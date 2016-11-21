@@ -160,6 +160,9 @@ public class EcjParser extends JavaParser {
     /** Whether parser errors should be dumped to stdout */
     private static final boolean DEBUG_DUMP_PARSE_ERRORS = false;
 
+    /** Whether we can skip computing ECJ error messages */
+    public static boolean skipComputingEcjErrors = true;
+
     /**
      * Whether library sources should be parsed (instead of the compiled
      * output be included on the classpath instead
@@ -1533,11 +1536,15 @@ public class EcjParser extends JavaParser {
                 return super.createProblem(originatingFileName, problemId, problemArguments,
                         messageArguments, severity, startPosition, endPosition, lineNumber,
                         columnNumber);
-            } else {
+            } else if (skipComputingEcjErrors) {
                 // Don't bother computing error message strings when we're not dumping error
                 // messages (they won't be shown anywhere)
                 return new DefaultProblem(originatingFileName, "<not computed>", problemId,
                         problemArguments, severity, startPosition, endPosition, lineNumber,
+                        columnNumber);
+            } else {
+                return super.createProblem(originatingFileName, problemId, problemArguments,
+                        messageArguments, severity, startPosition, endPosition, lineNumber,
                         columnNumber);
             }
         }
@@ -1560,12 +1567,16 @@ public class EcjParser extends JavaParser {
                 return super.createProblem(originatingFileName, problemId, problemArguments,
                         elaborationId, messageArguments, severity, startPosition, endPosition,
                         lineNumber, columnNumber);
-            } else {
+            } else if (skipComputingEcjErrors) {
                 // Don't bother computing error message strings when we're not dumping error
                 // messages (they won't be shown anywhere)
                 return new DefaultProblem(originatingFileName, "<not computed>", problemId,
                         problemArguments, severity, startPosition, endPosition, lineNumber,
                         columnNumber);
+            } else {
+                return super.createProblem(originatingFileName, problemId, problemArguments,
+                        elaborationId, messageArguments, severity, startPosition, endPosition,
+                        lineNumber, columnNumber);
             }
         }
 

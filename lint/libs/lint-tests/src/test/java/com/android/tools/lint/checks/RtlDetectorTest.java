@@ -29,11 +29,8 @@ import static com.android.tools.lint.checks.RtlDetector.convertOldToNew;
 import static com.android.tools.lint.checks.RtlDetector.convertToOppositeDirection;
 import static com.android.tools.lint.checks.RtlDetector.isRtlAttributeName;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -72,13 +69,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && mEnabled.contains(issue);
-            }
-        };
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     public void testTarget14WithRtl() throws Exception {

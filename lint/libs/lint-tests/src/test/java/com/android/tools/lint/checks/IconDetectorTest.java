@@ -16,35 +16,13 @@
 
 package com.android.tools.lint.checks;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.Variant;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import org.mockito.stubbing.OngoingStubbing;
 
 @SuppressWarnings("javadoc")
 public class IconDetectorTest extends AbstractCheckTest {
@@ -94,13 +72,8 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     @Override
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null) {
-            @Override
-            public boolean isEnabled(@NonNull Issue issue) {
-                return super.isEnabled(issue) && mEnabled.contains(issue);
-            }
-        };
+    protected boolean isEnabled(Issue issue) {
+        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     public void test() throws Exception {
@@ -704,47 +677,101 @@ public class IconDetectorTest extends AbstractCheckTest {
         // resConfigs in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
         // densities
-        mEnabled = Sets.newHashSet(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER);
-        assertEquals(""
-                + "res: Warning: Missing density variation folders in res: drawable-hdpi [IconMissingDensityFolder]\n"
-                + "0 errors, 1 warnings\n",
 
-                lintProject(
-                        image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-nodpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000)));
+        String expected = ""
+                + "res: Warning: Missing density variation folders in res: drawable-hdpi [IconMissingDensityFolder]\n"
+                + "0 errors, 1 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                image("res/drawable-nodpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                gradle(""
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        resConfigs \"mdpi\"\n"
+                        + "    }\n"
+                        + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
+                        + "    productFlavors {\n"
+                        + "        beta {\n"
+                        + "            flavorDimension \"releaseType\"\n"
+                        + "            resConfig \"en\"\n"
+                        + "            resConfigs \"nodpi\", \"hdpi\"\n"
+                        + "        }\n"
+                        + "        normal { flavorDimension \"releaseType\" }\n"
+                        + "        free { flavorDimension \"pricing\" }\n"
+                        + "        paid { flavorDimension \"pricing\" }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER)
+                .run()
+                .expect(expected);
     }
 
     public void testResConfigs2() throws Exception {
-        mEnabled = Sets.newHashSet(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
 
-                lintProject(
-                        // Use minSDK4 to ensure that we get warnings about missing drawables
-                        manifest().minSdk(4),
-                        image("res/drawable/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-mdpi/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-xhdpi/ic_launcher.png", 48, 48).fill(0xFF00FF30),
-                        image("res/drawable-mdpi/sample_icon.gif", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-hdpi/ic_launcher.png", 72, 72).fill(10, 10, 30, 30, 0xFFFF00FF)));
+        //noinspection all // Sample code
+        lint().files(
+                // Use minSDK4 to ensure that we get warnings about missing drawables
+                manifest().minSdk(4),
+                image("res/drawable/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
+                image("res/drawable-mdpi/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
+                image("res/drawable-xhdpi/ic_launcher.png", 48, 48).fill(0xFF00FF30),
+                image("res/drawable-mdpi/sample_icon.gif", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF),
+                image("res/drawable-hdpi/ic_launcher.png", 72, 72).fill(10, 10, 30, 30, 0xFFFF00FF),
+                gradle(""
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        resConfigs \"mdpi\"\n"
+                        + "    }\n"
+                        + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
+                        + "    productFlavors {\n"
+                        + "        beta {\n"
+                        + "            flavorDimension \"releaseType\"\n"
+                        + "            resConfig \"en\"\n"
+                        + "            resConfigs \"nodpi\", \"hdpi\"\n"
+                        + "        }\n"
+                        + "        normal { flavorDimension \"releaseType\" }\n"
+                        + "        free { flavorDimension \"pricing\" }\n"
+                        + "        paid { flavorDimension \"pricing\" }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER)
+                .run()
+                .expect(expected);
     }
 
     public void testSplits1() throws Exception {
         // splits in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
         // densities
-        mEnabled = Sets.newHashSet(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER);
-        assertEquals(""
-                + "res: Warning: Missing density variation folders in res: drawable-hdpi [IconMissingDensityFolder]\n"
-                + "0 errors, 1 warnings\n",
 
-                lintProject(
-                        image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-nodpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000)));
+        String expected = ""
+                + "res: Warning: Missing density variation folders in res: drawable-hdpi [IconMissingDensityFolder]\n"
+                + "0 errors, 1 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                image("res/drawable-nodpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
+                gradle(""
+                        + "android {\n"
+                        + "    splits {\n"
+                        + "        density {\n"
+                        + "            enable true\n"
+                        + "            reset()\n"
+                        + "            include \"mdpi\", \"hdpi\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER)
+                .run()
+                .expect(expected);
     }
 
     public void testWebpEligible() throws Exception {
@@ -806,225 +833,6 @@ public class IconDetectorTest extends AbstractCheckTest {
                                 + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
                                 + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
                 ));
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        String testName = getName();
-        if (testName.startsWith("testResConfigs")) {
-            return createClientForTestResConfigs();
-        } else if (testName.startsWith("testSplits")) {
-            return createClientForTestSplits();
-        } else {
-            return super.createClient();
-        }
-    }
-
-    private TestLintClient createClientForTestResConfigs() {
-
-        // Set up a mock project model for the resource configuration test(s)
-        // where we provide a subset of densities to be included
-
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        /*
-                        Simulate variant freeBetaDebug in this setup:
-                            defaultConfig {
-                                ...
-                                resConfigs "mdpi"
-                            }
-                            flavorDimensions  "pricing", "releaseType"
-                            productFlavors {
-                                beta {
-                                    flavorDimension "releaseType"
-                                    resConfig "en"
-                                    resConfigs "nodpi", "hdpi"
-                                }
-                                normal { flavorDimension "releaseType" }
-                                free { flavorDimension "pricing" }
-                                paid { flavorDimension "pricing" }
-                            }
-                         */
-                        ProductFlavor flavorFree = mock(ProductFlavor.class);
-                        when(flavorFree.getName()).thenReturn("free");
-                        when(flavorFree.getResourceConfigurations())
-                                .thenReturn(Collections.emptyList());
-
-                        ProductFlavor flavorNormal = mock(ProductFlavor.class);
-                        when(flavorNormal.getName()).thenReturn("normal");
-                        when(flavorNormal.getResourceConfigurations())
-                                .thenReturn(Collections.emptyList());
-
-                        ProductFlavor flavorPaid = mock(ProductFlavor.class);
-                        when(flavorPaid.getName()).thenReturn("paid");
-                        when(flavorPaid.getResourceConfigurations())
-                                .thenReturn(Collections.emptyList());
-
-                        ProductFlavor flavorBeta = mock(ProductFlavor.class);
-                        when(flavorBeta.getName()).thenReturn("beta");
-                        List<String> resConfigs = Arrays.asList("hdpi", "en", "nodpi");
-                        when(flavorBeta.getResourceConfigurations()).thenReturn(resConfigs);
-
-                        ProductFlavor defaultFlavor = mock(ProductFlavor.class);
-                        when(defaultFlavor.getName()).thenReturn("main");
-                        when(defaultFlavor.getResourceConfigurations()).thenReturn(
-                                Collections.singleton("mdpi"));
-
-                        ProductFlavorContainer containerBeta =
-                                mock(ProductFlavorContainer.class);
-                        when(containerBeta.getProductFlavor()).thenReturn(flavorBeta);
-
-                        ProductFlavorContainer containerFree =
-                                mock(ProductFlavorContainer.class);
-                        when(containerFree.getProductFlavor()).thenReturn(flavorFree);
-
-                        ProductFlavorContainer containerPaid =
-                                mock(ProductFlavorContainer.class);
-                        when(containerPaid.getProductFlavor()).thenReturn(flavorPaid);
-
-                        ProductFlavorContainer containerNormal =
-                                mock(ProductFlavorContainer.class);
-                        when(containerNormal.getProductFlavor()).thenReturn(flavorNormal);
-
-                        ProductFlavorContainer defaultContainer =
-                                mock(ProductFlavorContainer.class);
-                        when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
-
-                        List<ProductFlavorContainer> containers = Arrays.asList(
-                                containerPaid, containerFree, containerNormal, containerBeta
-                        );
-
-                        AndroidProject project = mock(AndroidProject.class);
-                        when(project.getProductFlavors()).thenReturn(containers);
-                        when(project.getDefaultConfig()).thenReturn(defaultContainer);
-                        return project;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        List<String> productFlavorNames = Arrays.asList("free", "beta");
-                        Variant mock = mock(Variant.class);
-                        when(mock.getProductFlavors()).thenReturn(productFlavorNames);
-                        return mock;
-                    }
-                };
-            }
-        };
-    }
-
-    private TestLintClient createClientForTestSplits() {
-
-        // Set up a mock project model for the resource configuration test(s)
-        // where we provide a subset of densities to be included
-
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        /*
-                            Simulate variant debug in this setup:
-                            splits {
-                                density {
-                                    enable true
-                                    reset()
-                                    include "mdpi", "hdpi"
-                                }
-                            }
-                         */
-
-                        ProductFlavor defaultFlavor = mock(ProductFlavor.class);
-                        when(defaultFlavor.getName()).thenReturn("main");
-                        when(defaultFlavor.getResourceConfigurations()).thenReturn(
-                                Collections.emptyList());
-
-                        ProductFlavorContainer defaultContainer =
-                                mock(ProductFlavorContainer.class);
-                        when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
-
-                        AndroidProject project = mock(AndroidProject.class);
-                        when(project.getProductFlavors()).thenReturn(
-                                Collections.emptyList());
-                        when(project.getDefaultConfig()).thenReturn(defaultContainer);
-                        return project;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Variant getCurrentVariant() {
-                        Collection<AndroidArtifactOutput> outputs = Lists.newArrayList();
-
-                        outputs.add(createAndroidArtifactOutput("", ""));
-                        outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
-                        outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
-
-                        AndroidArtifact mainArtifact = mock(AndroidArtifact.class);
-                        when(mainArtifact.getOutputs()).thenReturn(outputs);
-
-                        List<String> productFlavorNames = Collections.emptyList();
-                        Variant mock = mock(Variant.class);
-                        when(mock.getProductFlavors()).thenReturn(productFlavorNames);
-                        when(mock.getMainArtifact()).thenReturn(mainArtifact);
-                        return mock;
-                    }
-
-                    private AndroidArtifactOutput createAndroidArtifactOutput(
-                            @NonNull String filterType,
-                            @NonNull String identifier) {
-                        AndroidArtifactOutput artifactOutput = mock(
-                                AndroidArtifactOutput.class);
-
-                        OutputFile outputFile = mock(OutputFile.class);
-                        if (filterType.isEmpty()) {
-                            when(outputFile.getFilterTypes())
-                                    .thenReturn(Collections.emptyList());
-                            when(outputFile.getFilters())
-                                    .thenReturn(Collections.emptyList());
-                        } else {
-                            when(outputFile.getFilterTypes())
-                                    .thenReturn(Collections.singletonList(filterType));
-                            List<FilterData> filters = Lists.newArrayList();
-                            FilterData filter = mock(FilterData.class);
-                            when(filter.getFilterType()).thenReturn(filterType);
-                            when(filter.getIdentifier()).thenReturn(identifier);
-                            filters.add(filter);
-                            when(outputFile.getFilters()).thenReturn(filters);
-                        }
-
-                        // Work around wildcard capture
-                        //when(artifactOutput.getOutputs()).thenReturn(outputFiles);
-                        List<OutputFile> outputFiles = Collections.singletonList(outputFile);
-                        OngoingStubbing<? extends Collection<? extends OutputFile>> when = when(
-                                artifactOutput.getOutputs());
-                        //noinspection unchecked,RedundantCast
-                        ((OngoingStubbing<Collection<? extends OutputFile>>) (OngoingStubbing<?>) when)
-                                .thenReturn(outputFiles);
-
-                        return artifactOutput;
-                    }
-                };
-            }
-        };
     }
 
     @SuppressWarnings("all") // Sample code

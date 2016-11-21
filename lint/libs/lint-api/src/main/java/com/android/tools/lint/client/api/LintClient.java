@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_FOLDER;
 import static com.android.SdkConstants.DOT_AAR;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.GEN_FOLDER;
 import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.SdkConstants.RES_FOLDER;
@@ -1092,7 +1093,8 @@ public abstract class LintClient {
      */
     @SuppressWarnings("MethodMayBeStatic") // Intentionally instance method so it can be overridden
     public boolean isProjectDirectory(@NonNull File dir) {
-        return LintUtils.isManifestFolder(dir) || Project.isAospFrameworksRelatedProject(dir);
+        return LintUtils.isManifestFolder(dir) || Project.isAospFrameworksRelatedProject(dir)
+                || new File(dir, FN_BUILD_GRADLE).exists();
     }
 
     /**

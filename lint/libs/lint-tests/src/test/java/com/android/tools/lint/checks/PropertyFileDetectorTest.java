@@ -18,19 +18,13 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.PropertyFileDetector.suggestEscapes;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-import java.io.File;
 
 public class PropertyFileDetectorTest extends AbstractCheckTest {
     @Override
@@ -113,29 +107,5 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
         assertEquals("foo/bar", suggestEscapes("foo/bar"));
         assertEquals("c\\:\\\\foo\\\\bar", suggestEscapes("c\\:\\\\foo\\\\bar"));
         assertEquals("c\\:\\\\foo\\\\bar", suggestEscapes("c:\\\\foo\\bar"));
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        return new ToolsBaseTestLintClient() {
-            @NonNull
-            @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                return new Project(this, dir, referenceDir) {
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
-
-                    @Nullable
-                    @Override
-                    public AndroidProject getGradleProjectModel() {
-                        AndroidProject project = mock(AndroidProject.class);
-                        when(project.getResourcePrefix()).thenReturn("unit_test_prefix_");
-                        return project;
-                    }
-                };
-            }
-        };
     }
 }

@@ -101,8 +101,6 @@ public class ConstraintLayoutDetector extends LayoutDetector {
         GradleCoordinate latestAvailable = null;
 
         if (variant != null) {
-            // getCompileDependencies was added in builder model 2.2; in older versions, just
-            // use getDependencies
             Dependencies dependencies = variant.getMainArtifact().getDependencies();
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 MavenCoordinates rc = library.getResolvedCoordinates();

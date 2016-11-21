@@ -49,7 +49,7 @@ import java.util.zip.ZipEntry;
  * <p> NOTE: The custom issue registry should not extend this file; it should be a plain
  * IssueRegistry! This file is used internally to wrap the given issue registry.</p>
  */
-class JarFileIssueRegistry extends IssueRegistry {
+public class JarFileIssueRegistry extends IssueRegistry {
     /**
      * Manifest constant for declaring an issue provider. Example: Lint-Registry:
      * foo.bar.CustomIssueRegistry
@@ -69,7 +69,7 @@ class JarFileIssueRegistry extends IssueRegistry {
     }
 
     @NonNull
-    static JarFileIssueRegistry get(@NonNull LintClient client, @NonNull File jarFile)
+    public static JarFileIssueRegistry get(@NonNull LintClient client, @NonNull File jarFile)
             throws IOException, ClassNotFoundException, IllegalAccessException,
             InstantiationException {
         if (cache == null) {

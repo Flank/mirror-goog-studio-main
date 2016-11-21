@@ -559,8 +559,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Project project = context.getProject();
         Variant variant = project.getCurrentVariant();
         if (variant != null) {
-            // getCompileDependencies was added in builder model 2.2; in older versions, just
-            // use getDependencies
             Dependencies dependencies = variant.getMainArtifact().getDependencies();
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 MavenCoordinates mc = library.getResolvedCoordinates();
@@ -1432,7 +1430,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     // Historically the multidex library ended up in the support package but
                     // decided to do its own numbering (and isn't tied to the rest in terms
                     // of implementation dependencies)
-                    && !coordinates.getArtifactId().equals("multidex")) {
+                    && !coordinates.getArtifactId().startsWith("multidex")) {
                 versionToCoordinate.put(coordinates.getVersion(), coordinates);
             }
         }
@@ -1452,7 +1450,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         Set<String> versions = versionToCoordinate.keySet();
         if (versions.size() > 1) {
             List<String> sortedVersions = Lists.newArrayList(versions);
-            Collections.sort(sortedVersions, Collections.reverseOrder());
+            sortedVersions.sort(Collections.reverseOrder());
             MavenCoordinates c1 = findFirst(versionToCoordinate.get(sortedVersions.get(0)));
             MavenCoordinates c2 = findFirst(versionToCoordinate.get(sortedVersions.get(1)));
             // Not using toString because in the IDE, these are model proxies which display garbage output
@@ -1627,9 +1625,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
 
         AndroidArtifact artifact = variant.getMainArtifact();
-        GradleVersion version = project.getGradleModelVersion();
-        // getCompileDependencies was added in builder model 2.2; in older versions, just
-        // use getDependencies
         return artifact.getDependencies();
     }
 }

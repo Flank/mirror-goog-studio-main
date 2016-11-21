@@ -16,18 +16,22 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import java.io.BufferedInputStream;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Severity;
+import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractCheckTest extends LintDetectorTest {
     @Override
@@ -37,6 +41,11 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
 
     @Override
     protected List<Issue> getIssues() {
+        return getRegisteredIssuesFromDetector();
+    }
+
+    @NonNull
+    private List<Issue> getRegisteredIssuesFromDetector() {
         List<Issue> issues = new ArrayList<>();
         Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
         // Get the list of issues from the registry and filter out others, to make sure
@@ -52,37 +61,53 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     }
 
     @Override
-    protected InputStream getTestResource(String relativePath, boolean expectExists) {
-        String path = "data" + File.separator + relativePath;
-        InputStream stream = AbstractCheckTest.class.getResourceAsStream(path);
-        if (stream == null) {
-            File root = TestUtils.getWorkspaceRoot();
-            String pkg = AbstractCheckTest.class.getName();
-            pkg = pkg.substring(0, pkg.lastIndexOf('.'));
-            File f = new File(root,
-                "tools/base/lint/libs/lint-tests/src/test/java/".replace('/', File.separatorChar)
-                            + pkg.replace('.', File.separatorChar)
-                            + File.separatorChar + path);
-            if (f.exists()) {
-                try {
-                    return new BufferedInputStream(new FileInputStream(f));
-                } catch (FileNotFoundException e) {
-                    stream = null;
-                    if (expectExists) {
-                        fail("Could not find file " + relativePath);
-                    }
-                }
-            }
-        }
-        if (!expectExists && stream == null) {
-            return null;
-        }
-        return stream;
+    public InputStream getTestResource(String relativePath, boolean expectExists) {
+        fail("We should not be using file-based resources in the lint builtin unit tests.");
+        return null;
     }
 
     @Override
     protected TestLintClient createClient() {
         return new ToolsBaseTestLintClient();
+    }
+
+    static File sdk;
+    static {
+        sdk = TestUtils.getSdk();
+    }
+
+    @Override
+    @NonNull
+    protected TestLintTask lint() {
+        // instead of super.lint: don't set issues such that we can compute and compare
+        // detector results below
+        TestLintTask task = TestLintTask.lint();
+
+        task.checkMessage((context, issue, severity, location, message)
+                -> AbstractCheckTest.super.checkReportedError(context, issue, severity, location,
+                message));
+
+        // We call getIssues() instead of setting task.detector() because the above
+        // getIssues call will ensure that we only check issues registered in the class
+        task.detector(getDetectorInstance());
+
+        // Now check check the discrepancy to look for unregistered issues and
+        // highlight these
+        List<Issue> computedIssues = getRegisteredIssuesFromDetector();
+        if (getIssues().equals(computedIssues)) {
+            Set<Issue> checkedIssues = Sets.newHashSet(task.getCheckedIssues());
+            Set<Issue> detectorIssues = Sets.newHashSet(computedIssues);
+            if (!checkedIssues.equals(detectorIssues)) {
+                Set<Issue> difference = Sets.symmetricDifference(checkedIssues, detectorIssues);
+                fail("Discrepancy in issues listed in detector class "
+                        + getDetectorInstance().getClass().getSimpleName() + " and issues "
+                        + "found in the issue registry: " + difference);
+            }
+        }
+
+        task.issues(getIssues().toArray(new Issue[0]));
+        task.sdkHome(sdk);
+        return task;
     }
 
     /**
