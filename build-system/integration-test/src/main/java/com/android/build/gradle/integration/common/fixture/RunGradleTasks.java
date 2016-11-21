@@ -61,6 +61,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
+                gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
                 gradleTestProject.getProfileDirectory(),

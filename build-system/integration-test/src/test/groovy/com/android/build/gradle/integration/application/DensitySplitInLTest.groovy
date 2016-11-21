@@ -21,7 +21,6 @@ import com.android.annotations.Nullable
 import com.android.build.OutputFile
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
-import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
@@ -29,7 +28,6 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Sets
-import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -41,7 +39,6 @@ import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
-
 /**
  * Assemble tests for class densitySplitInL
  .
@@ -57,8 +54,12 @@ class DensitySplitInLTest {
 
     @BeforeClass
     static void setUp() {
-        AssumeUtil.assumeBuildToolsAtLeast(21)
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+        project.executor()
+                // Make sure ValidateSigningTask is called to create the debug keystore.
+                .withLocalAndroidSdkHome()
+                .run("clean", "assembleDebug")
+
+        model = project.model().getSingle().getOnlyModel()
     }
 
     @AfterClass

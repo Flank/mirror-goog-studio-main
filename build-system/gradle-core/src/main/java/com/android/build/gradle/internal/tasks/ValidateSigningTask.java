@@ -16,23 +16,23 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.prefs.AndroidLocation;
-
+import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
-
-import java.io.File;
 
 /**
  * A validate task that creates the debug keystore if it's missing. It only creates it if it's in
@@ -45,8 +45,8 @@ public class ValidateSigningTask extends BaseTask {
 
     private SigningConfig signingConfig;
 
-    public void setSigningConfig(SigningConfig signingConfig) {
-        this.signingConfig = signingConfig;
+    public void setSigningConfig(@NonNull SigningConfig signingConfig) {
+        this.signingConfig = checkNotNull(signingConfig);
     }
 
     public SigningConfig getSigningConfig() {
@@ -136,8 +136,13 @@ public class ValidateSigningTask extends BaseTask {
         public void execute(@NonNull ValidateSigningTask task) {
             task.setAndroidBuilder(mPackagingScope.getAndroidBuilder());
             task.setVariantName(mPackagingScope.getFullVariantName());
-            task.setSigningConfig(mPackagingScope.getSigningConfig());
+
+            CoreSigningConfig signingConfig = mPackagingScope.getSigningConfig();
+            checkState(
+                    signingConfig != null,
+                    "No signing config configured for variant %s.",
+                    mPackagingScope.getFullVariantName());
+            task.setSigningConfig(signingConfig);
         }
     }
-
 }

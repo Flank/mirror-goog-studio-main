@@ -28,7 +28,6 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Sets
-import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -40,7 +39,6 @@ import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
-
 /**
  * Test drive for the abiPureSplits samples test.
  */
@@ -57,8 +55,8 @@ class AbiPureSplits {
     }
 
     @Test
-    public void "test abi pure splits"() throws Exception {
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+    void "test abi pure splits"() throws Exception {
+        AndroidProject model = assembleAndGetModel()
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5)
@@ -66,7 +64,7 @@ class AbiPureSplits {
         expected.add("x86")
         expected.add("armeabi-v7a")
 
-        List<? extends OutputFile> outputs = getOutputs(model);
+        List<? extends OutputFile> outputs = getOutputs(model)
         assertEquals(4, outputs.size())
         for (OutputFile outputFile : outputs) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.ABI)
@@ -95,12 +93,20 @@ class AbiPureSplits {
         assertTrue(expected.isEmpty())
     }
 
+    private AndroidProject assembleAndGetModel() {
+        project.executor()
+                // Make sure ValidateSigningTask is called to create the debug keystore.
+                .withLocalAndroidSdkHome()
+                .run("clean", "assembleDebug")
+        return project.model().getSingle().getOnlyModel()
+    }
+
     @Test
     void "test adding an abi pure split"() throws Exception {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+        AndroidProject model = assembleAndGetModel()
 
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
@@ -146,7 +152,7 @@ class AbiPureSplits {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+        AndroidProject model = assembleAndGetModel()
 
         // record the build time of each APK to ensure we don't rebuild those in incremental mode.
         Map<String, Long> lastModifiedTimePerAbi =

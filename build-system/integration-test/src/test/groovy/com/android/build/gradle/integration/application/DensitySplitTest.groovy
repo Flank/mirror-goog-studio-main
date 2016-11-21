@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.OutputFile
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -52,7 +53,12 @@ class DensitySplitTest {
 
     @BeforeClass
     static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+        project.executor()
+                // Make sure ValidateSigningTask is called to create the debug keystore.
+                .withLocalAndroidSdkHome()
+                .run("clean", "assembleDebug")
+
+        model = project.model().getSingle().getOnlyModel()
     }
 
     @AfterClass
