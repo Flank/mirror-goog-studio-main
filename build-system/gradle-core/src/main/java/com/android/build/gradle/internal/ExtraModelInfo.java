@@ -23,11 +23,10 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.internal.dependency.ConfigurationLibraryGraph;
+import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
-import com.android.build.gradle.internal.ide.DependenciesLevel2Converter;
 import com.android.build.gradle.internal.ide.JavaArtifactImpl;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
@@ -38,7 +37,6 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageJsonSerializer;
 import com.android.ide.common.blame.SourceFilePosition;
@@ -319,13 +317,11 @@ public class ExtraModelInfo extends ErrorReporter {
                     String.format("Artifact with name %1$s is not of type JAVA", name));
         }
 
-        LibraryGraph graph = new ConfigurationLibraryGraph(configuration);
-
         JavaArtifact artifact = new JavaArtifactImpl(
                 name, assembleTaskName, javaCompileTaskName,
                 ideSetupTaskNames, generatedSourceFolders, classesFolder, javaResourcesFolder, null,
                 new ConfigurationDependencies(configuration),
-                graph, graph,
+                new ConfigurationDependencyGraphs(configuration),
                 sourceProvider, null);
 
         extraJavaArtifacts.put(variant.getName(), artifact);

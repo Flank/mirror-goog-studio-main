@@ -31,8 +31,8 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
-import com.android.builder.model.level2.LibraryGraph;
 import java.io.File;
 import java.io.IOException;
 import org.junit.After;
@@ -85,10 +85,10 @@ public class LocalJarInAarInModelTest {
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
         assertThat(androidItems.mapTo(COORDINATES))
-                .containsExactly("com.android.support:support-v4:aar:" + SUPPORT_LIB_VERSION);
+                .containsExactly("com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar");
 
         // now build the project.
         project.execute("prepareDebugDependencies");
@@ -113,10 +113,10 @@ public class LocalJarInAarInModelTest {
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
         assertThat(androidItems.mapTo(COORDINATES))
-                .containsExactly("com.android.support:support-v4:aar:" + SUPPORT_LIB_VERSION);
+                .containsExactly("com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar");
 
         // now check the model validity
         Library androidLibrary = model.getGlobalLibraryMap().getLibraries()

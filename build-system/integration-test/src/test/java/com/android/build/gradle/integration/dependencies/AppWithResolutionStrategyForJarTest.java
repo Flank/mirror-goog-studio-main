@@ -30,10 +30,8 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
@@ -111,24 +109,24 @@ public class AppWithResolutionStrategyForJarTest {
 
         Variant debugVariant = ModelHelper.getVariant(appVariants, "debug");
 
-        AndroidArtifact mainArtifact = debugVariant.getMainArtifact();
-        checkJarDependency(mainArtifact.getCompileGraph(), "15.0", "debug");
-        checkJarDependency(mainArtifact.getPackageGraph(), "17.0", "debug");
+        Items items = helper.on(debugVariant.getMainArtifact().getDependencyGraphs());
+        checkJarDependency(items, "15.0", "debug");
+        checkJarDependency(items.forPackage(), "17.0", "debug");
 
         Variant releaseVariant = ModelHelper.getVariant(appVariants, "release");
         Truth.assertThat(releaseVariant).isNotNull();
 
-        mainArtifact = releaseVariant.getMainArtifact();
-        checkJarDependency(mainArtifact.getCompileGraph(), "17.0", "release");
-        checkJarDependency(mainArtifact.getPackageGraph(), "17.0", "release");
+        items = helper.on(releaseVariant.getMainArtifact().getDependencyGraphs());
+        checkJarDependency(items, "17.0", "release");
+        checkJarDependency(items.forPackage(), "17.0", "release");
     }
 
     private static void checkJarDependency(
-            @NonNull LibraryGraph graph,
+            @NonNull Items items,
             @NonNull String jarVersion,
             @NonNull String variantName) {
 
-        Items subModuleItems = helper.on(graph).withType(MODULE);
+        Items subModuleItems = items.withType(MODULE);
         assertThat(subModuleItems.mapTo(COORDINATES))
                 .named("Direct modules of " + variantName)
                 .containsExactly(":library");
@@ -138,6 +136,6 @@ public class AppWithResolutionStrategyForJarTest {
 
         assertThat(libraryDeps.withType(JAVA).mapTo(COORDINATES))
                 .named("transitive java libs of " + variantName)
-                .containsExactly("com.google.guava:guava:jar:" + jarVersion);
+                .containsExactly("com.google.guava:guava:" + jarVersion + "@jar");
     }
 }

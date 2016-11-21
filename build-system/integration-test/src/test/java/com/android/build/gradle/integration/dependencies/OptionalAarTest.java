@@ -32,7 +32,7 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -115,7 +115,7 @@ public class OptionalAarTest {
         // get the main artifact of the debug artifact and its dependencies
         Variant variant = ModelHelper.getVariant(variants, "debug");
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         LibraryGraphHelper.Items moduleItems = helper.on(graph).withType(MODULE);
         assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":library");
@@ -135,13 +135,12 @@ public class OptionalAarTest {
         Variant variant = ModelHelper.getVariant(variants, "debug");
         AndroidArtifact mainArtifact = variant.getMainArtifact();
 
-        LibraryGraph compileGraph = mainArtifact.getCompileGraph();
-        LibraryGraphHelper.Items moduleItems = helper.on(compileGraph).withType(MODULE);
+        DependencyGraphs dependencyGraph = mainArtifact.getDependencyGraphs();
+        LibraryGraphHelper.Items moduleItems = helper.on(dependencyGraph).withType(MODULE);
         assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":library2");
-        assertThat(compileGraph.getProvidedLibraries())
+        assertThat(dependencyGraph.getProvidedLibraries())
                 .containsExactly(moduleItems.asSingleGraphItem().getArtifactAddress());
 
-        LibraryGraph packageGraph = mainArtifact.getPackageGraph();
-        assertThat(packageGraph.getDependencies()).isEmpty();
+        assertThat(dependencyGraph.getPackageDependencies()).isEmpty();
     }
 }

@@ -30,7 +30,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -79,7 +79,7 @@ public class DepOnLocalJarThroughAModuleTest {
 
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
 
-        LibraryGraph graph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
         assertThat(helper.on(graph).withType(JAVA).asList())
                 .named("app java dependencies")

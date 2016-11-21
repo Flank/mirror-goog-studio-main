@@ -35,7 +35,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Map;
@@ -158,7 +158,7 @@ public class MultiAtomTest {
                 .isEqualTo(AndroidProject.PROJECT_TYPE_INSTANTAPP);
 
         Variant variant = ModelHelper.getVariant(instantAppModel.getVariants(), "release");
-        LibraryGraph instantAppDeps = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs instantAppDeps = variant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(instantAppDeps).withType(JAVA).asList())
                 .named("InstantApp Javalibs dependencies")
                 .isEmpty();
@@ -181,7 +181,7 @@ public class MultiAtomTest {
 
         Variant atomCVariant = ModelHelper.getVariant(atomCModel.getVariants(), "release");
         assertThat(atomCVariant).named("AtomC release variant").isNotNull();
-        LibraryGraph atomCDeps = atomCVariant.getMainArtifact().getCompileGraph();
+        DependencyGraphs atomCDeps = atomCVariant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(atomCDeps).withType(JAVA).asList())
                 .named("atomC javalibs dependencies")
                 .isEmpty();

@@ -19,7 +19,7 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
@@ -71,7 +71,7 @@ public interface BaseArtifact {
     Dependencies getDependencies();
 
     /**
-     * Returns the resolved 'compile' dependencies for this artifact.
+     * Returns the resolved dependencies for this artifact.
      *
      * This is a composite of all the
      * dependencies for that artifact: default config + build type + flavor(s).
@@ -79,21 +79,7 @@ public interface BaseArtifact {
      * @return The dependencies.
      */
     @NonNull
-    LibraryGraph getCompileGraph();
-
-    /**
-     * Returns the resolved 'package' dependencies for this artifact.
-     *
-     * This is a composite of all the
-     * dependencies for that artifact: default config + build type + flavor(s).
-     *
-     * In case of Library modules, this is really the publish dependencies.
-     * For tests, this is really the runtime dependencies.
-     *
-     * @return The dependencies.
-     */
-    @NonNull
-    LibraryGraph getPackageGraph();
+    DependencyGraphs getDependencyGraphs();
 
     /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as

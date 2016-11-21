@@ -56,7 +56,16 @@ public interface DependencyContainer {
     @NonNull
     ImmutableList<DependencyNode> getDependencies();
 
+    /**
+     * Returns whether a given dependency is skipped
+     * @param dependency the dependency
+     */
     boolean isSkipped(@NonNull Dependency dependency);
+
+    /**
+     * Returns whether a given dependency is provided
+     * @param dependency the dependency
+     */
     boolean isProvided(@NonNull Dependency dependency);
 
     /**

@@ -33,7 +33,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -129,7 +129,7 @@ public class AppWithCompileIndirectJarTest {
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
-        LibraryGraph compileGraph = appDebug.getMainArtifact().getCompileGraph();
+        DependencyGraphs compileGraph = appDebug.getMainArtifact().getDependencyGraphs();
 
         // check direct dependencies
         assertThat(helper.on(compileGraph).withType(MODULE).mapTo(Property.GRADLE_PATH))
@@ -148,14 +148,14 @@ public class AppWithCompileIndirectJarTest {
 
         assertThat(libraryItems.withType(JAVA).mapTo(Property.COORDINATES))
                 .named("sub-module java dependencies")
-                .containsExactly("com.google.guava:guava:jar:18.0");
+                .containsExactly("com.google.guava:guava:18.0@jar");
 
         // ---
 
         Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
-        compileGraph = libDebug.getMainArtifact().getCompileGraph();
+        compileGraph = libDebug.getMainArtifact().getDependencyGraphs();
 
         assertThat(helper.on(compileGraph).withType(ANDROID).asList())
                 .named(":library android dependencies")
@@ -163,6 +163,6 @@ public class AppWithCompileIndirectJarTest {
 
         assertThat(helper.on(compileGraph).withType(JAVA).mapTo(Property.COORDINATES))
                 .named(":library java dependencies")
-                .containsExactly("com.google.guava:guava:jar:18.0");
+                .containsExactly("com.google.guava:guava:18.0@jar");
     }
 }

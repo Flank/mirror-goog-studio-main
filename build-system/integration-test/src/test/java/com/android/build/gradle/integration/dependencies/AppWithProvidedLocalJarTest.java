@@ -28,8 +28,8 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.LibraryGraph;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -85,21 +85,22 @@ public class AppWithProvidedLocalJarTest {
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
-        LibraryGraph compileGraph = variant.getMainArtifact().getCompileGraph();
+        DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
         // assert that there is one java library dependency
-        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+        assertThat(helper.on(dependencyGraph).withType(JAVA).asList())
                 .named("Java Library dependencies")
                 .hasSize(1);
         // and that it's provided
-        GraphItem javaItem = helper.on(compileGraph).withType(JAVA).asSingleGraphItem();
-        assertThat(compileGraph.getProvidedLibraries())
+        GraphItem javaItem = helper.on(dependencyGraph).withType(JAVA).asSingleGraphItem();
+        assertThat(dependencyGraph.getProvidedLibraries())
                 .named("compile provided list")
                 .containsExactly(javaItem.getArtifactAddress());
 
         // check that the package graph does not contain the item (or anything else)
-        LibraryGraph packageGraph = variant.getMainArtifact().getPackageGraph();
 
-        assertThat(packageGraph.getDependencies()).named("package dependencies").isEmpty();
+        assertThat(dependencyGraph.getPackageDependencies())
+                .named("package dependencies")
+                .isEmpty();
     }
 }

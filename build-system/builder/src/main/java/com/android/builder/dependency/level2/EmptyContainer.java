@@ -54,46 +54,55 @@ public class EmptyContainer implements DependencyContainer {
         return false;
     }
 
+    @NonNull
     @Override
     public ImmutableList<Dependency> getAllDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<Dependency> getAllPackagedDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<JavaDependency> getAllJavaDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<AndroidDependency> getAllAndroidDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<AtomDependency> getAllAtomDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<JavaDependency> getDirectJavaDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<JavaDependency> getDirectLocalJavaDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<AndroidDependency> getDirectAndroidDependencies() {
         return ImmutableList.of();
     }
 
+    @NonNull
     @Override
     public ImmutableList<AtomDependency> getDirectAtomDependencies() {
         return ImmutableList.of();

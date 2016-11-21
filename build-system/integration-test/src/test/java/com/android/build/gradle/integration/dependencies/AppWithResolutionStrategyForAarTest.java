@@ -33,7 +33,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.LibraryGraph;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -118,8 +118,8 @@ public class AppWithResolutionStrategyForAarTest {
         AndroidProject appProject = modelContainer.getModelMap().get(":app");
         Collection<Variant> appVariants = appProject.getVariants();
 
-        checkJarDependency(helper, appVariants, "debug", "org.jdeferred:jdeferred-android-aar:aar:1.2.2");
-        checkJarDependency(helper, appVariants, "release", "org.jdeferred:jdeferred-android-aar:aar:1.2.3");
+        checkJarDependency(helper, appVariants, "debug", "org.jdeferred:jdeferred-android-aar:1.2.2@aar");
+        checkJarDependency(helper, appVariants, "release", "org.jdeferred:jdeferred-android-aar:1.2.3@aar");
     }
 
     private static void checkJarDependency(
@@ -131,7 +131,7 @@ public class AppWithResolutionStrategyForAarTest {
 
         AndroidArtifact appArtifact = appVariant.getMainArtifact();
 
-        LibraryGraph artifactCompileGraph = appArtifact.getCompileGraph();
+        DependencyGraphs artifactCompileGraph = appArtifact.getDependencyGraphs();
 
         Items moduleDeps = helper.on(artifactCompileGraph).withType(MODULE);
         assertThat(moduleDeps.mapTo(GRADLE_PATH))

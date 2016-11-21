@@ -26,7 +26,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
@@ -69,8 +68,8 @@ import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.builder.model.level2.LibraryGraph;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableCollection;
@@ -388,27 +387,22 @@ public class ModelBuilder implements ToolingModelBuilder {
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
 
         DependenciesImpl dependencies;
-        LibraryGraph compileGraph, packageGraph;
+        DependencyGraphs dependencyGraphs;
 
         if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
             dependencies = DependenciesConverter.getEmpty();
 
-            compileGraph = cloneGraph(variantDependency.getCompileDependencies(),
+            dependencyGraphs = cloneGraph(
+                    variantDependency.getCompileDependencies(),
+                    variantDependency.getPackageDependencies(),
                     variantConfiguration, androidBuilder);
-            if (modelWithFullDependency) {
-                packageGraph = cloneGraph(variantDependency.getPackageDependencies(),
-                        variantConfiguration, androidBuilder);
-            } else {
-                packageGraph = DependenciesLevel2Converter.getEmpty();
-            }
         } else {
             dependencies = new DependenciesConverter().cloneDependencies(
                     variantDependency.getCompileDependencies(),
                     variantConfiguration,
                     androidBuilder);
 
-            compileGraph = DependenciesLevel2Converter.getEmpty();
-            packageGraph = DependenciesLevel2Converter.getEmpty();
+            dependencyGraphs = DependenciesLevel2Converter.getEmpty();
         }
 
         return new JavaArtifactImpl(
@@ -424,8 +418,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantData.getJavaResourcesForUnitTesting(),
                 taskManager.getGlobalScope().getMockableAndroidJarFile(),
                 dependencies,
-                compileGraph,
-                packageGraph,
+                dependencyGraphs,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider);
     }
@@ -529,27 +522,24 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         VariantDependencies variantDependency = variantData.getVariantDependency();
 
+
         DependenciesImpl dependencies;
-        LibraryGraph compileGraph, packageGraph;
+        DependencyGraphs dependencyGraphs;
 
         if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
             dependencies = DependenciesConverter.getEmpty();
 
-            compileGraph = cloneGraph(variantDependency.getCompileDependencies(),
+            dependencyGraphs = cloneGraph(
+                    variantDependency.getCompileDependencies(),
+                    variantDependency.getPackageDependencies(),
                     variantConfiguration, androidBuilder);
-            if (modelWithFullDependency) {
-                packageGraph = cloneGraph(variantDependency.getPackageDependencies(),
-                        variantConfiguration, androidBuilder);
-            } else {
-                packageGraph = DependenciesLevel2Converter.getEmpty();
-            }
         } else {
             dependencies = new DependenciesConverter().cloneDependencies(
                     variantDependency.getCompileDependencies(),
-                    variantConfiguration, androidBuilder);
+                    variantConfiguration,
+                    androidBuilder);
 
-            compileGraph = DependenciesLevel2Converter.getEmpty();
-            packageGraph = DependenciesLevel2Converter.getEmpty();
+            dependencyGraphs = DependenciesLevel2Converter.getEmpty();
         }
 
         return new AndroidArtifactImpl(
@@ -570,8 +560,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                         scope.getJavaOutputDir(),
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies,
-                compileGraph,
-                packageGraph,
+                dependencyGraphs,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),

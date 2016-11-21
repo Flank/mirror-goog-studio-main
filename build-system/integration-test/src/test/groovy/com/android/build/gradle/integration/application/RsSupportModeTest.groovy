@@ -25,7 +25,7 @@ import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.android.builder.model.level2.Library
-import com.android.builder.model.level2.LibraryGraph
+import com.android.builder.model.level2.DependencyGraphs
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -68,7 +68,7 @@ class RsSupportModeTest {
 
         AndroidArtifact mainArtifact = debugVariant.getMainArtifact()
 
-        LibraryGraph graph = mainArtifact.getCompileGraph()
+        DependencyGraphs graph = mainArtifact.getDependencyGraphs()
 
         List<Library> libraries = helper.on(graph).withType(JAVA).asLibraries();
         assertFalse(libraries.isEmpty())

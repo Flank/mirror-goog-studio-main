@@ -155,20 +155,27 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
     }
 
     private String computeToString() {
-        List<String> segments = Lists.newArrayList(groupId, artifactId, packaging);
-        if (!Strings.isNullOrEmpty(classifier)) {
-            segments.add(classifier);
+        StringBuilder sb = new StringBuilder(
+                groupId.length()
+                        + artifactId.length()
+                        + version.length()
+                        + 2 // the 2 ':'
+                        + (classifier != null ? classifier.length() + 1 : 0) // +1 for the ':'
+                        + packaging.length() + 1); // +1 for the '@'
+        sb.append(groupId).append(':').append(artifactId).append(':').append(version);
+        if (classifier != null) {
+            sb.append(':').append(classifier);
         }
-        segments.add(version);
-        return Joiner.on(':').join(segments).intern();
+        sb.append('@').append(packaging);
+        return sb.toString().intern();
     }
 
     private String computeVersionLessId() {
         StringBuilder sb = new StringBuilder(
                 groupId.length()
                         + artifactId.length()
-                        + 1
-                        + (classifier != null ? classifier.length() + 1 : 0));
+                        + 1 // +1 for the ':'
+                        + (classifier != null ? classifier.length() + 1 : 0)); // +1 for the ':'
         sb.append(groupId).append(':').append(artifactId);
         if (classifier != null) {
             sb.append(':').append(classifier);
