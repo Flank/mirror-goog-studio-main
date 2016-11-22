@@ -374,6 +374,7 @@ public final class GradleTestProject implements TestRule {
                         + "baseVersion = '%s'%n"
                         + "experimentalGradleVersion = '%s'%n"
                         + "supportLibVersion = '%s'%n"
+                        + "testSupportLibVersion = '%s'%n"
                         + "playServicesVersion = '%s'%n"
                         + "supportLibMinSdk = %d%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
@@ -381,6 +382,7 @@ public final class GradleTestProject implements TestRule {
                 Version.ANDROID_TOOLS_BASE_VERSION,
                 GRADLE_EXP_TEST_VERSION,
                 SUPPORT_LIB_VERSION,
+                TEST_SUPPORT_LIB_VERSION,
                 PLAY_SERVICES_VERSION,
                 SUPPORT_LIB_MIN_SDK);
     }
