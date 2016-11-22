@@ -84,12 +84,24 @@ platform_filegroup(
     name = "platforms/android-25",
 )
 
-# This will be needed by the "gradle" module, together with the google_apis add-on.
 platform_filegroup(
     name = "platforms/android-24",
-    visibility = [
-        "//tools/data-binding:__pkg__",
-    ],
+    visibility = ["//tools/data-binding:__pkg__"],
+)
+
+platform_filegroup(
+    name = "platforms/android-23",
+    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+)
+
+platform_filegroup(
+    name = "platforms/android-21",
+    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+)
+
+platform_filegroup(
+    name = "platforms/android-19",
+    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
 )
 
 filegroup(

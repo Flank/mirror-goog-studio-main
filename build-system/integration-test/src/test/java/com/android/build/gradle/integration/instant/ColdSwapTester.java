@@ -46,7 +46,7 @@ class ColdSwapTester {
     }
 
     void testDalvik(Steps steps) throws Exception {
-        doTest(steps, 15, ColdswapMode.AUTO);
+        doTest(steps, 19, ColdswapMode.AUTO);
     }
 
     void testMultiDex(Steps steps) throws Exception {
