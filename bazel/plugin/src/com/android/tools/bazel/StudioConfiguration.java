@@ -24,9 +24,9 @@ import java.util.Map;
 public class StudioConfiguration implements Configuration {
 
     @Override
-    public String nameRule(String rel, String name) {
+    public String nameRule(String pkg, String rel, String name) {
         String prefix = "";
-        if (rel.startsWith("tools/idea")) {
+        if (pkg.equals("tools") && rel.startsWith("tools/idea")) {
             prefix = "idea.";
         } else if (rel.startsWith("tools/base")) {
             prefix = "studio.";

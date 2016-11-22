@@ -15,7 +15,7 @@ iml_module(
         "//tools/base/build-system/builder-model:studio.builder-model",
         "//tools/base/sdk-common:studio.sdk-common",
         "//tools/base/layoutlib-api:studio.layoutlib-api",
-        "//tools:idea.java-psi-api",
+        "//tools/idea/java/java-psi-api",
     ],
     # do not sort: must match IML order
     deps = [
@@ -28,7 +28,7 @@ iml_module(
         "//tools/base/sdklib:studio.sdklib[module]",
         "//tools/base/sdk-common:studio.sdk-common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
-        "//tools:idea.java-psi-api[module]",
+        "//tools/idea/java/java-psi-api[module]",
     ],
 )
 

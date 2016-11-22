@@ -96,7 +96,7 @@ public class GenerateBazelAction extends AnAction {
             String rel = FileUtil.getRelativePath(workspace, bazelModule.getBaseDir());
 
             Package pkg = bazel.findPackage(rel);
-            ImlModule iml = new ImlModule(pkg, config.nameRule(rel, name));
+            ImlModule iml = new ImlModule(pkg, config.nameRule(pkg.getName(), rel, name));
             bazelModule.rule = iml;
 
             // Add all the source and resource paths
