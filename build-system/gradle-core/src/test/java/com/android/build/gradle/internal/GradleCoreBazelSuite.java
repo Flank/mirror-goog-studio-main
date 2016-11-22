@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import com.android.build.gradle.external.gnumake.NdkSampleTest;
 import com.android.testutils.JarTestSuiteRunner;
 import org.junit.runner.RunWith;
 
@@ -24,6 +23,7 @@ import org.junit.runner.RunWith;
 @RunWith(JarTestSuiteRunner.class)
 @JarTestSuiteRunner.ExcludeClasses({
     GradleCoreBazelSuite.class,
-    NdkSampleTest.class,
+    com.android.build.gradle.external.gnumake.NdkSampleTest.class,
+    com.android.build.gradle.internal.dsl.SigningConfigTest.class,  // fails in bazel sandbox
 })
 public class GradleCoreBazelSuite {}
