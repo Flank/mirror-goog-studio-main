@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle
+package com.android.build.gradle.internal.dsl;
 
-import groovy.transform.PackageScope
+import com.android.testutils.internal.CopyOfTester;
+import org.junit.Test;
 
-/**
- * Helper code for DSL tests.
- */
-@PackageScope
-class DslTestUtil {
-    /**
-     * Variants created by default.
-     */
-    static final def DEFAULT_VARIANTS = [
-           "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest"
-    ]
+public class ExternalNativeBuildOptionsTest {
 
-    static int countVariants(Map variants) {
-        variants.values().sum()
+    @Test
+    public void initWith() throws Exception {
+        CopyOfTester.assertAllGettersCalled(
+                ExternalNativeBuildOptions.class,
+                new ExternalNativeBuildOptions(),
+                original -> new ExternalNativeBuildOptions()._initWith(original));
     }
+
 }

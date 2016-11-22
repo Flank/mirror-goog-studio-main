@@ -12,6 +12,7 @@ dependencies {
     compile gradleApi()
 
     testCompile project(':base:project-test-lib')
+    testCompile project(':base:testutils')
     testCompile libs.junit
     testCompile libs.truth
 }

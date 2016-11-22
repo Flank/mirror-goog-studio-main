@@ -19,7 +19,6 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.test.BaseTest
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -27,7 +26,7 @@ import org.gradle.testfixtures.ProjectBuilder
 /**
  * Tests for the public DSL of the Lib plugin ('com.android.library')
  */
-public class LibraryPluginDslTest extends BaseTest {
+public class LibraryPluginDslTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {

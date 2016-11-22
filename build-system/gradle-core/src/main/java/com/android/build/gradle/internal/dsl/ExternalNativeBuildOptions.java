@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-
 import org.gradle.api.Action;
 import org.gradle.internal.reflect.Instantiator;
 
@@ -43,10 +42,15 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
         cmakeOptions = instantiator.newInstance(ExternalNativeCmakeOptions.class);
     }
 
+    public void _initWith(ExternalNativeBuildOptions that) {
+        ndkBuildOptions._initWith(that.getExternalNativeNdkBuildOptions());
+        cmakeOptions._initWith(that.getExternalNativeCmakeOptions());
+    }
+
     @Nullable
     @Override
     public CoreExternalNativeNdkBuildOptions getExternalNativeNdkBuildOptions() {
-        return ndkBuildOptions;
+        return getNdkBuild();
     }
 
     /**
@@ -65,7 +69,7 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
     @Nullable
     @Override
     public CoreExternalNativeCmakeOptions getExternalNativeCmakeOptions() {
-        return cmakeOptions;
+        return getCmake();
     }
 
     /**

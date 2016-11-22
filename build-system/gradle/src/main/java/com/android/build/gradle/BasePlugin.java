@@ -192,7 +192,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     protected abstract int getProjectType();
 
     @VisibleForTesting
-    VariantManager getVariantManager() {
+    public VariantManager getVariantManager() {
         return variantManager;
     }
 

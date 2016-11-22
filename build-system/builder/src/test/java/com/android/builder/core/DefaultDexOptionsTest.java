@@ -24,8 +24,11 @@ public class DefaultDexOptionsTest {
 
     @Test
     public void copyOfHandlesAllFields() throws Exception {
-        DefaultDexOptions instance = new DefaultDexOptions();
-        CopyOfTester.assertAllGettersCalled(DexOptions.class, instance, DefaultDexOptions::copyOf);
+        CopyOfTester.assertAllGettersCalled(
+                DefaultDexOptions.class, new DefaultDexOptions(),
+                original -> {
+                    DefaultDexOptions.copyOf(original);
+                    original.getOptimize(); // Always returns true, call manually.
+                });
     }
-
 }

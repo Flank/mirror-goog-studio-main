@@ -17,19 +17,14 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.signing.DefaultSigningConfig;
-import com.android.prefs.AndroidLocation;
 import com.google.common.base.MoreObjects;
-
+import java.io.File;
+import java.io.Serializable;
 import org.gradle.api.Named;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
-import org.gradle.tooling.BuildException;
-
-import java.io.File;
-import java.io.Serializable;
 
 /**
  * DSL object for configuring signing configs.
@@ -46,14 +41,6 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      */
     public SigningConfig(@NonNull String name) {
         super(name);
-
-        if (BuilderConstants.DEBUG.equals(name)) {
-            try {
-                initDebug();
-            } catch (AndroidLocation.AndroidLocationException e) {
-                throw new BuildException("Failed to get default debug keystore location", e);
-            }
-        }
     }
 
     public SigningConfig initWith(com.android.builder.model.SigningConfig that) {
@@ -63,6 +50,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
         setKeyPassword(that.getKeyPassword());
         setV1SigningEnabled(that.isV1SigningEnabled());
         setV2SigningEnabled(that.isV2SigningEnabled());
+        setStoreType(that.getStoreType());
         return this;
     }
 

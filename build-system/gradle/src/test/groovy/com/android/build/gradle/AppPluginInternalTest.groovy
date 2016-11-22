@@ -17,7 +17,6 @@
 package com.android.build.gradle
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.test.BaseTest
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultBuildType
@@ -26,12 +25,10 @@ import com.android.ide.common.signing.KeystoreHelper
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
-import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
-import static com.android.build.gradle.DslTestUtil.countVariants
 /**
  * Tests for the internal workings of the app plugin ("android")
  */
-public class AppPluginInternalTest extends BaseTest {
+public class AppPluginInternalTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {

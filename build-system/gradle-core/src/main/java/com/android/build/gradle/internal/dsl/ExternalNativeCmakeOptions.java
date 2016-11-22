@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -146,6 +145,14 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
 
     public void targets(@NonNull String ...targets) {
         Collections.addAll(this.targets, targets);
+    }
+
+    public void _initWith(CoreExternalNativeCmakeOptions that) {
+        setArguments(that.getArguments());
+        setcFlags(that.getcFlags());
+        setCppFlags(that.getCppFlags());
+        setAbiFilters(that.getAbiFilters());
+        setTargets(that.getTargets());
     }
 }
 
