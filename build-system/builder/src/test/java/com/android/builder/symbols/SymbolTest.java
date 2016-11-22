@@ -17,12 +17,8 @@
 package com.android.builder.symbols;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import nl.jqno.equalsverifier.Warning;
 import org.junit.Test;
 
 public class SymbolTest {
@@ -105,75 +101,5 @@ public class SymbolTest {
         } catch (IllegalArgumentException e) {
             // Expected
         }
-    }
-
-    @Test
-    public void equalsTest() {
-        Symbol sa = new Symbol("a", "b", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
-
-        assertEquals(sa, sb);
-        assertEquals(sa.hashCode(), sb.hashCode());
-    }
-
-    @Test
-    public void notEqualsClass() {
-        Symbol sa = new Symbol("aa", "b", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
-
-        assertNotEquals(sa, sb);
-    }
-
-    @Test
-    public void notEqualsName() {
-        Symbol sa = new Symbol("a", "bb", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
-
-        assertNotEquals(sa, sb);
-        // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
-    }
-
-    @Test
-    public void notEqualsType() {
-        Symbol sa = new Symbol("a", "b", "cc", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
-
-        assertNotEquals(sa, sb);
-        // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
-    }
-
-    @Test
-    public void notEqualsValue() {
-        Symbol sa = new Symbol("a", "b", "c", "dd");
-        Symbol sb = new Symbol("a", "b", "c", "d");
-
-        assertNotEquals(sa, sb);
-        // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
-    }
-
-    @Test
-    public void equalsNull() {
-        assertFalse(new Symbol("a", "b", "c", "d").equals(null));
-    }
-
-    @Test
-    public void equalsNonSymbol() {
-        assertFalse(new Symbol("a", "b", "c", "d").equals(3));
-    }
-
-    @Test
-    public void equalItself() {
-        Symbol sa = new Symbol("a", "b", "c", "d");
-        assertEquals(sa, sa);
-    }
-
-    @Test
-    public void useEqualsVerifier() {
-        EqualsVerifier.forClass(Symbol.class)
-                .suppress(Warning.STRICT_INHERITANCE)
-                .verify();
     }
 }

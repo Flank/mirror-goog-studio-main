@@ -34,9 +34,7 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
-import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolLoader;
-import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
@@ -869,7 +867,7 @@ public class AndroidBuilder {
         // If the project has libraries, R needs to be created for each library.
         if (aaptConfig.getSourceOutputDir() != null
                 && !aaptConfig.getLibraries().isEmpty()) {
-            SymbolTable fullSymbolValues = null;
+            SymbolLoader fullSymbolValues = null;
 
             // First pass processing the libraries, collecting them by packageName,
             // and ignoring the ones that have the same package name as the application
@@ -887,7 +885,7 @@ public class AndroidBuilder {
             }
 
             // list of all the symbol loaders per package names.
-            Multimap<String, SymbolTable> libMap = ArrayListMultimap.create();
+            Multimap<String, SymbolLoader> libMap = ArrayListMultimap.create();
 
             for (AndroidDependency lib : aaptConfig.getLibraries()) {
                 if (Strings.isNullOrEmpty(appPackageName)) {
@@ -922,18 +920,23 @@ public class AndroidBuilder {
                     // Doing it lazily allow us to support the case where there's no
                     // resources anywhere.
                     if (fullSymbolValues == null) {
-                        fullSymbolValues =
-                                SymbolIo.load(new File(aaptConfig.getSymbolOutputDir(), "R.txt"));
+                        fullSymbolValues = new SymbolLoader(
+                                new File(aaptConfig.getSymbolOutputDir(), "R.txt"), mLogger);
+                        fullSymbolValues.load();
                     }
 
+                    SymbolLoader libSymbols = new SymbolLoader(rFile, mLogger);
+                    libSymbols.load();
+
+
                     // store these symbols by associating them with the package name.
-                    libMap.put(packageName, SymbolIo.load(rFile));
+                    libMap.put(packageName, libSymbols);
                 }
             }
 
             // now loop on all the package name, merge all the symbols to write, and write them
             for (String packageName : libMap.keySet()) {
-                Collection<SymbolTable> symbols = libMap.get(packageName);
+                Collection<SymbolLoader> symbols = libMap.get(packageName);
 
                 if (enforceUniquePackageName && symbols.size() > 1) {
                     String msg = String.format(
@@ -955,7 +958,7 @@ public class AndroidBuilder {
                                 packageName,
                                 fullSymbolValues,
                                 generateFinalIds);
-                for (SymbolTable symbolLoader : symbols) {
+                for (SymbolLoader symbolLoader : symbols) {
                     writer.addSymbolsToWrite(symbolLoader);
                 }
                 writer.write();

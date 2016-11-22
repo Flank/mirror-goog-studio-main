@@ -47,15 +47,15 @@ public class SymbolWriter {
     @NonNull
     private final String mPackageName;
     @NonNull
-    private final List<SymbolTable> mSymbols = Lists.newArrayList();
+    private final List<SymbolLoader> mSymbols = Lists.newArrayList();
     @NonNull
-    private final SymbolTable mValues;
+    private final SymbolLoader mValues;
     private final boolean generateFinalIds;
 
     public SymbolWriter(
             @NonNull String outFolder,
             @NonNull String packageName,
-            @NonNull SymbolTable values,
+            @NonNull SymbolLoader values,
             boolean generateFinalIds) {
         mOutFolder = outFolder;
         mPackageName = packageName;
@@ -63,7 +63,7 @@ public class SymbolWriter {
         this.generateFinalIds = generateFinalIds;
     }
 
-    public void addSymbolsToWrite(@NonNull SymbolTable symbols) {
+    public void addSymbolsToWrite(@NonNull SymbolLoader symbols) {
         mSymbols.add(symbols);
     }
 
@@ -71,10 +71,8 @@ public class SymbolWriter {
     private Table<String, String, Symbol> getAllSymbols() {
         Table<String, String, Symbol> symbols = HashBasedTable.create();
 
-        for (SymbolTable symbolLoader : mSymbols) {
-            for (Symbol s : symbolLoader.allSymbols()) {
-                symbols.put(s.getResourceType(), s.getName(), s);
-            }
+        for (SymbolLoader symbolLoader : mSymbols) {
+            symbols.putAll(symbolLoader.getSymbols());
         }
 
         return symbols;
@@ -85,10 +83,7 @@ public class SymbolWriter {
         ImmutableTable.Builder<String, String, Symbol> symbolBuilder = ImmutableTable.builder();
 
         Table<String, String, Symbol> symbols = getAllSymbols();
-        Table<String, String, Symbol> values = HashBasedTable.create();
-        for (Symbol s : mValues.allSymbols()) {
-            values.put(s.getResourceType(), s.getName(), s);
-        }
+        Table<String, String, Symbol> values = mValues.getSymbols();
 
         Set<String> rowSet = symbols.rowKeySet();
 
