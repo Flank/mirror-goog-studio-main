@@ -44,10 +44,8 @@ public class SymbolIoTest {
 
         SymbolTable table = SymbolIo.read(file);
 
-        SymbolTable expected =
-                SymbolTable.builder()
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
-                        .build();
+        SymbolTable expected = new SymbolTable();
+        expected.add(new Symbol("xml", "authenticator", "int", "0x7f040000"));
         assertEquals(table, expected);
     }
 
@@ -63,38 +61,24 @@ public class SymbolIoTest {
 
         SymbolTable table = SymbolIo.read(file);
 
-        SymbolTable expected =
-                SymbolTable.builder()
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout",
-                                        "int[]",
-                                        "{ 0x7f010000, 0x7f010001 }"))
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_height",
-                                        "int",
-                                        "1"))
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_width",
-                                        "int",
-                                        "0"))
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
-                .build();
+        SymbolTable expected = new SymbolTable();
+        expected.add(
+                new Symbol(
+                        "styleable",
+                        "LimitedSizeLinearLayout",
+                        "int[]",
+                        "{ 0x7f010000, 0x7f010001 }"));
+        expected.add(new Symbol("styleable", "LimitedSizeLinearLayout_max_height", "int", "1"));
+        expected.add(new Symbol("styleable", "LimitedSizeLinearLayout_max_width", "int", "0"));
+        expected.add(new Symbol("xml", "authenticator", "int", "0x7f040000"));
         assertEquals(table, expected);
     }
 
     @Test
     public void writeReadSymbolFile() throws Exception {
-        SymbolTable original =
-                SymbolTable.builder()
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("e", "f", "g", "h"))
-                        .build();
+        SymbolTable original = new SymbolTable();
+        original.add(new Symbol("a", "b", "c", "d"));
+        original.add(new Symbol("e", "f", "g", "h"));
 
         File f = mTemporaryFolder.newFile();
 
@@ -126,11 +110,9 @@ public class SymbolIoTest {
 
     @Test
     public void rGenerationTest1() throws Exception {
-        SymbolTable table =
-                SymbolTable.builder()
-                        .tablePackage("test.pkg")
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
-                        .build();
+        SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
+        table.add(new Symbol("xml", "authenticator", "int", "0x7f040000"));
 
         checkRGeneration(
                 "/* AUTO-GENERATED FILE. DO NOT MODIFY." +
@@ -155,17 +137,15 @@ public class SymbolIoTest {
 
     @Test
     public void rGenerationTest2() throws Exception {
-        SymbolTable table =
-                SymbolTable.builder()
-                        .tableName("Roar")
-                        .tablePackage("test.pkg")
-                        .add(new Symbol("string", "app_name", "int", "0x7f030000"))
-                        .add(new Symbol("string", "lib1", "int", "0x7f030001"))
-                        .add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"))
-                        .add(new Symbol("style", "AppTheme", "int", "0x7f040001"))
-                        .add(new Symbol("drawable", "foobar", "int", "0x7f020000"))
-                        .add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"))
-                        .build();
+        SymbolTable table = new SymbolTable();
+        table.setTableName("Roar");
+        table.setTablePackage("test.pkg");
+        table.add(new Symbol("string", "app_name", "int", "0x7f030000"));
+        table.add(new Symbol("string", "lib1", "int", "0x7f030001"));
+        table.add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"));
+        table.add(new Symbol("style", "AppTheme", "int", "0x7f040001"));
+        table.add(new Symbol("drawable", "foobar", "int", "0x7f020000"));
+        table.add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"));
 
         checkRGeneration(
                 "/* AUTO-GENERATED FILE. DO NOT MODIFY." +
@@ -199,16 +179,14 @@ public class SymbolIoTest {
 
     @Test
     public void rGenerationTestNonFinalIds() throws Exception {
-        SymbolTable table =
-                SymbolTable.builder()
-                        .tablePackage("test.pkg")
-                        .add(new Symbol("string", "app_name", "int", "0x7f030000"))
-                        .add(new Symbol("string", "lib1", "int", "0x7f030001"))
-                        .add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"))
-                        .add(new Symbol("style", "AppTheme", "int", "0x7f040001"))
-                        .add(new Symbol("drawable", "foobar", "int", "0x7f020000"))
-                        .add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"))
-                        .build();
+        SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
+        table.add(new Symbol("string", "app_name", "int", "0x7f030000"));
+        table.add(new Symbol("string", "lib1", "int", "0x7f030001"));
+        table.add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"));
+        table.add(new Symbol("style", "AppTheme", "int", "0x7f040001"));
+        table.add(new Symbol("drawable", "foobar", "int", "0x7f020000"));
+        table.add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"));
 
         checkRGeneration(
                 "/* AUTO-GENERATED FILE. DO NOT MODIFY." +
@@ -242,21 +220,18 @@ public class SymbolIoTest {
 
     @Test
     public void rGenerationTestStyleablesInDefaultPackage() throws Exception {
-        SymbolTable table =
-                SymbolTable.builder()
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "TiledView",
-                                        "int[]",
-                                        "{ 0x7f010000, 0x7f010001, 0x7f010002, "
-                                                + "0x7f010003, 0x7f010004 }"))
-                        .add(new Symbol("styleable", "TiledView_tileName", "int", "2"))
-                        .add(new Symbol("styleable", "TiledView_tilingEnum", "int", "4"))
-                        .add(new Symbol("styleable", "TiledView_tilingMode", "int", "3"))
-                        .add(new Symbol("styleable", "TiledView_tilingProperty", "int", "0"))
-                        .add(new Symbol("styleable", "TiledView_tilingResource", "int", "1"))
-                        .build();
+        SymbolTable table = new SymbolTable();
+        table.add(
+                new Symbol(
+                        "styleable",
+                        "TiledView",
+                        "int[]",
+                        "{ 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004 }"));
+        table.add(new Symbol("styleable", "TiledView_tileName", "int", "2"));
+        table.add(new Symbol("styleable", "TiledView_tilingEnum", "int", "4"));
+        table.add(new Symbol("styleable", "TiledView_tilingMode", "int", "3"));
+        table.add(new Symbol("styleable", "TiledView_tilingProperty", "int", "0"));
+        table.add(new Symbol("styleable", "TiledView_tilingResource", "int", "1"));
 
         checkRGeneration(
                 "/* AUTO-GENERATED FILE. DO NOT MODIFY." +
@@ -285,30 +260,17 @@ public class SymbolIoTest {
 
     @Test
     public void testStyleables2() throws Exception {
-        SymbolTable table =
-                SymbolTable.builder()
-                        .tablePackage("test.pkg")
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout",
-                                        "int[]",
-                                        "{ 0x7f010000, 0x7f010001 }"))
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_height",
-                                        "int",
-                                        "1"))
-                        .add(
-                                new Symbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_width",
-                                        "int",
-                                        "0"))
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
-                        .build();
-
+        SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
+        table.add(
+                new Symbol(
+                        "styleable",
+                        "LimitedSizeLinearLayout",
+                        "int[]",
+                        "{ 0x7f010000, 0x7f010001 }"));
+        table.add(new Symbol("styleable", "LimitedSizeLinearLayout_max_height", "int", "1"));
+        table.add(new Symbol("styleable", "LimitedSizeLinearLayout_max_width", "int", "0"));
+        table.add(new Symbol("xml", "authenticator", "int", "0x7f040000"));
         checkRGeneration(
                 "/* AUTO-GENERATED FILE. DO NOT MODIFY." +
                         " *" +
