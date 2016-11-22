@@ -18,9 +18,7 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
-import java.io.IOException;
 
 /**
  * An install or uninstall operation that affects the current SDK state.
@@ -134,4 +132,19 @@ public interface PackageOperation {
      */
     @NonNull
     String getName();
+
+    /**
+     * If this operation fails, it might be possible to try the install a different way.
+     * Specifically, if we have a
+     * {@link InstallerFactory#setFallbackFactory(InstallerFactory) fallback factory}, this could be
+     * an operation created by that factory.
+     */
+    @Nullable
+    PackageOperation getFallbackOperation();
+
+    /**
+     * Sets the operation used to retry if this operation fails.
+     * @see #getFallbackOperation()
+     */
+    void setFallbackOperation(@Nullable PackageOperation fallback);
 }

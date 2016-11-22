@@ -17,6 +17,7 @@
 package com.android.repository.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
 
 import java.util.List;
@@ -47,6 +48,14 @@ public interface InstallerFactory {
      * uninstallers.
      */
     void setListenerFactory(@NonNull StatusChangeListenerFactory listenerFactory);
+
+    /**
+     * If a factory can't itself create an installer for a given package, it will try again using
+     * the given {@code fallback}, if provided.
+     * If an operation fails, the operation can contain a reference to an operation created by the
+     * fallback factory to facilitate retrying the install.
+     */
+    void setFallbackFactory(@Nullable InstallerFactory fallback);
 
     /**
      * A class that can create a list of appropriate listeners for an installer/uninstaller.
