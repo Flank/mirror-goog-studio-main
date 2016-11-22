@@ -17,6 +17,7 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.dependency.HashCodeUtils;
 import com.google.common.base.Preconditions;
 import java.util.Objects;
@@ -49,6 +50,7 @@ import java.util.regex.Pattern;
  * <p>In practice, symbols do not exist by themselves. They are usually part of a symbol table,
  * but this class is independent of any use.
  */
+@Immutable
 public class Symbol {
 
     /**
