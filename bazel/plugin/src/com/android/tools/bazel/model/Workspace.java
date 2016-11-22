@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.model;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import java.io.File;
@@ -40,6 +41,10 @@ public class Workspace {
 
     public Package getPackage(String name) {
         return packages.get(name);
+    }
+
+    public ImmutableSet<Package> getPackages() {
+        return ImmutableSet.copyOf(packages.values());
     }
 
     public File getDirectory() {

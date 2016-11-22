@@ -70,6 +70,10 @@ public abstract class BazelRule {
         }
     }
 
+    public void suppress() {
+        export = false;
+    }
+
     public boolean isExport() {
         return export;
     }

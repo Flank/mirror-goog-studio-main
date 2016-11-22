@@ -15,6 +15,7 @@
  */
 package com.android.tools.bazel;
 
+import com.android.tools.bazel.model.BazelRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -71,6 +72,11 @@ public class StudioConfiguration implements Configuration {
             "//tools/vendor/google/android-apk",
             "//tools/vendor/google/firebase",
             "//tools/vendor/google/url-assistant");
+    }
+
+    @Override
+    public boolean shouldSuppress(BazelRule rule) {
+      return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/");
     }
 
     @Override
