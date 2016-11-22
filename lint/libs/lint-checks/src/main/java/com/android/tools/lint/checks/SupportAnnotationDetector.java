@@ -1318,9 +1318,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
     }
 
     public static boolean containsRestrictionAnnotation(@NonNull PsiAnnotation[] array) {
+        return containsAnnotation(array, RESTRICT_TO_ANNOTATION);
+    }
+
+    public static boolean containsAnnotation(
+            @NonNull PsiAnnotation[] array,
+            @NonNull String qualifiedName) {
         for (PsiAnnotation annotation : array) {
-            String signature = annotation.getQualifiedName();
-            if (RESTRICT_TO_ANNOTATION.equals(signature)) {
+            if (qualifiedName.equals(annotation.getQualifiedName())) {
                 return true;
             }
         }
