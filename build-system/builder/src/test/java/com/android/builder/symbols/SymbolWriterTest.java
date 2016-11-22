@@ -359,7 +359,7 @@ public class SymbolWriterTest {
             "int drawable foobar 0x7fffffff\n" +
             "int drawable ic_launcher 0x7fffffff\n" +
             "int string app_name 0x7fffffff\n" +
-            "int string lib1 0x7fffffff\n" +
+            "int string lib1 0x7fffffff\n",
 
             // R.txt 2
             "int string app_name 0x80000000\n" +
