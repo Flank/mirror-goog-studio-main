@@ -34,6 +34,7 @@ import com.android.testutils.truth.FileRecordSubject;
 import com.android.testutils.truth.FileSubject;
 import com.android.testutils.truth.FileSubjectFactory;
 import com.android.testutils.truth.Java8OptionalSubject;
+import com.android.testutils.truth.ZipFileSubject;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ListMultimap;
@@ -118,7 +119,15 @@ public class TruthHelper {
 
     @NonNull
     public static ZipFileSubject assertThatZip(@Nullable File file) {
-        return assert_().about(ZipFileSubject.Factory.get()).that(file);
+        return assert_()
+                .about(
+                        new SubjectFactory<ZipFileSubject, File>() {
+                            @Override
+                            public ZipFileSubject getSubject(FailureStrategy fs, File that) {
+                                return new ZipFileSubject(fs, that);
+                            }
+                        })
+                .that(file);
     }
 
     @NonNull
