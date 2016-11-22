@@ -90,7 +90,7 @@ public final class GradleTestProject implements TestRule {
 
     public static final String GRADLE_TEST_VERSION;
     public static final String GRADLE_EXP_TEST_VERSION;
-    public static final String GRADLE_NIGHTLY_VERSION = "3.3-20161020000024+0000";
+    public static final String GRADLE_NIGHTLY_VERSION = "3.3-20161111000054+0000";
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 

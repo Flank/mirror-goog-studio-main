@@ -99,17 +99,21 @@ class ExternalBuildTaskManager {
                 .build());
 
         // add an empty java resources directory for now.
+        // the folder itself doesn't actually matter, but it has to be consistent
+        // for gradle's up-to-date check
         transformManager.addStream(OriginalStream.builder()
                 .addContentType(QualifiedContent.DefaultContentType.RESOURCES)
                 .addScope(QualifiedContent.Scope.PROJECT)
-                .setFolder(Files.createTempDir())
+                .setFolder(new File(project.getBuildDir(), "temp/streams/resources"))
                 .build());
 
         // add an empty native libraries resources directory for now.
+        // the folder itself doesn't actually matter, but it has to be consistent
+        // for gradle's up-to-date check
         transformManager.addStream(OriginalStream.builder()
                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                 .addScope(QualifiedContent.Scope.PROJECT)
-                .setFolder(Files.createTempDir())
+                .setFolder(new File(project.getBuildDir(), "temp/streams/native_libs"))
                 .build());
 
         ExternalBuildGlobalScope globalScope = new ExternalBuildGlobalScope(project);

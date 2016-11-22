@@ -36,7 +36,8 @@ public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, Fi
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasNotBeenChanged() {
-        Pattern pattern = Pattern.compile("(Input|Output) file " + getSubjectPattern());
+        Pattern pattern =
+                Pattern.compile("(Input|Output) property \\S+ file " + getSubjectPattern());
         if (pattern.matcher(gradleOutput).find()) {
             fail("has not been changed.");
         }
@@ -45,7 +46,10 @@ public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, Fi
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasBeenAdded() {
         Pattern pattern =
-                Pattern.compile("Input file " + getSubjectPattern() + " has been added.");
+                Pattern.compile(
+                        "(Input|Output) property \\S+ file "
+                                + getSubjectPattern()
+                                + " has been added.");
         if (!pattern.matcher(gradleOutput).find()) {
             failWithRawMessage(
                     "Not true that a task was executed due to %s being added.",
@@ -56,7 +60,10 @@ public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, Fi
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasChanged() {
         Pattern pattern =
-                Pattern.compile("(Input|Output) file " + getSubjectPattern() + " has changed.");
+                Pattern.compile(
+                        "(Input|Output) property \\S+ file "
+                                + getSubjectPattern()
+                                + " has changed.");
         if (!pattern.matcher(gradleOutput).find()) {
             failWithRawMessage(
                     "Not true that a task was executed due to %s being changed.",
@@ -67,8 +74,10 @@ public class GradleOutputFileSubject extends Subject<GradleOutputFileSubject, Fi
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasBeenRemoved() {
         Pattern pattern =
-                Pattern.compile("(Input|Output) file " + getSubjectPattern()
-                        + " has been removed.");
+                Pattern.compile(
+                        "(Input|Output) property \\S+ file "
+                                + getSubjectPattern()
+                                + " has been removed.");
         if (!pattern.matcher(gradleOutput).find()) {
             failWithRawMessage(
                     "Not true that a task was executed due to %s being removed.",
