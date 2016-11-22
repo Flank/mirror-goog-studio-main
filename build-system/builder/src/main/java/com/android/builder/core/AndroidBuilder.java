@@ -877,7 +877,7 @@ public class AndroidBuilder {
             }
         }
 
-        // Compute the full symbol table.
+        // Compute the full symbol table and use appPackageName as the table's package.
         File symbolOutputDir = aaptConfig.getSymbolOutputDir();
         if (symbolOutputDir == null) {
             throw new IOException("No symbol output dir, cannot read R.txt");
@@ -891,8 +891,9 @@ public class AndroidBuilder {
                             + "' does not exist");
         }
 
-        SymbolTable fullSymbolValues = SymbolIo.read(symbolOutputFile);
-        fullSymbolValues.setTablePackage(appPackageName);
+        SymbolTable fullSymbolValues =
+                SymbolIo.read(symbolOutputFile)
+                        .rename(appPackageName, SymbolTable.DEFAULT_NAME);
 
         // If the project has no libraries, then there is nothing more to do.
         if (aaptConfig.getLibraries().isEmpty()) {
@@ -939,17 +940,18 @@ public class AndroidBuilder {
             }
 
             SymbolTable libTable = SymbolIo.read(rFile);
-            SymbolTable libTableFiltered = fullSymbolValues.filter(libTable);
-            libTableFiltered.setTableName(libTable.getTableName());
-            libTableFiltered.setTablePackage(packageName);
+            libTable =
+                    fullSymbolValues
+                            .filter(libTable)
+                            .rename(libTable.getTablePackage(), libTable.getTableName());
 
-            String key = mapper.apply(libTableFiltered);
+            String key = mapper.apply(libTable);
             SymbolTable existing = tablesForLibraries.get(key);
             if (existing != null) {
-                SymbolTable.merge(libTableFiltered, Collections.singletonList(existing));
+                libTable = existing.merge(libTable);
             }
 
-            tablesForLibraries.put(key, libTableFiltered);
+            tablesForLibraries.put(key, libTable);
         }
 
         // Figure out whether we should be generating final IDs.
