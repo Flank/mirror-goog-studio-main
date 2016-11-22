@@ -22,9 +22,6 @@ tools:{package.xml,mksdcard*,support/*.txt}
 # Subset of docs happened to be used by tests
 docs:reference/android/{*,content/*}
 
-# for gfxtrace UI tests
-extras;android;gapid;3
-
 # Extra components picked to pass various AndroidGradleTestCase tests
 # TemplateTest uses a lot of them
 extras;android;m2repository:**{package.xml,/databinding/*/1.3.1/**,/animated-vector-drawable/25.0.0/**,/appcompat-v7/25.0.0/**,/constraint/**,/design/25.0.0/**,/gridlayout-v7/25.0.0/**,/recyclerview-v7/25.0.0/**,/support-annotations/25.0.0/**,/support-compat/25.0.0/**,/support-core-ui/25.0.0/**,/support-core-utils/25.0.0/**,/support-fragment/25.0.0/**,/support-media-compat/25.0.0/**,/support-v13/25.0.0/**,/support-v4/25.0.0/**,/support-vector-drawable/25.0.0/**,/support/transition/25.0.0/**,/support/percent/25.0.0/**,/leanback-v17/25.0.0/**,/espresso-core/2.2.2/**,/espresso-idling-resource/2.2.2/**,/test/exposed-instrumentation-api-publish/0.5/**,/test/rules/0.5/**,/test/runner/0.5/**,/testing-support-lib/0.1/**,/multidex*/1.0.1/**}
