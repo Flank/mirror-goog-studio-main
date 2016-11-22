@@ -7,8 +7,8 @@ apply plugin: 'com.android.library'
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    compile 'com.android.support:support-annotations:+'
-    compile 'com.android.support:support-v4:+'
+    compile "com.android.support:support-annotations:${project.supportLibVersion}"
+    compile "com.android.support:support-v4:${project.supportLibVersion}"
 }
 
 android {
