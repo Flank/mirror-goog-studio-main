@@ -5152,6 +5152,35 @@ public class ApiDetectorTest extends AbstractCheckTest {
         );
     }
 
+    public void testInnerClassAccess() throws Exception {
+        // "Calling new methods on older version" doesn't work with inner classes
+        // Regression test for https://code.google.com/p/android/issues/detail?id=228035
+        checkApiCheck(""
+                        + "src/pkg/my/myapplication/Fragment.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getContext [NewApi]\n"
+                        + "            Context c1 = getContext();\n"
+                        + "                         ~~~~~~~~~~\n"
+                        + "src/pkg/my/myapplication/Fragment.java:9: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getContext [NewApi]\n"
+                        + "            Context c2 = Fragment.this.getContext();\n"
+                        + "                                       ~~~~~~~~~~\n"
+                        + "2 errors, 0 warnings\n",
+                "No warnings.",
+
+                manifest().minSdk(15),
+                java(""
+                        + "package pkg.my.myapplication;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "\n"
+                        + "public class Fragment extends android.app.Fragment {\n"
+                        + "    class MyClass {\n"
+                        + "        public void test() {\n"
+                        + "            Context c1 = getContext();\n"
+                        + "            Context c2 = Fragment.this.getContext();\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"));
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
