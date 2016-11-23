@@ -46,7 +46,7 @@ public class AntennaPodInstantRunTest {
     private GradleTestProject project;
 
     @Before
-    public void updateToLatestGradleAndSetOptions() throws IOException {
+    public void updateToLatestVersionsAndSetOptions() throws IOException {
         project = mainProject.getSubproject("AntennaPod");
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
@@ -77,6 +77,25 @@ public class AntennaPodInstantRunTest {
                     "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                             + "\" // Updated by test");
         }
+
+        // Update the support lib and fix resulting issue:
+        List<File> filesWithSupportLibVersion =
+                ImmutableList.of(
+                        project.getBuildFile(),
+                        mainProject.file("afollestad/core/build.gradle"),
+                        mainProject.file("afollestad/commons/build.gradle"));
+
+        for (File buildFile : filesWithSupportLibVersion) {
+            TestFileUtils.searchAndReplace(
+                    buildFile,
+                    "23.1.1",
+                    GradleTestProject.SUPPORT_LIB_VERSION);
+        }
+
+        TestFileUtils.searchAndReplace(
+                mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),
+                "abc_ic_ab_back_mtrl_am_alpha",
+                "abc_ic_ab_back_material");
     }
 
     @Test
