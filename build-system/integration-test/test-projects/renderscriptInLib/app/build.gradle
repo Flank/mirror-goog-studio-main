@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion rootProject.oldSdkForRenderscript
+    compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
-        renderscriptTargetApi = 11
+        minSdkVersion 17
+        renderscriptTargetApi = 17
     }
 }
 
