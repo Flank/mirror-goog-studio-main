@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.NullLogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
@@ -57,8 +56,8 @@ public class SymbolWriterTest {
         File file = File.createTempFile(getClass().getSimpleName(), "txt");
         file.deleteOnExit();
         Files.write(rValues, file, Charsets.UTF_8);
-        // 2. load symbol from temp file.
-        SymbolTable symbolValues = SymbolIo.load(file);
+        // 2. read symbol from temp file.
+        SymbolTable symbolValues = SymbolIo.read(file);
         Table<String, String, Symbol> values = HashBasedTable.create();
         for (Symbol s : symbolValues.allSymbols()) {
             values.put(s.getResourceType(), s.getName(), s);
@@ -74,8 +73,8 @@ public class SymbolWriterTest {
             file = File.createTempFile(getClass().getSimpleName(), "txt");
             file.deleteOnExit();
             Files.write(rText, file, Charsets.UTF_8);
-            // 2. load symbol from temp file.
-            SymbolTable symbol = SymbolIo.load(file);
+            // 2. read symbol from temp file.
+            SymbolTable symbol = SymbolIo.read(file);
             symbolList.add(symbol);
         }
 

@@ -35,7 +35,6 @@ import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
 import com.android.builder.symbols.SymbolIo;
-import com.android.builder.symbols.SymbolLoader;
 import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
@@ -918,16 +917,16 @@ public class AndroidBuilder {
                 // if the library has no resource, this file won't exist.
                 if (rFile.isFile()) {
 
-                    // load the full values if that's not already been done.
+                    // read the full values if that's not already been done.
                     // Doing it lazily allow us to support the case where there's no
                     // resources anywhere.
                     if (fullSymbolValues == null) {
                         fullSymbolValues =
-                                SymbolIo.load(new File(aaptConfig.getSymbolOutputDir(), "R.txt"));
+                                SymbolIo.read(new File(aaptConfig.getSymbolOutputDir(), "R.txt"));
                     }
 
                     // store these symbols by associating them with the package name.
-                    libMap.put(packageName, SymbolIo.load(rFile));
+                    libMap.put(packageName, SymbolIo.read(rFile));
                 }
             }
 
