@@ -21,10 +21,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.common.collect.ImmutableCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Set;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Test;
@@ -33,8 +33,8 @@ public class SymbolTableTest {
 
     @Test
     public void equalEmptyTable() {
-        SymbolTable t0 = new SymbolTable();
-        SymbolTable t1 = new SymbolTable();
+        SymbolTable t0 = SymbolTable.builder().build();
+        SymbolTable t1 = SymbolTable.builder().build();
 
         assertEquals(t0, t1);
         assertEquals(t0.hashCode(), t1.hashCode());
@@ -42,11 +42,8 @@ public class SymbolTableTest {
 
     @Test
     public void equalNonEmptyTable() {
-        SymbolTable t0 = new SymbolTable();
-        SymbolTable t1 = new SymbolTable();
-
-        t0.add(new Symbol("1", "2", "3", "4"));
-        t1.add(new Symbol("1", "2", "3", "4"));
+        SymbolTable t0 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
+        SymbolTable t1 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
 
         assertEquals(t0, t1);
         assertEquals(t0.hashCode(), t1.hashCode());
@@ -54,11 +51,8 @@ public class SymbolTableTest {
 
     @Test
     public void nonEqualTable() {
-        SymbolTable t0 = new SymbolTable();
-        SymbolTable t1 = new SymbolTable();
-
-        t0.add(new Symbol("1", "2", "3", "4"));
-        t1.add(new Symbol("1", "2", "3", "5"));
+        SymbolTable t0 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
+        SymbolTable t1 = SymbolTable.builder().add(new Symbol("1", "2", "3", "5")).build();
 
         assertNotEquals(t0, t1);
         assertNotEquals(t0.hashCode(), t1.hashCode());
@@ -66,16 +60,13 @@ public class SymbolTableTest {
 
     @Test
     public void tableNameRequiredForEquality() {
-        SymbolTable t0 = new SymbolTable();
-        SymbolTable t1 = new SymbolTable();
-
-        t0.setTableName("foo");
-        t1.setTableName("bar");
+        SymbolTable t0 = SymbolTable.builder().tableName("foo").build();
+        SymbolTable t1 = SymbolTable.builder().tableName("bar").build();
 
         assertNotEquals(t0, t1);
         assertNotEquals(t0.hashCode(), t1.hashCode());
 
-        t1.setTableName("foo");
+        t1 = SymbolTable.builder().tableName("foo").build();
 
         assertEquals(t0, t1);
         assertEquals(t0.hashCode(), t1.hashCode());
@@ -83,16 +74,13 @@ public class SymbolTableTest {
 
     @Test
     public void tablePackageRequiredForEquality() {
-        SymbolTable t0 = new SymbolTable();
-        SymbolTable t1 = new SymbolTable();
-
-        t0.setTablePackage("foo");
-        t1.setTablePackage("bar");
+        SymbolTable t0 = SymbolTable.builder().tablePackage("foo").build();
+        SymbolTable t1 = SymbolTable.builder().tablePackage("bar").build();
 
         assertNotEquals(t0, t1);
         assertNotEquals(t0.hashCode(), t1.hashCode());
 
-        t1.setTablePackage("foo");
+        t1 = SymbolTable.builder().tablePackage("foo").build();
 
         assertEquals(t0, t1);
         assertEquals(t0.hashCode(), t1.hashCode());
@@ -100,12 +88,12 @@ public class SymbolTableTest {
 
     @Test
     public void readTableSymbols() {
-        SymbolTable t = new SymbolTable();
+        SymbolTable t = SymbolTable.builder().build();
 
-        Set<Symbol> syms = t.allSymbols();
+        ImmutableCollection<Symbol> syms = t.allSymbols();
         assertEquals(0, syms.size());
 
-        t.add(new Symbol("x", "y", "z", "w"));
+        t = SymbolTable.builder().add(new Symbol("x", "y", "z", "w")).build();
         syms = t.allSymbols();
         assertEquals(1, syms.size());
         assertTrue(syms.contains(new Symbol("x", "y", "z", "w")));
@@ -121,22 +109,20 @@ public class SymbolTableTest {
 
     @Test
     public void setValidName() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
+        SymbolTable t = SymbolTable.builder().tableName("foo").build();
         assertEquals("foo", t.getTableName());
     }
 
     @Test
     public void defaultTableName() {
-        SymbolTable t = new SymbolTable();
+        SymbolTable t = SymbolTable.builder().build();
         assertEquals("R", t.getTableName());
     }
 
     @Test
     public void setInvalidName() {
-        SymbolTable t = new SymbolTable();
         try {
-            t.setTableName("f o o");
+            SymbolTable.builder().tableName("f o o");
             fail();
         } catch (IllegalArgumentException e) {
             // Expected.
@@ -145,16 +131,14 @@ public class SymbolTableTest {
 
     @Test
     public void setValidPackage() {
-        SymbolTable t = new SymbolTable();
-        t.setTablePackage("a.bb.ccc");
+        SymbolTable t = SymbolTable.builder().tablePackage("a.bb.ccc").build();
         assertEquals("a.bb.ccc", t.getTablePackage());
     }
 
     @Test
     public void setInvalidPackage() {
-        SymbolTable t = new SymbolTable();
         try {
-            t.setTablePackage("a+b");
+            SymbolTable.builder().tablePackage("a+b");
             fail();
         } catch (IllegalArgumentException e) {
             // Expected.
@@ -163,120 +147,118 @@ public class SymbolTableTest {
 
     @Test
     public void defaultTablePackage() {
-        SymbolTable t = new SymbolTable();
+        SymbolTable t = SymbolTable.builder().build();
         assertEquals("", t.getTablePackage());
     }
 
     @Test
     public void mergeNoTables() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
-        t.setTablePackage("bar");
-        SymbolTable.merge(t, new ArrayList<>());
-        assertEquals("foo", t.getTableName());
-        assertEquals("bar", t.getTablePackage());
+        SymbolTable t = SymbolTable.merge(new ArrayList<>());
+        assertEquals("R", t.getTableName());
+        assertEquals("", t.getTablePackage());
     }
 
     @Test
     public void mergeOneTable() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
-        t.setTablePackage("bar");
+        SymbolTable t =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .build();
 
-        SymbolTable m0 = new SymbolTable();
-        m0.setTableName("duh");
-        m0.setTablePackage("duhduh");
-        m0.add(new Symbol("a", "b", "c", "d"));
-        SymbolTable.merge(t, Collections.singletonList(m0));
+        SymbolTable m = SymbolTable.merge(Collections.singletonList(t));
 
-        SymbolTable expected = new SymbolTable();
-        expected.setTableName("foo");
-        expected.setTablePackage("bar");
-        expected.add(new Symbol("a", "b", "c", "d"));
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .build();
 
-        assertEquals(expected, t);
+        assertEquals(expected, m);
     }
 
     @Test
     public void mergeThreeTables() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
-        t.setTablePackage("bar");
+        SymbolTable m0 =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .build();
 
-        SymbolTable m0 = new SymbolTable();
-        m0.setTableName("duh");
-        m0.setTablePackage("duhduh");
-        m0.add(new Symbol("a", "b", "c", "d"));
+        SymbolTable m1 =
+                SymbolTable.builder()
+                        .tableName("mu")
+                        .tablePackage("muu")
+                        .add(new Symbol("a", "b", "c1", "d1"))
+                        .add(new Symbol("a2", "b2", "c2", "d2"))
+                        .build();
 
-        SymbolTable m1 = new SymbolTable();
-        m1.setTableName("mu");
-        m1.setTablePackage("muu");
-        m1.add(new Symbol("a", "b", "c1", "d1"));
-        m1.add(new Symbol("a2", "b2", "c2", "d2"));
+        SymbolTable m2 =
+                SymbolTable.builder()
+                        .tableName("moo")
+                        .tablePackage("moo")
+                        .add(new Symbol("a", "b", "c3", "d3"))
+                        .add(new Symbol("a2", "b2", "c4", "d4"))
+                        .add(new Symbol("a5", "b5", "c5", "d5"))
+                        .build();
 
-        SymbolTable m2 = new SymbolTable();
-        m2.setTableName("moo");
-        m2.setTablePackage("moo");
-        m2.add(new Symbol("a", "b", "c3", "d3"));
-        m2.add(new Symbol("a2", "b2", "c4", "d4"));
-        m2.add(new Symbol("a5", "b5", "c5", "d5"));
+        SymbolTable r = SymbolTable.merge(Arrays.asList(m0, m1, m2));
 
-        SymbolTable.merge(t, Arrays.asList(m0, m1, m2));
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("a2", "b2", "c2", "d2"))
+                        .add(new Symbol("a5", "b5", "c5", "d5"))
+                        .build();
 
-        SymbolTable expected = new SymbolTable();
-        expected.setTableName("foo");
-        expected.setTablePackage("bar");
-        expected.add(new Symbol("a", "b", "c", "d"));
-        expected.add(new Symbol("a2", "b2", "c2", "d2"));
-        expected.add(new Symbol("a5", "b5", "c5", "d5"));
-
-        assertEquals(expected, t);
-    }
-
-    @Test
-    public void preexistingSymbolAreKeptDuringMerge() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
-        t.setTablePackage("bar");
-        t.add(new Symbol("a", "b", "c", "d"));
-
-        SymbolTable m0 = new SymbolTable();
-        m0.setTableName("N");
-        m0.setTablePackage("p");
-        m0.add(new Symbol("a", "b", "c", "dx"));
-        m0.add(new Symbol("a1", "b1", "c", "dy"));
-        SymbolTable.merge(t, Collections.singletonList(m0));
-
-        SymbolTable expected = new SymbolTable();
-        expected.setTableName("foo");
-        expected.setTablePackage("bar");
-        expected.add(new Symbol("a", "b", "c", "d"));
-        expected.add(new Symbol("a1", "b1", "c", "dy"));
-
-        assertEquals(expected, t);
+        assertEquals(expected, r);
     }
 
     @Test
     public void tableFilter() {
-        SymbolTable t = new SymbolTable();
-        t.setTableName("foo");
-        t.setTablePackage("bar");
-        t.add(new Symbol("a", "b", "c", "d"));
-        t.add(new Symbol("e", "f", "g", "h"));
+        SymbolTable t =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("e", "f", "g", "h"))
+                        .build();
 
-        SymbolTable f = new SymbolTable();
-        f.setTableName("blah");
-        f.setTablePackage("bleh");
-        f.add(new Symbol("i", "j", "k", "l"));
-        f.add(new Symbol("a", "b", "m", "n"));
+        SymbolTable f =
+                SymbolTable.builder()
+                        .tableName("blah")
+                        .tablePackage("bleh")
+                        .add(new Symbol("i", "j", "k", "l"))
+                        .add(new Symbol("a", "b", "m", "n"))
+                        .build();
 
         SymbolTable r = t.filter(f);
 
-        SymbolTable expected = new SymbolTable();
-        expected.setTableName("foo");
-        expected.setTablePackage("bar");
-        expected.add(new Symbol("a", "b", "c", "d"));
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .tableName("foo")
+                        .tablePackage("bar")
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .build();
 
         assertEquals(expected, r);
+    }
+
+    @Test
+    public void renameTest() {
+        SymbolTable t = SymbolTable.builder().add(new Symbol("a", "b", "c", "d")).build();
+        SymbolTable r = t.rename("x", "y");
+        SymbolTable e =
+                SymbolTable.builder()
+                        .add(new Symbol("a", "b", "c", "d"))
+                        .tableName("y")
+                        .tablePackage("x")
+                        .build();
+        assertEquals(e, r);
     }
 }
