@@ -96,7 +96,7 @@ public class AtomBundleSubject extends AbstractAndroidSubject<AtomBundleSubject>
     @Nullable
     private DexBackedClassDef getDexClass(
             @NonNull final String className, @NonNull final ClassFileScope scope)
-            throws IOException, ProcessException {
+            throws IOException {
         checkClassName(className);
 
         switch (scope) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.truth;
+package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.FileSubject;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -214,24 +212,26 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
     /**
      * Perform an action on a Zip file entry. The zip file entry is extracted from the zip file
      * passed to the {@link #doOnZipEntry(byte[])}.
+     *
      * @param <T> the expected return typ
      */
-    interface ZipEntryAction<T> {
+    public interface ZipEntryAction<T> {
 
         /**
-         * Perform an action on zip entry extracted to a temporary file. The file will only be
-         * valid during the execution of the method.
+         * Perform an action on zip entry extracted to a temporary file. The file will only be valid
+         * during the execution of the method.
+         *
          * @param entry the zip entry content.
          * @return a result or null if no result could be provided.
-         * @throws ProcessException
          */
         @Nullable
-        T doOnZipEntry(byte[] entry) throws ProcessException;
+        T doOnZipEntry(byte[] entry);
     }
 
     /**
-     * Convenience method to extract an entry from the current zip file,
-     * and run a {@link ZipEntryAction} on it.
+     * Convenience method to extract an entry from the current zip file, and run a {@link
+     * ZipEntryAction} on it.
+     *
      * @param path the entry name in the subject's zip.
      * @param action the action to run on the extracted entry.
      * @param <T> the expected result type
@@ -239,8 +239,7 @@ public abstract class AbstractZipSubject<T extends Subject<T, File>> extends Sub
      */
     @Nullable
     protected <T> T extractEntryAndRunAction(
-            @NonNull String path, @NonNull ZipEntryAction<T> action)
-            throws IOException, ProcessException {
+            @NonNull String path, @NonNull ZipEntryAction<T> action) throws IOException {
         try (ZipFile zipFile = new ZipFile(getSubject());
              InputStream classDexStream = getInputStream(zipFile, path)) {
             if (classDexStream == null) {

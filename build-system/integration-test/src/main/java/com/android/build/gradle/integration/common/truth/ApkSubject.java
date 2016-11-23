@@ -38,6 +38,7 @@ import com.google.common.truth.SubjectFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -218,7 +219,7 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
     protected static <T> ZipEntryAction<T> allEntriesAction(final ZipEntryAction<T> action) {
         return entry -> {
             try (ZipInputStream zipInputStream =
-                         new ZipInputStream(new ByteArrayInputStream(entry))) {
+                    new ZipInputStream(new ByteArrayInputStream(entry))) {
                 while (zipInputStream.getNextEntry() != null) {
                     byte[] entryBytes = ByteStreams.toByteArray(zipInputStream);
                     T result = action.doOnZipEntry(entryBytes);
@@ -227,7 +228,7 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
                     }
                 }
             } catch (IOException e) {
-                throw new ProcessException(e);
+                throw new UncheckedIOException(e);
             }
             return null;
         };
@@ -251,8 +252,8 @@ public class ApkSubject extends AbstractAndroidSubject<ApkSubject> {
 
     @Nullable
     private DexBackedClassDef getDexClass(
-            @NonNull final String className,
-            @NonNull final ClassFileScope scope) throws IOException, ProcessException {
+            @NonNull String className, @NonNull final ClassFileScope scope)
+            throws IOException {
         checkClassName(className);
 
         switch (scope) {
