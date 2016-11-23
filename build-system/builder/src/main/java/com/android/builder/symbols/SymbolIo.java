@@ -53,7 +53,7 @@ public final class SymbolIo {
     public static SymbolTable read(@NonNull File file) throws IOException {
         List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
 
-        SymbolTable table = new SymbolTable();
+        SymbolTable.Builder table = SymbolTable.builder();
 
         int lineIndex = 1;
         String line = null;
@@ -84,7 +84,7 @@ public final class SymbolIo {
                     e);
         }
 
-        return table;
+        return table.build();
     }
 
     /**
