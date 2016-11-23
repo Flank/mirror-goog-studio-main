@@ -92,13 +92,11 @@ public class SymbolIoTest {
             @NonNull String expected,
             @NonNull Path path,
             @NonNull SymbolTable table,
-            @NonNull String pkgName,
-            @NonNull String clsName,
             boolean finalIds)
             throws Exception {
         File directory = mTemporaryFolder.newFolder();
 
-        SymbolIo.exportToJava(table, directory, pkgName, clsName, finalIds);
+        SymbolIo.exportToJava(table, directory, finalIds);
         File result = directory.toPath().resolve(path).toFile();
         assertTrue(result.isFile());
 
@@ -113,6 +111,7 @@ public class SymbolIoTest {
     @Test
     public void rGenerationTest1() throws Exception {
         SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
         table.add(new Symbol("xml", "authenticator", "int", "0x7f040000"));
 
         checkRGeneration(
@@ -133,14 +132,14 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 true);
     }
 
     @Test
     public void rGenerationTest2() throws Exception {
         SymbolTable table = new SymbolTable();
+        table.setTableName("Roar");
+        table.setTablePackage("test.pkg");
         table.add(new Symbol("string", "app_name", "int", "0x7f030000"));
         table.add(new Symbol("string", "lib1", "int", "0x7f030001"));
         table.add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"));
@@ -175,14 +174,13 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "Roar.java"),
                 table,
-                "test.pkg",
-                "Roar",
                 true);
     }
 
     @Test
     public void rGenerationTestNonFinalIds() throws Exception {
         SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
         table.add(new Symbol("string", "app_name", "int", "0x7f030000"));
         table.add(new Symbol("string", "lib1", "int", "0x7f030001"));
         table.add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"));
@@ -217,8 +215,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 false);
     }
 
@@ -259,14 +255,13 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("R.java"),
                 table,
-                "",
-                "R",
                 true);
     }
 
     @Test
     public void testStyleables2() throws Exception {
         SymbolTable table = new SymbolTable();
+        table.setTablePackage("test.pkg");
         table.add(
                 new Symbol(
                         "styleable",
@@ -300,8 +295,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 true);
     }
 }

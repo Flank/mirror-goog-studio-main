@@ -28,12 +28,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
-import javax.lang.model.SourceVersion;
 
 /**
  * Reads and writes symbol tables to files.
@@ -123,8 +120,6 @@ public final class SymbolIo {
      *
      * @param table the table to export
      * @param directory the directory where the R source should be generated
-     * @param packageName the name of the package
-     * @param className the name of R class
      * @param finalIds should the generated IDs be final?
      * @return the generated file
      * @throws IOException failed to generate the source
@@ -133,28 +128,21 @@ public final class SymbolIo {
     public static File exportToJava(
             @NonNull SymbolTable table,
             @NonNull File directory,
-            @NonNull String packageName,
-            @NonNull String className,
             boolean finalIds) throws IOException {
         Preconditions.checkArgument(directory.isDirectory());
-        Preconditions.checkArgument(SourceVersion.isIdentifier(className));
-        if (!packageName.isEmpty()) {
-            Arrays.asList(packageName.split("\\."))
-                    .forEach(p -> Preconditions.checkArgument(SourceVersion.isIdentifier(p)));
-        }
 
         /*
          * Build the path to the class file, creating any needed directories.
          */
         Splitter splitter = Splitter.on('.');
-        Iterable<String> directories = splitter.split(packageName);
+        Iterable<String> directories = splitter.split(table.getTablePackage());
         File file = directory;
         for (String d : directories) {
             file = new File(file, d);
         }
 
         FileUtils.mkdirs(file);
-        file = new File(file, className + SdkConstants.DOT_JAVA);
+        file = new File(file, table.getTableName() + SdkConstants.DOT_JAVA);
 
         /*
          * Identify all resource types. We use a sorted set because we want to have resource types
@@ -180,12 +168,12 @@ public final class SymbolIo {
             pw.println(" * should not be modified by hand.");
             pw.println(" */");
 
-            if (!packageName.isEmpty()) {
-                pw.println("package " + packageName + ";");
+            if (!table.getTablePackage().isEmpty()) {
+                pw.println("package " + table.getTablePackage() + ";");
             }
 
             pw.println();
-            pw.println("public final class " + className + " {");
+            pw.println("public final class " + table.getTableName() + " {");
 
             for (String rt : resourceTypes) {
                 pw.println("    public static final class " + rt + " {");
