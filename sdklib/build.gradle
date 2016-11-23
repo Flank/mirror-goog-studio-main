@@ -171,6 +171,22 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     }
 }
 
+task initSdkForConnectedTests(type: JavaExec, dependsOn: initSdkForTests) {
+    standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
+    main = "com.android.sdklib.tool.SdkManagerCli"
+
+    args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
+            '--channel=3',
+            '--verbose',
+            // When you remove an entry below, please add it to removeSdkComponents above.
+            'system-images;android-23;google_apis;x86',
+            'system-images;android-21;google_apis;x86',
+            'system-images;android-19;google_apis;x86',
+            'system-images;android-17;google_apis;x86',
+    ]
+}
+
 def offline_sdk_targets = [["macosx", "64", "darwin-x86_64"],
                            ["macosx", "32", "darwin-x86"],
                            ["windows", "64", "windows-x86_64"],
