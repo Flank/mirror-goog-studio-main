@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel;
 
+import com.android.tools.bazel.model.BazelRule;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +28,8 @@ interface Configuration {
     List<String> getAdditionalImports();
 
     List<String> getLabelsToExport();
+
+    boolean shouldSuppress(BazelRule rule);
 
     Map<String, String> getCopySpec();
 }

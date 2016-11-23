@@ -261,6 +261,15 @@ public class GenerateBazelAction extends AnAction {
             bazel.getPackage(label.pkg).getRule(label.target).setExport();
         }
 
+        // But respect political boundaries.
+        for (Package pkg : bazel.getPackages()) {
+            for (BazelRule rule : pkg.getRules()) {
+              if (config.shouldSuppress(rule)) {
+                rule.suppress();
+              }
+            }
+        }
+
         progress.append("Saving BUILD files...\n");
         bazel.generate(progress);
 

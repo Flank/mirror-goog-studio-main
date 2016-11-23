@@ -19,6 +19,7 @@ package com.android.tools.bazel.model;
 import com.android.tools.bazel.parser.BuildParser;
 import com.android.tools.bazel.parser.Tokenizer;
 import com.android.tools.bazel.parser.ast.Build;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.intellij.openapi.util.io.FileUtil;
@@ -93,6 +94,10 @@ public class Package {
 
     public BazelRule getRule(String name) {
         return rules.get(name.toLowerCase());
+    }
+
+    public ImmutableSet<BazelRule> getRules() {
+        return ImmutableSet.copyOf(rules.values());
     }
 
     @NotNull
