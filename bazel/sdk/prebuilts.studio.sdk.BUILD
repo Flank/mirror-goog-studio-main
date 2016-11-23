@@ -25,6 +25,7 @@ filegroup(
         "//tools/adt/idea/android-tests:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/base/build-system/builder:__pkg__",
+        "//tools/base/build-system/gradle-core:__pkg__",
     ],
 )
 

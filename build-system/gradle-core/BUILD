@@ -69,7 +69,7 @@ java_test(
     name = "tests",
     srcs = glob(["src/test/java/**/*.java"]),
     data = [
-        "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:build-tools/25.0.0",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
