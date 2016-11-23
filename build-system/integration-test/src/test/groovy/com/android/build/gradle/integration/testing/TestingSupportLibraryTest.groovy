@@ -26,9 +26,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
-
 /**
  * Test project to cover the Android Gradle plugin's interaction with the testing support library.
  */
@@ -114,8 +111,9 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     dependencies {
-        androidTestCompile 'com.android.support.test:runner:0.3'
-        androidTestCompile 'com.android.support.test:rules:0.3'
+        androidTestCompile 'com.android.support:support-annotations:$GradleTestProject.SUPPORT_LIB_VERSION'
+        androidTestCompile 'com.android.support.test:runner:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
+        androidTestCompile 'com.android.support.test:rules:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
     }
 }
 """

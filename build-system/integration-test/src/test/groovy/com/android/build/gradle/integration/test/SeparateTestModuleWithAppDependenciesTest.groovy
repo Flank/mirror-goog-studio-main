@@ -49,6 +49,7 @@ android {
 }
 dependencies {
     compile 'com.google.android.gms:play-services-base:$GradleTestProject.PLAY_SERVICES_VERSION'
+    compile 'com.android.support:support-v4:$GradleTestProject.SUPPORT_LIB_VERSION'
 }
         """
 
