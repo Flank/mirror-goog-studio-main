@@ -70,6 +70,7 @@ public class StudioConfiguration implements Configuration {
             "//tools/studio/google/cloud/testing/firebase-testing",
             "//tools/studio/google/cloud/tools/android-studio-plugin:google-cloud-tools-as",
             "//tools/vendor/google/android-apk",
+            "//tools/vendor/google/android-ndk",
             "//tools/vendor/google/firebase",
             "//tools/vendor/google/url-assistant",
             "//tools/vendor/intellij/cidr:cidr-common_and_others");
