@@ -21,15 +21,11 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.ParallelParameterized;
-import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.repository.Revision;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +36,7 @@ import org.junit.runners.Parameterized;
  * Test case that executes "standard" gradle tasks in all our tests projects.
  *
  * <p>You can run only one test like this:
+ *
  * <p>{@code ./gradlew :base:integration-test:automaticTest --tests=*[abiPureSplits]}
  */
 @RunWith(ParallelParameterized.class)
@@ -57,7 +54,7 @@ public class CheckAll {
                 continue;
             }
 
-            parameters.add(new Object[]{testProject.getName()});
+            parameters.add(new Object[] {testProject.getName()});
         }
 
         return parameters;
@@ -74,17 +71,15 @@ public class CheckAll {
         return buildGradle.exists() || settingsGradle.exists();
     }
 
-    @Rule
-    public GradleTestProject project;
-
-    private String projectName;
+    @Rule public GradleTestProject project;
 
     public CheckAll(String projectName) {
-        this.projectName = projectName;
-        this.project = GradleTestProject.builder()
-                .fromTestProject(projectName)
-                .useExperimentalGradleVersion(COMPONENT_MODEL_PROJECTS.contains(projectName))
-                .create();
+        this.project =
+                GradleTestProject.builder()
+                        .fromTestProject(projectName)
+                        .useExperimentalGradleVersion(
+                                COMPONENT_MODEL_PROJECTS.contains(projectName))
+                        .create();
     }
 
     @Test
@@ -93,44 +88,25 @@ public class CheckAll {
         project.execute("assembleDebug", "assembleAndroidTest", "lint");
     }
 
-    private boolean canAssemble(@NonNull GradleTestProject project) {
-        if (BROKEN_FOR_REASON.containsKey(project.getName())) {
-            return BROKEN_FOR_REASON.get(project.getName()).test(project);
-        } else {
-            return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
-        }
+    private static boolean canAssemble(@NonNull GradleTestProject project) {
+        return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
     }
 
-    // TODO: Investigate and clear these lists.
-    private static final ImmutableMap<String, Predicate<GradleTestProject>> BROKEN_FOR_REASON =
-            ImmutableMap.of(
-                    // TODO: Fails in C++ code, not sure what the issue is.
+    private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE =
+            ImmutableSet.of(
+                    // NDK + Renderscript is currently broken, see http://b.android.com/191791.
                     "ndkRsHelloCompute",
-                    p -> false,
-
-                    // We need build tools at least 24.0.0
-                    "jarjarWithJack",
-                    p ->
-                            Revision.parseRevision(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
-                                    .compareTo(new Revision(24, 0, 0)) >= 0,
-
-                    // requires ndk r10
                     "renderscriptNdk",
-                    p -> NdkHandler.findRevision(p.getNdkDir()) == null
-            );
 
-    private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE = ImmutableSet.of(
-            // These are all right:
-            "duplicateNameImport", // Fails on purpose.
-            "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.
-            "instant-unit-tests", // Specific to testing instant run, not a "real" project.
-            "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check anyway.
-            "simpleManifestMergingTask", // Not an Android project.
-            "externalBuildPlugin" // Not an Android Project.
-    );
+                    // These are all right:
+                    "duplicateNameImport", // Fails on purpose.
+                    "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.
+                    "instant-unit-tests", // Specific to testing instant run, not a "real" project.
+                    "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check anyway.
+                    "simpleManifestMergingTask", // Not an Android project.
+                    "externalBuildPlugin" // Not an Android Project.
+                    );
 
-    private static final ImmutableSet<String> COMPONENT_MODEL_PROJECTS = ImmutableSet.of(
-            "componentModel",
-            "ndkSanAngeles2",
-            "ndkVariants");
+    private static final ImmutableSet<String> COMPONENT_MODEL_PROJECTS =
+            ImmutableSet.of("componentModel", "ndkSanAngeles2", "ndkVariants");
 }
