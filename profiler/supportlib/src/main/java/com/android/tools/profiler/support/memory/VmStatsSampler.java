@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.memory;
 
+import android.os.Build;
 import android.os.Debug;
 
 import java.util.concurrent.CountDownLatch;
@@ -27,7 +28,12 @@ public final class VmStatsSampler extends Thread {
 
     private static final long SLEEP_TIME_NS = TimeUnit.MILLISECONDS.toNanos(250);
 
+    // The following string resources are used for querying runtime stats for api >= 23
+    private static final String GC_COUNT_STAT = "art.gc.gc-count";
+
     private CountDownLatch mRunning = new CountDownLatch(1);
+
+    private int mPreviousGcCount;
 
     public VmStatsSampler() {
         super(NAME);
@@ -35,14 +41,16 @@ public final class VmStatsSampler extends Thread {
 
     @Override
     public void run() {
+        mPreviousGcCount = getGcCount();
         while (mRunning.getCount() > 0) {
             try {
                 long startTime = System.nanoTime();
 
                 int freedCount = Debug.getGlobalFreedCount();
                 int allocatedCount = Debug.getGlobalAllocCount();
-                int gcCount = Debug.getGlobalGcInvocationCount();
-                sendVmStats(allocatedCount, freedCount, gcCount);
+                int gcCount = getGcCount();
+                sendVmStats(allocatedCount, freedCount, gcCount - mPreviousGcCount);
+                mPreviousGcCount = gcCount;
 
                 long endTime = System.nanoTime();
                 if (SLEEP_TIME_NS > endTime - startTime) {
@@ -60,6 +68,20 @@ public final class VmStatsSampler extends Thread {
         try {
             join();
         } catch (InterruptedException ignored) {}
+    }
+
+    private int getGcCount() {
+        int sdkVersion = Build.VERSION.SDK_INT;
+        int gcCount;
+        if (sdkVersion >= Build.VERSION_CODES.LOLLIPOP) {
+            String stat = Debug.getRuntimeStat(GC_COUNT_STAT);
+            gcCount = Integer.parseInt(stat);
+        }
+        else {
+            gcCount = Debug.getGlobalGcInvocationCount();
+        }
+
+        return gcCount;
     }
 
     public static native void sendVmStats(int allocCount, int freeCount, int gcCount);
