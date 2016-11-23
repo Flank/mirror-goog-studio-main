@@ -17,7 +17,9 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
+import com.android.builder.dependency.HashCodeUtils;
 import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -155,5 +157,27 @@ public class Symbol {
     @NonNull
     public String getJavaType() {
         return javaType;
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtils.hashCode(resourceType, name, javaType, value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof Symbol)) {
+            return false;
+        }
+
+        Symbol other = (Symbol) obj;
+        return Objects.equals(resourceType, other.resourceType)
+                && Objects.equals(name, other.name)
+                && Objects.equals(javaType, other.javaType)
+                && Objects.equals(value, other.value);
     }
 }
