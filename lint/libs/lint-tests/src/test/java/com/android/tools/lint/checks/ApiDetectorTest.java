@@ -4634,6 +4634,49 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testRequiresApiInheritance() throws Exception {
+        lint().files(
+                java("package android.support.v7.app;\n"
+                        + "\n"
+                        + "import android.support.annotation.RequiresApi;\n"
+                        + "\n"
+                        + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                        + "public class RequiresApiTest {\n"
+                        + "    public void test() {\n"
+                        + "        new ParentClass().foo1(); // ERROR\n"
+                        + "        new ChildClass().foo1(); // OK\n"
+                        + "        new ChildClass().foo2(); // OK\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @RequiresApi(16)\n"
+                        + "    public class ParentClass {\n"
+                        + "        @RequiresApi(18)\n"
+                        + "        void foo1() {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public class ChildClass extends ParentClass {\n"
+                        + "        @Override\n"
+                        + "        void foo1() {\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        void foo2() {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expect(""
+                        + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 16 (current min is 1): RequiresApiTest$ParentClass [NewApi]\n"
+                        + "        new ParentClass().foo1(); // ERROR\n"
+                        + "            ~~~~~~~~~~~\n"
+                        + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 18 (current min is 1): foo1 [NewApi]\n"
+                        + "        new ParentClass().foo1(); // ERROR\n"
+                        + "                          ~~~~\n"
+                        + "2 errors, 0 warnings\n");
+    }
+
     public void testDrawableThemeReferences() throws Exception {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=199597
