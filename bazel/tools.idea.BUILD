@@ -205,7 +205,6 @@ iml_module(
         "idea/plugins/IntentionPowerPak/src",
         "idea/plugins/generate-tostring/src",
     ],
-    javacopts = ["-extra_checks:off"],
     resources = ["idea/plugins/generate-tostring/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
