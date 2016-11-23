@@ -17,17 +17,15 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.concurrency.Immutable;
 import com.android.builder.dependency.HashCodeUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.lang.model.SourceVersion;
 
 /**
@@ -40,7 +38,6 @@ import javax.lang.model.SourceVersion;
  * are used to generate the {@code R.java} file. Actually, the name of the table is the class name
  * and the package is the java package so, traditionally, all symbol tables are named {@code R}.
  */
-@Immutable
 public class SymbolTable {
 
     /**
@@ -53,34 +50,27 @@ public class SymbolTable {
      * All symbols mapped by IDs (see {@link #key(Symbol)}.
      */
     @NonNull
-    private final ImmutableMap<String, Symbol> symbols;
+    private Map<String, Symbol> symbols;
 
     /**
      * The table name.
      */
     @NonNull
-    private final String tableName;
+    private String tableName;
 
     /**
      * The table package. An empty package means the default package.
      */
     @NonNull
-    private final String tablePackage;
+    private String tablePackage;
 
     /**
-     * Creates a new symbol table.
-     *
-     * @param tablePackage the table package
-     * @param tableName the table name
-     * @param symbols the table symbol mapped by {@link #key(Symbol)}
+     * Creates a new, empty, symbol table.
      */
-    private SymbolTable(
-            @NonNull String tablePackage,
-            @NonNull String tableName,
-            @NonNull Map<String, Symbol> symbols) {
-        this.symbols = ImmutableMap.copyOf(symbols);
-        this.tableName = tableName;
-        this.tablePackage = tablePackage;
+    public SymbolTable() {
+        symbols = new HashMap<>();
+        tableName = DEFAULT_NAME;
+        tablePackage = "";
     }
 
     /**
@@ -94,6 +84,17 @@ public class SymbolTable {
     }
 
     /**
+     * Sets the table name. See class description.
+     *
+     * @param tableName the table name; must be a valid java identifier
+     */
+    public void setTableName(@NonNull String tableName) {
+        Preconditions.checkArgument(SourceVersion.isIdentifier(tableName));
+
+        this.tableName = tableName;
+    }
+
+    /**
      * Obtains the table package. See class description.
      *
      * @return the table package
@@ -101,6 +102,20 @@ public class SymbolTable {
     @NonNull
     public String getTablePackage() {
         return tablePackage;
+    }
+
+    /**
+     * Sets the table package. See class description.
+     *
+     * @param tablePackage; must be a valid java package name
+     */
+    public void setTablePackage(@NonNull String tablePackage) {
+        if (!tablePackage.isEmpty()) {
+            Arrays.asList(tablePackage.split("\\."))
+                    .forEach(p -> Preconditions.checkArgument(SourceVersion.isIdentifier(p)));
+        }
+
+        this.tablePackage = tablePackage;
     }
 
     /**
@@ -120,8 +135,17 @@ public class SymbolTable {
      * @return all symbols
      */
     @NonNull
-    public ImmutableCollection<Symbol> allSymbols() {
-        return symbols.values();
+    public Set<Symbol> allSymbols() {
+        return new HashSet<>(symbols.values());
+    }
+
+    /**
+     * Adds a symbol to the table.
+     *
+     * @param symbol the symbol to add
+     */
+    public void add(@NonNull Symbol symbol) {
+        symbols.put(key(symbol), symbol);
     }
 
     @Override
@@ -156,198 +180,35 @@ public class SymbolTable {
      */
     @NonNull
     public SymbolTable filter(@NonNull SymbolTable table) {
-        SymbolTable.Builder stb = builder();
-        stb.tableName(tableName);
-        stb.tablePackage(tablePackage);
+        SymbolTable st = new SymbolTable();
+        st.setTableName(tableName);
+        st.setTablePackage(tablePackage);
 
         for (Map.Entry<String, Symbol> e : symbols.entrySet()) {
             if (table.symbols.containsKey(e.getKey())) {
-                stb.symbols.put(e.getKey(), e.getValue());
+                st.symbols.put(e.getKey(), e.getValue());
             }
         }
 
-        return stb.build();
-    }
-
-    /**
-     * Short for merging {@code this} and {@code m}.
-     *
-     * @param m the table to add to {@code this}
-     * @return the result of merging {@code this} with {@code m}
-     */
-    @NonNull
-    public SymbolTable merge(@NonNull SymbolTable m) {
-        return merge(Arrays.asList(this, m));
-    }
-
-    /**
-     * Builds a new symbol table that has the same symbols as this one, but was renamed with
-     * the given package and table name.
-     *
-     * @param tablePackage the table package
-     * @param tableName the table name
-     * @return the new renamed symbol table
-     */
-    @NonNull
-    public SymbolTable rename(@NonNull String tablePackage, @NonNull String tableName) {
-        return builder()
-                .tablePackage(tablePackage)
-                .tableName(tableName)
-                .addAll(allSymbols())
-                .build();
+        return st;
     }
 
     /**
      * Merges a list of tables into a single table. The merge is order-sensitive: when multiple
      * symbols with the same class / name exist in multiple tables, the first one will be used.
      *
+     * @param result the table that will hold the result; symbols that already exist in this table,
+     * if any, will not be changed by the merge and symbols in {@code tables} with the same class
+     * and name will be ignored
      * @param tables the tables to merge
-     * @return the table with the result of the merge; this table will have the package / name of
-     * the first table in {@code tables}, or the default one if there are no tables in
-     * {@code tables}
      */
-    @NonNull
-    public static SymbolTable merge(@NonNull List<SymbolTable> tables) {
-        SymbolTable.Builder builder = SymbolTable.builder();
-
-        boolean first = true;
+    public static void merge(@NonNull SymbolTable result, @NonNull List<SymbolTable> tables) {
         for (SymbolTable t : tables) {
-
-            if (first) {
-                builder.tablePackage(t.getTablePackage());
-                builder.tableName(t.getTableName());
-                first = false;
-            }
-
-            for (Symbol s : t.allSymbols()) {
-                if (!builder.contains(s)) {
-                    builder.add(s);
+            for (Map.Entry<String, Symbol> e : t.symbols.entrySet()) {
+                if (!result.symbols.containsKey(e.getKey())) {
+                    result.symbols.put(e.getKey(), e.getValue());
                 }
             }
-        }
-
-        return builder.build();
-    }
-
-    /**
-     * Creates a new builder to create a {@link SymbolTable}.
-     *
-     * @return a builder
-     */
-    @NonNull
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
-     * Builder that creates a symbol table.
-     */
-    public static class Builder {
-
-        /**
-         * Current table name.
-         */
-        @NonNull
-        private String tableName;
-
-        /**
-         * Current table package.
-         */
-        @NonNull
-        private String tablePackage;
-
-        /**
-         * Symbols to be added to the table.
-         */
-        @NonNull
-        private Map<String, Symbol> symbols;
-
-        /**
-         * Creates a new builder.
-         */
-        private Builder() {
-            symbols = new HashMap<>();
-            tablePackage = "";
-            tableName = DEFAULT_NAME;
-        }
-
-        /**
-         * Adds a symbol to the table to be built. The table must not contains a symbol with the
-         * same resource type and name.
-         *
-         * @param symbol the symbol to add
-         * @return {@code this} for use with fluent-style notation
-         */
-        public Builder add(@NonNull Symbol symbol) {
-            String key = key(symbol);
-            if (symbols.containsKey(key)) {
-                throw new IllegalArgumentException("Duplicate symbol in table");
-            }
-
-            symbols.put(key, symbol);
-            return this;
-        }
-
-        /**
-         * Adds all symbols in the given collection to the table. This is semantically equivalent
-         * to calling {@link #add(Symbol)} for all symbols.
-         *
-         * @param symbols the symbols to add
-         * @return {@code this} for use with fluent-style notation
-         */
-        public Builder addAll(@NonNull Collection<Symbol> symbols) {
-            symbols.forEach(this::add);
-            return this;
-        }
-
-        /**
-         * Sets the table name. See {@link SymbolTable} description.
-         *
-         * @param tableName the table name; must be a valid java identifier
-         * @return {@code this} for use with fluent-style notation
-         */
-        public Builder tableName(@NonNull String tableName) {
-            Preconditions.checkArgument(SourceVersion.isIdentifier(tableName));
-
-            this.tableName = tableName;
-            return this;
-        }
-
-        /**
-         * Sets the table package. See {@link SymbolTable} description.
-         *
-         * @param tablePackage; must be a valid java package name
-         * @return {@code this} for use with fluent-style notation
-         */
-        public Builder tablePackage(@NonNull String tablePackage) {
-            if (!tablePackage.isEmpty()) {
-                Arrays.asList(tablePackage.split("\\."))
-                        .forEach(p -> Preconditions.checkArgument(SourceVersion.isIdentifier(p)));
-            }
-
-            this.tablePackage = tablePackage;
-            return this;
-        }
-
-        /**
-         * Checks if a symbol with the same resource type and name as {@code symbol} have been
-         * added.
-         *
-         * @param symbol the symbol to check
-         * @return has a symbol with the same resource type / name been added?
-         */
-        public boolean contains(@NonNull Symbol symbol) {
-            return symbols.containsKey(key(symbol));
-        }
-
-        /**
-         * Builds a symbol table with all symbols added.
-         *
-         * @return the symbol table
-         */
-        @NonNull
-        public SymbolTable build() {
-            return new SymbolTable(tablePackage, tableName, symbols);
         }
     }
 }
