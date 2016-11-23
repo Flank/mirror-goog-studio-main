@@ -2465,7 +2465,7 @@ public class ApiDetector extends ResourceXmlDetector
                             }
                         }
                         String expressionOwner = evaluator.getInternalName(cls);
-                        if (expressionOwner == null) {
+                        if (expressionOwner == null || "java/lang/Object".equals(expressionOwner)) {
                             break;
                         }
                         int specificApi = mApiDatabase.getCallVersion(expressionOwner, name, desc);
