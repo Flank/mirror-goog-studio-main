@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.integration.common.truth.ZipFileSubject
+import com.android.testutils.truth.ZipFileSubject
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.builder.Version
 import com.android.builder.model.AndroidProject
