@@ -231,6 +231,7 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
   SystemData event;
   event.set_type(SystemData::ROTATION);
   event.set_action_id(jstate);
-  SendSystemEvent(&event, 0);
+  // Give rotation events a unique id.
+  SendSystemEvent(&event, GetClock().GetCurrentTime());
 }
 };
