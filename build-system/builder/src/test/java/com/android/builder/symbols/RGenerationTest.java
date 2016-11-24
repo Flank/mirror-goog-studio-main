@@ -87,7 +87,7 @@ public class RGenerationTest {
     }
 
     @Test
-    public void generationFailsIfLibraryContainsExtraSymbols() throws Exception {
+    public void generationAllowedIfLibraryContainsExtraSymbols() throws Exception {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
@@ -102,13 +102,8 @@ public class RGenerationTest {
                         .build();
 
         File out = temporaryFolder.newFolder();
-        try {
-            RGeneration.generateRForLibraries(main, Collections.singleton(l0), out, false);
-            fail();
-        } catch (SymbolException e) {
-            assertTrue(e.getMessage().contains("eeee"));
-            assertTrue(e.getMessage().contains("ffff"));
-        }
+
+        RGeneration.generateRForLibraries(main, Collections.singleton(l0), out, false);
     }
 
     @Test
