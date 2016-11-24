@@ -26,14 +26,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
-import javax.lang.model.SourceVersion;
 
 /**
  * Reads and writes symbol tables to files.
@@ -47,11 +46,16 @@ public final class SymbolIo {
      *
      * @param file the symbol file
      * @return the table read
-     * @throws IOException failed to read the table
+     * @throws UncheckedIOException failed to read the table
      */
     @NonNull
-    public static SymbolTable read(@NonNull File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
+    public static SymbolTable read(@NonNull File file) {
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
         SymbolTable.Builder table = SymbolTable.builder();
 
@@ -75,13 +79,14 @@ public final class SymbolIo {
                 table.add(new Symbol(className, name, type, value));
             }
         } catch (IndexOutOfBoundsException e) {
-            throw new IOException(
-                    String.format(
-                            "File format error reading %s line %d: '%s'",
-                            file.getAbsolutePath(),
-                            lineIndex,
-                            line),
-                    e);
+            throw new UncheckedIOException(
+                    new IOException(
+                            String.format(
+                                    "File format error reading %s line %d: '%s'",
+                                    file.getAbsolutePath(),
+                                    lineIndex,
+                                    line),
+                            e));
         }
 
         return table.build();
@@ -92,9 +97,9 @@ public final class SymbolIo {
      *
      * @param table the table
      * @param file the file where the table should be written
-     * @throws IOException I/O error
+     * @throws UncheckedIOException I/O error
      */
-    public static void write(@NonNull SymbolTable table, @NonNull File file) throws IOException {
+    public static void write(@NonNull SymbolTable table, @NonNull File file) {
         List<String> lines = new ArrayList<>();
 
         for (Symbol s : table.allSymbols()) {
@@ -112,6 +117,8 @@ public final class SymbolIo {
                 FileOutputStream fos = new FileOutputStream(file);
                 PrintWriter pw = new PrintWriter(fos)) {
             lines.forEach(pw::println);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -123,38 +130,29 @@ public final class SymbolIo {
      *
      * @param table the table to export
      * @param directory the directory where the R source should be generated
-     * @param packageName the name of the package
-     * @param className the name of R class
      * @param finalIds should the generated IDs be final?
      * @return the generated file
-     * @throws IOException failed to generate the source
+     * @throws UncheckedIOException failed to generate the source
      */
     @NonNull
     public static File exportToJava(
             @NonNull SymbolTable table,
             @NonNull File directory,
-            @NonNull String packageName,
-            @NonNull String className,
-            boolean finalIds) throws IOException {
+            boolean finalIds) {
         Preconditions.checkArgument(directory.isDirectory());
-        Preconditions.checkArgument(SourceVersion.isIdentifier(className));
-        if (!packageName.isEmpty()) {
-            Arrays.asList(packageName.split("\\."))
-                    .forEach(p -> Preconditions.checkArgument(SourceVersion.isIdentifier(p)));
-        }
 
         /*
          * Build the path to the class file, creating any needed directories.
          */
         Splitter splitter = Splitter.on('.');
-        Iterable<String> directories = splitter.split(packageName);
+        Iterable<String> directories = splitter.split(table.getTablePackage());
         File file = directory;
         for (String d : directories) {
             file = new File(file, d);
         }
 
         FileUtils.mkdirs(file);
-        file = new File(file, className + SdkConstants.DOT_JAVA);
+        file = new File(file, table.getTableName() + SdkConstants.DOT_JAVA);
 
         /*
          * Identify all resource types. We use a sorted set because we want to have resource types
@@ -180,20 +178,19 @@ public final class SymbolIo {
             pw.println(" * should not be modified by hand.");
             pw.println(" */");
 
-            if (!packageName.isEmpty()) {
-                pw.println("package " + packageName + ";");
+            if (!table.getTablePackage().isEmpty()) {
+                pw.println("package " + table.getTablePackage() + ";");
             }
 
             pw.println();
-            pw.println("public final class " + className + " {");
+            pw.println("public final class " + table.getTableName() + " {");
 
             for (String rt : resourceTypes) {
                 pw.println("    public static final class " + rt + " {");
 
                 // Sort the symbols by name to make output preditable and, therefore, testing
                 // easier.
-                SortedSet<Symbol> syms =
-                        new TreeSet<>((s1, s2) -> s1.getName().compareTo(s2.getName()));
+                SortedSet<Symbol> syms = new TreeSet<>(Comparator.comparing(Symbol::getName));
                 table.allSymbols().forEach(sym -> {
                     if (sym.getResourceType().equals(rt)) {
                         syms.add(sym);
@@ -217,6 +214,8 @@ public final class SymbolIo {
             }
 
             pw.println("}");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
 
         return file;

@@ -17,6 +17,7 @@
 package com.android.builder.symbols;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -260,5 +261,12 @@ public class SymbolTableTest {
                         .tablePackage("x")
                         .build();
         assertEquals(e, r);
+    }
+
+    @Test
+    public void containsSymbol() {
+        SymbolTable t = SymbolTable.builder().add(new Symbol("a", "b", "c", "d")).build();
+        assertTrue(t.contains("a", "b"));
+        assertFalse(t.contains("aa", "b"));
     }
 }

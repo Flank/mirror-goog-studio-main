@@ -108,13 +108,11 @@ public class SymbolIoTest {
             @NonNull String expected,
             @NonNull Path path,
             @NonNull SymbolTable table,
-            @NonNull String pkgName,
-            @NonNull String clsName,
             boolean finalIds)
             throws Exception {
         File directory = mTemporaryFolder.newFolder();
 
-        SymbolIo.exportToJava(table, directory, pkgName, clsName, finalIds);
+        SymbolIo.exportToJava(table, directory, finalIds);
         File result = directory.toPath().resolve(path).toFile();
         assertTrue(result.isFile());
 
@@ -152,8 +150,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 true);
     }
 
@@ -198,8 +194,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "Roar.java"),
                 table,
-                "test.pkg",
-                "Roar",
                 true);
     }
 
@@ -243,8 +237,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 false);
     }
 
@@ -288,8 +280,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("R.java"),
                 table,
-                "",
-                "R",
                 true);
     }
 
@@ -343,8 +333,6 @@ public class SymbolIoTest {
                         "}",
                 Paths.get("test", "pkg", "R.java"),
                 table,
-                "test.pkg",
-                "R",
                 true);
     }
 }

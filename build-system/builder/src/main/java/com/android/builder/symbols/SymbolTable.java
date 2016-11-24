@@ -110,7 +110,30 @@ public class SymbolTable {
      */
     @NonNull
     private static String key(@NonNull Symbol symbol) {
-        return symbol.getResourceType() + " " + symbol.getName();
+        return key(symbol.getResourceType(), symbol.getName());
+    }
+
+    /**
+     * Obtains a unique key for a resource type / name.
+     *
+     * @param resourceType the resource type
+     * @param name the name
+     * @return the unique ID
+     */
+    @NonNull
+    private static String key(@NonNull String resourceType, @NonNull String name) {
+        return resourceType + " " + name;
+    }
+
+    /**
+     * Checks if the table contains a symbol with the given resource type / name.
+     *
+     * @param resourceType the resource type
+     * @param name the name
+     * @return does the table contain a symbol with the given resource type / name?
+     */
+    public boolean contains(@NonNull String resourceType, @NonNull String name) {
+        return symbols.containsKey(key(resourceType, name));
     }
 
     /**
