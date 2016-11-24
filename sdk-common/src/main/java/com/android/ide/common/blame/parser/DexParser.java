@@ -24,7 +24,6 @@ import com.android.utils.ILogger;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -79,6 +78,26 @@ public class DexParser implements PatternAwareOutputParser {
             return true;
         }
 
+
+        if (line.startsWith("warning: Ignoring InnerClasses attribute")) {
+            StringBuilder original1 = new StringBuilder(line).append('\n');
+            String nextLine = reader.readLine();
+            while (!Strings.isNullOrEmpty(nextLine)) {
+                original1.append(nextLine).append('\n');
+                if (nextLine.equals("indicate that it is *not* an inner class.")) {
+                    break;
+                }
+                nextLine = reader.readLine();
+            }
+            messages.add(new Message(
+                    Message.Kind.WARNING,
+                    original1.toString(),
+                    original1.toString(),
+                    Optional.of(DEX_TOOL_NAME),
+                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            return true;
+        }
+
         if (line.startsWith("trouble writing output: Too many method references:")) {
             StringBuilder original1 = new StringBuilder(line).append('\n');
             String nextLine = reader.readLine();
@@ -86,12 +105,13 @@ public class DexParser implements PatternAwareOutputParser {
                 original1.append(nextLine).append('\n');
                 nextLine = reader.readLine();
             }
-            messages.add(new Message(
-                    Message.Kind.ERROR,
-                    DEX_LIMIT_EXCEEDED_ERROR,
-                    original1.toString(),
-                    Optional.of(DEX_TOOL_NAME),
-                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            messages.add(
+                    new Message(
+                            Message.Kind.ERROR,
+                            DEX_LIMIT_EXCEEDED_ERROR,
+                            original1.toString(),
+                            Optional.of(DEX_TOOL_NAME),
+                            ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
         if (line.equals("PARSE ERROR:")) {
