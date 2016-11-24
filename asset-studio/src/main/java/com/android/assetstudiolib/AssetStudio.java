@@ -22,9 +22,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class AssetStudio {
 
@@ -53,32 +53,26 @@ public final class AssetStudio {
 
     @Nullable
     public static String getPathForBasename(@NonNull String basename) {
-        Generator generator = path -> GraphicGenerator.getResourcesNames(path, DOT_XML);
-        return getBasenameToPathMap(generator).get(basename);
+        return getBasenameToPathMap(path -> GraphicGenerator.getResourcesNames(path, DOT_XML))
+                .get(basename);
     }
 
     @NonNull
     @VisibleForTesting
-    static Map<String, String> getBasenameToPathMap(@NonNull Generator generator) {
+    static Map<String, String> getBasenameToPathMap(
+            @NonNull Function<String, Iterator<String>> generator) {
         ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<>();
         int dotXmlLength = DOT_XML.length();
 
         for (String category : MATERIAL_DESIGN_ICON_CATEGORIES) {
             String path = MATERIAL_DESIGN_ICONS_PATH + category + '/';
 
-            for (Iterator<String> i = generator.getResourceNames(path); i.hasNext(); ) {
+            for (Iterator<String> i = generator.apply(path); i.hasNext(); ) {
                 String name = i.next();
                 builder.put(name.substring(0, name.length() - dotXmlLength), path + name);
             }
         }
 
         return builder.build();
-    }
-
-    @VisibleForTesting
-    interface Generator {
-
-        @NonNull
-        Iterator<String> getResourceNames(@NonNull String path);
     }
 }
