@@ -397,7 +397,7 @@ public class SdkDownloadGradleTest {
 
     @NonNull
     private RunGradleTasks getExecutor() {
-        return project.executor().withSdkAutoDownload();
+        return project.executor().withSdkAutoDownload().withoutOfflineFlag();
     }
 
     private void checkForLibrary(

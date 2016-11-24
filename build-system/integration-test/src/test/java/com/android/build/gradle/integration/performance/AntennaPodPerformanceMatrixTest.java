@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.performance;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.JackHelper;
@@ -145,10 +146,8 @@ public class AntennaPodPerformanceMatrixTest {
         ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
-        project.executor()
-                .withEnableInfoLogging(false)
-                .run("assembleDebug", "assembleDebugAndroidTest");
-        project.executor().withEnableInfoLogging(false).run("clean");
+        getExecutor().run("assembleDebug", "assembleDebugAndroidTest");
+        getExecutor().run("clean");
 
         for (BenchmarkMode benchmarkMode : PerformanceTestUtil.BENCHMARK_MODES) {
             InstantRun instantRunModel = null;
@@ -169,14 +168,14 @@ public class AntennaPodPerformanceMatrixTest {
                     project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
                     continue;
                 case BUILD__FROM_CLEAN:
-                    project.executor().withEnableInfoLogging(false).run("clean");
+                    getExecutor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
                 case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental tasks
-                    project.executor().withEnableInfoLogging(false).run(tasks);
+                    getExecutor().run(tasks);
                     isEdit = true;
                     break;
                 case BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
@@ -188,7 +187,7 @@ public class AntennaPodPerformanceMatrixTest {
                     //TODO
                     continue;
                 case INSTANT_RUN_BUILD__FROM_CLEAN:
-                    project.executor().withEnableInfoLogging(false).run("clean");
+                    getExecutor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
                 case INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
@@ -211,15 +210,15 @@ public class AntennaPodPerformanceMatrixTest {
                     //TODO
                     continue;
                 case BUILD_ANDROID_TESTS_FROM_CLEAN:
-                    project.executor().withEnableInfoLogging(false).run("clean");
+                    getExecutor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebugAndroidTest");
                     break;
                 case BUILD_UNIT_TESTS_FROM_CLEAN:
-                    project.executor().withEnableInfoLogging(false).run("clean");
+                    getExecutor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebugUnitTest");
                     break;
                 case GENERATE_SOURCES:
-                    project.executor().withEnableInfoLogging(false).run("clean");
+                    getExecutor().run("clean");
                     project.executor()
                             .withArgument("-Pandroid.injected.generateSourcesOnly=true")
                             .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
@@ -228,7 +227,7 @@ public class AntennaPodPerformanceMatrixTest {
                 case NO_OP:
                     // Do an initial build for NO_OP.
                     tasks = ImmutableList.of(":app:assembleDebug");
-                    project.executor().withEnableInfoLogging(false).run(tasks);
+                    getExecutor().run(tasks);
                     break;
                 case LINT_RUN:
                     continue; // TODO
@@ -244,20 +243,20 @@ public class AntennaPodPerformanceMatrixTest {
             }
 
             if (instantRunModel != null) {
-                project.executor()
-                        .withEnableInfoLogging(false)
+                getExecutor()
                         .recordBenchmark(benchmarkMode)
                         .withInstantRun(24, ColdswapMode.MULTIDEX)
                         .run(tasks);
 
                 InstantRunTestUtils.loadContext(instantRunModel).getVerifierStatus();
             } else {
-                project.executor()
-                        .withEnableInfoLogging(false)
-                        .recordBenchmark(benchmarkMode)
-                        .run(tasks);
+                getExecutor().recordBenchmark(benchmarkMode).run(tasks);
             }
         }
+    }
+
+    public RunGradleTasks getExecutor() {
+        return project.executor().withEnableInfoLogging(false).withoutOfflineFlag();
     }
 
     private boolean isJackOn() {

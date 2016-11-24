@@ -187,6 +187,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             "false"));
         }
 
+        args.addAll(getOfflineFlag());
+
         args.addAll(arguments);
 
         System.out.println("[GradleTestProject] Executing tasks: gradle "
