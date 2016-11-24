@@ -29,14 +29,13 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.apkzlib.zfile.ApkCreatorFactory;
+import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
-import com.android.builder.symbols.SymbolIo;
-import com.android.builder.symbols.SymbolTable;
-import com.android.builder.symbols.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -48,8 +47,6 @@ import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.OldPackager;
 import com.android.builder.model.SigningConfig;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
-import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SealedPackageException;
 import com.android.builder.packaging.SigningException;
@@ -57,6 +54,9 @@ import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.SignedJarApkCreator;
+import com.android.builder.symbols.RGeneration;
+import com.android.builder.symbols.SymbolIo;
+import com.android.builder.symbols.SymbolTable;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -90,15 +90,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -109,6 +106,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -864,101 +862,70 @@ public class AndroidBuilder {
             throw new ProcessException("Failed to execute aapt", e);
         }
 
-
-        // If the project has libraries, R needs to be created for each library.
-        if (aaptConfig.getSourceOutputDir() != null
-                && !aaptConfig.getLibraries().isEmpty()) {
-            SymbolTable fullSymbolValues = null;
-
-            // First pass processing the libraries, collecting them by packageName,
-            // and ignoring the ones that have the same package name as the application
-            // (since that R class was already created).
-            String appPackageName = aaptConfig.getCustomPackageForR();
-            if (appPackageName == null) {
+        File sourceOut = aaptConfig.getSourceOutputDir();
+        if (sourceOut != null) {
+            // Figure out what the main symbol file's package is.
+            String mainPackageName = aaptConfig.getCustomPackageForR();
+            if (mainPackageName == null) {
                 File manifestFile = aaptConfig.getManifestFile();
                 if (manifestFile != null) {
                     try {
-                        appPackageName = AndroidManifest.getPackage(new FileWrapper(manifestFile));
+                        mainPackageName = AndroidManifest.getPackage(new FileWrapper(manifestFile));
+                        if (mainPackageName == null) {
+                            throw new IOException(
+                                    "No package name defined in " + manifestFile.getAbsolutePath());
+                        }
                     } catch (StreamException e) {
-                        // we were not able to get the content of the file, keep the null value
+                        throw new IOException(
+                                "Failed to read " + manifestFile.getAbsolutePath(),
+                                e);
                     }
+                } else {
+                    throw new IOException("No manifest file in aapt config");
                 }
             }
 
-            // list of all the symbol loaders per package names.
-            Multimap<String, SymbolTable> libMap = ArrayListMultimap.create();
+            // Load the main symbol file.
+            File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
+            SymbolTable mainSymbols =
+                    mainRTxt.isFile()? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
+            mainSymbols = mainSymbols.rename(mainPackageName, mainSymbols.getTableName());
 
-            for (AndroidDependency lib : aaptConfig.getLibraries()) {
-                if (Strings.isNullOrEmpty(appPackageName)) {
-                    continue;
-                }
+            // For each dependency, load its symbol file.
+            Set<SymbolTable> depSymbolTables = new HashSet<>();
+            for (AndroidDependency dependency : aaptConfig.getLibraries()) {
+                File depMan = dependency.getManifest();
+                String depPackageName;
 
-                String packageName;
                 try {
-                    packageName = AndroidManifest.getPackage(new FileWrapper(lib.getManifest()));
+                    depPackageName = AndroidManifest.getPackage(new FileWrapper(depMan));
                 } catch (StreamException e) {
-                    // we were not able to get the content of the file,
-                    packageName = null;
+                    throw new IOException("Failed to read manifest " + depMan.getAbsolutePath(), e);
                 }
 
-                if (appPackageName.equals(packageName)) {
-                    if (enforceUniquePackageName) {
-                        String msg = String.format(
-                                "Error: A library uses the same package as this project: %s",
-                                packageName);
-                        throw new RuntimeException(msg);
-                    }
-
-                    // ignore libraries that have the same package name as the app
-                    continue;
+                if (mainPackageName.equals(depPackageName) && enforceUniquePackageName) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Error: A library uses the same package as this project: %s",
+                                    depPackageName));
                 }
 
-                File rFile = lib.getSymbolFile();
-                // if the library has no resource, this file won't exist.
-                if (rFile.isFile()) {
-
-                    // read the full values if that's not already been done.
-                    // Doing it lazily allow us to support the case where there's no
-                    // resources anywhere.
-                    if (fullSymbolValues == null) {
-                        fullSymbolValues =
-                                SymbolIo.read(new File(aaptConfig.getSymbolOutputDir(), "R.txt"));
-                    }
-
-                    // store these symbols by associating them with the package name.
-                    libMap.put(packageName, SymbolIo.read(rFile));
-                }
+                File rFile = dependency.getSymbolFile();
+                SymbolTable depSymbols =
+                        rFile.exists()? SymbolIo.read(rFile) : SymbolTable.builder().build();
+                depSymbols = depSymbols.rename(depPackageName, depSymbols.getTableName());
+                depSymbolTables.add(depSymbols);
             }
 
-            // now loop on all the package name, merge all the symbols to write, and write them
-            for (String packageName : libMap.keySet()) {
-                Collection<SymbolTable> symbols = libMap.get(packageName);
-
-                if (enforceUniquePackageName && symbols.size() > 1) {
-                    String msg = String.format(
-                            "Error: more than one library with package name '%s'", packageName);
-                    throw new RuntimeException(msg);
-                }
-
-                boolean generateFinalIds = true;
-                if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
-                    generateFinalIds = false;
-                } else if (aaptConfig.getVariantType() == VariantType.ATOM
-                        && aaptConfig.getBaseFeature() != null) {
-                    generateFinalIds = false;
-                }
-                //noinspection ConstantConditions
-                SymbolWriter writer =
-                        new SymbolWriter(
-                                aaptConfig.getSourceOutputDir().getAbsolutePath(),
-                                packageName,
-                                fullSymbolValues,
-                                generateFinalIds);
-                for (SymbolTable symbolLoader : symbols) {
-                    writer.addSymbolsToWrite(symbolLoader);
-                }
-                writer.write();
+            boolean finalIds = true;
+            if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+                finalIds = false;
+            } else if (aaptConfig.getVariantType() == VariantType.ATOM
+                    && aaptConfig.getBaseFeature() != null) {
+                finalIds = false;
             }
+
+            RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
         }
     }
 
