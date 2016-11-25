@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.Packaging
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.google.common.io.Files
 import com.google.common.io.Resources
 import groovy.transform.CompileStatic
@@ -27,8 +25,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 import java.nio.charset.Charset
 
@@ -40,7 +36,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG
  * Assemble tests for assets.
  */
 @CompileStatic
-@RunWith(FilterableParameterized)
 class AssetsTest {
     byte[] simpleJarDataA
     byte[] simpleJarDataB
@@ -51,21 +46,13 @@ class AssetsTest {
     File resourcesDir;
     File libsDir;
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
-
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("assets")
             .create()
 
     private void execute(String... tasks) {
-        project.executor().withPackaging(mPackaging).run(tasks)
+        project.executor().run(tasks)
     }
 
     @Before
@@ -130,6 +117,6 @@ class AssetsTest {
     @Test
     @Category(DeviceTests.class)
     void connectedCheck() {
-        project.executor().withPackaging(mPackaging).executeConnectedCheck()
+        project.executor().executeConnectedCheck()
     }
 }

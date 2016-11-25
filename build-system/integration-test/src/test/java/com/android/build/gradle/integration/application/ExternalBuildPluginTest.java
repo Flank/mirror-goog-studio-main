@@ -20,8 +20,6 @@ import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
@@ -47,7 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -59,8 +56,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -71,16 +66,7 @@ import org.xml.sax.SAXException;
 /**
  * Integration test for the ExternalBuildPlugin.
  */
-@RunWith(FilterableParameterized.class)
 public class ExternalBuildPluginTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     private File manifestFile;
 
@@ -152,7 +138,6 @@ public class ExternalBuildPluginTest {
 
         mProject.executor()
             .withInstantRun(23, ColdswapMode.AUTO)
-            .withPackaging(mPackaging)
             .run("clean", "process");
 
         InstantRunBuildContext instantRunBuildContext = loadFromBuildInfo();
@@ -207,7 +192,6 @@ public class ExternalBuildPluginTest {
 
         mProject.executor()
                 .withInstantRun(23, ColdswapMode.AUTO)
-                .withPackaging(mPackaging)
                 .run("process");
 
         instantRunBuildContext = loadFromBuildInfo();

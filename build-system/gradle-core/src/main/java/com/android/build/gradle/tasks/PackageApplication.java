@@ -19,17 +19,13 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.transforms.InstantRunSlicer;
-import com.android.builder.packaging.DuplicateFileException;
 import com.android.builder.profile.ProcessRecorder;
 import com.android.ide.common.res2.FileStatus;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -38,132 +34,33 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.tooling.BuildException;
 
 /**
  * Task to package an Android application (APK).
  */
 @ParallelizableTask
 public class PackageApplication extends PackageAndroidArtifact {
-    /**
-     * If {@code true}, the tasks works with the old code.
-     */
-    private boolean inOldMode;
 
     @Override
     protected boolean isIncremental() {
-        return !inOldMode;
+        return true;
     }
 
     @Override
     protected void doFullTaskAction() throws IOException {
-        if (inOldMode) {
-            doOldTask();
-            recordMetrics();
-            return;
-        }
         super.doFullTaskAction();
         recordMetrics();
     }
 
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
-        if (inOldMode) {
-            doFullTaskAction();
-            recordMetrics();
-            return;
-        }
         super.doIncrementalTaskAction(changedInputs);
         recordMetrics();
-    }
-
-    /**
-     * Old packaging code.
-     */
-    private void doOldTask() {
-        try {
-
-            ImmutableSet.Builder<File> dexFoldersForApk = ImmutableSet.builder();
-            ImmutableList.Builder<File> javaResourcesForApk = ImmutableList.builder();
-
-            Collection<File> javaResourceFiles = getJavaResourceFiles();
-            if (javaResourceFiles != null) {
-                javaResourcesForApk.addAll(javaResourceFiles);
-            }
-            switch(dexPackagingPolicy) {
-                case INSTANT_RUN_SHARDS_IN_SINGLE_APK:
-                    File zippedDexes = zipDexesForInstantRun(getDexFolders(), dexFoldersForApk);
-                    javaResourcesForApk.add(zippedDexes);
-                    break;
-                case INSTANT_RUN_MULTI_APK:
-                    for (File dexFolder : getDexFolders()) {
-                        if (dexFolder.getName().contains(InstantRunSlicer.MAIN_SLICE_NAME)) {
-                            dexFoldersForApk.add(dexFolder);
-                        }
-                    }
-                    break;
-                case STANDARD:
-                    dexFoldersForApk.addAll(getDexFolders());
-                    break;
-                default:
-                    throw new RuntimeException(
-                            "Unhandled DexPackagingPolicy : " + getDexPackagingPolicy());
-            }
-
-            getBuilder().oldPackageApk(
-                    getResourceFile().getAbsolutePath(),
-                    dexFoldersForApk.build(),
-                    javaResourcesForApk.build(),
-                    getJniFolders(),
-                    getAssets(),
-                    getAbiFilters(),
-                    getJniDebugBuild(),
-                    getSigningConfig(),
-                    getOutputFile(),
-                    getMinSdkVersion(),
-                    getNoCompressPredicate());
-        } catch (DuplicateFileException e) {
-            Logger logger = getLogger();
-            logger.error("Error: duplicate files during packaging of APK " + getOutputFile()
-                    .getAbsolutePath());
-            logger.error("\tPath in archive: " + e.getArchivePath());
-            int index = 1;
-            for (File file : e.getSourceFiles()) {
-                logger.error("\tOrigin " + (index++) + ": " + file);
-            }
-            logger.error("You can ignore those files in your build.gradle:");
-            logger.error("\tandroid {");
-            logger.error("\t  packagingOptions {");
-            logger.error("\t    exclude \'" + e.getArchivePath() + "\'");
-            logger.error("\t  }");
-            logger.error("\t}");
-            throw new BuildException(e.getMessage(), e);
-        } catch (Exception e) {
-            //noinspection ThrowableResultOfMethodCallIgnored
-            Throwable rootCause = Throwables.getRootCause(e);
-            if (rootCause instanceof NoSuchAlgorithmException) {
-                throw new BuildException(
-                        rootCause.getMessage() + ": try using a newer JVM to build your application.",
-                        rootCause);
-            }
-            throw new BuildException(e.getMessage(), e);
-        }
-
-        // mark this APK production, this will eventually be saved when instant-run is enabled.
-        // this might get overridden if the package is signed/aligned.
-        try {
-            instantRunContext.addChangedFile(instantRunFileType, getOutputFile());
-        } catch (IOException e) {
-            throw new BuildException(e.getMessage(), e);
-        }
     }
 
     private File zipDexesForInstantRun(Iterable<File> dexFolders,
@@ -281,15 +178,10 @@ public class PackageApplication extends PackageAndroidArtifact {
 
         @Override
         public void execute(@NonNull final PackageApplication packageApplication) {
-            packageApplication.inOldMode =
-                    AndroidGradleOptions.useOldPackaging(packagingScope.getProject());
-
             ConventionMappingHelper.map(
                     packageApplication,
                     "outputFile",
-                    packageApplication.inOldMode
-                            ? packagingScope::getIntermediateApk
-                            : packagingScope::getOutputPackage);
+                    packagingScope::getOutputPackage);
             super.execute(packageApplication);
         }
     }
@@ -326,9 +218,6 @@ public class PackageApplication extends PackageAndroidArtifact {
         @Override
         public void execute(@NonNull final PackageApplication packageApplication) {
             packageApplication.setOutputFile(mOutputFile);
-
-            packageApplication.inOldMode =
-                    AndroidGradleOptions.useOldPackaging(packagingScope.getProject());
 
             super.execute(packageApplication);
             packageApplication.instantRunFileType = FileType.RESOURCES;

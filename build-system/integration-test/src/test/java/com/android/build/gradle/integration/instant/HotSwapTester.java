@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.utils.UninstallOnClose;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
@@ -50,8 +49,6 @@ public class HotSwapTester {
     @NonNull
     private final GradleTestProject project;
     @NonNull
-    private final Packaging packaging;
-    @NonNull
     private final String packageName;
     @NonNull
     private final String activityName;
@@ -66,7 +63,6 @@ public class HotSwapTester {
 
     public HotSwapTester(
             @NonNull GradleTestProject project,
-            @NonNull Packaging packaging,
             @NonNull String packageName,
             @NonNull String activityName,
             @NonNull String logTag,
@@ -74,7 +70,6 @@ public class HotSwapTester {
             @NonNull Logcat logcat,
             int port) {
         this.project = project;
-        this.packaging = packaging;
         this.packageName = packageName;
         this.activityName = activityName;
         this.logTag = logTag;
@@ -114,7 +109,7 @@ public class HotSwapTester {
 
             // Run first time on device
             InstantRunTestUtils.doInitialBuild(
-                    project, packaging, device.getVersion().getApiLevel(), COLDSWAP_MODE);
+                    project, device.getVersion().getApiLevel(), COLDSWAP_MODE);
 
             // Deploy to device
             InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
@@ -145,7 +140,6 @@ public class HotSwapTester {
 
                 // Now build the hot swap patch.
                 project.executor()
-                        .withPackaging(packaging)
                         .withInstantRun(device.getVersion().getApiLevel(), COLDSWAP_MODE)
                         .run("assembleDebug");
 

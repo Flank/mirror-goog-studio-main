@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -54,7 +53,6 @@ public class InstantRunLibraryAdd {
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         // get the build-info timestamp.
@@ -89,7 +87,6 @@ public class InstantRunLibraryAdd {
         // now perform an incremental build.
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.
@@ -108,7 +105,6 @@ public class InstantRunLibraryAdd {
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         // now add a library to the project.
@@ -130,7 +126,6 @@ public class InstantRunLibraryAdd {
         // a cold swap build.
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.RESTART_ONLY)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.

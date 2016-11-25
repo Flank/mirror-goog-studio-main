@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
@@ -60,8 +59,7 @@ public class InstantRunChangeDeviceTest {
         return Sets.cartesianProduct(
                         ImmutableList.of(
                                 buildTargetsToTest,
-                                buildTargetsToTest,
-                                EnumSet.allOf(Packaging.class)))
+                                buildTargetsToTest))
                 .stream()
                 .map(fromTo -> Iterables.toArray(fromTo, Object.class))
                 .collect(Collectors.toList());
@@ -72,9 +70,6 @@ public class InstantRunChangeDeviceTest {
 
     @Parameterized.Parameter(1)
     public BuildTarget secondBuild;
-
-    @Parameterized.Parameter(2)
-    public Packaging packaging;
 
     @Rule
     public GradleTestProject mProject = GradleTestProject.builder()
@@ -109,12 +104,11 @@ public class InstantRunChangeDeviceTest {
         mProject.execute("clean");
 
         if (firstBuild == BuildTarget.NO_INSTANT_RUN) {
-            mProject.executor().withPackaging(packaging).run("assembleDebug");
+            mProject.executor().run("assembleDebug");
             checkNormalApk(apk);
             startBuildId = null;
         } else {
             mProject.executor()
-                    .withPackaging(packaging)
                     .withInstantRun(
                             firstBuild.getApiLevel(),
                             ColdswapMode.AUTO,
@@ -126,11 +120,10 @@ public class InstantRunChangeDeviceTest {
         }
 
         if (secondBuild == BuildTarget.NO_INSTANT_RUN) {
-            mProject.executor().withPackaging(packaging).run("assembleDebug");
+            mProject.executor().run("assembleDebug");
             checkNormalApk(apk);
         } else {
             mProject.executor()
-                    .withPackaging(packaging)
                     .withInstantRun(
                             secondBuild.getApiLevel(),
                             ColdswapMode.AUTO,

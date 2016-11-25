@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
@@ -44,19 +43,10 @@ import org.junit.runners.Parameterized;
 /**
  * Tests that users can align an APK externally generated.
  */
-@RunWith(Parameterized.class)
 public class AlignExternallyGeneratedApkTest {
 
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -118,33 +108,9 @@ public class AlignExternallyGeneratedApkTest {
                 Charsets.US_ASCII);
 
         /*
-         * Disable zipalign if using old packaging.
-         */
-        if (mPackaging == Packaging.OLD_PACKAGING) {
-            List<String> lines = Files.readLines(project.getBuildFile(), Charsets.US_ASCII);
-            boolean found = false;
-            for (int i = 0; i < lines.size(); i++) {
-                if (lines.get(i).equals("android {")) {
-                    lines.add(i + 1, "buildTypes { debug { zipAlignEnabled false } }");
-                    found = true;
-                    break;
-                }
-            }
-
-            Files.write(
-                    String.join(System.lineSeparator(), lines),
-                    project.getBuildFile(),
-                    Charsets.US_ASCII);
-
-            assertTrue(found);
-        }
-
-        /*
          * Now run task ZA.
          */
-        project.executor()
-                .withPackaging(mPackaging)
-                .run("ZA");
+        project.executor().run("ZA");
 
         /*
          * Make sure alignedApk exists and it is different from the original APK.

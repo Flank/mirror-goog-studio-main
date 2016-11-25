@@ -22,9 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
@@ -35,28 +33,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.zip.GZIPOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * test for packaging of asset files.
  */
-@RunWith(FilterableParameterized.class)
 public class AssetPackagingTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -133,7 +119,7 @@ public class AssetPackagingTest {
     }
 
     private void execute(@NonNull String... tasks) {
-        project.executor().withPackaging(mPackaging).run(tasks);
+        project.executor().run(tasks);
     }
 
     private static void createOriginalAsset(
@@ -599,7 +585,7 @@ public class AssetPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatApk(project.getTestApk(mPackaging, "debug")), filename, content);
+        check(assertThatApk(project.getTestApk("debug")), filename, content);
     }
 
     /**

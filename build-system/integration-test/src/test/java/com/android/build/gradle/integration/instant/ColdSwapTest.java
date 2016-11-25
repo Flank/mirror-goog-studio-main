@@ -21,9 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
@@ -39,29 +37,17 @@ import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Smoke test for cold swap builds.
  */
-@RunWith(FilterableParameterized.class)
 public class ColdSwapTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging packaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -78,7 +64,7 @@ public class ColdSwapTest {
 
     //@Test
     public void withDalvik() throws Exception {
-        new ColdSwapTester(project).withPackaging(packaging).testDalvik(new ColdSwapTester.Steps() {
+        new ColdSwapTester(project).testDalvik(new ColdSwapTester.Steps() {
             @Override
             public void checkApk(@NonNull File apk) throws Exception {
                 checkDalvikApk(apk);
@@ -117,7 +103,7 @@ public class ColdSwapTest {
 
     //@Test
     public void withMultiDex() throws Exception {
-        new ColdSwapTester(project).withPackaging(packaging).testMultiDex(new ColdSwapTester.Steps() {
+        new ColdSwapTester(project).testMultiDex(new ColdSwapTester.Steps() {
             @Override
             public void checkApk(@NonNull File apk) throws Exception {
                 ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
@@ -155,7 +141,7 @@ public class ColdSwapTest {
 
     @Test
     public void withMultiApk() throws Exception {
-        new ColdSwapTester(project).withPackaging(packaging).testMultiApk(new ColdSwapTester.Steps() {
+        new ColdSwapTester(project).testMultiApk(new ColdSwapTester.Steps() {
             @Override
             public void checkApk(@NonNull File apk) throws Exception {
             }

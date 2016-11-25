@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
@@ -72,7 +71,7 @@ public class ConditionalApiUse {
     public void buildFor19() throws Exception {
 
         InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(
-                project, Packaging.NEW_PACKAGING, 19, ColdswapMode.AUTO);
+                project, 19, ColdswapMode.AUTO);
 
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY)
                 .that(project.getApk("debug"));
@@ -89,7 +88,6 @@ public class ConditionalApiUse {
 
         project.executor()
                 .withInstantRun(19, ColdswapMode.AUTO)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         // because we touched a class that was not compatible with InstantRun, we should have
@@ -105,7 +103,7 @@ public class ConditionalApiUse {
     @Test
     public void buildFor23() throws Exception {
         InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(
-                project, Packaging.NEW_PACKAGING, 23, ColdswapMode.AUTO);
+                project, 23, ColdswapMode.AUTO);
 
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY)
                 .that(project.getApk("debug"));
@@ -122,7 +120,6 @@ public class ConditionalApiUse {
 
         project.executor()
                 .withInstantRun(23, ColdswapMode.AUTO)
-                .withPackaging(Packaging.NEW_PACKAGING)
                 .run("assembleDebug");
 
         InstantRunArtifact reloadDexArtifact = InstantRunTestUtils

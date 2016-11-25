@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.model.AndroidProject;
@@ -166,7 +165,6 @@ public final class InstantRunTestUtils {
     @NonNull
     static InstantRun doInitialBuild(
             @NonNull GradleTestProject project,
-            @NonNull Packaging packaging,
             int apiLevel,
             @NonNull ColdswapMode coldswapMode) {
         project.execute("clean");
@@ -175,7 +173,6 @@ public final class InstantRunTestUtils {
 
         project.executor()
                 .withInstantRun(apiLevel, coldswapMode, OptionalCompilationStep.FULL_APK)
-                .withPackaging(packaging)
                 .run("assembleDebug");
 
         return instantRunModel;
