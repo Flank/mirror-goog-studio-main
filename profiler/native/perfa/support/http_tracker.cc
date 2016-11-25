@@ -123,6 +123,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
   httpData.set_conn_id(juid);
   httpData.set_app_id(getpid());
   httpData.set_url(url.get());
+  httpData.set_trace(stack.get());
   net_stub.RegisterHttpData(&ctx, httpData, &reply);
 
   SendHttpEvent(juid, HttpEventRequest::CREATED);

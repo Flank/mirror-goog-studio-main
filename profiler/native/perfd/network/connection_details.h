@@ -42,7 +42,7 @@ struct ConnectionDetails final {
 
     // The code stacktrace where this connection was created
     // Available immediately.
-    std::string trace;  // TODO: Populate this
+    std::string trace;
 
     // A unique ID which can be used as a key to fetch the contents of a request
     // payload (or empty string otherwise).
