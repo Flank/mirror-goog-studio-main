@@ -157,7 +157,7 @@ all transitive dependencies.
 Invoked by running:
 
 ```
-bazel run //tools/base/bazel:add_dependency com.example:foo:1.0
+bazel run //tools/base/bazel:add_dependency com.example:foo:1.0 com.example:android-lib:aar:1.0
 ```
 
 You can also use it to download protoc binaries, like this:
