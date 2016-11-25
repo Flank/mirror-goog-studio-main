@@ -65,6 +65,20 @@ configurations {
     compile.exclude group: 'com.google.guava', module: 'guava-jdk5'
 }
 
+File getCheckedInSdk() {
+    String directoryName;
+    String os = System.getProperty("os.name")
+    if (os.startsWith("Mac")) {
+        directoryName = "darwin"
+    } else if (os.startsWith("Linux")) {
+        directoryName = "linux"
+    } else if (os.startsWith("Windows")) {
+        directoryName = "windows"
+    }
+
+    return rootProject.file("../prebuilts/studio/sdk/" + directoryName)
+}
+
 def testEnvironment = System.getenv().findAll {it.value != null}
 testEnvironment << [
         PROJECT_BUILD_DIR : project.buildDir,
@@ -73,6 +87,9 @@ testEnvironment << [
         DATA_BINDING_INTERNAL_REPO : rootProject.file("../tools/data-binding/internal-prebuilts"),
         DATA_BINDING_REPO : rootProject.file("../tools/data-binding/maven-repo")
 ]
+def testEnvironmentCheckedInSdk = new HashMap()
+testEnvironmentCheckedInSdk << testEnvironment
+testEnvironmentCheckedInSdk['ANDROID_HOME'] = getCheckedInSdk()
 
 // These tasks will not depend on publishLocal, so they will run integration
 // tests against whatever version of the plugin is in ../../../out/repo. This
@@ -90,7 +107,7 @@ configure([test, testPrebuilts]) {
                     "source tree, under out/..., or an env var ANDROID_HOME."
     systemProperties['jar.path'] = jar.archivePath
     systemProperties['java.io.tmpdir'] = tempFile.absolutePath
-    environment = testEnvironment
+    environment = testEnvironmentCheckedInSdk
 
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
@@ -119,13 +136,13 @@ task automaticTest(type: Test) {
 
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
-    environment = testEnvironment
+    environment = testEnvironmentCheckedInSdk
 }
 
 task onlineTest(type: Test) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
-    environment = testEnvironment
+    environment = testEnvironmentCheckedInSdk
 
     useJUnit {
         includeCategories "com.android.build.gradle.integration.common.category.OnlineTests"
