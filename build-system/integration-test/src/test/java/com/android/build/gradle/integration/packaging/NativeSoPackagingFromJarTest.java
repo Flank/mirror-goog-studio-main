@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

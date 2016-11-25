@@ -28,7 +28,7 @@ import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 /**

@@ -18,9 +18,9 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 import static com.android.build.gradle.integration.instant.HotSwapTester.COLDSWAP_MODE;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;

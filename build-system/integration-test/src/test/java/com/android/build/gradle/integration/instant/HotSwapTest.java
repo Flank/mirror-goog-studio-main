@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatDex;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
+import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.truth;
+package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.IndirectSubject;
 import java.io.IOException;
 
 public interface DexSubject {
 
-    IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
-            throws ProcessException, IOException;
+    IndirectSubject<DexClassSubject> containsClass(@NonNull String className) throws IOException;
 
-    void containsClasses(@NonNull String... classNames) throws ProcessException, IOException;
+    void containsClasses(@NonNull String... classNames) throws IOException;
 }
