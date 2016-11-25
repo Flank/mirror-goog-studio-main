@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.truth;
+package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.utils.DexUtils;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.IndirectSubject;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
@@ -58,13 +55,12 @@ public class DexFileSubject extends Subject<DexFileSubject, File> implements Dex
 
     @Override
     public IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
-            throws ProcessException, IOException {
+            throws IOException {
         return getDelegate().containsClass(className);
     }
 
     @Override
-    public void containsClasses(@NonNull String... classNames)
-            throws ProcessException, IOException {
+    public void containsClasses(@NonNull String... classNames) throws IOException {
         getDelegate().containsClasses(classNames);
     }
 }

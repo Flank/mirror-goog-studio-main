@@ -20,9 +20,9 @@ import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_RAW;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
 import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getFailureMessage;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

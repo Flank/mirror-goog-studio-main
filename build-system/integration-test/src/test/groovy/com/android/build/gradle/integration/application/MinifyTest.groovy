@@ -34,6 +34,7 @@ import org.objectweb.asm.tree.FieldNode
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.google.common.truth.TruthJUnit.assume
 
 /**
@@ -117,7 +118,7 @@ class MinifyTest {
 
     @Test
     void 'Test classes.jar is present for non Jack enabled variants'() throws Exception {
-        ZipFileSubject classes = TruthHelper.assertThatZip(project.file(
+        ZipFileSubject classes = assertThatZip(project.file(
                 "build/$AndroidProject.FD_INTERMEDIATES/packaged/debug/classes.jar"))
 
         classes.contains("com/android/tests/basic/Main.class")

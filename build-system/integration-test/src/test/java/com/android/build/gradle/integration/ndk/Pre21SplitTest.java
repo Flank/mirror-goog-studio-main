@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

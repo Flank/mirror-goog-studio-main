@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.common.truth;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.process.ProcessException;
@@ -31,7 +31,6 @@ import com.google.common.io.Closer;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.SubjectFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
