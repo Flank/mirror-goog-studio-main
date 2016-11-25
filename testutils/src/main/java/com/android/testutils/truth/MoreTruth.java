@@ -61,6 +61,11 @@ public class MoreTruth {
     }
 
     @NonNull
+    public static DexFileSubject assertThatDex(@Nullable File dex) {
+        return assert_().about(DexFileSubject.FACTORY).that(dex);
+    }
+
+    @NonNull
     public static <T> Java8OptionalSubject<T> assertThat(
             @SuppressWarnings("OptionalUsedAsFieldOrParameterType") @NonNull
                     java.util.Optional<T> optional) {

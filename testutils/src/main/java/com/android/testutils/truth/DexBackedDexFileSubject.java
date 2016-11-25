@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.truth;
+package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.IndirectSubject;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, DexBackedDexFile>
@@ -55,7 +51,7 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
 
     @Override
     public IndirectSubject<DexClassSubject> containsClass(@NonNull String className)
-            throws ProcessException, IOException {
+            throws IOException {
         checkClassName(className);
 
         if (assertSubjectIsNonNull()) {
@@ -72,7 +68,7 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
     }
 
     @Override
-    public void containsClasses(@NonNull String... expected) throws ProcessException, IOException {
+    public void containsClasses(@NonNull String... expected) throws IOException {
         for (String clazz : expected) {
             checkClassName(clazz);
         }

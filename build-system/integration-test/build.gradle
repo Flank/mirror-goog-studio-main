@@ -38,10 +38,6 @@ dependencies {
     compile libs.google_api_client
     compile libs.google_storage_client
     testCompile libs.mockito_all
-    compile('org.smali:dexlib2:2.1.3') {
-        // commons-cli is not needed as we're not using dexlib from the command line.
-        exclude group: 'commons-cli', module: 'commons-cli'
-    }
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.

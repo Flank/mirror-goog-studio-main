@@ -15,5 +15,6 @@
     <orderEntry type="library" name="easymock-tools" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="library" name="truth" level="project" />
+    <orderEntry type="library" name="dexlib2" level="project" />
   </component>
 </module>

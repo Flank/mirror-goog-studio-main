@@ -28,7 +28,7 @@ import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatZip
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 
 /**
  * Tests for native dependencies

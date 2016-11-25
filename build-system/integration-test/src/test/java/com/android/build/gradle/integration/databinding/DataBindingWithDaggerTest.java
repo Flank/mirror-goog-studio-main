@@ -22,8 +22,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
-import com.android.build.gradle.integration.common.truth.DexBackedDexFileSubject;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.truth.DexBackedDexFileSubject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
