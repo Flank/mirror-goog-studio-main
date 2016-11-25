@@ -746,7 +746,9 @@ public class XmlPrettyPrinter {
                         }
                     }
                 }
-
+                if (!mLineSeparator.equals("\n")) {
+                    trimmed = trimmed.replace("\n", mLineSeparator);
+                }
                 mOut.append(trimmed);
                 mOut.append(mLineSeparator);
                 indent(depth);

@@ -233,6 +233,15 @@ public class XmlPrettyPrinterTest {
     }
 
     @Test
+    public void testWindowsDelimitersInComment() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.defaults(),
+                "<!--\r\nhello\r\nworld\r\n-->\r\n<doc />\r\n",
+                "<!--\r\nhello\r\nworld\r\n-->\r\n<doc />\r\n",
+                "\r\n");
+    }
+
+    @Test
     public void testRemoveBlanklines() throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.defaults();
         prefs.removeEmptyLines = true;
