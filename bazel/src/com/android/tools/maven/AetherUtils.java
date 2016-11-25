@@ -3,7 +3,8 @@ package com.android.tools.maven;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
-
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -22,9 +23,6 @@ import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 
-import java.nio.file.Path;
-import java.util.List;
-
 /** Constructs Aether objects. */
 class AetherUtils {
     static final RemoteRepository MAVEN_CENTRAL =
@@ -32,8 +30,12 @@ class AetherUtils {
                             "Maven Central", "default", "https://repo1.maven.org/maven2/")
                     .build();
 
+    static final RemoteRepository JCENTER =
+            new RemoteRepository.Builder("JCenter", "default", "http://jcenter.bintray.com/")
+                    .build();
+
     static final ImmutableList<RemoteRepository> REPOSITORIES =
-            ImmutableList.of(MAVEN_CENTRAL);
+            ImmutableList.of(MAVEN_CENTRAL, JCENTER);
 
     static RepositorySystem getRepositorySystem() {
         DefaultServiceLocator serviceLocator = MavenRepositorySystemUtils.newServiceLocator();

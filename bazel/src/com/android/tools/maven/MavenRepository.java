@@ -19,7 +19,6 @@ package com.android.tools.maven;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -31,8 +30,8 @@ import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.resolution.ModelResolver;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -46,8 +45,8 @@ import org.eclipse.aether.resolution.DependencyResult;
 /**
  * A maven repository.
  *
- * Provides a friendly API to accessing a local maven repository, by encapsulating all the
- * aether requests.
+ * <p>Provides a friendly API to accessing a local maven repository, by encapsulating all the aether
+ * requests.
  */
 public class MavenRepository {
 
@@ -55,7 +54,7 @@ public class MavenRepository {
     private final ModelBuilder mModelBuilder;
     private final ModelResolver mModelResolver;
     private final RepositorySystem mRepositorySystem;
-    private final RepositorySystemSession mRepositorySystemSession;
+    private final DefaultRepositorySystemSession mRepositorySystemSession;
     private final LocalRepositoryManager mLocalRepositoryManager;
 
     public MavenRepository(Path repoDirectory) {
@@ -67,17 +66,17 @@ public class MavenRepository {
         mModelBuilder = new DefaultModelBuilderFactory().newInstance();
         mModelResolver = resolver;
         mRepositorySystem = AetherUtils.getRepositorySystem();
-        mRepositorySystemSession = AetherUtils
-                .getRepositorySystemSession(mRepositorySystem, repoDirectory);
+        mRepositorySystemSession =
+                AetherUtils.getRepositorySystemSession(mRepositorySystem, repoDirectory);
         mLocalRepositoryManager = mRepositorySystemSession.getLocalRepositoryManager();
-    }
-
-    public MavenRepository() {
-        this(Files.createTempDir().toPath());
     }
 
     public Path getDirectory() {
         return mRepoDirectory;
+    }
+
+    public DefaultRepositorySystemSession getmRepositorySystemSession() {
+        return mRepositorySystemSession;
     }
 
     public Model getPomEffectiveModel(Path pomFile) {
