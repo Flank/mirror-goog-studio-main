@@ -500,6 +500,157 @@ public class SdkManagerCliTest {
                 progress));
     }
 
+
+    /** Verify the behavior of --licenses */
+    @Test
+    public void licenses() throws Exception {
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--licenses"), mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("n\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run();
+
+        assertEquals(
+                "2 of 2 SDK package licenses not accepted.\n"
+                        + "Review licenses that have not been accepted (y/N)? ", out.toString());
+    }
+
+    /** Verify the behavior of --licenses with --verbose */
+    @Test
+    public void licensesVerbose() throws Exception {
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--licenses", "--verbose"),
+                        mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        new SdkManagerCli(
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("n\n".getBytes()),
+                mDownloader,
+                mSdkHandler)
+                .run();
+
+        assertEquals(
+                "License lic1:\n"
+                        + "---------------------------------------\n"
+                        + "my license\n"
+                        + "---------------------------------------\n"
+                        + "Not yet accepted\n"
+                        + "\n"
+                        + "License lic2:\n"
+                        + "---------------------------------------\n"
+                        + "my license 2\n"
+                        + "---------------------------------------\n"
+                        + "Not yet accepted\n"
+                        + "\n"
+                        + "2 of 2 SDK package licenses not accepted.\n"
+                        + "Review licenses that have not been accepted (y/N)? ", out.toString());
+    }
+
+    /** Verify can accept licenses via --licences */
+    @Test
+    public void acceptLicenses() throws Exception {
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--licenses"), mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\ny\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run();
+
+        assertEquals(
+                "2 of 2 SDK package licenses not accepted.\n"
+                        + "Review licenses that have not been accepted (y/N)? \n"
+                        + "1/2: License lic1:\n"
+                        + "---------------------------------------\n"
+                        + "my license\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): \n"
+                        + "2/2: License lic2:\n"
+                        + "---------------------------------------\n"
+                        + "my license 2\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): All SDK package licenses accepted\n",
+                out.toString());
+        out.reset();
+        // Subsequent call should pass without accepting again.
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run();
+        assertEquals("All SDK package licenses accepted.\n", out.toString());
+    }
+
+    /** Verify accepting some licences with --licences */
+    @Test
+    public void acceptSomeLicenses() throws Exception {
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--licenses"), mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        // Accept one of the licences
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\nn\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run();
+        assertEquals(
+                "2 of 2 SDK package licenses not accepted.\n"
+                        + "Review licenses that have not been accepted (y/N)? \n"
+                        + "1/2: License lic1:\n"
+                        + "---------------------------------------\n"
+                        + "my license\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): \n"
+                        + "2/2: License lic2:\n"
+                        + "---------------------------------------\n"
+                        + "my license 2\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): 1 license not accepted\n",
+                out.toString());
+
+        out.reset();
+
+        // Then the other one
+        new SdkManagerCli(
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("y\ny\n".getBytes()),
+                mDownloader,
+                mSdkHandler)
+                .run();
+        assertEquals(
+                "1 of 2 SDK package license not accepted.\n"
+                        + "Review license that has not been accepted (y/N)? \n"
+                        + "1/1: License lic2:\n"
+                        + "---------------------------------------\n"
+                        + "my license 2\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): All SDK package licenses accepted\n",
+                out.toString());
+    }
+
+
     /**
      * Not accepting the license of a package that's depended on results in the depending package
      * not being installed either.
