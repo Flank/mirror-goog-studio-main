@@ -86,28 +86,31 @@ public class RGeneration {
          */
         for (Pair<String, String> k : new HashSet<>(toWrite.keySet())) {
             SymbolTable st = toWrite.get(k);
-
-            // Check that there are no symbols that disappear from the table.
-            Set<Symbol> missing = st.allSymbols().stream()
-                    .filter(s -> !main.contains(s.getResourceType(), s.getName()))
-                    .collect(Collectors.toSet());
-            if (!missing.isEmpty()) {
-                Symbol example = missing.iterator().next();
-                throw new SymbolException(
-                        "Library '"
-                                + st.getTablePackage()
-                                + "."
-                                + st.getTableName()
-                                + " has "
-                                + missing.size()
-                                + " symbols that are not in the main symbol table. For example: "
-                                + example.getResourceType()
-                                + "/"
-                                + example.getName());
-            }
-
             st = main.filter(st).rename(st.getTablePackage(), st.getTableName());
             toWrite.put(k, st);
+
+            /*
+             * Symbols may actually disappear from the library's symbol table. This can happen
+             * with library resolution. For example:
+             *
+             * - Library A version 1 has resource X; it's symbol table will include X and resource
+             * X will exist in the library.
+             * - Library B version 1 depends on library A version 1; it's symbol table will include
+             * X ("inherited" from A), but it won't include resource X since the resource is in
+             * library A version 1.
+             * - Library A version 2 does not have resource X; it does not exist in A's symbol
+             * list nor in its resources.
+             * - Library (or application) depends on Library B version 1 *and* Library A version 2.
+             *
+             * During dependency resolution, when building C we end up with Library A version 2 and
+             * Library B, but Library A version 1 is ignored (because version 2 is included). This
+             * means that symbol X will exist in Library B's symbol table, but the actual resource
+             * does not exist so it won't exist in the main symbol table, which is built from the
+             * existing resources.
+             *
+             * The file we generate for A, in this case, will not include symbol X, although it was
+             * in A's original symbol table.
+             */
         }
 
         /*
