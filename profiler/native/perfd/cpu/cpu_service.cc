@@ -136,6 +136,10 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     string trace_content;
     FileReader::Read(trace_path_, &trace_content);
     response->set_trace(trace_content);
+    // Set the trace id to a random integer
+    // TODO: Change to something more predictable/robust
+    int trace_id = rand() % INT_MAX;
+    response->set_trace_id(trace_id);
     remove(trace_path_.c_str());  // No more use of this file. Delete it.
     trace_path_.clear();  // Make it clear no trace file is alive.
   } else {
