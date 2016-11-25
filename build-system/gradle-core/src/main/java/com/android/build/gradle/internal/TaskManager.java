@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -929,7 +930,8 @@ public abstract class TaskManager {
     @NonNull
     public AndroidTask<PackageSplitRes> createSplitResourcesTasks(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope) {
+            @NonNull VariantScope scope,
+            @NonNull PackagingScope packagingScope) {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
 
         checkState(variantData.getSplitHandlingPolicy().equals(
@@ -947,15 +949,20 @@ public abstract class TaskManager {
         VariantOutputScope variantOutputScope = variantOutputData.getScope();
         AndroidTask<PackageSplitRes> packageSplitRes =
                 androidTasks.create(tasks, new PackageSplitRes.ConfigAction(scope));
-        packageSplitRes.dependsOn(tasks,
-                variantOutputScope.getProcessResourcesTask().getName());
+        packageSplitRes.dependsOn(tasks, variantOutputScope.getProcessResourcesTask().getName());
+
+        if (packagingScope.getSigningConfig() != null) {
+            packageSplitRes.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope));
+        }
+
         return packageSplitRes;
     }
 
     @Nullable
     public AndroidTask<PackageSplitAbi> createSplitAbiTasks(
             @NonNull TaskFactory tasks,
-            @NonNull final VariantScope scope) {
+            @NonNull VariantScope scope,
+            @NonNull PackagingScope packagingScope) {
         ApplicationVariantData variantData = (ApplicationVariantData) scope.getVariantData();
 
         checkState(variantData.getSplitHandlingPolicy().equals(
@@ -989,6 +996,11 @@ public abstract class TaskManager {
 
         packageSplitAbiTask.dependsOn(tasks, generateSplitAbiRes);
         packageSplitAbiTask.dependsOn(tasks, scope.getNdkBuildable());
+
+        if (packagingScope.getSigningConfig() != null) {
+            packageSplitAbiTask.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope));
+        }
+
         if (scope.getExternalNativeBuildTask() != null) {
             packageSplitAbiTask.dependsOn(tasks, scope.getExternalNativeBuildTask());
         }
@@ -1001,23 +1013,29 @@ public abstract class TaskManager {
         return packageSplitAbiTask;
     }
 
-    public void createSplitTasks(@NonNull TaskFactory tasks, @NonNull final VariantScope scope) {
+    public void createSplitTasks(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        VariantOutputScope outputScope =
+                variantScope.getVariantData().getOutputs().get(0).getScope();
+        PackagingScope packagingScope = new DefaultGradlePackagingScope(outputScope);
+
         AndroidTask<PackageSplitRes> packageSplitResourcesTask =
-                createSplitResourcesTasks(tasks, scope);
-        final AndroidTask<PackageSplitAbi> packageSplitAbiTask = createSplitAbiTasks(tasks, scope);
+                createSplitResourcesTasks(tasks, variantScope, packagingScope);
+        final AndroidTask<PackageSplitAbi> packageSplitAbiTask =
+                createSplitAbiTasks(tasks, variantScope, packagingScope);
 
         AndroidTask<SplitZipAlign> zipAlign =
-                androidTasks.create(tasks, new SplitZipAlign.ConfigAction(scope));
+                androidTasks.create(tasks, new SplitZipAlign.ConfigAction(variantScope));
         //noinspection VariableNotUsedInsideIf - only need to check if task exist.
         if (packageSplitAbiTask != null) {
-            zipAlign.configure(tasks,
-                    task -> task.getAbiInputFiles().addAll(scope.getPackageSplitAbiOutputFiles()));
+            zipAlign.configure(
+                    tasks,
+                    task ->
+                            task.getAbiInputFiles()
+                                    .addAll(variantScope.getPackageSplitAbiOutputFiles()));
         }
         zipAlign.dependsOn(tasks, packageSplitResourcesTask);
         zipAlign.optionalDependsOn(tasks, packageSplitAbiTask);
 
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        VariantOutputScope outputScope = variantData.getOutputs().get(0).getScope();
         outputScope.setSplitZipAlignTask(zipAlign);
     }
 
@@ -2380,15 +2398,7 @@ public abstract class TaskManager {
 
             //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
             if (signingConfig != null) {
-                ValidateSigningTask.ConfigAction configAction =
-                        new ValidateSigningTask.ConfigAction(packagingScope);
-
-                AndroidTask<?> validateSigningTask = androidTasks.get(configAction.getName());
-                if (validateSigningTask == null) {
-                    validateSigningTask = androidTasks.create(tasks, configAction);
-                }
-
-                packageApp.dependsOn(tasks, validateSigningTask);
+                packageApp.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope));
             }
 
 
@@ -2594,6 +2604,18 @@ public abstract class TaskManager {
                 tasks, new UninstallTask.ConfigAction(variantScope));
 
         tasks.named(UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
+    }
+
+    private AndroidTask<?> getValidateSigningTask(
+            @NonNull TaskFactory tasks, @NonNull PackagingScope packagingScope) {
+        ValidateSigningTask.ConfigAction configAction =
+                new ValidateSigningTask.ConfigAction(packagingScope);
+
+        AndroidTask<?> validateSigningTask = androidTasks.get(configAction.getName());
+        if (validateSigningTask == null) {
+            validateSigningTask = androidTasks.create(tasks, configAction);
+        }
+        return validateSigningTask;
     }
 
     public AndroidTask<DefaultTask> createAssembleTask(

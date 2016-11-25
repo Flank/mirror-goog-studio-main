@@ -21,11 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,16 +54,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @NonNull final Path profilesDirectory;
 
+    @NonNull final Path projectDirectory;
+
     @Nullable Logging.BenchmarkMode benchmarkMode;
 
     boolean enableInfoLogging;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
+            @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path profilesDirectory,
             @Nullable String heapSize) {
+        this.projectDirectory = projectDirectory;
         this.benchmarkRecorder = benchmarkRecorder;
         this.enableInfoLogging = benchmarkRecorder == null;
         this.projectConnection = projectConnection;
@@ -119,6 +126,18 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      */
     public T withEnableInfoLogging(boolean enableInfoLogging) {
         this.enableInfoLogging = enableInfoLogging;
+        return (T) this;
+    }
+
+    public T withLocalAndroidSdkHome() throws IOException {
+        Path localAndroidSdkHome = projectDirectory.resolve("android_sdk_home");
+        Files.createDirectories(localAndroidSdkHome);
+        withArgument(
+                String.format(
+                        "-D%s=%s",
+                        AndroidLocation.EnvVar.ANDROID_SDK_HOME.getName(),
+                        localAndroidSdkHome.toAbsolutePath()));
+
         return (T) this;
     }
 

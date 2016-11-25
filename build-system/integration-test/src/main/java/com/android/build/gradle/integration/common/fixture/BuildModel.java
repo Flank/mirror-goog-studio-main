@@ -71,6 +71,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
+                project.getTestDir().toPath(),
                 project.getBuildFile().toPath(),
                 project.getBenchmarkRecorder(),
                 project.getProfileDirectory(),
