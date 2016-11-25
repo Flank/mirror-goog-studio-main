@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -178,22 +179,18 @@ public class InstantRunSplitApkBuilder extends BaseTask {
             throws IOException, DuplicateFileException, KeytoolException, PackagerException,
             InterruptedException, ProcessException {
 
-        final File outputLocation = new File(getOutputDirectory(), file.encodeName()
-                + "_unaligned.apk");
-        Files.createParentDirs(outputLocation);
-        File resPackageFile = generateSplitApkManifest(file.encodeName());
-        getBuilder().packageCodeSplitApk(resPackageFile.getAbsolutePath(),
-                file.dexFile, signingConf, outputLocation);
-        // zip align it.
         final File alignedOutput = new File(getOutputDirectory(), file.encodeName() + ".apk");
-        ProcessInfoBuilder processInfoBuilder = new ProcessInfoBuilder();
-        processInfoBuilder.setExecutable(getZipAlignExe());
-        processInfoBuilder.addArgs("-f", "4");
-        processInfoBuilder.addArgs(outputLocation.getAbsolutePath());
-        processInfoBuilder.addArgs(alignedOutput.getAbsolutePath());
+        Files.createParentDirs(alignedOutput);
+        File resPackageFile = generateSplitApkManifest(file.encodeName());
 
-        getBuilder().executeProcess(processInfoBuilder.createProcess(),
-                new LoggedProcessOutputHandler(getILogger()));
+        // packageCodeSplitApk uses a temporary directory for incremental runs. Since we don't
+        // do incremental builds here, make sure it gets an empty directory.
+        File packageTmpDir = new File(getTemporaryDir(), "package");
+        FileUtils.cleanOutputDir(packageTmpDir);
+
+        getBuilder().packageCodeSplitApk(resPackageFile.getAbsolutePath(),
+                file.dexFile, signingConf, alignedOutput, packageTmpDir,
+                ApkCreatorFactories.fromProjectProperties(getProject(), true));
 
         instantRunBuildContext.addChangedFile(FileType.SPLIT, alignedOutput);
         resPackageFile.delete();
