@@ -161,7 +161,6 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.DataBindingOptions;
-import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -618,12 +617,12 @@ public abstract class TaskManager {
     /**
      * Adds the manifest artifact for the variant.
      *
-     * This artifact is added if the publishNonDefault option is {@code true}.
-     * See {@link VariantDependencies#compute variant dependencies evaluation} for more details
+     * <p>This artifact is added if the publishNonDefault option is {@code true}. See variant
+     * dependencies evaluation in {@link VariantDependencies} for more details.
      */
     private void addManifestArtifact(
             @NonNull TaskFactory tasks,
-            @NonNull  BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (variantData.getVariantDependency().getManifestConfiguration() != null) {
             ManifestProcessorTask mergeManifestsTask =
                     variantData.getOutputs().get(0).getScope().getManifestProcessorTask()
@@ -2053,7 +2052,9 @@ public abstract class TaskManager {
         // ----- Create PreDex tasks for libraries -----
         JackPreDexTransform preDexPackagedTransform =
                 JackPreDexTransform.builder()
-                        .androidBuilder(androidBuilder)
+                        .buildToolInfo(androidBuilder::getBuildToolInfo)
+                        .errorReporter(androidBuilder.getErrorReporter())
+                        .javaProcessExecutor(androidBuilder.getJavaProcessExecutor())
                         .javaMaxHeapSize(
                                 globalScope.getExtension().getDexOptions().getJavaMaxHeapSize())
                         .coreJackOptions(scope.getVariantConfiguration().getJackOptions())
@@ -2080,7 +2081,10 @@ public abstract class TaskManager {
 
         JackPreDexTransform preDexRuntimeTransform =
                 JackPreDexTransform.builder()
-                        .androidBuilder(androidBuilder)
+                        .bootClasspath(() -> androidBuilder.getBootClasspath(true))
+                        .buildToolInfo(androidBuilder::getBuildToolInfo)
+                        .errorReporter(androidBuilder.getErrorReporter())
+                        .javaProcessExecutor(androidBuilder.getJavaProcessExecutor())
                         .javaMaxHeapSize(
                                 globalScope.getExtension().getDexOptions().getJavaMaxHeapSize())
                         .coreJackOptions(scope.getVariantConfiguration().getJackOptions())

@@ -17,13 +17,15 @@
 package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
+import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
+import com.android.utils.ILogger;
 import com.android.utils.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -31,19 +33,20 @@ import java.io.IOException;
 /**
  * Cache for jar -> jack conversion, using the Jack --import tool.
  *
- * Since we cannot yet have a single task for each library that needs to be run through Jack
- * (because there is no task-level parallelization), this class allows reusing the output of
- * the Jack process for a library in a project in other projects.
+ * <p>Since we cannot yet have a single task for each library that needs to be run through Jack
+ * (because there is no task-level parallelization), this class allows reusing the output of the
+ * Jack process for a library in a project in other projects.
  *
- * Because different project could use different build-tools, both the library to be converted
+ * <p>Because different project could use different build-tools, both the library to be converted
  * and the version of the build tools are used as keys in the cache.
  *
- * The API is fairly simple, just call {@link #convertLibrary(AndroidBuilder, File, File, JackProcessOptions, boolean)}
+ * <p>The API is fairly simple, just call {@link #convertLibrary(File, File, JackProcessOptions,
+ * boolean, BuildToolInfo, ILogger, ErrorReporter, JavaProcessExecutor)}
  *
- * The call will be blocking until the conversion happened, either through actually running Jack or
- * through copying the output of a previous Jack run.
+ * <p>The call will be blocking until the conversion happened, either through actually running Jack
+ * or through copying the output of a previous Jack run.
  *
- * After a build a call to {@link #clear(java.io.File, com.android.utils.ILogger)} with a file
+ * <p>After a build a call to {@link #clear(java.io.File, com.android.utils.ILogger)} with a file
  * will allow saving the known converted libraries for future reuse.
  */
 public class JackConversionCache extends PreProcessCache<JackDexKey> {
@@ -72,41 +75,35 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
      * @throws ProcessException if it fails
      */
     public void convertLibrary(
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull JackProcessOptions options,
-            boolean isJackInProcess)
-            throws ProcessException,
-            JackToolchain.ToolchainException,
-            ClassNotFoundException,
-            InterruptedException,
-            IOException {
-        Preconditions.checkNotNull(androidBuilder.getTargetInfo());
+            boolean isJackInProcess,
+            @NonNull BuildToolInfo buildToolInfo,
+            @NonNull ILogger logger,
+            @NonNull ErrorReporter errorReporter,
+            @NonNull JavaProcessExecutor javaProcessExecutor)
+            throws ProcessException, JackToolchain.ToolchainException, ClassNotFoundException,
+                    InterruptedException, IOException {
         JackDexKey itemKey =
                 JackDexKey.of(
                         inputFile,
-                        androidBuilder.getTargetInfo().getBuildTools().getRevision(),
+                        buildToolInfo.getRevision(),
                         options.getJumboMode(),
                         options.getDexOptimize(),
                         options.getMinSdkVersion().getApiString(),
                         options.getUseJill() ? JILL_USED : JACK_USED,
                         options.getAdditionalParameters());
 
-        Pair<PreProcessCache.Item, Boolean> pair = getItem(androidBuilder.getLogger(), itemKey);
+        Pair<PreProcessCache.Item, Boolean> pair = getItem(logger, itemKey);
         Item item = pair.getFirst();
 
         // if this is a new item
         if (pair.getSecond()) {
             try {
                 // haven't process this file yet so do it and record it.
-                JackToolchain toolchain =
-                        new JackToolchain(
-                                androidBuilder.getTargetInfo().getBuildTools(),
-                                androidBuilder.getLogger(),
-                                androidBuilder.getErrorReporter());
-                toolchain.convert(
-                        options, androidBuilder.getJavaProcessExecutor(), isJackInProcess);
+                JackToolchain toolchain = new JackToolchain(buildToolInfo, logger, errorReporter);
+                toolchain.convert(options, javaProcessExecutor, isJackInProcess);
 
 
                 item.getOutputFiles().add(outFile);

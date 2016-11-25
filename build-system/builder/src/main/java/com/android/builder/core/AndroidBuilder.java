@@ -242,6 +242,14 @@ public class AndroidBuilder {
         return mTargetInfo;
     }
 
+    /** Returns the build tools for this builder. */
+    @NonNull
+    public BuildToolInfo getBuildToolInfo() {
+        checkNotNull(
+                mTargetInfo, "Cannot call getBuildToolInfo() before setTargetInfo() is called.");
+        return mTargetInfo.getBuildTools();
+    }
+
     @NonNull
     public ILogger getLogger() {
         return mLogger;
@@ -252,10 +260,8 @@ public class AndroidBuilder {
         return mErrorReporter;
     }
 
-    /**
-     * Returns the compilation target, if set.
-     */
-    @Nullable
+    /** Returns the compilation target, if set. */
+    @NonNull
     public IAndroidTarget getTarget() {
         checkState(mTargetInfo != null,
                 "Cannot call getTarget() before setTargetInfo() is called.");
