@@ -99,18 +99,18 @@ public class LibraryPluginDslTest extends BaseDslTest {
                                            @NonNull String testedVariantName,
                                            @NonNull Set<LibraryVariant> variants,
                                            @NonNull Set<TestVariant> testVariants) {
-        LibraryVariant variant = findNamedItem(variants, variantName)
+        LibraryVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNotNull(variant.testVariant)
         assertEquals(testedVariantName, variant.testVariant.name)
-        assertEquals(variant.testVariant, findNamedItem(testVariants, testedVariantName))
+        assertEquals(variant.testVariant, findVariant(testVariants, testedVariantName))
         checkLibraryTasks(variant)
         checkTestTasks(variant.testVariant)
     }
 
     private static void checkNonTestedVariant(@NonNull String variantName,
                                               @NonNull Set<LibraryVariant> variants) {
-        LibraryVariant variant = findNamedItem(variants, variantName)
+        LibraryVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNull(variant.testVariant)
         checkLibraryTasks(variant)
