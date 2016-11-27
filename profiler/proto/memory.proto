@@ -32,11 +32,11 @@ service MemoryService {
   }
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
-  rpc SetAllocationTracking(AllocationTrackingRequest) returns (AllocationTrackingResponse) {
+  rpc SetAllocationTracking(AllocationTrackingRequest)
+      returns (AllocationTrackingResponse) {
   }
-  rpc GetAllocationDump(AllocationDumpDataRequest) returns (DumpDataResponse) {
-  }
-  rpc ListAllocationDumpInfos(ListDumpInfosRequest) returns (ListAllocationDumpInfosResponse) {
+  rpc ListAllocationTrackingEnvironments(AllocationTrackingEnvironmentRequest)
+      returns (AllocationTrackingEnvironmentResponse) {
   }
 }
 
@@ -88,11 +88,20 @@ message HeapDumpInfo {
   bool success = 5;
 }
 
-message AllocationDumpInfo {
-  int64 start_time = 1;
-  int64 end_time = 2;
-  int32 dump_id = 3;
-  bool success = 4;
+message AllocatedClass {
+  int32 classId = 1;
+  string className = 2;
+}
+
+message AllocationStack {
+  message StackFrame {
+    string className = 1;
+    string methodName = 2;
+    int32 lineNumber = 3;
+  }
+
+  bytes stackId = 1;
+  repeated StackFrame stackFrames = 2;
 }
 
 message MemoryData {
@@ -114,11 +123,26 @@ message MemoryData {
     int32 gc_count = 4;
   }
 
+  message AllocationTrackingSetting {
+    int64 timestamp = 1;
+    bool enabled = 2;
+  }
+
+  message AllocationEvent {
+    int64 timestamp = 1;
+    int32 size = 2;
+    int32 threadId = 3;
+    int32 allocatedClassId = 4;
+    bytes allocationStackId = 5;
+  }
+
   // end timestamp after which values are yet to be queried for
   int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
   repeated VmStatsSample vm_stats_samples = 3;
   repeated HeapDumpInfo heap_dump_infos = 4;
+  repeated AllocationTrackingSetting allocation_tracking_settings = 5;
+  repeated AllocationEvent allocation_events = 6;
 }
 
 message ListDumpInfosRequest {
@@ -165,7 +189,6 @@ message ListHeapDumpInfosResponse {
 
 message AllocationTrackingRequest {
   int32 app_id = 1;
-  int64 request_time = 2;
   bool enabled = 3;
 }
 
@@ -178,14 +201,16 @@ message AllocationTrackingResponse {
     FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
-  AllocationDumpInfo info = 2;
+  int64 timestamp = 2;
 }
 
-message AllocationDumpDataRequest {
+message AllocationTrackingEnvironmentRequest {
   int32 app_id = 1;
-  int32 dump_id = 2;
+  int64 start_time = 2;  // exclusive
+  int64 end_time = 3;    // inclusive
 }
 
-message ListAllocationDumpInfosResponse {
-  repeated AllocationDumpInfo infos = 1;
+message AllocationTrackingEnvironmentResponse {
+  repeated AllocatedClass allocated_classes = 1;
+  repeated AllocationStack allocation_stacks = 2;
 }
