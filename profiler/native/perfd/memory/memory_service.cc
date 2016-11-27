@@ -19,14 +19,14 @@
 
 #include "utils/trace.h"
 
-using profiler::proto::AllocationDumpDataRequest;
+using profiler::proto::AllocationTrackingEnvironmentRequest;
+using profiler::proto::AllocationTrackingEnvironmentResponse;
 using profiler::proto::AllocationTrackingRequest;
 using profiler::proto::AllocationTrackingResponse;
 using profiler::proto::DumpDataResponse;
 using profiler::proto::HeapDumpDataRequest;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
-using profiler::proto::ListAllocationDumpInfosResponse;
 using profiler::proto::ListHeapDumpInfosResponse;
 using profiler::proto::ListDumpInfosRequest;
 using profiler::proto::MemoryData;
@@ -129,8 +129,6 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   }
 }
 
-#undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
-
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
     ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
     ListHeapDumpInfosResponse* response) {
@@ -141,22 +139,35 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::SetAllocationTracking(
     ::grpc::ServerContext* context, const AllocationTrackingRequest* request,
     AllocationTrackingResponse* response) {
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Not implemented on device");
+  Trace trace("MEM:GetFile");
+  int32_t app_id = request->app_id();
+
+  auto result = collectors_.find(app_id);
+  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
+      result, collectors_, response, AllocationTrackingResponse::FAILURE_UNKNOWN)
+
+  (result->second).SetAllocationTracking(request->enabled(), response);
+  switch (response->status()) {
+    case AllocationTrackingResponse::SUCCESS:
+    case AllocationTrackingResponse::IN_PROGRESS:
+    case AllocationTrackingResponse::NOT_ENABLED:
+      return ::grpc::Status::OK;
+    default:
+      return ::grpc::Status(
+          ::grpc::StatusCode::UNKNOWN,
+          "Unknown issues when attempting to set allocation tracking.");
+  }
 }
 
-::grpc::Status MemoryServiceImpl::GetAllocationDump(
-    ::grpc::ServerContext* context, const AllocationDumpDataRequest* request,
-    DumpDataResponse* response) {
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Not implemented on device");
-}
+#undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-::grpc::Status MemoryServiceImpl::ListAllocationDumpInfos(
-    ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
-    ListAllocationDumpInfosResponse* response) {
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Not implemented on device");
+::grpc::Status MemoryServiceImpl::ListAllocationTrackingEnvironments(
+    ::grpc::ServerContext* context,
+    const AllocationTrackingEnvironmentRequest* request,
+    AllocationTrackingEnvironmentResponse* response) {
+  return ::grpc::Status(
+      ::grpc::StatusCode::UNIMPLEMENTED,
+      "Listing allocation tracking environments is WIP.");
 }
 
 MemoryCollector* MemoryServiceImpl::GetCollector(int32_t app_id) {

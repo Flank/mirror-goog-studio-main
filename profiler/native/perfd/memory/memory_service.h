@@ -67,15 +67,11 @@ class MemoryServiceImpl final
       const ::profiler::proto::AllocationTrackingRequest* request,
       ::profiler::proto::AllocationTrackingResponse* response) override;
 
-  ::grpc::Status GetAllocationDump(
+  ::grpc::Status ListAllocationTrackingEnvironments(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::AllocationDumpDataRequest* request,
-      ::profiler::proto::DumpDataResponse* response) override;
-
-  ::grpc::Status ListAllocationDumpInfos(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::ListDumpInfosRequest* request,
-      ::profiler::proto::ListAllocationDumpInfosResponse* response) override;
+      const ::profiler::proto::AllocationTrackingEnvironmentRequest* request,
+      ::profiler::proto::AllocationTrackingEnvironmentResponse* response)
+      override;
 
  private:
   MemoryCollector* GetCollector(int32_t app_id);

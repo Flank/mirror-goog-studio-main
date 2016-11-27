@@ -20,6 +20,7 @@
 #include "utils/file_reader.h"
 #include "utils/log.h"
 
+using ::profiler::proto::AllocationTrackingResponse;
 using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
@@ -36,13 +37,18 @@ MemoryCache::MemoryCache(const Clock& clock, int32_t samples_capacity)
       memory_samples_(new MemoryData::MemorySample[samples_capacity]),
       vm_stats_samples_(new MemoryData::VmStatsSample[samples_capacity]),
       heap_dump_infos_(new HeapDumpInfo[samples_capacity]),
+      allocation_tracking_settings_(
+          new MemoryData::AllocationTrackingSetting[samples_capacity]),
       put_memory_sample_index_(0),
       put_vm_stats_sample_index_(0),
+      put_allocation_tracking_settings_index_(0),
       next_heap_dump_sample_id_(0),
       samples_capacity_(samples_capacity),
       memory_samples_buffer_full_(false),
       vm_stats_samples_buffer_full_(false),
-      has_unfinished_heap_dump_(false) {}
+      allocation_tracking_settings_buffer_full_(false),
+      has_unfinished_heap_dump_(false),
+      is_allocation_tracking_enabled_(false) {}
 
 void MemoryCache::SaveMemorySample(const MemoryData::MemorySample& sample) {
   std::lock_guard<std::mutex> lock(memory_samples_mutex_);
@@ -106,6 +112,34 @@ bool MemoryCache::EndHeapDump(int64_t end_time, bool success) {
   return true;
 }
 
+void MemoryCache::SetAllocationTracking(bool enabled,
+                                        AllocationTrackingResponse* response) {
+  std::lock_guard<std::mutex> lock(allocation_tracking_settings_mutex_);
+
+  if (enabled == is_allocation_tracking_enabled_) {
+    if (is_allocation_tracking_enabled_) {
+      response->set_status(AllocationTrackingResponse::IN_PROGRESS);
+    } else {
+      response->set_status(AllocationTrackingResponse::NOT_ENABLED);
+    }
+  } else {
+    int64_t timestamp = clock_.GetCurrentTime();
+    response->set_status(AllocationTrackingResponse::SUCCESS);
+    response->set_timestamp(timestamp);
+    is_allocation_tracking_enabled_ = enabled;
+    // TODO enable/disable post-O allocation tracking
+    allocation_tracking_settings_[put_allocation_tracking_settings_index_]
+        .set_timestamp(timestamp);
+    allocation_tracking_settings_[put_allocation_tracking_settings_index_]
+        .set_enabled(is_allocation_tracking_enabled_);
+    put_allocation_tracking_settings_index_ = GetNextSampleIndex(
+        put_allocation_tracking_settings_index_);
+    if (put_allocation_tracking_settings_index_ == 0) {
+      allocation_tracking_settings_buffer_full_ = true;  // Check if we have wrapped.
+    }
+  }
+}
+
 void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                                  MemoryData* response) {
   std::lock_guard<std::mutex> memory_lock(memory_samples_mutex_);
@@ -138,6 +172,21 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
       i = GetNextSampleIndex(i);
     } while (i != put_vm_stats_sample_index_);
   }
+
+  if (put_allocation_tracking_settings_index_ > 0 || allocation_tracking_settings_buffer_full_) {
+    int32_t i = allocation_tracking_settings_buffer_full_ ?
+        put_allocation_tracking_settings_index_ : 0;
+    do {
+      int64_t timestamp = allocation_tracking_settings_[i].timestamp();
+      if (timestamp > start_time_exl && timestamp <= end_time_inc) {
+        response->add_allocation_tracking_settings()->CopyFrom(allocation_tracking_settings_[i]);
+        end_timestamp = std::max(timestamp, end_timestamp);
+      }
+      i = GetNextSampleIndex(i);
+    } while (i != put_vm_stats_sample_index_);
+  }
+
+  // TODO implement JVMTI allocation events AND MAKE SURE THE BUFFER IS LARGE
 
   if (next_heap_dump_sample_id_ > 0) {
     // Since |next_heap_dump_sample_id_| is a contiguous value mapped to a
