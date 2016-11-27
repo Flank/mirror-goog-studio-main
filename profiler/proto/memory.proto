@@ -32,11 +32,11 @@ service MemoryService {
   }
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
-  rpc SetAllocationTracking(AllocationTrackingRequest)
-      returns (AllocationTrackingResponse) {
+  rpc TrackAllocations(TrackAllocationsRequest)
+      returns (TrackAllocationsResponse) {
   }
-  rpc ListAllocationTrackingEnvironments(AllocationTrackingEnvironmentRequest)
-      returns (AllocationTrackingEnvironmentResponse) {
+  rpc ListAllocationContexts(AllocationContextsRequest)
+      returns (AllocationContextsResponse) {
   }
 }
 
@@ -123,7 +123,7 @@ message MemoryData {
     int32 gc_count = 4;
   }
 
-  message AllocationTrackingSetting {
+  message AllocationsInfo {
     int64 timestamp = 1;
     bool enabled = 2;
   }
@@ -141,7 +141,7 @@ message MemoryData {
   repeated MemorySample mem_samples = 2;
   repeated VmStatsSample vm_stats_samples = 3;
   repeated HeapDumpInfo heap_dump_infos = 4;
-  repeated AllocationTrackingSetting allocation_tracking_settings = 5;
+  repeated AllocationsInfo allocations_info = 5;
   repeated AllocationEvent allocation_events = 6;
 }
 
@@ -187,12 +187,12 @@ message ListHeapDumpInfosResponse {
   repeated HeapDumpInfo infos = 1;
 }
 
-message AllocationTrackingRequest {
+message TrackAllocationsRequest {
   int32 app_id = 1;
   bool enabled = 3;
 }
 
-message AllocationTrackingResponse {
+message TrackAllocationsResponse {
   enum Status {
     UNSPECIFIED = 0;
     SUCCESS = 1;
@@ -204,13 +204,13 @@ message AllocationTrackingResponse {
   int64 timestamp = 2;
 }
 
-message AllocationTrackingEnvironmentRequest {
+message AllocationContextsRequest {
   int32 app_id = 1;
   int64 start_time = 2;  // exclusive
   int64 end_time = 3;    // inclusive
 }
 
-message AllocationTrackingEnvironmentResponse {
+message AllocationContextsResponse {
   repeated AllocatedClass allocated_classes = 1;
   repeated AllocationStack allocation_stacks = 2;
 }

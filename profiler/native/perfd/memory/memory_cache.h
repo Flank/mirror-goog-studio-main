@@ -36,8 +36,8 @@ class MemoryCache {
   bool StartHeapDump(const std::string& dump_file_path,
                      int64_t request_time);
   bool EndHeapDump(int64_t end_time, bool success);
-  void SetAllocationTracking(bool enabled,
-                             proto::AllocationTrackingResponse* response);
+  void TrackAllocations(bool enabled,
+                        proto::TrackAllocationsResponse* response);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
@@ -56,23 +56,23 @@ class MemoryCache {
   std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;
   std::unique_ptr<proto::MemoryData::VmStatsSample[]> vm_stats_samples_;
   std::unique_ptr<proto::HeapDumpInfo[]> heap_dump_infos_;
-  std::unique_ptr<proto::MemoryData::AllocationTrackingSetting[]>
-      allocation_tracking_settings_;
+  std::unique_ptr<proto::MemoryData::AllocationsInfo[]>
+      allocations_info_;
   std::mutex memory_samples_mutex_;
   std::mutex vm_stats_samples_mutex_;
   std::mutex heap_dump_infos_mutex_;
-  std::mutex allocation_tracking_settings_mutex_;
+  std::mutex allocations_info_mutex_;
 
   int32_t put_memory_sample_index_;
   int32_t put_vm_stats_sample_index_;
-  int32_t put_allocation_tracking_settings_index_;
+  int32_t put_allocations_info_index_;
   int32_t next_heap_dump_sample_id_;
   // TODO consider configuring cache sizes independently.
   int32_t samples_capacity_;
 
   bool memory_samples_buffer_full_;
   bool vm_stats_samples_buffer_full_;
-  bool allocation_tracking_settings_buffer_full_;
+  bool allocations_info_buffer_full_;
   bool has_unfinished_heap_dump_;
   bool is_allocation_tracking_enabled_;
 };

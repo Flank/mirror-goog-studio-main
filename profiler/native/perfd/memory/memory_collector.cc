@@ -26,7 +26,7 @@
 #include "utils/trace.h"
 
 using ::profiler::proto::DumpDataResponse;
-using ::profiler::proto::AllocationTrackingResponse;
+using ::profiler::proto::TrackAllocationsResponse;
 
 namespace profiler {
 
@@ -126,10 +126,10 @@ void MemoryCollector::GetHeapDumpData(int32_t dump_id,
   memory_cache_.ReadHeapDumpFileContents(dump_id, response);
 }
 
-void MemoryCollector::SetAllocationTracking(
+void MemoryCollector::TrackAllocations(
     bool enabled,
-    AllocationTrackingResponse* response) {
-  memory_cache_.SetAllocationTracking(enabled, response);
+    TrackAllocationsResponse* response) {
+  memory_cache_.TrackAllocations(enabled, response);
 }
 
 }  // namespace profiler
