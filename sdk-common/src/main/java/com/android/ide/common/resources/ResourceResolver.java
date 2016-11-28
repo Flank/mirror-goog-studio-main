@@ -467,6 +467,11 @@ public class ResourceResolver extends RenderResources {
      * project resources
      */
     private ResourceValue findResValue(ResourceUrl resource, boolean forceFramework) {
+        if (resource.type == ResourceType.AAPT) {
+            // Aapt resources are synthetic references that do not need to be resolved.
+            return null;
+        }
+
         // map of ResourceValue for the given type
         ResourceValueMap typeMap;
         ResourceType resType = resource.type;
