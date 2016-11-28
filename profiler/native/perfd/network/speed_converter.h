@@ -31,15 +31,15 @@ class SpeedConverter final {
  public:
   // Initialize this converter with the current state of the device. |bytes|
   // should represent the number of bytes transferred since device boot.
-  SpeedConverter(int64_t timestamp_us, int64_t bytes)
-  : last_timestamp_us_(timestamp_us), last_bytes_(bytes),
-    speed_time_us_(timestamp_us) {}
+  SpeedConverter(int64_t timestamp_ns, int64_t bytes)
+  : last_timestamp_ns_(timestamp_ns), last_bytes_(bytes),
+    speed_time_ns_(timestamp_ns) {}
 
   // Add the next data point of |bytes| transferred since device boot, and from
-  // that, we'll calculate the latest speed. |timestamp_us| should always be a
+  // that, we'll calculate the latest speed. |timestamp_ns| should always be a
   // larger value than before, and |bytes| should stay the same or increase over
   // time. Other values are ignored as invalid.
-  void Add(int64_t timestamp_us, int64_t bytes);
+  void Add(int64_t timestamp_ns, int64_t bytes);
 
   // Return the last speed calculated (in bytes per second) after the last call
   // to |Add|
@@ -49,24 +49,24 @@ class SpeedConverter final {
   // will always equal the timestamp passed into |Add| unless the speed dropped
   // to 0 since the previous call to |Add|. See the class header comment for
   // more details.
-  int64_t speed_time_us() { return speed_time_us_; }
+  int64_t speed_time_ns() { return speed_time_ns_; }
 
  private:
 
   // Given the last speed value and other relevant values, calculate the next
   // speed value we need to generate a timeslice that would produce |bytes|.
-  // Calculated values will be output into |speed| and |speed_time_us|.
+  // Calculated values will be output into |speed| and |speed_time_ns|.
   //
-  // Note that |next_time_us| will usually be the same as |curr_time_us|, unless
-  // the speed dropped to 0 at some point between |prev_time_us| and
-  // |curr_time_us|.
-  static void Convert(int64_t prev_time_us, int64_t curr_time_us,
-    int64_t prev_speed, int64_t bytes, int64_t* speed, int64_t* speed_time_us);
+  // Note that |next_time_ns| will usually be the same as |curr_time_ns|, unless
+  // the speed dropped to 0 at some point between |prev_time_ns| and
+  // |curr_time_ns|.
+  static void Convert(int64_t prev_time_ns, int64_t curr_time_ns,
+    int64_t prev_speed, int64_t bytes, int64_t* speed, int64_t* speed_time_ns);
 
-  int64_t last_timestamp_us_;
+  int64_t last_timestamp_ns_;
   int64_t last_bytes_;
 
-  int64_t speed_time_us_;
+  int64_t speed_time_ns_;
   int64_t speed_{0};
 };
 
