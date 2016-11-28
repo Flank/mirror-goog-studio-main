@@ -998,6 +998,7 @@ public final class SdkConstants {
     // Attributes: Manifest
     public static final String ATTR_EXPORTED = "exported";             //$NON-NLS-1$
     public static final String ATTR_PERMISSION = "permission";         //$NON-NLS-1$
+    public static final String ATTR_PROCESS = "process";               //$NON-NLS-1$
     public static final String ATTR_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$

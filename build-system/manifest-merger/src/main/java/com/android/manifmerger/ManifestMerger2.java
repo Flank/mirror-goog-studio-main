@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -55,6 +56,9 @@ public class ManifestMerger2 {
 
     static final String BOOTSTRAP_APPLICATION
             = "com.android.tools.fd.runtime.BootstrapApplication";
+
+    static final String BOOTSTRAP_RUN_AS_SERVICE
+            = "com.android.tools.fd.runtime.RunAsServer";
 
     @NonNull
     private final File mManifestFile;
@@ -393,8 +397,39 @@ public class ManifestMerger2 {
                         SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_NAME,
                         BOOTSTRAP_APPLICATION);
             }
+            addRunAsServer(document, application);
         }
         return document.reparse();
+    }
+
+    @NonNull
+    private static void addRunAsServer(XmlDocument document, XmlElement application) {
+        // <service
+        //     android:name="com.android.tools.fd.runtime.RunAsServer"
+        //     android:exported="true"
+        //     android:process=":RunAsServer" />
+        Element service = document.getXml().createElement(SdkConstants.TAG_SERVICE);
+        service.setAttributeNS(
+            SdkConstants.ANDROID_URI,
+            SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_NAME,
+            BOOTSTRAP_RUN_AS_SERVICE);
+        // Export it so we can start it with a shell command from adb.
+        service.setAttributeNS(
+            SdkConstants.ANDROID_URI,
+            SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_EXPORTED,
+            SdkConstants.VALUE_TRUE);
+        // It turns out that you get a lot better debugging information if you run
+        // it in-process.  But for production it needs to run in a separate process.
+        final boolean RUN_IN_SEPARATE_PROCESS = true;
+        if (RUN_IN_SEPARATE_PROCESS) {
+            int lastDot = BOOTSTRAP_RUN_AS_SERVICE.lastIndexOf('.');
+            String processName = ":" + BOOTSTRAP_RUN_AS_SERVICE.substring(lastDot + 1);
+            service.setAttributeNS(
+                SdkConstants.ANDROID_URI,
+                SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_PROCESS,
+                processName);
+        }
+        application.getXml().appendChild(service);
     }
 
     /**
