@@ -165,6 +165,93 @@ iml_module(
 )
 
 iml_module(
+    name = "idea.lang-tests",
+    tags = ["managed"],
+    test_srcs = ["idea/platform/lang-impl/testSources"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/idea/platform/lang-api",
+        "//tools:idea.platform-impl_and_others",
+        "//tools/idea/.idea/libraries:cli-parser",
+        "//tools/idea/platform/indexing-impl",
+        "//tools/idea/platform/projectModel-impl",
+        "//tools/idea/platform/analysis-impl",
+        "//tools/idea/platform/structure-view-impl",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/platform/boot[module]",
+        "//tools/idea/platform/lang-api[module]",
+        "//tools/idea/platform/vcs-api[module]",
+        "//tools/idea/.idea/libraries:OroMatcher",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:Velocity",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/.idea/libraries:xpp3-1.1.4-min",
+        "//tools/idea/.idea/libraries:cli-parser",
+        "//tools/idea/platform/indexing-api[module]",
+        "//tools/idea/platform/indexing-impl[module]",
+        "//tools/idea/.idea/libraries:Snappy-Java",
+        "//tools/idea/platform/projectModel-impl[module]",
+        "//tools/idea/.idea/libraries:Groovy[test]",
+        "//tools/idea/.idea/libraries:swingx",
+        "//tools/idea/.idea/libraries:Guava",
+        "//tools/idea/.idea/libraries:gson",
+        "//tools/idea/jps/model-impl:jps-model-impl[module]",
+        "//tools/idea/platform/analysis-impl[module]",
+        "//tools/idea/platform/structure-view-impl[module]",
+        "//tools/idea/.idea/libraries:commons-logging",
+        "//tools/idea/.idea/libraries:Mocks[test]",
+    ],
+)
+
+iml_module(
+    name = "idea.diff-tests",
+    tags = ["managed"],
+    test_srcs = ["idea/platform/diff-impl/tests"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/idea/platform/diff-api"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/platform/core-api[module]",
+        "//tools/idea/platform/diff-api[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/platform/platform-api[module]",
+        "//tools/idea/platform/vcs-api/vcs-api-core[module]",
+        "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:KotlinTest[test]",
+    ],
+)
+
+iml_module(
+    name = "idea.built-in-server-tests",
+    tags = ["managed"],
+    test_srcs = ["idea/platform/built-in-server/testSrc"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/platform/projectModel-api[module]",
+        "//tools/idea/platform/projectModel-impl[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/.idea/libraries:Netty",
+        "//tools/idea/xml/openapi:xml-openapi[module]",
+        "//tools/idea/platform/xdebugger-api[module]",
+        "//tools/idea/.idea/libraries:Guava",
+        "//tools/idea/.idea/libraries:gson",
+        "//tools/idea/.idea/libraries:XmlRPC",
+        "//tools/idea/.idea/libraries:Sanselan",
+        "//tools/idea/platform/built-in-server-api[module]",
+        "//tools/idea/platform/vcs-api[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
+        "//tools/idea/.idea/libraries:assertJ[test]",
+    ],
+)
+
+iml_module(
     name = "idea.java-analysis-impl",
     # do not sort: must match IML order
     srcs = [
@@ -244,6 +331,54 @@ iml_module(
         "//tools/idea/.idea/libraries:Velocity",
         "//tools/idea/java/java-structure-view[module]",
         "//tools/idea/.idea/libraries:nekohtml",
+    ],
+)
+
+iml_module(
+    name = "idea.java-tests",
+    exclude = ["idea/java/java-tests/testSrc/com/intellij/index/IndexTestGenerator.scala"],
+    tags = ["managed"],
+    test_srcs = [
+        "idea/java/java-tests/testSrc",
+        "idea/plugins/InspectionGadgets/testsrc",
+        "idea/plugins/IntentionPowerPak/testSrc",
+        "idea/plugins/generate-tostring/testSrc",
+    ],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/idea/plugins/java-i18n"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools:idea.compiler-impl_and_others[module]",
+        "//tools:idea.java-impl[module]",
+        "//tools/idea/community-resources[module]",
+        "//tools/idea/platform/platform-api[module]",
+        "//tools/idea/.idea/libraries:Velocity",
+        "//tools/idea/plugins/java-i18n[module]",
+        "//tools/idea/.idea/libraries:asm5",
+        "//tools/idea/java/compiler/instrumentation-util[module]",
+        "//tools/idea/.idea/libraries:Groovy",
+        "//tools/idea/plugins/IntelliLang:IntelliLang-java[module]",
+        "//tools/idea/plugins/IntelliLang:IntelliLang-xml[module]",
+        "//tools/idea/plugins/junit[module, test]",
+        "//tools/idea/plugins/testng[module, test]",
+        "//tools/idea/plugins/ui-designer[module, test]",
+        "//tools/idea/plugins/eclipse[module, test]",
+        "//tools/idea/java/execution/openapi:execution-openapi[module]",
+        "//tools/idea/platform/platform-tests[module, test]",
+        "//tools/idea/java/java-indexing-api[module, test]",
+        "//tools/idea/plugins/junit_rt[module, test]",
+        "//tools/idea/plugins/properties/properties-psi-api[module, test]",
+        "//tools/idea/plugins/java-decompiler/plugin:java-decompiler-plugin[module, test]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/platform/util:util-tests[module, test]",
+        "//tools/idea/.idea/libraries:Mocks[test]",
+        "//tools/idea/plugins/groovy:jetgroovy[module, test]",
+        "//tools:idea.lang-tests[module, test]",
+        "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:assertJ[test]",
+        "//tools/idea/.idea/libraries:KotlinTest[test]",
+        "//tools/idea/platform/built-in-server-api[module, test]",
     ],
 )
 
@@ -412,5 +547,27 @@ iml_module(
         "//tools/idea/plugins/svn4idea/lib:jsch.agentproxy.svnkit-trilead-ssh2",
         "//tools/idea/.idea/libraries:http-client",
         "//tools/idea/.idea/libraries:sqlite",
+    ],
+)
+
+# TODO: move back to idea/plugins/svn4idea when we can avoid conflict with "build" dir there
+iml_module(
+    name = "idea.svn4idea-tests",
+    tags = ["managed"],
+    test_srcs = ["idea/plugins/svn4idea/testSource"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools:idea.svn4idea[module]",
+        "//tools/idea/platform/vcs-api[module]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/plugins/svn4idea/lib:svnkit",
+        "//tools/idea/platform/lang-api[module]",
+        "//tools/idea/plugins/svn4idea/lib:sqljet",
+        "//tools/idea/.idea/libraries:jsch-agent-proxy",
+        "//tools/idea/.idea/libraries:trilead-ssh2",
+        "//tools/idea/platform/vcs-tests[module, test]",
     ],
 )
