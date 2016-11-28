@@ -1,8 +1,22 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.build.gradle;
 
 import com.android.build.gradle.internal.BadPluginException;
-import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
@@ -14,8 +28,6 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import junit.framework.TestCase;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
 
 /** Tests for the internal workings of the app plugin ("android") */
 public class AppPluginInternalTest extends BaseDslTest {
@@ -24,14 +36,7 @@ public class AppPluginInternalTest extends BaseDslTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        SdkHandler.setTestSdkFolder(new File(System.getenv("ANDROID_HOME")));
-        project =
-                ProjectBuilder.builder()
-                        .withProjectDir(new File(getTestDir(), FOLDER_TEST_PROJECTS + "/basic"))
-                        .build();
-
         project.apply(ImmutableMap.of("plugin", "com.android.application"));
-
         AppExtension android = project.getExtensions().getByType(AppExtension.class);
         android.setCompileSdkVersion(COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(BUILD_TOOL_VERSION);
@@ -49,8 +54,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         TestCase.assertEquals(0, plugin.getVariantManager().getProductFlavors().size());
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
-        TestCase.assertEquals(
-                DEFAULT_VARIANTS.size(), variants.size()); // includes the test variant(s)
+        checkDefaultVariants(variants);
 
         BaseDslTest.findVariantData(variants, "debug");
         BaseDslTest.findVariantData(variants, "release");
@@ -128,7 +132,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         TestCase.assertEquals(3, plugin.getVariantManager().getBuildTypes().size());
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
-        LinkedHashMap<String, Integer> map = new LinkedHashMap<String, Integer>(3);
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTests", 3);
         map.put("androidTests", 1);
@@ -167,7 +171,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         TestCase.assertEquals(2, plugin.getVariantManager().getProductFlavors().size());
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
-        LinkedHashMap<String, Integer> map = new LinkedHashMap<String, Integer>(3);
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTests", 4);
         map.put("androidTests", 2);
@@ -223,7 +227,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         TestCase.assertEquals(5, plugin.getVariantManager().getProductFlavors().size());
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
-        LinkedHashMap<String, Integer> map = new LinkedHashMap<String, Integer>(3);
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
         map.put("androidTests", 6);
@@ -315,7 +319,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         plugin.createAndroidTasks(true);
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
-        LinkedHashMap<String, Integer> map = new LinkedHashMap<String, Integer>(3);
+        LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);
         map.put("androidTests", 2);
@@ -327,7 +331,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         variant = BaseDslTest.findVariantData(variants, "flavor1Debug");
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
-        final File file = ((CoreSigningConfig) signingConfig).getStoreFile();
+        final File file = signingConfig.getStoreFile();
         TestCase.assertEquals(
                 KeystoreHelper.defaultDebugKeystoreLocation(),
                 (file == null ? null : file.getAbsolutePath()));
@@ -340,13 +344,12 @@ public class AppPluginInternalTest extends BaseDslTest {
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a3"),
-                ((CoreSigningConfig) signingConfig).getStoreFile());
+                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
 
         variant = BaseDslTest.findVariantData(variants, "flavor2Debug");
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
-        final File file1 = ((CoreSigningConfig) signingConfig).getStoreFile();
+        final File file1 = signingConfig.getStoreFile();
         TestCase.assertEquals(
                 KeystoreHelper.defaultDebugKeystoreLocation(),
                 (file1 == null ? null : file1.getAbsolutePath()));
@@ -355,15 +358,13 @@ public class AppPluginInternalTest extends BaseDslTest {
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a1"),
-                ((CoreSigningConfig) signingConfig).getStoreFile());
+                new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile());
 
         variant = BaseDslTest.findVariantData(variants, "flavor2Release");
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a3"),
-                ((CoreSigningConfig) signingConfig).getStoreFile());
+                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
     }
 
     /**
@@ -400,18 +401,6 @@ public class AppPluginInternalTest extends BaseDslTest {
     }
 
     public void testSigningConfigInitWith() throws Exception {
-        Project project =
-                ProjectBuilder.builder()
-                        .withProjectDir(new File(getTestDir(), FOLDER_TEST_PROJECTS + "/basic"))
-                        .build();
-
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>(1);
-        map.put("plugin", "com.android.application");
-        project.apply(map);
-        AppExtension android = project.getExtensions().getByType(AppExtension.class);
-        android.setCompileSdkVersion(COMPILE_SDK_VERSION);
-        android.setBuildToolsVersion(BUILD_TOOL_VERSION);
-
         Eval.me(
                 "project",
                 project,
@@ -454,6 +443,4 @@ public class AppPluginInternalTest extends BaseDslTest {
         TestCase.assertNotNull(recordedException);
         TestCase.assertEquals(BadPluginException.class, recordedException.getClass());
     }
-
-    private Project project;
 }
