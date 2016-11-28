@@ -255,13 +255,6 @@ public class GenerateBazelAction extends AnAction {
             imp.setExport();
         }
 
-        // Let's generate only what's needed for the exported targets.
-        for (String s : config.getLabelsToExport()) {
-            Label label = new Label(s);
-            bazel.getPackage(label.pkg).getRule(label.target).setExport();
-        }
-
-        // But respect political boundaries.
         for (Package pkg : bazel.getPackages()) {
             for (BazelRule rule : pkg.getRules()) {
               if (config.shouldSuppress(rule)) {
