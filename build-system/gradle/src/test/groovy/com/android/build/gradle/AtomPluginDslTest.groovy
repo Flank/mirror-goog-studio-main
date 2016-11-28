@@ -329,11 +329,11 @@ class AtomPluginDslTest extends BaseDslTest {
             @NonNull String testedVariantName,
             @NonNull Set<AtomVariant> variants,
             @NonNull Set<TestVariant> testVariants) {
-        AtomVariant variant = findNamedItem(variants, variantName, "variantData")
+        AtomVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNotNull(variant.testVariant)
         assertEquals(testedVariantName, variant.testVariant.name)
-        assertEquals(variant.testVariant, findNamedItemMaybe(testVariants, testedVariantName))
+        assertEquals(variant.testVariant, findVariantMaybe(testVariants, testedVariantName))
         checkTasks(variant)
         assertTrue(variant.testVariant instanceof TestVariant)
         checkTestTasks(variant.testVariant)
@@ -341,7 +341,7 @@ class AtomPluginDslTest extends BaseDslTest {
 
     private static void checkNonTestedVariant(@NonNull String variantName,
             @NonNull Set<AtomVariant> variants) {
-        AtomVariant variant = findNamedItem(variants, variantName, "variantData")
+        AtomVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNull(variant.testVariant)
         checkTasks(variant)

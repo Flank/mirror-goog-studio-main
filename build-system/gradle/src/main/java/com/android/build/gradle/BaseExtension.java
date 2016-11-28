@@ -564,19 +564,19 @@ public abstract class BaseExtension implements AndroidConfig {
 
     /** {@inheritDoc} */
     @Override
-    public Collection<ProductFlavor> getProductFlavors() {
+    public NamedDomainObjectContainer<ProductFlavor> getProductFlavors() {
         return productFlavors;
     }
 
     /** {@inheritDoc} */
     @Override
-    public Collection<BuildType> getBuildTypes() {
+    public NamedDomainObjectContainer<BuildType> getBuildTypes() {
         return buildTypes;
     }
 
     /** {@inheritDoc} */
     @Override
-    public Collection<SigningConfig> getSigningConfigs() {
+    public NamedDomainObjectContainer<SigningConfig> getSigningConfigs() {
         return signingConfigs;
     }
 
