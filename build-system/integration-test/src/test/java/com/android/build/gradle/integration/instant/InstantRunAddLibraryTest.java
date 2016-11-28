@@ -87,10 +87,9 @@ public class InstantRunAddLibraryTest {
                 .run("assembleDebug");
 
         // Add dependency
-        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
-                + "dependencies {\n"
-                + "    compile 'com.google.guava:guava:17.0'\n"
-                + "}\n");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "dependencies { compile 'com.google.guava:guava:18.0' }\n");
 
         // Use that dependency
         writeClass("com.google.common.base.Strings.nullToEmpty(null);");

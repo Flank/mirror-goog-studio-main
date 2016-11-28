@@ -20,6 +20,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -211,6 +212,7 @@ public class AnnotationProcessorTest {
     }
 
     @Test
+    @Category(FailsUnderBazel.class)
     public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
         // check for jack and non-component plugin
         Assume.assumeTrue(forJack && !forComponentPlugin);
@@ -247,6 +249,7 @@ public class AnnotationProcessorTest {
     }
 
     @Test
+    @Category(FailsUnderBazel.class)
     public void checkWarningWhenAptAndAnnotationProcessor() throws IOException {
         // this warning is shown only for the javac toolchain and non-component plugin
         Assume.assumeTrue(!forJack && !forComponentPlugin);

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
@@ -26,12 +27,14 @@ import java.nio.file.StandardOpenOption;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Checks that we can handle a class with non-ASCII name in combination with ProGuard.
  *
  * <p>See http://b.android.com/221057
  */
+@Category(FailsUnderBazel.class)
 public class AccentCharacterAndProguardTest {
 
     @Rule

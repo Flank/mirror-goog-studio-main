@@ -144,10 +144,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      * This will fail if the project is a multi-project setup.
      */
     private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) {
-        ModelContainer<T> container = buildModel(
-                projectConnection,
-                new GetAndroidModelAction<T>(modelClass),
-                modelLevel);
+        ModelContainer<T> container =
+                buildModel(projectConnection, new GetAndroidModelAction<>(modelClass), modelLevel);
 
         // ensure there was only one project
         assertThat(container.getModelMap())
@@ -215,6 +213,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         BuildActionExecuter<ModelContainer<T>> executor = connection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(5);
+        arguments.addAll(getCommonArguments());
         arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "=true");
         arguments.add("-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true");
         arguments.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
@@ -244,8 +243,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         for (String feature : modelFeatures) {
             arguments.add("-P" + feature + "=true");
         }
-
-        arguments.addAll(getOfflineFlag());
 
         setJvmArguments(executor);
 

@@ -78,7 +78,7 @@ File getCheckedInSdk() {
 def testEnvironment = System.getenv().findAll {it.value != null}
 testEnvironment << [
         GRADLE_USER_HOME : new File(project.buildDir, "GRADLE_USER_HOME"),
-        PROJECT_BUILD_DIR : project.buildDir,
+        TEST_TMPDIR : project.buildDir, // Use the same environment variable as Bazel for now.
         CUSTOM_REPO : rootProject.file("../out/repo"),
         INTEGRATION_TEST : "true",
         DATA_BINDING_INTERNAL_REPO : rootProject.file("../tools/data-binding/internal-prebuilts"),
@@ -124,6 +124,7 @@ configure([test, testPrebuilts]) {
     }
     exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
+    exclude "**/BazelIntegrationTestsSuite*"
 }
 
 task automaticTest(type: Test) {

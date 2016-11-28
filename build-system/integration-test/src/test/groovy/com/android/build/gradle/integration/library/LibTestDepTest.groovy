@@ -80,7 +80,7 @@ class LibTestDepTest {
         assertEquals(2, javaLibraries.size())
         for (Library lib : javaLibraries) {
             File f = lib.getArtifact()
-            assertTrue(f.getName().equals("guava-15.0.jar") || f.getName().equals("jsr305-1.3.9.jar"))
+            assertTrue(f.getName().equals("guava-19.0.jar") || f.getName().equals("jsr305-1.3.9.jar"))
         }
     }
 

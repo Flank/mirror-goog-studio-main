@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -33,9 +34,11 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-/**
- * test for packaging of asset files.
- */
+import org.junit.experimental.categories.Category;
+
+// For some reason uploadArchive does not create maven-metadata.xml in the
+// testRepo and then fails to find artifacts there.
+@Category(FailsUnderBazel.class)
 public class NativeSoPackagingFromRemoteAarTest {
 
     @Rule

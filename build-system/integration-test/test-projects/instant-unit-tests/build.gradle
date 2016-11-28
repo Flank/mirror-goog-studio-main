@@ -65,7 +65,7 @@ if (!instantRunServer.exists()) {
 
 dependencies {
     compile 'com.android.tools:annotations:' + rootProject.baseVersion
-    compile 'com.google.guava:guava:17.0'
+    compile 'com.google.guava:guava:19.0'
     compile files(instantRunServer)
     compile files("build/incremental-test-classes-jar/instrumentedBaseClasses.jar")
 
@@ -75,7 +75,7 @@ dependencies {
     androidTestCompile 'com.google.code.findbugs:jsr305:1.3.9'
     androidTestCompile 'com.google.truth:truth:0.28'
     //androidTestCompile 'org.mockito:mockito-core:1.9.5'
-    androidTestCompile 'com.google.guava:guava:17.0'
+    androidTestCompile 'com.google.guava:guava:19.0'
     compile 'com.android.support.test:runner:0.3'
     androidTestCompile 'com.android.support.test:rules:0.3'
 }

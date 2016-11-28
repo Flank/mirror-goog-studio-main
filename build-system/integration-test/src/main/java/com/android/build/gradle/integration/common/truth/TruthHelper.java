@@ -73,6 +73,7 @@ import com.google.common.truth.TestVerb;
 import com.google.common.truth.ThrowableSubject;
 import java.io.File;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -84,6 +85,11 @@ public class TruthHelper {
     @NonNull
     public static FileSubject assertThat(@Nullable File file) {
         return assert_().about(FileSubjectFactory.factory()).that(file);
+    }
+
+    @NonNull
+    public static FileSubject assertThat(@NonNull Path path) {
+        return assertThat(path.toFile());
     }
 
     @NonNull

@@ -84,7 +84,7 @@ public class CMakeAtomTest {
         File bundleNativeLib = ZipHelper.extractFile(atomBundle, "libs/lib/x86/libhello-jni.so");
         assertThatNativeLib(bundleNativeLib).isStripped();
 
-        File atom = sProject.getSubproject(":instantApp").getAtom("atom", "release");
+        File atom = sProject.getSubproject(":instantApp").getAtom("release");
         ApkSubject apkSubject = assertThatApk(atom);
         apkSubject.contains("lib/armeabi/libhello-jni.so");
         apkSubject.contains("lib/armeabi-v7a/libhello-jni.so");

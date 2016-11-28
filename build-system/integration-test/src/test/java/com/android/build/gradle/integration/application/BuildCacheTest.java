@@ -51,7 +51,7 @@ public class BuildCacheTest {
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\ndependencies {\n    compile 'com.google.guava:guava:17.0'\n}\n");
+                "\ndependencies {\n    compile 'com.google.guava:guava:18.0'\n}\n");
     }
 
     @Test

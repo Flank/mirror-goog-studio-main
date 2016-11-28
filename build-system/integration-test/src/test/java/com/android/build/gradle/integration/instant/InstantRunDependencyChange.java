@@ -56,9 +56,8 @@ public class InstantRunDependencyChange {
                 .run("assembleDebug");
 
         // add a dependency on the project build.
-        Files.append("dependencies {\n"
-                        + "    compile 'com.google.guava:guava:17.0'\n"
-                        + "}",
+        Files.append(
+                "dependencies { compile 'com.google.guava:guava:18.0' }",
                 project.file("build.gradle"),
                 Charsets.UTF_8);
 
@@ -83,8 +82,10 @@ public class InstantRunDependencyChange {
                 Files.asCharSource(project.file("build.gradle"), Charsets.UTF_8).read();
 
         // add the dependency and do a clean build.
-        Files.write(originalBuildFile + "dependencies {\n"
-                        + "    compile 'com.google.guava:guava:17.0'\n"
+        Files.write(
+                originalBuildFile
+                        + "dependencies {\n"
+                        + "    compile 'com.google.guava:guava:19.0'\n"
                         + "}",
                 project.file("build.gradle"),
                 Charsets.UTF_8);

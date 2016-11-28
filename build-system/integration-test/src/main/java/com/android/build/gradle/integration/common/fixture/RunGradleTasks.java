@@ -144,6 +144,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
 
         List<String> args = Lists.newArrayList();
+        args.addAll(getCommonArguments());
 
         if (enableInfoLogging) {
             args.add("-i"); // -i, --info Set log level to info.
@@ -170,8 +171,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD,
                             "false"));
         }
-
-        args.addAll(getOfflineFlag());
 
         args.addAll(arguments);
 
