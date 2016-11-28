@@ -19,10 +19,10 @@
 
 #include "utils/trace.h"
 
-using profiler::proto::AllocationTrackingEnvironmentRequest;
-using profiler::proto::AllocationTrackingEnvironmentResponse;
-using profiler::proto::AllocationTrackingRequest;
-using profiler::proto::AllocationTrackingResponse;
+using profiler::proto::AllocationContextsRequest;
+using profiler::proto::AllocationContextsResponse;
+using profiler::proto::TrackAllocationsRequest;
+using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::DumpDataResponse;
 using profiler::proto::HeapDumpDataRequest;
 using profiler::proto::TriggerHeapDumpRequest;
@@ -136,21 +136,21 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
                           "Not implemented on device");
 }
 
-::grpc::Status MemoryServiceImpl::SetAllocationTracking(
-    ::grpc::ServerContext* context, const AllocationTrackingRequest* request,
-    AllocationTrackingResponse* response) {
+::grpc::Status MemoryServiceImpl::TrackAllocations(
+    ::grpc::ServerContext* context, const TrackAllocationsRequest* request,
+    TrackAllocationsResponse* response) {
   Trace trace("MEM:GetFile");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response, AllocationTrackingResponse::FAILURE_UNKNOWN)
+      result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
-  (result->second).SetAllocationTracking(request->enabled(), response);
+  (result->second).TrackAllocations(request->enabled(), response);
   switch (response->status()) {
-    case AllocationTrackingResponse::SUCCESS:
-    case AllocationTrackingResponse::IN_PROGRESS:
-    case AllocationTrackingResponse::NOT_ENABLED:
+    case TrackAllocationsResponse::SUCCESS:
+    case TrackAllocationsResponse::IN_PROGRESS:
+    case TrackAllocationsResponse::NOT_ENABLED:
       return ::grpc::Status::OK;
     default:
       return ::grpc::Status(
@@ -161,10 +161,10 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-::grpc::Status MemoryServiceImpl::ListAllocationTrackingEnvironments(
+::grpc::Status MemoryServiceImpl::ListAllocationContexts(
     ::grpc::ServerContext* context,
-    const AllocationTrackingEnvironmentRequest* request,
-    AllocationTrackingEnvironmentResponse* response) {
+    const AllocationContextsRequest* request,
+    AllocationContextsResponse* response) {
   return ::grpc::Status(
       ::grpc::StatusCode::UNIMPLEMENTED,
       "Listing allocation tracking environments is WIP.");
