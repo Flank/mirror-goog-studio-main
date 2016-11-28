@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -162,14 +163,21 @@ public class TestLintResult {
 
                         String startMarker;
                         String endMarker;
+                        String message = warning.message;
+
+                        // Use plain ascii in the test golden files for now. (This also ensures
+                        // that the markup is well-formed, e.g. if we have a ` without a matching
+                        // closing `, the ` would show up in the plain text.)
+                        message = TextFormat.RAW.convertTo(message, TextFormat.TEXT);
+
                         if (isXml) {
                             String tag = warning.severity.getDescription().toLowerCase(Locale.ROOT);
                             startMarker = "<?" + tag + " message=\""
-                                    + warning.message + "\"?>";
+                                    + message + "\"?>";
                             endMarker = "<?" + tag + "?>";
                         } else {
                             // Java, Gradle, Kotlin, ...
-                            startMarker = "/*" + warning.message + "*/";
+                            startMarker = "/*" + message + "*/";
                             endMarker = "/**/";
                         }
 

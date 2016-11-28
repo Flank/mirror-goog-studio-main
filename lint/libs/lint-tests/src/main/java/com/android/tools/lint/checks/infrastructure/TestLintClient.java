@@ -462,14 +462,9 @@ public class TestLintClient extends LintCliClient {
             return;
         }
 
-        // Use plain ascii in the test golden files for now. (This also ensures
-        // that the markup is well-formed, e.g. if we have a ` without a matching
-        // closing `, the ` would show up in the plain text.)
-        message = format.convertTo(message, TextFormat.TEXT);
-
         if (task.messageChecker != null) {
             task.messageChecker.checkReportedError(context, issue, severity,
-                    location, message);
+                    location, format.convertTo(message, TextFormat.TEXT));
         }
 
         if (severity == Severity.FATAL) {

@@ -53,7 +53,7 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
             "is more of a hint as to what the data should be cast to when stored.\n" +
             "\n" +
             "There are many ways to store a string. `TEXT`, `VARCHAR`, `CHARACTER` and `CLOB` " +
-            "are string types, *but `STRING` is not*. Columns defined as STRING are actually " +
+            "are string types, **but `STRING` is not**. Columns defined as STRING are actually " +
             "numeric.\n" +
             "\n" +
             "If you try to store a value in a numeric column, SQLite will try to cast it to a " +

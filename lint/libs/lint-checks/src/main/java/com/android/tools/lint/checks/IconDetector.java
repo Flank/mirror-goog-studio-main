@@ -211,7 +211,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             "The res/drawable folder is intended for density-independent graphics such as " +
             "shapes defined in XML. For bitmaps, move it to `drawable-mdpi` and consider " +
             "providing higher and lower resolution versions in `drawable-ldpi`, `drawable-hdpi` " +
-            "and `drawable-xhdpi`. If the icon *really* is density independent (for example " +
+            "and `drawable-xhdpi`. If the icon **really** is density independent (for example " +
             "a solid color) you can place it in `drawable-nodpi`.",
             Category.ICONS,
             5,
@@ -301,7 +301,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             "IconNoDpi",
             "Icon appears in both `-nodpi` and dpi folders",
             "Bitmaps that appear in `drawable-nodpi` folders will not be scaled by the " +
-            "Android framework. If a drawable resource of the same name appears *both* in " +
+            "Android framework. If a drawable resource of the same name appears **both** in " +
             "a `-nodpi` folder as well as a dpi folder such as `drawable-hdpi`, then " +
             "the behavior is ambiguous and probably not intentional. Delete one or the " +
             "other, or use different names for the icons.",
