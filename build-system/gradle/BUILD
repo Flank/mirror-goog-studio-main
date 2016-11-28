@@ -46,14 +46,24 @@ maven_pom(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**/*.java"]),
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+        # TODO: Make it easier to configure AndroidLocation per project.
+        "-DANDROID_SDK_HOME=/tmp/android_sdk_home",
+    ],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":gradle",
         "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system/builder",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/gradle-core",
+        "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
     ],
 )

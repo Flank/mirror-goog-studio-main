@@ -23,18 +23,14 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.test.BaseTest
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
-import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
-import static com.android.build.gradle.DslTestUtil.countVariants
-
 /**
  * Tests for the public DSL of the Atom plugin.
  */
-class AtomPluginDslTest  extends BaseTest {
+class AtomPluginDslTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {
@@ -333,11 +329,11 @@ class AtomPluginDslTest  extends BaseTest {
             @NonNull String testedVariantName,
             @NonNull Set<AtomVariant> variants,
             @NonNull Set<TestVariant> testVariants) {
-        AtomVariant variant = findNamedItem(variants, variantName, "variantData")
+        AtomVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNotNull(variant.testVariant)
         assertEquals(testedVariantName, variant.testVariant.name)
-        assertEquals(variant.testVariant, findNamedItemMaybe(testVariants, testedVariantName))
+        assertEquals(variant.testVariant, findVariantMaybe(testVariants, testedVariantName))
         checkTasks(variant)
         assertTrue(variant.testVariant instanceof TestVariant)
         checkTestTasks(variant.testVariant)
@@ -345,7 +341,7 @@ class AtomPluginDslTest  extends BaseTest {
 
     private static void checkNonTestedVariant(@NonNull String variantName,
             @NonNull Set<AtomVariant> variants) {
-        AtomVariant variant = findNamedItem(variants, variantName, "variantData")
+        AtomVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNull(variant.testVariant)
         checkTasks(variant)

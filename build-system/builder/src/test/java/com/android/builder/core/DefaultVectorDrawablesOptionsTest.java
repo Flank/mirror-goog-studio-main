@@ -16,16 +16,14 @@
 
 package com.android.builder.core;
 
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.testutils.internal.CopyOfTester;
-
 import org.junit.Test;
 
 public class DefaultVectorDrawablesOptionsTest {
     @Test
     public void testCopyOf() throws Exception {
         CopyOfTester.assertAllGettersCalled(
-                VectorDrawablesOptions.class,
+                DefaultVectorDrawablesOptions.class,
                 new DefaultVectorDrawablesOptions(),
                 DefaultVectorDrawablesOptions::copyOf);
     }

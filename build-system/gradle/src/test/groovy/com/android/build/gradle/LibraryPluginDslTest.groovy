@@ -19,7 +19,6 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.test.BaseTest
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -27,7 +26,7 @@ import org.gradle.testfixtures.ProjectBuilder
 /**
  * Tests for the public DSL of the Lib plugin ('com.android.library')
  */
-public class LibraryPluginDslTest extends BaseTest {
+public class LibraryPluginDslTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {
@@ -100,18 +99,18 @@ public class LibraryPluginDslTest extends BaseTest {
                                            @NonNull String testedVariantName,
                                            @NonNull Set<LibraryVariant> variants,
                                            @NonNull Set<TestVariant> testVariants) {
-        LibraryVariant variant = findNamedItem(variants, variantName)
+        LibraryVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNotNull(variant.testVariant)
         assertEquals(testedVariantName, variant.testVariant.name)
-        assertEquals(variant.testVariant, findNamedItem(testVariants, testedVariantName))
+        assertEquals(variant.testVariant, findVariant(testVariants, testedVariantName))
         checkLibraryTasks(variant)
         checkTestTasks(variant.testVariant)
     }
 
     private static void checkNonTestedVariant(@NonNull String variantName,
                                               @NonNull Set<LibraryVariant> variants) {
-        LibraryVariant variant = findNamedItem(variants, variantName)
+        LibraryVariant variant = findVariant(variants, variantName)
         assertNotNull(variant)
         assertNull(variant.testVariant)
         checkLibraryTasks(variant)
