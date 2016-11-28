@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
@@ -150,7 +151,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
     @Test
     public void runBenchmarks() throws Exception {
-        ModelContainer<AndroidProject> modelContainer = project.model().ignoreSyncIssues().getMulti();
+        ModelContainer<AndroidProject> modelContainer = model().ignoreSyncIssues().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
         for (AndroidProject project : models.values()) {
@@ -164,26 +165,27 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
         // TODO: warm up (This is really slow already)
 
-        getExecutor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleDebug");
+        executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleDebug");
 
-        getExecutor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleDebug");
+        executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleDebug");
 
-        getExecutor().run("clean");
+        executor().run("clean");
 
-        project.model()
-                .ignoreSyncIssues()
-                .withoutOfflineFlag()
-                .recordBenchmark(BenchmarkMode.SYNC)
-                .getMulti();
+        model().ignoreSyncIssues().recordBenchmark(BenchmarkMode.SYNC).getMulti();
 
-        getExecutor()
+        executor()
                 .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
                 .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
-        getExecutor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
+        executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
     }
 
-    private RunGradleTasks getExecutor() {
+    @NonNull
+    private BuildModel model() {
+        return project.model().withoutOfflineFlag();
+    }
+
+    private RunGradleTasks executor() {
         return project.executor().withoutOfflineFlag().withEnableInfoLogging(false);
     }
 }
