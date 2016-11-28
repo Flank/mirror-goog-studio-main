@@ -257,6 +257,14 @@ public class DependencyGraph {
                 continue;
             }
 
+            Dependency dependency = dependencyMap.get(node.getAddress());
+            assert dependency != null;
+            // if the dependency is already in there, then there's no need to go through it
+            // and its children again.
+            if (outFlatDependencies.contains(dependency)) {
+                continue;
+            }
+
             // flatten the dependencies for those libraries
             // never pass the tested local jars as this is guaranteed to be null beyond the
             // direct dependencies.
@@ -268,8 +276,6 @@ public class DependencyGraph {
 
             // and add the current one (if needed) in back, the list will get reversed and it
             // will get moved to the front (higher priority)
-            Dependency dependency = dependencyMap.get(node.getAddress());
-            assert dependency != null;
             addDependencyToSet(dependency, node, outFlatDependencies, testedLocalJars);
         }
     }
@@ -280,9 +286,8 @@ public class DependencyGraph {
             @NonNull Set<Dependency> outFlatDependencies,
             @Nullable List<JavaDependency> testedLocalJars) {
         //noinspection SuspiciousMethodCalls
-        if (!outFlatDependencies.contains(dependency)
-                && (testedLocalJars == null || node.getNodeType() != NodeType.JAVA
-                || !testedLocalJars.contains(dependency))) {
+        if (testedLocalJars == null || node.getNodeType() != NodeType.JAVA
+                || !testedLocalJars.contains(dependency)) {
             outFlatDependencies.add(dependency);
         }
     }
