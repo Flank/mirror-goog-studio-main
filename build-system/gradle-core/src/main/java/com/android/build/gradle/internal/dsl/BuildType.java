@@ -26,13 +26,11 @@ import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.Iterables;
-
+import java.io.Serializable;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.io.Serializable;
 
 /**
  * DSL object to configure build types.
@@ -106,7 +104,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     @Override
     @NonNull
-    public CoreExternalNativeBuildOptions getExternalNativeBuildOptions() {
+    public ExternalNativeBuildOptions getExternalNativeBuildOptions() {
         return externalNativeBuildOptions;
     }
 
@@ -161,6 +159,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                 thatBuildType.getJavaCompileOptions().getAnnotationProcessorOptions());
         shrinkResources = thatBuildType.isShrinkResources();
         shaderOptions._initWith(thatBuildType.getShaders());
+        externalNativeBuildOptions._initWith(thatBuildType.getExternalNativeBuildOptions());
+        useProguard = thatBuildType.isUseProguard();
     }
 
     public int hashCode() {

@@ -114,7 +114,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.Action;
-import org.gradle.api.BuildableComponentSpec;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;

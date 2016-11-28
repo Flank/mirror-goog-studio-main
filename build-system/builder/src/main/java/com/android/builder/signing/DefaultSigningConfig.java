@@ -18,11 +18,9 @@ package com.android.builder.signing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SigningConfig;
-import com.android.ide.common.signing.KeystoreHelper;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.google.common.base.MoreObjects;
-
 import java.io.File;
 import java.security.KeyStore;
 
@@ -46,22 +44,23 @@ public class DefaultSigningConfig implements SigningConfig {
     private boolean mV2SigningEnabled = true;
 
     /**
-     * Creates a SigningConfig.
+     * Creates a {@link DefaultSigningConfig} that uses the default debug alias and passwords.
      */
-    public DefaultSigningConfig(@NonNull String name) {
-        mName = name;
+    @NonNull
+    public static DefaultSigningConfig debugSigningConfig(File storeFile) {
+        DefaultSigningConfig result = new DefaultSigningConfig(BuilderConstants.DEBUG);
+        result.mStoreFile = storeFile;
+        result.mStorePassword = DEFAULT_PASSWORD;
+        result.mKeyAlias = DEFAULT_ALIAS;
+        result.mKeyPassword = DEFAULT_PASSWORD;
+        return result;
     }
 
     /**
-     * Initializes the SigningConfig with the debug keystore/key alias data.
-     *
-     * @throws AndroidLocationException if the debug keystore location cannot be found
+     * Creates a {@link DefaultSigningConfig}.
      */
-    public void initDebug() throws AndroidLocationException {
-        mStoreFile = new File(KeystoreHelper.defaultDebugKeystoreLocation());
-        mStorePassword = DEFAULT_PASSWORD;
-        mKeyAlias = DEFAULT_ALIAS;
-        mKeyPassword = DEFAULT_PASSWORD;
+    public DefaultSigningConfig(@NonNull String name) {
+        mName = name;
     }
 
     @Override

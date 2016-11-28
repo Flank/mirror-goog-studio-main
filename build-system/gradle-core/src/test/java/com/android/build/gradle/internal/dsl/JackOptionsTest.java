@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.testutils.internal.CopyOfTester;
-
 import org.junit.Test;
 
 public class JackOptionsTest {
@@ -25,7 +24,7 @@ public class JackOptionsTest {
     @Test
     public void testInitWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
-                CoreJackOptions.class,
+                JackOptions.class,
                 new JackOptions(),
                 original -> new JackOptions()._initWith(original));
     }

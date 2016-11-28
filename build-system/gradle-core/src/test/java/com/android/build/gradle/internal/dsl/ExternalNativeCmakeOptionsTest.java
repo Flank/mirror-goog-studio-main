@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,13 @@ package com.android.build.gradle.internal.dsl;
 import com.android.testutils.internal.CopyOfTester;
 import org.junit.Test;
 
-public class SigningConfigTest {
+public class ExternalNativeCmakeOptionsTest {
 
     @Test
-    public void testInitWith() throws Exception {
+    public void _initWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
-                SigningConfig.class,
-                new SigningConfig("original"),
-                original -> {
-                    // Manually call getters that are not called by _initWith:
-                    original.getName();
-                    original.isSigningReady();
-
-                    new SigningConfig("copy").initWith(original);
-                });
+                ExternalNativeCmakeOptions.class,
+                new ExternalNativeCmakeOptions(),
+                original -> new ExternalNativeCmakeOptions()._initWith(original));
     }
 }

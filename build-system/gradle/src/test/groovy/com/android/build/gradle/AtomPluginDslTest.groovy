@@ -23,18 +23,14 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.test.BaseTest
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
-import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
-import static com.android.build.gradle.DslTestUtil.countVariants
-
 /**
  * Tests for the public DSL of the Atom plugin.
  */
-class AtomPluginDslTest  extends BaseTest {
+class AtomPluginDslTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {

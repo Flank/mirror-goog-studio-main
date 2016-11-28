@@ -17,19 +17,16 @@
 package com.android.build.gradle
 
 import com.android.build.gradle.internal.SdkHandler
-import com.android.build.gradle.internal.test.BaseTest
 import com.android.build.gradle.internal.variant.BaseVariantData
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import static org.junit.Assume.assumeFalse;
-
-import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
+import static org.junit.Assume.assumeFalse
 import static com.google.common.truth.Truth.assertThat
 
 /**
  * Test variant dependencies.
  */
-public class DependencyTest extends BaseTest {
+public class DependencyTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {

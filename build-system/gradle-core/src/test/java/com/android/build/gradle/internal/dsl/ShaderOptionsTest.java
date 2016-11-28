@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.testutils.internal.CopyOfTester;
-
 import org.junit.Test;
 
 public class ShaderOptionsTest {
@@ -25,7 +24,7 @@ public class ShaderOptionsTest {
     @Test
     public void testInitWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
-                CoreShaderOptions.class,
+                ShaderOptions.class,
                 new ShaderOptions(),
                 original -> new ShaderOptions()._initWith(original));
     }

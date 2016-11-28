@@ -25,19 +25,16 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.test.BaseTest
 import com.android.utils.StringHelper
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
-import static com.android.build.gradle.DslTestUtil.DEFAULT_VARIANTS
-import static com.android.build.gradle.DslTestUtil.countVariants
 import static com.google.common.truth.Truth.assertThat
 /**
  * Tests for the public DSL of the App plugin ("android")
  */
-public class AppPluginDslTest extends BaseTest {
+public class AppPluginDslTest extends BaseDslTest {
 
     @Override
     protected void setUp() throws Exception {

@@ -17,12 +17,9 @@
 package com.android.testutils.internal;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
-
-import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,10 +28,10 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.mockito.internal.util.reflection.LenientCopyTool;
+import org.mockito.stubbing.Answer;
 
-/**
- * Utility to test "copyOf" methods.
- */
+/** Utility to test "copyOf" and "initWith" methods. */
 public class CopyOfTester {
 
     private static final Pattern GETTER_NAME = Pattern.compile("^(get|is)[A-Z].*");
@@ -42,31 +39,40 @@ public class CopyOfTester {
     private static final Predicate<Method> IS_GETTER =
             m -> GETTER_NAME.matcher(m.getName()).matches();
 
+    /**
+     * Checks that all getters declared in the given class (and superclasses) are called when the
+     * copying code is invoked.
+     */
     public static <T> void assertAllGettersCalled(
-            @NonNull Class<T> klass,
-            @NonNull T object,
-            @NonNull Consumer<T> methodUnderTest) {
-        Set<Method> allGetters =
+            @NonNull Class<T> klass, @NonNull T object, @NonNull Consumer<T> copyingCode) {
+        // We're keeping track of names, and not Method instances to handle interface
+        // implementations  that change the return type to be more specific. In such case
+        // klass.getMethods() returns both methods, but the overridden one cannot be invoked.
+        Set<String> allGetters =
                 Arrays.stream(klass.getMethods())
                         .filter(IS_GETTER)
-                        .filter(method ->  method.getDeclaringClass() != Object.class)
+                        .filter(method -> method.getDeclaringClass() != Object.class)
+                        .map(Method::getName)
                         .collect(Collectors.toSet());
         assertThat(allGetters).named("getters declared in " + klass.getName()).isNotEmpty();
 
-        Set<Method> gettersCalled = new HashSet<>();
+        Set<String> gettersCalled = new HashSet<>();
 
-        T mock = Mockito.mock(klass, (Answer) invocation -> {
-            Method method = invocation.getMethod();
-            if (GETTER_NAME.matcher(method.getName()).matches()) {
-                gettersCalled.add(method);
-            }
-            return method.invoke(object, invocation.getArguments());
-        });
+        // The code below seems to be the only way to create a "spy" (object with all state copied
+        // from the original) with a custom Answer.
+        Answer recordGetters =
+                invocation -> {
+                    Method method = invocation.getMethod();
+                    if (GETTER_NAME.matcher(method.getName()).matches()) {
+                        gettersCalled.add(method.getName());
+                    }
+                    return invocation.callRealMethod();
+                };
+        T mock = mock(klass, recordGetters);
+        new LenientCopyTool().copyToMock(object, mock);
 
-        methodUnderTest.accept(mock);
+        copyingCode.accept(mock);
 
-        assertThat(gettersCalled)
-                .named("getters called")
-                .containsExactlyElementsIn(allGetters);
+        assertThat(gettersCalled).named("getters called").containsExactlyElementsIn(allGetters);
     }
 }
