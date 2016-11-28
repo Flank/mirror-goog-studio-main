@@ -40,36 +40,8 @@ public class DependencyCheckerTest {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "dependencies.compile 'org.apache.httpcomponents:httpclient:4.1.1'\n");
 
-        project.execute("clean", "assembleDebug");
-        assertThat(project.getStdout())
+        GradleBuildResult result = project.executor().run("clean", "assembleDebug");
+        assertThat(result.getStdout())
                 .contains("Dependency org.apache.httpcomponents:httpclient:4.1.1 is ignored");
-    }
-
-
-    /**
-     * See {@link com.android.build.gradle.internal.tasks.PrepareDependenciesTask} for the expected
-     * output.
-     */
-    @Test
-    public void comGoogleAndroid() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
-                + "// Lower than com.google.android:android:4.1.14\n"
-                + "android.defaultConfig.minSdkVersion 14\n"
-                + "\n"
-                + "repositories {\n"
-                + "    mavenCentral()\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile 'com.google.android:android:4.1.1.4'\n"
-                + "}");
-
-        GradleBuildResult result = project.executor().expectFailure().run("clean", "assemble");
-
-        String stderr = result.getStderr();
-        assertThat(stderr).contains("corresponds to API level 15");
-        // Picked up from com.google.android
-        assertThat(stderr).contains("which is 14"); // Declared in Gradle.
-        assertThat(stderr).contains("com.google.android");
     }
 }

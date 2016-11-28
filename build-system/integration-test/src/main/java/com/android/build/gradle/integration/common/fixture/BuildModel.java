@@ -244,6 +244,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             arguments.add("-P" + feature + "=true");
         }
 
+        arguments.addAll(getOfflineFlag());
+
         setJvmArguments(executor);
 
         executor.setStandardOutput(System.out);

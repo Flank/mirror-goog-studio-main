@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -188,38 +189,42 @@ public class MediumGradleProjectPerformanceMatrixTest {
     public void runBenchmarks() throws Exception {
         // Warm up
         project.model().getMulti();
-        project.executor().run("assemble");
-        project.executor().run("clean");
+        getExecutor().run("assemble");
+        getExecutor().run("clean");
 
-        project.executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
+        getExecutor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
 
         Map<String, AndroidProject> model =
                 project.model().recordBenchmark(BenchmarkMode.SYNC).getMulti().getModelMap();
         assertThat(model.keySet()).contains(":WordPress");
 
 
-        project.executor()
+        getExecutor()
                 .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
                 .withArgument("-Pandroid.injected.generateSourcesOnly=true")
-                .run(ModelHelper.getGenerateSourcesCommands(
-                        model,
-                        project -> project.equals(":WordPress") ? "vanillaDebug" : "debug"));
+                .run(
+                        ModelHelper.getGenerateSourcesCommands(
+                                model,
+                                project ->
+                                        project.equals(":WordPress") ? "vanillaDebug" : "debug"));
 
-        project.executor().run("clean");
+        getExecutor().run("clean");
 
-        project.executor()
-                .recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN)
-                .run("assembleVanillaDebug");
+        getExecutor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleVanillaDebug");
 
-        project.executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
+        getExecutor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
 
+        getExecutor().run("clean");
 
-        project.executor().run("clean");
-
-        project.executor()
+        getExecutor()
                 .recordBenchmark(BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN)
                 .run("assembleVanillaDebugAndroidTest");
 
 
+    }
+
+    @NonNull
+    private RunGradleTasks getExecutor() {
+        return project.executor().withoutOfflineFlag();
     }
 }

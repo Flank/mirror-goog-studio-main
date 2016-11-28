@@ -77,6 +77,7 @@ File getCheckedInSdk() {
 
 def testEnvironment = System.getenv().findAll {it.value != null}
 testEnvironment << [
+        GRADLE_USER_HOME : new File(project.buildDir, "GRADLE_USER_HOME"),
         PROJECT_BUILD_DIR : project.buildDir,
         CUSTOM_REPO : rootProject.file("../out/repo"),
         INTEGRATION_TEST : "true",

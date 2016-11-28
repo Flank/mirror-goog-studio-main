@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
@@ -55,6 +57,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull final Path profilesDirectory;
 
     @NonNull final Path projectDirectory;
+    protected boolean offline = true;
 
     @Nullable Logging.BenchmarkMode benchmarkMode;
 
@@ -141,7 +144,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    void setJvmArguments(@NonNull LongRunningOperation launcher) {
+    public T withoutOfflineFlag() {
+        this.offline = false;
+        return (T) this;
+    }
+
+    protected List<String> getOfflineFlag() {
+        if (offline) {
+            return ImmutableList.of("--offline");
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    protected void setJvmArguments(@NonNull LongRunningOperation launcher) {
         List<String> jvmArguments = new ArrayList<>();
 
         if (!Strings.isNullOrEmpty(heapSize)) {

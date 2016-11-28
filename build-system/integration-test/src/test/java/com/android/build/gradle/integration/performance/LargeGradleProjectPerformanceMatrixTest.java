@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.performance;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -163,29 +164,26 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
         // TODO: warm up (This is really slow already)
 
-        project.executor()
-                .withEnableInfoLogging(false)
-                .recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN)
-                .run("assembleDebug");
+        getExecutor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleDebug");
 
-        project.executor()
-                .withEnableInfoLogging(false)
-                .recordBenchmark(BenchmarkMode.NO_OP)
-                .run("assembleDebug");
+        getExecutor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleDebug");
 
-        project.executor().run("clean");
+        getExecutor().run("clean");
 
         project.model()
                 .ignoreSyncIssues()
+                .withoutOfflineFlag()
                 .recordBenchmark(BenchmarkMode.SYNC)
                 .getMulti();
 
-        project.executor()
+        getExecutor()
                 .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
                 .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
-        project.executor()
-                .recordBenchmark(BenchmarkMode.EVALUATION)
-                .run("tasks");
+        getExecutor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
+    }
+
+    private RunGradleTasks getExecutor() {
+        return project.executor().withoutOfflineFlag().withEnableInfoLogging(false);
     }
 }

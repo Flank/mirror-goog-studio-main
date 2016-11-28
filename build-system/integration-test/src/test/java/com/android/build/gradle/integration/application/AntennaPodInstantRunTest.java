@@ -18,7 +18,9 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
@@ -100,24 +102,24 @@ public class AntennaPodInstantRunTest {
 
     @Test
     public void buildAntennaPod() throws Exception {
-        project.execute("clean");
+        getExecutor().run("clean");
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(
                         project.model().getMulti().getModelMap().get(":app"));
 
-        project.executor()
+        getExecutor()
                 .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         // Test the incremental build
         makeHotSwapChange(1);
-        project.executor()
+        getExecutor()
                 .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         makeHotSwapChange(100);
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIDEX).run("assembleDebug");
+        getExecutor().withInstantRun(23, ColdswapMode.MULTIDEX).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
@@ -129,9 +131,14 @@ public class AntennaPodInstantRunTest {
         // Test cold swap
         makeColdSwapChange(100);
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIDEX).run(":app:assembleDebug");
+        getExecutor().withInstantRun(23, ColdswapMode.MULTIDEX).run(":app:assembleDebug");
 
         InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel, ColdswapMode.MULTIDEX);
+    }
+
+    @NonNull
+    private RunGradleTasks getExecutor() {
+        return project.executor().withoutOfflineFlag();
     }
 
     private void makeHotSwapChange(int i) throws IOException {
