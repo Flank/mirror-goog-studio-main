@@ -27,8 +27,6 @@ interface Configuration {
 
     List<String> getAdditionalImports();
 
-    List<String> getLabelsToExport();
-
     boolean shouldSuppress(BazelRule rule);
 
     Map<String, String> getCopySpec();

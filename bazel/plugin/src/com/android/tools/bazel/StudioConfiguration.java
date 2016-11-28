@@ -57,28 +57,22 @@ public class StudioConfiguration implements Configuration {
     }
 
     @Override
-    public List<String> getLabelsToExport() {
-        return ImmutableList.of(
-            "//tools/adt/idea/adt-branding",
-            "//tools/adt/idea/uitest-framework",
-            "//tools/adt/idea/android-gradle-jps",
-            "//tools/adt/idea/android-plugin",
-            "//tools/adt/idea/android-tests",
-            "//tools/adt/idea/designer-tests",
-            "//tools/adt/idea/sdk-updates-tests",
-            "//tools/studio/google/appindexing:google-appindexing",
-            "//tools/studio/google/cloud/testing/firebase-testing",
-            "//tools/studio/google/cloud/tools/android-studio-plugin:google-cloud-tools-as",
-            "//tools/vendor/google/android-apk",
-            "//tools/vendor/google/android-ndk",
-            "//tools/vendor/google/firebase",
-            "//tools/vendor/google/url-assistant",
-            "//tools/vendor/intellij/cidr:cidr-common_and_others");
-    }
-
-    @Override
     public boolean shouldSuppress(BazelRule rule) {
-      return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/");
+        return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
+            || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
+            || rule.getName().endsWith("configuration-store-tests")  // Kotlin compilation fails
+            || rule.getName().endsWith("devkit")  // Kotlin compilation fails
+            || rule.getName().endsWith("devkit-tests")  // depends on devkit
+            || rule.getName().endsWith("maven3-server-common")  // Java compilation fails
+            || rule.getName().endsWith("maven30-server-impl")  // depends on maven3-server-common
+            || rule.getName().endsWith("maven32-server-impl")  // Java compilation fails
+            || rule.getName().endsWith("cvs-core")  // Java compilation fails
+            || rule.getName().endsWith("cvs-plugin")  // depends on cvs-core
+            || rule.getName().endsWith("json-tests")  // some stripping issue
+            || rule.getName().endsWith("community-main_and_others")  // big nasty build-graph cycle
+            || rule.getName().endsWith("community-main-tests")  // depends on community-main
+            || rule.getName().endsWith("android-uitests")  // depends on community-main
+            || rule.getName().endsWith("lldb-integration-tests");  // depends on community-main
     }
 
     @Override

@@ -25,7 +25,7 @@ import java.util.Set;
 
 public abstract class BazelRule {
 
-    private boolean export;
+    private boolean export = true;
     private final Package pkg;
     String name;
     Set<BazelRule> dependencies = Sets.newLinkedHashSet();
