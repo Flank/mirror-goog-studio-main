@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.variant;
 
+import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -48,6 +49,7 @@ import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.res2.ResourceSet;
@@ -56,7 +58,13 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileTree;
@@ -65,16 +73,6 @@ import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
-
-import android.databinding.tool.LayoutXmlProcessor;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Base data about a variant.
@@ -160,7 +158,8 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
         this.variantConfiguration = variantConfiguration;
         this.taskManager = taskManager;
 
@@ -180,10 +179,12 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                             variantConfiguration.getFullName(),
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
-        scope = new VariantScopeImpl(
-                taskManager.getGlobalScope(),
-                new TransformManager(taskManager.getAndroidTasks(), errorReporter),
-                this);
+        scope =
+                new VariantScopeImpl(
+                        taskManager.getGlobalScope(),
+                        new TransformManager(
+                                taskManager.getAndroidTasks(), errorReporter, recorder),
+                        this);
         taskManager.configureScopeForNdk(scope);
     }
 

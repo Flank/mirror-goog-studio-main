@@ -28,19 +28,25 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.builder.model.OptionalCompilationStep;
-import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier;
+import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.internal.pipeline.TaskTestUtils;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,13 +54,6 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Tests for the {@link InstantRunVerifierTransform}
@@ -463,13 +462,15 @@ public class InstantRunVerifierTransformTest {
 
     private InstantRunVerifierTransform getTransform() {
 
-        return new InstantRunVerifierTransform(variantScope) {
+        return new InstantRunVerifierTransform(variantScope, new TaskTestUtils.FakeRecorder()) {
 
             @NonNull
             @Override
-            protected InstantRunVerifierStatus runVerifier(String name,
-                    @NonNull final InstantRunVerifier.ClassBytesProvider originalClass ,
-                    @NonNull final InstantRunVerifier.ClassBytesProvider updatedClass) throws IOException {
+            protected InstantRunVerifierStatus runVerifier(
+                    String name,
+                    @NonNull final InstantRunVerifier.ClassBytesProvider originalClass,
+                    @NonNull final InstantRunVerifier.ClassBytesProvider updatedClass)
+                    throws IOException {
 
                 recordedVerification.put(
                         ((InstantRunVerifier.ClassBytesFileProvider) originalClass).getFile(),

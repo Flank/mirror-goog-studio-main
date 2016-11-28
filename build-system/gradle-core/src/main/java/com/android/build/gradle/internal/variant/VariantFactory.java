@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.VariantType;
-
+import com.android.builder.profile.Recorder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 
@@ -41,7 +41,8 @@ public interface VariantFactory {
     @NonNull
     BaseVariantData createVariantData(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull TaskManager taskManager);
+            @NonNull TaskManager taskManager,
+            @NonNull Recorder recorder);
 
     @NonNull
     BaseVariant createVariantApi(

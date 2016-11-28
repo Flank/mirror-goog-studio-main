@@ -45,19 +45,18 @@ import com.android.build.gradle.tasks.fd.GenerateInstantRunAppInfoTask;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.execution.TaskExecutionAdapter;
-import org.gradle.api.logging.Logger;
-
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.execution.TaskExecutionAdapter;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskState;
 
 /**
@@ -83,17 +82,21 @@ public class InstantRunTaskManager {
 
     @NonNull
     private final TaskFactory tasks;
+    @NonNull private final Recorder recorder;
 
-    public InstantRunTaskManager(@NonNull Logger logger,
+    public InstantRunTaskManager(
+            @NonNull Logger logger,
             @NonNull InstantRunVariantScope instantRunVariantScope,
             @NonNull TransformManager transformManager,
             @NonNull AndroidTaskRegistry androidTasks,
-            @NonNull TaskFactory tasks) {
+            @NonNull TaskFactory tasks,
+            @NonNull Recorder recorder) {
         this.logger = logger;
         this.variantScope = instantRunVariantScope;
         this.transformManager = transformManager;
         this.androidTasks = androidTasks;
         this.tasks = tasks;
+        this.recorder = recorder;
     }
 
 
@@ -114,7 +117,8 @@ public class InstantRunTaskManager {
 
         // always run the verifier first, since if it detects incompatible changes, we
         // should skip bytecode enhancements of the changed classes.
-        InstantRunVerifierTransform verifierTransform = new InstantRunVerifierTransform(variantScope);
+        InstantRunVerifierTransform verifierTransform =
+                new InstantRunVerifierTransform(variantScope, recorder);
         Optional<AndroidTask<TransformTask>> verifierTaskOptional =
                 transformManager.addTransform(tasks, transformVariantScope, verifierTransform);
         verifierTask = verifierTaskOptional.orElse(null);

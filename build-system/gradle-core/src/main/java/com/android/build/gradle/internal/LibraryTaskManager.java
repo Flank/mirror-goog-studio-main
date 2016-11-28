@@ -54,7 +54,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Sets;
@@ -64,7 +63,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
@@ -83,7 +81,7 @@ public class LibraryTaskManager extends TaskManager {
 
     private Task assembleDefault;
 
-    public LibraryTaskManager (
+    public LibraryTaskManager(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
@@ -91,7 +89,8 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder recorder) {
         super(
                 project,
                 androidBuilder,
@@ -100,7 +99,8 @@ public class LibraryTaskManager extends TaskManager {
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,
-                toolingRegistry);
+                toolingRegistry,
+                recorder);
     }
 
     @Override
@@ -130,146 +130,91 @@ public class LibraryTaskManager extends TaskManager {
         createCheckManifestTask(tasks, variantScope);
 
         // Add a task to create the res values
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createGenerateResValuesTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
+                projectPath,
+                variantName,
+                () -> createGenerateResValuesTask(tasks, variantScope));
 
         // Add a task to process the manifest(s)
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createMergeLibManifestsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                projectPath,
+                variantName,
+                () -> createMergeLibManifestsTask(tasks, variantScope));
 
         // Add a task to compile renderscript files.
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createRenderscriptTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
+                projectPath,
+                variantName,
+                () -> createRenderscriptTask(tasks, variantScope));
 
-        AndroidTask<MergeResources> packageRes = ThreadRecorder.get().record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                projectPath, variantName,
-                new Recorder.Block<AndroidTask<MergeResources>>() {
-                    @Override
-                    public AndroidTask<MergeResources> call() throws Exception {
-                        // Create a merge task to only merge the resources from this library and not
-                        // the dependencies. This is what gets packaged in the aar.
-                        AndroidTask<MergeResources> mergeResourceTask =
-                                basicCreateMergeResourcesTask(
-                                        tasks,
-                                        variantScope,
-                                        "package",
-                                        FileUtils.join(variantBundleDir, "res"),
-                                        false /*includeDependencies*/,
-                                        false /*processResources*/);
-
-                        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                                || variantData.getVariantDependency().hasNonOptionalLibraries()) {
-                            // Add a task to merge the resource folders, including the libraries, in order to
-                            // generate the R.txt file with all the symbols, including the ones from
-                            // the dependencies.
-                            createMergeResourcesTask(
-                                    tasks,
-                                    variantScope,
-                                    false /*processResources*/);
-                        }
-
-                        mergeResourceTask.configure(tasks,
-                                new Action<Task>() {
-                                    @Override
-                                    public void execute(Task task) {
-                                        MergeResources mergeResourcesTask = (MergeResources) task;
-                                        mergeResourcesTask.setPublicFile(FileUtils.join(
-                                                variantBundleDir,
-                                                FN_PUBLIC_TXT
-                                        ));
-                                    }
-                                });
-
-                        return mergeResourceTask;
-                    }
-                });
+        AndroidTask<MergeResources> packageRes =
+                recorder.record(
+                        ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
+                        projectPath,
+                        variantName,
+                        () ->
+                                createMergeResourcesTask(
+                                        tasks, variantData, variantScope, variantBundleDir));
 
         // Add a task to merge the assets folders
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createMergeAssetsTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
+                projectPath,
+                variantName,
+                () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createBuildConfigTask(tasks, variantScope);
-                        return null;
-                    }
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
+                projectPath,
+                variantName,
+                () -> createBuildConfigTask(tasks, variantScope));
+
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                projectPath,
+                variantName,
+                () -> {
+                    // Add a task to generate resource source files, directing the location
+                    // of the r.txt file to be directly in the bundle.
+                    createProcessResTask(
+                            tasks,
+                            variantScope,
+                            variantBundleDir,
+                            false /*generateResourcePackage*/);
+
+                    // process java resources
+                    createProcessJavaResTasks(tasks, variantScope);
                 });
 
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        // Add a task to generate resource source files, directing the location
-                        // of the r.txt file to be directly in the bundle.
-                        createProcessResTask(tasks, variantScope, variantBundleDir,
-                                false /*generateResourcePackage*/);
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK,
+                projectPath,
+                variantName,
+                () -> createAidlTask(tasks, variantScope));
 
-                        // process java resources
-                        createProcessJavaResTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createAidlTask(tasks, variantScope);
-                        return null;
-                    }
-                });
-
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() {
-                        createShaderTask(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
+                projectPath,
+                variantName,
+                () -> createShaderTask(tasks, variantScope));
 
         // Add a compile task
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        // create data binding merge task before the javac task so that it can
-                        // parse jars before any consumer
-                        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
-                        AndroidTask<? extends JavaCompile> javacTask =
-                                createJavacTask(tasks, variantScope);
-                        addJavacClassesStream(variantScope);
-                        TaskManager.setJavaCompilerTask(javacTask, tasks, variantScope);
-                        return null;
-                    }
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK,
+                projectPath,
+                variantName,
+                () -> {
+                    // create data binding merge task before the javac task so that it can
+                    // parse jars before any consumer
+                    createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+                    AndroidTask<? extends JavaCompile> javacTask =
+                            createJavacTask(tasks, variantScope);
+                    addJavacClassesStream(variantScope);
+                    TaskManager.setJavaCompilerTask(javacTask, tasks, variantScope);
                 });
 
         // Add data binding tasks if enabled
@@ -278,27 +223,22 @@ public class LibraryTaskManager extends TaskManager {
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (!isComponentModelPlugin) {
             // Add NDK tasks
-            ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK,
-                    projectPath, variantName, new Recorder.Block<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            createNdkTasks(tasks, variantScope);
-                            return null;
-                        }
-                    });
+            recorder.record(
+                    ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK,
+                    projectPath,
+                    variantName,
+                    () -> createNdkTasks(tasks, variantScope));
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // External native build
-        ThreadRecorder.get().record(
+        recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createExternalNativeBuildJsonGenerators(variantScope);
-                        createExternalNativeBuildTasks(tasks, variantScope);
-                        return null;
-                    }
+                projectPath,
+                variantName,
+                () -> {
+                    createExternalNativeBuildJsonGenerators(variantScope);
+                    createExternalNativeBuildTasks(tasks, variantScope);
                 });
 
         // merge jni libs.
@@ -306,20 +246,24 @@ public class LibraryTaskManager extends TaskManager {
         createStripNativeLibraryTask(tasks, variantScope);
 
         // package the renderscript header files files into the bundle folder
-        AndroidTask<Sync> packageRenderscriptTask = ThreadRecorder.get().record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath,
-                variantName,
-                () -> getAndroidTasks()
-                        .create(tasks, new PackageRenderscriptConfigAction(variantScope)));
+        AndroidTask<Sync> packageRenderscriptTask =
+                recorder.record(
+                        ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
+                        projectPath,
+                        variantName,
+                        () ->
+                                getAndroidTasks()
+                                        .create(
+                                                tasks,
+                                                new PackageRenderscriptConfigAction(variantScope)));
 
         // merge consumer proguard files from different build types and flavors
-        AndroidTask<MergeFileTask> mergeProguardFilesTask = ThreadRecorder.get().record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK,
-                projectPath,
-                variantName,
-                () -> getAndroidTasks()
-                        .create(tasks, new MergeProguardFilesConfigAction(project, variantScope)));
+        AndroidTask<MergeFileTask> mergeProguardFilesTask =
+                recorder.record(
+                        ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK,
+                        projectPath,
+                        variantName,
+                        () -> createMergeFileTask(tasks, variantScope));
 
         // copy lint.jar into the bundle folder
         AndroidTask<Copy> copyLintTask =
@@ -342,15 +286,14 @@ public class LibraryTaskManager extends TaskManager {
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
 
-        ThreadRecorder.get().record(
+        recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK,
                 projectPath,
                 variantName,
                 new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        TransformManager transformManager =
-                                variantScope.getTransformManager();
+                        TransformManager transformManager = variantScope.getTransformManager();
 
                         // ----- Code Coverage first -----
                         if (instrumented) {
@@ -375,31 +318,34 @@ public class LibraryTaskManager extends TaskManager {
                                             TransformManager.SCOPE_FULL_LIBRARY);
                             if (!difference.isEmpty()) {
                                 String scopes = difference.toString();
-                                androidBuilder.getErrorReporter().handleSyncError(
-                                        "",
-                                        SyncIssue.TYPE_GENERIC,
-                                        String.format(
-                                                "Transforms with scopes '%s' cannot be applied"
-                                                        + "to library projects.",
-                                                scopes));
+                                androidBuilder
+                                        .getErrorReporter()
+                                        .handleSyncError(
+                                                "",
+                                                SyncIssue.TYPE_GENERIC,
+                                                String.format(
+                                                        "Transforms with scopes '%s' cannot be applied"
+                                                                + "to library projects.",
+                                                        scopes));
                             }
 
                             List<Object> deps = customTransformsDependencies.get(i);
                             transformManager
                                     .addTransform(tasks, variantScope, transform)
-                                    .ifPresent(t -> {
-                                        if (!deps.isEmpty()) {
-                                            t.dependsOn(tasks, deps);
-                                        }
+                                    .ifPresent(
+                                            t -> {
+                                                if (!deps.isEmpty()) {
+                                                    t.dependsOn(tasks, deps);
+                                                }
 
-                                        // if the task is a no-op then we make assemble task
-                                        // depend on it.
-                                        if (transform.getScopes().isEmpty()) {
-                                            variantScope
-                                                    .getAssembleTask()
-                                                    .dependsOn(tasks, t);
-                                        }
-                                    });
+                                                // if the task is a no-op then we make assemble task
+                                                // depend on it.
+                                                if (transform.getScopes().isEmpty()) {
+                                                    variantScope
+                                                            .getAssembleTask()
+                                                            .dependsOn(tasks, t);
+                                                }
+                                            });
                         }
 
                         // ----- Minify next -----
@@ -428,19 +374,16 @@ public class LibraryTaskManager extends TaskManager {
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
 
                         Optional<AndroidTask<TransformTask>> jarPackagingTask =
-                                transformManager.addTransform(
-                                        tasks, variantScope, transform);
+                                transformManager.addTransform(tasks, variantScope, transform);
                         if (!generateSourcesOnly) {
                             jarPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
                         }
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle.
                         LibraryJniLibsTransform jniTransform =
-                                new LibraryJniLibsTransform(
-                                        new File(variantBundleDir, FD_JNI));
+                                new LibraryJniLibsTransform(new File(variantBundleDir, FD_JNI));
                         Optional<AndroidTask<TransformTask>> jniPackagingTask =
-                                transformManager.addTransform(
-                                        tasks, variantScope, jniTransform);
+                                transformManager.addTransform(tasks, variantScope, jniTransform);
                         if (!generateSourcesOnly) {
                             jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
                         }
@@ -507,14 +450,52 @@ public class LibraryTaskManager extends TaskManager {
                 project.getPath(),
                 variantBundleDir));
 
-        ThreadRecorder.get().record(ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
-                projectPath, variantName, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        createLintTasks(tasks, variantScope);
-                        return null;
-                    }
-                });
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
+                projectPath,
+                variantName,
+                () -> createLintTasks(tasks, variantScope));
+    }
+
+    @NonNull
+    private AndroidTask<MergeFileTask> createMergeFileTask(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope) {
+        return getAndroidTasks()
+                .create(
+                        tasks,
+                        new MergeProguardFilesConfigAction(project, variantScope));
+    }
+
+    @NonNull
+    private AndroidTask<MergeResources> createMergeResourcesTask(
+            @NonNull TaskFactory tasks,
+            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @NonNull VariantScope variantScope,
+            @NonNull File variantBundleDir) {
+        // Create a merge task to only merge the resources from this library and not
+        // the dependencies. This is what gets packaged in the aar.
+        AndroidTask<MergeResources> mergeResourceTask =
+                basicCreateMergeResourcesTask(
+                        tasks,
+                        variantScope,
+                        "package",
+                        FileUtils.join(variantBundleDir, "res"),
+                        false /*includeDependencies*/,
+                        false /*processResources*/);
+
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                || variantData.getVariantDependency().hasNonOptionalLibraries()) {
+            // Add a task to merge the resource folders, including the libraries, in order to
+            // generate the R.txt file with all the symbols, including the ones from
+            // the dependencies.
+            createMergeResourcesTask(tasks, variantScope, false /*processResources*/);
+        }
+
+        mergeResourceTask.configure(
+                tasks, task -> task.setPublicFile(FileUtils.join(variantBundleDir, FN_PUBLIC_TXT)));
+
+        return mergeResourceTask;
     }
 
     private void excludeDataBindingClassesIfNecessary(final VariantScope variantScope,

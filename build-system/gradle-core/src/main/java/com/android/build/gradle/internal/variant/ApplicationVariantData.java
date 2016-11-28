@@ -22,8 +22,8 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 
 /**
@@ -36,8 +36,9 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
             @NonNull AndroidConfig androidConfig,
             @NonNull GradleVariantConfiguration config,
             @NonNull TaskManager taskManager,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
     }
 

@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -42,8 +42,9 @@ public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutpu
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output

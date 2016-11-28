@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -43,8 +43,9 @@ public class TestVariantData extends ApkVariantData {
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull TestedVariantData testedVariantData,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
         this.testedVariantData = testedVariantData;
 
         // create default output
