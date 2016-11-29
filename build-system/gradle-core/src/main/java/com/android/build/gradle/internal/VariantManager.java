@@ -426,8 +426,7 @@ public class VariantManager implements VariantModel {
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
             VariantDependencies.Builder builder = VariantDependencies
-                    .builder(project, androidBuilder.getErrorReporter(),
-                            testVariantConfig.getFullName(), variantType)
+                    .builder(project, androidBuilder.getErrorReporter(), testVariantConfig)
                     .setPublishVariant(false)
                     .setTestedVariantType(testedVariantType)
                     .addProviders(testVariantProviders)
@@ -593,9 +592,8 @@ public class VariantManager implements VariantModel {
                 variantFactory.createVariantData(variantConfig, taskManager);
 
         VariantDependencies.Builder builder = VariantDependencies
-                .builder(project, androidBuilder.getErrorReporter(),
-                        variantConfig.getFullName(), variantData.getType())
-                .setPublishVariant(isVariantPublished())
+                .builder(project, androidBuilder.getErrorReporter(), variantConfig)
+                .setPublishVariant(true)
                 .addProviders(variantProviders);
 
         final VariantDependencies variantDep = builder.build();
@@ -787,14 +785,7 @@ public class VariantManager implements VariantModel {
                         productFlavorList);
 
                 if (restrictVariants) {
-                    if (variantFactory.getVariantConfigurationType() == VariantType.LIBRARY) {
-                        // for a library, we can only safely remove variants if:
-                        // 1. we're not publishing all of them
-                        // 2. this is not the default variant.
-                        // This ensures that this is not a variant that is referenced by another module.
-                        ignore = !extension.getPublishNonDefault() &&
-                                !variantFilter.getName().equals(extension.getDefaultPublishConfig());
-                    } else if (projectMatch) {
+                    if (projectMatch) {
                         // get the app project, compare to this one, and if a match only accept
                         // the variant being built.
                         ignore = !variantFilter.getName().equals(restrictedVariantName);
@@ -848,10 +839,6 @@ public class VariantManager implements VariantModel {
                     ANDROID_TEST);
             variantDataList.add(androidTestVariantData);
         }
-    }
-
-    private boolean isVariantPublished() {
-        return extension.getPublishNonDefault();
     }
 
     private static void checkName(@NonNull String name, @NonNull String displayName) {

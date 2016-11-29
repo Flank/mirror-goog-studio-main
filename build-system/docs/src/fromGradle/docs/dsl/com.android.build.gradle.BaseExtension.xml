@@ -25,7 +25,6 @@
             <tr><td>ndkDirectory</td></tr>
             <tr><td>packagingOptions</td></tr>
             <tr><td>productFlavors</td></tr>
-            <tr><td>publishNonDefault</td></tr>
             <tr><td>resourcePrefix</td></tr>
             <tr><td>sdkDirectory</td></tr>
             <tr><td>signingConfigs</td></tr>

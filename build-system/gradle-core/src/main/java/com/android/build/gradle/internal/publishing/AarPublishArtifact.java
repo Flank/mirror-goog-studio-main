@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,44 @@
 package com.android.build.gradle.internal.publishing;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import java.io.File;
 import org.gradle.api.AttributeContainer;
+import org.gradle.api.Task;
+import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
 /**
- * custom implementation of PublishArtifact for published APKs.
+ * custom implementation of PublishArtifact for published AARs.
  */
-public class AtomPublishArtifact extends BasePublishArtifact {
+public class AarPublishArtifact extends BasePublishArtifact {
 
-    public AtomPublishArtifact(
-            @NonNull String name,
-            @Nullable String classifier,
-            @NonNull FileSupplier outputFileSupplier) {
-        super(name, classifier, outputFileSupplier);
+    public AarPublishArtifact(@NonNull AbstractArchiveTask task, @NonNull String classifier) {
+        super(task.getBaseName(), classifier, new FileSupplier() {
+            @NonNull
+            @Override
+            public Task getTask() {
+                return task;
+            }
+
+            @Override
+            public File get() {
+                return task.getArchivePath();
+            }
+        });
     }
 
     @Override
     public String getExtension() {
-        return "atombundle";
+        return "aar";
     }
 
     @Override
     public String getType() {
-        return "atombundle";
+        return "aar";
     }
 
     @Override
     public AttributeContainer getAttributes() {
-        // This is temporary and is likely to change in another nightly of Gradle 3.3
-        // as there is no way to return a new instance of this.
         return null;
     }
-
-
 }

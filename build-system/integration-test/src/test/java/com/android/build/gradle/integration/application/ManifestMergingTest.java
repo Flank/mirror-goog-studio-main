@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import java.io.File;
@@ -61,9 +62,15 @@ public class ManifestMergingTest {
     public void checkManifestMergingForLibraries() {
         libsTest.execute("clean", "build");
         File fileOutput = libsTest.
-                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/default/AndroidManifest.xml");
+                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/debug/AndroidManifest.xml");
 
-        assertTrue(fileOutput.exists());
+        assertThat(fileOutput).isFile();
+
+        fileOutput = libsTest.
+                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/release/AndroidManifest.xml");
+
+        assertThat(fileOutput).isFile();
+
     }
 
     @Test

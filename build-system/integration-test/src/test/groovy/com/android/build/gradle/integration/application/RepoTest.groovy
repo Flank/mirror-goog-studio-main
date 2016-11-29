@@ -19,9 +19,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 /**
  * Integration test for uploadAchives with multiple projects.
+ *
+ * TODO: Reenable when gradle fix publication with attribute config
  */
 @CompileStatic
 class RepoTest {

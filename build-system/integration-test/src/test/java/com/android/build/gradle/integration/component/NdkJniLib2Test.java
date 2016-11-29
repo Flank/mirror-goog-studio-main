@@ -112,13 +112,13 @@ public class NdkJniLib2Test {
     public void checkSoAreIncludedInBothAppAndLibrary() throws IOException, InterruptedException {
         project.execute("clean", ":app:assembleDebug");
 
-        File releaseAar = project.getSubproject("lib").getAar("release");
-        assertThatAar(releaseAar).contains("jni/x86/libhello-jni.so");
+        File debugAar = project.getSubproject("lib").getAar("debug");
+        assertThatAar(debugAar).contains("jni/x86/libhello-jni.so");
 
         File app = project.getSubproject("app").getApk("debug");
         assertThatAar(app).contains("lib/x86/libhello-jni.so");
 
-        File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so");
+        File lib = ZipHelper.extractFile(debugAar, "jni/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
         lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();

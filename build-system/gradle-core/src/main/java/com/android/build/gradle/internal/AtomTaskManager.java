@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.GenerateAtomMetadata;
@@ -311,31 +310,13 @@ public class AtomTaskManager extends TaskManager {
 
         variantScope.getAssembleTask().dependsOn(tasks, bundleAtom);
 
-        VariantConfiguration variantConfig = variantScope.getVariantConfiguration();
-        if (getExtension().getDefaultPublishConfig().equals(variantConfig.getFullName())) {
-            VariantHelper.setupDefaultConfig(project,
-                    variantData.getVariantDependency().getPackageConfiguration());
-
-            // add the artifact that will be published
-            bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add("default",
-                    new AtomPublishArtifact(
-                            getGlobalScope().getProjectBaseName(),
-                            null,
-                            packageTask)));
-
-            getAssembleDefault().dependsOn(variantScope.getAssembleTask().getName());
-        }
-
-        // also publish the artifact with its full config name
-        if (getExtension().getPublishNonDefault()) {
-            String classifier =
-                    variantData.getVariantDependency().getPublishConfiguration().getName();
-            bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
-                    new AtomPublishArtifact(
-                            getGlobalScope().getProjectBaseName(),
-                            classifier,
-                            packageTask)));
-        }
+        String classifier =
+                variantData.getVariantDependency().getPublishConfiguration().getName();
+        bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
+                new AtomPublishArtifact(
+                        getGlobalScope().getProjectBaseName(),
+                        classifier,
+                        packageTask)));
     }
 
     @NonNull

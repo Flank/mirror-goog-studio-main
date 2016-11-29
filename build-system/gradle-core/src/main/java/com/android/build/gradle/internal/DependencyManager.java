@@ -752,12 +752,14 @@ public class DependencyManager {
                                 // artifact has a classifier that is the variant Name).
                                 // Otherwise the subproject only outputs a single artifact
                                 // and the location was set to default.
-                                String pathLeaf = variantName != null ? variantName : "default";
-
+                                if (variantName == null) {
+                                    throw new RuntimeException(
+                                            "Expected variantName in Android sub-project's classifier (" + project.getPath() + ")");
+                                }
                                 File stagingDir = FileUtils.join(
                                         subProject.getBuildDir(),
                                         FD_INTERMEDIATES, DIR_BUNDLES,
-                                        pathLeaf);
+                                        variantName);
 
                                 androidDependency = AndroidDependency.createStagedAarLibrary(
                                         artifact.getFile(),

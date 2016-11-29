@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
@@ -127,7 +128,7 @@ public class AppWithResolutionStrategyForJarTest {
             @NonNull String variantName) {
 
         Items subModuleItems = items.withType(MODULE);
-        assertThat(subModuleItems.mapTo(COORDINATES))
+        assertThat(subModuleItems.mapTo(GRADLE_PATH))
                 .named("Direct modules of " + variantName)
                 .containsExactly(":library");
 

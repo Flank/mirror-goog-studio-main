@@ -30,7 +30,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -42,7 +41,6 @@ import org.junit.runners.Parameterized;
 /**
  * test for packaging of asset files.
  */
-@CompileStatic
 @RunWith(FilterableParameterized.class)
 public class NativeSoPackagingFromRemoteAarTest {
 
@@ -82,7 +80,7 @@ public class NativeSoPackagingFromRemoteAarTest {
                 + "    maven { url '../testrepo' }\n"
                 + "}\n"
                 + "dependencies {\n"
-                + "    compile 'com.example.android.nativepackaging:library:1.0'\n"
+                + "    compile 'com.example.android.nativepackaging:library:1.0:release@aar'\n"
                 + "}\n");
 
         TestFileUtils.appendToFile(libProject.getBuildFile(),

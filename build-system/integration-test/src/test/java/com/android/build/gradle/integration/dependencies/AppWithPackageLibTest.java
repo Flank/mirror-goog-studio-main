@@ -64,9 +64,16 @@ public class AppWithPackageLibTest {
 
     @Test
     public void checkModelFailedToLoad() {
-        assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
+        final AndroidProject androidProject = modelContainer.getModelMap().get(":app");
+
+        assertThat(androidProject).hasIssueSize(2);
+        assertThat(androidProject).hasIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_PACKAGE_DEP,
-                "projectWithModules:library:unspecified@aar");
+                "projectWithModules:library:unspecified:debug@aar");
+        assertThat(androidProject).hasIssue(
+                SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_NON_JAR_PACKAGE_DEP,
+                "projectWithModules:library:unspecified:release@aar");
     }
 }

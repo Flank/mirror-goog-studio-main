@@ -20,6 +20,5 @@ android {
 }
 
 dependencies {
-    flavor1Compile project(path: ':lib', configuration: 'flavor1Release')
-    flavor2Compile project(path: ':lib', configuration: 'flavor2Release')
+    compile project(path: ':lib')
 }
