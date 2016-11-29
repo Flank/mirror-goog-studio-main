@@ -123,7 +123,7 @@ public class GeneratedClass${suffix} {
         project.execute("clean", "assembleDebug")
         assertFalse(
                 "Extract annotation should get generated class on path.",
-                project.getStdout().contains("Not extracting annotations (compilation problems encountered)"))
+                project.getBuildResult().getStdout().contains("Not extracting annotations (compilation problems encountered)"))
         assertThat(project.file("build/generated/source/testplugin/debug/com/example/helloworld/GeneratedClass.java")).exists()
     }
 

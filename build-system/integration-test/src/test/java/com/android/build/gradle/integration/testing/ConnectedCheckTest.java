@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.ddmlib.IDevice;
@@ -51,8 +52,8 @@ public class ConnectedCheckTest {
     public void connectedCheckOnAllDevices() throws IOException {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
-        project.execute("connectedCheck");
-        assertThat(project.getStdout().contains("Starting 3 tests on"));
+        GradleBuildResult result = project.executor().run("connectedCheck");
+        assertThat(result.getStdout().contains("Starting 3 tests on"));
     }
 
     @Category(DeviceTests.class)
@@ -65,11 +66,13 @@ public class ConnectedCheckTest {
                 ImmutableList.of(
                         "-Pandroid.androidTest.shardBetweenDevices=true",
                         Adb.getInjectToDeviceProviderProperty(device)));
-        assertThat(project.getStdout()).contains("will shard tests into 1 shards");
-        assertThat(project.getStdout()).contains("Starting 3 tests on");
-        assertThat(project.getStdout()).contains("finished 1 of estimated 3 tests");
-        assertThat(project.getStdout()).contains("finished 2 of estimated 3 tests");
-        assertThat(project.getStdout()).contains("finished 3 of estimated 3 tests");
+        GradleBuildResult result = project.getBuildResult();
+        String stdout = result.getStdout();
+        assertThat(stdout).contains("will shard tests into 1 shards");
+        assertThat(stdout).contains("Starting 3 tests on");
+        assertThat(stdout).contains("finished 1 of estimated 3 tests");
+        assertThat(stdout).contains("finished 2 of estimated 3 tests");
+        assertThat(stdout).contains("finished 3 of estimated 3 tests");
     }
 
     @Category(DeviceTests.class)
@@ -77,11 +80,11 @@ public class ConnectedCheckTest {
     public void connectedCheckIn7Shards() throws IOException {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
-        project.execute(
+        GradleBuildResult result = project.executor().withArguments(
                 ImmutableList.of(
                         "-Pandroid.androidTest.shardBetweenDevices=true",
-                        "-Pandroid.androidTest.numShards=7"),
-                "connectedCheck");
-        assertThat(project.getStdout()).contains("will shard tests into 7 shards");
+                        "-Pandroid.androidTest.numShards=7"))
+                .run("connectedCheck");
+        assertThat(result.getStdout()).contains("will shard tests into 7 shards");
     }
 }

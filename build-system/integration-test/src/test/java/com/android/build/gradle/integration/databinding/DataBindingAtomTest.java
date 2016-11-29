@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
@@ -64,9 +65,8 @@ public class DataBindingAtomTest {
         project.setBuildFile(mBuildFile);
         project.execute("assembleDebug");
 
-        assertThat(project.getStdout())
-                .named("Build output")
-                .contains(":dataBindingProcessLayoutsDebug");
+        final GradleBuildResult buildResult = project.getBuildResult();
+        assertThat(buildResult.getTask(":dataBindingProcessLayoutsDebugAtom")).wasExecuted();
 
         AtomBundleSubject atombundle = assertThatAtomBundle(project.getAtomBundle("debug"));
         atombundle.containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");

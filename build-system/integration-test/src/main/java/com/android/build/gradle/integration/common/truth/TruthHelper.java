@@ -137,6 +137,12 @@ public class TruthHelper {
                 dependencies);
     }
 
+    @NonNull
+    public static GradleTaskSubject assertThat(@NonNull TaskStateList.TaskInfo taskInfo) {
+        return assert_().about(GradleTaskSubject.FACTORY).that(taskInfo);
+    }
+
+
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @NonNull
     public static <T> Java8OptionalSubject<T> assertThat(@NonNull java.util.Optional<T> optional) {

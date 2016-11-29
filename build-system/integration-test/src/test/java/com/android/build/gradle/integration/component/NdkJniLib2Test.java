@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestA
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.GradleOutputVerifier;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.utils.FileUtils;
@@ -34,6 +33,7 @@ import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
@@ -144,10 +144,9 @@ public class NdkJniLib2Test {
         GradleBuildResult result = project.executor()
                 .withArgument("--dry-run") // Just checking task order.  Don't need to actually run.
                 .run(":app:assembleDebug");
-        GradleOutputVerifier verifier = new GradleOutputVerifier(result.getStdout());
-        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary")
+        assertThat(result.getTask(":app:linkEmptyArmeabiDebugSharedLibrary"))
                 .wasExecuted();
-        verifier.assertThatTask(":app:linkEmptyArmeabiDebugSharedLibrary")
+        assertThat(result.getTask(":app:linkEmptyArmeabiDebugSharedLibrary"))
                 .ranAfter(":app:prepareDebugDependencies");
     }
 }

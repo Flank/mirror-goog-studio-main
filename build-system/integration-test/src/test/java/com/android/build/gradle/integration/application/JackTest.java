@@ -101,7 +101,8 @@ public class JackTest {
     public void assembleDebug() throws IOException {
         project.execute("clean", "assembleDebug");
         assertThatApk(project.getApk("debug")).contains("classes.dex");
-        assertThat(project.getStdout()).contains("transformJackWithJack");
+        assertThat(project.getBuildResult().getTask(":transformJackWithJackForDebug"))
+                .wasExecuted();
     }
 
     @Test
