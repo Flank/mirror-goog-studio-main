@@ -21,9 +21,9 @@ maven_java_library(
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library:tools.analytics-shared",
-        "//tools/analytics-library:tools.analytics-tracker",
         "//tools/analytics-library/protos/src/main/proto",
+        "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
