@@ -15,17 +15,15 @@
  */
 package com.android.tools.fd.client;
 
+import static org.junit.Assert.*;
+
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.List;
-
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class InstantRunBuildInfoTest {
 
@@ -44,7 +42,9 @@ public class InstantRunBuildInfoTest {
     @Test
     public void testHasNoChanges() throws IOException {
         InstantRunBuildInfo info = getBuildInfo("instantrun", "build-info-no-artifacts.xml");
-        assertTrue("If there are no artifacts, then it doesn't matter what the verifier said.", info.hasNoChanges());
+        assertTrue(
+                "If there are no artifacts, then it doesn't matter what the verifier said.",
+                info.hasNoChanges());
 
         info = getBuildInfo("instantrun", "build-info-res.xml");
         assertFalse("If there is an artifact, then there are changes", info.hasNoChanges());
@@ -73,17 +73,29 @@ public class InstantRunBuildInfoTest {
     @Test
     public void testSplitApks2() throws IOException {
         // Ensure that when we get a main APK (but not all the splits) as part of
-        // a build info, we pull in all the slices from the first build too
+        // a build info, we pull in only the necessary slices
         InstantRunBuildInfo info = getBuildInfo("instantrun", "build-info2.xml");
 
         List<InstantRunArtifact> artifacts = info.getArtifacts();
-        assertEquals(12, artifacts.size());
+        assertEquals(2, artifacts.size());
         assertTrue(info.hasMainApk());
         assertTrue(info.hasOneOf(InstantRunArtifactType.SPLIT));
+        // should find two new build artifacts - one split and one main
         assertTrue(
-                artifacts.stream().filter(p -> p.timestamp.equals("1452207930094")).count() == 1);
+                artifacts.stream().filter(p -> p.type.equals(InstantRunArtifactType.SPLIT)).count()
+                        == 1);
         assertTrue(
-                artifacts.stream().filter(p -> p.timestamp.equals("1452205343311")).count() == 11);
+                artifacts
+                                .stream()
+                                .filter(p -> p.type.equals(InstantRunArtifactType.SPLIT_MAIN))
+                                .count()
+                        == 1);
+        assertTrue(
+                artifacts.stream().filter(p -> p.timestamp.equals("1452207930094")).count() == 2);
+        // don't look at old build
+        assertTrue(
+                artifacts.stream().filter(p -> p.timestamp.equals("1452205343311")).count() == 0);
+        assertEquals("COLD", info.getBuildMode());
     }
 
     @NonNull

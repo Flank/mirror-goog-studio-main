@@ -19,21 +19,20 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.EnumMap;
-import java.util.Map;
-
-/**
- * Changes to a class that cannot be hot swapped with the current InstantRun runtime
- */
+/** Changes to a class that cannot be hot swapped with the current InstantRun runtime. */
 public enum InstantRunVerifierStatus {
 
     // There were no changes.
     NO_CHANGES(
-            InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM),
+            InstantRunBuildMode.HOT_WARM,
+            InstantRunBuildMode.HOT_WARM,
+            InstantRunBuildMode.HOT_WARM),
 
     // changes are compatible with current InstantRun features.
     COMPATIBLE(
-            InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM, InstantRunBuildMode.HOT_WARM),
+            InstantRunBuildMode.HOT_WARM,
+            InstantRunBuildMode.HOT_WARM,
+            InstantRunBuildMode.HOT_WARM),
 
     // the verifier did not run successfully.
     NOT_RUN,
@@ -83,8 +82,8 @@ public enum InstantRunVerifierStatus {
     /**
      * The merged xml manifest file changed.
      *
-     * <p>Changes to resource ids referenced by the binary manifest will be
-     * {@link #BINARY_MANIFEST_FILE_CHANGE}.
+     * <p>Changes to resource ids referenced by the binary manifest will be {@link
+     * #BINARY_MANIFEST_FILE_CHANGE}.
      */
     MANIFEST_FILE_CHANGE(
             InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.COLD),
@@ -99,7 +98,7 @@ public enum InstantRunVerifierStatus {
 
     FULL_BUILD_REQUESTED(
             InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.FULL),
-    
+
     INITIAL_BUILD(InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.FULL);
 
     private final ImmutableMap<InstantRunPatchingPolicy, InstantRunBuildMode> buildMode;
@@ -112,10 +111,11 @@ public enum InstantRunVerifierStatus {
             @NonNull InstantRunBuildMode preLollipopBuildMode,
             @NonNull InstantRunBuildMode multiDexBuildMode,
             @NonNull InstantRunBuildMode multiApkBuildMode) {
-        buildMode = ImmutableMap.of(
-                InstantRunPatchingPolicy.PRE_LOLLIPOP, preLollipopBuildMode,
-                InstantRunPatchingPolicy.MULTI_DEX, multiDexBuildMode,
-                InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode);
+        buildMode =
+                ImmutableMap.of(
+                        InstantRunPatchingPolicy.PRE_LOLLIPOP, preLollipopBuildMode,
+                        InstantRunPatchingPolicy.MULTI_DEX, multiDexBuildMode,
+                        InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode);
     }
 
     public InstantRunBuildMode getInstantRunBuildModeForPatchingPolicy(

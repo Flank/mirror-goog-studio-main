@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
+import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -31,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
@@ -56,11 +58,9 @@ public class ButterKnifeTest {
 
     private File mActiv;
 
-    @Rule
-    public Logcat logcat = Logcat.create();
+    @Rule public Logcat logcat = Logcat.create();
 
-    @Rule
-    public final Adb adb = new Adb();
+    @Rule public final Adb adb = new Adb();
 
     @Before
     public void setUp() throws IOException {
@@ -75,34 +75,50 @@ public class ButterKnifeTest {
 
     @Test
     public void coldSwapBuild() throws Exception {
-        new ColdSwapTester(project).testMultiDex(new ColdSwapTester.Steps() {
-            @Override
-            public void checkApk(@NonNull File apk) throws Exception {
-                assertThatApk(apk).hasClass(ACTIVITY_DESC, INSTANT_RUN);
-            }
+        new ColdSwapTester(project)
+                .testMultiDex(
+                        new ColdSwapTester.Steps() {
+                            @Override
+                            public void checkApk(@NonNull File apk) throws Exception {
+                                assertThatApk(apk).hasClass(ACTIVITY_DESC, INSTANT_RUN);
+                            }
 
-            @Override
-            public void makeChange() throws Exception {
-                TestFileUtils.searchAndReplace(mActiv.getAbsoluteFile(),
-                        "text\\.getText\\(\\)\\.toString\\(\\)", "getMessage()");
-                TestFileUtils.addMethod(
-                        mActiv,
-                        "public String getMessage() { return text.getText().toString(); }");
-            }
+                            @Override
+                            public void makeChange() throws Exception {
+                                TestFileUtils.searchAndReplace(
+                                        mActiv.getAbsoluteFile(),
+                                        "text\\.getText\\(\\)\\.toString\\(\\)",
+                                        "getMessage()");
+                                TestFileUtils.addMethod(
+                                        mActiv,
+                                        "public String getMessage() { return text.getText().toString(); }");
+                            }
 
-            @Override
-            public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
-                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
-            }
+                            @Override
+                            public void checkVerifierStatus(
+                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
+                            }
 
-            @Override
-            public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
-                InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
-                assertThatDex(artifact.getLocation())
-                        .containsClass(ACTIVITY_DESC)
-                        .that().hasMethod("getMessage");
-            }
-        });
+                            @Override
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                                    throws Exception {
+                                // for multi dex cold build mode is triggered
+                                assertEquals(InstantRunBuildMode.COLD, buildMode);
+                            }
+
+                            @Override
+                            public void checkArtifacts(
+                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    throws Exception {
+                                InstantRunBuildContext.Artifact artifact =
+                                        Iterables.getOnlyElement(artifacts);
+                                assertThatDex(artifact.getLocation())
+                                        .containsClass(ACTIVITY_DESC)
+                                        .that()
+                                        .hasMethod("getMessage");
+                            }
+                        });
     }
 
     @Test
@@ -112,19 +128,16 @@ public class ButterKnifeTest {
 
         makeHotSwapChange("CHANGE");
 
-        project.executor()
-                .withInstantRun(23, COLDSWAP_MODE)
-                .run("assembleDebug");
+        project.executor().withInstantRun(23, COLDSWAP_MODE).run("assembleDebug");
 
-        InstantRunArtifact artifact =
-                InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
+        InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
         assertThatDex(artifact.file).containsClass("Lcom/example/bk/Activ$override;");
     }
 
     private void makeHotSwapChange(String change) throws Exception {
         TestFileUtils.searchAndReplace(
-                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\""+ change +"\"");
+                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\"" + change + "\"");
     }
 
     @Test

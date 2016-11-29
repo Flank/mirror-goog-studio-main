@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
+import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -32,6 +33,7 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
@@ -51,9 +53,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/**
- * Tests support for Dagger and Instant Run.
- */
+/** Tests support for Dagger and Instant Run. */
 @RunWith(FilterableParameterized.class)
 public class DaggerTest {
 
@@ -62,23 +62,17 @@ public class DaggerTest {
     private static final String APP_MODULE_DESC = "Lcom/android/tests/AppModule;";
     private static final String GET_MESSAGE = "getMessage";
 
-    @Rule
-    public Logcat logcat = Logcat.create();
+    @Rule public Logcat logcat = Logcat.create();
 
-    @Rule
-    public final Adb adb = new Adb();
+    @Rule public final Adb adb = new Adb();
 
     @Parameterized.Parameters(name = "{0},useAndroidApt={1}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                {"daggerOne", true},
-                {"daggerTwo", true},
-                {"daggerTwo", false}
-        });
+        return Arrays.asList(
+                new Object[][] {{"daggerOne", true}, {"daggerTwo", true}, {"daggerTwo", false}});
     }
 
-    @Rule
-    public GradleTestProject project;
+    @Rule public GradleTestProject project;
 
     private File mAppModule;
 
@@ -89,9 +83,7 @@ public class DaggerTest {
         this.testProject = testProject;
         this.useAndroidApt = useAndroidApt;
 
-        project = GradleTestProject.builder()
-                .fromTestProject(testProject)
-                .create();
+        project = GradleTestProject.builder().fromTestProject(testProject).create();
     }
 
     @Before
@@ -99,8 +91,7 @@ public class DaggerTest {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         if (this.testProject.equals("daggerTwo")) {
             Assume.assumeTrue(
-                    "Dagger 2 only works on java 7+",
-                    JavaVersion.current().isJava7Compatible());
+                    "Dagger 2 only works on java 7+", JavaVersion.current().isJava7Compatible());
         }
         mAppModule = project.file("src/main/java/com/android/tests/AppModule.java");
 
@@ -116,33 +107,48 @@ public class DaggerTest {
 
     @Test
     public void coldSwap() throws Exception {
-        new ColdSwapTester(project).testMultiDex(new ColdSwapTester.Steps() {
-            @Override
-            public void checkApk(@NonNull File apk) throws Exception {
-                assertThatApk(apk).hasClass(APP_MODULE_DESC, INSTANT_RUN);
-            }
+        new ColdSwapTester(project)
+                .testMultiDex(
+                        new ColdSwapTester.Steps() {
+                            @Override
+                            public void checkApk(@NonNull File apk) throws Exception {
+                                assertThatApk(apk).hasClass(APP_MODULE_DESC, INSTANT_RUN);
+                            }
 
-            @Override
-            public void makeChange() throws Exception {
-                TestFileUtils.addMethod(
-                        mAppModule,
-                        "public String getMessage() { return \"coldswap\"; }");
-                TestFileUtils.searchAndReplace(mAppModule, "\"from module\"", "getMessage()");
-            }
+                            @Override
+                            public void makeChange() throws Exception {
+                                TestFileUtils.addMethod(
+                                        mAppModule,
+                                        "public String getMessage() { return \"coldswap\"; }");
+                                TestFileUtils.searchAndReplace(
+                                        mAppModule, "\"from module\"", "getMessage()");
+                            }
 
-            @Override
-            public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
-                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
-            }
+                            @Override
+                            public void checkVerifierStatus(
+                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
+                            }
 
-            @Override
-            public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
-                InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
-                assertThatDex(artifact.getLocation())
-                        .containsClass(APP_MODULE_DESC)
-                        .that().hasMethod(GET_MESSAGE);
-            }
-        });
+                            @Override
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                                    throws Exception {
+                                // for multi dex cold build mode is triggered
+                                assertEquals(InstantRunBuildMode.COLD, buildMode);
+                            }
+
+                            @Override
+                            public void checkArtifacts(
+                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    throws Exception {
+                                InstantRunBuildContext.Artifact artifact =
+                                        Iterables.getOnlyElement(artifacts);
+                                assertThatDex(artifact.getLocation())
+                                        .containsClass(APP_MODULE_DESC)
+                                        .that()
+                                        .hasMethod(GET_MESSAGE);
+                            }
+                        });
     }
 
     @Test
@@ -152,11 +158,9 @@ public class DaggerTest {
 
         TestFileUtils.searchAndReplace(mAppModule, "from module", "CHANGE");
 
-        project.executor().withInstantRun(23, COLDSWAP_MODE)
-                .run("assembleDebug");
+        project.executor().withInstantRun(23, COLDSWAP_MODE).run("assembleDebug");
 
-        InstantRunArtifact artifact =
-                InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
+        InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
         assertThatDex(artifact.file).containsClass("Lcom/android/tests/AppModule$override;");
     }
@@ -199,8 +203,6 @@ public class DaggerTest {
                         TestFileUtils.searchAndReplace(
                                 mAppModule, CHANGE_PREFIX + 1, CHANGE_PREFIX + 2);
                     }
-                }
-        );
+                });
     }
-
 }
