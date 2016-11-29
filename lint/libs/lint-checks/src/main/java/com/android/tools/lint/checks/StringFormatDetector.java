@@ -1224,7 +1224,36 @@ public class StringFormatDetector extends ResourceXmlDetector implements JavaPsi
                         ResourceValue v = item.getResourceValue(false);
                         if (v != null) {
                             String value = v.getRawXmlValue();
-                            if (value != null) {
+                            // Attempt to resolve indirection
+                            if (value == null) {
+                                continue;
+                            }
+                            if (isReference(value)) {
+                                // Only resolve a few indirections
+                                for (int i = 0; i < 3; i++) {
+                                    ResourceUrl url = ResourceUrl.parse(value);
+                                    if (url == null || url.framework) {
+                                        break;
+                                    }
+                                    List<ResourceItem> l = resources.getResourceItem(url.type,
+                                            url.name);
+                                    if (l != null && !l.isEmpty()) {
+                                        v = l.get(0).getResourceValue(false);
+                                        if (v != null) {
+                                            value = v.getValue();
+                                            if (value == null || !isReference(value)) {
+                                                break;
+                                            }
+                                        } else {
+                                            break;
+                                        }
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (value != null && !isReference(value)) {
                                 // Make sure it's really a formatting string,
                                 // not for example "Battery remaining: 90%"
                                 boolean isFormattingString = value.indexOf('%') != -1;

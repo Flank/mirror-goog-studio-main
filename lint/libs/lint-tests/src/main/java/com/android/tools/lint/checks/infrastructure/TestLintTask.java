@@ -35,6 +35,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
@@ -49,7 +50,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +57,8 @@ import java.util.Map;
 public class TestLintTask {
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
+    /** Map from project directory to corresponding Gradle model mocker */
+    final Map<File, ProjectDescription> dirToProjectDescription = Maps.newHashMap();
     /** Cache for {@link #getCheckedIssues()} */
     private List<Issue> checkedIssues;
     /** Whether the {@link #run} method has already been invoked */
@@ -405,40 +407,41 @@ public class TestLintTask {
         }
     }
 
-    /**
-     * Performs the lint check, returning the results of the lint check.
-     *
-     * @return the result
-     */
-    @NonNull
-    public TestLintResult run() {
-        alreadyRun = true;
+    private static void addProjects(
+            @NonNull List<ProjectDescription> target,
+            @NonNull ProjectDescription... projects) {
+        for (ProjectDescription project : projects) {
+            if (!target.contains(project)) {
+                target.add(project);
+            }
 
-        ensureConfigured();
+            for (ProjectDescription dependency : project.dependsOn) {
+                addProjects(target, dependency);
+            }
+        }
+    }
+
+    /** Constructs the actual lint projects on disk */
+    @NonNull
+    private List<File> createProjects(File rootDir) {
+        List<ProjectDescription> allProjects = Lists.newArrayListWithCapacity(2 * projects.length);
+        addProjects(allProjects, projects);
 
         // Assign names if necessary
-        for (int i = 0; i < projects.length; i++) {
-            ProjectDescription project = projects[i];
+        for (int i = 0; i < allProjects.size(); i++) {
+            ProjectDescription project = allProjects.get(i);
             if (project.name == null) {
                 project.name = "project" + Integer.toString(i);
             }
         }
 
-        File rootDir = Files.createTempDir();
-        try {
-            // Use canonical path to make sure we don't end up failing
-            // to chop off the prefix from Project#getDisplayPath
-            rootDir = rootDir.getCanonicalFile();
-        } catch (IOException ignore) {
-        }
-
         List<File> projectDirs = Lists.newArrayList();
-        for (ProjectDescription project : projects) {
+        for (ProjectDescription project : allProjects) {
             try {
                 TestFile[] files = project.files;
 
                 // Also create dependency files
-                if (project.dependsOn != null && !project.dependsOn.isEmpty()) {
+                if (!project.dependsOn.isEmpty()) {
                     TestFile.PropertyTestFile propertyFile = null;
                     for (TestFile file : files) {
                         if (file instanceof TestFile.PropertyTestFile) {
@@ -459,12 +462,36 @@ public class TestLintTask {
                 }
 
                 File projectDir = new File(rootDir, project.name);
-                populateProjectDirectory(projectDir, files);
+                dirToProjectDescription.put(projectDir, project);
+                populateProjectDirectory(project, projectDir, files);
                 projectDirs.add(projectDir);
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
+
+        return projectDirs;
+    }
+
+    /**
+     * Performs the lint check, returning the results of the lint check.
+     *
+     * @return the result
+     */
+    @NonNull
+    public TestLintResult run() {
+        alreadyRun = true;
+        ensureConfigured();
+
+        File rootDir = Files.createTempDir();
+        try {
+            // Use canonical path to make sure we don't end up failing
+            // to chop off the prefix from Project#getDisplayPath
+            rootDir = rootDir.getCanonicalFile();
+        } catch (IOException ignore) {
+        }
+
+        List<File> projectDirs = createProjects(rootDir);
         try {
             String output = checkLint(projectDirs);
             return new TestLintResult(output);
@@ -472,6 +499,46 @@ public class TestLintTask {
             return new TestLintResult(e);
         } finally {
             TestUtils.deleteFile(rootDir);
+        }
+    }
+
+    /**
+     * Creates lint test projects according to the configured project descriptions.
+     * Note that these are not the same projects that will be used if the
+     * {@link #run()} method is called. This method is intended mainly for testing
+     * the lint infrastructure itself. Most detector tests will just want to
+     * use {@link #run()}.
+     *
+     * @param keepFiles if true, don't delete the generated temporary project source files
+     */
+    @NonNull
+    public List<Project> createProjects(boolean keepFiles) {
+        File rootDir = Files.createTempDir();
+        try {
+            // Use canonical path to make sure we don't end up failing
+            // to chop off the prefix from Project#getDisplayPath
+            rootDir = rootDir.getCanonicalFile();
+        } catch (IOException ignore) {
+        }
+
+        List<File> projectDirs = createProjects(rootDir);
+
+        TestLintClient lintClient = createClient();
+        lintClient.task = this;
+        try {
+            List<Project> projects = Lists.newArrayList();
+            for (File dir : projectDirs) {
+                projects.add(lintClient.getProject(dir, rootDir));
+            }
+            return projects;
+        } finally {
+            // Client should not be used outside of the check process
+            //noinspection ConstantConditions
+            lintClient.task = null;
+
+            if (!keepFiles) {
+                TestUtils.deleteFile(rootDir);
+            }
         }
     }
 
@@ -497,7 +564,9 @@ public class TestLintTask {
         return lintClient;
     }
 
-    public void populateProjectDirectory(@NonNull File projectDir,
+    public void populateProjectDirectory(
+            @NonNull ProjectDescription project,
+            @NonNull File projectDir,
             @NonNull TestFile... testFiles) throws IOException {
         if (!projectDir.exists()) {
             boolean ok = projectDir.mkdirs();
@@ -548,7 +617,10 @@ public class TestLintTask {
         } else {
             manifest = new File(projectDir, ANDROID_MANIFEST_XML);
         }
-        addManifestFileIfNecessary(manifest);
+
+        if (project.type != ProjectDescription.Type.JAVA) {
+            addManifestFileIfNecessary(manifest);
+        }
     }
 
     /**

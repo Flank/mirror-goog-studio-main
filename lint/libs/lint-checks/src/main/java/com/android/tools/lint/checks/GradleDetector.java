@@ -975,7 +975,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
                 "guava".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(19, 0));
+            version = getNewerRevision(dependency, new Revision(20, 0));
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new Revision(2, 7));

@@ -1266,23 +1266,60 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         // Regression test for
         //   http://b.android.com/202241
         // We need to handle string references.
-        assertEquals("No warnings.",
+        lint().files(
+                xml("res/values/strings.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "   <string name=\"test_string_en\">This is English fallback - %1$d</string>\n"
+                        + "   <string name=\"test_string\" translatable=\"false\">  @string/test_string_en  </string>\n"
+                        + "</resources>\n"
+                        + "\n"),
+                xml("res/values/strings-es.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                        + "    <string name=\"test_string\">Pretend this is French - %1$d</string>\n"
+                        + "</resources>\n"
+                        + "\n"))
+                .run()
+                .expectClean();
+    }
 
-                lintProject(
-                        xml("res/values/strings.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<resources>\n"
-                                + "   <string name=\"test_string_en\">This is English fallback - %1$d</string>\n"
-                                + "   <string name=\"test_string\" translatable=\"false\">  @string/test_string_en  </string>\n"
-                                + "</resources>\n"
-                                + "\n"),
-                        xml("res/values/strings-es.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
-                                + "    <string name=\"test_string\">Pretend this is French - %1$d</string>\n"
-                                + "</resources>\n"
-                                + "\n")
-                ));
+    public void testIssue228570() throws Exception {
+        // Regression test for
+        //   http://b.android.com/228570
+        // We need to handle string references.
+        lint().files(
+                xml("res/values/strings.xml", ""
+                        + "<resources>\n"
+                        + "    <string name=\"confirm_delete_message\">@string/Do_you_want_to_delete_X_items</string>\n"
+                        + "    <string name=\"Do_you_want_to_delete_X_items\">Do you want to delete %d entries?</string>\n"
+                        + "</resources>"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Test extends android.app.Activity {\n"
+                        + "\n"
+                        + "    public void test() {\n"
+                        + "        int itemsCount = 5;\n"
+                        + "        String string2 = getString(R.string.confirm_delete_message, itemsCount); // OK\n"
+                        + "        String string1 = getString(R.string.confirm_delete_message, itemsCount, 5); // ERROR\n"
+                        + "    }\n"
+                        + "    public static final class R {\n"
+                        + "        public static final class string {\n"
+                        + "            public static final int confirm_delete_message = 0x7f0a0000;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + ""
+                        + "}"))
+                .issues(StringFormatDetector.ARG_TYPES)
+                .incremental("src/test/pkg/Test.java")
+                .run()
+                .expect(""
+                        + "src/test/pkg/Test.java:8: Error: Wrong argument count, format string confirm_delete_message requires 1 but format call supplies 2 [StringFormatMatches]\n"
+                        + "        String string1 = getString(R.string.confirm_delete_message, itemsCount, 5); // ERROR\n"
+                        + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/values/strings.xml: This definition requires 1 arguments\n"
+                        + "1 errors, 0 warnings\n");
     }
 
     public void testFormattingCharSuggestions() throws Exception {
