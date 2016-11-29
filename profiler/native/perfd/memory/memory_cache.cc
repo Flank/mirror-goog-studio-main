@@ -123,18 +123,25 @@ void MemoryCache::TrackAllocations(bool enabled,
     }
   } else {
     int64_t timestamp = clock_.GetCurrentTime();
+    if (enabled) {
+      MemoryData::AllocationsInfo& info =
+          allocations_info_[put_allocations_info_index_];
+      info.set_start_time(timestamp);
+      info.set_end_time(kUnfinishedTimestamp);
+      put_allocations_info_index_ = GetNextSampleIndex(
+          put_allocations_info_index_);
+      if (put_allocations_info_index_ == 0) {
+        allocations_info_buffer_full_ = true;  // Check if we have wrapped.
+      }
+    } else {
+      allocations_info_[put_allocations_info_index_ == 0 ?
+          samples_capacity_ - 1 : put_allocations_info_index_ - 1]
+          .set_end_time(timestamp);
+    }
     response->set_status(TrackAllocationsResponse::SUCCESS);
     response->set_timestamp(timestamp);
     is_allocation_tracking_enabled_ = enabled;
     // TODO enable/disable post-O allocation tracking
-    allocations_info_[put_allocations_info_index_].set_timestamp(timestamp);
-    allocations_info_[put_allocations_info_index_]
-        .set_enabled(is_allocation_tracking_enabled_);
-    put_allocations_info_index_ = GetNextSampleIndex(
-        put_allocations_info_index_);
-    if (put_allocations_info_index_ == 0) {
-      allocations_info_buffer_full_ = true;  // Check if we have wrapped.
-    }
   }
 }
 
@@ -143,6 +150,7 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   std::lock_guard<std::mutex> memory_lock(memory_samples_mutex_);
   std::lock_guard<std::mutex> vm_stats_lock(vm_stats_samples_mutex_);
   std::lock_guard<std::mutex> heap_dump_lock(heap_dump_infos_mutex_);
+  std::lock_guard<std::mutex> allocations_info_lock(allocations_info_mutex_);
 
   int64_t end_timestamp = -1;
   if (put_memory_sample_index_ > 0 || memory_samples_buffer_full_) {
@@ -175,13 +183,15 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     int32_t i = allocations_info_buffer_full_ ?
         put_allocations_info_index_ : 0;
     do {
-      int64_t timestamp = allocations_info_[i].timestamp();
-      if (timestamp > start_time_exl && timestamp <= end_time_inc) {
+      int64_t start_time = allocations_info_[i].start_time();
+      int64_t end_time = allocations_info_[i].end_time();
+      if ((start_time > start_time_exl && start_time <= end_time_inc) ||
+          (end_time > start_time_exl && end_time <= end_time_inc)) {
         response->add_allocations_info()->CopyFrom(allocations_info_[i]);
-        end_timestamp = std::max(timestamp, end_timestamp);
+        end_timestamp = std::max({start_time, end_time, end_timestamp});
       }
       i = GetNextSampleIndex(i);
-    } while (i != put_vm_stats_sample_index_);
+    } while (i != put_allocations_info_index_);
   }
 
   // TODO implement JVMTI allocation events AND MAKE SURE THE BUFFER IS LARGE
