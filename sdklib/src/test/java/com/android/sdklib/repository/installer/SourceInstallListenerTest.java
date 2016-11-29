@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.repository.api.Installer;
 import com.android.repository.api.InstallerFactory;
 import com.android.repository.api.LocalPackage;
-import com.android.repository.api.RemotePackage;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.installer.BasicInstallerFactory;
 import com.android.repository.impl.meta.RepositoryPackages;
@@ -37,14 +36,11 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import junit.framework.TestCase;
@@ -68,13 +64,13 @@ public class SourceInstallListenerTest extends TestCase {
                         .createSourceDetailsType();
         sourceDetails.setApiLevel(23);
         remote.setTypeDetails((TypeDetails) sourceDetails);
-        Map<String, RemotePackage> remotes = ImmutableMap.of(remote.getPath(), remote);
 
         // Create local package for platform;android-23
         LocalPackage local = getLocalPlatformPackage(fop);
-        Map<String, LocalPackage> locals = ImmutableMap.of(local.getPath(), local);
 
-        FakeRepoManager mgr = new FakeRepoManager(ROOT, new RepositoryPackages(locals, remotes));
+        FakeRepoManager mgr = new FakeRepoManager(ROOT,
+                new RepositoryPackages(ImmutableList.of(local),
+                        ImmutableList.of(remote)));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getRepositoryModule());
 
@@ -113,15 +109,12 @@ public class SourceInstallListenerTest extends TestCase {
         MockFileOp fop = new MockFileOp();
 
         // Create local packages for platform;android-23 and sources;android-23
-        Map<String, LocalPackage> locals = new HashMap<>();
         LocalPackage localPlatform = getLocalPlatformPackage(fop);
         LocalPackage localSource = getLocalSourcePackage(fop);
 
-        locals.put(localPlatform.getPath(), localPlatform);
-        locals.put(localSource.getPath(), localSource);
-
         FakeRepoManager mgr = new FakeRepoManager(ROOT,
-                new RepositoryPackages(locals, Collections.emptyMap()));
+                new RepositoryPackages(ImmutableList.of(localPlatform, localSource),
+                        ImmutableList.of()));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getRepositoryModule());
 
