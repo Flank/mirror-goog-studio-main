@@ -114,7 +114,8 @@ public interface ApkCreatorFactory {
          * default should be used
          * @param minSdkVersion minimum SDK version that will run the APK
          * @param nativeLibrariesPackagingMode packaging mode for native libraries
-         * @param noCompressPredicate predicate to decide which file paths should be uncompressed
+         * @param noCompressPredicate predicate to decide which file paths should be uncompressed;
+         * returns {@code true} for files that should not be compressed
          */
         public CreationData(
                 @Nonnull File apkPath,
