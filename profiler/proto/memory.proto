@@ -124,8 +124,8 @@ message MemoryData {
   }
 
   message AllocationsInfo {
-    int64 timestamp = 1;
-    bool enabled = 2;
+    int64 start_time = 1;
+    int64 end_time = 2;
   }
 
   message AllocationEvent {
