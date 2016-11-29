@@ -19,7 +19,6 @@ import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 
 import com.android.repository.Revision;
-import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
@@ -30,13 +29,11 @@ import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 import org.apache.commons.compress.archivers.zip.UnixStat;
@@ -58,11 +55,8 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         assertEquals(request,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("l1"))
-                                .addRemote(r1)
-                                .addRemote(new FakeRemotePackage("r2"))
-                                .build(), progress));
+                        new RepositoryPackages(ImmutableList.of(new FakeLocalPackage("l1")),
+                                ImmutableList.of(r1, new FakeRemotePackage("r2"))), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -81,12 +75,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> expected = ImmutableList.of(r3, r2, r1);
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("l1"))
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress));
+                        new RepositoryPackages(
+                                ImmutableList.of(new FakeLocalPackage("l1")),
+                                ImmutableList.of(r1, r2, r3)), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -102,11 +93,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> expected = ImmutableList.of(r2);
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("r1"))
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .build(), progress));
+                        new RepositoryPackages(
+                                ImmutableList.of(new FakeLocalPackage("r1")),
+                                ImmutableList.of(r1, r2)), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -122,11 +111,9 @@ public class InstallerUtilTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
         List<RemotePackage> result = InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("r1"))
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .build(), progress);
+                new RepositoryPackages(
+                        ImmutableList.of(new FakeLocalPackage("l1")),
+                        ImmutableList.of(r1, r2)), progress);
         assertTrue(result.get(0).equals(r1) || result.get(1).equals(r1));
         assertTrue(result.get(0).equals(r2) || result.get(1).equals(r2));
         progress.assertNoErrorsOrWarnings();
@@ -150,12 +137,9 @@ public class InstallerUtilTest extends TestCase {
         r3_2.setRevision(new Revision(2));
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(r3_2)
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress));
+                        new RepositoryPackages(
+                                ImmutableList.of(r3_2),
+                                ImmutableList.of(r1, r2, r3)), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -175,12 +159,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> expected = ImmutableList.of(r2, r1);
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("r3"))
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress));
+                        new RepositoryPackages(
+                                ImmutableList.of(new FakeLocalPackage("r3")),
+                                ImmutableList.of(r1, r2, r3)), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -200,12 +181,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> expected = ImmutableList.of(r3, r2, r1);
         assertEquals(expected,
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addLocal(new FakeLocalPackage("r3"))
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress));
+                        new RepositoryPackages(
+                                ImmutableList.of(new FakeLocalPackage("r3")),
+                                ImmutableList.of(r1, r2, r3)), progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -221,11 +199,9 @@ public class InstallerUtilTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         List<RemotePackage> result = InstallerUtil.computeRequiredPackages(request,
-                new RepositoryPackagesBuilder()
-                        .addRemote(r1)
-                        .addRemote(r2)
-                        .addRemote(r3)
-                        .build(), progress);
+                new RepositoryPackages(
+                        ImmutableList.of(),
+                        ImmutableList.of(r1, r2, r3)), progress);
         assertTrue(result.get(0).equals(r2) || result.get(1).equals(r2));
         assertTrue(result.get(0).equals(r3) || result.get(1).equals(r3));
         assertEquals(r1, result.get(2));
@@ -247,12 +223,9 @@ public class InstallerUtilTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         List<RemotePackage> result = InstallerUtil.computeRequiredPackages(request,
-                new RepositoryPackagesBuilder()
-                        .addRemote(r1)
-                        .addRemote(r2)
-                        .addRemote(r3)
-                        .addRemote(r4)
-                        .build(), progress);
+                new RepositoryPackages(
+                        ImmutableList.of(),
+                        ImmutableList.of(r1, r2, r3, r4)), progress);
         assertEquals(r4, result.get(0));
         assertTrue(result.get(1).equals(r2) || result.get(2).equals(r2));
         assertTrue(result.get(1).equals(r3) || result.get(2).equals(r3));
@@ -277,11 +250,9 @@ public class InstallerUtilTest extends TestCase {
         // Don't have any guarantee of order in this case.
         assertEquals(expected,
                 Sets.newHashSet(InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress)));
+                        new RepositoryPackages(
+                                ImmutableList.of(),
+                                ImmutableList.of(r1, r2, r3)), progress)));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -303,12 +274,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         List<RemotePackage> result =
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .addRemote(r4)
-                                .build(), progress);
+                        new RepositoryPackages(
+                                ImmutableList.of(),
+                                ImmutableList.of(r1, r2, r3, r4)), progress);
         assertTrue(result.get(0).equals(r3) || result.get(1).equals(r3));
         assertTrue(result.get(0).equals(r4) || result.get(1).equals(r4));
         assertEquals(r2, result.get(2));
@@ -330,11 +298,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
         List<RemotePackage> result =
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .build(), progress);
+                        new RepositoryPackages(
+                                ImmutableList.of(),
+                                ImmutableList.of(r1, r2, r3)), progress);
         assertEquals(r3, result.get(0));
         assertTrue(result.get(1).equals(r1) || result.get(2).equals(r1));
         assertTrue(result.get(1).equals(r2) || result.get(2).equals(r2));
@@ -356,11 +322,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
         List<RemotePackage> result =
           InstallerUtil.computeRequiredPackages(request,
-                                                new RepositoryPackagesBuilder()
-                                                  .addRemote(r1)
-                                                  .addRemote(r2)
-                                                  .addLocal(r3)
-                                                  .build(), progress);
+                  new RepositoryPackages(
+                          ImmutableList.of(r3),
+                          ImmutableList.of(r1, r2)), progress);
         assertEquals(2, result.size());
         assertTrue(result.get(0).equals(r1) || result.get(1).equals(r1));
         assertTrue(result.get(0).equals(r2) || result.get(1).equals(r2));
@@ -385,12 +349,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1, r2);
         List<RemotePackage> result =
                 InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addRemote(r1)
-                                .addRemote(r2)
-                                .addRemote(r3)
-                                .addLocal(l3)
-                                .build(), progress);
+                        new RepositoryPackages(
+                                ImmutableList.of(l3),
+                                ImmutableList.of(r1, r2, r3)), progress);
 
         assertTrue(result.get(0).equals(r3) || result.get(1).equals(r3));
         assertTrue(result.get(0).equals(r1) || result.get(1).equals(r1));
@@ -408,9 +369,9 @@ public class InstallerUtilTest extends TestCase {
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         assertNull(InstallerUtil.computeRequiredPackages(request,
-                        new RepositoryPackagesBuilder()
-                                .addRemote(r1)
-                                .build(), progress));
+                new RepositoryPackages(
+                        ImmutableList.of(),
+                        ImmutableList.of(r1)), progress));
         assertTrue(!progress.getWarnings().isEmpty());
     }
 
@@ -429,12 +390,9 @@ public class InstallerUtilTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
         assertNull(InstallerUtil.computeRequiredPackages(request,
-                new RepositoryPackagesBuilder()
-                        .addLocal(new FakeLocalPackage("r3"))
-                        .addRemote(r1)
-                        .addRemote(r2)
-                        .addRemote(r3)
-                        .build(), progress));
+                new RepositoryPackages(
+                        ImmutableList.of(new FakeLocalPackage("r3")),
+                        ImmutableList.of(r1, r2, r3)), progress));
         assertTrue(!progress.getWarnings().isEmpty());
     }
 
@@ -590,25 +548,4 @@ public class InstallerUtilTest extends TestCase {
             fop.deleteFileOrFolder(outRoot.toFile());
         }
     }
-
-    private static class RepositoryPackagesBuilder {
-        private Map<String, RemotePackage> mRemotes = Maps.newHashMap();
-        private Map<String, LocalPackage> mLocals = Maps.newHashMap();
-
-        public RepositoryPackagesBuilder addLocal(LocalPackage p) {
-            mLocals.put(p.getPath(), p);
-            return this;
-        }
-
-        public RepositoryPackagesBuilder addRemote(RemotePackage p) {
-            mRemotes.put(p.getPath(), p);
-            return this;
-        }
-
-        public RepositoryPackages build() {
-            return new RepositoryPackages(mLocals, mRemotes);
-        }
-    }
-
-
 }

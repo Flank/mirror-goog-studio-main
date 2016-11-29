@@ -23,9 +23,11 @@ import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.UpdatablePackage;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -40,26 +42,26 @@ public class RepositoryPackagesTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        Map<String, LocalPackage> locals = Maps.newHashMap();
-        Map<String, RemotePackage> remotes = Maps.newHashMap();
+        List<LocalPackage> locals = new ArrayList<>();
+        List<RemotePackage> remotes = new ArrayList<>();
 
         // p1 has no corresponding remote
-        locals.put("p1", new FakeLocalPackage("p1"));
+        LocalPackage l1 = new FakeLocalPackage("p1");
 
         // p2 has an updated remote
-        locals.put("p2", new FakeLocalPackage("p2"));
-        FakeRemotePackage remote = new FakeRemotePackage("p2");
-        remote.setRevision(new Revision(2));
-        remotes.put("p2", remote);
+        LocalPackage l2 = new FakeLocalPackage("p2");
+        FakeRemotePackage r2 = new FakeRemotePackage("p2");
+        r2.setRevision(new Revision(2));
 
         // p3 has a non-updated remote
-        locals.put("p3", new FakeLocalPackage("p3"));
-        remotes.put("p3", new FakeRemotePackage("p3"));
+        LocalPackage l3 = new FakeLocalPackage("p3");
+        RemotePackage r3 = new FakeRemotePackage("p3");
 
         // p4 is only remote
-        remotes.put("p4", new FakeRemotePackage("p4"));
+        RemotePackage r4 = new FakeRemotePackage("p4");
 
-        mPackages = new RepositoryPackages(locals, remotes);
+        mPackages = new RepositoryPackages(ImmutableList.of(l1, l2, l3),
+                ImmutableList.of(r2, r3, r4));
     }
 
     public void testConsolidated() throws Exception {
@@ -111,29 +113,29 @@ public class RepositoryPackagesTest extends TestCase {
     }
 
     public void testPrefixes() {
-        Map<String, LocalPackage> locals = Maps.newHashMap();
-        Map<String, RemotePackage> remotes = Maps.newHashMap();
+        List<LocalPackage> locals = new ArrayList<>();
+        List<RemotePackage> remotes = new ArrayList<>();
 
         FakeLocalPackage l1 = new FakeLocalPackage("a;b;c");
-        locals.put("a;b;c", l1);
+        locals.add(l1);
         FakeRemotePackage r1 = new FakeRemotePackage("a;b;c");
-        remotes.put("a;b;c", r1);
+        remotes.add(r1);
         FakeLocalPackage l2 = new FakeLocalPackage("a;b;d");
-        locals.put("a;b;d", l2);
+        locals.add(l2);
         FakeRemotePackage r2 = new FakeRemotePackage("a;b;d");
-        remotes.put("a;b;d", r2);
+        remotes.add(r2);
         FakeLocalPackage l3 = new FakeLocalPackage("a;c");
-        locals.put("a;c", l3);
+        locals.add(l3);
         FakeRemotePackage r3 = new FakeRemotePackage("a;c");
-        remotes.put("a;c", r3);
+        remotes.add(r3);
         FakeLocalPackage l4 = new FakeLocalPackage("d");
-        locals.put("d", l4);
+        locals.add(l4);
         FakeRemotePackage r4 = new FakeRemotePackage("d");
-        remotes.put("d", r4);
+        remotes.add(r4);
         FakeLocalPackage localOnly = new FakeLocalPackage("l");
-        locals.put("l", localOnly);
+        locals.add(localOnly);
         FakeRemotePackage remoteOnly = new FakeRemotePackage("r");
-        remotes.put("r", remoteOnly);
+        remotes.add(remoteOnly);
 
         RepositoryPackages packages = new RepositoryPackages();
         packages.setLocalPkgInfos(locals);
