@@ -25,6 +25,7 @@ filegroup(
         "//tools/adt/idea/android-tests:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/base/build-system/builder:__pkg__",
+        "//tools/base/build-system/gradle:__pkg__",
         "//tools/base/build-system/gradle-core:__pkg__",
     ],
 )
@@ -87,7 +88,10 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-24",
-    visibility = ["//tools/data-binding:__pkg__"],
+    visibility = [
+        "//tools/base/build-system/gradle:__pkg__",
+        "//tools/data-binding:__pkg__",
+    ],
 )
 
 platform_filegroup(
@@ -103,6 +107,12 @@ platform_filegroup(
 platform_filegroup(
     name = "platforms/android-19",
     visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+)
+
+filegroup(
+    name = "add-ons/addon-google_apis-google-latest",
+    srcs = ["add-ons/addon-google_apis-google-24"],
+    visibility = ["//visibility:public"],
 )
 
 filegroup(

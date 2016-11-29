@@ -1,29 +1,39 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.api.ApkVariantOutput;
-import com.android.build.gradle.api.ApplicationVariant;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
-import com.android.testutils.TestUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,44 +42,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.api.Plugin;
 import org.junit.Assert;
 
-/** Tests for the public DSL of the App plugin ("android") */
-public class AppPluginDslTest extends BaseDslTest {
+/** Base class for checking the "application" and "atom" DSLs. */
+public abstract class AbstractAppPluginDslTest<
+                PluginT extends BasePlugin,
+                ExtensionT extends BaseExtension,
+                VariantT extends BaseVariant>
+        extends BaseDslTest {
+    protected PluginT plugin;
+    protected ExtensionT android;
 
-    private AppPlugin plugin;
-    private Project project;
-    private AppExtension android;
-
-    private static void checkTestedVariant(
-            @NonNull String variantName,
-            @NonNull String testedVariantName,
-            @NonNull Collection<ApplicationVariant> variants,
-            @NonNull Set<TestVariant> testVariants) {
-        ApplicationVariant variant = BaseDslTest.findVariant(variants, variantName);
-        assertNotNull(variant.getTestVariant());
-        assertEquals(testedVariantName, variant.getTestVariant().getName());
-        assertEquals(
-                variant.getTestVariant(),
-                BaseDslTest.findVariantMaybe(testVariants, testedVariantName));
-        checkTasks(variant);
-        checkTasks(variant.getTestVariant());
-    }
-
-    private static void checkNonTestedVariant(
-            @NonNull String variantName, @NonNull Set<ApplicationVariant> variants) {
-        ApplicationVariant variant = BaseDslTest.findVariant(variants, variantName);
-        Assert.assertNull(variant.getTestVariant());
-        checkTasks(variant);
-    }
-
-    private static void checkTasks(@NonNull ApkVariant variant) {
-        boolean isTestVariant = variant instanceof TestVariant;
-
+    protected static void checkTestTasks(@NonNull TestVariant variant) {
         assertNotNull(variant.getAidlCompile());
         assertNotNull(variant.getMergeResources());
         assertNotNull(variant.getMergeAssets());
@@ -77,76 +64,63 @@ public class AppPluginDslTest extends BaseDslTest {
         assertNotNull(variant.getJavaCompiler());
         assertNotNull(variant.getProcessJavaResources());
         assertNotNull(variant.getAssemble());
-        assertNotNull(variant.getUninstall());
-
-        Assert.assertFalse(variant.getOutputs().isEmpty());
+        assertNotNull(variant.getConnectedInstrumentTest());
+        assertNotNull(variant.getTestedVariant());
+        assertFalse(variant.getOutputs().isEmpty());
 
         for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
-            Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
-            ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-
-            assertNotNull(apkVariantOutput.getProcessManifest());
-            assertNotNull(apkVariantOutput.getProcessResources());
-            assertNotNull(apkVariantOutput.getPackageApplication());
-        }
-
-        if (variant.isSigningReady()) {
-            assertNotNull(variant.getInstall());
-
-            for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
-                ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-
-                // Check if we did the right thing, depending on the default value of the flag.
-                if (!AndroidGradleOptions.DEFAULT_USE_OLD_PACKAGING) {
-                    Assert.assertNull(apkVariantOutput.getZipAlign());
-                } else {
-                    // tested variant are never zipAligned.
-                    if (!isTestVariant && variant.getBuildType().isZipAlignEnabled()) {
-                        assertNotNull(apkVariantOutput.getZipAlign());
-                    } else {
-                        Assert.assertNull(apkVariantOutput.getZipAlign());
-                    }
-                }
-            }
-
-        } else {
-            Assert.assertNull(variant.getInstall());
-        }
-
-        if (isTestVariant) {
-            TestVariant testVariant = DefaultGroovyMethods.asType(variant, TestVariant.class);
-            assertNotNull(testVariant.getConnectedInstrumentTest());
-            assertNotNull(testVariant.getTestedVariant());
+            assertNotNull(baseVariantOutput.getProcessManifest());
+            assertNotNull(baseVariantOutput.getProcessResources());
         }
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        SdkHandler.setTestSdkFolder(TestUtils.getSdk());
 
-        project =
-                ProjectBuilder.builder()
-                        .withProjectDir(new File(getTestDir(), FOLDER_TEST_PROJECTS + "/basic"))
-                        .build();
-
-        project.apply(ImmutableMap.of("plugin", "com.android.application"));
-        android = project.getExtensions().getByType(AppExtension.class);
+        project.apply(ImmutableMap.of("plugin", getPluginName()));
+        android = project.getExtensions().getByType(getExtensionClass());
         android.setCompileSdkVersion(COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(BUILD_TOOL_VERSION);
-        plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        plugin = getPlugin();
     }
+
+    @NonNull
+    protected abstract String getPluginName();
+
+    @NonNull
+    protected abstract Class<PluginT> getPluginClass();
+
+    @NonNull
+    protected abstract Class<ExtensionT> getExtensionClass();
+
+    @NonNull
+    protected abstract DomainObjectSet<TestVariant> getTestVariants();
+
+    @NonNull
+    protected abstract DomainObjectSet<VariantT> getVariants();
+
+    @NonNull
+    protected abstract String getReleaseJavacTaskName();
+
+    protected abstract void checkTestedVariant(
+            @NonNull String variantName,
+            @NonNull String testedVariantName,
+            @NonNull Collection<VariantT> variants,
+            @NonNull Set<TestVariant> testVariants);
+
+    protected abstract void checkNonTestedVariant(
+            @NonNull String variantName, @NonNull Set<VariantT> variants);
 
     public void testBasic() {
         plugin.createAndroidTasks(false);
-        assertEquals(
-                DEFAULT_VARIANTS.size(), plugin.getVariantManager().getVariantDataList().size());
+        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
 
         // we can now call this since the variants/tasks have been created
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(2, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(1, testVariants.size());
 
         checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
@@ -156,14 +130,13 @@ public class AppPluginDslTest extends BaseDslTest {
     /** Same as Basic but with a slightly different DSL. */
     public void testBasic2() {
         plugin.createAndroidTasks(false);
-        assertEquals(
-                DEFAULT_VARIANTS.size(), plugin.getVariantManager().getVariantDataList().size());
+        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
 
         // we can now call this since the variants/tasks have been created
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(2, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(1, testVariants.size());
 
         checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
@@ -179,14 +152,13 @@ public class AppPluginDslTest extends BaseDslTest {
                         + "'\n        }\n");
 
         plugin.createAndroidTasks(false);
-        assertEquals(
-                DEFAULT_VARIANTS.size(), plugin.getVariantManager().getVariantDataList().size());
+        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
 
         // we can now call this since the variants/tasks have been created
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(2, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(1, testVariants.size());
 
         checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
@@ -237,10 +209,10 @@ public class AppPluginDslTest extends BaseDslTest {
         // we can now call this since the variants/tasks have been created
 
         // does not include tests
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(3, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(1, testVariants.size());
 
         checkTestedVariant("staging", "stagingAndroidTest", variants, testVariants);
@@ -275,10 +247,10 @@ public class AppPluginDslTest extends BaseDslTest {
         // we can now call this since the variants/tasks have been created
 
         // does not include tests
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(4, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(2, testVariants.size());
 
         checkTestedVariant("flavor1Debug", "flavor1DebugAndroidTest", variants, testVariants);
@@ -329,10 +301,10 @@ public class AppPluginDslTest extends BaseDslTest {
         // we can now call this since the variants/tasks have been created
 
         // does not include tests
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(12, variants.size());
 
-        Set<TestVariant> testVariants = android.getTestVariants();
+        Set<TestVariant> testVariants = getTestVariants();
         assertEquals(6, testVariants.size());
 
         checkTestedVariant("f1FaDebug", "f1FaDebugAndroidTest", variants, testVariants);
@@ -393,16 +365,15 @@ public class AppPluginDslTest extends BaseDslTest {
                         + "}\n");
 
         plugin.createAndroidTasks(false);
-        assertEquals(
-                DEFAULT_VARIANTS.size(), plugin.getVariantManager().getVariantDataList().size());
+        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
 
         // we can now call this since the variants/tasks have been created
 
         // does not include tests
-        Set<ApplicationVariant> variants = android.getApplicationVariants();
+        Set<VariantT> variants = getVariants();
         assertEquals(2, variants.size());
 
-        for (ApplicationVariant variant : variants) {
+        for (VariantT variant : variants) {
             if ("release".equals(variant.getBuildType().getName())) {
                 assertNotNull(variant.getMappingFile());
             } else {
@@ -476,7 +447,7 @@ public class AppPluginDslTest extends BaseDslTest {
         plugin.createAndroidTasks(false);
 
         AndroidJavaCompile compileReleaseJavaWithJavac =
-                (AndroidJavaCompile) project.getTasks().getByName("compileReleaseJavaWithJavac");
+                (AndroidJavaCompile) project.getTasks().getByName(getReleaseJavacTaskName());
         assertEquals(
                 JavaVersion.VERSION_1_6.toString(),
                 compileReleaseJavaWithJavac.getTargetCompatibility());
@@ -514,7 +485,7 @@ public class AppPluginDslTest extends BaseDslTest {
         plugin.createAndroidTasks(false);
 
         AndroidJavaCompile compileReleaseJavaWithJavac =
-                (AndroidJavaCompile) project.getTasks().getByName("compileReleaseJavaWithJavac");
+                (AndroidJavaCompile) project.getTasks().getByName(getReleaseJavacTaskName());
         assertEquals("foo", compileReleaseJavaWithJavac.getOptions().getEncoding());
     }
 
@@ -568,95 +539,6 @@ public class AppPluginDslTest extends BaseDslTest {
                                 .containsExactlyEntriesIn(args));
     }
 
-    public void testGeneratedDensities() throws Exception {
-        Eval.me(
-                "project",
-                project,
-                "\n"
-                        + "project.android {\n"
-                        + "    productFlavors {\n"
-                        + "        f1 {\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        f2  {\n"
-                        + "            vectorDrawables {\n"
-                        + "                generatedDensities 'ldpi'\n"
-                        + "                generatedDensities += ['mdpi']\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        f3 {\n"
-                        + "            vectorDrawables {\n"
-                        + "                generatedDensities = defaultConfig.generatedDensities - ['ldpi', 'mdpi']\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        f4.vectorDrawables.generatedDensities = []\n"
-                        + "\n"
-                        + "        oldSyntax {\n"
-                        + "            generatedDensities = ['ldpi']\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
-        plugin.createAndroidTasks(false);
-
-        checkGeneratedDensities(
-                "mergeF1DebugResources", "ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi");
-        checkGeneratedDensities("mergeF2DebugResources", "ldpi", "mdpi");
-        checkGeneratedDensities("mergeF3DebugResources", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi");
-        checkGeneratedDensities("mergeF4DebugResources");
-        checkGeneratedDensities("mergeOldSyntaxDebugResources", "ldpi");
-    }
-
-    public void testUseSupportLibrary_default() throws Exception {
-        plugin.createAndroidTasks(false);
-
-        assertThat(getTask("mergeDebugResources", MergeResources.class).isDisableVectorDrawables())
-                .isFalse();
-    }
-
-    public void testUseSupportLibrary_flavors() throws Exception {
-
-        Eval.me(
-                "project",
-                project,
-                "\n"
-                        + "project.android {\n"
-                        + "\n"
-                        + "\n"
-                        + "    productFlavors {\n"
-                        + "        f1 {\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        f2  {\n"
-                        + "            vectorDrawables {\n"
-                        + "                useSupportLibrary true\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        f3 {\n"
-                        + "            vectorDrawables {\n"
-                        + "                useSupportLibrary = false\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
-        plugin.createAndroidTasks(false);
-
-        assertThat(
-                        getTask("mergeF1DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
-                .isFalse();
-        assertThat(
-                        getTask("mergeF2DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
-                .isTrue();
-        assertThat(
-                        getTask("mergeF3DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
-                .isFalse();
-    }
-
     /** Make sure DSL objects don't need "=" everywhere. */
     public void testSetters() throws Exception {
 
@@ -690,12 +572,6 @@ public class AppPluginDslTest extends BaseDslTest {
         assertEquals(android.getAdbExe(), android.getAdbExecutable());
     }
 
-    private void checkGeneratedDensities(String taskName, String... densities) {
-        MergeResources mergeResources = getTask(taskName, MergeResources.class);
-        assertThat(mergeResources.getGeneratedDensities())
-                .containsExactlyElementsIn(Arrays.asList(densities));
-    }
-
     public void checkProguardFiles(Map<String, List<String>> expected) {
         Map<String, GradleVariantConfiguration> variantMap = getVariantMap();
         expected.forEach(
@@ -715,7 +591,7 @@ public class AppPluginDslTest extends BaseDslTest {
                 });
     }
 
-    private <T> T getTask(String name, @SuppressWarnings("unused") Class<T> klass) {
+    protected <T> T getTask(String name, @SuppressWarnings("unused") Class<T> klass) {
         //noinspection unchecked
         return (T) project.getTasks().getByName(name);
     }
@@ -729,5 +605,12 @@ public class AppPluginDslTest extends BaseDslTest {
                         Collectors.toMap(
                                 BaseVariantData::getName,
                                 BaseVariantData::getVariantConfiguration));
+    }
+
+    @SuppressWarnings("unchecked") // For some reason type bounds don't "just compile".
+    private PluginT getPlugin() {
+        Class<? extends Plugin> pluginClass = (Class<? extends Plugin>) getPluginClass();
+        Plugin plugin = project.getPlugins().getPlugin(pluginClass);
+        return (PluginT) plugin;
     }
 }

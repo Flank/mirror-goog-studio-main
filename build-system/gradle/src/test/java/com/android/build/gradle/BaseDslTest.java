@@ -16,78 +16,43 @@
 
 package com.android.build.gradle;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.testutils.TestUtils;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import com.android.utils.FileUtils;
+import com.google.common.collect.Lists;
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.CodeSource;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import junit.framework.TestCase;
+import org.gradle.api.Project;
+import org.gradle.testfixtures.ProjectBuilder;
 
 /** Base class for tests. */
 public abstract class BaseDslTest extends TestCase {
-    public static final int COMPILE_SDK_VERSION = 24;
-    public static final String BUILD_TOOL_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
-    public static final String FOLDER_TEST_PROJECTS = "test-projects";
-    public static final List<String> DEFAULT_VARIANTS =
-            ImmutableList.of(
-                    "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
-
-    protected File sdkDir;
+    protected static final int COMPILE_SDK_VERSION = 24;
+    protected static final String BUILD_TOOL_VERSION =
+            AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
+    private static final String MANIFEST_TEMPLATE =
+            // language=xml
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><manifest package=\"%s\"></manifest>";
 
     protected static int countVariants(Map<String, Integer> variants) {
         return variants.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        sdkDir = TestUtils.getSdk();
-    }
-
-    /** Returns the root dir for the gradle plugin project */
-    protected File getRootDir() {
-        CodeSource source = getClass().getProtectionDomain().getCodeSource();
-        if (source != null) {
-            URL location = source.getLocation();
-            try {
-                File dir = new File(location.toURI());
-                TestCase.assertTrue(dir.getPath(), dir.exists());
-
-                File f =
-                        dir.getParentFile()
-                                .getParentFile()
-                                .getParentFile()
-                                .getParentFile()
-                                .getParentFile()
-                                .getParentFile()
-                                .getParentFile();
-
-                return new File(
-                        f,
-                        Joiner.on(File.separator)
-                                .join("tools", "base", "build-system", "integration-test"));
-            } catch (URISyntaxException e) {
-                TestCase.fail(e.getLocalizedMessage());
-            }
-        }
-
-        TestCase.fail("Fail to get the tools/build folder");
-        return null;
-    }
-
-    /** Returns the root folder for the tests projects. */
-    protected File getTestDir() {
-        return getRootDir();
+    protected static void checkDefaultVariants(List<BaseVariantData<?>> variants) {
+        assertThat(Lists.transform(variants, BaseVariantData::getName))
+                .containsExactly(
+                        "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
 
     /**
@@ -112,7 +77,7 @@ public abstract class BaseDslTest extends TestCase {
     protected static <T extends BaseVariant> T findVariant(
             @NonNull Collection<T> variants, @NonNull String name) {
         T foundItem = findVariantMaybe(variants, name);
-        assertNotNull("Variant with name " + name + " not found.", foundItem);
+        assertNotNull("Variant with name " + name + " not found in " + variants, foundItem);
         return foundItem;
     }
 
@@ -128,5 +93,25 @@ public abstract class BaseDslTest extends TestCase {
         Optional<T> result = variants.stream().filter(t -> t.getName().equals(name)).findAny();
         return result.orElseThrow(
                 () -> new AssertionError("Variant data for " + name + " not found."));
+    }
+
+    protected File projectDirectory;
+    protected Project project;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        SdkHandler.setTestSdkFolder(TestUtils.getSdk());
+        projectDirectory = Files.createTempDirectory(getClass().getName()).toFile();
+        File manifest = new File(projectDirectory, "src/main/AndroidManifest.xml");
+        FileUtils.createFile(manifest, String.format(MANIFEST_TEMPLATE, getClass().getName()));
+
+        project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        FileUtils.deletePath(projectDirectory);
+        super.tearDown();
     }
 }
