@@ -52,9 +52,4 @@ public class AarPublishArtifact extends BasePublishArtifact {
     public String getType() {
         return "aar";
     }
-
-    @Override
-    public AttributeContainer getAttributes() {
-        return null;
-    }
 }
