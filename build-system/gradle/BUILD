@@ -46,6 +46,11 @@ maven_pom(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**/*.java"]),
+    data = [
+        "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+        "//prebuilts/studio/sdk:build-tools/25.0.0",
+        "//prebuilts/studio/sdk:platforms/android-24",
+    ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
         # TODO: Make it easier to configure AndroidLocation per project.
@@ -60,6 +65,8 @@ java_test(
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-core",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",

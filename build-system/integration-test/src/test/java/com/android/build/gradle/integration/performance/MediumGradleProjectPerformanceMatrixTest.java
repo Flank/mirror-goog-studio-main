@@ -220,8 +220,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
         executor()
                 .recordBenchmark(BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN)
                 .run("assembleVanillaDebugAndroidTest");
-
-
     }
 
     @NonNull
