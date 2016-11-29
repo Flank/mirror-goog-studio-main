@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.integration.databinding;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AarSubject;
@@ -93,10 +95,9 @@ public class DataBindingTest {
     @Test
     public void checkApkContainsDataBindingClasses() throws IOException, ProcessException {
         project.setBuildFile(buildFile);
-        project.execute("assembleDebug");
-        String buildOutput = project.getStdout();
+        GradleBuildResult result = project.executor().run("assembleDebug");
+        assertThat(result.getTask(":dataBindingProcessLayoutsDebug")).wasExecuted();
 
-        assertTrue(buildOutput.contains(":dataBindingProcessLayoutsDebug"));
         if (myLibrary) {
             AarSubject aar = assertThatAar(project.getAar("debug"));
             aar.doesNotContainClass("Landroid/g/testapp/databinding/ActivityMainBinding;");
@@ -112,6 +113,5 @@ public class DataBindingTest {
                 apk.containsClass("Landroid/databinding/adapters/Converters;");
             }
         }
-
     }
 }

@@ -16,9 +16,16 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject;
+import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
+import com.android.build.gradle.integration.common.truth.TaskStateList;
+import java.io.File;
+import java.util.Set;
 import org.gradle.tooling.GradleConnectionException;
 
 import java.io.ByteArrayOutputStream;
@@ -31,20 +38,22 @@ import java.io.ByteArrayOutputStream;
 public class GradleBuildResult {
 
     @NonNull
-    private final ByteArrayOutputStream stdout;
+    private final String stdout;
 
     @NonNull
-    private final ByteArrayOutputStream stderr;
+    private final String stderr;
 
     @Nullable
     private final GradleConnectionException exception;
+
+    private TaskStateList taskStateList;
 
     public GradleBuildResult(
             @NonNull ByteArrayOutputStream stdout,
             @NonNull ByteArrayOutputStream stderr,
             @Nullable GradleConnectionException exception) {
-        this.stdout = stdout;
-        this.stderr = stderr;
+        this.stdout = stdout.toString();
+        this.stderr = stderr.toString();
         this.exception = exception;
     }
 
@@ -57,12 +66,42 @@ public class GradleBuildResult {
     }
 
     public String getStdout() {
-        return stdout.toString();
+        return stdout;
     }
 
     @NonNull
     public String getStderr() {
-        return stderr.toString();
+        return stderr;
+    }
+
+    /**
+     * Truth style assert to check changes to a file.
+     */
+    @NonNull
+    public GradleOutputFileSubject assertThatFile(File subject) {
+        return assert_().about(GradleOutputFileSubjectFactory.factory(stdout)).that(subject);
+    }
+
+    @NonNull
+    public TaskStateList.TaskInfo getTask(String name) {
+        return initTaskStates().getTask(name);
+    }
+
+    @NonNull
+    public Set<String> getUpToDateTasks() {
+        return initTaskStates().getUpToDateTasks();
+    }
+
+    @NonNull
+    public Set<String> getInputChangedTasks() {
+        return initTaskStates().getInputChangedTasks();
+    }
+
+    private TaskStateList initTaskStates() {
+        if (taskStateList == null) {
+            taskStateList = new TaskStateList(stdout);
+        }
+        return taskStateList;
     }
 
 }

@@ -1,11 +1,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
@@ -48,22 +49,29 @@ public class JackSmokeTest {
 
     @Test
     public void assembleBasicDebug() throws Exception {
-        sBasic.execute(JACK_OPTIONS, "clean", "assembleDebug", "assembleDebugAndroidTest");
-        TruthHelper.assertThatApk(sBasic.getApk("debug")).contains("classes.dex");
-        assertThat(sBasic.getStdout()).contains("transformJackWithJack");
+        GradleBuildResult result = sBasic
+                .executor().withArguments(JACK_OPTIONS)
+                .run("clean", "assembleDebug", "assembleDebugAndroidTest");
+        assertThat(result.getTask(":transformJackWithJackForDebug")).wasExecuted();
+
+        assertThatApk(sBasic.getApk("debug")).contains("classes.dex");
     }
 
     @Test
     public void assembleMinifyDebug() {
-        sMinify.execute(JACK_OPTIONS, "clean", "assembleDebug", "assembleDebugAndroidTest");
-        assertThat(sMinify.getStdout()).contains("transformJackWithJack");
+        GradleBuildResult result = sMinify.executor().withArguments(JACK_OPTIONS)
+                .run("clean", "assembleDebug", "assembleDebugAndroidTest");
+        assertThat(result.getTask(":transformJackWithJackForDebug")).wasExecuted();
     }
 
     @Test
     public void assembleMultiDexDebug() {
-        sMultiDex.execute(JACK_OPTIONS, "clean",
-                "assembleIcsDebugAndroidTest", "assembleDebug", "assembleLollipopDebugAndroidTest");
-        assertThat(sMultiDex.getStdout()).contains("transformJackWithJack");
+        GradleBuildResult result = sMultiDex.executor().withArguments(JACK_OPTIONS)
+                .run("clean", "assembleIcsDebugAndroidTest", "assembleDebug",
+                        "assembleLollipopDebugAndroidTest");
+        assertThat(result.getTask(":transformJackWithJackForIcsDebug")).wasExecuted();
+        assertThat(result.getTask(":transformJackWithJackForLollipopDebug")).wasExecuted();
+        assertThat(result.getTask(":transformJackWithJackForLollipopDebugAndroidTest")).wasExecuted();
     }
 
     @Test
