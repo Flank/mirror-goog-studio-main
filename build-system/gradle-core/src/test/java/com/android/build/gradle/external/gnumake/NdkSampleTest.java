@@ -286,11 +286,12 @@ public class NdkSampleTest {
             path = path.replace("/", "\\");
         }
         File ndkPath = getNdkPath();
-        File testPath = new File(ndkPath, path);
+        File androidMkPath = new File(ndkPath, path);
+        File executePath = new File("/tmp/executeFromHere");
         Map<String, String> variantConfigs = getVariantConfigs();
 
         // Get the baseline config
-        File baselineJsonFile = getJsonFile(testPath, operatingSystem);
+        File baselineJsonFile = getJsonFile(androidMkPath, operatingSystem);
 
         if (REGENERATE_TEST_BASELINES) {
             File directory = new File(THIS_TEST_FOLDER + "support-files/ndk-sample-baselines");
@@ -302,24 +303,22 @@ public class NdkSampleTest {
             // Create the output .txt for each variant by running ndk-build
             for (String variantName : variantConfigs.keySet()) {
                 String variantBuildOutputText =
-                        getNdkResult(testPath, variantConfigs.get(variantName));
+                        getNdkResult(androidMkPath, variantConfigs.get(variantName));
                 variantBuildOutputText = variantBuildOutputText
                         .replace("\\", "/")
-                        .replace(FileUtils.toSystemIndependentPath(ndkPath.getPath()), "{ndkPath}")
-                        .replace(FileUtils.toSystemIndependentPath(testPath.getPath()), "{testPath}")
                         .replace("windows", "{platform}")
                         .replace("linux", "{platform}")
                         .replace("darwin", "{platform}")
                         .replace(THIS_TEST_FOLDER, "{test}");
-                File variantBuildOutputFile = getVariantBuildOutputFile(testPath, variantName, operatingSystem);
+                File variantBuildOutputFile = getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
                 Files.write(variantBuildOutputText, variantBuildOutputFile, Charsets.UTF_8);
             }
         }
 
         // Build the expected result
-        NativeBuildConfigValueBuilder builder = new NativeBuildConfigValueBuilder(testPath);
+        NativeBuildConfigValueBuilder builder = new NativeBuildConfigValueBuilder(androidMkPath, executePath);
         for (String variantName : variantConfigs.keySet()) {
-            File variantBuildOutputFile = getVariantBuildOutputFile(testPath, variantName, operatingSystem);
+            File variantBuildOutputFile = getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
             String variantBuildOutputText = Joiner.on('\n')
                     .join(Files.readLines(variantBuildOutputFile, Charsets.UTF_8));
 
@@ -352,7 +351,7 @@ public class NdkSampleTest {
                 .toJson(actualConfig);
         checkOutputsHaveWhitelistedExtensions(actualConfig);
 
-        String testPathString = testPath.toString();
+        String testPathString = androidMkPath.toString();
 
         if (isWindows) {
             actualResult = actualResult.replace("/", "\\\\");
@@ -471,6 +470,17 @@ public class NdkSampleTest {
         return assert_().about(NativeBuildConfigValueSubject.FACTORY).that(project);
     }
 
+    // Related to b.android.com/227685 which caused wrong file path in src file when path was
+    // relative to folder containing build.gradle. Fix was to make the path absolute by explicitly
+    // rooting it under execute path.
+    @Test
+    public void cocos2d() throws IOException, InterruptedException {
+        NativeBuildConfigValue config = checkJson("samples/cocos2d");
+        // Expect relative paths to be rooted at execute path
+        assertThat(config).hasSourceFileNames(
+                "/tmp/executeFromHere/../../../../external/bullet/BulletMultiThreaded/btThreadSupportInterface.cpp");
+    }
+
     // Related to b.android.com/216676. Same source file name produces same target name.
     @Test
     public void duplicate_source_names() throws IOException, InterruptedException {
@@ -556,7 +566,12 @@ public class NdkSampleTest {
 
     @Test
     public void clang_example() throws IOException, InterruptedException {
-        checkJson("samples/clang");
+        NativeBuildConfigValue config = checkJson("samples/clang");
+        // Assert that full paths coming from the ndk-build output aren't further qualified with
+        // executution path.
+        assertThat(config).hasExactSourceFileNames(
+            "/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/android/cpufeatures/cpu-features.c",
+            "/usr/local/google/home/jomof/projects/hello-neon1/app/src/main/cpp/helloneon.c");
     }
 
     @Test
@@ -574,16 +589,16 @@ public class NdkSampleTest {
     @Test
     public void google_test_example() throws IOException, InterruptedException {
        NativeBuildConfigValue config = checkJson("samples/google-test-example");
-        assertThat(config)
-                .hasExactLibraryOutputs(
-                        FileUtils.toSystemDependentPath(
-                                "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_static.a"),
-                        FileUtils.toSystemDependentPath(
-                                "{NDK}/debug/obj/local/arm64-v8a/sample1_unittest"),
-                        FileUtils.toSystemDependentPath(
-                                "{NDK}/debug/obj/local/arm64-v8a/libsample1.so"),
-                        FileUtils.toSystemDependentPath(
-                                "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_main.a"));
+       assertThat(config)
+            .hasExactLibraryOutputs(
+                FileUtils.toSystemDependentPath(
+                        "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_static.a"),
+                FileUtils.toSystemDependentPath(
+                        "{NDK}/debug/obj/local/arm64-v8a/sample1_unittest"),
+                FileUtils.toSystemDependentPath(
+                        "{NDK}/debug/obj/local/arm64-v8a/libsample1.so"),
+                FileUtils.toSystemDependentPath(
+                        "{NDK}/debug/obj/local/arm64-v8a/libgoogletest_main.a"));
     }
 
     @Test
@@ -644,17 +659,17 @@ public class NdkSampleTest {
         assertThat(config)
                 .hasExactLibraryOutputs(
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/obj/local/x86/libhellocomputendk.so"),
+                                "/{ndkPath}/samples/HelloComputeNDK/obj/local/x86/libhellocomputendk.so"),
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/libs/armeabi-v7a/librs.mono.so"),
+                                "/{ndkPath}/samples/HelloComputeNDK/libs/armeabi-v7a/librs.mono.so"),
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/obj/local/mips/libhellocomputendk.so"),
+                                "/{ndkPath}/samples/HelloComputeNDK/obj/local/mips/libhellocomputendk.so"),
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/libs/mips/librs.mono.so"),
+                                "/{ndkPath}/samples/HelloComputeNDK/libs/mips/librs.mono.so"),
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/libs/x86/librs.mono.so"),
+                                "/{ndkPath}/samples/HelloComputeNDK/libs/x86/librs.mono.so"),
                         FileUtils.toSystemDependentPath(
-                                "{ndkPath}/samples/HelloComputeNDK/obj/local/armeabi-v7a/libhellocomputendk.so"));
+                                "/{ndkPath}/samples/HelloComputeNDK/obj/local/armeabi-v7a/libhellocomputendk.so"));
     }
     // input: support-files/ndk-sample-baselines/test-libstdc++.json
     @Test
