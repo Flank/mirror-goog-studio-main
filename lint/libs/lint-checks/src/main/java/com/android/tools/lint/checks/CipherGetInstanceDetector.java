@@ -59,7 +59,6 @@ public class CipherGetInstanceDetector extends Detector implements Detector.Java
     private static final String GET_INSTANCE = "getInstance";
     private static final Set<String> ALGORITHM_ONLY =
             Sets.newHashSet("AES", "DES", "DESede");
-    private static final String ECB = "ECB";
 
     // ---- Implements JavaScanner ----
 
@@ -94,7 +93,8 @@ public class CipherGetInstanceDetector extends Detector implements Detector.Java
             String message = "`Cipher.getInstance` should not be called without setting the"
                     + " encryption mode and padding";
             context.report(ISSUE, call, context.getLocation(node), message);
-        } else if (value.contains(ECB)) {
+        } else if ((value.contains("/ECB/") || value.endsWith("/ECB"))
+                && !value.startsWith("RSA/")) {
             String message = "ECB encryption mode should not be used";
             if (includeValue) {
                 message += " (was \"" + value + "\")";

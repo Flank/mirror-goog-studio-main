@@ -111,6 +111,27 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
         );
     }
 
+    // http://b.android.com/204099 Generate a warning only when ECB mode
+    // is used with symmetric ciphers such as DES.
+    public void testAsymmetricCipherRSA() throws Exception {
+        //noinspection all // Sample code
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        java(""
+                                + "package test.pkg;\n"
+                                + "\n"
+                                + "import javax.crypto.Cipher;\n"
+                                + "\n"
+                                + "public class CipherGetInstanceRSA {\n"
+                                + "  private void foo() throws Exception {\n"
+                                + "    Cipher.getInstance(\"RSA/ECB/NoPadding\");\n"
+                                + "  }\n"
+                                + "}\n")
+                )
+        );
+    }
+
     public void testResolveConstants() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
