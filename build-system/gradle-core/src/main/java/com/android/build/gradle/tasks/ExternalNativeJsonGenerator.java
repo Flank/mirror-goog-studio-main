@@ -597,6 +597,7 @@ public abstract class ExternalNativeJsonGenerator {
                         variantData.getName(),
                         validAbis,
                         androidBuilder,
+                        projectDir,
                         sdkHandler.getSdkFolder(),
                         sdkHandler.getNdkFolder(),
                         soFolder,

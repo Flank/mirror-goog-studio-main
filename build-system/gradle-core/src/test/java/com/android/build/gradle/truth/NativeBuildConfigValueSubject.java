@@ -174,6 +174,24 @@ public class NativeBuildConfigValueSubject
         return names;
     }
 
+    @NonNull
+    private Set<String> getSourceFileNames() {
+        Set<String> names = Sets.newHashSet();
+        checkNotNull(getSubject().libraries);
+        for (NativeLibraryValue library : getSubject().libraries.values()) {
+            if (library.files == null) {
+                continue;
+            }
+            for (NativeSourceFileValue file : library.files) {
+                if (file.src == null) {
+                    continue;
+                }
+                names.add(file.src.getPath());
+            }
+        }
+        return names;
+    }
+
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     private void hasExactOutputFiles(String... baseName) {
         Set<String> intermediateNames = getIntermediatesNames();
@@ -248,6 +266,48 @@ public class NativeBuildConfigValueSubject
                     "Not true that %s libraries have unique names. It had duplications %s",
                     getDisplaySubject(),
                     duplicates);
+        }
+    }
+
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasExactSourceFileNames(String... fileNames) {
+        Set<String> intermediateNames = getSourceFileNames();
+        Set<String> expected = Sets.newHashSet(fileNames);
+        Set<String> expectedNotFound = Sets.newHashSet();
+        expectedNotFound.addAll(expected);
+        expectedNotFound.removeAll(intermediateNames);
+        if (!expectedNotFound.isEmpty()) {
+            failWithRawMessage("Not true that %s source files was %s. Set %s was missing %s",
+                    getDisplaySubject(),
+                    expected,
+                    intermediateNames,
+                    expectedNotFound);
+        }
+
+        Set<String> foundNotExpected = Sets.newHashSet();
+        foundNotExpected.addAll(intermediateNames);
+        foundNotExpected.removeAll(expected);
+        if (!foundNotExpected.isEmpty()) {
+            failWithRawMessage("Not true that %s source files was %s. It had extras %s",
+                    getDisplaySubject(),
+                    expected,
+                    foundNotExpected);
+        }
+    }
+
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasSourceFileNames(String... fileNames) {
+        Set<String> intermediateNames = getSourceFileNames();
+        Set<String> expected = Sets.newHashSet(fileNames);
+        Set<String> expectedNotFound = Sets.newHashSet();
+        expectedNotFound.addAll(expected);
+        expectedNotFound.removeAll(intermediateNames);
+        if (!expectedNotFound.isEmpty()) {
+            failWithRawMessage("Not true that %s source files contained %s. Set %s was missing %s",
+                    getDisplaySubject(),
+                    expected,
+                    intermediateNames,
+                    expectedNotFound);
         }
     }
 }

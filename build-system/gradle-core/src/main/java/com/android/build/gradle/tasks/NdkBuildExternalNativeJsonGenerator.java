@@ -48,6 +48,8 @@ import java.util.Map;
  * JSON can be generated during configuration.
  */
 class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
+    @NonNull
+    final private File projectDir;
 
     NdkBuildExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
@@ -55,6 +57,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             @NonNull String variantName,
             @NonNull List<Abi> abis,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull File projectDir,
             @NonNull File sdkFolder,
             @NonNull File ndkFolder,
             @NonNull File soFolder,
@@ -82,6 +85,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 cFlags,
                 cppFlags,
                 nativeBuildConfigurationsJsons);
+        this.projectDir = projectDir;
     }
 
     @Override
@@ -93,7 +97,29 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
         // Write the captured ndk-build output to a file for diagnostic purposes.
         diagnostic("parse and convert ndk-build output to build configuration JSON");
-        NativeBuildConfigValue buildConfig = new NativeBuildConfigValueBuilder(getMakeFile())
+
+        // Tasks, including the Exec task used to execute ndk-build, will execute in the same folder
+        // as the module build.gradle. However, parsing of ndk-build output doesn't necessarily
+        // happen within a task because it may be done at sync time. The parser needs to create
+        // absolute paths for source files that have relative paths in the ndk-build output. For
+        // this reason, we need to tell the parser the folder of the module build.gradle. This is
+        // 'projectDir'.
+        //
+        // Example, if a project is set up as follows:
+        //
+        //   project/build.gradle
+        //   project/app/build.gradle
+        //
+        // Then, right now, the current folder is 'project/' but ndk-build -n was executed in
+        // 'project/app/'. For this reason, any relative paths in the ndk-build -n ouput will be
+        // relative to 'project/app/' but a direct call now to getAbsolutePath() would produce a
+        // path relative to 'project/' which is wrong.
+        //
+        // NOTE: CMake doesn't have the same issue because CMake JSON generation happens fully
+        // within the Exec call which has 'project/app' as the current directory.
+        NativeBuildConfigValue buildConfig = new NativeBuildConfigValueBuilder(
+                    getMakeFile(),
+                    projectDir)
                 .addCommands(
                         getBuildCommand(abi, abiPlatformVersion, applicationMk),
                         variantName,

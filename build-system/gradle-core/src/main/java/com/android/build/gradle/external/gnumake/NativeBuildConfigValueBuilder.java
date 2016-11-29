@@ -95,7 +95,8 @@ public class NativeBuildConfigValueBuilder {
     private final Map<String, String> toolChainToCppCompiler = new HashMap<>();
     private final Set<String> cFileExtensions = new HashSet<>();
     private final Set<String> cppFileExtensions = new HashSet<>();
-    private final File projectRootPath;
+    private final File androidMk;
+    private final File executionRootPath;
     @NonNull
     private final List<Output> outputs;
 
@@ -103,10 +104,11 @@ public class NativeBuildConfigValueBuilder {
      * Constructs a NativeBuildConfigValueBuilder which can be used to build a
      * {@link NativeBuildConfigValue}.
      *
-     * projectRootPath -- file path to the project that contains an ndk-build project.
+     * projectRootPath -- file path to the project that contains an ndk-build project (
      */
-    public NativeBuildConfigValueBuilder(File projectRootPath) {
-        this.projectRootPath = projectRootPath;
+    public NativeBuildConfigValueBuilder(File androidMk, File executionRootPath) {
+        this.androidMk = androidMk;
+        this.executionRootPath = executionRootPath;
         this.outputs = new ArrayList<>();
     }
 
@@ -140,7 +142,7 @@ public class NativeBuildConfigValueBuilder {
         // Sort by library name so that output is stable
         Collections.sort(outputs, (o1, o2) -> o1.libraryName.compareTo(o2.libraryName));
         config.cleanCommands = generateCleanCommands();
-        config.buildFiles = Lists.newArrayList(projectRootPath);
+        config.buildFiles = Lists.newArrayList(androidMk);
         config.libraries = generateLibraries();
         config.toolchains = generateToolchains();
         config.cFileExtensions = generateExtensions(cFileExtensions);
@@ -267,6 +269,9 @@ public class NativeBuildConfigValueBuilder {
                 NativeSourceFileValue file = new NativeSourceFileValue();
                 value.files.add(file);
                 file.src = new File(input.getOnlyInput());
+                if (!file.src.isAbsolute()) {
+                    file.src = new File(executionRootPath, input.getOnlyInput());
+                }
                 List<String> flags = new ArrayList<>();
                 for (int i = 0; i < input.getCommand().args.size(); ++i) {
                     String arg = input.getCommand().args.get(i);
