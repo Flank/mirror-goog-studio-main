@@ -17,7 +17,7 @@ iml_module(
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:jimfs",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/idea/.idea/libraries:mockito",
     ],
 )
 
