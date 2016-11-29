@@ -19,7 +19,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
-import com.android.repository.api.RepoPackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakePackage;
@@ -32,12 +31,10 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -729,9 +726,7 @@ public class AndroidTargetManagerTest extends TestCase {
                 DetailsTypes.getPlatformPath(new AndroidVersion(20, null)), real1Location, 20);
         LocalPackage real2 = new FakePlatformPackage("19", real2Location, 19);
         List<LocalPackage> locals = ImmutableList.of(bogus1, bogus2, real1, real2);
-        RepositoryPackages packages = new RepositoryPackages(
-                Maps.uniqueIndex(locals, RepoPackage::getPath),
-                new HashMap<>());
+        RepositoryPackages packages = new RepositoryPackages(locals, ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(packages);
         AndroidSdkHandler handler =
                 new AndroidSdkHandler(new File("/sdk"), null, fop, mgr);

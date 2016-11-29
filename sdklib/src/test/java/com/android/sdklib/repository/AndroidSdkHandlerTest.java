@@ -20,9 +20,8 @@ import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
-import java.util.Map;
 import junit.framework.TestCase;
 
 /**
@@ -31,30 +30,22 @@ import junit.framework.TestCase;
 public class AndroidSdkHandlerTest extends TestCase {
 
     public void testGetLatestPackage() {
-        Map<String, LocalPackage> locals = Maps.newHashMap();
-
         FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1");
         p1_1.setRevision(Revision.parseRevision("1.1"));
-        locals.put("p;1.1", p1_1);
         FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20");
         p1_20.setRevision(Revision.parseRevision("1.20"));
-        locals.put("p;1.20", p1_20);
         FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1");
         p2_1.setRevision(Revision.parseRevision("2.1"));
-        locals.put("p;2.1", p2_1);
         FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3");
         p2_2_rc3.setRevision(Revision.parseRevision("2.2-rc3"));
-        locals.put("p;2.2-rc3", p2_2_rc3);
 
         FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0");
         qr2_0.setRevision(Revision.parseRevision("2.0"));
-        locals.put("q;r;2.0", qr2_0);
         FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1");
         qr2_1.setRevision(Revision.parseRevision("2.1"));
-        locals.put("q;r;2.1", qr2_1);
 
         RepositoryPackages packages = new RepositoryPackages();
-        packages.setLocalPkgInfos(locals);
+        packages.setLocalPkgInfos(ImmutableList.of(p1_1, p1_20, p2_1, p2_2_rc3, qr2_0, qr2_1));
 
         LocalPackage latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
@@ -113,18 +104,14 @@ public class AndroidSdkHandlerTest extends TestCase {
     }
 
     public void testGetLatestPackageException() {
-        Map<String, LocalPackage> locals = Maps.newHashMap();
-
         FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1");
         p1_1.setRevision(Revision.parseRevision("1.1"));
-        locals.put("p;1.1", p1_1);
         FakeLocalPackage pgarbage = new FakeLocalPackage("p;garbage");
         pgarbage.setRevision(Revision.parseRevision("1.2.3"));
-        locals.put("p;garbage", pgarbage);
 
         RepositoryPackages packages = new RepositoryPackages();
 
-        packages.setLocalPkgInfos(locals);
+        packages.setLocalPkgInfos(ImmutableList.of(p1_1, pgarbage));
         try {
             AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                     packages.getLocalPackagesForPrefix("p"),

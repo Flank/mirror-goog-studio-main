@@ -43,9 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.ls.LSResourceResolver;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +51,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * Main implementation of {@link RepoManager}. Loads local and remote {@link RepoPackage}s
@@ -518,7 +516,7 @@ public class RepoManagerImpl extends RepoManager {
                     indicator.setText("Loading local repository...");
                     Map<String, LocalPackage> newLocals = local.getPackages(indicator);
                     boolean fireListeners = !newLocals.equals(mPackages.getLocalPackages());
-                    mPackages.setLocalPkgInfos(newLocals);
+                    mPackages.setLocalPkgInfos(newLocals.values());
                     mLastLocalRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
                         for (RepoLoadedCallback listener : mLocalListeners) {
@@ -553,7 +551,7 @@ public class RepoManagerImpl extends RepoManager {
                     indicator.setText("Computing updates...");
                     indicator.setFraction(0.75);
                     boolean fireListeners = !remotes.equals(mPackages.getRemotePackages());
-                    mPackages.setRemotePkgInfos(remotes);
+                    mPackages.setRemotePkgInfos(remotes.values());
                     mLastRemoteRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
                         for (RepoLoadedCallback callback : mRemoteListeners) {

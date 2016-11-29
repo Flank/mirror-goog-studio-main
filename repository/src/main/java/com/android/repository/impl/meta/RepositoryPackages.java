@@ -27,11 +27,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlTransient;
 
 
@@ -106,8 +107,8 @@ public final class RepositoryPackages {
         myTimestampMs = System.currentTimeMillis();
     }
 
-    public RepositoryPackages(@NonNull Map<String, LocalPackage> localPkgs,
-            @NonNull Map<String, RemotePackage> remotePkgs) {
+    public RepositoryPackages(@NonNull List<LocalPackage> localPkgs,
+            @NonNull List<RemotePackage> remotePkgs) {
         this();
         setLocalPkgInfos(localPkgs);
         setRemotePkgInfos(remotePkgs);
@@ -208,9 +209,9 @@ public final class RepositoryPackages {
      * Sets the collection of known {@link LocalPackage}s, and recomputes the list of updates and
      * new packages, if {@link RemotePackage}s have been set.
      */
-    public void setLocalPkgInfos(@NonNull Map<String, ? extends LocalPackage> packages) {
+    public void setLocalPkgInfos(@NonNull Collection<LocalPackage> packages) {
         synchronized (mLock) {
-            mLocalPackages = ImmutableMap.copyOf(packages);
+            mLocalPackages = mapByPath(packages);
             invalidate();
             mLocalPackagesByPrefix = computePackagePrefixes(mLocalPackages);
         }
@@ -220,12 +221,20 @@ public final class RepositoryPackages {
      * Sets the collection of known {@link RemotePackage}s, and recomputes the list of updates and
      * new packages, if {@link LocalPackage}s have been set.
      */
-    public void setRemotePkgInfos(@NonNull Map<String, ? extends RemotePackage> packages) {
+    public void setRemotePkgInfos(@NonNull Collection<RemotePackage> packages) {
         synchronized (mLock) {
-            mRemotePackages = ImmutableMap.copyOf(packages);
+            mRemotePackages = mapByPath(packages);
             invalidate();
             mRemotePackagesByPrefix = computePackagePrefixes(mRemotePackages);
         }
+    }
+
+    @NonNull
+    private static <T extends RepoPackage> Map<String, T> mapByPath(
+      @NonNull Collection<T> packages) {
+        return ImmutableMap.copyOf(
+                packages.stream()
+                        .collect(Collectors.toMap(RepoPackage::getPath, Function.identity())));
     }
 
     private void invalidate() {

@@ -59,7 +59,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
         LocalPackage pkg = new FakePackage.FakeLocalPackage(path);
         existing.put(path, pkg);
-        mRepositoryPackages.setLocalPkgInfos(existing);
+        mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
         ProgressIndicator progress = new FakeProgressIndicator();
         mFileOp.mkdirs(new FakePackage.FakeRemotePackage(path)
