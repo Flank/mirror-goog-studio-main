@@ -160,10 +160,10 @@ public class ModelBuilder implements ToolingModelBuilder {
                     variantData.getVariantDependency(),
                     testedProjectPath);
             try {
-                ResolveDependenciesTask.extractAarInParallel(
-                        project,
-                        variantData.getVariantConfiguration(),
-                        AndroidGradleOptions.getBuildCache(project));
+                //ResolveDependenciesTask.extractAarInParallel(
+                //        project,
+                //        variantData.getVariantConfiguration(),
+                //        AndroidGradleOptions.getBuildCache(project));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -418,8 +418,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantType.getArtifactName(),
                 variantData.getScope().getAssembleTask().getName(),
                 variantData.getScope().getCompileTask().getName(),
-                Sets.newHashSet(variantData.getScope().getPrepareDependenciesTask().getName(),
-                        taskManager.createMockableJar.getName()),
+                Sets.newHashSet(taskManager.createMockableJar.getName()),
                 extraGeneratedSourceFolders != null ? extraGeneratedSourceFolders : Collections.<File>emptyList(),
                 (variantData.javacTask != null) ?
                         variantData.javacTask.getDestinationDir() :
@@ -656,12 +655,11 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         List<File> result;
 
-        FileCollection extraFolders = variantData.getExtraGeneratedResFolders();
+        final FileCollection extraResFolders = variantData.getExtraGeneratedResFolders();
+        Set<File> extraFolders = extraResFolders != null ? extraResFolders.getFiles() : null;
         if (extraFolders != null && !extraFolders.isEmpty()) {
-            Set<File> files = extraFolders.getFiles();
-
-            result = Lists.newArrayListWithCapacity(files.size() + 2);
-            result.addAll(files);
+            result = Lists.newArrayListWithCapacity(extraFolders.size() + 2);
+            result.addAll(extraFolders);
         } else {
             result = Lists.newArrayListWithCapacity(2);
         }

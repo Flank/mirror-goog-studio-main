@@ -138,7 +138,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private List<ConfigurableFileTree> javaSources;
 
     private List<File> extraGeneratedSourceFolders;
-    private FileCollection extraGeneratedResFolders;
+    private ConfigurableFileCollection extraGeneratedResFolders;
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
 
@@ -185,12 +185,16 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                             variantConfiguration.getFullName(),
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
-        GlobalScope globalScope = taskManager.getGlobalScope();
+
+        final GlobalScope globalScope = taskManager.getGlobalScope();
         scope = new VariantScopeImpl(
-                globalScope,
-                new TransformManager(
-                        globalScope.getProject(), taskManager.getAndroidTasks(), errorReporter, recorder),
-                this);
+                        globalScope,
+                        new TransformManager(
+                                globalScope.getProject(),
+                                taskManager.getAndroidTasks(),
+                                errorReporter,
+                                recorder),
+                        this);
         taskManager.configureScopeForNdk(scope);
     }
 
@@ -350,15 +354,10 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     public void registerGeneratedResFolders(@NonNull FileCollection folders) {
         if (extraGeneratedResFolders == null) {
-            extraGeneratedResFolders = folders;
-        } else {
-            extraGeneratedResFolders = extraGeneratedResFolders.plus(folders);
+            extraGeneratedResFolders = scope.getGlobalScope().getProject().files();
         }
 
-        // rewrite the task dependency.
-        // This should go away once we move to a non changing file collection on which we
-        // add new ones.
-        sourceGenTask.dependsOn(extraGeneratedResFolders);
+        extraGeneratedResFolders.from(folders);
     }
 
     @Deprecated
@@ -560,7 +559,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      */
     @NonNull
     private static List<String> getAllFilters(Iterable<File> resourceFolders, String... prefixes) {
-        List<String> providedResFolders = new ArrayList<String>();
+        List<String> providedResFolders = new ArrayList<>();
         for (File resFolder : resourceFolders) {
             File[] subResFolders = resFolder.listFiles();
             if (subResFolders != null) {

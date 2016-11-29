@@ -26,6 +26,7 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.EmptyContainer;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.internal.ClassFieldImpl;
@@ -43,6 +44,7 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
@@ -71,7 +73,89 @@ import java.util.Set;
  */
 public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, F extends ProductFlavor> {
 
-    private static final DependencyContainer UNRESOLVED_CONTAINER = EmptyContainer.get();
+    private static final DependencyContainer UNRESOLVED_CONTAINER = new DependencyContainer() {
+        @NonNull
+        @Override
+        public ImmutableMap<Object, Dependency> getDependencyMap() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<DependencyNode> getDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @Override
+        public boolean isSkipped(@NonNull Dependency dependency) {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @Override
+        public boolean isProvided(@NonNull Dependency dependency) {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<Dependency> getAllDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<Dependency> getAllPackagedDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<JavaDependency> getAllJavaDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<AndroidDependency> getAllAndroidDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<AtomDependency> getAllAtomDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<JavaDependency> getDirectJavaDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<JavaDependency> getDirectLocalJavaDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<AndroidDependency> getDirectAndroidDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @NonNull
+        @Override
+        public ImmutableList<AtomDependency> getDirectAtomDependencies() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+
+        @Nullable
+        @Override
+        public AtomDependency getBaseAtom() {
+            throw new RuntimeException("Call to UNRESOLVED_CONTAINER");
+        }
+    };
 
     /**
      * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
@@ -1261,52 +1345,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * returns all the resource folders from all the dependencies.
-     * @return
-     */
-    @NonNull
-    public Set<File> getResourceFoldersForDependencies() {
-        Set<File> files = Sets.newHashSet();
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies()) {
-            File resFolder = dependency.getResFolder();
-            if (resFolder.isDirectory()) {
-                files.add(resFolder);
-            }
-        }
-
-        return files;
-    }
-
-    /**
-     * Returns the dynamic list of {@link ResourceSet} for the dependencies only.
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * {@link com.android.ide.common.res2.ResourceMerger}.
-     *
-     * @return a list ResourceSet.
-     */
-    @NonNull
-    public List<ResourceSet> getResourceSetsForDependencies(boolean validateEnabled) {
-        List<ResourceSet> resourceSets = Lists.newArrayList();
-
-        // the list of dependency must be reversed to use the right overlay order.
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-            File resFolder = dependency.getResFolder();
-            if (resFolder.isDirectory()) {
-                ResourceSet resourceSet = new ResourceSet(dependency.getExtractedFolder().getName(),
-                        dependency.getName(), validateEnabled);
-                resourceSet.addSource(resFolder);
-                resourceSet.setFromDependency(true);
-                resourceSets.add(resourceSet);
-            }
-        }
-
-        return resourceSets;
-    }
-
-    /**
      * Returns the dynamic list of {@link ResourceSet} for the source folders only.
      *
      * The list is ordered in ascending order of importance, meaning the first set is meant to be
@@ -1318,7 +1356,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public List<ResourceSet> getResourceSets(boolean validateEnabled) {
         List<ResourceSet> resourceSets = Lists.newArrayList();
-
         Collection<File> mainResDirs = mDefaultSourceProvider.getResDirectories();
 
         // the main + generated res folders are in the same ResourceSet
@@ -1365,23 +1402,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return resourceSets;
     }
 
-    @NonNull
-    public List<AssetSet> getAssetSetsForDependencies() {
-        List<AssetSet> assetSets = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-            File assetFolder = dependency.getAssetsFolder();
-            if (assetFolder.isDirectory()) {
-                AssetSet assetSet = new AssetSet(dependency.getExtractedFolder().getName());
-                assetSet.addSource(assetFolder);
-                assetSets.add(assetSet);
-            }
-        }
-
-        return assetSets;
-    }
-
     /**
      * Returns the dynamic list of {@link AssetSet} based on the configuration, its dependencies,
      * as well as tested config if applicable (test of a library).
@@ -1394,6 +1414,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<AssetSet> getAssetSets() {
+        // TODO FIXME FOR test of a library, need to include tested lib (same for all the other code)
         List<AssetSet> assetSets = Lists.newArrayList();
 
         Collection<File> mainResDirs = mDefaultSourceProvider.getAssetsDirectories();
@@ -1577,24 +1598,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the renderscript import folder that are outside of the current project.
-     */
-    @NonNull
-    public List<File> getRenderscriptImports() {
-        List<File> list = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency lib : getPackageDependencies().getAllAndroidDependencies()) {
-            File rsLib = lib.getRenderscriptFolder();
-            if (rsLib.isDirectory()) {
-                list.add(rsLib);
-            }
-        }
-
-        return list;
-    }
-
-    /**
      * Returns all the renderscript source folder from the main config, the flavors and the
      * build type.
      *
@@ -1611,24 +1614,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return sourceList;
-    }
-
-    /**
-     * Returns all the aidl import folder that are outside of the current project.
-     */
-    @NonNull
-    public List<File> getAidlImports() {
-        List<File> list = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency lib : getPackageDependencies().getAllAndroidDependencies()) {
-            File aidlLib = lib.getAidlFolder();
-            if (aidlLib.isDirectory()) {
-                list.add(aidlLib);
-            }
-        }
-
-        return list;
     }
 
     @NonNull
@@ -1655,30 +1640,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return sourceList;
-    }
-
-    /**
-     * Returns the compile classpath for this config. If the config tests a library, this
-     * will include the classpath of the tested config
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getCompileClasspath() {
-        DependencyContainer compileDep = getCompileDependencies();
-
-        Set<File> classpath = Sets.newLinkedHashSetWithExpectedSize(
-                compileDep.getAllDependencies().size());
-
-        for (Dependency dependency : compileDep.getAllDependencies()) {
-            classpath.add(dependency.getClasspathFile());
-            List<File> additionalFiles = dependency.getAdditionalClasspath();
-            if (additionalFiles != null) {
-                classpath.addAll(additionalFiles);
-            }
-        }
-
-        return classpath;
     }
 
     /**

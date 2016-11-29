@@ -28,20 +28,19 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.io.FileWrapper;
 import com.android.manifmerger.ManifestProvider;
 import com.android.xml.AndroidManifest;
-import com.google.common.collect.ImmutableList;
-
-import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
@@ -69,7 +68,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private Boolean handleProfiling;
     private Boolean functionalTest;
     private Map<String, Object> placeholdersValues;
-    private List<ManifestProvider> providers;
+    private FileCollection manifests;
 
     @Nullable
     private String testLabel;
@@ -86,7 +85,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                 getFunctionalTest(),
                 getTestLabel(),
                 getTestManifestFile(),
-                getProviders(),
+                computeProviders(),
                 getPlaceholdersValues(),
                 getManifestOutputFile(),
                 getTmpDir());
@@ -193,29 +192,30 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         this.placeholdersValues = placeholdersValues;
     }
 
-    public List<ManifestProvider> getProviders() {
-        return providers;
-    }
-
-    public void setProviders(List<ManifestProvider> providers) {
-        this.providers = providers;
-    }
-
     /**
-     * A synthetic input to allow gradle up-to-date checks to work.
-     *
-     * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
-     * this method gathers and returns the underlying manifest files.
+     * Compute the final list of providers based on the manifest file collection.
+     * @return the list of providers.
      */
-    @SuppressWarnings("unused")
-    @InputFiles
-    public List<File> getLibraryManifests() {
-        List<ManifestProvider> manifestProviders = getProviders();
-        if (manifestProviders == null || manifestProviders.isEmpty()) {
-            return ImmutableList.of();
+    public List<ManifestProvider> computeProviders() {
+        // TODO get metadata on a per file basis.
+        Set<File> manifests = getManifests().getFiles();
+
+        List<ManifestProvider> list = Lists.newArrayListWithCapacity(manifests.size());
+
+        for (File manifest : manifests) {
+            list.add (new MergeManifests.ConfigAction.ManifestProviderImpl(manifest, "TODO"));
         }
 
-        return manifestProviders.stream().map(ManifestProvider::getManifest).collect(Collectors.toList());
+        return list;
+    }
+
+    @InputFiles
+    public FileCollection getManifests() {
+        return manifests;
+    }
+
+    public void setManifests(FileCollection manifests) {
+        this.manifests = manifests;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessTestManifest> {
@@ -313,8 +313,8 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     processTestManifestTask, "functionalTest", config::getFunctionalTest);
             ConventionMappingHelper.map(
                     processTestManifestTask, "testLabel", config::getTestLabel);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "providers", config::getFlatPackageAndroidLibraries);
+
+            processTestManifestTask.manifests = scope.getManifests();
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());

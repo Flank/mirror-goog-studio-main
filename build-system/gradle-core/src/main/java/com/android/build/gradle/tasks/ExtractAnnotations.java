@@ -46,6 +46,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.EmptyFileVisitor;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.BasePlugin;
@@ -370,15 +371,12 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     public static class ConfigAction implements TaskConfigAction<ExtractAnnotations> {
 
-        @NonNull private Project project;
         @NonNull private AndroidConfig extension;
         @NonNull private VariantScope variantScope;
 
         public ConfigAction(
-                @NonNull Project project,
                 @NonNull AndroidConfig extension,
                 @NonNull VariantScope variantScope) {
-            this.project = project;
             this.extension = extension;
             this.variantScope = variantScope;
         }
@@ -417,15 +415,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setEncoding(extension.getCompileOptions().getEncoding());
             task.setSourceCompatibility(
                     extension.getCompileOptions().getSourceCompatibility().toString());
-            ConventionMappingHelper.map(
-                    task,
-                    "classpath",
-                    new Callable<ConfigurableFileCollection>() {
-                        @Override
-                        public ConfigurableFileCollection call() throws Exception {
-                            return project.files(androidBuilder.getCompileClasspath(variantConfig));
-                        }
-                    });
+            task.setClasspath(variantScope.getJavaClasspath());
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

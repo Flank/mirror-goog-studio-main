@@ -254,11 +254,13 @@ abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
+    @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
         getVariantData().registerResGeneratingTask(task, generatedResFolders);
     }
 
     @Override
+    @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
         getVariantData().registerResGeneratingTask(task, generatedResFolders);
     }

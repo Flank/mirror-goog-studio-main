@@ -468,7 +468,8 @@ public class VariantManager implements VariantModel {
      */
     public void populateVariantDataList() {
         // default configure attribute resolution
-        project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
+        //project.getConfigurations().getByName("default").setCanBeConsumed(false);
         project.configurationAttributesSchema(schema -> {
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_CONTENT, String.class));

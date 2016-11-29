@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -29,12 +30,14 @@ import com.android.builder.model.ApiVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -55,7 +58,9 @@ public class MergeManifests extends ManifestProcessorTask {
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ApkVariantOutputData variantOutputData;
-    private List<ManifestProvider> providers;
+    private FileCollection manifests;
+    private FileCollection microApkManifest;
+    private FileCollection compatibleScreensManifest;
     private List<Feature> optionalFeatures;
 
     @Override
@@ -63,7 +68,7 @@ public class MergeManifests extends ManifestProcessorTask {
         getBuilder().mergeManifestsForApplication(
                 getMainManifest(),
                 getManifestOverlays(),
-                getProviders(),
+                computeFullProviderList(),
                 getPackageOverride(),
                 getVersionCode(),
                 getVersionName(),
@@ -128,22 +133,36 @@ public class MergeManifests extends ManifestProcessorTask {
     }
 
     /**
-     * A synthetic input to allow gradle up-to-date checks to work.
-     *
-     * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
-     * this method gathers and returns the underlying manifest files.
+     * Compute the final list of providers based on the manifest file collection and the other
+     * providers.
+     * @return the list of providers.
      */
-    @SuppressWarnings("unused")
-    @InputFiles
-    public List<File> getManifestInputs() {
-        List<ManifestProvider> providers = getProviders();
-        if (providers == null || providers.isEmpty()) {
-            return ImmutableList.of();
+    private List<ManifestProvider> computeFullProviderList() {
+        List<ManifestProvider> providers = Lists.newArrayList();
+
+        // TODO get metadata on a per file basis.
+        Set<File> manifests = getManifests().getFiles();
+
+        for (File manifest : manifests) {
+            // TODO fix order?
+            providers.add(new ConfigAction.ManifestProviderImpl(manifest, "TODO"));
         }
 
-        return providers.stream()
-                .map(ManifestProvider::getManifest)
-                .collect(Collectors.toList());
+
+        if (microApkManifest != null) {
+            providers.add(new ConfigAction.ManifestProviderImpl(
+                    microApkManifest.getSingleFile(),
+                    "Wear App sub-manifest"));
+        }
+
+        if (compatibleScreensManifest != null) {
+            providers.add(new ConfigAction.ManifestProviderImpl(
+                    compatibleScreensManifest.getSingleFile(),
+                    "Compatible-Screens sub-manifest"));
+
+        }
+
+        return providers;
     }
 
     @Input
@@ -215,12 +234,24 @@ public class MergeManifests extends ManifestProcessorTask {
         this.variantOutputData = variantOutputData;
     }
 
-    public List<ManifestProvider> getProviders() {
-        return providers;
+    @SuppressWarnings("unused")
+    @InputFiles
+    public FileCollection getManifests() {
+        return manifests;
     }
 
-    public void setProviders(List<ManifestProvider> providers) {
-        this.providers = providers;
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getMicroApkManifest() {
+        return microApkManifest;
+    }
+
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getCompatibleScreensManifest() {
+        return compatibleScreensManifest;
     }
 
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
@@ -249,8 +280,9 @@ public class MergeManifests extends ManifestProcessorTask {
         public void execute(@NonNull MergeManifests processManifestTask) {
             BaseVariantOutputData variantOutputData = scope.getVariantOutputData();
 
+            final VariantScope variantScope = scope.getVariantScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantScope().getVariantData();
+                    variantScope.getVariantData();
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     variantData.getVariantConfiguration();
 
@@ -265,33 +297,21 @@ public class MergeManifests extends ManifestProcessorTask {
                         (ApkVariantOutputData) variantOutputData;
             }
 
-            ConventionMappingHelper.map(
-                    processManifestTask,
-                    "providers",
-                    () -> {
-                        List<ManifestProvider> manifests =
-                                Lists.newArrayList(config.getPackageManifestProviders());
+            Project project = scope.getGlobalScope().getProject();
 
-                        if (scope.getVariantScope().getMicroApkTask() != null
-                                && variantData
-                                        .getVariantConfiguration()
-                                        .getBuildType()
-                                        .isEmbedMicroApp()) {
-                            manifests.add(
-                                    new ManifestProviderImpl(
-                                            scope.getVariantScope().getMicroApkManifestFile(),
-                                            "Wear App sub-manifest"));
-                        }
+            // this includes the libraries and the atoms.
+            processManifestTask.manifests = variantScope.getManifests();
 
-                        if (scope.getCompatibleScreensManifestTask() != null) {
-                            manifests.add(
-                                    new ManifestProviderImpl(
-                                            scope.getCompatibleScreensManifestFile(),
-                                            "Compatible-Screens sub-manifest"));
-                        }
-
-                        return manifests;
-                    });
+            // optional manifest files too.
+            if (variantScope.getMicroApkTask() != null &&
+                    config.getBuildType().isEmbedMicroApp()) {
+                processManifestTask.microApkManifest = project.files(
+                        variantScope.getMicroApkManifestFile());
+            }
+            if (scope.getCompatibleScreensManifestTask() != null) {
+                processManifestTask.compatibleScreensManifest = project.files(
+                        scope.getCompatibleScreensManifestFile());
+            }
 
             ConventionMappingHelper.map(processManifestTask, "minSdkVersion",
                     new Callable<String>() {
@@ -333,9 +353,9 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.setManifestOutputFile(scope.getManifestOutputFile());
             processManifestTask.setInstantRunManifestOutputFile(
-                    scope.getVariantScope().getInstantRunManifestOutputFile());
+                    variantScope.getInstantRunManifestOutputFile());
 
-            processManifestTask.setReportFile(scope.getVariantScope().getManifestReportFile());
+            processManifestTask.setReportFile(variantScope.getManifestReportFile());
             processManifestTask.optionalFeatures = optionalFeatures;
 
         }
@@ -346,7 +366,7 @@ public class MergeManifests extends ManifestProcessorTask {
          * This is used to pass to the merger manifest snippet that needs to be added during
          * merge.
          */
-        private static class ManifestProviderImpl implements ManifestProvider {
+        public static class ManifestProviderImpl implements ManifestProvider {
 
             @NonNull
             private final File manifest;

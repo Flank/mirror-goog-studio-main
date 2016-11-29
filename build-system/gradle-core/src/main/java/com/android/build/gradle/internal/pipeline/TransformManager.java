@@ -102,6 +102,8 @@ public class TransformManager extends FilterableStreamCollection {
     private final ErrorReporter errorReporter;
     @NonNull
     private final Logger logger;
+    @NonNull
+    private final Recorder recorder;
 
     /**
      * These are the streams that are available for new Transforms to consume.
@@ -117,7 +119,6 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull private final List<TransformStream> streams = Lists.newArrayList();
     @NonNull
     private final List<Transform> transforms = Lists.newArrayList();
-    @NonNull private final Recorder recorder;
 
     public TransformManager(
             @NonNull Project project,
@@ -129,7 +130,6 @@ public class TransformManager extends FilterableStreamCollection {
         this.errorReporter = errorReporter;
         this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
-
     }
 
     @NonNull

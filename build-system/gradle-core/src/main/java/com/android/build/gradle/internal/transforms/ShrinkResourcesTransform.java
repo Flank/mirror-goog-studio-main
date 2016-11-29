@@ -238,7 +238,8 @@ public class ShrinkResourcesTransform extends Transform {
                         .setManifestFile(mergedManifest)
                         .setOptions(processResourcesTask.getAaptOptions())
                         .setResourceOutputApk(destination)
-                        .setLibraries(processResourcesTask.getAndroidDependencies())
+                        .setLibraries(processResourcesTask.getManifests().getFiles(),
+                                processResourcesTask.getSymbolFiles().getFiles())
                         .setCustomPackageForR(processResourcesTask.getPackageForR())
                         .setSourceOutputDir(new File(sourceOutputPath))
                         .setVariantType(processResourcesTask.getType())

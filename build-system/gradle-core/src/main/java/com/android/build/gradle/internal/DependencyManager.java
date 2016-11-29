@@ -945,7 +945,8 @@ public class DependencyManager {
                             boolean isRootOfSeparateTestedApp = testedProjectPath != null
                                     && testedProjectPath.equals(gradlePath);
                             // check this jar does not have a dependency on an library, as this would not work.
-                            if (containsDirectDependency(transitiveDependencies, NodeType.ANDROID)) {
+                            // TODO reenable this. This is because we're seeing all the intermediate artifacts through this.
+                            if (false) {//containsDirectDependency(transitiveDependencies, NodeType.ANDROID))
                                 // there is one case where it's ok to have a jar depend on aars:
                                 // when a test project tests a separate app project, the code of the
                                 // app is published as a jar, but it brings in the dependencies

@@ -62,8 +62,8 @@ public class OriginalStream extends TransformStream {
     public static final class Builder {
         private final Project project;
         private Set<ContentType> contentTypes = Sets.newHashSet();
-        private FileCollection fileCollection;
         private QualifiedContent.ScopeType scope;
+        private FileCollection fileCollection;
         private Supplier<Collection<File>> jarFiles;
         private Supplier<Collection<File>> folders;
         private ImmutableList<? extends Object> dependencies;

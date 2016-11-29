@@ -250,21 +250,12 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             bundleAtom.setBundleFolder(scope.getBaseBundleDir());
             bundleAtom.setBundleFile(scope.getOutputBundleFile());
 
-            ConventionMappingHelper.map(
-                    bundleAtom,
-                    "jniFolders",
-                    () -> scope.getTransformManager()
-                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS));
-            ConventionMappingHelper.map(
-                    bundleAtom,
-                    "dexFolders",
-                    () -> scope.getTransformManager()
-                            .getPipelineOutputAsFileCollection(StreamFilter.DEX));
-            ConventionMappingHelper.map(
-                    bundleAtom,
-                    "javaResources",
-                    () -> scope.getTransformManager()
-                            .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES));
+            bundleAtom.jniFolders = scope.getTransformManager()
+                    .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
+            bundleAtom.dexFolders = scope.getTransformManager()
+                    .getPipelineOutputAsFileCollection(StreamFilter.DEX);
+            bundleAtom.javaResources = scope.getTransformManager()
+                    .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
         }
 
         @NonNull

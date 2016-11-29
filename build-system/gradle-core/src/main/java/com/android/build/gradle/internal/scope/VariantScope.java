@@ -121,7 +121,49 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaOutputDir(@NonNull AtomDependency androidAtom);
 
     @NonNull
-    Iterable<File> getJavaOutputs();
+    FileCollection getJavaOutputs();
+
+    @NonNull
+    FileCollection getAidlImports();
+
+    @NonNull
+    FileCollection getRenderscriptImports();
+
+    @NonNull
+    FileCollection getManifests();
+
+    @NonNull
+    FileCollection getSymbolsFile();
+
+    @NonNull
+    FileCollection getSubProjectDataBindingArtifactFolders();
+
+    @NonNull
+    FileCollection getExternalAarJniLibFolders();
+
+    @NonNull
+    FileCollection getSubProjectPackagedJars();
+
+    @NonNull
+    FileCollection getSubProjectLocalPackagedJars();
+
+    @NonNull
+    FileCollection getSubProjectPackagedJniJarsAndFolders();
+
+    @NonNull
+    FileCollection getExternalJars();
+
+    @NonNull
+    FileCollection getLocalPackagedJars();
+
+    @NonNull
+    FileCollection getDependenciesResourceFolders();
+
+    @NonNull
+    FileCollection getDependenciesAssetFolders();
+
+    @NonNull
+    FileCollection getBaseAtomResourcePkg();
 
     @NonNull
     File getJavaDependencyCache();
@@ -322,10 +364,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<DefaultTask> getPreBuildTask();
 
     void setPreBuildTask(AndroidTask<DefaultTask> preBuildTask);
-
-    AndroidTask<PrepareDependenciesTask> getPrepareDependenciesTask();
-
-    void setPrepareDependenciesTask(AndroidTask<PrepareDependenciesTask> prepareDependenciesTask);
 
     @Nullable
     AndroidTask<ResolveDependenciesTask> getResolveDependenciesTask();

@@ -110,6 +110,7 @@ public class InstantRunTaskManager {
             SupplierTask<File> instantRunMergedManifest,
             SupplierTask<File> processedResourcesOutputFile,
             boolean addDependencyChangeChecker) {
+        final Project project = variantScope.getGlobalScope().getProject();
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
@@ -191,7 +192,6 @@ public class InstantRunTaskManager {
                 tasks, new FastDeployRuntimeExtractorTask.ConfigAction(variantScope));
         extractorTask.dependsOn(tasks, buildInfoLoaderTask);
 
-        Project project = variantScope.getGlobalScope().getProject();
         // also add a new stream for the extractor task output.
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)

@@ -29,6 +29,7 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -61,7 +62,7 @@ public class RenderscriptCompile extends NdkTask {
 
     private List<File> sourceDirs;
 
-    private List<File> importDirs;
+    private FileCollection importDirs;
 
     private Integer targetApi;
 
@@ -124,11 +125,11 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @InputFiles
-    public List<File> getImportDirs() {
+    public FileCollection getImportDirs() {
         return importDirs;
     }
 
-    public void setImportDirs(List<File> importDirs) {
+    public void setImportDirs(FileCollection importDirs) {
         this.importDirs = importDirs;
     }
 
@@ -196,7 +197,7 @@ public class RenderscriptCompile extends NdkTask {
         // get the import folders. If the .rsh files are not directly under the import folders,
         // we need to get the leaf folders, as this is what llvm-rs-cc expects.
         List<File> importFolders = AndroidBuilder.getLeafFolders("rsh",
-                getImportDirs(), getSourceDirs());
+                getImportDirs().getFiles(), getSourceDirs());
 
         getBuilder().compileAllRenderscriptFiles(
                 getSourceDirs(),
@@ -248,7 +249,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setVariantName(config.getFullName());
 
             ConventionMappingHelper.map(renderscriptTask, "targetApi",
-                    (Callable<Integer>) config::getRenderscriptTarget);
+                    config::getRenderscriptTarget);
 
             renderscriptTask.supportMode = config.getRenderscriptSupportModeEnabled();
             renderscriptTask.ndkMode = ndkMode;
@@ -256,9 +257,8 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.optimLevel = config.getBuildType().getRenderscriptOptimLevel();
 
             ConventionMappingHelper.map(renderscriptTask, "sourceDirs",
-                    (Callable<List<File>>) config::getRenderscriptSourceList);
-            ConventionMappingHelper.map(renderscriptTask, "importDirs",
-                    (Callable<List<File>>) config::getRenderscriptImports);
+                    config::getRenderscriptSourceList);
+            renderscriptTask.importDirs = scope.getRenderscriptImports();
 
             renderscriptTask.setSourceOutputDir(scope.getRenderscriptSourceOutputDir());
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
@@ -266,7 +266,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setLibOutputDir(scope.getRenderscriptLibOutputDir());
 
             ConventionMappingHelper.map(renderscriptTask, "ndkConfig",
-                    (Callable<CoreNdkOptions>) config::getNdkConfig);
+                    config::getNdkConfig);
         }
     }
 }

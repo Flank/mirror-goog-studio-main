@@ -25,6 +25,7 @@ import com.android.builder.core.AndroidBuilder;
 
 import java.io.File;
 import java.util.Collection;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Implementation of the apk-generating variant.
@@ -58,9 +59,8 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
 
     @Override
     @NonNull
-    public Collection<File> getCompileLibraries() {
-        return androidBuilder.getCompileClasspath(
-                getVariantData().getVariantConfiguration());
+    public FileCollection getCompileLibraries() {
+        return getApkVariantData().getScope().getJavaClasspath();
     }
 
     @Override

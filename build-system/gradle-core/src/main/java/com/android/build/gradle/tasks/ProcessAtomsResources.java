@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import android.databinding.tool.util.L;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -112,7 +113,8 @@ public class ProcessAtomsResources extends IncrementalTask {
                                 .setManifestFile(getManifestFiles().get(atomName))
                                 .setOptions(getAaptOptions())
                                 .setResourceDir(getResDirs().get(atomName))
-                                .setLibraries(getAtomLibraryDependencies().get(atomName))
+                                .setLibraries(getAtomLibraryDependencies().get(atomName).stream().map((dep) -> new AaptPackageConfig.LibraryInfo(dep.getManifest(), dep.getSymbolFile())).collect(
+                                        Collectors.toList()))
                                 .setCustomPackageForR(getPackagesForR().get(atomName))
                                 .setSymbolOutputDir(getTextSymbolOutputDirs().get(atomName))
                                 .setSourceOutputDir(srcOut)

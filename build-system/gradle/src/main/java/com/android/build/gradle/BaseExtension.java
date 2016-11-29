@@ -438,6 +438,7 @@ public abstract class BaseExtension implements AndroidConfig {
     public void flavorDimensions(String... dimensions) {
         checkWritability();
         flavorDimensionList = Arrays.asList(dimensions);
+
     }
 
     /**

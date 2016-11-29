@@ -93,8 +93,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     // files instead.
                     if (!testedVariantData.getType().equals(LIBRARY)
                             || scope.getVariantData().getType().equals(UNIT_TEST)) {
+                        classpath = classpath.plus(testedVariantData.getScope().getJavaClasspath());
                         classpath = classpath.plus(project.files(
-                                        testedVariantData.getScope().getJavaClasspath(),
                                         testedVariantData.getScope().getJavaOutputDir(),
                                         testedVariantData.getScope().getJavaDependencyCache()));
                     }
@@ -111,6 +111,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                         }
                     }
                 }
+
                 return classpath;
             }
         });

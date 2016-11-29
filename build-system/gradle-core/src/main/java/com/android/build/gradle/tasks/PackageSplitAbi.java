@@ -337,11 +337,9 @@ public class PackageSplitAbi extends SplitRelatedTask {
             packageSplitAbiTask.manifest = variantOutputScope.getManifestOutputFile();
             packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
 
-            ConventionMappingHelper.map(
-                    packageSplitAbiTask,
-                    "jniFolders",
-                    () -> this.scope.getTransformManager()
-                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS));
+            packageSplitAbiTask.jniFolders = this.scope.getTransformManager()
+                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
+            packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
         }
     }
 }

@@ -33,8 +33,6 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.blame.MergingLog;
@@ -45,17 +43,15 @@ import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -92,7 +88,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String preferredDensity;
 
-    private List<AndroidDependency> androidDependencies;
+    private FileCollection manifests;
+    private FileCollection symbolFiles;
 
     private String packageForR;
 
@@ -112,7 +109,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private InstantRunBuildContext instantRunBuildContext;
 
-    private Supplier<File> baseFeature;
+    private FileCollection baseFeature;
 
     private Collection<File> previousFeatures;
 
@@ -150,11 +147,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                             FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                             aaptOptions.getCruncherProcesses());
 
+            FileCollection baseFeature = getBaseFeature();
             AaptPackageConfig.Builder config = new AaptPackageConfig.Builder()
                     .setManifestFile(manifestFileToPackage)
                     .setOptions(getAaptOptions())
                     .setResourceDir(getResDir())
-                    .setLibraries(getAndroidDependencies())
+                    .setLibraries(getManifests().getFiles(), getSymbolFiles().getFiles())
                     .setCustomPackageForR(getPackageForR())
                     .setSymbolOutputDir(getTextSymbolOutputDir())
                     .setSourceOutputDir(srcOut)
@@ -167,7 +165,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .setResourceConfigs(getResourceConfigs())
                     .setSplits(getSplits())
                     .setPreferredDensity(getPreferredDensity())
-                    .setBaseFeature(getBaseFeature())
+                    .setBaseFeature(baseFeature.isEmpty() ? null : baseFeature.getSingleFile())
                     .setPreviousFeatures(getPreviousFeatures());
 
             builder.processResources(aapt, config, getEnforceUniquePackageName());
@@ -244,21 +242,18 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
                         .getEnforceUniquePackageName();
 
-                ConventionMappingHelper.map(
-                        processResources,
-                        "androidDependencies",
-                        config::getFlatPackageAndroidLibraries);
-                ConventionMappingHelper.map(
-                        processResources,
-                        "packageForR",
+                processResources.manifests = scope.getVariantScope().getManifests();
+                processResources.symbolFiles = scope.getVariantScope().getSymbolsFile();
+
+                ConventionMappingHelper.map(processResources, "packageForR",
                         () -> {
-                            String splitName = config.getSplitFromManifest();
-                            if (splitName == null) {
-                                return config.getOriginalApplicationId();
-                            } else {
-                                return config.getOriginalApplicationId() + "." + splitName;
-                            }
-                        });
+                                String splitName = config.getSplitFromManifest();
+                                if (splitName == null) {
+                                    return config.getOriginalApplicationId();
+                                } else {
+                                    return config.getOriginalApplicationId() + "." + splitName;
+                                }
+                            }) ;
 
                 // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
                 processResources
@@ -344,16 +339,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     scope.getVariantScope().getInstantRunBuildContext();
 
             processResources.setPreviousFeatures(ImmutableSet.of());
-
-            processResources.setBaseFeature(
-                    () -> {
-                        AtomDependency baseAtom =
-                                scope.getVariantScope()
-                                        .getVariantConfiguration()
-                                        .getPackageDependencies()
-                                        .getBaseAtom();
-                        return baseAtom != null ? baseAtom.getResourcePackage() : null;
-                    });
+            processResources.setBaseFeature(scope.getVariantScope().getBaseAtomResourcePkg());
         }
     }
 
@@ -481,24 +467,13 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @InputFiles
-    @Optional
-    @Nullable
-    public List<File> getInputFilesFromLibraries() {
-        List<AndroidDependency> dependencies = getAndroidDependencies();
-        if (dependencies == null) {
-            return ImmutableList.of();
-        }
-        List<File> files = Lists.newArrayListWithCapacity(dependencies.size() * 2);
-        for (AndroidDependency dependency : dependencies) {
-            files.add(dependency.getManifest());
-            files.add(dependency.getSymbolFile());
-        }
-        return files;
+    public FileCollection getManifests() {
+        return manifests;
     }
 
-
-    public List<AndroidDependency> getAndroidDependencies() {
-        return androidDependencies;
+    @InputFiles
+    public FileCollection getSymbolFiles() {
+        return symbolFiles;
     }
 
     @Input
@@ -577,14 +552,13 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.mergeBlameLogFolder = mergeBlameLogFolder;
     }
 
-    @InputFile
-    @Optional
-    @Nullable
-    public File getBaseFeature() {
-        return baseFeature.get();
+    @InputFiles
+    @NonNull
+    public FileCollection getBaseFeature() {
+        return baseFeature;
     }
 
-    public void setBaseFeature(Supplier<File> baseFeature) {
+    public void setBaseFeature(FileCollection baseFeature) {
         this.baseFeature = baseFeature;
     }
 

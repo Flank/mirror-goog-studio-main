@@ -566,6 +566,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         protected final DexPackagingPolicy dexPackagingPolicy;
 
         public ConfigAction(
+                @NonNull Project project,
                 @NonNull PackagingScope packagingScope,
                 @Nullable InstantRunPatchingPolicy patchingPolicy) {
             this.project = packagingScope.getProject();

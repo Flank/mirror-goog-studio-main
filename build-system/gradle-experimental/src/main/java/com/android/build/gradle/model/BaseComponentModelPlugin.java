@@ -614,23 +614,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 variantManager.createTasksForVariantData(
                         new TaskModelMapAdaptor(tasks),
                         binary.getVariantData());
-
-                // Add dependency for each NativeLibraryBinarySpec on the prepareDependencies task
-                // to ensure it is executed after its dependent projects are built.
-                for (NativeLibraryBinarySpec nativeBinary : binary.getNativeBinaries()) {
-                    AndroidTask<PrepareDependenciesTask> prepareDependenciesTask =
-                            binary.getVariantData().getScope().getPrepareDependenciesTask();
-                    // Set dependencies using the tasks for the binaries because, unlike
-                    // Task.dependsOn, BuildableComponentSpec.builtBy does not support dependencies
-                    // on String.
-                    if (nativeBinary instanceof SharedLibraryBinarySpec) {
-                        ((SharedLibraryBinarySpec) nativeBinary).getTasks().all(
-                                task -> task.dependsOn(prepareDependenciesTask.getName()));
-                    } else if (nativeBinary instanceof StaticLibraryBinarySpec) {
-                        ((StaticLibraryBinarySpec) nativeBinary).getTasks().all(
-                                task -> task.dependsOn(prepareDependenciesTask.getName()));
-                    }
-                }
             }
         }
 

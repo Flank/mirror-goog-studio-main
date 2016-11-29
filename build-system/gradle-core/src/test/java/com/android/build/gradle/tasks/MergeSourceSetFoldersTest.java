@@ -102,13 +102,13 @@ public class MergeSourceSetFoldersTest {
         AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
 
         List<AssetSet> dependencySets = Lists.newArrayList();
-        task.setDependencySetSupplier(InputSupplier.from(() -> dependencySets));
+        task.setLibraries(project.files(file));
 
         File file2 = new File("foo/bar/1.0");
         AssetSet librarySet = createAssetSet(dependencySets, "foo:bar:1.0", file2);
 
         assertThat(task.getSourceFolderInputs()).containsExactly(file);
-        assertThat(task.getDependencyInputs()).containsExactly(file2);
+        assertThat(task.getLibraries()).containsExactly(file2);
         assertThat(task.computeAssetSetList()).containsExactly(librarySet, mainSet).inOrder();
     }
 
@@ -150,13 +150,15 @@ public class MergeSourceSetFoldersTest {
         AssetSet debugSet = createAssetSet(folderSets, "debug", debugFile);
 
         List<AssetSet> dependencySets = Lists.newArrayList();
-        task.setDependencySetSupplier(InputSupplier.from(() -> dependencySets));
+        //task.setDependencySetSupplier(InputSupplier.from(() -> dependencySets));
 
         File libFile = new File("foo/bar/1.0");
         AssetSet librarySet = createAssetSet(dependencySets, "foo:bar:1.0", libFile);
 
         File libFile2 = new File("foo/bar/2.0");
         AssetSet librarySet2 = createAssetSet(dependencySets, "foo:bar:2.0", libFile2);
+
+        task.setLibraries(project.files(libFile, libFile2));
 
         File shaderFile = new File("shader");
         setFileCollection(task::setShadersOutputDir, shaderFile);
@@ -165,7 +167,7 @@ public class MergeSourceSetFoldersTest {
         setFileCollection(task::setCopyApk, copyApkFile);
 
         assertThat(task.getSourceFolderInputs()).containsExactly(file, file2, debugFile);
-        assertThat(task.getDependencyInputs()).containsExactly(libFile, libFile2);
+        assertThat(task.getLibraries()).containsExactly(libFile, libFile2);
         assertThat(task.computeAssetSetList())
                 .containsExactly(librarySet, librarySet2, mainSet, debugSet)
                 .inOrder();

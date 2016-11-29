@@ -275,6 +275,7 @@ class ExternalBuildTaskManager {
                 androidTasks.create(
                         tasks,
                         new PackageApplication.StandardConfigAction(
+                                project,
                                 packagingScope,
                                 variantScope.getInstantRunBuildContext().getPatchingPolicy()));
 

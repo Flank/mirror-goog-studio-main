@@ -124,7 +124,7 @@ public class InstantAppTaskManager extends TaskManager {
         AndroidTask<ProcessAtomsResources> processAtomsResources =
                 getAndroidTasks()
                         .create(tasks, new ProcessAtomsResources.ConfigAction(variantOutputScope));
-        processAtomsResources.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
+        processAtomsResources.dependsOn(tasks, variantScope.getPreBuildTask());
 
         // Compile the final R classes.
         AndroidTask<JavaCompileAtomResClass> javaCompileAtomsResClasses =

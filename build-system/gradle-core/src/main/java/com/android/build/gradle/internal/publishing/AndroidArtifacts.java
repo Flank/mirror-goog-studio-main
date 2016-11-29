@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import com.android.builder.model.AndroidArtifact;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
 import groovy.lang.Closure;
@@ -26,9 +27,11 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ConfigurablePublishArtifact;
+import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
@@ -44,6 +47,34 @@ public class AndroidArtifacts {
     public static final String TYPE_AAR = "aar";
     public static final String TYPE_APK = "apk";
     public static final String TYPE_ATOM_BUNDLE = "atombundle";
+
+    // types for AAR/ATOM content
+    public static final String TYPE_JAR = "jar";
+    public static final String TYPE_MANIFEST = "android-manifest";
+    public static final String TYPE_RESOURCES = "android-res";
+    public static final String TYPE_ASSETS = "android-assets";
+    public static final String TYPE_LOCAL_JARS = "android-local-jars";
+    public static final String TYPE_JNI = "android-jni";
+    public static final String TYPE_AIDL = "android-aidl";
+    public static final String TYPE_RENDERSCRIPT = "android-renderscript";
+    public static final String TYPE_LINT_JAR = "android-lint";
+    public static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
+    public static final String TYPE_PUBLIC_RES = "android-public-res";
+    public static final String TYPE_SYMBOLS = "android-symbols";
+    public static final String TYPE_PROGUARD_RULES = "android-proguad";
+    public static final String TYPE_DATA_BINDING = "android-databinding";
+    public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
+
+    // scoped types for jars
+    // This is the published folders of local jars for AAR modules
+    public static final String TYPE_JAR_SUB_PROJECTS = "jar-scope-sub";
+    // This is the list of local jars transformed from TYPE_JAR_SUB_PROJECT, in order to query
+    // only these.
+    public static final String TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS = "jar-scope-sub-local";
+
+    // types for additional artifacts to go with APK
+    public static final String TYPE_MAPPING = "android-mapping";
+    public static final String TYPE_METADATA = "android-metadata";
 
     public static PublishArtifact getAarArtifact(
             @NonNull AbstractArchiveTask task,
@@ -92,21 +123,21 @@ public class AndroidArtifacts {
             @NonNull String name,
             @NonNull FileSupplier outputFileSupplier) {
         return new AndroidArtifact(
-                name, "xml", "xml", null /*classifier*/, outputFileSupplier);
+                name, "xml", TYPE_MANIFEST, null /*classifier*/, outputFileSupplier);
     }
 
     public static PublishArtifact buildMappingArtifact(
             @NonNull String name,
             @NonNull FileSupplier outputFileSupplier) {
         return new AndroidArtifact(
-                name, "map", "map", null /*classifier*/, outputFileSupplier);
+                name, "map", TYPE_MAPPING, null /*classifier*/, outputFileSupplier);
     }
 
     public static PublishArtifact buildMetadataArtifact(
             @NonNull String name,
             @NonNull FileSupplier outputFileSupplier) {
         return new AndroidArtifact(
-                name, "mtd", "mtd", null /*classifier*/, outputFileSupplier);
+                name, "mtd", TYPE_METADATA, null /*classifier*/, outputFileSupplier);
     }
 
     public static void publish(
@@ -115,14 +146,15 @@ public class AndroidArtifacts {
             File file,
             String builtBy,
             String type) {
-        project.getArtifacts().add(
-                publishConfigName,
-                file, new Closure(project /*doesnt matter*/) {
-                    public Object doCall(ConfigurablePublishArtifact artifact) {
-                        artifact.setType(type);
-                        artifact.builtBy(project.getTasks().getByName(builtBy));
-                        return null;
-                    }
+        //System.out.println("Publishing " + file + " to " + project + ":" + publishConfigName + "@" + type);
+        project.getConfigurations().getByName(publishConfigName).getOutgoing().variants(
+                (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
+                    variants.create(type, (variant) ->
+                            variant.artifact(file, (artifact) -> {
+                                artifact.setType(type);
+                                artifact.builtBy(project.getTasks().getByName(builtBy));
+                            }));
+
                 });
     }
 

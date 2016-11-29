@@ -25,16 +25,21 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Configuration for an {@code aapt} packaging operation. This implementation provides getters
@@ -43,6 +48,28 @@ import java.util.Set;
  * <p>To create a packaging configuration, use the provided builder, {@link Builder}.
  */
 public class AaptPackageConfig implements Cloneable {
+
+    public static class LibraryInfo {
+        @NonNull
+        private final File manifest;
+        @Nullable
+        private final File symbolFile;
+
+        public LibraryInfo(@NonNull File manifest, @Nullable File symbolFile) {
+            this.manifest = manifest;
+            this.symbolFile = symbolFile;
+        }
+
+        @NonNull
+        public File getManifest() {
+            return manifest;
+        }
+
+        @Nullable
+        public File getSymbolFile() {
+            return symbolFile;
+        }
+    }
 
     /**
      * The manifest file (see {@link Builder#setManifestFile(File)}).
@@ -74,7 +101,7 @@ public class AaptPackageConfig implements Cloneable {
      * All libraries added (see {@link Builder#setLibraries(List)}).
      */
     @NonNull
-    private ImmutableList<AndroidDependency> mLibraries;
+    private ImmutableList<LibraryInfo> mLibraries;
 
     /**
      * Symbol output directory (see {@link Builder#setSymbolOutputDir(File)}).
@@ -244,8 +271,8 @@ public class AaptPackageConfig implements Cloneable {
      * @return all libraries; returns an empty list if no libraries were added
      */
     @NonNull
-    public List<AndroidDependency> getLibraries() {
-        return Collections.unmodifiableList(mLibraries);
+    public List<LibraryInfo> getLibraries() {
+        return mLibraries;
     }
 
     /**
@@ -514,11 +541,45 @@ public class AaptPackageConfig implements Cloneable {
          * @return {@code this}
          */
         @NonNull
-        public Builder setLibraries(@Nullable List<AndroidDependency> libraries) {
+        public Builder setLibraries(@Nullable List<LibraryInfo> libraries) {
             if (libraries == null) {
                 mConfig.mLibraries = ImmutableList.of();
             } else {
                 mConfig.mLibraries = ImmutableList.copyOf(libraries);
+            }
+
+            return this;
+        }
+
+        /**
+         * Sets the libraries in the package configuration. See
+         * {@link AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field rules.
+         *
+         * @param manifests the manifest files
+         * @param symbolFiles the symbol files.
+         *
+         * @return {@code this}
+         */
+        @NonNull
+        public Builder setLibraries(@NonNull Set<File> manifests, @NonNull Set<File> symbolFiles) {
+            // TODO fix the R.txt optional support.
+            if (true) {
+                mConfig.mLibraries = ImmutableList.copyOf(manifests.stream()
+                        .map(file -> new LibraryInfo(file, null))
+                        .collect(Collectors.toList()));
+                return this;
+            }
+            Preconditions.checkState(manifests.size() == symbolFiles.size());
+            if (manifests.isEmpty()) {
+                mConfig.mLibraries = ImmutableList.of();
+            } else {
+                Iterator<File> i = manifests.iterator();
+                Iterator<File> i2 = symbolFiles.iterator();
+                List<LibraryInfo> infos = Lists.newArrayListWithCapacity(manifests.size());
+                while (i.hasNext()) {
+                    infos.add(new LibraryInfo(i.next(), i2.next()));
+                }
+                mConfig.mLibraries = ImmutableList.copyOf(infos);
             }
 
             return this;

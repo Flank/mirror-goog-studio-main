@@ -32,7 +32,6 @@ import com.android.annotations.Nullable;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.compiling.DependencyFileProcessor;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
@@ -364,32 +363,6 @@ public class AndroidBuilder {
         }
 
         return null;
-    }
-
-    /**
-     * Returns the compile classpath for this config. If the config tests a library, this
-     * will include the classpath of the tested config.
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getCompileClasspath(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> compileClasspath = variantConfiguration.getCompileClasspath();
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            Set<File> fullJars = Sets.newLinkedHashSetWithExpectedSize(compileClasspath.size() + 1);
-            fullJars.addAll(compileClasspath);
-            if (renderScriptSupportJar != null) {
-                fullJars.add(renderScriptSupportJar);
-            }
-            compileClasspath = fullJars;
-        }
-
-        return compileClasspath;
     }
 
     /**
@@ -894,7 +867,7 @@ public class AndroidBuilder {
 
             // For each dependency, load its symbol file.
             Set<SymbolTable> depSymbolTables = new HashSet<>();
-            for (AndroidDependency dependency : aaptConfig.getLibraries()) {
+            for (AaptPackageConfig.LibraryInfo dependency : aaptConfig.getLibraries()) {
                 File depMan = dependency.getManifest();
                 String depPackageName;
 
@@ -913,7 +886,7 @@ public class AndroidBuilder {
 
                 File rFile = dependency.getSymbolFile();
                 SymbolTable depSymbols =
-                        rFile.exists()? SymbolIo.read(rFile) : SymbolTable.builder().build();
+                        (rFile != null && rFile.exists())? SymbolIo.read(rFile) : SymbolTable.builder().build();
                 depSymbols = depSymbols.rename(depPackageName, depSymbols.getTableName());
                 depSymbolTables.add(depSymbols);
             }
@@ -1038,7 +1011,7 @@ public class AndroidBuilder {
                                     @NonNull File sourceOutputDir,
                                     @Nullable File packagedOutputDir,
                                     @Nullable Collection<String> packageWhiteList,
-                                    @NonNull List<File> importFolders,
+                                    @NonNull Set<File> importFolders,
                                     @Nullable DependencyFileProcessor dependencyFileProcessor,
                                     @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, LoggedErrorException, ProcessException {
@@ -1289,11 +1262,11 @@ public class AndroidBuilder {
      */
     @NonNull
     @SafeVarargs
-    public static List<File> getLeafFolders(@NonNull String extension, List<File>... importFolders) {
+    public static List<File> getLeafFolders(@NonNull String extension, Collection<File>... importFolders) {
         List<File> results = Lists.newArrayList();
 
         if (importFolders != null) {
-            for (List<File> folders : importFolders) {
+            for (Collection<File> folders : importFolders) {
                 SourceSearcher searcher = new SourceSearcher(folders, extension);
                 searcher.setUseExecutor(false);
                 LeafFolderGatherer processor = new LeafFolderGatherer();

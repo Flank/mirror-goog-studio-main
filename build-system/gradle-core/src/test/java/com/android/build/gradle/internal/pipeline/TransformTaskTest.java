@@ -110,7 +110,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformTask.transform(inputBuilder().build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncremental()).isFalse();
+        assertThat(t.isIncrementalInputs()).isFalse();
         assertThat(t.getReferencedInputs()).isEmpty();
 
         Collection<TransformInput> inputs = t.getInputs();
@@ -2414,5 +2414,4 @@ public class TransformTaskTest extends TaskTestUtils {
             };
         }
     }
-
 }

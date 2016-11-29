@@ -543,17 +543,4 @@ public class GradleVariantConfiguration
             return super.getVersionCode();
         }
     }
-
-    @NonNull
-    public ImmutableSet<File> getSubProjectDataBindingArtifactFolders() {
-        ImmutableSet.Builder<File> builder = ImmutableSet.builder();
-        for (AndroidDependency dependency : getFlatPackageAndroidLibraries()) {
-            File dataBindingDir = new File(dependency.getExtractedFolder(),
-                    DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
-            if (dataBindingDir.exists()) {
-                builder.add(dataBindingDir);
-            }
-        }
-        return builder.build();
-    }
 }

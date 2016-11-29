@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.ide.common.res2.FileStatus;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
@@ -34,10 +33,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.ParallelizableTask;
 
@@ -160,9 +159,10 @@ public class PackageApplication extends PackageAndroidArtifact {
             extends PackageAndroidArtifact.ConfigAction<PackageApplication> {
 
         public StandardConfigAction(
+                @NonNull Project project,
                 @NonNull PackagingScope scope,
                 @Nullable InstantRunPatchingPolicy patchingPolicy) {
-            super(scope, patchingPolicy);
+            super(project, scope, patchingPolicy);
         }
 
         @NonNull
@@ -197,10 +197,11 @@ public class PackageApplication extends PackageAndroidArtifact {
         private final File mOutputFile;
 
         public InstantRunResourcesConfigAction(
+                @NonNull Project project,
                 @NonNull File outputFile,
                 @NonNull PackagingScope scope,
                 @Nullable InstantRunPatchingPolicy patchingPolicy) {
-            super(scope, patchingPolicy);
+            super(project, scope, patchingPolicy);
             mOutputFile = outputFile;
         }
 

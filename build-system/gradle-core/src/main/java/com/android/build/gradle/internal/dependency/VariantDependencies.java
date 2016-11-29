@@ -20,30 +20,31 @@ import static org.gradle.api.artifacts.Configuration.State.RESOLVED;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ConfigurationProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.DependencyNode;
+import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.DependencyContainer;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
+import org.gradle.api.attributes.Attribute;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -59,12 +60,10 @@ public class VariantDependencies {
     public static final String CONFIG_ATTR_BUILD_TYPE = "android.buildType";
     public static final String CONFIG_ATTR_FLAVOR_SINGLE = "android.flavor.dimension.single";
     public static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.dimension.";
-
-
     // TODO this is temporary until we have attributes on artifacts.
     public static final String CONFIG_ATTR_CONTENT = "android.content";
     public enum ArtifactContent {
-        MAIN, CLASSES, MANIFEST, MAPPING, METADATA
+        MAIN, CLASSES, MANIFEST, MAPPING, METADATA, ARCHIVES
     }
 
     /** Name of the metadata configuration */
@@ -85,6 +84,8 @@ public class VariantDependencies {
     private final Configuration packageConfiguration;
     @Nullable
     private final Configuration publishConfiguration;
+    @Nullable
+    private final Configuration archivesConfiguration;
     @NonNull
     private final Configuration annotationProcessorConfiguration;
     @NonNull
@@ -239,6 +240,7 @@ public class VariantDependencies {
             compile.setExtendsFrom(compileConfigs);
             compile.setCanBeConsumed(false);
             applyAttributes(compile, buildType, ArtifactContent.MAIN, flavorMap);
+            applyTransforms(project, compile);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -265,25 +267,37 @@ public class VariantDependencies {
             apk.setDescription("## Internal use, do not manually configure ##");
             apk.setExtendsFrom(apkConfigs);
             applyAttributes(apk, buildType, ArtifactContent.MAIN, flavorMap);
+            applyTransforms(project, apk);
             apk.setCanBeConsumed(false);
 
             Configuration publish = null;
+            Configuration archives = null;
             Configuration mapping = null;
             Configuration classes = null;
             Configuration metadata = null;
             Configuration manifest = null;
 
             if (publishVariant) {
+                // this is the configuration that contains the artifacts for inter-module
+                // dependencies and building.
                 publish = project.getConfigurations().maybeCreate(variantName);
                 publish.setDescription("Published Configuration for Variant " + variantName);
                 applyAttributes(publish, buildType, ArtifactContent.MAIN, flavorMap);
                 publish.setCanBeResolved(false);
+
+                // this is the configuration that contains the artifacts for publishing
+                // TODO find better names between publish and archives?
+                archives = project.getConfigurations().maybeCreate(variantName + "Archives");
+                archives.setDescription("Published archives Configuration for Variant " + variantName);
+                applyAttributes(archives, buildType, ArtifactContent.ARCHIVES, flavorMap);
+                archives.setCanBeResolved(false);
 
                 // if the variant is not a library, then the publishing configuration should
                 // not extend from the apkConfigs. It's mostly there to access the artifact from
                 // another project but it shouldn't bring any dependencies with it.
                 if (variantType == VariantType.LIBRARY) {
                     publish.setExtendsFrom(apkConfigs);
+                    archives.setExtendsFrom(apkConfigs);
                 } else if (variantType == VariantType.DEFAULT) {
                     // for apps we need a bunch of other configs for separate test projects.
 
@@ -336,6 +350,7 @@ public class VariantDependencies {
                     compile,
                     apk,
                     publish,
+                    archives,
                     annotationProcessor,
                     jackPlugin,
                     mapping,
@@ -376,8 +391,20 @@ public class VariantDependencies {
 
             configuration.attribute(CONFIG_ATTR_CONTENT, content.name());
         }
-    }
 
+        private void applyTransforms(Project project, Configuration configuration) {
+            configuration.getResolutionStrategy().registerTransform(AarTransform.class,
+                    transform -> {
+                        final AarTransform aarTransform = (AarTransform) transform;
+                        aarTransform.setProject(project);
+                        aarTransform.setFileCache(AndroidGradleOptions.getBuildCache(project)
+                                .orElseThrow(() -> new RuntimeException(
+                                        "aar transform can only work with the build cache")));
+                    });
+            configuration.getResolutionStrategy().registerTransform(LocalJarTransform.class,
+                    transform -> {});
+        }
+    }
 
     public static Builder builder(
             @NonNull Project project,
@@ -392,6 +419,7 @@ public class VariantDependencies {
             @NonNull Configuration compileConfiguration,
             @NonNull Configuration packageConfiguration,
             @Nullable Configuration publishConfiguration,
+            @Nullable Configuration archiveConfiguration,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
             @Nullable Configuration mappingConfiguration,
@@ -405,6 +433,7 @@ public class VariantDependencies {
         this.compileConfiguration = compileConfiguration;
         this.packageConfiguration = packageConfiguration;
         this.publishConfiguration = publishConfiguration;
+        this.archivesConfiguration = archiveConfiguration;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
         this.mappingConfiguration = mappingConfiguration;
@@ -432,6 +461,11 @@ public class VariantDependencies {
     @Nullable
     public Configuration getPublishConfiguration() {
         return publishConfiguration;
+    }
+
+    @Nullable
+    public Configuration getArchivesConfiguration() {
+        return archivesConfiguration;
     }
 
     @NonNull

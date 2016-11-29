@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -34,7 +35,7 @@ import java.util.concurrent.Callable;
 public class SourceSearcher {
 
     @NonNull
-    private final List<File> mSourceFolders;
+    private final Collection<File> mSourceFolders;
     private final String[] mExtensions;
     @Nullable
     private WaitableExecutor<Void> mExecutor;
@@ -46,7 +47,7 @@ public class SourceSearcher {
         void initOnFirstFile();
     }
 
-    public SourceSearcher(@NonNull List<File> sourceFolders, String... extensions) {
+    public SourceSearcher(@NonNull Collection<File> sourceFolders, String... extensions) {
         mSourceFolders = sourceFolders;
         mExtensions = extensions;
     }

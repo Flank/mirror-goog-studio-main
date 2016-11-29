@@ -62,38 +62,38 @@ public class ResolveDependenciesTask extends BaseTask {
                 variantData.getVariantDependency().getCompileDependencies(),
                 variantData.getVariantDependency().getPackageDependencies());
 
-        extractAarInParallel(getProject(), variantData.getVariantConfiguration(), buildCache);
+//        extractAarInParallel(getProject(), variantData.getVariantConfiguration(), buildCache);
     }
 
-    public static void extractAarInParallel(
-            @NonNull Project project,
-            @NonNull GradleVariantConfiguration config,
-            @NonNull Optional<FileCache> buildCache)
-            throws LoggedErrorException, InterruptedException, IOException {
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
-
-        Set<AndroidDependency> dependencies =
-                Sets.newHashSet(config.getFlatCompileAndroidLibraries());
-        dependencies.addAll(config.getFlatPackageAndroidLibraries());
-
-        for (AndroidDependency androidDependency :dependencies) {
-            if (androidDependency.getProjectPath() != null) {
-                // Don't need to explode sub-module library.
-                continue;
-            }
-            File input = androidDependency.getArtifactFile();
-            File output = androidDependency.getExtractedFolder();
-            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache.isPresent(), androidDependency.getCoordinates());
-            PrepareLibraryTask.prepareLibrary(
-                    input,
-                    output,
-                    buildCache.isPresent() ? buildCache.get() : null,
-                    androidDependency.getCoordinates(),
-                    createAction(project, executor, input),
-                    useBuildCache);
-        }
-        executor.waitForTasksWithQuickFail(false);
-    }
+    //public static void extractAarInParallel(
+    //        @NonNull Project project,
+    //        @NonNull GradleVariantConfiguration config,
+    //        @NonNull Optional<FileCache> buildCache)
+    //        throws LoggedErrorException, InterruptedException, IOException {
+    //    WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+    //
+    //    Set<AndroidDependency> dependencies =
+    //            Sets.newHashSet(config.getFlatCompileAndroidLibraries());
+    //    dependencies.addAll(config.getFlatPackageAndroidLibraries());
+    //
+    //    for (AndroidDependency androidDependency :dependencies) {
+    //        if (androidDependency.getProjectPath() != null) {
+    //            // Don't need to explode sub-module library.
+    //            continue;
+    //        }
+    //        File input = androidDependency.getArtifactFile();
+    //        File output = androidDependency.getExtractedFolder();
+    //        boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache.isPresent(), androidDependency.getCoordinates());
+    //        PrepareLibraryTask.prepareLibrary(
+    //                input,
+    //                output,
+    //                buildCache.isPresent() ? buildCache.get() : null,
+    //                androidDependency.getCoordinates(),
+    //                createAction(project, executor, input),
+    //                useBuildCache);
+    //    }
+    //    executor.waitForTasksWithQuickFail(false);
+    //}
 
     private static Consumer<File> createAction(
             @NonNull Project project,

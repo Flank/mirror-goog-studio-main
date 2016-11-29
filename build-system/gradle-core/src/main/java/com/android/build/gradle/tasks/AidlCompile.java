@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -76,7 +77,7 @@ public class AidlCompile extends IncrementalTask {
         return getBuildTools().getRevision().toString();
     }
     private List<File> sourceDirs;
-    private List<File> importDirs;
+    private FileCollection importDirs;
 
     @InputFiles
     public FileTree getSourceFiles() {
@@ -132,7 +133,7 @@ public class AidlCompile extends IncrementalTask {
                 getSourceOutputDir(),
                 getPackagedDir(),
                 getPackageWhitelist(),
-                getImportDirs(),
+                getImportDirs().getFiles(),
                 dependencyFileProcessor,
                 new LoggedProcessOutputHandler(getILogger()));
     }
@@ -143,7 +144,7 @@ public class AidlCompile extends IncrementalTask {
     @NonNull
     private List<File> getImportFolders() {
         List<File> fullImportDir = Lists.newArrayList();
-        fullImportDir.addAll(getImportDirs());
+        fullImportDir.addAll(getImportDirs().getFiles());
         fullImportDir.addAll(getSourceDirs());
 
         return fullImportDir;
@@ -354,11 +355,11 @@ public class AidlCompile extends IncrementalTask {
     }
 
     @InputFiles
-    public List<File> getImportDirs() {
+    public FileCollection getImportDirs() {
         return importDirs;
     }
 
-    public void setImportDirs(List<File> importDirs) {
+    public void setImportDirs(FileCollection importDirs) {
         this.importDirs = importDirs;
     }
 
@@ -395,8 +396,7 @@ public class AidlCompile extends IncrementalTask {
 
             ConventionMappingHelper.map(compileTask, "sourceDirs",
                     (Callable<List<File>>) variantConfiguration::getAidlSourceList);
-            ConventionMappingHelper.map(compileTask, "importDirs",
-                    (Callable<List<File>>) variantConfiguration::getAidlImports);
+            compileTask.importDirs = scope.getAidlImports();
 
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
 

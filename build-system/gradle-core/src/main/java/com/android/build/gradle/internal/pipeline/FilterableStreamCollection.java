@@ -17,22 +17,11 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.TransformInput;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import groovy.lang.Closure;
-import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.TaskDependency;
 
 /**
  * A collection of {@link TransformStream} that can be queried.
