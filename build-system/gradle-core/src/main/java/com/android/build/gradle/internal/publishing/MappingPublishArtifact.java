@@ -42,11 +42,4 @@ public class MappingPublishArtifact extends BasePublishArtifact {
     public String getType() {
         return "map";
     }
-
-    @Override
-    public AttributeContainer getAttributes() {
-        // This is temporary and is likely to change in another nightly of Gradle 3.3
-        // as there is no way to return a new instance of this.
-        return null;
-    }
 }
