@@ -83,6 +83,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      */
     private Properties mInstallProperties;
 
+    private PackageOperation mFallbackOperation;
+
     /**
      * Listeners that will be notified when the status changes.
      */
@@ -393,6 +395,18 @@ public abstract class AbstractPackageOperation implements PackageOperation {
             return false;
         }
         return true;
+    }
+
+
+    @Override
+    @Nullable
+    public PackageOperation getFallbackOperation() {
+        return mFallbackOperation;
+    }
+
+    @Override
+    public void setFallbackOperation(@Nullable PackageOperation mFallbackOperation) {
+        this.mFallbackOperation = mFallbackOperation;
     }
 }
 

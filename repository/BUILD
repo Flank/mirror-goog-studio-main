@@ -17,6 +17,7 @@ iml_module(
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:jimfs",
         "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/base/third_party:org.mockito_mockito-all",
     ],
 )
 
@@ -60,5 +61,6 @@ java_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
+        "//tools/base/third_party:org.mockito_mockito-all",
     ],
 )
