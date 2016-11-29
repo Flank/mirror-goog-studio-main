@@ -131,17 +131,6 @@ public class TestLintClient extends LintCliClient {
         return true;
     }
 
-
-    //@Override
-    //public String getSuperClass(@NonNull Project project, @NonNull String name) {
-    //    String superClass = LintDetectorTest.this.getSuperClass(project, name);
-    //    if (superClass != null) {
-    //        return superClass;
-    //    }
-    //
-    //    return super.getSuperClass(project, name);
-    //}
-
     protected String checkLint(List<File> files, List<Issue> issues) throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
@@ -261,6 +250,13 @@ public class TestLintClient extends LintCliClient {
         }
         projectDirs.add(dir);
 
+        ProjectDescription description;
+        try {
+            description = task.dirToProjectDescription.get(dir.getCanonicalFile());
+        } catch (IOException ignore) {
+            description = task.dirToProjectDescription.get(dir);
+        }
+
         GradleModelMocker mocker;
         try {
             mocker = task.projectMocks.get(dir.getCanonicalFile());
@@ -271,7 +267,7 @@ public class TestLintClient extends LintCliClient {
             mocker.setVariantName(task.variantName);
         }
 
-        return new TestProject(this, dir, referenceDir, mocker);
+        return new TestProject(this, dir, referenceDir, description, mocker);
     }
 
     @Override
@@ -761,10 +757,13 @@ public class TestLintClient extends LintCliClient {
     public static class TestProject extends Project {
         @Nullable
         public final GradleModelMocker mocker;
+        private final ProjectDescription projectDescription;
 
-        protected TestProject(@NonNull LintClient client, @NonNull File dir,
-                @NonNull File referenceDir, @Nullable GradleModelMocker mocker) {
+        public TestProject(@NonNull LintClient client, @NonNull File dir,
+                @NonNull File referenceDir, @Nullable ProjectDescription projectDescription,
+                @Nullable GradleModelMocker mocker) {
             super(client, dir, referenceDir);
+            this.projectDescription = projectDescription;
             this.mocker = mocker;
         }
 
@@ -779,6 +778,17 @@ public class TestLintClient extends LintCliClient {
             return mocker != null ? mocker.getVariant() : null;
         }
 
+        @Override
+        public boolean isLibrary() {
+            return super.isLibrary()  || projectDescription != null
+                    && projectDescription.type == ProjectDescription.Type.LIBRARY;
+        }
+
+        @Override
+        public boolean isAndroidProject() {
+            return projectDescription == null ||
+                    projectDescription.type != ProjectDescription.Type.JAVA;
+        }
 
         @Override
         public int getBuildSdk() {

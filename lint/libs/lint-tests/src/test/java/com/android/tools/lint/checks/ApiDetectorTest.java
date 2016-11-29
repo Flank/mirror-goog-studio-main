@@ -29,6 +29,7 @@ import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -4705,6 +4706,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "    <item android:drawable=\"?android:selectableItemBackground\"/>\n"
                                 + "</layer-list>")
         ));
+    }
+
+    public void testNonAndroidProjects() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=228481
+        // Don't flag API violations in plain java modules if there are no dependent
+        // Android modules pointing to it
+        lint().projects(project(
+                java(""
+                        + "package com.example;\n"
+                        + "\n"
+                        + "import java.io.FileReader;\n"
+                        + "import java.io.IOException;\n"
+                        + "import java.util.Properties;\n"
+                        + "\n"
+                        + "public class MyClass {\n"
+                        + "  public static void foo() throws IOException {\n"
+                        + "    FileReader reader=new FileReader(\"../local.properties\");\n"
+                        + "    Properties props=new Properties();\n"
+                        + "\n"
+                        + "    props.load(reader);\n"
+                        + "    reader.close();\n"
+                        + "  }\n"
+                        + "}\n"))
+                .type(ProjectDescription.Type.JAVA))
+                .run()
+                .expectClean();
     }
 
     @Override

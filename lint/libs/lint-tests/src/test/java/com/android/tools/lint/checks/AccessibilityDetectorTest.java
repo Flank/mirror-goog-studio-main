@@ -16,16 +16,10 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.infrastructure.TestFiles.xml;
-import static com.android.tools.lint.checks.infrastructure.TestLintTask.lint;
-
-import org.junit.Ignore;
-import org.junit.Test;
+import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
-public class AccessibilityDetectorTest {
-    @Ignore("Passes locally but not on server; disable to unblock")
-    @Test
+public class AccessibilityDetectorTest extends AbstractCheckTest {
     public void testAccessibility() throws Exception {
         String expected = ""
                 + "res/layout/accessibility.xml:4: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]\n"
@@ -37,7 +31,10 @@ public class AccessibilityDetectorTest {
                 + "res/layout/accessibility.xml:9: Warning: Do not set both contentDescription and hint: the contentDescription will mask the hint [ContentDescription]\n"
                 + "    <EditText android:hint=\"@string/label\" android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
                 + "                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 3 warnings\n";
+                + "res/layout/accessibility.xml:12: Warning: [Accessibility] Empty contentDescription attribute on image [ContentDescription]\n"
+                + "    <ImageButton android:id=\"@+android:id/summary\" android:contentDescription=\"TODO\" />\n"
+                + "                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n";
 
         lint().files(
                 xml("res/layout/accessibility.xml", ""
@@ -52,9 +49,14 @@ public class AccessibilityDetectorTest {
                         + "    <EditText android:hint=\"@string/label\" android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
                         + "    <EditText android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
                         + "    <EditText tools:ignore=\"ContentDescription\" android:hint=\"@string/label\" android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
+                        + "    <ImageButton android:id=\"@+android:id/summary\" android:contentDescription=\"TODO\" />\n"
                         + "</LinearLayout>\n"))
-                .issues(AccessibilityDetector.ISSUE)
                 .run()
                 .expect(expected);
+    }
+
+    @Override
+    protected Detector getDetector() {
+        return new AccessibilityDetector();
     }
 }
