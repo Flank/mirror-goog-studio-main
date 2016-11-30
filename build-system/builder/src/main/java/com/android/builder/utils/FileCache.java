@@ -19,6 +19,7 @@ package com.android.builder.utils;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
+import com.android.ide.common.util.ReadWriteProcessLock;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;

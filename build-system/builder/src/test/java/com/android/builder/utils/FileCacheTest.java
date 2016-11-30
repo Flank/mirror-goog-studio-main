@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.IOExceptionFunction;
+import com.android.testutils.concurrency.ConcurrencyTester;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -811,16 +812,20 @@ public class FileCacheTest {
             File outputFile = outputFiles[i];
             String fileContent = fileContents[i];
 
-            IOExceptionFunction<File, Void> actionUnderTest = (File file) -> {
-                Files.write(fileContent, file, StandardCharsets.UTF_8);
+            Function<File, Void> actionUnderTest = (File file) -> {
+                try {
+                    Files.write(fileContent, file, StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 return null;
             };
             tester.addMethodInvocationFromNewThread(
-                    (IOExceptionFunction<File, Void> anActionUnderTest) -> {
+                    (Function<File, Void> anActionUnderTest) -> {
                         try {
                             fileCache.createFile(
                                     outputFile, inputs, () -> anActionUnderTest.apply(outputFile));
-                        } catch (ExecutionException exception) {
+                        } catch (ExecutionException | IOException exception) {
                             throw new RuntimeException(exception);
                         }
                     },
@@ -973,18 +978,22 @@ public class FileCacheTest {
             String fileContent = fileContents[i];
             final int idx = i;
 
-            IOExceptionFunction<File, Void> actionUnderTest = (File file) -> {
-                Files.write(fileContent, file, StandardCharsets.UTF_8);
+            Function<File, Void> actionUnderTest = (File file) -> {
+                try {
+                    Files.write(fileContent, file, StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 return null;
             };
             tester.addMethodInvocationFromNewThread(
-                    (IOExceptionFunction<File, Void> anActionUnderTest) -> {
+                    (Function<File, Void> anActionUnderTest) -> {
                         try {
                             cachedFiles[idx] =
                                     fileCache.createFileInCacheIfAbsent(
                                             inputs,
                                             (outputFile) -> anActionUnderTest.apply(outputFile));
-                        } catch (ExecutionException exception) {
+                        } catch (ExecutionException | IOException exception) {
                             throw new RuntimeException(exception);
                         }
                     },
@@ -1141,7 +1150,7 @@ public class FileCacheTest {
             @NonNull FileCache fileCache,
             @NonNull String[] filesToLock,
             @NonNull FileCache.LockingType[] lockingTypes) {
-        IOExceptionFunction<Void, Void> actionUnderTest = (Void arg) -> {
+        Function<Void, Void> actionUnderTest = (Void arg) -> {
             // Do some artificial work here
             assertThat(1).isEqualTo(1);
             return null;
@@ -1151,13 +1160,13 @@ public class FileCacheTest {
             FileCache.LockingType lockingType = lockingTypes[i];
 
             tester.addMethodInvocationFromNewThread(
-                    (IOExceptionFunction<Void, Void> anActionUnderTest) -> {
+                    (Function<Void, Void> anActionUnderTest) -> {
                         try {
                             fileCache.doLocked(
                                     new File(cacheDir, fileToLock),
                                     lockingType,
                                     () -> anActionUnderTest.apply(null));
-                        } catch (ExecutionException exception) {
+                        } catch (ExecutionException | IOException exception) {
                             throw new RuntimeException(exception);
                         }
                     },

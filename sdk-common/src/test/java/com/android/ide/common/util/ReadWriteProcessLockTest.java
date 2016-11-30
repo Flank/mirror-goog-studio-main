@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.builder.utils;
+package com.android.ide.common.util;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.IOExceptionFunction;
-import com.android.apkzlib.utils.IOExceptionRunnable;
+import com.android.testutils.concurrency.ConcurrencyTester;
+import com.android.testutils.concurrency.InterProcessConcurrencyTester;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Function;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -134,7 +135,7 @@ public class ReadWriteProcessLockTest {
             @NonNull LockType[] lockTypes,
             @NonNull InterProcessConcurrencyTester interProcessTester,
             @NonNull ConcurrencyTester<Void, Void> singleProcessTester) {
-        IOExceptionFunction<Void, Void> actionUnderTest = (Void arg) -> {
+        Function<Void, Void> actionUnderTest = (Void arg) -> {
             // Do some artificial work here
             assertThat(1).isEqualTo(1);
             return null;
@@ -147,9 +148,13 @@ public class ReadWriteProcessLockTest {
                     SampleAction.class, new String[] {lockFile.getPath(), lockType.toString()});
 
             singleProcessTester.addMethodInvocationFromNewThread(
-                    (IOExceptionFunction<Void, Void> anActionUnderTest) -> {
-                        executeActionWithLock(
-                                () -> anActionUnderTest.apply(null), lockFile, lockType);
+                    (Function<Void, Void> anActionUnderTest) -> {
+                        try {
+                            executeActionWithLock(
+                                    () -> anActionUnderTest.apply(null), lockFile, lockType);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     },
                     actionUnderTest);
         }
@@ -170,8 +175,12 @@ public class ReadWriteProcessLockTest {
                     new InterProcessConcurrencyTester.MainProcessNotifier(serverSocketPort);
             notifier.processStarted();
 
-            IOExceptionRunnable actionUnderTest = () -> {
-                notifier.actionStarted();
+            Runnable actionUnderTest = () -> {
+                try {
+                    notifier.actionStarted();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 // Do some artificial work here
                 assertThat(1).isEqualTo(1);
             };
@@ -182,7 +191,7 @@ public class ReadWriteProcessLockTest {
 
     /** Executes an action with a lock. */
     private static void executeActionWithLock(
-            @NonNull IOExceptionRunnable action,
+            @NonNull Runnable action,
             @NonNull File lockFile,
             @NonNull LockType lockType)
             throws IOException {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.utils;
+package com.android.ide.common.util;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -79,7 +79,7 @@ public final class ReadWriteProcessLock {
      * The client of this class should not access (read, write, or delete) the lock file. The lock
      * file may or may not exist when this method is called. However, it will be created and will
      * not be deleted once the client starts using the locking mechanism provided by this class.
-     * The client may delete the lock files only when the locking machanism is no longer in use.
+     * The client may delete the lock files only when the locking mechanism is no longer in use.
      *
      * @param lockFile the lock file, used solely for synchronization purposes
      */
