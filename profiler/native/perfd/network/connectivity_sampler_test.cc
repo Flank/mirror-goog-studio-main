@@ -56,6 +56,16 @@ TEST(ConnectivitySampler, NoRadioState) {
             data.connectivity_data().radio_state());
 }
 
+TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
+  ConnectivitySampler sampler("cat " + TestUtils::getNetworkTestData(
+    "connectivity_radio_both_false_and_true_exist.txt"), "");
+  profiler::proto::NetworkProfilerData data;
+  sampler.GetData(&data);
+  EXPECT_TRUE(data.has_connectivity_data());
+  EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
+            data.connectivity_data().radio_state());
+}
+
 TEST(ConnectivitySampler, NoNetworkTypeId) {
   ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
                                       "connectivity_no_network_type_id.txt"));
