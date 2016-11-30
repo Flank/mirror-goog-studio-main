@@ -122,6 +122,10 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
+        if (!context.getProject().getReportIssues()) {
+            return;
+        }
+
         Element root = document.getDocumentElement();
         if (root != null) {
             if (context.getPhase() == 1) {

@@ -806,6 +806,14 @@ public class TestLintClient extends LintCliClient {
             return super.getBuildSdk();
         }
 
+        @Override
+        public boolean getReportIssues() {
+            if (projectDescription != null && !projectDescription.report) {
+                return false;
+            }
+            return super.getReportIssues();
+        }
+
         @Nullable
         @Override
         public AndroidProject getGradleProjectModel() {
