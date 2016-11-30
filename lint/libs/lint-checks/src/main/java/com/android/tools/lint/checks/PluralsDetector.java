@@ -232,6 +232,9 @@ public class PluralsDetector extends ResourceXmlDetector {
                 }
             } else if (nodeType == Node.TEXT_NODE) {
                 String text = child.getNodeValue();
+                if (containsExpandTemplate(text)) {
+                    return true;
+                }
                 if (text.indexOf('%') == -1) {
                     continue;
                 }
@@ -242,5 +245,21 @@ public class PluralsDetector extends ResourceXmlDetector {
             }
         }
         return false;
+    }
+
+    private static boolean containsExpandTemplate(@NonNull String text) {
+        // Checks to see if the string has a template parameter
+        // processed by android.text.TextUtils#expandTemplate
+        int index = 0;
+        while (true) {
+            index = text.indexOf('^', index);
+            if (index == -1 || index == text.length() - 1) {
+                return false;
+            }
+            if (Character.isDigit(text.charAt(index + 1))) {
+                return true;
+            }
+            index++;
+        }
     }
 }

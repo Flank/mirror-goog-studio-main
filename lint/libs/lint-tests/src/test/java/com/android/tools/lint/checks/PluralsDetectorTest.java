@@ -157,6 +157,24 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         mPlurals2_class2));
     }
 
+    public void testExpandTemplates() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=228989
+        // "ImpliedQuantity lint check should allow ^1 as format argument"
+        lint().files(
+                xml("res/values-uk/strings.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                        + "    <plurals name=\"foobar\">\n"
+                        + "        <item quantity=\"one\">foobar one <xliff:g id=\"foobar\" example=\"1\">^1</xliff:g></item>\n"
+                        + "        <item quantity=\"few\">foobar few <xliff:g id=\"foobar\" example=\"1\">^1</xliff:g></item>\n"
+                        + "        <item quantity=\"many\">foobar many <xliff:g id=\"foobar\" example=\"1\">^1</xliff:g></item>\n"
+                        + "        <item quantity=\"other\">foobar other <xliff:g id=\"foobar\" example=\"23\">^1</xliff:g></item>\n"
+                        + "    </plurals>\n"
+                        + "</resources>"))
+                .run()
+                .expectClean();
+    }
+
     private Set<Issue> mEnabled = new HashSet<>();
 
     @Override
