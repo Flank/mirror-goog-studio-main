@@ -97,7 +97,8 @@ message AllocationStack {
   message StackFrame {
     string className = 1;
     string methodName = 2;
-    int32 lineNumber = 3;
+    string fileName = 3;
+    int32 lineNumber = 4;
   }
 
   bytes stackId = 1;
