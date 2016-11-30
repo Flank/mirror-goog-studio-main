@@ -85,7 +85,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 + "    res/drawable-mdpi/ic_launcher.png: <No location-specific message\n"
                 + "res/drawable/ic_launcher.png: Warning: Found bitmap drawable res/drawable/ic_launcher.png in densityless folder [IconLocation]\n"
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
-                + "res: Warning: Missing density variation folders in res: drawable-xhdpi, drawable-xxhdpi, drawable-xxxhdpi [IconMissingDensityFolder]\n"
+                + "res: Warning: Missing density variation folders in res: drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                 + "0 errors, 5 warnings\n",
 
             lintProject(
@@ -148,7 +148,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 + "    res/drawable-hdpi/appwidget_bg.9.png: <No location-specific message\n"
                 + "res/drawable-hdpi/unrelated.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, unrelated.png [IconDuplicates]\n"
                 + "    res/drawable-hdpi/ic_launcher.png: <No location-specific message\n"
-                + "res: Warning: Missing density variation folders in res: drawable-mdpi, drawable-xhdpi, drawable-xxhdpi, drawable-xxxhdpi [IconMissingDensityFolder]\n"
+                + "res: Warning: Missing density variation folders in res: drawable-mdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                 + "0 errors, 3 warnings\n",
 
             lintProject(
@@ -167,7 +167,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 + "res/drawable-xlarge-nodpi-v11/frame.png: Warning: The frame.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable-nodpi, drawable-xlarge-nodpi-v11 [IconDuplicatesConfig]\n"
                 + "    res/drawable-nodpi/frame.png: <No location-specific message\n"
                 + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi, drawable-xxxhdpi [IconMissingDensityFolder]\n"
+                + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                 + "0 errors, 3 warnings\n",
 
             lintProject(
@@ -214,7 +214,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
                 + "res/drawable-nodpi/frame.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/frame.png, res/drawable-nodpi/frame.xml [IconXmlAndPng]\n"
                 + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi, drawable-xxxhdpi [IconMissingDensityFolder]\n"
+                + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                 + "0 errors, 3 warnings\n",
 
             lintProject(
@@ -402,10 +402,15 @@ public class IconDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(""
                 + "res/drawable-mdpi/icon1.png: Warning: Notification icons must be entirely white [IconColors]\n"
+                + "    src/test/pkg/NotificationTest.java:11: Icon used in notification here\n"
                 + "res/drawable-mdpi/icon2.png: Warning: Notification icons must be entirely white [IconColors]\n"
+                + "    src/test/pkg/NotificationTest.java:16: Icon used in notification here\n"
                 + "res/drawable-mdpi/icon3.png: Warning: Notification icons must be entirely white [IconColors]\n"
+                + "    src/test/pkg/NotificationTest.java:23: Icon used in notification here\n"
                 + "res/drawable-mdpi/icon4.png: Warning: Notification icons must be entirely white [IconColors]\n"
+                + "    src/test/pkg/NotificationTest.java:29: Icon used in notification here\n"
                 + "res/drawable-mdpi/icon5.png: Warning: Notification icons must be entirely white [IconColors]\n"
+                + "    src/test/pkg/NotificationTest.java:36: Icon used in notification here\n"
                 + "0 errors, 5 warnings\n",
 
             lintProject(
@@ -573,6 +578,34 @@ public class IconDetectorTest extends AbstractCheckTest {
                     image("res/drawable-hdpi/ic_launcher_filled.png", 50, 40).fill(0xFFFFFFFF),
                     image("res/drawable-mdpi/ic_launcher_2.png", 50, 40).text(5, 5, "x", 0xFFFFFFFF)
             ));
+    }
+
+    public void testSquareLauncherFromNonStandardMipmapName() throws Exception {
+        // Checks both launcher icons not named ic_launcher and roundIcon attributes
+        mEnabled = Collections.singleton(IconDetector.ICON_LAUNCHER_SHAPE);
+        String expected = ""
+                + "res/mipmap-mdpi/my_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]\n"
+                + "res/mipmap-hdpi/my_launcher_round.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]\n"
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"pkg.my.myapplication\">\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@mipmap/my_launcher\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:roundIcon=\"@mipmap/my_launcher_round\""
+                        + "/>\n"
+                        + "</manifest>"),
+                image("res/mipmap-hdpi/my_launcher_round.png", 50, 50).fill(0xFFFFFFFF),
+                image("res/mipmap-hdpi/my_launcher2_round.png", 50, 50).fillOval(0,0, 50, 50, 0xFFFFFFFF),
+                image("res/mipmap-mdpi/my_launcher.png", 50, 50).fill(0xFFFFFFFF),
+                image("res/mipmap-mdpi/ic_launcher.png", 50, 40).text(5, 5, "x", 0xFFFFFFFF)) // OK
+                .issues(IconDetector.ICON_LAUNCHER_SHAPE)
+                .run()
+                .expect(expected);
     }
 
     public void testMixNinePatch() throws Exception {
@@ -833,6 +866,88 @@ public class IconDetectorTest extends AbstractCheckTest {
                                 + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
                                 + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
                 ));
+    }
+
+    public void test118398_a() throws Exception {
+        // Regression test for http://b.android.com/118398
+        lint().files(
+                // Use minSDK4 to ensure that we get warnings about missing drawables
+                manifest().minSdk(4),
+                image("res/drawable-hdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-hdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-hdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-hdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-mdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-xhdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-xxhdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/mipmap-hdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-hdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-mdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-mdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xhdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xxhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xxhdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xxxhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xxxhdpi/ic_launcher_round.png", 48, 48))
+                .issues(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER)
+                .run()
+                .expectClean();
+    }
+
+    public void test118398_b() throws Exception {
+        // Regression test for http://b.android.com/118398
+        lint().files(
+                // Use minSDK4 to ensure that we get warnings about missing drawables
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"pkg.my.myapplication\">\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@drawable/ic_action_name\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:roundIcon=\"@mipmap/ic_launcher_round\"/>\n"
+                        + "</manifest>"),
+                image("res/drawable-hdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-hdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-hdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-hdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-mdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-mdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-xhdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-xhdpi-v9/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi/ic_action_name.png", 48, 48),
+                image("res/drawable-xxhdpi/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi-v11/ic_stat_name.png", 48, 48),
+                image("res/drawable-xxhdpi-v9/ic_action_name.png", 48, 48),
+                image("res/drawable-xxxhdpi/ic_stat_name.png", 48, 48),
+                image("res/mipmap-hdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-hdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-mdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-mdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xhdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xxhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xxhdpi/ic_launcher_round.png", 48, 48),
+                image("res/mipmap-xxxhdpi/ic_launcher.png", 48, 48),
+                image("res/mipmap-xxxhdpi/ic_launcher_round.png", 48, 48))
+                .issues(IconDetector.ICON_DENSITIES, IconDetector.ICON_MISSING_FOLDER)
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

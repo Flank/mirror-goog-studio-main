@@ -560,28 +560,6 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
 
     @Nullable
     @Override
-    public File getFile(@NonNull PsiFile file) {
-        if (file instanceof EcjPsiJavaFile) {
-            EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
-            return javaFile.getIoFile();
-        }
-
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public CharSequence getFileContents(@NonNull PsiFile file) {
-        if (file instanceof EcjPsiJavaFile) {
-            EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
-            return CharBuffer.wrap(javaFile.getFileContents());
-        }
-
-        return super.getFileContents(file);
-    }
-
-    @Nullable
-    @Override
     public String findJarPath(@NonNull PsiElement element) {
         while (true) {
             PsiElement cls = PsiTreeUtil.getParentOfType(element, PsiClass.class, true);

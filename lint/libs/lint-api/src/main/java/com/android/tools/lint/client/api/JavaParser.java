@@ -168,16 +168,37 @@ public abstract class JavaParser {
                 // Don't bother with this error if it's in a different file during single-file analysis
                 return Location.NONE;
             }
-            JavaEvaluator evaluator = context.getEvaluator();
-            File ioFile = evaluator.getFile(containingFile);
+            File ioFile = getFile(containingFile);
             if (ioFile == null) {
                 return Location.NONE;
             }
             file = ioFile;
-            contents = evaluator.getFileContents(containingFile);
+            contents = getFileContents(containingFile);
         }
         return Location.create(file, contents, range.getStartOffset(),
                                range.getEndOffset());
+    }
+
+    @Nullable
+    public abstract File getFile(@NonNull PsiFile file);
+
+    @NonNull
+    public CharSequence getFileContents(@NonNull PsiFile file) {
+        return file.getText();
+    }
+
+    @NonNull
+    public Location createLocation(@NonNull PsiElement element) {
+        TextRange range = element.getTextRange();
+        PsiFile containingFile = element.getContainingFile();
+        CharSequence contents;
+        File file = getFile(containingFile);
+        if (file == null) {
+            return Location.NONE;
+        }
+        contents = getFileContents(containingFile);
+        return Location.create(file, contents, range.getStartOffset(),
+                range.getEndOffset());
     }
 
     /**
