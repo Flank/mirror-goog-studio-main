@@ -78,7 +78,7 @@ java_test(
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     deps = [
         ":gradle-core",
-        "//tools/analytics-library:analytics-protos",
+        "//tools/analytics-library/protos:analytics-protos",
         "//tools/base/annotations",
         "//tools/base/apkzlib",
         "//tools/base/build-system:gradle-api",

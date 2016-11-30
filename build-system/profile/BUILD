@@ -11,9 +11,9 @@ java_library(
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library:analytics-protos",
-        "//tools/analytics-library:tools.analytics-shared",
-        "//tools/analytics-library:tools.analytics-tracker",
+        "//tools/analytics-library/protos:analytics-protos",
+        "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.code.gson_gson",
@@ -29,7 +29,7 @@ java_test(
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":profile",
-        "//tools/analytics-library:analytics-protos",
+        "//tools/analytics-library/protos:analytics-protos",
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
