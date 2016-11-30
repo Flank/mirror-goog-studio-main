@@ -39,6 +39,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
+import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -209,33 +210,46 @@ public class SdkHandler {
         return ndkFolder;
     }
 
-    private void findSdkLocation(@NonNull Properties properties, @NonNull File rootDir) {
+    /**
+     * Find the location of the SDK.
+     *
+     * Returns a Pair<File, Boolean>, where getFirst() returns a File of the SDK location, and
+     * getSecond() returns a Boolean indicating whether it is a regular SDK.
+     *
+     * Returns Pair.of(null, true) when SDK is not found.
+     *
+     * @param properties Properties, usually configured in local.properties file.
+     * @param rootDir directory for resolving relative paths.
+     * @return Pair of SDK location and boolean indicating if it's a regular SDK.
+     */
+    @NonNull
+    public static Pair<File, Boolean> findSdkLocation(
+            @NonNull Properties properties,
+            @NonNull File rootDir) {
         String sdkDirProp = properties.getProperty("sdk.dir");
         if (sdkDirProp != null) {
-            sdkFolder = new File(sdkDirProp);
-            if (!sdkFolder.isAbsolute()) {
-                sdkFolder = new File(rootDir, sdkDirProp);
+            File sdk = new File(sdkDirProp);
+            if (!sdk.isAbsolute()) {
+                sdk = new File(rootDir, sdkDirProp);
             }
-            return;
+            return Pair.of(sdk, true);
         }
 
         sdkDirProp = properties.getProperty("android.dir");
         if (sdkDirProp != null) {
-            sdkFolder = new File(rootDir, sdkDirProp);
-            isRegularSdk = false;
-            return;
+            return Pair.of(new File(rootDir, sdkDirProp), false);
         }
 
         String envVar = System.getenv("ANDROID_HOME");
         if (envVar != null) {
-            sdkFolder = new File(envVar);
-            return;
+            return Pair.of(new File(envVar), true);
         }
 
         String property = System.getProperty("android.home");
         if (property != null) {
-            sdkFolder = new File(property);
+            return Pair.of(new File(property), true);
         }
+        return Pair.of(null, true);
     }
 
     private void findLocation(@NonNull Project project) {
@@ -271,8 +285,10 @@ public class SdkHandler {
             }
         }
 
-        findSdkLocation(properties, rootDir);
-        ndkFolder = NdkHandler.findNdkDirectory(properties);
+        Pair<File, Boolean> sdkLocation = findSdkLocation(properties, rootDir);
+        sdkFolder = sdkLocation.getFirst();
+        isRegularSdk = sdkLocation.getSecond();
+        ndkFolder = NdkHandler.findNdkDirectory(properties, rootDir);
     }
 
     public void setSdkLibData(SdkLibData sdkLibData) {

@@ -535,7 +535,7 @@ public abstract class ExternalNativeJsonGenerator {
         if (ndkFolder == null || !ndkFolder.isDirectory()) {
             throw new InvalidUserDataException(String.format(
                     "NDK not configured. %s\n" +
-                            "Download it with SDK manager.)",
+                            "Download it with SDK manager.",
                     ndkFolder== null ? "" : ndkFolder));
         }
         final BaseVariantData<? extends BaseVariantOutputData> variantData =

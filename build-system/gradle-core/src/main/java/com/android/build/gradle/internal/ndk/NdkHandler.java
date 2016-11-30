@@ -22,9 +22,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
 import com.android.repository.Revision;
+import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -161,12 +163,12 @@ public class NdkHandler {
     @Nullable
     private static File findNdkDirectory(@NonNull File projectDir) {
         File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
-        Properties properties = null;
+        Properties properties = new Properties();
         if (localProperties.isFile()) {
             properties = readProperties(localProperties);
         }
 
-        File ndkDir = findNdkDirectory(properties);
+        File ndkDir = findNdkDirectory(properties, projectDir);
         if (ndkDir == null) {
             return null;
         }
@@ -208,12 +210,10 @@ public class NdkHandler {
      * Return null if NDK directory is not found.
      */
     @Nullable
-    public static File findNdkDirectory(@Nullable Properties properties) {
-        if (properties != null) {
-            String ndkDirProp = properties.getProperty("ndk.dir");
-            if (ndkDirProp != null) {
-                return new File(ndkDirProp);
-            }
+    public static File findNdkDirectory(@NonNull Properties properties, @NonNull File projectDir) {
+        String ndkDirProp = properties.getProperty("ndk.dir");
+        if (ndkDirProp != null) {
+            return new File(ndkDirProp);
         }
 
         String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
@@ -221,10 +221,11 @@ public class NdkHandler {
             return new File(ndkEnvVar);
         }
 
-        String stdEnvVar = System.getenv("ANDROID_HOME");
-        if (stdEnvVar != null && !stdEnvVar.isEmpty()) {
+        Pair<File, Boolean> sdkLocation = SdkHandler.findSdkLocation(properties, projectDir);
+        File sdkFolder = sdkLocation.getFirst();
+        if (sdkFolder != null) {
             // Worth checking if the NDK came bundled with the SDK
-            return new File(stdEnvVar, NDK_BUNDLE_SUBPATH);
+            return new File(sdkFolder, NDK_BUNDLE_SUBPATH);
         }
 
         return null;
