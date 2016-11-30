@@ -74,7 +74,7 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     private final List<Abi> abis;
     @NonNull
-    private final AndroidBuilder androidBuilder;
+    protected final AndroidBuilder androidBuilder;
     @NonNull
     private final File makefile;
     @NonNull
@@ -269,10 +269,7 @@ public abstract class ExternalNativeJsonGenerator {
                     }
 
                     diagnostic("executing %s %s", getNativeBuildSystem().getName(), processBuilder);
-                    String buildOutput = ExternalNativeBuildTaskUtils
-                            .executeBuildProcessAndLogError(
-                                    androidBuilder,
-                                    processBuilder);
+                    String buildOutput = executeProcess(processBuilder);
                     diagnostic("done executing %s", getNativeBuildSystem().getName());
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -336,6 +333,13 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     abstract ProcessInfoBuilder getProcessBuilder(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJson);
+
+    /**
+     * Execute the JSON generation process. Return the combination of STDIO and STDERR from running
+     * the process.
+     */
+    abstract String executeProcess(ProcessInfoBuilder processBuilder)
+            throws ProcessException, IOException;
 
     /**
      * @return the native build system that is used to generate the JSON.
