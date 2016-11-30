@@ -21,41 +21,55 @@
 namespace {
 
 using profiler::Tokenizer;
+using std::string;
 
 // Returns whether the next token is a valid heading which is the same as
 // regex "[0-9]+:". For example, a valid heading is "01:"
 //
 // If successful, the heading token is consumed; otherwise, the tokenizer will
 // be left wherever it failed and you shouldn't continue to use it.
-bool IsValidHeading(Tokenizer *t) {
+bool EatValidHeading(Tokenizer *t) {
   char separator;
   return (t->EatNextToken(Tokenizer::IsDigit) && t->GetNextChar(&separator) &&
           separator == ':');
 }
 
-// Returns whether the next token is an ip address of all zeros, which is the
-// same as regex "0+:[0-9A-Za-z]{4}". For example, an all zeros IP address is
-// "00000000000000000:A12B"
+// Returns whether the next token is a valid IP address, which is the same as
+// regex "[0-9]+:[0-9A-Za-z]{4}". If valid, the parameter |address| will be set
+// to its value.
+//
+// If successful, the address is consumed; otherwise, the tokenizer will
+// be left wherever it failed and you shouldn't continue to use it.
+bool GetAddress(Tokenizer *t, string *address) {
+  char separator;
+  std::string port;
+  if (t->GetNextToken(Tokenizer::IsAlphaNum, address) &&
+      t->GetNextChar(&separator) && separator == ':' &&
+      t->GetNextToken(Tokenizer::IsAlphaNum, &port) && port.size() == 4) {
+    return true;
+  }
+  return false;
+}
+
+// Returns whether the next token is the ip address "127.0.0.1", coverted to
+// ipv4 or ipv6 byte string. In other words, this will match either
+// "0100007F:[0-9A-Za-z]{4}" or
+// 0000000000000000FFFF00000100007F:[0-9A-Za-z]{4}".
 //
 // If successful, the IP address is consumed; otherwise, the tokenizer will
 // be left wherever it failed and you shouldn't continue to use it.
-bool IsAllZerosIpAddress(Tokenizer *t) {
-  char separator;
-  std::string port;
-  if (t->EatNextToken(Tokenizer::IsOneOf("0")) && t->GetNextChar(&separator) &&
-      separator == ':' && t->GetNextToken(Tokenizer::IsAlphaNum, &port)) {
-    return port.size() == 4;
+bool EatLoopbackAddress(Tokenizer *t) {
+  std::string address;
+  if (GetAddress(t, &address)) {
+    return address == "0100007F" ||
+           address == "0000000000000000FFFF00000100007F";
   }
   return false;
 }
 
 // Returns whether the tokenizer is pointing at a line which represents a
-// local interface, which we identify when both remote and local ip addresses
-// are all zeroes and the connection status is listening ('0A').
-//
-// For example, this represents a local interface connection:
-// " 01: 00000000000000000000000000000000:13B4
-// 00000000000000000000000000000000:0000 0A ...".
+// connection on a local interface (essentially, one loopback address talking
+// to another).
 //
 // If successful, the tokenizer will be moved to right after the status code
 // (the fourth token in the line); otherwise, the tokenizer will be left
@@ -63,18 +77,19 @@ bool IsAllZerosIpAddress(Tokenizer *t) {
 bool IsLocalInterface(Tokenizer *t) {
   // It's possible to have empty space in the beginning, for example, " 1:" has
   // empty space and "100:" does not have empty space.
-  t->EatWhile(Tokenizer::IsWhitespace);
-  bool match = IsValidHeading(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
-               IsAllZerosIpAddress(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
-               IsAllZerosIpAddress(t) && t->EatWhile(Tokenizer::IsWhitespace);
+  bool valid_heading = t->EatWhile(Tokenizer::IsWhitespace) &&
+                       EatValidHeading(t) &&
+                       t->EatWhile(Tokenizer::IsWhitespace);
 
-  if (match) {
-    char c;
-    if (t->GetNextChar(&c) && c == '0' && t->GetNextChar(&c) &&
-        (c == 'A' || c == 'a')) {
-      return true;
-    }
+  if (!valid_heading) {
+    return false;
   }
+
+  if (EatLoopbackAddress(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
+      EatLoopbackAddress(t) && t->EatWhile(Tokenizer::IsWhitespace)) {
+    return true;
+  }
+
   return false;
 }
 }  // namespace
@@ -107,6 +122,7 @@ int ConnectionSampler::ReadConnectionNumber(const string &file) {
       }
     }
   }
+
   return count;
 }
 
