@@ -27,6 +27,7 @@ import com.android.build.gradle.external.gson.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -165,6 +166,15 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 .addArgs("-B") // Build as if clean
                 .addArgs("-n");
         return builder;
+    }
+
+    @Override
+    String executeProcess(ProcessInfoBuilder processBuilder) throws ProcessException, IOException {
+        return ExternalNativeBuildTaskUtils
+                .executeBuildProcessAndLogError(
+                        androidBuilder,
+                        processBuilder,
+                        false /* logStdioToInfo */);
     }
 
     @NonNull
