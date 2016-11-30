@@ -1064,6 +1064,7 @@ public class ResourceUsageModel {
         final int STATE_ATTRIBUTE_VALUE_SINGLE = 10;
         final int STATE_ATTRIBUTE_VALUE_DOUBLE = 11;
         final int STATE_CLOSE_TAG = 12;
+        final int STATE_ENDING_TAG = 13;
 
         int state = STATE_TEXT;
         int offset = 0;
@@ -1113,6 +1114,7 @@ public class ResourceUsageModel {
                                 offset = length;
                                 break;
                             }
+                            state = STATE_TEXT;
                             offset = end + 3;
                             continue;
                         } else if (html.startsWith("![CDATA[", offset)) {
@@ -1123,6 +1125,7 @@ public class ResourceUsageModel {
                                 offset = length;
                                 break;
                             }
+                            state = STATE_TEXT;
                             offset = end + 3;
                             continue;
                         }
@@ -1135,9 +1138,11 @@ public class ResourceUsageModel {
                         int end = html.indexOf('>', offset + 2);
                         if (end == -1) {
                             offset = length;
+                            state = STATE_TEXT;
                             break;
                         }
                         offset = end + 1;
+                        state = STATE_TEXT;
                         continue;
                     }
                     state = STATE_IN_TAG;
@@ -1170,10 +1175,23 @@ public class ResourceUsageModel {
                         tag = html.substring(tagStart, offset).trim();
                         endHtmlTag(from, html, offset, tag);
                         state = STATE_TEXT;
+                    } else if (c == '/') {
+                        tag = html.substring(tagStart, offset).trim();
+                        endHtmlTag(from, html, offset, tag);
+                        state = STATE_ENDING_TAG;
                     }
                     offset++;
                     break;
                 }
+
+                case STATE_ENDING_TAG: {
+                    if (c == '>') {
+                        offset++;
+                        state = STATE_TEXT;
+                    }
+                    break;
+                }
+
                 case STATE_BEFORE_ATTRIBUTE: {
                     if (c == '>') {
                         endHtmlTag(from, html, offset, tag);

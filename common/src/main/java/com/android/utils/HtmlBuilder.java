@@ -276,6 +276,29 @@ public class HtmlBuilder {
         return this;
     }
 
+    public HtmlBuilder beginClassSpan(@NonNull String cssClasses) {
+        mStringBuilder.append("<span class=\"");
+        mStringBuilder.append(cssClasses);
+        mStringBuilder.append("\">");
+        return this;
+    }
+
+    public HtmlBuilder beginPre(@Nullable String styleClass) {
+        mStringBuilder.append("<pre");
+        if (styleClass != null) {
+            mStringBuilder.append(" class=\"");
+            mStringBuilder.append(styleClass);
+            mStringBuilder.append("\"");
+        }
+        mStringBuilder.append(">\n");
+        return this;
+    }
+
+    public HtmlBuilder endPre() {
+        mStringBuilder.append("</pre>\n");
+        return this;
+    }
+
     public HtmlBuilder endSpan() {
         mStringBuilder.append("</span>");
         return this;

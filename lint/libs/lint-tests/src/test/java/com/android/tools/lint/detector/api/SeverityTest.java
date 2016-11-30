@@ -50,4 +50,12 @@ public class SeverityTest extends TestCase {
         assertThat(Severity.FATAL).isLessThan(Severity.ERROR);
         assertThat(Severity.WARNING).isGreaterThan(Severity.ERROR);
     }
+
+    public void testIsError() {
+        assertThat(Severity.IGNORE.isError()).isFalse();
+        assertThat(Severity.INFORMATIONAL.isError()).isFalse();
+        assertThat(Severity.WARNING.isError()).isFalse();
+        assertThat(Severity.ERROR.isError()).isTrue();
+        assertThat(Severity.FATAL.isError()).isTrue();
+    }
 }

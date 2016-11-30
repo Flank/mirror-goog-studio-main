@@ -53,7 +53,7 @@ public class XmlReporter extends Reporter {
      * @param output the output file
      * @throws IOException if an error occurs
      */
-    public XmlReporter(LintCliClient client, File output) throws IOException {
+    public XmlReporter(@NonNull LintCliClient client, @NonNull File output) throws IOException {
         super(client, output);
         writer = new BufferedWriter(Files.newWriter(output, Charsets.UTF_8));
     }

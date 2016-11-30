@@ -24,7 +24,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -100,7 +99,9 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
                 client.log(null, "Cannot write output file %1$s", output);
                 continue;
             }
-            HtmlReporter reporter = new HtmlReporter(client, output, flags);
+
+            Reporter reporter = Reporter.createHtmlReporter(client, output, flags, simpleFormat);
+            //HtmlReporter reporter = new HtmlReporter(client, output, flags);
             reporter.setBundleResources(bundleResources);
             reporter.setSimpleFormat(simpleFormat);
             reporter.setUrlMap(urlMap);
@@ -109,7 +110,7 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
             int projectErrorCount = 0;
             int projectWarningCount = 0;
             for (Warning warning: issues) {
-                if (warning.severity == Severity.ERROR || warning.severity == Severity.FATAL) {
+                if (warning.severity.isError()) {
                     projectErrorCount++;
                 } else if (warning.severity == Severity.WARNING) {
                     projectWarningCount++;
@@ -130,23 +131,19 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
             }
             reporter.setTitle(String.format("Lint Report for %1$s", relative));
             reporter.setStripPrefix(relative);
-            reporter.write(stats, issues
-            );
+            reporter.write(stats, issues);
 
             projects.add(new ProjectEntry(fileName, projectErrorCount, projectWarningCount,
                     relative));
         }
 
-        Closer closer = Closer.create();
         // Write overview index?
-        try {
-            closer.register(writer);
-            writeOverview(stats, projects);
-        } catch (Throwable e) {
-            throw closer.rethrow(e);
-        } finally {
-            closer.close();
-        }
+        writer.close();
+        // Sort project list in decreasing order of errors, warnings and names
+        Collections.sort(projects);
+
+        Reporter reporter = Reporter.createHtmlReporter(client, output, flags, simpleFormat);
+        reporter.writeProjectList(stats, projects);
 
         if (!client.getFlags().isQuiet()
                 && (stats.errorCount > 0 || stats.warningCount > 0)) {
@@ -156,104 +153,7 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
         }
     }
 
-    private void writeOverview(@NonNull Stats stats, List<ProjectEntry> projects)
-            throws IOException {
-        writer.write(
-                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
-                "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
-                "<head>\n" +
-                "<title>" + title + "</title>\n");
-        writeStyleSheet();
-        writer.write(
-                "</head>\n" +
-                "<body>\n" +
-                "<h1>" +
-                        title +
-                "</h1>\n" +
-                "<div class=\"titleSeparator\"></div>\n");
-
-
-        // Sort project list in decreasing order of errors, warnings and names
-        Collections.sort(projects);
-
-        writer.write(String.format("Check performed at %1$s.",
-                new Date().toString()));
-        writer.write("<br/>\n");
-        appendEscapedText(String.format("%1$s found",
-                describeCounts(stats.errorCount, stats.warningCount, false)));
-        if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
-            File baselineFile = flags.getBaselineFile();
-            assert baselineFile != null;
-            appendEscapedText(String.format(" (%1$ss filtered by "
-                            + "baseline %2$s)",
-                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
-                    baselineFile.getName()));
-        }
-        writer.write(":\n<br/><br/>\n");
-
-        if (stats.errorCount == 0 && stats.warningCount == 0) {
-            writer.write("Congratulations!");
-            return;
-        }
-
-        String errorUrl = null;
-        String warningUrl = null;
-        if (!INLINE_RESOURCES && !simpleFormat) {
-            errorUrl = addLocalResources(HtmlReporter.getErrorIconUrl());
-            warningUrl = addLocalResources(HtmlReporter.getWarningIconUrl());
-        }
-
-        writer.write("<table class=\"overview\">\n");
-        writer.write("<tr><th>");
-        writer.write("Project");
-        writer.write("</th><th class=\"countColumn\">");
-
-        if (INLINE_RESOURCES) {
-            String markup = getErrorIcon();
-            writer.write(markup);
-            writer.write('\n');
-        } else {
-            if (errorUrl != null) {
-                writer.write("<img border=\"0\" align=\"top\" src=\"");
-                writer.write(errorUrl);
-                writer.write("\" alt=\"Error\" />\n");
-            }
-        }
-        writer.write("Errors");
-        writer.write("</th><th class=\"countColumn\">");
-
-        if (INLINE_RESOURCES) {
-            String markup = getWarningIcon();
-            writer.write(markup);
-            writer.write('\n');
-        } else {
-            if (warningUrl != null) {
-                writer.write("<img border=\"0\" align=\"top\" src=\"");
-                writer.write(warningUrl);
-                writer.write("\" alt=\"Warning\" />\n");
-            }
-        }
-        writer.write("Warnings");
-        writer.write("</th></tr>\n");
-
-        for (ProjectEntry entry : projects) {
-            writer.write("<tr><td>");
-            writer.write("<a href=\"");
-            appendEscapedText(entry.fileName);
-            writer.write("\">");
-            writer.write(entry.path);
-            writer.write("</a></td><td class=\"countColumn\">");
-            writer.write(Integer.toString(entry.errorCount));
-            writer.write("</td><td class=\"countColumn\">");
-            writer.write(Integer.toString(entry.warningCount));
-            writer.write("</td></tr>\n");
-        }
-        writer.write("</table>\n");
-
-        writer.write("</body>\n</html>\n");
-    }
-
-    private static class ProjectEntry implements Comparable<ProjectEntry> {
+    static class ProjectEntry implements Comparable<ProjectEntry> {
         public final int errorCount;
         public final int warningCount;
         public final String fileName;
