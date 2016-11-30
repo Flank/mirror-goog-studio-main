@@ -1,3 +1,5 @@
+load("//tools/base/bazel:maven.bzl", "maven_repo")
+
 java_library(
     name = "integration-test",
     srcs = glob([
@@ -76,5 +78,13 @@ java_test(
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.smali_dexlib2",
+    ],
+)
+
+# Maven repo with all the dependencies required by test projects.
+maven_repo(
+    name = "prebuilts_repo",
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.5.201505241946:jar",
     ],
 )
