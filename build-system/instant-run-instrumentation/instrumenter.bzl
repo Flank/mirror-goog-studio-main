@@ -7,7 +7,7 @@ def _instrumenter_impl(ctx):
    + ctx.outputs.instrumented_classes.path + " " \
    + ':'.join([label.path for label in ctx.files.classpath])
   ctx.action(
-    inputs = ctx.files.classes + ctx.files.classpath,
+    inputs = [ctx.executable.instrumenter] + ctx.files.classes + ctx.files.classpath,
     outputs = [ctx.outputs.instrumented_classes],
     mnemonic = "instrumenter",
     command = cmd,
