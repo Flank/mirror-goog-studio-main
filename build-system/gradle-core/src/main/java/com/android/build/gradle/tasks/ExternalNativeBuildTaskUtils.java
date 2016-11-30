@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -221,10 +222,12 @@ public class ExternalNativeBuildTaskUtils {
     @NonNull
     public static String executeBuildProcessAndLogError(
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ProcessInfoBuilder process)
+            @NonNull ProcessInfoBuilder process,
+            boolean logStdioToInfo)
             throws BuildCommandException, IOException {
         ProgressiveLoggingProcessOutputHandler handler =
-                new ProgressiveLoggingProcessOutputHandler(androidBuilder.getLogger());
+                new ProgressiveLoggingProcessOutputHandler(androidBuilder.getLogger(),
+                        logStdioToInfo);
         try {
             // Log the command to execute but only in verbose (ie --info)
             androidBuilder.getLogger().verbose(process.toString());
@@ -254,9 +257,12 @@ public class ExternalNativeBuildTaskUtils {
         private final FileBackedOutputStream combinedOutput;
         @NonNull
         private final ProgressiveLoggingProcessOutput loggingProcessOutput;
+        private final boolean logStdioToInfo;
 
-        public ProgressiveLoggingProcessOutputHandler(@NonNull ILogger logger) {
+        public ProgressiveLoggingProcessOutputHandler(
+                @NonNull ILogger logger, boolean logStdioToInfo) {
             this.logger = logger;
+            this.logStdioToInfo = logStdioToInfo;
             combinedOutput = new FileBackedOutputStream(2048);
             loggingProcessOutput = new ProgressiveLoggingProcessOutput();
         }
@@ -282,8 +288,8 @@ public class ExternalNativeBuildTaskUtils {
             private final ProgressiveLoggingOutputStream errorStream;
 
             ProgressiveLoggingProcessOutput() {
-                outputStream = new ProgressiveLoggingOutputStream();
-                errorStream = new ProgressiveLoggingOutputStream();
+                outputStream = new ProgressiveLoggingOutputStream(logStdioToInfo);
+                errorStream = new ProgressiveLoggingOutputStream(true /* logStdioToInfo */);
             }
 
             @NonNull @Override public ProgressiveLoggingOutputStream getStandardOutput() {
@@ -302,6 +308,11 @@ public class ExternalNativeBuildTaskUtils {
                 @NonNull
                 byte[] buffer = new byte[INITIAL_BUFFER_SIZE];
                 int nextByteIndex = 0;
+                private final boolean logToInfo;
+
+                ProgressiveLoggingOutputStream(boolean logToInfo) {
+                    this.logToInfo = logToInfo;
+                }
 
                 @Override public void write(int b) throws IOException {
                     combinedOutput.write(b);
@@ -326,7 +337,9 @@ public class ExternalNativeBuildTaskUtils {
                         return;
                     }
                     String line = new String(buffer, 0, nextByteIndex, "UTF-8");
-                    logger.info(line);
+                    if (logToInfo) {
+                        logger.info(line);
+                    }
                     nextByteIndex = 0;
                 }
 

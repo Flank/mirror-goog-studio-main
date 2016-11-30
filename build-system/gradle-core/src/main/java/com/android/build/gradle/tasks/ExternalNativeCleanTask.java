@@ -125,7 +125,8 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
             diagnostic("%s", processBuilder);
             ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
                     getBuilder(),
-                    processBuilder);
+                    processBuilder,
+                    true /* logStdioToInfo */);
         }
     }
 

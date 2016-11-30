@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
@@ -133,6 +134,15 @@ class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         }
 
         return builder;
+    }
+
+    @Override
+    String executeProcess(ProcessInfoBuilder processBuilder) throws ProcessException, IOException {
+        return ExternalNativeBuildTaskUtils
+                .executeBuildProcessAndLogError(
+                        androidBuilder,
+                        processBuilder,
+                        true /* logStdioToInfo */);
     }
 
     @NonNull

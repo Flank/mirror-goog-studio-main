@@ -89,6 +89,28 @@ class NativeBuildOutputTest {
         checkFailed(["'xx'"], [], 0);
     }
 
+
+    // Make sure that the STDOUT of ndk-build -n doesn't appear for the user.
+    @Test
+    public void checkNdkBuildNoDashNOutput() {
+        project.buildFile << """
+            android {
+                externalNativeBuild {
+                    ndkBuild {
+                        path "src/main/cpp/Android.mk"
+                    }
+                }
+            }
+            """;
+
+        project.file("src/main/cpp/Android.mk") << androidMk;
+
+        checkSucceeded([], [
+                "install",
+                "rm -f"
+        ]);
+    }
+
     @Test
     public void checkCMakeErrorInSourceCode() {
         project.buildFile << """
@@ -219,7 +241,7 @@ class NativeBuildOutputTest {
             """;
 
         project.file("src/main/cpp/Android.mk") << androidMk;
-        checkSucceeded(["x86/libhello-jni.so"],
+        checkSucceeded(["Build hello-jni x86"],
                        ["armeabi"]);
     }
 
