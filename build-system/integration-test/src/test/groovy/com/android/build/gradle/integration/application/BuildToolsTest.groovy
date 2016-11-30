@@ -19,22 +19,20 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.AssumeUtil
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Sets
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.google.common.truth.Truth.assertThat
-import static com.google.common.truth.Truth.assert_
+
 /**
  * Tests to ensure that changing the build tools version in the build.gradle will trigger
  * re-execution of some tasks even if no source file change was detected.
@@ -128,5 +126,16 @@ android {
         assertThat(model.getBuildToolsVersion())
                 .named("Build Tools Version")
                 .isEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION)
+    }
+
+    @Test
+    void buildToolsSyncIssue() {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"",
+                "buildToolsVersion '24.0.3'");
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        TruthHelper.assertThat(model)
+                .hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
     }
 }
