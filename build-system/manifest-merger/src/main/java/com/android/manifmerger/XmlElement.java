@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import java.util.Locale;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -127,7 +128,7 @@ public class XmlElement extends OrphanXmlElement {
                     } catch (IllegalArgumentException e) {
                         try {
                             // is this another tool's operation type that we do not care about.
-                            OtherOperationType.valueOf(instruction);
+                            OtherOperationType.valueOf(instruction.toLowerCase(Locale.ROOT));
                             continue;
                         } catch (IllegalArgumentException e1) {
 

@@ -244,7 +244,7 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "    package=\"com.example.lib3\">\n"
                 + "\n"
                 + "    <application android:label=\"@string/lib_name\">\n"
-                + "        <activity android:name=\"activityOne\" tools:ignore=\"value\"/>\n"
+                + "        <activity android:name=\"activityOne\" tools:targetApi=\"true\" tools:ignore=\"value\"/>\n"
                 + "    </application>\n"
                 + "\n"
                 + "</manifest>";
