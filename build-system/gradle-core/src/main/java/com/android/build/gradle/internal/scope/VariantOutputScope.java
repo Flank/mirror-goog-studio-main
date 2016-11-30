@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -33,13 +32,10 @@ import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AtomDependency;
-import com.android.builder.model.AndroidAtom;
 import com.android.utils.StringHelper;
-
-import org.gradle.api.DefaultTask;
-
 import java.io.File;
 import java.util.Collection;
+import org.gradle.api.DefaultTask;
 
 /**
  * A scope containing data for a specific variant.
@@ -130,18 +126,10 @@ public class VariantOutputScope implements TransformVariantScope {
      */
     @NonNull
     public File getFinalPackage() {
-        if (AndroidGradleOptions.useOldPackaging(getGlobalScope().getProject())) {
-            if (isSignedApk() && isZipAlignApk()) {
-                return buildPackagePath(DOT_ANDROID_PACKAGE);
-            } else {
-                return getIntermediateApk();
-            }
+        if (getVariantScope().getVariantData().getType() == VariantType.INSTANTAPP) {
+            return buildPackagePath(DOT_INSTANTAPP_PACKAGE);
         } else {
-            if (getVariantScope().getVariantData().getType() == VariantType.INSTANTAPP) {
-                return buildPackagePath(DOT_INSTANTAPP_PACKAGE);
-            } else {
-                return buildPackagePath(isSignedApk() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
-            }
+            return buildPackagePath(isSignedApk() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
         }
     }
 

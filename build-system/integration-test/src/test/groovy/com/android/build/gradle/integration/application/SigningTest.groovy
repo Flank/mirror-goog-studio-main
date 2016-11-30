@@ -16,18 +16,17 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.apkzlib.sign.DigestAlgorithm
+import com.android.apkzlib.sign.SignatureAlgorithm
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.Packaging
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.apkzlib.sign.DigestAlgorithm
-import com.android.apkzlib.sign.SignatureAlgorithm
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SigningConfig
@@ -50,7 +49,6 @@ import org.junit.runners.Parameterized
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.BuilderConstants.RELEASE
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS
@@ -59,6 +57,7 @@ import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FI
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V1_ENABLED
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V2_ENABLED
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 
 /**
  * Integration test for all signing-related features.
@@ -73,29 +72,24 @@ class SigningTest {
 
     public static final String KEY_PASSWORD = "key_password"
 
-    @Parameterized.Parameters(name = "{0}, {3}")
+    @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
         List<Object[]> parameters = []
 
-        for (packaging in Packaging.values()) {
-            parameters.add([
-                    "rsa_keystore.jks",
-                    "CERT.RSA",
-                    SignatureAlgorithm.RSA.minSdkVersion,
-                    packaging] as Object[])
-            parameters.add([
-                    "dsa_keystore.jks",
-                    "CERT.DSA",
-                    SignatureAlgorithm.DSA.minSdkVersion,
-                    packaging] as Object[])
-            parameters.add([
-                    "ec_keystore.jks",
-                    "CERT.EC",
-                    SignatureAlgorithm.ECDSA.minSdkVersion,
-                    packaging] as Object[])
-        }
+        parameters.add([
+                "rsa_keystore.jks",
+                "CERT.RSA",
+                SignatureAlgorithm.RSA.minSdkVersion] as Object[]);
+        parameters.add([
+                "dsa_keystore.jks",
+                "CERT.DSA",
+                SignatureAlgorithm.DSA.minSdkVersion] as Object[]);
+        parameters.add([
+                "ec_keystore.jks",
+                "CERT.EC",
+                SignatureAlgorithm.ECDSA.minSdkVersion] as Object[]);
 
-        return parameters
+        return parameters;
     }
 
     @Parameterized.Parameter(0)
@@ -106,9 +100,6 @@ class SigningTest {
 
     @Parameterized.Parameter(2)
     public int minSdkVersion
-
-    @Parameterized.Parameter(3)
-    public Packaging packaging
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -177,7 +168,7 @@ class SigningTest {
     }
 
     private void execute(String... tasks) {
-        project.executor().withPackaging(packaging).run(tasks)
+        project.executor().run(tasks)
     }
 
     @Test
@@ -195,7 +186,7 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
                 "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD)
 
-        project.executor().withArguments(args).withPackaging(packaging).run("assembleRelease")
+        project.executor().withArguments(args).run("assembleRelease")
 
         // Check for signing file inside the archive.
         assertThatZip(project.getApk("release")).contains("META-INF/$certEntryName")
@@ -361,16 +352,12 @@ class SigningTest {
         device.uninstallPackage("com.example.helloworld")
         device.uninstallPackage("com.example.helloworld.test")
         project.executor()
-                .withPackaging(packaging)
                 .withArgument(Adb.getInjectToDeviceProviderProperty(device))
                 .run(GradleTestProject.DEVICE_TEST_TASK)
     }
 
     @Test
     public void 'signing scheme toggle'() throws Exception {
-        // Old packaging doesn't support the v2 signing scheme.
-        Assume.assumeTrue(packaging == Packaging.NEW_PACKAGING)
-
         File apk = project.getApk("debug")
 
         // Toggles not specified -- testing their default values
@@ -434,7 +421,7 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_V1_ENABLED + "=true",
                 "-P" + PROPERTY_SIGNING_V2_ENABLED + "=false");
 
-        project.executor().withArguments(args).withPackaging(packaging).run("assembleRelease")
+        project.executor().withArguments(args).run("assembleRelease")
         File apk = project.getApk("release")
 
         assertThatApk(apk).contains("META-INF/$certEntryName")
@@ -443,9 +430,6 @@ class SigningTest {
 
     @Test
     void "assemble with injected v2 config only"() {
-        // Old packaging doesn't support the v2 signing scheme.
-        Assume.assumeTrue(packaging == Packaging.NEW_PACKAGING)
-
         // add prop args for signing override.
         List<String> args = ImmutableList.of(
                 "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
@@ -455,7 +439,7 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_V1_ENABLED + "=false",
                 "-P" + PROPERTY_SIGNING_V2_ENABLED + "=true");
 
-        project.executor().withArguments(args).withPackaging(packaging).run("assembleRelease")
+        project.executor().withArguments(args).run("assembleRelease")
         File apk = project.getApk("release")
 
         assertThatApk(apk).doesNotContain("META-INF/$certEntryName")

@@ -26,34 +26,21 @@ import static com.google.common.io.Files.write;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * test for packaging of java resources.
  */
-@RunWith(FilterableParameterized.class)
 public class JavaResPackagingTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -149,7 +136,7 @@ public class JavaResPackagingTest {
     }
 
     private void execute(String... tasks) {
-        project.executor().withPackaging(mPackaging).run(tasks);
+        project.executor().run(tasks);
     }
 
     @Test
@@ -546,7 +533,7 @@ public class JavaResPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, ProcessException {
-        check(assertThatApk(project.getTestApk(mPackaging, "debug")), filename, content);
+        check(assertThatApk(project.getTestApk("debug")), filename, content);
     }
 
     /**

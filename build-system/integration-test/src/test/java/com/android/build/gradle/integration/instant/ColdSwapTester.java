@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -33,16 +32,9 @@ import java.util.List;
 /** Helper class for testing cold-swap scenarios. */
 class ColdSwapTester {
     private final GradleTestProject mProject;
-    private Packaging mPackaging;
 
     public ColdSwapTester(GradleTestProject project) {
         mProject = project;
-        mPackaging = Packaging.DEFAULT;
-    }
-
-    ColdSwapTester withPackaging(Packaging packaging) {
-        mPackaging = packaging;
-        return this;
     }
 
     void testDalvik(Steps steps) throws Exception {
@@ -55,7 +47,7 @@ class ColdSwapTester {
 
     private void doTest(Steps steps, int apiLevel, ColdswapMode coldswapMode) throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(mProject, mPackaging, apiLevel, coldswapMode);
+                InstantRunTestUtils.doInitialBuild(mProject, apiLevel, coldswapMode);
 
         steps.checkApk(mProject.getApk("debug"));
 
@@ -65,7 +57,6 @@ class ColdSwapTester {
         steps.makeChange();
 
         mProject.executor()
-                .withPackaging(mPackaging)
                 .withInstantRun(apiLevel, coldswapMode)
                 .run("assembleDebug");
 

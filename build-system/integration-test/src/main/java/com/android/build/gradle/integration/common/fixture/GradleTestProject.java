@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
@@ -498,24 +497,10 @@ public final class GradleTestProject implements TestRule {
                 "apk/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ANDROID_PACKAGE);
     }
 
-    public File getTestApk(Packaging packaging, String... dimensions) {
+    public File getTestApk(String... dimensions) {
         List<String> dimensionList = Lists.newArrayList(dimensions);
         dimensionList.add("androidTest");
-        if (packaging == Packaging.OLD_PACKAGING) {
-            dimensionList.add("unaligned");
-        }
-
         return getApk(Iterables.toArray(dimensionList, String.class));
-    }
-
-    public File getTestApk(String... dimensions) {
-        @SuppressWarnings("ConstantConditions")
-        Packaging packaging =
-                AndroidGradleOptions.DEFAULT_USE_OLD_PACKAGING
-                        ? Packaging.OLD_PACKAGING
-                        : Packaging.NEW_PACKAGING;
-
-        return getTestApk(packaging, dimensions);
     }
 
     /**

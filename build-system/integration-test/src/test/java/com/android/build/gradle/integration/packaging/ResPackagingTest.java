@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
@@ -29,18 +30,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.nio.charset.Charset;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import java.nio.charset.Charset;
-
-import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 /**
  * test for packaging of android asset files.
@@ -48,16 +42,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * This only uses raw files. This is not about running aapt tests, this is only about
  * everything around it, so raw files are easier to test in isolation.
  */
-@RunWith(FilterableParameterized.class)
 public class ResPackagingTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -70,7 +55,7 @@ public class ResPackagingTest {
     private GradleTestProject testProject;
 
     private void execute(String... tasks) {
-        project.executor().withPackaging(mPackaging).run(tasks);
+        project.executor().run(tasks);
     }
 
     @Before
@@ -758,7 +743,7 @@ public class ResPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, ProcessException {
-        check(assertThatApk(project.getTestApk(mPackaging, "debug")), filename, content);
+        check(assertThatApk(project.getTestApk("debug")), filename, content);
     }
 
     /**
