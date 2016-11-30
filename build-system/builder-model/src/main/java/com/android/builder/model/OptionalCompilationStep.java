@@ -28,21 +28,16 @@ public enum OptionalCompilationStep {
      */
     INSTANT_DEV,
     /**
-     * presence will disable all tasks before javac.
-     */
-    LOCAL_JAVA_ONLY,
-    /**
-     * presence will disable all tasks before resource merger.
-     */
-    LOCAL_RES_ONLY,
-    /**
-     * presence will force production of all the necessary artifacts to do an application restart.
+     * Force rebuild of cold swap artifacts.
+     *
+     * <p>Dex files and/or resources.ap_ for ColdswapMode.MULTIDEX and some split APKs for
+     * ColdswapMode.MULTIAPK.
      */
     RESTART_ONLY,
     /**
-     * Force rebuild of the apk.
+     * Force rebuild of fresh install artifacts.
      *
-     * If targeting N or above this is the same as RESTART_ONLY due to APK splits.
+     * <p>A full apk for ColdswapMode.MULTIDEX and all the split apks for ColdswapMode.MULTIAPK.
      */
     FULL_APK,
 }

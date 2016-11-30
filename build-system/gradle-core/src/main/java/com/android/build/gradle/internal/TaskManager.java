@@ -524,16 +524,14 @@ public abstract class TaskManager {
                 .setJars(config::getLocalPackagedJars)
                 .build());
 
-        IncrementalMode incrementalMode = getIncrementalMode(config);
-        boolean skipDependency = incrementalMode == IncrementalMode.LOCAL_JAVA_ONLY ||
-                incrementalMode == IncrementalMode.LOCAL_RES_ONLY;
-        ImmutableList<Object> dependencies = skipDependency ?
-                ImmutableList.of() :
+        ImmutableList<Object> dependencies =
                 ImmutableList.of(
                         variantScope.getResolveDependenciesTask() != null
                                 ? variantScope.getResolveDependenciesTask().getName()
                                 : variantScope.getPrepareDependenciesTask().getName(),
-                        variantData.getVariantDependency().getPackageConfiguration()
+                        variantData
+                                .getVariantDependency()
+                                .getPackageConfiguration()
                                 .getBuildDependencies());
 
         transformManager.addStream(OriginalStream.builder()
@@ -810,11 +808,10 @@ public abstract class TaskManager {
                         includeDependencies,
                         processResources));
 
-        if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.LOCAL_RES_ONLY) {
-            mergeResourcesTask.dependsOn(tasks,
-                    scope.getPrepareDependenciesTask(),
-                    scope.getResourceGenTask());
-        }
+        mergeResourcesTask.dependsOn(
+                tasks,
+                scope.getPrepareDependenciesTask(),
+                scope.getResourceGenTask());
         scope.setMergeResourcesTask(mergeResourcesTask);
         scope.setResourceOutputDir(
                 Objects.firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir()));
@@ -980,12 +977,9 @@ public abstract class TaskManager {
                 variantOutputScope.getProcessResourcesTask().dependsOn(tasks,
                         scope.getDataBindingProcessLayoutsTask().getName());
             }
-            if (getIncrementalMode(scope.getVariantConfiguration())
-                    != IncrementalMode.LOCAL_RES_ONLY) {
-                variantOutputScope.getProcessResourcesTask().dependsOn(
-                        tasks,
-                        variantOutputScope.getManifestProcessorTask());
-            }
+            variantOutputScope
+                    .getProcessResourcesTask()
+                    .dependsOn(tasks, variantOutputScope.getManifestProcessorTask());
 
             if (vod.getMainOutputFile().getFilter(DENSITY) == null) {
                 scope.setGenerateRClassTask(variantOutputScope.getProcessResourcesTask());
@@ -1241,27 +1235,25 @@ public abstract class TaskManager {
                 .build());
     }
 
-    private void setupCompileTaskDependencies(@NonNull TaskFactory tasks,
-            @NonNull VariantScope scope,
-            AndroidTask<?> compileTask) {
-        IncrementalMode incrementalMode = getIncrementalMode(scope.getVariantConfiguration());
+    private static void setupCompileTaskDependencies(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope, AndroidTask<?> compileTask) {
 
-        if (incrementalMode == IncrementalMode.LOCAL_RES_ONLY) {
-            // in this case only depend on the R class. We want to ignore the other
-            // source generating classes like RS, aidl, etc...
-            compileTask.optionalDependsOn(tasks, scope.getGenerateRClassTask());
-        } else if (incrementalMode != IncrementalMode.LOCAL_JAVA_ONLY) {
-            compileTask.optionalDependsOn(tasks, scope.getSourceGenTask());
-            compileTask.dependsOn(tasks, scope.getPrepareDependenciesTask());
-            // TODO - dependency information for the compile classpath is being lost.
-            // Add a temporary approximation
-            compileTask.dependsOn(tasks,
-                    scope.getVariantData().getVariantDependency().getCompileConfiguration()
-                            .getBuildDependencies());
-            compileTask.dependsOn(tasks,
-                    scope.getVariantData().getVariantDependency()
-                            .getAnnotationProcessorConfiguration().getBuildDependencies());
-        }
+        compileTask.optionalDependsOn(tasks, scope.getSourceGenTask());
+        compileTask.dependsOn(tasks, scope.getPrepareDependenciesTask());
+        // TODO - dependency information for the compile classpath is being lost.
+        // Add a temporary approximation
+        compileTask.dependsOn(
+                tasks,
+                scope.getVariantData()
+                        .getVariantDependency()
+                        .getCompileConfiguration()
+                        .getBuildDependencies());
+        compileTask.dependsOn(
+                tasks,
+                scope.getVariantData()
+                        .getVariantDependency()
+                        .getAnnotationProcessorConfiguration()
+                        .getBuildDependencies());
     }
 
     /**
@@ -1547,7 +1539,8 @@ public abstract class TaskManager {
 
 
     protected enum IncrementalMode {
-        NONE, FULL, LOCAL_JAVA_ONLY, LOCAL_RES_ONLY
+        NONE,
+        FULL,
     }
 
     /**
@@ -1559,22 +1552,8 @@ public abstract class TaskManager {
         if (config.isInstantRunSupported()
                 && targetDeviceSupportsInstantRun(config, project)
                 && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
-            if (isComponentModelPlugin) {
-                return IncrementalMode.FULL;
-            }
-
-            // while both LOCAL_RES and LOCAL_JAVA could be active, LOCAL_RES is higher priority.
-            if (globalScope.isActive(OptionalCompilationStep.LOCAL_RES_ONLY)) {
-                return IncrementalMode.LOCAL_RES_ONLY;
-            }
-
-            if (globalScope.isActive(OptionalCompilationStep.LOCAL_JAVA_ONLY)) {
-                return IncrementalMode.LOCAL_JAVA_ONLY;
-            }
-
             return IncrementalMode.FULL;
         }
-
         return IncrementalMode.NONE;
     }
 

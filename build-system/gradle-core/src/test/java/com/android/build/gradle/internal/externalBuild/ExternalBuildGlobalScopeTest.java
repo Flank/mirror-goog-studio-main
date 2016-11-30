@@ -21,14 +21,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
-
+import java.io.File;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.File;
 
 /**
  * Tests for the {@link ExternalBuildGlobalScope} class
@@ -61,6 +59,7 @@ public class ExternalBuildGlobalScopeTest {
         scope = new ExternalBuildGlobalScope(project);
 
         assertThat(scope.isActive(OptionalCompilationStep.INSTANT_DEV)).isTrue();
-        assertThat(scope.isActive(OptionalCompilationStep.LOCAL_JAVA_ONLY)).isFalse();
+        assertThat(scope.isActive(OptionalCompilationStep.RESTART_ONLY)).isFalse();
+        assertThat(scope.isActive(OptionalCompilationStep.FULL_APK)).isFalse();
     }
 }
