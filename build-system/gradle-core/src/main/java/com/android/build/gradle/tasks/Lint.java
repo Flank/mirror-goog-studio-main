@@ -34,7 +34,6 @@ import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.Warning;
-import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
@@ -226,8 +225,7 @@ public class Lint extends BaseTask {
                 if (!ok) {
                     System.err.println("Couldn't create baseline folder " + dir);
                 } else {
-                    XmlReporter reporter = new XmlReporter(client, baselineFile);
-                    reporter.setIntendedForBaseline(true);
+                    Reporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
                     reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
                     System.err.println("(Also breaking build in case this was not intentional.)");

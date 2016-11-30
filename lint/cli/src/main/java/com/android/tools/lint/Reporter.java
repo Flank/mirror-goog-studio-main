@@ -63,6 +63,7 @@ import com.android.tools.lint.checks.TextViewDetector;
 import com.android.tools.lint.checks.TitleDetector;
 import com.android.tools.lint.checks.TypoDetector;
 import com.android.tools.lint.checks.TypographyDetector;
+import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.checks.Utf8Detector;
 import com.android.tools.lint.checks.WrongCallDetector;
@@ -79,6 +80,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -95,6 +97,10 @@ import java.util.Set;
  */
 @Beta
 public abstract class Reporter {
+
+    public static final String NEW_FORMAT_PROPERTY = "lint.old-html-style";
+    public static final boolean USE_MATERIAL_HTML_STYLE = !Boolean.getBoolean(NEW_FORMAT_PROPERTY);
+
     protected final LintCliClient client;
     protected final File output;
     protected String title = "Lint Report";
@@ -107,11 +113,82 @@ public abstract class Reporter {
     protected boolean displayEmpty = true;
 
     /**
+     * Creates a new HTML {@link Reporter}
+     *
+     * @param client       the associated client
+     * @param output       the output file
+     * @param flags        the command line flags
+     * @param simpleFormat if true, use simple HTML format
+     * @throws IOException if an error occurs
+     */
+    @NonNull
+    public static Reporter createHtmlReporter(
+            @NonNull LintCliClient client,
+            @NonNull File output,
+            @NonNull LintCliFlags flags,
+            boolean simpleFormat) throws IOException {
+        if (USE_MATERIAL_HTML_STYLE) {
+            return new MaterialHtmlReporter(client, output, flags);
+        }
+        HtmlReporter reporter = new HtmlReporter(client, output, flags);
+        if (simpleFormat) {
+            reporter.setSimpleFormat(true);
+        }
+        return reporter;
+    }
+
+    /**
+     * Constructs a new text {@link Reporter}
+     *
+     * @param client the client
+     * @param flags the flags
+     * @param file the file corresponding to the writer, if any
+     * @param writer the writer to write into
+     * @param close whether the writer should be closed when done
+     */
+    @NonNull
+    public static Reporter createTextReporter(
+            @NonNull LintCliClient client,
+            @NonNull LintCliFlags flags,
+            @Nullable File file,
+            @NonNull Writer writer,
+            boolean close)  {
+        return new TextReporter(client, flags, file, writer, close);
+    }
+
+    /**
+     * Constructs a new {@link XmlReporter}
+     *
+     * @param client              the client
+     * @param output              the output file
+     * @param intendedForBaseline whether this XML report is used to write a baseline file
+     * @throws IOException if an error occurs
+     */
+    public static  Reporter createXmlReporter(
+            @NonNull LintCliClient client,
+            @NonNull File output,
+            boolean intendedForBaseline) throws IOException {
+        XmlReporter reporter = new XmlReporter(client, output);
+        reporter.setIntendedForBaseline(intendedForBaseline);
+        return reporter;
+    }
+
+    /**
      * Write the given warnings into the report
      * @param stats  the vital statistics for the lint report
      * @param issues the issues to be reported  @throws IOException if an error occurs
      */
     public abstract void write(@NonNull Stats stats, List<Warning> issues) throws IOException;
+
+    /**
+     * Writes a project overview table
+     * @param stats  the vital statistics for the lint report
+     * @param projects the projects to write
+     */
+    public void writeProjectList(@NonNull Stats stats,
+            @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     protected Reporter(@NonNull LintCliClient client, @NonNull File output) {
         this.client = client;
@@ -469,6 +546,8 @@ public abstract class Reporter {
                     TypographyDetector.FRACTIONS,
                     TypographyDetector.OTHER,
                     TypographyDetector.QUOTES,
+                    UnusedResourceDetector.ISSUE,
+                    UnusedResourceDetector.ISSUE_IDS,
                     UselessViewDetector.USELESS_LEAF,
                     Utf8Detector.ISSUE,
                     WrongCallDetector.ISSUE,
@@ -476,6 +555,26 @@ public abstract class Reporter {
             );
         }
         return studioFixes.contains(issue);
+    }
+
+    private String stripPrefix;
+
+    protected String stripPath(@NonNull String path) {
+        if (stripPrefix != null && path.startsWith(stripPrefix)
+                && path.length() > stripPrefix.length()) {
+            int index = stripPrefix.length();
+            if (path.charAt(index) == File.separatorChar) {
+                index++;
+            }
+            return path.substring(index);
+        }
+
+        return path;
+    }
+
+    /** Sets path prefix to strip from displayed file names */
+    public void setStripPrefix(@Nullable String prefix) {
+        stripPrefix = prefix;
     }
 
     /**
@@ -506,6 +605,10 @@ public abstract class Reporter {
                 int errorCount,
                 int warningCount) {
             this(errorCount, warningCount, 0, 0, 0);
+        }
+
+        public int count() {
+            return errorCount + warningCount;
         }
     }
 }

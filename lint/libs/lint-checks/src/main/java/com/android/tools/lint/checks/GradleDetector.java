@@ -1459,7 +1459,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             String message = "All " + groupId + " libraries must use the exact same "
                     + "version specification (mixing versions can lead to runtime crashes). "
                     + "Found versions " + Joiner.on(", ").join(sortedVersions) + ". "
-                    + "Examples include " + example1 + " and " + example2;
+                    + "Examples include `" + example1 + "` and `" + example2 + "`";
 
             if (cookie != null) {
                 report(context, cookie, COMPATIBILITY, message);

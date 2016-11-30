@@ -100,4 +100,9 @@ public enum Severity {
 
         return null;
     }
+
+    /** Returns true if this severity is at least an error */
+    public boolean isError() {
+        return this == ERROR || this == FATAL;
+    }
 }

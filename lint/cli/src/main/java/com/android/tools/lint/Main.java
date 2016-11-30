@@ -380,11 +380,10 @@ public class Main {
                     exit(ERRNO_EXISTS);
                 }
                 try {
-                    HtmlReporter htmlReporter = new HtmlReporter(client, output, flags);
-                    if (arg.equals(ARG_SIMPLE_HTML)) {
-                        htmlReporter.setSimpleFormat(true);
-                    }
-                    flags.getReporters().add(htmlReporter);
+                    boolean simpleFormat = arg.equals(ARG_SIMPLE_HTML);
+                    Reporter reporter = Reporter.createHtmlReporter(client, output, flags,
+                            simpleFormat);
+                    flags.getReporters().add(reporter);
                 } catch (IOException e) {
                     log(e, null);
                     exit(ERRNO_INVALID_ARGS);
@@ -411,7 +410,7 @@ public class Main {
                     exit(ERRNO_EXISTS);
                 }
                 try {
-                    flags.getReporters().add(new XmlReporter(client, output));
+                    flags.getReporters().add(Reporter.createXmlReporter(client, output, false));
                 } catch (IOException e) {
                     log(e, null);
                     exit(ERRNO_INVALID_ARGS);
@@ -815,12 +814,13 @@ public class Main {
             "\n" +
             "1. With a `@SuppressLint` annotation in the Java code\n" +
             "2. With a `tools:ignore` attribute in the XML file\n" +
-            "3. With ignore flags specified in the `build.gradle` file, " +
+            "3. With a //noinspection comment in the source code\n" +
+            "4. With ignore flags specified in the `build.gradle` file, " +
                 "as explained below\n" +
-            "4. With a `lint.xml` configuration file in the project\n" +
-            "5. With a `lint.xml` configuration file passed to lint " +
+            "5. With a `lint.xml` configuration file in the project\n" +
+            "6. With a `lint.xml` configuration file passed to lint " +
                 "via the " + ARG_CONFIG + " flag\n" +
-            "6. With the " + ARG_IGNORE + " flag passed to lint.\n" +
+            "7. With the " + ARG_IGNORE + " flag passed to lint.\n" +
             "\n" +
             "To suppress a lint warning with an annotation, add " +
             "a `@SuppressLint(\"id\")` annotation on the class, method " +
@@ -829,6 +829,10 @@ public class Main {
             "id's, such as `\"UnusedResources\"` or `{\"UnusedResources\"," +
             "\"UnusedIds\"}`, or it can be `\"all\"` to suppress all lint " +
             "warnings in the given scope.\n" +
+            "\n" +
+            "To suppress a lint warning with a comment, add " +
+            "a `//noinspection id` comment on the line before the statement " +
+            "with the error.\n" +
             "\n" +
             "To suppress a lint warning in an XML file, add a " +
             "`tools:ignore=\"id\"` attribute on the element containing " +
@@ -853,7 +857,7 @@ public class Main {
             "\n" +
             "To suppress lint warnings with a configuration XML file, " +
             "create a file named `lint.xml` and place it at the root " +
-            "directory of the project in which it applies.\n" +
+            "directory of the module in which it applies.\n" +
             "\n" +
             "The format of the `lint.xml` file is something like the " +
             "following:\n" +

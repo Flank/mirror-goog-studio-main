@@ -243,7 +243,7 @@ public class LintBaseline {
                     if (severity == null) {
                         severity = issue.getDefaultSeverity();
                     }
-                    if (severity == Severity.ERROR || severity == Severity.FATAL) {
+                    if (severity.isError()) {
                         foundErrorCount++;
                     } else {
                         foundWarningCount++;
