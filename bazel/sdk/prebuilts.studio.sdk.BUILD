@@ -22,7 +22,7 @@ filegroup(
         include = ["*/build-tools/25.0.0/**"],
     ),
     visibility = [
-        "//tools/adt/idea/android-tests:__pkg__",
+        "//tools/adt/idea/android:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/base/build-system/builder:__pkg__",
         "//tools/base/build-system/gradle:__pkg__",
