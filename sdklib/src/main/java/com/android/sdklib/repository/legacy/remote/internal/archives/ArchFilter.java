@@ -112,7 +112,6 @@ public class ArchFilter {
                 hostOs = HostOs.fromXmlName(props.getProperty(LEGACY_PROP_OS));
             }
             if (!props.containsKey(PROP_HOST_BITS) &&
-                    !props.containsKey(PROP_HOST_BITS) &&
                     props.containsKey(LEGACY_PROP_ARCH)) {
                 // We'll only handle the typical x86 and x86_64 values of the old PROP_ARCH
                 // value and ignore the PPC value. "Any" is equivalent to keeping the new
