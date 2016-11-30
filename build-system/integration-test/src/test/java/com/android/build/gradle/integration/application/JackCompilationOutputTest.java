@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
@@ -55,7 +56,9 @@ public class JackCompilationOutputTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().withName("basic").fromTestProject("basic").create();
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .create();
 
     @Before
     public void updateBuildFile() throws IOException {
