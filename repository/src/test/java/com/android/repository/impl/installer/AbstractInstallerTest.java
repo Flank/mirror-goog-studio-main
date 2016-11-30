@@ -17,8 +17,10 @@
 package com.android.repository.impl.installer;
 
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -124,6 +126,20 @@ public class AbstractInstallerTest {
             // Only temp dir 2 should remain, since it's still referenced by the incomplete install.
             assertTrue(fop.exists(dir) == (i == 2));
         }
+    }
+
+    @Test
+    public void installerProperties() throws Exception {
+        MockFileOp fop = new MockFileOp();
+        RepoManager mgr = new RepoManagerImpl(fop);
+        mgr.setLocalPath(new File("/sdk"));
+        RemotePackage remote = new FakeRemotePackage("foo;bar");
+        FakeDownloader downloader = new FakeDownloader(fop);
+        AbstractInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
+        assertSame(installer.getPackage(), remote);
+        assertEquals(installer.getName(), String.format("Install %1$s (revision: %2$s)",
+                                                        remote.getDisplayName(),
+                                                        remote.getVersion().toString()));
     }
 
     private static class TestInstaller extends AbstractInstaller {
