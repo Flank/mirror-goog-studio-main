@@ -28,6 +28,7 @@ public class ProjectDescription {
     final List<ProjectDescription> dependsOn = Lists.newArrayList();
     String name;
     Type type = Type.APP;
+    boolean report = true;
 
     /**
      * Creates a new project description
@@ -84,6 +85,22 @@ public class ProjectDescription {
      */
     public ProjectDescription type(@NonNull Type type) {
         this.type = type;
+        return this;
+    }
+
+    /**
+     * Marks this project as reportable (the default) or non-reportable.
+     * Lint projects are usually reportable, but if they depend on libraries
+     * (such as appcompat) those dependencies are marked as non-reportable.
+     * Lint will still analyze those projects (for example, an unused resource
+     * analysis should list resources pulled in from these libraries) but issues
+     * found within those libraries will not be reported.
+     *
+     * @param report whether we should report issues for this project
+     * @return this for constructor chaining
+     */
+    public ProjectDescription report(boolean report) {
+        this.report = report;
         return this;
     }
 
