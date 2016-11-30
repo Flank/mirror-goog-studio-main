@@ -76,7 +76,7 @@ public class ColdSwapTest {
         createActivityClass("", "");
     }
 
-    @Test
+    //@Test
     public void withDalvik() throws Exception {
         new ColdSwapTester(project).withPackaging(packaging).testDalvik(new ColdSwapTester.Steps() {
             @Override
@@ -115,7 +115,7 @@ public class ColdSwapTest {
                 AbstractAndroidSubject.ClassFileScope.MAIN);
     }
 
-    @Test
+    //@Test
     public void withMultiDex() throws Exception {
         new ColdSwapTester(project).withPackaging(packaging).testMultiDex(new ColdSwapTester.Steps() {
             @Override

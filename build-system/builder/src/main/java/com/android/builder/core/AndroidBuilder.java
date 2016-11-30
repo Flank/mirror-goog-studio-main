@@ -45,10 +45,10 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
+import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.internal.packaging.OldPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
-import com.android.builder.packaging.SealedPackageException;
 import com.android.builder.packaging.SigningException;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.sdk.SdkInfo;
@@ -91,6 +91,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1729,7 +1730,9 @@ public class AndroidBuilder {
             @NonNull String androidResPkgLocation,
             @NonNull File dexFile,
             @Nullable SigningConfig signingConfig,
-            @NonNull File outApkLocation)
+            @NonNull File outApkLocation,
+            @NonNull File incrementalDir,
+            @NonNull ApkCreatorFactory apkCreatorFactory)
             throws KeytoolException, PackagerException, IOException {
 
         PrivateKey key;
@@ -1768,11 +1771,14 @@ public class AndroidBuilder {
                         NativeLibrariesPackagingMode.COMPRESSED,
                         s -> false);
 
-        try (OldPackager packager = new OldPackager(creationData, androidResPkgLocation, mLogger)) {
-            packager.addFile(dexFile, "classes.dex");
-        } catch (SealedPackageException e) {
-            // shouldn't happen since we control the package from start to end.
-            throw new RuntimeException(e);
+        try (IncrementalPackager packager = new IncrementalPackager(
+                creationData,
+                incrementalDir,
+                apkCreatorFactory,
+                new HashSet<>(),
+                true)) {
+            RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
+            packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
         }
     }
 
