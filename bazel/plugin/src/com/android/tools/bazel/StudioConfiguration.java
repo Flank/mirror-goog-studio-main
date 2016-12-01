@@ -60,7 +60,6 @@ public class StudioConfiguration implements Configuration {
     public boolean shouldSuppress(BazelRule rule) {
         return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
             || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
-            || rule.getName().endsWith("configuration-store-tests")  // Kotlin compilation fails
             || rule.getName().endsWith("devkit")  // Kotlin compilation fails
             || rule.getName().endsWith("devkit-tests")  // depends on devkit
             || rule.getName().endsWith("maven3-server-common")  // Java compilation fails

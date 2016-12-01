@@ -227,6 +227,26 @@ iml_module(
 )
 
 iml_module(
+    name = "idea.configuration-store-tests",
+    tags = ["managed"],
+    test_srcs = ["idea/platform/configuration-store-impl/testSrc"],
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/platform/util[module]",
+        "//tools/idea/platform/core-api[module]",
+        "//tools/idea/platform/platform-api[module]",
+        "//tools/idea/platform/projectModel-impl[module]",
+        "//tools/idea/.idea/libraries:assertJ[test]",
+        "//tools:idea.platform-impl_and_others[module]",
+        "//tools/idea/plugins/eclipse[module, test]",
+        "//tools/idea/platform/util:util-tests[module, test]",
+    ],
+)
+
+iml_module(
     name = "idea.built-in-server-tests",
     tags = ["managed"],
     test_srcs = ["idea/platform/built-in-server/testSrc"],
