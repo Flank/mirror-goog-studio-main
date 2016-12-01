@@ -640,9 +640,10 @@ public class TranslationDetector extends ResourceXmlDetector {
 
             mNames.add(name);
 
-            if (mNonTranslatable != null && mNonTranslatable.contains(name)) {
-                String message = String.format("The resource string \"`%1$s`\" has been marked as " +
-                        "`translatable=\"false\"`", name);
+            if (mNonTranslatable != null && mNonTranslatable.contains(name)
+                    && !context.file.getParentFile().getName().equals(FD_RES_VALUES)) {
+                String message = String.format("The resource string \"`%1$s`\" has been "
+                        + "marked as `translatable=\"false\"`", name);
                 context.report(EXTRA, attribute, context.getLocation(attribute), message);
             }
 
