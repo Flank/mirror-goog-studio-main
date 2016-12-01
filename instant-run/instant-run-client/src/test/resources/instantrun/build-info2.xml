@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <instant-run
-    api-level="23"
+    api-level="25"
+    build-mode="COLD"
     format="2"
     timestamp="1452207930094" >
 
@@ -20,6 +21,10 @@
     <artifact
         location="/Users/tnorbye/AndroidStudioProjects/ColdswapTest/app/build/outputs/apk/app-debug.apk"
         type="SPLIT_MAIN" />
+
+    <artifact
+            location="/Users/tnorbye/AndroidStudioProjects/ColdswapTest/app/build/intermediates/split-apk/debug/dependencies_f446d1f1d3dddfda734cabfe37f06b7416d2b888.apk"
+            type="SPLIT" />
 
     <build timestamp="1452205343311" >
         <artifact
@@ -63,6 +68,10 @@
         <artifact
             location="/Users/tnorbye/AndroidStudioProjects/ColdswapTest/app/build/outputs/apk/app-debug.apk"
             type="SPLIT_MAIN" />
+
+        <artifact
+                location="/Users/tnorbye/AndroidStudioProjects/ColdswapTest/app/build/intermediates/split-apk/debug/dependencies_f446d1f1d3dddfda734cabfe37f06b7416d2b888.apk"
+                type="SPLIT" />
     </build>
 
 </instant-run>

@@ -29,16 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,13 +38,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-/**
- * Context object for all InstantRun related information.
- */
+/** Context object for all InstantRun related information. */
 public class InstantRunBuildContext {
 
     private static final Logger LOG = Logging.getLogger(InstantRunBuildContext.class);
@@ -75,6 +70,7 @@ public class InstantRunBuildContext {
     static final String ATTR_FORMAT = "format";
     static final String ATTR_ABI = "abi";
     static final String ATTR_TOKEN = "token";
+    static final String ATTR_BUILD_MODE = "build-mode";
 
     // Keep roughly in sync with InstantRunBuildInfo#isCompatibleFormat:
     //
@@ -85,7 +81,7 @@ public class InstantRunBuildContext {
     // new Gradle version and the older version. Whenever we bump this version
     // we should cross check the logic and decide how to handle the isCompatible()
     // method.)
-    static final String CURRENT_FORMAT = "9";
+    static final String CURRENT_FORMAT = "10";
 
     public enum TaskType {
         JAVAC,
@@ -95,20 +91,24 @@ public class InstantRunBuildContext {
     }
 
     /**
-     * A Build represents the result of an InstantRun enabled build invocation.
-     * It will contain all the artifacts it produced as well as the unique timestamp for the build
-     * and the result of the InstantRun verification process.
+     * A Build represents the result of an InstantRun enabled build invocation. It will contain all
+     * the artifacts it produced as well as the unique timestamp for the build and the result of the
+     * InstantRun verification process.
      */
     public static class Build {
 
         private final long buildId;
-        @NonNull
-        private InstantRunVerifierStatus verifierStatus;
+        @NonNull private InstantRunVerifierStatus verifierStatus;
+        private InstantRunBuildMode buildMode;
         private final List<Artifact> artifacts = new ArrayList<>();
 
-        public Build(long buildId, @NonNull InstantRunVerifierStatus verifierStatus) {
+        public Build(
+                long buildId,
+                @NonNull InstantRunVerifierStatus verifierStatus,
+                @NonNull InstantRunBuildMode buildMode) {
             this.buildId = buildId;
             this.verifierStatus = verifierStatus;
+            this.buildMode = buildMode;
         }
 
         @Nullable
@@ -130,6 +130,7 @@ public class InstantRunBuildContext {
         private void toXml(@NonNull Document document, @NonNull Element element) {
             element.setAttribute(ATTR_TIMESTAMP, String.valueOf(buildId));
             element.setAttribute(ATTR_VERIFIER, verifierStatus.name());
+            element.setAttribute(ATTR_BUILD_MODE, buildMode.name());
             for (Artifact artifact : artifacts) {
                 element.appendChild(artifact.toXml(document));
             }
@@ -139,11 +140,14 @@ public class InstantRunBuildContext {
         public static Build fromXml(@NonNull Node buildNode) {
             NamedNodeMap attributes = buildNode.getAttributes();
             Node verifierAttribute = attributes.getNamedItem(ATTR_VERIFIER);
-            Build build = new Build(
-                    Long.parseLong(attributes.getNamedItem(ATTR_TIMESTAMP).getNodeValue()),
-                    InstantRunVerifierStatus.valueOf(verifierAttribute.getNodeValue()));
+            Node buildModeAttribute = attributes.getNamedItem(ATTR_BUILD_MODE);
+            Build build =
+                    new Build(
+                            Long.parseLong(attributes.getNamedItem(ATTR_TIMESTAMP).getNodeValue()),
+                            InstantRunVerifierStatus.valueOf(verifierAttribute.getNodeValue()),
+                            InstantRunBuildMode.valueOf(buildModeAttribute.getNodeValue()));
             NodeList childNodes = buildNode.getChildNodes();
-            for (int i=0; i< childNodes.getLength(); i++) {
+            for (int i = 0; i < childNodes.getLength(); i++) {
                 Node artifactNode = childNodes.item(i);
                 if (artifactNode.getNodeName().equals(TAG_ARTIFACT)) {
                     Artifact artifact = Artifact.fromXml(artifactNode);
@@ -166,11 +170,14 @@ public class InstantRunBuildContext {
         public InstantRunVerifierStatus getVerifierStatus() {
             return verifierStatus;
         }
+
+        @NonNull
+        public InstantRunBuildMode getBuildMode() {
+            return buildMode;
+        }
     }
 
-    /**
-     * A build artifact defined by its type and location.
-     */
+    /** A build artifact defined by its type and location. */
     public static class Artifact {
         private final FileType fileType;
         private File location;
@@ -184,8 +191,8 @@ public class InstantRunBuildContext {
         public Node toXml(@NonNull Document document) {
             Element artifact = document.createElement(TAG_ARTIFACT);
             artifact.setAttribute(ATTR_TYPE, fileType.name());
-            artifact.setAttribute(ATTR_LOCATION,
-                    XmlUtils.toXmlAttributeValue(location.getAbsolutePath()));
+            artifact.setAttribute(
+                    ATTR_LOCATION, XmlUtils.toXmlAttributeValue(location.getAbsolutePath()));
             return artifact;
         }
 
@@ -232,16 +239,18 @@ public class InstantRunBuildContext {
     private final long[] taskDurationInMs = new long[TaskType.values().length];
     private InstantRunPatchingPolicy patchingPolicy;
     /** Null until setApiLevel is called. */
-    @Nullable
-    private Integer featureLevel = null;
+    @Nullable private Integer featureLevel = null;
+
     private String density = null;
     private String abi = null;
     private final Build currentBuild =
-            new Build(System.nanoTime(), InstantRunVerifierStatus.NO_CHANGES);
+            new Build(
+                    System.nanoTime(),
+                    InstantRunVerifierStatus.NO_CHANGES,
+                    InstantRunBuildMode.HOT_WARM);
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private boolean isInstantRunMode = false;
     private final AtomicLong token = new AtomicLong(0);
-    private InstantRunBuildMode buildMode = InstantRunBuildMode.HOT_WARM;
     private boolean buildHasFailed = false;
 
     public void setInstantRunMode(boolean instantRunMode) {
@@ -262,9 +271,10 @@ public class InstantRunBuildContext {
 
     /**
      * Get the unique build id for this build invocation.
+     *
      * @return a unique build id.
      */
-    public long  getBuildId() {
+    public long getBuildId() {
         return currentBuild.buildId;
     }
 
@@ -280,38 +290,40 @@ public class InstantRunBuildContext {
 
     /**
      * Setst the verifier status for the current build.
+     *
      * @param verifierStatus
      */
     public void setVerifierStatus(@NonNull InstantRunVerifierStatus verifierStatus) {
 
-        LOG.info("Receiving verifier result: {}. Current Verifier/Build mode is {}/{}.",
+        LOG.info(
+                "Receiving verifier result: {}. Current Verifier/Build mode is {}/{}.",
                 verifierStatus,
                 currentBuild.getVerifierStatus(),
-                buildMode);
+                currentBuild.buildMode);
 
         // get the new build mode for this verifier status as it may change the one we
         // currently use.
-        InstantRunBuildMode newBuildMode = buildMode.combine(
-                verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
+        InstantRunBuildMode newBuildMode =
+                currentBuild.buildMode.combine(
+                        verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
 
         // if our current status is not set, or the new build mode is higher, reset everything.
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES
                 || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE
-                || newBuildMode != buildMode) {
+                || newBuildMode != currentBuild.buildMode) {
             currentBuild.verifierStatus = verifierStatus;
-            buildMode = newBuildMode;
+            currentBuild.buildMode = newBuildMode;
         }
-        Preconditions.checkNotNull(patchingPolicy,
-                "setApiLevel should be called before setVerifierStatus");
+        Preconditions.checkNotNull(
+                patchingPolicy, "setApiLevel should be called before setVerifierStatus");
 
-        LOG.info("Verifier result is now : {}. Build mode is now {}.",
+        LOG.info(
+                "Verifier result is now : {}. Build mode is now {}.",
                 currentBuild.getVerifierStatus(),
-                buildMode);
+                currentBuild.buildMode);
     }
 
-    /**
-     * Returns the verifier status if set for the current build being executed.
-     */
+    /** Returns the verifier status if set for the current build being executed. */
     @NonNull
     public InstantRunVerifierStatus getVerifierResult() {
         return currentBuild.getVerifierStatus();
@@ -320,25 +332,25 @@ public class InstantRunBuildContext {
     /**
      * Returns true if the verifier did not find any incompatible changes for InstantRun or was not
      * run due to no code changes.
+     *
      * @return true to use hot swapping, false otherwise.
      */
     public boolean hasPassedVerification() {
-        return buildMode == InstantRunBuildMode.HOT_WARM;
+        return currentBuild.buildMode == InstantRunBuildMode.HOT_WARM;
     }
 
-    public void setApiLevel(int featureLevel,
-            @Nullable String coldswapMode,
-            @Nullable String targetAbi) {
+    public void setApiLevel(
+            int featureLevel, @Nullable String coldswapMode, @Nullable String targetAbi) {
         this.featureLevel = featureLevel;
         // cache the patching policy.
-        this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(
-                featureLevel, coldswapMode);
+        this.patchingPolicy =
+                InstantRunPatchingPolicy.getPatchingPolicy(featureLevel, coldswapMode);
         this.abi = targetAbi;
     }
 
     public int getFeatureLevel() {
-        return Preconditions.checkNotNull(featureLevel,
-                "setApiLevel should be called before any other actions.");
+        return Preconditions.checkNotNull(
+                featureLevel, "setApiLevel should be called before any other actions.");
     }
 
     @Nullable
@@ -355,10 +367,9 @@ public class InstantRunBuildContext {
         return patchingPolicy;
     }
 
-
     @NonNull
     public InstantRunBuildMode getBuildMode() {
-        return buildMode;
+        return currentBuild.buildMode;
     }
 
     public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file)
@@ -379,8 +390,9 @@ public class InstantRunBuildContext {
 
         // validate the patching policy and the received file type to record the file or not.
         // RELOAD and MAIN are always record.
-        if (fileType != FileType.RELOAD_DEX && fileType != FileType.MAIN &&
-                fileType != FileType.RESOURCES) {
+        if (fileType != FileType.RELOAD_DEX
+                && fileType != FileType.MAIN
+                && fileType != FileType.RESOURCES) {
             switch (patchingPolicy) {
                 case PRE_LOLLIPOP:
                     return;
@@ -425,7 +437,6 @@ public class InstantRunBuildContext {
         currentBuild.artifacts.add(new Artifact(fileType, file));
     }
 
-
     @Nullable
     public Build getLastBuild() {
         return previousBuilds.isEmpty() ? null : previousBuilds.lastEntry().getValue();
@@ -446,8 +457,8 @@ public class InstantRunBuildContext {
 
     /**
      * Remove all unwanted changes :
-     *  - All reload.dex changes older than the last cold swap.
-     *  - Empty changes (unless it's the last one).
+     * - All reload.dex changes older than the last cold swap.
+     * - Empty changes (unless it's the last one).
      */
     private void purge() {
         boolean foundColdRestart = false;
@@ -469,14 +480,12 @@ public class InstantRunBuildContext {
                     previousBuilds.remove(aBuildId);
                     continue;
                 }
-            }
-            else if (previousBuild.verifierStatus != InstantRunVerifierStatus.NO_CHANGES) {
+            } else if (previousBuild.verifierStatus != InstantRunVerifierStatus.NO_CHANGES) {
                 foundColdRestart = true;
             }
             // when a coldswap build was found, remove all RESOURCES entries for previous builds
             // as the resource is redelivered as part of the main split.
-            if (foundColdRestart
-                    && patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+            if (foundColdRestart && patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
                 Artifact resourceApArtifact = previousBuild.getArtifactForType(FileType.RESOURCES);
                 if (resourceApArtifact != null) {
                     previousBuild.artifacts.remove(resourceApArtifact);
@@ -506,7 +515,7 @@ public class InstantRunBuildContext {
                 previousBuilds.remove(aBuildId);
             }
         }
-        if (buildMode == InstantRunBuildMode.FULL) {
+        if (currentBuild.buildMode == InstantRunBuildMode.FULL) {
             collapseMainArtifactsIntoCurrentBuild();
         }
     }
@@ -538,8 +547,7 @@ public class InstantRunBuildContext {
             }
 
             for (String splitLocation : splitLocations) {
-                currentBuild.artifacts
-                        .add(new Artifact(FileType.SPLIT, new File(splitLocation)));
+                currentBuild.artifacts.add(new Artifact(FileType.SPLIT, new File(splitLocation)));
             }
 
             if (main != null) {
@@ -558,22 +566,23 @@ public class InstantRunBuildContext {
                     }
                 }
                 if (main == null) {
-                    throw new IllegalStateException("No current or previous main artifacts. "
-                            + "This should not happen.");
+                    throw new IllegalStateException(
+                            "No current or previous main artifacts. " + "This should not happen.");
                 }
                 currentBuild.artifacts.add(main);
             }
         }
         if (currentBuild.artifacts.isEmpty()) {
-            throw new IllegalStateException("Full build with no artifacts. "
-                    + "This should not happen.");
+            throw new IllegalStateException(
+                    "Full build with no artifacts. " + "This should not happen.");
         }
     }
 
     /**
-     * Load previous iteration build-info.xml. The only information we really care about is the
-     * list of previous builds so we can provide the list of artifacts to the IDE to catch up
-     * a disconnected device.
+     * Load previous iteration build-info.xml. The only information we really care about is the list
+     * of previous builds so we can provide the list of artifacts to the IDE to catch up a
+     * disconnected device.
+     *
      * @param persistedState the persisted xml file.
      */
     public void loadFromXmlFile(@NonNull File persistedState)
@@ -585,9 +594,7 @@ public class InstantRunBuildContext {
         loadFromDocument(XmlUtils.parseUtfXmlFile(persistedState, false));
     }
 
-    /**
-     * {@link #loadFromXmlFile(File)} but using a String
-     */
+    /** {@link #loadFromXmlFile(File)} but using a String */
     public void loadFromXml(@NonNull String persistedState)
             throws IOException, SAXException, ParserConfigurationException {
         loadFromDocument(XmlUtils.parseDocument(persistedState, false));
@@ -621,7 +628,7 @@ public class InstantRunBuildContext {
         Build lastBuild = Build.fromXml(instantRun);
         previousBuilds.put(lastBuild.buildId, lastBuild);
         NodeList buildNodes = instantRun.getChildNodes();
-        for (int i=0; i<buildNodes.getLength();i++) {
+        for (int i = 0; i < buildNodes.getLength(); i++) {
             Node buildNode = buildNodes.item(i);
             if (buildNode.getNodeName().equals(TAG_BUILD)) {
                 Build build = Build.fromXml(buildNode);
@@ -632,14 +639,14 @@ public class InstantRunBuildContext {
 
     /**
      * Merges the artifacts of a temporary build info into this build's artifacts. If this build
-     * finishes the build-info.xml will contain the artifacts produced by this iteration as well
-     * as the artifacts produced in a previous iteration and saved into the temporary build info.
+     * finishes the build-info.xml will contain the artifacts produced by this iteration as well as
+     * the artifacts produced in a previous iteration and saved into the temporary build info.
+     *
      * @param tmpBuildInfoFile a past build build-info.xml
      * @throws IOException cannot be thrown.
      * @throws SAXException when the xml is not correct.
      * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
-
     public void mergeFromFile(@NonNull File tmpBuildInfoFile)
             throws IOException, SAXException, ParserConfigurationException {
         mergeFrom(XmlUtils.parseUtfXmlFile(tmpBuildInfoFile, false));
@@ -647,14 +654,14 @@ public class InstantRunBuildContext {
 
     /**
      * Merges the artifacts of a temporary build info into this build's artifacts. If this build
-     * finishes the build-info.xml will contain the artifacts produced by this iteration as well
-     * as the artifacts produced in a previous iteration and saved into the temporary build info.
+     * finishes the build-info.xml will contain the artifacts produced by this iteration as well as
+     * the artifacts produced in a previous iteration and saved into the temporary build info.
+     *
      * @param tmpBuildInfo a past build build-info.xml as a String
      * @throws IOException cannot be thrown.
      * @throws SAXException when the xml is not correct.
      * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
-
     public void mergeFrom(@NonNull String tmpBuildInfo)
             throws IOException, SAXException, ParserConfigurationException {
 
@@ -664,7 +671,7 @@ public class InstantRunBuildContext {
     private void mergeFrom(@NonNull Document document) throws IOException {
         Element instantRun = document.getDocumentElement();
         Build lastBuild = Build.fromXml(instantRun);
-        for (Artifact previousArtifact: lastBuild.getArtifacts()) {
+        for (Artifact previousArtifact : lastBuild.getArtifacts()) {
             mergeArtifact(previousArtifact);
         }
     }
@@ -672,8 +679,9 @@ public class InstantRunBuildContext {
     private void mergeArtifact(@NonNull Artifact stashedArtifact) {
         for (Artifact artifact : currentBuild.artifacts) {
             if (artifact.getType() == stashedArtifact.getType()
-                    && artifact.getLocation().getAbsolutePath().equals(
-                    stashedArtifact.getLocation().getAbsolutePath())) {
+                    && artifact.getLocation()
+                            .getAbsolutePath()
+                            .equals(stashedArtifact.getLocation().getAbsolutePath())) {
                 return;
             }
         }
@@ -681,31 +689,21 @@ public class InstantRunBuildContext {
         currentBuild.getArtifacts().add(stashedArtifact);
     }
 
-    /**
-     * Close all activities related to InstantRun.
-     */
+    /** Close all activities related to InstantRun. */
     public void close() {
         // add the current build to the list of builds to be persisted.
         previousBuilds.put(currentBuild.buildId, currentBuild);
-
-
 
         // purge unwanted past iterations.
         purge();
     }
 
-    /**
-     * Define the pesistence mode for this context (which results in the build-info.xml).
-     */
+    /** Define the pesistence mode for this context (which results in the build-info.xml). */
     @VisibleForTesting
     enum PersistenceMode {
-        /**
-         * Persist this build as a final full build (and do not include any previous builds).
-         */
+        /** Persist this build as a final full build (and do not include any previous builds). */
         FULL_BUILD,
-        /**
-         * Persist this build as a final incremental build and include all previous builds
-         */
+        /** Persist this build as a final incremental build and include all previous builds */
         INCREMENTAL_BUILD,
         /**
          * Persist this build as a temporary build (that may still execute or failed to complete)
@@ -715,16 +713,19 @@ public class InstantRunBuildContext {
 
     /**
      * Serialize this context into an xml format.
+     *
      * @return the xml persisted information as a {@link String}
      */
     public String toXml() throws ParserConfigurationException {
-        return toXml(buildMode == InstantRunBuildMode.FULL
-                ? PersistenceMode.FULL_BUILD
-                : PersistenceMode.INCREMENTAL_BUILD);
+        return toXml(
+                currentBuild.buildMode == InstantRunBuildMode.FULL
+                        ? PersistenceMode.FULL_BUILD
+                        : PersistenceMode.INCREMENTAL_BUILD);
     }
 
     /**
      * Serialize this context into an xml format.
+     *
      * @param persistenceMode desired {@link PersistenceMode}
      * @return the xml persisted information as a {@link String}
      */
@@ -743,11 +744,13 @@ public class InstantRunBuildContext {
 
         for (TaskType taskType : TaskType.values()) {
             Element taskTypeNode = document.createElement(TAG_TASK);
-            taskTypeNode.setAttribute(ATTR_NAME,
-                    CaseFormat.UPPER_UNDERSCORE.converterTo(
-                            CaseFormat.LOWER_HYPHEN).convert(taskType.name()));
-            taskTypeNode.setAttribute(ATTR_DURATION,
-                    String.valueOf(taskDurationInMs[taskType.ordinal()]));
+            taskTypeNode.setAttribute(
+                    ATTR_NAME,
+                    CaseFormat.UPPER_UNDERSCORE
+                            .converterTo(CaseFormat.LOWER_HYPHEN)
+                            .convert(taskType.name()));
+            taskTypeNode.setAttribute(
+                    ATTR_DURATION, String.valueOf(taskDurationInMs[taskType.ordinal()]));
             instantRun.appendChild(taskTypeNode);
         }
 
@@ -763,7 +766,7 @@ public class InstantRunBuildContext {
         instantRun.setAttribute(ATTR_FORMAT, CURRENT_FORMAT);
         instantRun.setAttribute(ATTR_PLUGIN_VERSION, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
-        switch(persistenceMode) {
+        switch (persistenceMode) {
             case FULL_BUILD:
                 // only include the last build.
                 if (!previousBuilds.isEmpty()) {
@@ -777,15 +780,15 @@ public class InstantRunBuildContext {
                 break;
             case TEMP_BUILD:
                 break;
-            default :
+            default:
                 throw new RuntimeException("PersistenceMode not handled" + persistenceMode);
         }
         return instantRun;
     }
 
     /**
-     * Writes a temporary build-info.xml to persist the produced artifacts in case the build
-     * fails before we have a chance to write the final build-info.xml
+     * Writes a temporary build-info.xml to persist the produced artifacts in case the build fails
+     * before we have a chance to write the final build-info.xml
      */
     public void writeTmpBuildInfo(@NonNull File tmpBuildInfo)
             throws ParserConfigurationException, IOException {

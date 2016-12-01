@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -27,6 +28,7 @@ import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.truth.DexBackedDexFileSubject;
@@ -44,17 +46,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * Smoke test for cold swap builds.
- */
+
+/** Smoke test for cold swap builds. */
 public class ColdSwapTest {
-
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application")).create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .create();
 
-    @Rule
-    public Expect expect = Expect.createAndEnableStackTrace();
+    @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
     public void activityClass() throws IOException {
@@ -81,6 +82,13 @@ public class ColdSwapTest {
             }
 
             @Override
+            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                    throws Exception {
+                // for api 19 (pre-lollipop) a full build is triggered
+                assertEquals(InstantRunBuildMode.FULL, buildMode);
+            }
+
+            @Override
             public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts)
                     throws Exception {
                 assertThat(artifacts).hasSize(1);
@@ -92,12 +100,17 @@ public class ColdSwapTest {
     private void checkDalvikApk(@NonNull File apk) throws IOException, ProcessException {
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
 
-        apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
-                .that().hasMethod("onCreate");
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
+        apkSubject
+                .hasClass(
+                        "Lcom/example/helloworld/HelloWorld;",
+                        AbstractAndroidSubject.ClassFileScope.MAIN)
+                .that()
+                .hasMethod("onCreate");
+        apkSubject.hasClass(
+                "Lcom/android/tools/fd/runtime/BootstrapApplication;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
+        apkSubject.hasClass(
+                "Lcom/android/tools/fd/runtime/AppInfo;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
     }
 
@@ -125,6 +138,13 @@ public class ColdSwapTest {
             @Override
             public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
                 assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
+            }
+
+            @Override
+            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                    throws Exception {
+                // for multi dex cold build mode is triggered
+                assertEquals(InstantRunBuildMode.COLD, buildMode);
             }
 
             @Override
@@ -157,6 +177,13 @@ public class ColdSwapTest {
             }
 
             @Override
+            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                    throws Exception {
+                // for api 24 a cold build mode is triggered
+                assertEquals(InstantRunBuildMode.COLD, buildMode);
+            }
+
+            @Override
             public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
                 assertThat(artifacts).hasSize(1);
                 for (InstantRunBuildContext.Artifact artifact : artifacts) {
@@ -169,14 +196,14 @@ public class ColdSwapTest {
     }
 
     private void makeColdSwapChange() throws IOException {
-        createActivityClass("import java.util.logging.Logger;", "newMethod();\n"
-                + "    }\n"
-                + "    public void newMethod() {\n"
-                + "        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)\n"
-                + "                .warning(\"Added some logging\");\n"
-                + "");
-
-
+        createActivityClass(
+                "import java.util.logging.Logger;",
+                "newMethod();\n"
+                        + "    }\n"
+                        + "    public void newMethod() {\n"
+                        + "        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)\n"
+                        + "                .warning(\"Added some logging\");\n"
+                        + "");
     }
 
     private void checkUpdatedClassPresence(@Nullable DexBackedDexFile dex) throws Exception {
@@ -189,24 +216,26 @@ public class ColdSwapTest {
 
     private void createActivityClass(@NonNull String imports, @NonNull String newMethodBody)
             throws IOException {
-        String javaCompile = "package com.example.helloworld;\n" + imports +
-                "\n"
-                + "import android.app.Activity;\n"
-                + "import android.os.Bundle;\n"
-                + "\n"
-                + "public class HelloWorld extends Activity {\n"
-                + "    /** Called when the activity is first created. */\n"
-                + "    @Override\n"
-                + "    public void onCreate(Bundle savedInstanceState) {\n"
-                + "        super.onCreate(savedInstanceState);\n"
-                + "        setContentView(R.layout.main);\n"
-                + "        " +
-                newMethodBody +
-                "    }\n"
-                + "}";
-        Files.write(javaCompile,
+        String javaCompile =
+                "package com.example.helloworld;\n"
+                        + imports
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class HelloWorld extends Activity {\n"
+                        + "    /** Called when the activity is first created. */\n"
+                        + "    @Override\n"
+                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        setContentView(R.layout.main);\n"
+                        + "        "
+                        + newMethodBody
+                        + "    }\n"
+                        + "}";
+        Files.write(
+                javaCompile,
                 project.file("src/main/java/com/example/helloworld/HelloWorld.java"),
                 Charsets.UTF_8);
     }
-
 }

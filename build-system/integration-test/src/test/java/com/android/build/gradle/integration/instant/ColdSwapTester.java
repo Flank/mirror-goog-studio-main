@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -68,6 +69,7 @@ class ColdSwapTester {
         assertThat(lastBuild.getBuildId()).isNotEqualTo(startBuildId);
 
         steps.checkVerifierStatus(lastBuild.getVerifierStatus());
+        steps.checkBuildMode(lastBuild.getBuildMode());
         steps.checkArtifacts(lastBuild.getArtifacts());
     }
 
@@ -81,6 +83,8 @@ class ColdSwapTester {
         void makeChange() throws Exception;
 
         void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception;
+
+        void checkBuildMode(@NonNull InstantRunBuildMode buildMode) throws Exception;
 
         void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts)
                 throws Exception;
