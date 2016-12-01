@@ -66,7 +66,6 @@ public class StudioConfiguration implements Configuration {
             || rule.getName().endsWith("maven32-server-impl")  // Java compilation fails
             || rule.getName().endsWith("cvs-core")  // Java compilation fails
             || rule.getName().endsWith("cvs-plugin")  // depends on cvs-core
-            || rule.getName().endsWith("json-tests")  // some stripping issue
             || rule.getName().endsWith("community-main_and_others")  // big nasty build-graph cycle
             || rule.getName().endsWith("community-main-tests")  // depends on community-main
             || rule.getName().endsWith("android-uitests")  // depends on community-main
