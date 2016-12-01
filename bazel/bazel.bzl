@@ -220,7 +220,7 @@ def _iml_resources(name, resources, srcs):
   if iml_resources:
     mappings = {}
     for d in iml_resource_dirs:
-      mappings[d] = name + ".res.root"
+      mappings[d + "/"] = name + ".res.root/"
     fileset(
       name = name + ".res",
       srcs = iml_resources,
