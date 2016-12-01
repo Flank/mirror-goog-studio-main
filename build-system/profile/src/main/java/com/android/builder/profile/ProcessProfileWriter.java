@@ -16,8 +16,6 @@
 
 package com.android.builder.profile;
 
-import static com.android.builder.profile.MemoryStats.getCurrentProperties;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.analytics.CommonMetricsData;
@@ -43,8 +41,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** Records all the {@link GradleBuildProfileSpan}s for a process, in order it was received. */
-public class ProcessRecorder {
+/**
+ * Records profile information for a build.
+ *
+ * <p>There is only ever one ProcessProfileWriter per build invocation, even though there will be
+ * multiple android plugin applications. See {@code ProfilerInitializer} for logic that creates one
+ * per build and finalizes it at the end of the build.
+ *
+ * <p>The methods implemented from {@link ProfileRecordWriter} will be called from multiple threads
+ * during the build, storing execution spans.
+ */
+public final class ProcessProfileWriter implements ProfileRecordWriter {
 
     private boolean finished = false;
 
@@ -58,26 +65,27 @@ public class ProcessRecorder {
 
     @NonNull private final Path mBenchmarkProfileOutputFile;
 
-    private static final AtomicLong lastRecordId = new AtomicLong(1);
+    private final AtomicLong lastRecordId = new AtomicLong(1);
 
     private final ConcurrentLinkedQueue<GradleBuildProfileSpan> spans;
 
-    static long allocateRecordId() {
+    @Override
+    public long allocateRecordId() {
         return lastRecordId.incrementAndGet();
     }
 
     @VisibleForTesting
-    static void resetForTests() {
+    void resetForTests() {
         lastRecordId.set(1);
     }
 
     @NonNull
-    static ProcessRecorder get() {
-        return ProcessRecorderFactory.sINSTANCE.get();
+    public static ProcessProfileWriter get() {
+        return ProcessProfileWriterFactory.sINSTANCE.get();
     }
 
 
-    ProcessRecorder(@NonNull Path benchmarkProfileOutputFile) {
+    ProcessProfileWriter(@NonNull Path benchmarkProfileOutputFile) {
         mBenchmarkProfileOutputFile = benchmarkProfileOutputFile;
         mNameAnonymizer = new NameAnonymizer();
         mBuild = GradleBuildProfile.newBuilder();
@@ -87,7 +95,8 @@ public class ProcessRecorder {
     }
 
     /** Append a span record to the build profile. Thread safe. */
-    void writeRecord(
+    @Override
+    public void writeRecord(
             @NonNull String project,
             @Nullable String variant,
             @NonNull final GradleBuildProfileSpan.Builder executionRecord) {
@@ -186,7 +195,12 @@ public class ProcessRecorder {
     }
 
     private GradleBuildMemorySample createAndRecordMemorySample() {
-        GradleBuildMemorySample stats = getCurrentProperties();
+
+        GradleBuildMemorySample stats =
+                GradleBuildMemorySample.newBuilder()
+                        .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
+                        .setTimestamp(System.currentTimeMillis())
+                        .build();
         if (stats != null) {
             mBuild.addMemorySample(stats);
         }

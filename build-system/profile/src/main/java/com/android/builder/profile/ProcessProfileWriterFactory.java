@@ -37,15 +37,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Configures and creates instances of {@link ProcessRecorder}.
+ * Configures and creates instances of {@link ProcessProfileWriter}.
  *
- * There can be only one instance of {@link ProcessRecorder} per process (well class loader
- * to be exact). This instance can be configured initially before any calls to
- * {@link ThreadRecorder#get()} is made. An exception will be thrown if an attempt is made to
- * configure the instance of {@link ProcessRecorder} past this initialization window.
- *
+ * <p>There can be only one instance of {@link ProcessProfileWriter} per process (well class loader
+ * to be exact). This instance can be configured initially before any calls to {@link
+ * ThreadRecorder#get()} is made. An exception will be thrown if an attempt is made to configure the
+ * instance of {@link ProcessProfileWriter} past this initialization window.
  */
-public class ProcessRecorderFactory {
+public final class ProcessProfileWriterFactory {
 
     private static final DateTimeFormatter PROFILE_FILE_NAME =
             DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
@@ -54,9 +53,9 @@ public class ProcessRecorderFactory {
         synchronized (LOCK) {
 
             if (sINSTANCE.isInitialized()) {
-                sINSTANCE.processRecorder.finish();
+                sINSTANCE.processProfileWriter.finish();
             }
-            sINSTANCE.processRecorder = null;
+            sINSTANCE.processProfileWriter = null;
         }
     }
 
@@ -65,13 +64,13 @@ public class ProcessRecorderFactory {
     private ScheduledExecutorService mScheduledExecutorService = Executors.newScheduledThreadPool(1);
 
     @VisibleForTesting
-    ProcessRecorderFactory() {}
+    ProcessProfileWriterFactory() {}
     @Nullable
     private ILogger mLogger = null;
 
-    /** Set up the the ProcessRecorder. Idempotent for multi-project builds. */
+    /** Set up the the ProcessProfileWriter. Idempotent for multi-project builds. */
     public static void initialize(
-            @NonNull File projectPath,
+            @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
             @NonNull File profileOutputDirectory) {
@@ -87,14 +86,15 @@ public class ProcessRecorderFactory {
                             .toPath()
                             .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
 
-            ProcessRecorder recorder = sINSTANCE.get(); // Initialize the ProcessRecorder instance
+            ProcessProfileWriter recorder =
+                    sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
 
-            setGlobalProperties(recorder, projectPath, gradleVersion, logger);
+            setGlobalProperties(recorder, rootProjectDirectoryPath, gradleVersion, logger);
         }
     }
 
     private static void setGlobalProperties(
-            @NonNull ProcessRecorder recorder,
+            @NonNull ProcessProfileWriter recorder,
             @NonNull File projectPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger) {
@@ -120,33 +120,33 @@ public class ProcessRecorderFactory {
         this.mLogger = iLogger;
     }
 
-    public static ProcessRecorderFactory getFactory() {
+    public static ProcessProfileWriterFactory getFactory() {
         return sINSTANCE;
     }
 
     boolean isInitialized() {
-        return processRecorder != null;
+        return processProfileWriter != null;
     }
 
     @SuppressWarnings("VariableNotUsedInsideIf")
     private void assertRecorderNotCreated() {
         if (isInitialized()) {
-            throw new RuntimeException("ProcessRecorder already created.");
+            throw new RuntimeException("ProcessProfileWriter already created.");
         }
     }
 
     private static final Object LOCK = new Object();
-    static ProcessRecorderFactory sINSTANCE = new ProcessRecorderFactory();
+    static ProcessProfileWriterFactory sINSTANCE = new ProcessProfileWriterFactory();
 
-    @Nullable
-    private ProcessRecorder processRecorder = null;
+    @Nullable private ProcessProfileWriter processProfileWriter = null;
 
     @VisibleForTesting
     public static void initializeForTests(@NonNull Path profileOutputFile) {
-        sINSTANCE = new ProcessRecorderFactory();
+        sINSTANCE = new ProcessProfileWriterFactory();
         sINSTANCE.setProfileOutputFile(profileOutputFile);
-        ProcessRecorder.resetForTests();
-        ProcessRecorder recorder = sINSTANCE.get(); // Initialize the ProcessRecorder instance
+        ProcessProfileWriter recorder =
+                sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
+        recorder.resetForTests();
         setGlobalProperties(recorder,
                 new File("fake/path/to/test_project/"),
                 "2.10",
@@ -168,17 +168,17 @@ public class ProcessRecorderFactory {
         this.profileOutputFile = outputFile;
     }
 
-    synchronized ProcessRecorder get() {
-        if (processRecorder == null) {
+    synchronized ProcessProfileWriter get() {
+        if (processProfileWriter == null) {
             Preconditions.checkState(
                     profileOutputFile != null, "call setProfileOutputFile() first");
             if (mLogger == null) {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
             initializeAnalytics(mLogger, mScheduledExecutorService);
-            processRecorder = new ProcessRecorder(profileOutputFile);
+            processProfileWriter = new ProcessProfileWriter(profileOutputFile);
         }
 
-        return processRecorder;
+        return processProfileWriter;
     }
 }

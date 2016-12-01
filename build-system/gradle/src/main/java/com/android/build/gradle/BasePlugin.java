@@ -69,7 +69,7 @@ import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.dx.command.dexer.Main;
@@ -224,7 +224,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         ProfilerInitializer.init(project);
 
-        ProcessRecorder.getProject(project.getPath())
+        ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
@@ -565,7 +565,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         extension.disableWrite();
 
-        ProcessRecorder.getProject(project.getPath())
+        ProcessProfileWriter.getProject(project.getPath())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString());
 
         // setup SDK repositories.

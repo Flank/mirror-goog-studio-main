@@ -47,8 +47,7 @@ import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -97,8 +96,12 @@ public class InstantAppTaskManager extends TaskManager {
 
         final VariantScope variantScope = variantData.getScope();
 
-        ProcessRecorder.getProject(projectPath).setAtoms(
-                variantData.getVariantConfiguration().getFlatAndroidAtomsDependencies().size());
+        ProcessProfileWriter.getProject(projectPath)
+                .setAtoms(
+                        variantData
+                                .getVariantConfiguration()
+                                .getFlatAndroidAtomsDependencies()
+                                .size());
 
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);

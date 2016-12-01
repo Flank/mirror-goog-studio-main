@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -48,7 +48,7 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         ProfilerInitializer.init(project);
-        ProcessRecorder.getProject(project.getPath())
+        ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(GradleBuildProject.PluginType.LIBRARY)
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.COMPONENT_MODEL);

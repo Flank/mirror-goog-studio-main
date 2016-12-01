@@ -18,14 +18,16 @@ package com.android.build.gradle.internal.profile;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.profile.AsyncRecorder;
-import com.android.builder.profile.ProcessRecorderFactory;
+import com.android.builder.profile.ProcessProfileWriter;
+import com.android.builder.profile.ProcessProfileWriterFactory;
+import com.android.builder.profile.ProfileRecordWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.ILogger;
@@ -35,12 +37,12 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTaskExecution;
-import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import org.gradle.api.Project;
@@ -48,148 +50,116 @@ import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskState;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
-/**
- * Tests for {@link RecordingBuildListener}
- */
+/** Tests for {@link RecordingBuildListener} */
+@RunWith(MockitoJUnitRunner.class)
 public class RecordingBuildListenerTest {
 
-    @Mock
-    Task mTask;
+    @Mock Task task;
 
-    @Mock
-    Task mSecondTask;
+    @Mock Task secondTask;
 
-    @Mock
-    TaskState mTaskState;
+    @Mock TaskState taskState;
 
-    @Mock
-    Project mProject;
+    @Mock Project project;
 
-    @Mock
-    ILogger logger;
+    @Mock ILogger logger;
 
     private Path mProfileProtoFile;
 
-    private static final class TestRecorder implements Recorder {
-
-        final AtomicLong recordId = new AtomicLong(0);
-        final List<GradleBuildProfileSpan> records = new CopyOnWriteArrayList<>();
-
-        @Override
-        public <T> T record(
-                @NonNull ExecutionType executionType,
-                @NonNull String projectPath,
-                String variant,
-                @NonNull Block<T> block) {
-            throw new UnsupportedOperationException("record method was not supposed to be called.");
-        }
-
-        @Nullable
-        @Override
-        public <T> T record(
-                @NonNull ExecutionType executionType,
-                @Nullable GradleTransformExecution transform,
-                @NonNull String projectPath,
-                @Nullable String variant,
-                @NonNull Block<T> block) {
-            throw new UnsupportedOperationException("record method was not supposed to be called");
-        }
-
-        @Override
-        public long allocationRecordId() {
-            return recordId.incrementAndGet();
-        }
-
-        @Override
-        public void closeRecord(
-                @NonNull String project,
-                @Nullable String variant,
-                @NonNull GradleBuildProfileSpan.Builder executionRecord) {
-            if (project.equals(":projectName")) {
-                executionRecord.setProject(1);
+    @NonNull
+    private static GradleBuildProfileSpan getRecordForId(
+            @NonNull List<GradleBuildProfileSpan> records, long recordId) {
+        for (GradleBuildProfileSpan record : records) {
+            if (record.getId() == recordId) {
+                return record;
             }
-            if ("variantName".equals(variant)) {
-                executionRecord.setVariant(1);
-            }
-
-            records.add(executionRecord.build());
         }
+        throw new AssertionError(
+                "No record with id "
+                        + recordId
+                        + " found in ["
+                        + Joiner.on(", ").join(records)
+                        + "]");
     }
-
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        when(mProject.getPath()).thenReturn(":projectName");
-        when(mTask.getName()).thenThrow(new AssertionError("Nothing should be using task name"));
-        when(mTask.getPath()).thenReturn(":projectName:taskName");
-        when(mTask.getProject()).thenReturn(mProject);
-        when(mSecondTask.getPath()).thenReturn(":projectName:task2Name");
-        when(mSecondTask.getName())
+        when(project.getPath()).thenReturn(":projectName");
+        when(task.getName()).thenThrow(new AssertionError("Nothing should be using task name"));
+        when(task.getPath()).thenReturn(":projectName:taskName");
+        when(task.getProject()).thenReturn(project);
+        when(secondTask.getPath()).thenReturn(":projectName:task2Name");
+        when(secondTask.getName())
                 .thenThrow(new AssertionError("Nothing should be using task name"));
-        when(mSecondTask.getProject()).thenReturn(mProject);
+        when(secondTask.getProject()).thenReturn(project);
         mProfileProtoFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto.rawproto");
-        ProcessRecorderFactory.initializeForTests(mProfileProtoFile);
+        ProcessProfileWriterFactory.initializeForTests(mProfileProtoFile);
     }
 
     @Test
     public void singleThreadInvocation() {
-        TestRecorder recorder = new TestRecorder();
-        RecordingBuildListener listener = new RecordingBuildListener(recorder);
+        TestProfileRecordWriter writer = new TestProfileRecordWriter();
+        RecordingBuildListener listener = new RecordingBuildListener(writer);
 
-        listener.beforeExecute(mTask);
-        listener.afterExecute(mTask, mTaskState);
-        assertEquals(1, recorder.records.size());
-        GradleBuildProfileSpan record = recorder.records.get(0);
+        listener.beforeExecute(task);
+        listener.afterExecute(task, taskState);
+        assertEquals(1, writer.getRecords().size());
+        GradleBuildProfileSpan record = writer.getRecords().get(0);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
+        assertEquals(0, record.getThreadId());
     }
 
     @Test
     public void singleThreadWithMultipleSpansInvocation() throws InterruptedException, IOException {
 
-        RecordingBuildListener listener =
-                new RecordingBuildListener(ThreadRecorder.get());
+        RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
 
-        listener.beforeExecute(mTask);
-        ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
-                ":projectName", null, new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        Logger.getAnonymousLogger().finest("useless block");
-                        return null;
-                    }
-                }); {
+        listener.beforeExecute(task);
+        ThreadRecorder.get()
+                .record(
+                        ExecutionType.SOME_RANDOM_PROCESSING,
+                        ":projectName",
+                        null,
+                        new Recorder.Block<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                Logger.getAnonymousLogger().finest("useless block");
+                                return null;
+                            }
+                        });
+        {
         }
-        listener.afterExecute(mTask, mTaskState);
-        ProcessRecorderFactory.shutdown();
+        listener.afterExecute(task, taskState);
+        ProcessProfileWriterFactory.shutdown();
 
         GradleBuildProfile profile = loadProfile();
         assertEquals("Span count", 2, profile.getSpanCount());
 
         GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
         assertEquals(0, record.getParentId());
+        assertEquals(0, record.getThreadId());
 
         record = getRecordForId(profile.getSpanList(), 3);
         assertNotNull(record);
-        assertEquals(2, record.getParentId());
+        assertEquals(0, record.getParentId());
         assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.getType());
+        assertNotEquals(0, record.getThreadId());
     }
-
-
 
     @Test
     public void simulateTasksUnorderedLifecycleEventsDelivery()
             throws InterruptedException, IOException {
+        RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
 
-        RecordingBuildListener listener =
-                new RecordingBuildListener(AsyncRecorder.get());
-
-        listener.beforeExecute(mTask);
-        listener.beforeExecute(mSecondTask);
+        listener.beforeExecute(task);
+        listener.beforeExecute(secondTask);
         ThreadRecorder.get()
                 .record(
                         ExecutionType.SOME_RANDOM_PROCESSING,
@@ -199,10 +169,10 @@ public class RecordingBuildListenerTest {
                             logger.verbose("useless block");
                             return null;
                         });
-        listener.afterExecute(mTask, mTaskState);
-        listener.afterExecute(mSecondTask, mTaskState);
+        listener.afterExecute(task, taskState);
+        listener.afterExecute(secondTask, taskState);
 
-        ProcessRecorderFactory.shutdown();
+        ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
 
         assertEquals(3, profile.getSpanCount());
@@ -212,92 +182,100 @@ public class RecordingBuildListenerTest {
         record = getRecordForId(profile.getSpanList(), 3);
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
+        assertEquals(0, record.getThreadId());
 
         record = getRecordForId(profile.getSpanList(), 4);
         assertNotNull(record);
         assertEquals(ExecutionType.SOME_RANDOM_PROCESSING, record.getType());
+        assertNotEquals(0, record.getThreadId());
     }
 
     @Test
     public void multipleThreadsInvocation() {
-        TestRecorder recorder = new TestRecorder();
-        RecordingBuildListener listener = new RecordingBuildListener(recorder);
+        TestProfileRecordWriter writer = new TestProfileRecordWriter();
+        RecordingBuildListener listener = new RecordingBuildListener(writer);
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
-        when(secondTask.getProject()).thenReturn(mProject);
+        when(secondTask.getProject()).thenReturn(project);
 
         // first thread start
-        listener.beforeExecute(mTask);
+        listener.beforeExecute(task);
 
         // now second threads start
         listener.beforeExecute(secondTask);
 
         // first thread finishes
-        listener.afterExecute(mTask, mTaskState);
+        listener.afterExecute(task, taskState);
 
         // and second thread finishes
-        listener.afterExecute(secondTask, mTaskState);
+        listener.afterExecute(secondTask, taskState);
 
-        assertEquals(2, recorder.records.size());
-        GradleBuildProfileSpan record = getRecordForId(recorder.records, 1);
+        assertEquals(2, writer.getRecords().size());
+        GradleBuildProfileSpan record = getRecordForId(writer.getRecords(), 1);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
+        assertEquals(0, record.getThreadId());
 
-        record = getRecordForId(recorder.records, 2);
+        record = getRecordForId(writer.getRecords(), 2);
         assertEquals(2, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
+        assertEquals(0, record.getThreadId());
     }
 
     @Test
     public void multipleThreadsOrderInvocation() {
-        TestRecorder recorder = new TestRecorder();
-        RecordingBuildListener listener = new RecordingBuildListener(recorder);
+        TestProfileRecordWriter writer = new TestProfileRecordWriter();
+        RecordingBuildListener listener = new RecordingBuildListener(writer);
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
-        when(secondTask.getProject()).thenReturn(mProject);
+        when(secondTask.getProject()).thenReturn(project);
 
         // first thread start
-        listener.beforeExecute(mTask);
+        listener.beforeExecute(task);
 
         // now second threads start
         listener.beforeExecute(secondTask);
 
         // second thread finishes
-        listener.afterExecute(secondTask, mTaskState);
+        listener.afterExecute(secondTask, taskState);
 
         // and first thread finishes
-        listener.afterExecute(mTask, mTaskState);
+        listener.afterExecute(task, taskState);
 
-        assertEquals(2, recorder.records.size());
-        GradleBuildProfileSpan record = getRecordForId(recorder.records, 1);
+        assertEquals(2, writer.getRecords().size());
+        GradleBuildProfileSpan record = getRecordForId(writer.getRecords(), 1);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
+        assertEquals(0, record.getThreadId());
 
-        record = getRecordForId(recorder.records, 2);
+        record = getRecordForId(writer.getRecords(), 2);
         assertEquals(2, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
+        assertEquals(0, record.getThreadId());
     }
 
     @Test
     public void ensureTaskStateRecorded() {
-        TestRecorder recorder = new TestRecorder();
-        RecordingBuildListener listener = new RecordingBuildListener(recorder);
+        TestProfileRecordWriter writer = new TestProfileRecordWriter();
+        RecordingBuildListener listener = new RecordingBuildListener(writer);
 
-        when(mTaskState.getDidWork()).thenReturn(true);
-        when(mTaskState.getExecuted()).thenReturn(true);
-        when(mTaskState.getFailure()).thenReturn(new RuntimeException("Task failure"));
-        when(mTaskState.getSkipped()).thenReturn(false);
-        when(mTaskState.getUpToDate()).thenReturn(false);
+        when(taskState.getDidWork()).thenReturn(true);
+        when(taskState.getExecuted()).thenReturn(true);
+        when(taskState.getFailure()).thenReturn(new RuntimeException("Task failure"));
+        when(taskState.getSkipped()).thenReturn(false);
+        when(taskState.getUpToDate()).thenReturn(false);
 
-        listener.beforeExecute(mTask);
-        listener.afterExecute(mTask, mTaskState);
+        listener.beforeExecute(task);
+        listener.afterExecute(task, taskState);
 
-        assertEquals(1, recorder.records.size());
-        assertThat(recorder.records.get(0).getType()).named("execution type").isEqualTo(ExecutionType.TASK_EXECUTION);
-        GradleTaskExecution task = recorder.records.get(0).getTask();
+        assertEquals(1, writer.getRecords().size());
+        assertThat(writer.getRecords().get(0).getType())
+                .named("execution type")
+                .isEqualTo(ExecutionType.TASK_EXECUTION);
+        GradleTaskExecution task = writer.getRecords().get(0).getTask();
         assertThat(task.getDidWork()).named("task.did_work").isTrue();
         assertThat(task.getFailed()).named("task.failed").isTrue();
         assertThat(task.getSkipped()).named("task.skipped").isFalse();
@@ -313,21 +291,38 @@ public class RecordingBuildListenerTest {
                 .isEqualTo(GradleTaskExecution.Type.JAVA_COMPILE);
     }
 
-
     private GradleBuildProfile loadProfile() throws IOException {
         return GradleBuildProfile.parseFrom(Files.readAllBytes(mProfileProtoFile));
     }
 
-    @NonNull
-    private static GradleBuildProfileSpan getRecordForId(
-            @NonNull List<GradleBuildProfileSpan> records, long recordId) {
-        for (GradleBuildProfileSpan record : records) {
-            if (record.getId() == recordId) {
-                return record;
-            }
+    static final class TestProfileRecordWriter implements ProfileRecordWriter {
+
+        private final List<GradleBuildProfileSpan> records =
+                Collections.synchronizedList(new ArrayList<>());
+        private final AtomicLong recordId = new AtomicLong(1);
+
+        @Override
+        public long allocateRecordId() {
+            return recordId.getAndIncrement();
         }
-        throw new AssertionError(
-                "No record with id " + recordId + " found in ["
-                        + Joiner.on(", ").join(records) + "]");
+
+        @Override
+        public void writeRecord(
+                @NonNull String project,
+                @Nullable String variant,
+                @NonNull GradleBuildProfileSpan.Builder executionRecord) {
+            if (project.equals(":projectName")) {
+                executionRecord.setProject(1);
+            }
+            if ("variantName".equals(variant)) {
+                executionRecord.setVariant(1);
+            }
+
+            records.add(executionRecord.build());
+        }
+
+        public List<GradleBuildProfileSpan> getRecords() {
+            return records;
+        }
     }
 }
