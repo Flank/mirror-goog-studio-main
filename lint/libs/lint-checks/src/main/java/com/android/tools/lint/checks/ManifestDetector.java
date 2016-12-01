@@ -413,7 +413,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             6,
             Severity.FATAL,
             IMPLEMENTATION).addMoreInfo(
-            "http://tools.android.com/tech-docs/bind-listener");
+            "http://android-developers.blogspot.com/2016/04/deprecation-of-bindlistener.html");
 
     /** Permission name of mock location permission */
     public static final String MOCK_LOCATION_PERMISSION =

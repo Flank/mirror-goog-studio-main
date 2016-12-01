@@ -630,7 +630,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
                 if (type == ResourceType.RAW &&isKeepFile(name, xmlContext)) {
                     // Don't flag raw.keep: these are used for resource shrinking
                     // keep lists
-                    //    http://tools.android.com/tech-docs/new-build-system/resource-shrinking
+                    //    https://developer.android.com/studio/build/shrink-code.html
                     resource.setReachable(true);
                 }
             }
