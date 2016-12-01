@@ -250,7 +250,6 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                 androidBuilder,
                 true,
                 packagingScope.getProject(),
-                packagingScope.getVariantType(),
                 FileUtils.mkdirs(new File(
                         packagingScope.getIncrementalDir("instantRunDependenciesApkBuilder"),
                         "aapt-temp")),

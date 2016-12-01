@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -67,14 +66,14 @@ public class ProcessInstantAppResources extends IncrementalTask {
                 new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
 
         try {
-            Aapt aapt = AaptGradleFactory.make(
-                    getBuilder(),
-                    processOutputHandler,
-                    true,
-                    variantScope.getGlobalScope().getProject(),
-                    VariantType.INSTANTAPP,
-                    FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
-                    aaptOptions.getCruncherProcesses());
+            Aapt aapt =
+                    AaptGradleFactory.make(
+                            getBuilder(),
+                            processOutputHandler,
+                            true,
+                            getProject(),
+                            FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
+                            aaptOptions.getCruncherProcesses());
 
             AaptPackageConfig.Builder config = new AaptPackageConfig.Builder()
                     .setManifestFile(getManifestFile())
@@ -190,7 +189,6 @@ public class ProcessInstantAppResources extends IncrementalTask {
     private AaptOptions aaptOptions;
     private File outputResourcePackage;
     private File mergeBlameLogFolder;
-    private VariantScope variantScope;
 
     public static class ConfigAction implements TaskConfigAction<ProcessInstantAppResources> {
 
@@ -218,7 +216,6 @@ public class ProcessInstantAppResources extends IncrementalTask {
 
             processInstantAppResources.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processInstantAppResources.setVariantName(config.getFullName());
-            processInstantAppResources.variantScope = scope.getVariantScope();
             processInstantAppResources.setIncrementalFolder(
                     scope.getVariantScope().getIncrementalDir(getName()));
 
