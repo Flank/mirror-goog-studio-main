@@ -20,66 +20,69 @@ import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.testutils.internal.CopyOfTester;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
 import java.util.Collection;
 import java.util.Map;
+import junit.framework.TestCase;
 
 public class DefaultProductFlavorTest extends TestCase {
 
-    private DefaultProductFlavor mDefault;
-    private DefaultProductFlavor mDefault2;
-    private DefaultProductFlavor mCustom;
-    private DefaultProductFlavor mCustom2;
+    private DefaultProductFlavor defaultFlavor;
+    private DefaultProductFlavor defaultFlavor2;
+    private DefaultProductFlavor custom;
+    private DefaultProductFlavor custom2;
 
     @Override
     protected void setUp() throws Exception {
-        mDefault = new DefaultProductFlavor("default");
-        mDefault2 = new DefaultProductFlavor("default2");
+        defaultFlavor = new DefaultProductFlavor("default");
+        defaultFlavor2 = new DefaultProductFlavor("default2");
 
-        mCustom = new DefaultProductFlavor("custom");
-        mCustom.setMinSdkVersion(new DefaultApiVersion(42));
-        mCustom.setTargetSdkVersion(new DefaultApiVersion(43));
-        mCustom.setRenderscriptTargetApi(17);
-        mCustom.setVersionCode(44);
-        mCustom.setVersionName("42.0");
-        mCustom.setApplicationId("com.forty.two");
-        mCustom.setTestApplicationId("com.forty.two.test");
-        mCustom.setTestInstrumentationRunner("com.forty.two.test.Runner");
-        mCustom.setTestHandleProfiling(true);
-        mCustom.setTestFunctionalTest(true);
-        mCustom.addResourceConfiguration("hdpi");
-        mCustom.addManifestPlaceholders(
-                ImmutableMap.<String, Object>of("one", "oneValue", "two", "twoValue"));
+        custom = new DefaultProductFlavor("custom");
+        custom.setMinSdkVersion(new DefaultApiVersion(42));
+        custom.setTargetSdkVersion(new DefaultApiVersion(43));
+        custom.setRenderscriptTargetApi(17);
+        custom.setVersionCode(44);
+        custom.setVersionName("42.0");
+        custom.setApplicationId("com.forty.two");
+        custom.setTestApplicationId("com.forty.two.test");
+        custom.setTestInstrumentationRunner("com.forty.two.test.Runner");
+        custom.setTestHandleProfiling(true);
+        custom.setTestFunctionalTest(true);
+        custom.addResourceConfiguration("hdpi");
+        custom.addManifestPlaceholders(ImmutableMap.of("one", "oneValue", "two", "twoValue"));
 
-        mCustom.addResValue(new ClassFieldImpl("foo", "one", "oneValue"));
-        mCustom.addResValue(new ClassFieldImpl("foo", "two", "twoValue"));
-        mCustom.addBuildConfigField(new ClassFieldImpl("foo", "one", "oneValue"));
-        mCustom.addBuildConfigField(new ClassFieldImpl("foo", "two", "twoValue"));
+        custom.addResValue(new ClassFieldImpl("foo", "one", "oneValue"));
+        custom.addResValue(new ClassFieldImpl("foo", "two", "twoValue"));
+        custom.addBuildConfigField(new ClassFieldImpl("foo", "one", "oneValue"));
+        custom.addBuildConfigField(new ClassFieldImpl("foo", "two", "twoValue"));
+        custom.setVersionNameSuffix("custom");
+        custom.setApplicationIdSuffix("custom");
 
-
-        mCustom2 = new DefaultProductFlavor("custom2");
-        mCustom2.addResourceConfigurations("ldpi", "hdpi");
-        mCustom2.addManifestPlaceholders(
-                ImmutableMap.<String, Object>of("two", "twoValueBis", "three", "threeValue"));
-        mCustom2.addResValue(new ClassFieldImpl("foo", "two", "twoValueBis"));
-        mCustom2.addResValue(new ClassFieldImpl("foo", "three", "threeValue"));
-        mCustom2.addBuildConfigField(new ClassFieldImpl("foo", "two", "twoValueBis"));
-        mCustom2.addBuildConfigField(new ClassFieldImpl("foo", "three", "threeValue"));
+        custom2 = new DefaultProductFlavor("custom2");
+        custom2.addResourceConfigurations("ldpi", "hdpi");
+        custom2.addManifestPlaceholders(
+                ImmutableMap.of("two", "twoValueBis", "three", "threeValue"));
+        custom2.addResValue(new ClassFieldImpl("foo", "two", "twoValueBis"));
+        custom2.addResValue(new ClassFieldImpl("foo", "three", "threeValue"));
+        custom2.addBuildConfigField(new ClassFieldImpl("foo", "two", "twoValueBis"));
+        custom2.addBuildConfigField(new ClassFieldImpl("foo", "three", "threeValue"));
+        custom2.setApplicationIdSuffix("custom2");
+        custom2.setVersionNameSuffix("custom2");
+        custom2.setApplicationId("com.custom2.app");
     }
 
     public void testClone() {
-        ProductFlavor flavor = DefaultProductFlavor.clone(mCustom);
-        assertEquals(mCustom, flavor);
+        ProductFlavor flavor = DefaultProductFlavor.clone(custom);
+        assertEquals(custom, flavor);
 
         CopyOfTester.assertAllGettersCalled(
-                DefaultProductFlavor.class, mCustom, DefaultProductFlavor::clone);
+                DefaultProductFlavor.class, custom, DefaultProductFlavor::clone);
     }
 
     public void testMergeOnDefault() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mDefault, mCustom);
+        ProductFlavor flavor =
+                DefaultProductFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom));
 
         assertNotNull(flavor.getMinSdkVersion());
         assertEquals(42, flavor.getMinSdkVersion().getApiLevel());
@@ -98,7 +101,8 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testMergeOnCustom() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mDefault, mCustom);
+        ProductFlavor flavor =
+                DefaultProductFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom));
 
         assertNotNull(flavor.getMinSdkVersion());
         assertEquals(42, flavor.getMinSdkVersion().getApiLevel());
@@ -117,7 +121,8 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testMergeDefaultOnDefault() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mDefault2, mDefault);
+        ProductFlavor flavor =
+                DefaultProductFlavor.mergeFlavors(defaultFlavor2, ImmutableList.of(defaultFlavor));
 
         assertNull(flavor.getMinSdkVersion());
         assertNull(flavor.getTargetSdkVersion());
@@ -132,7 +137,7 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testResourceConfigMerge() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mCustom2, mCustom);
+        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(custom2, ImmutableList.of(custom));
 
         Collection<String> configs = flavor.getResourceConfigurations();
         assertEquals(2, configs.size());
@@ -141,7 +146,7 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testManifestPlaceholdersMerge() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mCustom2, mCustom);
+        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(custom2, ImmutableList.of(custom));
 
         Map<String, Object> manifestPlaceholders = flavor.getManifestPlaceholders();
         assertEquals(3, manifestPlaceholders.size());
@@ -152,7 +157,7 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testResValuesMerge() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mCustom2, mCustom);
+        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(custom2, ImmutableList.of(custom));
 
         Map<String, ClassField> resValues = flavor.getResValues();
         assertEquals(3, resValues.size());
@@ -162,12 +167,39 @@ public class DefaultProductFlavorTest extends TestCase {
     }
 
     public void testBuildConfigFieldMerge() {
-        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(mCustom2, mCustom);
+        ProductFlavor flavor = DefaultProductFlavor.mergeFlavors(custom2, ImmutableList.of(custom));
 
         Map<String, ClassField> buildConfigFields = flavor.getBuildConfigFields();
         assertEquals(3, buildConfigFields.size());
         assertEquals("oneValue", buildConfigFields.get("one").getValue());
         assertEquals("twoValue", buildConfigFields.get("two").getValue());
         assertEquals("threeValue", buildConfigFields.get("three").getValue());
+    }
+
+    public void testMergeMultiple() {
+        DefaultProductFlavor custom3 = new DefaultProductFlavor("custom3");
+        custom3.setMinSdkVersion(new DefaultApiVersion(102));
+        custom3.setApplicationIdSuffix("custom3");
+        custom3.setVersionNameSuffix("custom3");
+
+        ProductFlavor flavor =
+                DefaultProductFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2));
+
+        assertEquals(flavor.getMinSdkVersion(), new DefaultApiVersion(102));
+        assertEquals("customcustom3custom2", flavor.getVersionNameSuffix());
+        assertEquals(flavor.getApplicationIdSuffix(), "custom.custom3.custom2");
+    }
+
+    public void testSecondDimensionOverwritesDefault() {
+        DefaultProductFlavor custom3 = new DefaultProductFlavor("custom3");
+        custom3.setMinSdkVersion(new DefaultApiVersion(102));
+
+        ProductFlavor flavor =
+                DefaultProductFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2));
+
+        assertEquals(flavor.getMinSdkVersion(), new DefaultApiVersion(102));
+        assertEquals(flavor.getApplicationId(), "com.custom2.app");
+        assertEquals("customcustom2", flavor.getVersionNameSuffix());
+        assertEquals(flavor.getApplicationIdSuffix(), "custom.custom2");
     }
 }
