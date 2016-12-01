@@ -111,12 +111,11 @@ public class FileCache {
      * Returns a {@code FileCache} instance with {@link LockingScope#INTER_PROCESS}.
      *
      * <p>Threads of the same process as well as those across different processes can read same the
-     * cache entry concurrently, but only one of them can write to the same cache entry or the same
-     * output file/directory at a time, without any other thread concurrently reading that cache
-     * entry. If the cache is being deleted by another thread of any process, then any read or write
-     * access to the cache will block until the deletion completes. The user must access the cache
-     * via {@code FileCache}'s API; otherwise, the previous concurrency guarantees will no longer
-     * hold.
+     * cache entry concurrently, but only one of them can write to the same cache entry at a time,
+     * without any other thread concurrently reading that cache entry. If the cache is being deleted
+     * by another thread of any process, then any read or write access to the cache will block until
+     * the deletion completes. The user must access the cache via {@code FileCache}'s API;
+     * otherwise, the previous concurrency guarantees will no longer hold.
      *
      * <p>Note that if this cache is never used by more than one process at a time, it may be
      * preferable to configure the cache with {@code SINGLE_PROCESS} locking scope instead since
@@ -136,17 +135,16 @@ public class FileCache {
      *
      * <p>Threads of the same process as well as those across different processes can read same the
      * cache entry concurrently; however, only one thread in the current process can write to the
-     * same cache entry or the same output file/directory at a time, without any other thread in the
-     * current process concurrently reading that cache entry, but there is no guarantee that that
-     * cache entry is not being read or written to by another thread of another process. If the
-     * cache is being deleted by another thread of the current process, then any read or write
-     * access to the cache will block until the deletion completes. The user must access the cache
-     * via {@code FileCache}'s API; otherwise, the previous concurrency guarantees will no longer
-     * hold.
+     * same cache entry at a time, without any other thread in the current process concurrently
+     * reading that cache entry, but there is no guarantee that that cache entry is not being read
+     * or written to by another thread of another process. If the cache is being deleted by another
+     * thread of the current process, then any read or write access to the cache will block until
+     * the deletion completes. The user must access the cache via {@code FileCache}'s API;
+     * otherwise, the previous concurrency guarantees will no longer hold.
      *
      * <p>Note that if this cache may be used by more than one process at a time, the client must
-     * configure the cache with {@code INTER_PROCESS} locking scope instead, even though there
-     * will be more synchronization overhead.
+     * configure the cache with {@code INTER_PROCESS} locking scope instead, even though there will
+     * be more synchronization overhead.
      *
      * @param cacheDirectory the directory that will contain the cached files/directories (may not
      *     already exist)
@@ -189,6 +187,12 @@ public class FileCache {
      * and the type of locking scope configured for this cache, this method may block until it is
      * allowed to continue.
      *
+     * <p>NOTE ON THREAD SAFETY: The cache is responsible for synchronizing access within the cache
+     * directory only. When the clients of the cache use this method to create an output
+     * file/directory (which must be outside the cache directory), they need to make sure that
+     * multiple threads/processes do not create the same output file/directory, or they need to have
+     * a way to manage that situation.
+     *
      * @param outputFile the output file/directory
      * @param inputs all the inputs that affect the creation of the output file/directory
      * @param fileCreator the callback function to create the output file/directory
@@ -226,8 +230,29 @@ public class FileCache {
         File cacheEntryDir = getCacheEntryDir(inputs);
         File cachedFile = getCachedFile(cacheEntryDir);
 
-        // Callable to create the output file
-        Callable<Void> createOutputFile =
+        // If the cache is hit, copy the cached file to the output file. The cached file should have
+        // been guarded with a SHARED lock when this callable is invoked (see method
+        // queryCacheEntry). Note that as stated in the contract of this method, we don't guard the
+        // output file with an EXCLUSIVE lock.
+        Callable<Void> actionIfCacheHit =
+                () -> {
+                    // Delete the output file and create its parent directory according to the
+                    // contract of this method
+                    FileUtils.deletePath(outputFile);
+                    Files.createParentDirs(outputFile);
+                    // Only copy if the cached file exist as file creator may not have produced an
+                    // output during the first time this cache is called on the given inputs
+                    if (cachedFile.exists()) {
+                        copyFileOrDirectory(cachedFile, outputFile);
+                    }
+                    return null;
+                };
+
+        // If the cache is missed or corrupted, create the output file and copy it to the cached
+        // file. The cached file should have been guarded with an EXCLUSIVE lock when this callable
+        // is invoked (see method queryCacheEntry). We again don't guard the output file with an
+        // EXCLUSIVE lock.
+        Callable<Void> actionIfCacheMissedOrCorrupted =
                 () -> {
                     // Delete the output file and create its parent directory first according to the
                     // contract of this method
@@ -238,52 +263,14 @@ public class FileCache {
                     } catch (Exception exception) {
                         throw new FileCreatorException(exception);
                     }
+
+                    // Only copy if the output file exists as file creator is not required to always
+                    // produce an output
+                    if (outputFile.exists()) {
+                        copyFileOrDirectory(outputFile, cachedFile);
+                    }
                     return null;
                 };
-
-        // Callable to copy the output file to the cached file
-        Callable<Void> copyOutputFileToCachedFile = () -> {
-            // Only copy if the output file exists as file creator is not required to always
-            // produce an output
-            if (outputFile.exists()) {
-                copyFileOrDirectory(outputFile, cachedFile);
-            }
-            return null;
-        };
-
-        // Callable to copy the cached file to the output file
-        Callable<Void> copyCachedFileToOutputFile = () -> {
-            // Delete the output file and create its parent directory according to the contract of
-            // this method
-            FileUtils.deletePath(outputFile);
-            Files.createParentDirs(outputFile);
-            // Only copy if the cached file exist as file creator may not have produced an output
-            // during the first time this cache is called on the given inputs
-            if (cachedFile.exists()) {
-                copyFileOrDirectory(cachedFile, outputFile);
-            }
-            return null;
-        };
-
-        // If the cache is hit, copy the cached file to the output file. The cached file should have
-        // been guarded with a SHARED lock when this callable is invoked (see method
-        // queryCacheEntry). Here, we guard the output file with an EXCLUSIVE lock so that other
-        // threads/processes won't be able to write to the same output file at the same time.
-        Callable<Void> actionIfCacheHit =
-                () -> doLocked(outputFile, LockingType.EXCLUSIVE, copyCachedFileToOutputFile);
-
-        // If the cache is missed or corrupted, create the output file and copy it to the cached
-        // file. The cached file should have been guarded with an EXCLUSIVE lock when this callable
-        // is invoked (see method queryCacheEntry). Here, we again guard the output file with an
-        // EXCLUSIVE lock.
-        Callable<Void> actionIfCacheMissedOrCorrupted =
-                () -> doLocked(
-                        outputFile,
-                        LockingType.EXCLUSIVE, () -> {
-                                createOutputFile.call();
-                                copyOutputFileToCachedFile.call();
-                                return null;
-                        });
 
         return queryCacheEntry(
                 inputs, cacheEntryDir, actionIfCacheHit, actionIfCacheMissedOrCorrupted);
@@ -602,8 +589,8 @@ public class FileCache {
     }
 
     /**
-     * Executes an action that accesses a file/directory with a shared lock (for reading) or an
-     * exclusive lock (for writing).
+     * Executes an action that accesses the cache directory or a cache entry directory with a shared
+     * lock (for reading) or an exclusive lock (for deleting/writing).
      *
      * <p>If this cache is configured with {@link LockingScope#INTER_PROCESS}, synchronization takes
      * place for threads of the same process as well as those across different processes. If this
@@ -612,11 +599,12 @@ public class FileCache {
      * synchronization takes effect only for the same cache (i.e., processes/threads using different
      * cache directories are not synchronized).
      *
-     * <p>Note that the file/directory to be accessed may or may not already exist.
+     * <p>Note that the directory to lock may or may not already exist.
      *
-     * @param accessedFile the file/directory that an action is going to access
-     * @param lockingType the type of lock (shared/reading or exclusive/writing)
-     * @param action the action that will be accessing the file/directory
+     * @param directoryToLock the cache directory or cache entry directory whose access needs to be
+     *     synchronized
+     * @param lockingType the type of lock (shared or exclusive)
+     * @param action the action that will be accessing the directory
      * @throws ExecutionException if an exception occurred during the execution of the action
      * @throws IOException if an I/O exception occurred, but not during the execution of the action
      * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
@@ -624,40 +612,49 @@ public class FileCache {
      */
     @VisibleForTesting
     <V> V doLocked(
-            @NonNull File accessedFile,
+            @NonNull File directoryToLock,
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
             throws ExecutionException, IOException {
         if (lockingScope == LockingScope.INTER_PROCESS) {
-            return doInterProcessLocked(accessedFile, lockingType, action);
+            return doInterProcessLocked(directoryToLock, lockingType, action);
         } else {
-            return doSingleProcessLocked(accessedFile, lockingType, action);
+            return doSingleProcessLocked(directoryToLock, lockingType, action);
         }
     }
 
-    /** Executes an action that accesses a file/directory with inter-process locking. */
+    /**
+     * Executes an action that accesses the cache directory or a cache entry directory with
+     * inter-process locking.
+     */
     private <V> V doInterProcessLocked(
-            @NonNull File accessedFile,
+            @NonNull File directoryToLock,
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
             throws ExecutionException, IOException {
-        // For each file/directory being accessed, we create a corresponding lock file to
-        // synchronize execution across processes. We don't use the file/directory being accessed as
-        // the lock file since we want to separate its usage from the locking mechanism and it is
-        // also not possible for the underlying locking mechanism (using Java's FileLock) to lock a
-        // directory.
-        String lockFileName =
-                Hashing.sha1()
-                        .hashString(
-                                FileUtils.getCaseSensitivityAwareCanonicalPath(accessedFile),
-                                StandardCharsets.UTF_8)
-                        .toString();
-        // If the file/directory being accessed is the cache directory itself, we use a lock file
-        // within the tmpdir directory; otherwise we use a lock file within the cache directory
-        File lockFile =
-                accessedFile.getCanonicalFile().equals(cacheDirectory.getCanonicalFile())
-                        ? new File(System.getProperty("java.io.tmpdir"), lockFileName)
-                        : new File(cacheDirectory, lockFileName);
+        // For a given directory to lock, we use a corresponding lock file
+        File lockFile;
+        if (directoryToLock.getCanonicalFile().equals(cacheDirectory.getCanonicalFile())) {
+            // If the directory to lock is the cache directory, we use a lock file within the tmpdir
+            // directory
+            String lockFileName =
+                    Hashing.sha1()
+                            .hashString(
+                                    FileUtils.getCaseSensitivityAwareCanonicalPath(cacheDirectory),
+                                    StandardCharsets.UTF_8)
+                            .toString();
+            lockFile = new File(System.getProperty("java.io.tmpdir"), lockFileName);
+        } else {
+            // If the directory to lock is a cache entry directory, we use a lock file within the
+            // cache directory
+            Preconditions.checkState(
+                    directoryToLock
+                            .getParentFile()
+                            .getCanonicalFile()
+                            .equals(cacheDirectory.getCanonicalFile()));
+            lockFile = new File(cacheDirectory, directoryToLock.getName() + ".lock");
+        }
+        Preconditions.checkState(lockFile.getParentFile().isDirectory());
 
         // ReadWriteProcessLock will normalize the lock file's path so that the paths can be
         // correctly compared by equals(), we don't need to normalize it here.
@@ -676,15 +673,18 @@ public class FileCache {
         }
     }
 
-    /** Executes an action that accesses a file/directory with single-process locking. */
+    /**
+     * Executes an action that accesses the cache directory or a cache entry directory with
+     * single-process locking.
+     */
     private static <V> V doSingleProcessLocked(
-            @NonNull File accessedFile,
+            @NonNull File directoryToLock,
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
-            throws ExecutionException, IOException {
+            throws ExecutionException {
         // We normalize the lock file's path so that the paths can be correctly compared by equals()
         ReadWriteThreadLock readWriteThreadLock =
-                new ReadWriteThreadLock(accessedFile.toPath().normalize());
+                new ReadWriteThreadLock(directoryToLock.toPath().normalize());
         ReadWriteThreadLock.Lock lock =
                 lockingType == LockingType.SHARED
                         ? readWriteThreadLock.readLock()
@@ -818,7 +818,7 @@ public class FileCache {
              * properties of the file/directory such as its hash, size, or timestamp as part of the
              * inputs as well.
              *
-             * @see #putFilePathLengtTimestamp(String, File)
+             * @see #putFilePathLengthTimestamp(String, File)
              */
             public Builder putFilePath(@NonNull String name, @NonNull File file) {
                 parameters.put(name, file.getPath());
@@ -838,7 +838,7 @@ public class FileCache {
              * part of the inputs as well.
              *
              * @param file the file to be hashed (must not be a directory)
-             * @see #putFilePathLengtTimestamp(String, File)
+             * @see #putFilePathLengthTimestamp(String, File)
              */
             public Builder putFileHash(@NonNull String name, @NonNull File file)
                     throws IOException {
@@ -854,8 +854,7 @@ public class FileCache {
              * <p>This is much faster than calculating the file hash and approximates it well enough
              * for files that we know are not supposed to change often.
              */
-            public Builder putFilePathLengtTimestamp(@NonNull String name, @NonNull File file)
-                    throws IOException {
+            public Builder putFilePathLengthTimestamp(@NonNull String name, @NonNull File file) {
                 Preconditions.checkArgument(file.isFile(), file + " is not a file.");
 
                 putFilePath(name + ".path", file);

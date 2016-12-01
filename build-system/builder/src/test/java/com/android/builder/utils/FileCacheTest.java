@@ -47,8 +47,8 @@ public class FileCacheTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @NonNull private File cacheDir;
-    @NonNull private File outputDir;
+    private File cacheDir;
+    private File outputDir;
 
     @Before
     public void setUp() throws IOException {
@@ -314,6 +314,7 @@ public class FileCacheTest {
                                             StandardCharsets.UTF_8);
                                 })
                         .getCachedFile();
+        assertNotNull(cachedDir2);
         assertThat(fileCache.getHits()).isEqualTo(1);
         assertThat(fileCache.getMisses()).isEqualTo(1);
         assertThat(cachedDir2).isEqualTo(cachedDir1);
@@ -461,7 +462,7 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testInvalidOutputFile() throws Exception {
+    public void testCreateFile_InvalidOutputFile() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
@@ -508,7 +509,7 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testOutputFileAlreadyExistsAndIsNotCreated() throws Exception {
+    public void testCreateFile_OutputFileAlreadyExistsAndIsNotCreated() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
@@ -538,7 +539,7 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testOutputFileDoesNotAlreadyExistAndIsCreated() throws Exception {
+    public void testCreateFile_OutputFileDoesNotAlreadyExistAndIsCreated() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
@@ -561,6 +562,25 @@ public class FileCacheTest {
         // output files (together with their parent directories)
         fileCache.createFile(fileInOutputDir2, inputs, () -> {});
         assertThat(fileInOutputDir2).exists();
+    }
+
+    @Test
+    public void testCreateFile_OutputFileNotLocked() throws Exception {
+        FileCache fileCache = FileCache.getInstanceWithInterProcessLocking(cacheDir);
+        FileCache.Inputs inputs =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input"))
+                        .build();
+
+        File outputFile = new File(outputDir, "output");
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
+
+        // The cache directory should contain 1 cache entry directory and 1 lock file for that
+        // directory (no lock file for the output file)
+        assertThat(fileCache.getCacheDirectory().list()).hasLength(2);
     }
 
     @Test
@@ -762,6 +782,7 @@ public class FileCacheTest {
 
         // Modify the inputs file's contents
         File cachedFile = result.getCachedFile();
+        assertNotNull(cachedFile);
         File inputsFile = new File(cachedFile.getParent(), "inputs");
         Files.write("Corrupted inputs", inputsFile, StandardCharsets.UTF_8);
 
@@ -1214,7 +1235,8 @@ public class FileCacheTest {
                 FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
     }
 
-    private void testDoLocked_MultiThreads_SameLockFileMixedLocks(@NonNull FileCache fileCache) {
+    private static void testDoLocked_MultiThreads_SameLockFileMixedLocks(
+            @NonNull FileCache fileCache) {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
                 tester,
@@ -1231,7 +1253,8 @@ public class FileCacheTest {
         tester.assertThatActionsCannotRunConcurrently();
     }
 
-    private void testDoLocked_MultiThreads_SameLockFileSharedLocks(@NonNull FileCache fileCache) {
+    private static void testDoLocked_MultiThreads_SameLockFileSharedLocks(
+            @NonNull FileCache fileCache) {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
                 tester,
@@ -1248,7 +1271,7 @@ public class FileCacheTest {
         tester.assertThatActionsCanRunConcurrently();
     }
 
-    private void testDoLocked_MultiThreads_DifferentLockFiles(@NonNull FileCache fileCache) {
+    private static void testDoLocked_MultiThreads_DifferentLockFiles(@NonNull FileCache fileCache) {
         // Use mixed locks on different lock files
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
         prepareConcurrencyTestForDoLocked(
@@ -1267,28 +1290,28 @@ public class FileCacheTest {
     }
 
     /**
-     * Performs a few steps common to the concurrency tests for
-     * {@link FileCache#doLocked(File, FileCache.LockingType, Callable)}.
+     * Performs a few steps common to the concurrency tests for {@link FileCache#doLocked(File,
+     * FileCache.LockingType, Callable)}.
      */
-    private void prepareConcurrencyTestForDoLocked(
+    private static void prepareConcurrencyTestForDoLocked(
             @NonNull ConcurrencyTester<Void, Void> tester,
             @NonNull FileCache fileCache,
-            @NonNull String[] filesToLock,
+            @NonNull String[] dirsToLock,
             @NonNull FileCache.LockingType[] lockingTypes) {
         Function<Void, Void> actionUnderTest = (Void arg) -> {
             // Do some artificial work here
             assertThat(1).isEqualTo(1);
             return null;
         };
-        for (int i = 0; i < filesToLock.length; i++) {
-            String fileToLock = filesToLock[i];
+        for (int i = 0; i < dirsToLock.length; i++) {
+            String dirToLock = dirsToLock[i];
             FileCache.LockingType lockingType = lockingTypes[i];
 
             tester.addMethodInvocationFromNewThread(
                     (Function<Void, Void> anActionUnderTest) -> {
                         try {
                             fileCache.doLocked(
-                                    new File(cacheDir, fileToLock),
+                                    new File(fileCache.getCacheDirectory(), dirToLock),
                                     lockingType,
                                     () -> anActionUnderTest.apply(null));
                         } catch (ExecutionException | IOException exception) {

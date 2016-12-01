@@ -102,7 +102,7 @@ public class MockableAndroidJarTask extends DefaultTask {
     private FileCache.Inputs getCacheInputs() throws IOException {
         return new FileCache.Inputs.Builder(FileCache.Command.GENERATE_MOCKABLE_JAR)
                 .putString("fileName", outputFile.getName())
-                .putFilePathLengtTimestamp("platformJar", androidJar)
+                .putFilePathLengthTimestamp("platformJar", androidJar)
                 .build();
     }
 
