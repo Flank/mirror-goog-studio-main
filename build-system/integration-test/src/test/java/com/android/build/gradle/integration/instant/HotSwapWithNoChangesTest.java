@@ -21,9 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -38,19 +36,15 @@ import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Tests how Instant Run cleans up state after a cold swap.
  */
-@RunWith(FilterableParameterized.class)
 public class HotSwapWithNoChangesTest {
 
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
@@ -59,14 +53,6 @@ public class HotSwapWithNoChangesTest {
 
     public static final String ACTIVITY_PATH =
             "src/main/java/com/example/helloworld/HelloWorld.java";
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging packaging;
 
     @Rule
     public GradleTestProject project =
@@ -92,7 +78,6 @@ public class HotSwapWithNoChangesTest {
             // Force cold swap.
             project.executor()
                     .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
-                    .withPackaging(packaging)
                     .run("assembleDebug");
         });
     }
@@ -108,7 +93,6 @@ public class HotSwapWithNoChangesTest {
             // Adding a new class will force a cold swap.
             project.executor()
                     .withInstantRun(23, COLDSWAP_MODE)
-                    .withPackaging(packaging)
                     .run("assembleDebug");
         });
     }
@@ -119,7 +103,6 @@ public class HotSwapWithNoChangesTest {
 
         project.executor()
                 .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
-                .withPackaging(packaging)
                 .run("assembleDebug");
 
         ApkSubject apkFile = expect.about(ApkSubject.FACTORY)
@@ -139,7 +122,6 @@ public class HotSwapWithNoChangesTest {
 
         // now run again the incremental build.
         project.executor()
-                .withPackaging(packaging)
                 .withInstantRun(23, COLDSWAP_MODE)
                 .run("assembleDebug");
 

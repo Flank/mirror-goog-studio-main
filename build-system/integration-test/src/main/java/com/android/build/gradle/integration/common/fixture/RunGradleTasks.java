@@ -54,7 +54,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
-    private Packaging packaging;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -113,14 +112,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         return this;
     }
 
-    /**
-     * Sets the desired packaging implementation.
-     */
-    public RunGradleTasks withPackaging(@NonNull Packaging packaging) {
-        this.packaging = packaging;
-        return this;
-    }
-
     public RunGradleTasks withSdkAutoDownload() {
         this.isSdkAutoDownload = true;
         return this;
@@ -169,14 +160,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
         if (buildToolsVersion != null) {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
-        }
-
-        if (packaging != null) {
-            args.add(
-                    String.format(
-                            "-P%s=%s",
-                            AndroidGradleOptions.PROPERTY_USE_OLD_PACKAGING,
-                            packaging.mFlagValue));
         }
 
         if (!isSdkAutoDownload) {

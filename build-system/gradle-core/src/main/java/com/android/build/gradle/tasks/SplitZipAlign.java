@@ -82,8 +82,6 @@ public class SplitZipAlign extends SplitRelatedTask {
 
     private File zipAlignExe;
 
-    private boolean useOldPackaging;
-
     @Nullable
     private File apkMetadataFile;
 
@@ -383,9 +381,6 @@ public class SplitZipAlign extends SplitRelatedTask {
                     "metadata");
             zipAlign.setApkMetadataFile(new File(metadataDirectory, config.getFullName() + ".mtd"));
             ((ApkVariantOutputData) variantOutputData).splitZipAlign = zipAlign;
-
-            zipAlign.useOldPackaging = AndroidGradleOptions.useOldPackaging(
-                    scope.getGlobalScope().getProject());
         }
     }
 }

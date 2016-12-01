@@ -2503,18 +2503,9 @@ public abstract class TaskManager {
             AndroidTask<?> appTask = packageApp;
 
             if (signedApk) {
-                if (AndroidGradleOptions.useOldPackaging(globalScope.getProject())
-                        && variantData.getZipAlignEnabled()) {
-                    AndroidTask<ZipAlign> zipAlignTask = androidTasks.create(
-                            tasks, new ZipAlign.ConfigAction(variantOutputScope));
-                    zipAlignTask.dependsOn(tasks, packageApp);
-
-                    appTask = zipAlignTask;
-                }
-
                 /*
                  * There may be a zip align task in the variant output scope, even if we don't
-                 * need one for this because we're using new packaging.
+                 * need one for this.
                  */
                 if (variantData.getZipAlignEnabled()
                         && variantOutputScope.getSplitZipAlignTask() != null) {

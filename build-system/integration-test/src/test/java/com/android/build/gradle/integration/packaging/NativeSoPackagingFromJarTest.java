@@ -23,8 +23,6 @@ import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
@@ -34,14 +32,11 @@ import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.Collection;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -51,18 +46,9 @@ import org.objectweb.asm.Opcodes;
 /**
  * test for packaging of asset files.
  */
-@RunWith(FilterableParameterized.class)
 public class NativeSoPackagingFromJarTest {
     private static final String LIB_X86_LIBHELLO_SO = "lib/x86/libhello.so";
     private static final String COM_FOO_FOO_CLASS = "com/foo/Foo.class";
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
@@ -124,13 +110,13 @@ public class NativeSoPackagingFromJarTest {
 
     @Test
     public void testAppPackaging() throws Exception {
-        project.executor().withPackaging(mPackaging).run("app:assembleDebug");
+        project.executor().run("app:assembleDebug");
         checkApk(appProject, "libhello.so", "hello");
     }
 
     @Test
     public void testLibraryPackaging() throws Exception {
-        project.executor().withPackaging(mPackaging).run("library:assembleDebug");
+        project.executor().run("library:assembleDebug");
         checkAar(libProject, "libhello.so", "hello");
 
         // also check that the bar.jar is also present as a local jar with a the class

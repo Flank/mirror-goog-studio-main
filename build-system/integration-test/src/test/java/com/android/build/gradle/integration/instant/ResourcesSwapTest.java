@@ -27,9 +27,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -44,30 +42,18 @@ import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Test for changing resources with Instant Run. */
-@RunWith(FilterableParameterized.class)
 public class ResourcesSwapTest {
 
     private static final String LOG_TAG = "ResourcesSwapTest.sha";
     private static final String BLACK_PNG_SHA = "256111655c33c5b5c095f6287abe6db307eab27a";
     private static final String WHITE_PNG_SHA = "bdd80c122f819fd58ee0603530d27f591a9cc46c";
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject mProject =
@@ -97,7 +83,7 @@ public class ResourcesSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(mProject, mPackaging, 21, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(mProject, 21, COLDSWAP_MODE);
         File apk = mProject.getApk("debug");
         assertThatApk(apk).contains("assets/movie.mp4");
         assertThatApk(apk).contains("classes.dex");
@@ -107,7 +93,6 @@ public class ResourcesSwapTest {
 
         mProject.executor()
                 .withInstantRun(21, COLDSWAP_MODE)
-                .withPackaging(mPackaging)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getResourcesArtifact(instantRunModel);
@@ -164,7 +149,6 @@ public class ResourcesSwapTest {
         HotSwapTester tester =
                 new HotSwapTester(
                         mProject,
-                        mPackaging,
                         HelloWorldApp.APP_ID,
                         "HelloWorld",
                         LOG_TAG,

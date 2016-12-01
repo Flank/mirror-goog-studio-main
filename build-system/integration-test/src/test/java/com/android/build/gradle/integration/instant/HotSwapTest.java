@@ -27,9 +27,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
@@ -43,34 +41,22 @@ import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Smoke test for hot swap builds.
  */
-@RunWith(FilterableParameterized.class)
 public class HotSwapTest {
 
     private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
     private static final String LOG_TAG = "hotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
     private static final int CHANGES_COUNT = 3;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging packaging;
 
     @Rule
     public final Adb adb = new Adb();
@@ -98,7 +84,7 @@ public class HotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, packaging, 19, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(project, 19, COLDSWAP_MODE);
 
         // As no injected API level, will default to no splits.
         ApkSubject apkFile = expect.about(ApkSubject.FACTORY)
@@ -113,7 +99,6 @@ public class HotSwapTest {
 
         project.executor()
                 .withInstantRun(19, COLDSWAP_MODE)
-                .withPackaging(packaging)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact =
@@ -157,7 +142,6 @@ public class HotSwapTest {
         HotSwapTester tester =
                 new HotSwapTester(
                         project,
-                        packaging,
                         HelloWorldApp.APP_ID,
                         "HelloWorld",
                         LOG_TAG,

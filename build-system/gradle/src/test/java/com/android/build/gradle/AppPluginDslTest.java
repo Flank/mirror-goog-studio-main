@@ -67,16 +67,7 @@ public class AppPluginDslTest
                 ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
                 // Check if we did the right thing, depending on the default value of the flag.
-                if (!AndroidGradleOptions.DEFAULT_USE_OLD_PACKAGING) {
-                    Assert.assertNull(apkVariantOutput.getZipAlign());
-                } else {
-                    // tested variant are never zipAligned.
-                    if (!isTestVariant && variant.getBuildType().isZipAlignEnabled()) {
-                        assertNotNull(apkVariantOutput.getZipAlign());
-                    } else {
-                        Assert.assertNull(apkVariantOutput.getZipAlign());
-                    }
-                }
+                Assert.assertNull(apkVariantOutput.getZipAlign());
             }
 
         } else {

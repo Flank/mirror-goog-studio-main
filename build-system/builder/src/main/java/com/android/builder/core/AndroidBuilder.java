@@ -33,9 +33,7 @@ import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
-import com.android.builder.files.RelativeFiles;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -46,7 +44,6 @@ import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.internal.packaging.OldPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SigningException;
@@ -87,24 +84,20 @@ import com.android.utils.ILogger;
 import com.android.utils.LineCollector;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -129,7 +122,6 @@ import java.util.zip.ZipFile;
  * {@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
  * {@link #compileAllAidlFiles(List, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)}
  * {@link #getDexByteCodeConverter()}
- * {@link #oldPackageApk(String, Set, Collection, Collection, File, Set, boolean, SigningConfig, File, int, Predicate)}
  *
  * Java compilation is not handled but the builder provides the boot classpath with
  * {@link #getBootClasspath(boolean)}.
@@ -1568,158 +1560,6 @@ public class AndroidBuilder {
                 javaProcessInfo,
                 new LoggedProcessOutputHandler(getLogger()));
         result.rethrowFailure().assertNormalExitValue();
-    }
-
-    /**
-     * Packages the apk.
-     *
-     * <p>If in debug mode (when {@code jniDebugBuild} is {@code true}), when native
-     * libraries are present, the packaging will also include one or more copies of
-     * {@code gdbserver} in the final APK file. These are used for debugging native code, to ensure
-     * that {@code gdbserver} is accessible to the application. There will be one version of
-     * {@code gdbserver} for each ABI supported by the application. The {@code gbdserver} files are
-     * placed in the {@code libs/abi/} folders automatically by the NDK.
-     *
-     * @param androidResPkgLocation the location of the packaged resource file
-     * @param dexFolders the folder(s) with the dex file(s).
-     * @param javaResourcesLocations the processed Java resource folders and/or jars
-     * @param jniLibsLocations the folders containing jni shared libraries
-     * @param assetsFolder the folder containing assets (null if no assets are to be packaged)
-     * @param abiFilters optional ABI filter
-     * @param jniDebugBuild whether the app should include jni debug data
-     * @param signingConfig the signing configuration
-     * @param outApkLocation location of the APK.
-     * @param noCompressPredicate predicate for paths that should not be compressed
-     * @throws FileNotFoundException if the store location was not found
-     * @throws KeytoolException failed
-     * @throws PackagerException failed
-     */
-    @SuppressWarnings("deprecation")
-    public void oldPackageApk(
-            @NonNull String androidResPkgLocation,
-            @NonNull Set<File> dexFolders,
-            @NonNull Collection<File> javaResourcesLocations,
-            @NonNull Collection<File> jniLibsLocations,
-            @Nullable File assetsFolder,
-            @NonNull Set<String> abiFilters,
-            boolean jniDebugBuild,
-            @Nullable SigningConfig signingConfig,
-            @NonNull File outApkLocation,
-            int minSdkVersion,
-            @NonNull Predicate<String> noCompressPredicate)
-            throws KeytoolException, PackagerException, SigningException, IOException {
-        checkNotNull(androidResPkgLocation, "androidResPkgLocation cannot be null.");
-        checkNotNull(outApkLocation, "outApkLocation cannot be null.");
-
-        /*
-         * This is because this method is not supposed be be called in an incremental build. So, if
-         * an out APK already exists, we delete it.
-         */
-        FileUtils.deleteIfExists(outApkLocation);
-
-        Map<RelativeFile, FileStatus> javaResourceMods = Maps.newHashMap();
-        Map<File, FileStatus> javaResourceArchiveMods = Maps.newHashMap();
-        for (File resourceLocation : javaResourcesLocations) {
-            if (resourceLocation.isFile()) {
-                javaResourceArchiveMods.put(resourceLocation, FileStatus.NEW);
-            } else {
-                Set<RelativeFile> files =
-                        RelativeFiles.fromDirectory(resourceLocation, rf -> rf.getFile().isFile());
-                javaResourceMods.putAll(
-                        Maps.asMap(files, Functions.constant(FileStatus.NEW)));
-            }
-        }
-
-        NativeLibraryAbiPredicate nativeLibraryPredicate =
-                new NativeLibraryAbiPredicate(abiFilters, jniDebugBuild);
-        Map<RelativeFile, FileStatus> jniMods = Maps.newHashMap();
-        Map<File, FileStatus> jniArchiveMods = Maps.newHashMap();
-        for (File jniLoc : jniLibsLocations) {
-            if (jniLoc.isFile()) {
-                jniArchiveMods.put(jniLoc, FileStatus.NEW);
-            } else {
-                Set<RelativeFile> files =
-                        RelativeFiles.fromDirectory(
-                                jniLoc,
-                                RelativeFiles.fromPathPredicate(nativeLibraryPredicate));
-                jniMods.putAll(
-                        Maps.asMap(files, Functions.constant(FileStatus.NEW)));
-            }
-        }
-
-        Set<RelativeFile> assets = assetsFolder == null
-                ? Collections.emptySet()
-                : RelativeFiles.fromDirectory(assetsFolder, rf -> rf.getFile().isFile());
-
-        PrivateKey key;
-        X509Certificate certificate;
-        boolean v1SigningEnabled;
-        boolean v2SigningEnabled;
-
-        if (signingConfig != null && signingConfig.isSigningReady()) {
-            CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-                    signingConfig.getStoreType(),
-                    Preconditions.checkNotNull(signingConfig.getStoreFile()),
-                    Preconditions.checkNotNull(signingConfig.getStorePassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyPassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyAlias()));
-            key = certificateInfo.getKey();
-            certificate = certificateInfo.getCertificate();
-            v1SigningEnabled = signingConfig.isV1SigningEnabled();
-            v2SigningEnabled = signingConfig.isV2SigningEnabled();
-        } else {
-            key = null;
-            certificate = null;
-            v1SigningEnabled = false;
-            v2SigningEnabled = false;
-        }
-
-        ApkCreatorFactory.CreationData creationData =
-                new ApkCreatorFactory.CreationData(
-                        outApkLocation,
-                        key,
-                        certificate,
-                        v1SigningEnabled,
-                        v2SigningEnabled,
-                        null, // BuiltBy
-                        mCreatedBy,
-                        minSdkVersion,
-                        NativeLibrariesPackagingMode.COMPRESSED,
-                        noCompressPredicate);
-        try (OldPackager packager = new OldPackager(creationData, androidResPkgLocation, mLogger)) {
-            // add dex folder to the apk root.
-            if (!dexFolders.isEmpty()) {
-                packager.addDexFiles(dexFolders);
-            }
-
-            // add the output of the java resource merger
-            for (Map.Entry<RelativeFile, FileStatus> resourceUpdate :
-                    javaResourceMods.entrySet()) {
-                packager.updateResource(resourceUpdate.getKey(), resourceUpdate.getValue());
-            }
-
-            for (Map.Entry<File, FileStatus> resourceArchiveUpdate :
-                    javaResourceArchiveMods.entrySet()) {
-                packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
-                        resourceArchiveUpdate.getValue(), i -> false);
-            }
-
-            for (Map.Entry<RelativeFile, FileStatus> jniLibUpdates : jniMods.entrySet()) {
-                packager.updateResource(jniLibUpdates.getKey(), jniLibUpdates.getValue());
-            }
-
-            for (Map.Entry<File, FileStatus> resourceArchiveUpdate :
-                    jniArchiveMods.entrySet()) {
-                packager.updateResourceArchive(resourceArchiveUpdate.getKey(),
-                        resourceArchiveUpdate.getValue(), nativeLibraryPredicate.negate());
-            }
-
-            for (RelativeFile asset : assets) {
-                packager.addFile(
-                        asset.getFile(),
-                        SdkConstants.FD_ASSETS + "/" + asset.getOsIndependentRelativePath());
-            }
-        }
     }
 
     /**

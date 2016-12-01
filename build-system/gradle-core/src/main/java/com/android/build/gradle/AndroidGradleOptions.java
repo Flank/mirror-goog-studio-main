@@ -18,7 +18,6 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -41,9 +40,6 @@ import org.gradle.api.Project;
  */
 public class AndroidGradleOptions {
 
-    @VisibleForTesting
-    public static final boolean DEFAULT_USE_OLD_PACKAGING = false;
-
     private static final boolean DEFAULT_ENABLE_AAPT2 = false;
 
     private static final boolean DEFAULT_ENABLE_BUILD_CACHE = true;
@@ -61,8 +57,6 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
             "android.incrementalJavaCompile";
-
-    public static final String PROPERTY_USE_OLD_PACKAGING = "android.useOldPackaging";
 
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
 
@@ -153,10 +147,6 @@ public class AndroidGradleOptions {
 
     public static boolean generateSourcesOnly(@NonNull Project project) {
         return getBoolean(project, AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY);
-    }
-
-    public static boolean useOldPackaging(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_USE_OLD_PACKAGING, DEFAULT_USE_OLD_PACKAGING);
     }
 
     public static boolean keepTimestampsInApk(@NonNull Project project) {
