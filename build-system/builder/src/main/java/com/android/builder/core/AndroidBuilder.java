@@ -33,6 +33,7 @@ import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
@@ -105,7 +106,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -1569,11 +1569,12 @@ public class AndroidBuilder {
     }
 
     /**
-     * Creates a new split APK containing only code, this will only be functional on
-     * MarshMallow and above devices.
+     * Creates a new split APK containing only code.
+     *
+     * <p>This is used for instant run cold swaps on N and above.
      */
     public void packageCodeSplitApk(
-            @NonNull String androidResPkgLocation,
+            @NonNull File androidResPkg,
             @NonNull File dexFile,
             @Nullable SigningConfig signingConfig,
             @NonNull File outApkLocation,
@@ -1623,6 +1624,9 @@ public class AndroidBuilder {
                 apkCreatorFactory,
                 new HashSet<>(),
                 true)) {
+            ImmutableMap<RelativeFile, FileStatus> androidResources =
+                    IncrementalRelativeFileSets.fromZip(androidResPkg);
+            packager.updateAndroidResources(androidResources);
             RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
             packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
         }
