@@ -138,7 +138,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Returns the application ID.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/applicationid-vs-packagename">ApplicationId versus PackageName</a>
+     * <p>See <a href="https://developer.android.com/studio/build/application-id.html">Set the Application ID</a>
      */
     @Override
     @Nullable
@@ -308,7 +308,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Test application ID.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/applicationid-vs-packagename">ApplicationId versus PackageName</a>
+     * <p>See <a href="https://developer.android.com/studio/build/application-id.html">Set the Application ID</a>
      */
     @Override
     @Nullable

@@ -430,7 +430,7 @@ public abstract class BaseExtension implements AndroidConfig {
     /**
      * Specifies names of flavor dimensions.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Multi-flavor-variants">Multi-flavor variants</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">Multi-flavor variants</a>.
      */
     public void flavorDimensions(String... dimensions) {
         checkWritability();
@@ -622,8 +622,8 @@ public abstract class BaseExtension implements AndroidConfig {
      * Name of the configuration used to build the default artifact of this project, used for
      * publishing to Maven
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Referencing-a-Library">
-     * Referencing a Library</a>
+     * <p>See <a href="https://developer.android.com/studio/build/dependencies.html">
+     * Add Build Dependencies</a>
      */
     @Override
     public String getDefaultPublishConfig() {
@@ -673,7 +673,7 @@ public abstract class BaseExtension implements AndroidConfig {
     /**
      * Returns the names of flavor dimensions.
      *
-     * <p>See <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Multi-flavor-variants">Multi-flavor variants</a>.
+     * <p>See <a href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">Multi-flavor variants</a>.
      */
     @Override
     public List<String> getFlavorDimensionList() {
