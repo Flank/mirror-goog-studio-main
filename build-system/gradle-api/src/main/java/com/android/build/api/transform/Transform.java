@@ -113,7 +113,7 @@ public abstract class Transform {
      * Returns the scope(s) of the Transform. This indicates which scopes the transform consumes.
      */
     @NonNull
-    public abstract Set<Scope> getScopes();
+    public abstract Set<? super Scope> getScopes();
 
     /**
      * Returns the referenced scope(s) for the Transform. These scopes are not consumed by
@@ -123,7 +123,7 @@ public abstract class Transform {
      * <p>The default implementation returns an empty Set.
      */
     @NonNull
-    public Set<Scope> getReferencedScopes() {
+    public Set<? super Scope> getReferencedScopes() {
         return ImmutableSet.of();
     }
 

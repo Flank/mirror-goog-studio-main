@@ -26,16 +26,15 @@ import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder;
+import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
+import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -46,6 +45,7 @@ import com.android.builder.model.SyncIssue;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -293,21 +293,55 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getInstantRunBuildContext().getPatchingPolicy();
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+
             BaseVariantOutputData outputData =
                     variantScope.getVariantData().getOutputs().get(0);
             PackagingScope packagingScope = new DefaultGradlePackagingScope(outputData.getScope());
 
-            AndroidTask<InstantRunSplitApkBuilder> splitApk =
-                    getAndroidTasks().create(tasks,
-                            new InstantRunSplitApkBuilder.ConfigAction(packagingScope));
+            // create the transforms that will create the dependencies apk.
+            InstantRunDependenciesApkBuilder dependenciesApkBuilder =
+                    new InstantRunDependenciesApkBuilder(
+                            getLogger(),
+                            project,
+                            variantScope.getInstantRunBuildContext(),
+                            variantScope.getGlobalScope().getAndroidBuilder(),
+                            packagingScope,
+                            packagingScope.getSigningConfig(),
+                            packagingScope.getAaptOptions(),
+                            packagingScope.getInstantRunSplitApkOutputFolder(),
+                            packagingScope.getInstantRunSupportDir(),
+                            packagingScope.getApplicationId(),
+                            packagingScope.getVersionName(),
+                            packagingScope.getVersionCode());
 
-            TransformManager transformManager = variantScope.getTransformManager();
-            for (TransformStream stream : transformManager.getStreams(StreamFilter.DEX)) {
-                // TODO Optimize to avoid creating too many actions
-                splitApk.dependsOn(tasks, stream.getDependencies());
+            variantScope.getTransformManager().addTransform(
+                    tasks, variantScope, dependenciesApkBuilder);
+
+            // and now the transform that will create a split APK for each slice.
+            InstantRunSliceSplitApkBuilder slicesApkBuilder =
+                    new InstantRunSliceSplitApkBuilder(
+                            getLogger(),
+                            project,
+                            variantScope.getInstantRunBuildContext(),
+                            variantScope.getGlobalScope().getAndroidBuilder(),
+                            packagingScope,
+                            packagingScope.getSigningConfig(),
+                            packagingScope.getAaptOptions(),
+                            packagingScope.getInstantRunSplitApkOutputFolder(),
+                            packagingScope.getInstantRunSupportDir(),
+                            packagingScope.getApplicationId(),
+                            packagingScope.getVersionName(),
+                            packagingScope.getVersionCode());
+
+            Optional<AndroidTask<TransformTask>> transformTaskAndroidTask = variantScope
+                    .getTransformManager().addTransform(tasks, variantScope, slicesApkBuilder);
+
+            if (transformTaskAndroidTask.isPresent()) {
+                AndroidTask<TransformTask> splitApk = transformTaskAndroidTask.get();
+                variantScope.getAssembleTask().dependsOn(tasks, splitApk);
+                buildInfoGeneratorTask
+                        .configure(tasks, task -> task.mustRunAfter(splitApk.getName()));
             }
-            variantScope.getAssembleTask().dependsOn(tasks, splitApk);
-            buildInfoGeneratorTask.configure(tasks, task -> task.mustRunAfter(splitApk.getName()));
 
             // if the assembleVariant task run, make sure it also runs the task to generate
             // the build-info.xml.

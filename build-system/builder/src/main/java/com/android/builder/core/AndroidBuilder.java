@@ -1575,7 +1575,7 @@ public class AndroidBuilder {
      */
     public void packageCodeSplitApk(
             @NonNull File androidResPkg,
-            @NonNull File dexFile,
+            @NonNull Set<File> dexFiles,
             @Nullable SigningConfig signingConfig,
             @NonNull File outApkLocation,
             @NonNull File incrementalDir,
@@ -1627,8 +1627,10 @@ public class AndroidBuilder {
             ImmutableMap<RelativeFile, FileStatus> androidResources =
                     IncrementalRelativeFileSets.fromZip(androidResPkg);
             packager.updateAndroidResources(androidResources);
-            RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
-            packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
+            for (File dexFile : dexFiles) {
+                RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
+                packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
+            }
         }
     }
 

@@ -22,7 +22,6 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -120,7 +119,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders(@NonNull FileType fileType) {
+    public Set<File> getDexFolders() {
         return mTransformManager.getPipelineOutput(StreamFilter.DEX).keySet();
     }
 

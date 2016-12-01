@@ -34,6 +34,7 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
@@ -52,6 +53,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -154,8 +156,8 @@ public class DexTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_PROJECT;
+    public Set<? super Scope> getScopes() {
+        return TransformManager.SCOPE_FULL_INSTANT_RUN_PROJECT;
     }
 
     @NonNull
@@ -253,8 +255,12 @@ public class DexTransform extends Transform {
             // runs dx on everything.
             if ((jarInputs.size() + directoryInputs.size()) == 1
                     || !dexOptions.getPreDexLibraries()) {
+
+                // since there is only one dex file, we can merge all the scopes into the full
+                // application one.
                 File outputDir = outputProvider.getContentLocation("main",
-                        getOutputTypes(), getScopes(),
+                        getOutputTypes(),
+                        TransformManager.SCOPE_FULL_PROJECT,
                         Format.DIRECTORY);
                 FileUtils.mkdirs(outputDir);
 
@@ -400,7 +406,7 @@ public class DexTransform extends Transform {
 
                 if (needMerge) {
                     File outputDir = outputProvider.getContentLocation("main",
-                            TransformManager.CONTENT_DEX, getScopes(),
+                            TransformManager.CONTENT_DEX, TransformManager.SCOPE_FULL_PROJECT,
                             Format.DIRECTORY);
                     FileUtils.mkdirs(outputDir);
 

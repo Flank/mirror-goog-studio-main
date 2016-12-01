@@ -25,17 +25,19 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.incremental.InputFileDetails;
 
@@ -70,7 +72,7 @@ public class IntermediateFolderUtils {
             @NonNull File rootLocation,
             @NonNull String name,
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> scopes,
+            @NonNull Set<? super Scope> scopes,
             @NonNull Format format) {
         // runtime check these since it's (indirectly) called by 3rd party transforms.
         checkNotNull(name);
@@ -107,7 +109,7 @@ public class IntermediateFolderUtils {
     public static TransformInput computeNonIncrementalInputFromFolder(
             @NonNull File folder,
             @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<Scope> requiredScopes) {
+            @NonNull Set<? super Scope> requiredScopes) {
         final List<JarInput> jarInputs = Lists.newArrayList();
         final List<DirectoryInput> directoryInputs = Lists.newArrayList();
 
@@ -127,7 +129,7 @@ public class IntermediateFolderUtils {
                         public void generate(
                                 @NonNull File file,
                                 @NonNull Set<ContentType> types,
-                                @NonNull Set<Scope> scopes) {
+                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
                             jarInputs.add(new ImmutableJarInput(
                                     file.getName().substring(0,
                                             file.getName().length() - DOT_JAR.length()),
@@ -154,7 +156,7 @@ public class IntermediateFolderUtils {
 
                         @Override
                         public void generate(@NonNull File file, @NonNull Set<ContentType> types,
-                                @NonNull Set<Scope> scopes) {
+                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
                             directoryInputs.add(new ImmutableDirectoryInput(
                                     file.getName(),
                                     file,
@@ -179,7 +181,7 @@ public class IntermediateFolderUtils {
 
         @Override
         protected boolean checkRemovedFolder(
-                @NonNull Set<Scope> transformScopes,
+                @NonNull Set<? super Scope> transformScopes,
                 @NonNull Set<ContentType> transformInputTypes,
                 @NonNull File file,
                 @NonNull List<String> fileSegments) {
@@ -212,7 +214,7 @@ public class IntermediateFolderUtils {
             }
 
             // get the scopes.
-            Set<Scope> scopes = stringToScopes(fileSegments.get(index++));
+            Set<QualifiedContent.ScopeType> scopes = stringToScopes(fileSegments.get(index++));
             if (scopes == null) {
                 return false;
             }
@@ -244,7 +246,7 @@ public class IntermediateFolderUtils {
 
         @Override
         boolean checkRemovedJarFile(
-                @NonNull Set<Scope> transformScopes,
+                @NonNull Set<? super Scope> transformScopes,
                 @NonNull Set<ContentType> transformInputTypes,
                 @NonNull File file,
                 @NonNull List<String> fileSegments) {
@@ -280,7 +282,7 @@ public class IntermediateFolderUtils {
             }
 
             // get the scopes.
-            Set<Scope> scopes = stringToScopes(fileSegments.get(index++));
+            Set<QualifiedContent.ScopeType> scopes = stringToScopes(fileSegments.get(index++));
             if (scopes == null) {
                 return false;
             }
@@ -325,7 +327,7 @@ public class IntermediateFolderUtils {
     public static IncrementalTransformInput computeIncrementalInputFromFolder(
             @NonNull File rootLocation,
             @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<Scope> requiredScopes) {
+            @NonNull Set<? super Scope> requiredScopes) {
         final IncrementalTransformInput input = new IntermediateTransformInput(rootLocation);
 
         File jarsFolder = new File(rootLocation, JARS);
@@ -344,7 +346,7 @@ public class IntermediateFolderUtils {
                         public void generate(
                                 @NonNull File file,
                                 @NonNull Set<ContentType> types,
-                                @NonNull Set<Scope> scopes) {
+                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
                             input.addJarInput(new QualifiedContentImpl(
                                     file.getName().substring(0,
                                             file.getName().length() - DOT_JAR.length()),
@@ -371,7 +373,7 @@ public class IntermediateFolderUtils {
 
                         @Override
                         public void generate(@NonNull File file, @NonNull Set<ContentType> types,
-                                @NonNull Set<Scope> scopes) {
+                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
                             input.addFolderInput(new MutableDirectoryInput(
                                     file.getName(),
                                     file,
@@ -389,13 +391,13 @@ public class IntermediateFolderUtils {
         void generate(
                 @NonNull File file,
                 @NonNull Set<ContentType> types,
-                @NonNull Set<Scope> scopes);
+                @NonNull Set<QualifiedContent.ScopeType> scopes);
     }
 
     private static void parseTypeLevelFolders(
             @NonNull File rootFolder,
             @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<Scope> requiredScopes,
+            @NonNull Set<? super Scope> requiredScopes,
             @NonNull InputGenerator generator) {
         File[] files = rootFolder.listFiles(File::isDirectory);
 
@@ -418,21 +420,21 @@ public class IntermediateFolderUtils {
     private static void parseScopeLevelFolders(
             @NonNull File rootFolder,
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> requiredScopes,
+            @NonNull Set<? super Scope> requiredScopes,
             @NonNull InputGenerator generator) {
         File[] files = rootFolder.listFiles(File::isDirectory);
 
         if (files != null && files.length > 0) {
             for (File file : files) {
-                Set<Scope> scopes = stringToScopes(file.getName());
+                Set<QualifiedContent.ScopeType> scopes = stringToScopes(file.getName());
                 if (scopes != null) {
                     // we need up to the requiredScopes, but no more.
                     // content that only contains unwanted Scope can be safely dropped, however
                     // content that is both in and out of Scope will trigger a runtime error.
                     // check these are the scope we want, and only pass down scopes we care about.
-                    Set<Scope> limitedScopes = Sets.newHashSetWithExpectedSize(requiredScopes.size());
+                    Set<QualifiedContent.ScopeType> limitedScopes = Sets.newHashSetWithExpectedSize(requiredScopes.size());
                     boolean foundUnwanted = false;
-                    for (Scope scope : scopes) {
+                    for (QualifiedContent.ScopeType scope : scopes) {
                         if (requiredScopes.contains(scope)) {
                             limitedScopes.add(scope);
                         } else {
@@ -443,7 +445,7 @@ public class IntermediateFolderUtils {
                         if (foundUnwanted) {
                             throw new RuntimeException("error");
                         }
-                        parseContentLevelFolders(file, types, Sets.immutableEnumSet(limitedScopes),
+                        parseContentLevelFolders(file, types, limitedScopes,
                                 generator);
                     }
                 }
@@ -454,7 +456,7 @@ public class IntermediateFolderUtils {
     private static void parseContentLevelFolders(
             @NonNull File rootFolder,
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> scopes,
+            @NonNull Set<QualifiedContent.ScopeType> scopes,
             @NonNull final InputGenerator generator) {
 
         File[] files = rootFolder.listFiles(generator::accept);
@@ -501,7 +503,7 @@ public class IntermediateFolderUtils {
     }
 
     @Nullable
-    private static Set<Scope> stringToScopes(String folderName) {
+    private static Set<QualifiedContent.ScopeType> stringToScopes(String folderName) {
         int value;
         try {
             value = Integer.parseInt(folderName, 16);
@@ -509,24 +511,36 @@ public class IntermediateFolderUtils {
             return null;
         }
 
-        Set<Scope> scopes = Sets.newHashSet();
+        ImmutableSet.Builder<QualifiedContent.ScopeType> scopesBuilder = ImmutableSet.builder();
 
-        for (Scope scope : Scope.values()) {
+        for (QualifiedContent.ScopeType scope : allScopes()) {
             if ((scope.getValue() & value) != 0) {
-                scopes.add(scope);
+                scopesBuilder.add(scope);
             }
         }
+        ImmutableSet<QualifiedContent.ScopeType> scopes = scopesBuilder.build();
 
         if (scopes.isEmpty()) {
             return null;
         }
 
-        return Sets.immutableEnumSet(scopes);
+        return scopes;
     }
 
-    private static String scopesToString(@NonNull Set<Scope> scopes) {
+    private static List<QualifiedContent.ScopeType> allScopes() {
+        ImmutableList.Builder<QualifiedContent.ScopeType> scopeTypes = ImmutableList.builder();
+        for (QualifiedContent.ScopeType scopeType : Scope.values()) {
+            scopeTypes.add(scopeType);
+        }
+        for (QualifiedContent.ScopeType scopeType : InternalScope.values()) {
+            scopeTypes.add(scopeType);
+        }
+        return scopeTypes.build();
+    }
+
+    private static String scopesToString(@NonNull Set<? super Scope> scopes) {
         int value = 0;
-        for (Scope scope : scopes) {
+        for (QualifiedContent.ScopeType scope : (Set<QualifiedContent.ScopeType>) scopes) {
             value += scope.getValue();
         }
 
