@@ -77,6 +77,7 @@ import com.android.dx.command.dexer.Main;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.repository.api.Channel;
+import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.downloader.LocalFileAwareDownloader;
@@ -89,9 +90,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -759,6 +765,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     private SettingsController getSettingsController() {
+        Proxy proxy = createProxy(System.getProperties(), getLogger());
         return new SettingsController() {
             @Override
             public boolean getForceHttp() {
@@ -775,7 +782,62 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             public Channel getChannel() {
                 return AndroidGradleOptions.getSdkChannel(project);
             }
+
+            @NonNull
+            @Override
+            public Proxy getProxy() {
+                return proxy;
+            }
         };
+    }
+
+    @VisibleForTesting
+    static Proxy createProxy(@NonNull Properties properties, @NonNull ILogger logger) {
+        String host = properties.getProperty("https.proxyHost");
+        int port = 443;
+        if (host != null) {
+            String maybePort = properties.getProperty("https.proxyPort");
+            if (maybePort != null) {
+                try {
+                    port = Integer.parseInt(maybePort);
+                } catch (NumberFormatException e) {
+                    logger.info("Invalid https.proxyPort '" + maybePort + "', using default 443");
+                }
+            }
+        }
+        else {
+            host = properties.getProperty("http.proxyHost");
+            //noinspection VariableNotUsedInsideIf
+            if (host != null) {
+                port = 80;
+                String maybePort = properties.getProperty("http.proxyPort");
+                if (maybePort != null) {
+                    try {
+                        port = Integer.parseInt(maybePort);
+                    } catch (NumberFormatException e) {
+                        logger.info("Invalid http.proxyPort '" + maybePort + "', using default 80");
+                    }
+                }
+            }
+        }
+        if (host != null) {
+            InetSocketAddress proxyAddr = createAddress(host, port);
+            if (proxyAddr != null) {
+                return new Proxy(Proxy.Type.HTTP, proxyAddr);
+            }
+        }
+        return Proxy.NO_PROXY;
+
+    }
+
+    private static InetSocketAddress createAddress(String proxyHost, int proxyPort) {
+        try {
+            InetAddress address = InetAddress.getByName(proxyHost);
+            return new InetSocketAddress(address, proxyPort);
+        } catch (UnknownHostException e) {
+            new ConsoleProgressIndicator().logWarning("Failed to parse host " + proxyHost);
+            return null;
+        }
     }
 
     private Downloader getDownloader() {
