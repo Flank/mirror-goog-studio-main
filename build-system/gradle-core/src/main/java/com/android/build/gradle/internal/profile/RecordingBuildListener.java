@@ -20,7 +20,8 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-import com.android.builder.profile.ProcessRecorder;
+import com.android.builder.profile.ProcessProfileWriter;
+import com.android.builder.profile.ProfileRecordWriter;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -37,30 +38,29 @@ import org.gradle.api.tasks.TaskState;
  */
 public class RecordingBuildListener implements TaskExecutionListener {
 
-    @NonNull
-    private final Recorder mRecorder;
+    @NonNull private final ProfileRecordWriter recordWriter;
     // map of outstanding tasks executing, keyed by their path.
     @NonNull
-    private final Map<String, GradleBuildProfileSpan.Builder> mTaskRecords =
+    private final Map<String, GradleBuildProfileSpan.Builder> taskRecords =
             new ConcurrentHashMap<>();
 
-    RecordingBuildListener(@NonNull Recorder recorder) {
-        mRecorder = recorder;
+    RecordingBuildListener(@NonNull ProfileRecordWriter recorder) {
+        recordWriter = recorder;
     }
 
     @Override
     public void beforeExecute(@NonNull Task task) {
         GradleBuildProfileSpan.Builder builder = GradleBuildProfileSpan.newBuilder();
         builder.setType(ExecutionType.TASK_EXECUTION);
-        builder.setId(mRecorder.allocationRecordId());
+        builder.setId(recordWriter.allocateRecordId());
         builder.setStartTimeInMs(System.currentTimeMillis());
 
-        mTaskRecords.put(task.getPath(), builder);
+        taskRecords.put(task.getPath(), builder);
     }
 
     @Override
     public void afterExecute(@NonNull Task task, @NonNull TaskState taskState) {
-        GradleBuildProfileSpan.Builder record = mTaskRecords.remove(task.getPath());
+        GradleBuildProfileSpan.Builder record = taskRecords.remove(task.getPath());
 
         record.setDurationInMs(System.currentTimeMillis() - record.getStartTimeInMs());
 
@@ -73,8 +73,8 @@ public class RecordingBuildListener implements TaskExecutionListener {
                         .setUpToDate(taskState.getUpToDate())
                         .setFailed(taskState.getFailure() != null));
 
-        mRecorder.closeRecord(task.getProject().getPath(), getVariantName(task), record);
-        ProcessRecorder.recordMemorySample();
+        recordWriter.writeRecord(task.getProject().getPath(), getVariantName(task), record);
+        ProcessProfileWriter.recordMemorySample();
     }
 
     @Nullable

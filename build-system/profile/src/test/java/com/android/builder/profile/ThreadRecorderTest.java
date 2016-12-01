@@ -34,7 +34,7 @@ public class ThreadRecorderTest {
     @Before
     public void setUp() throws IOException {
         Path outputFile = Jimfs.newFileSystem().getPath("profile_proto");
-        ProcessRecorderFactory.initializeForTests(outputFile);
+        ProcessProfileWriterFactory.initializeForTests(outputFile);
     }
 
     @Test

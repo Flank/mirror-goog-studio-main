@@ -30,13 +30,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests for the {@link ProcessRecorder} class
- */
-public class ProcessRecorderTest {
+/** Tests for the {@link ProcessProfileWriter} class */
+public class ProcessProfileWriterTest {
 
 
     private Path outputFile;
@@ -45,15 +44,16 @@ public class ProcessRecorderTest {
     public void setUp() throws IOException {
         // reset for each test.
         outputFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto");
-        ProcessRecorderFactory.initializeForTests(outputFile);
+        ProcessProfileWriterFactory.initializeForTests(outputFile);
     }
 
     @Test
     public void testBasicRecord() throws Exception {
         ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
                 ":projectName", null, () -> 10);
-        ProcessRecorderFactory.shutdown();
+        ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
+        assertThat(profile.getSpanList()).hasSize(1);
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
         assertThat(profile.getSpan(0).getId()).isNotEqualTo(0);
         assertThat(profile.getSpan(0).getVariant()).isEqualTo(0);
@@ -64,8 +64,9 @@ public class ProcessRecorderTest {
     public void testRecordWithAttributes() throws Exception {
         ThreadRecorder.get().record(
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", "foo", () -> 10);
-        ProcessRecorderFactory.shutdown();
+        ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
+        assertThat(profile.getSpanList()).hasSize(1);
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
         assertThat(profile.getSpan(0).getVariant()).isNotEqualTo(0);
         assertThat(profile.getSpan(0).getStartTimeInMs()).isNotEqualTo(0);
@@ -77,7 +78,7 @@ public class ProcessRecorderTest {
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", null, () ->
                         ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
                                 ":projectName", null, () -> 10));
-        ProcessRecorderFactory.shutdown();
+        ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(2);
         GradleBuildProfileSpan parent = profile.getSpan(1);
@@ -122,7 +123,7 @@ public class ProcessRecorderTest {
 
         assertNotNull(value);
         assertEquals(16, value.intValue());
-        ProcessRecorderFactory.shutdown();
+        ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(6);
 
@@ -159,6 +160,29 @@ public class ProcessRecorderTest {
                     }
                 };
 
+        List<Thread> threads =
+                Stream.generate(() -> new Thread(recordRunnable))
+                        .limit(20)
+                        .collect(Collectors.toList());
+
+        threads.forEach(Thread::start);
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        ProcessProfileWriter.get().finish();
+    }
+
+    @Test
+    public void testThreadNumbering() throws Exception {
+        Runnable recordRunnable =
+                () ->
+                        ThreadRecorder.get()
+                                .record(
+                                        ExecutionType.SOME_RANDOM_PROCESSING,
+                                        ":projectName",
+                                        "variant",
+                                        () -> null);
+
         ImmutableList.Builder<Thread> threadBuilder = ImmutableList.builder();
         for (int i = 0; i < 20; i++) {
             threadBuilder.add(new Thread(recordRunnable));
@@ -171,7 +195,16 @@ public class ProcessRecorderTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        ProcessRecorder.get().finish();
+        ProcessProfileWriter.get().finish();
+
+        GradleBuildProfile profile = loadProfile();
+        List<Long> threadValues =
+                profile.getSpanList()
+                        .stream()
+                        .map(GradleBuildProfileSpan::getThreadId)
+                        .collect(Collectors.toList());
+        assertThat(threadValues).hasSize(20);
+        assertThat(threadValues).containsNoDuplicates();
     }
 
     private GradleBuildProfile loadProfile() throws IOException {

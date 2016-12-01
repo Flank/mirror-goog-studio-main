@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-public class NameAnonymizer {
+public final class NameAnonymizer {
 
     static final long NO_VARIANT_SPECIFIED = 0;
 
