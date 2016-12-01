@@ -13,14 +13,6 @@
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="instant-run-runtime" scope="TEST" />
     <orderEntry type="module" module-name="common" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.0.4/asm-debug-all-5.0.4.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="asm-tools" level="project" />
   </component>
 </module>

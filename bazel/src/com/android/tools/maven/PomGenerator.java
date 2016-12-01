@@ -16,24 +16,31 @@
 
 package com.android.tools.maven;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 
 /**
  * A tool to create pom files. Usage:
- * PomGenerator target.pom  <options>
+ * <pre>
+ * {@code
+ * PomGenerator <options>
  *
  * Options:
  * -o <pom> Where to write the pom file.
@@ -42,6 +49,10 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
  * --artifact <artifact> [optional] The artifact name to use.
  * --version <version> [optional] The version to use.
  * --deps [pom1:...:pomn] The list of poms to set as dependencies.
+ * --exclusion group1:artifact1 group2:artifact2 Exclusion to be added to the POM file.
+ *     Can be specified multiple times.
+ * }
+ * </pre>
  */
 public class PomGenerator {
 
@@ -61,6 +72,8 @@ public class PomGenerator {
     public static void main(String[] args) throws Exception {
         new PomGenerator().run(Arrays.asList(args));
     }
+
+    private final Multimap<String, String> exclusions = HashMultimap.create();
 
     private void run(List<String> args) throws Exception {
         File in = null;
@@ -89,6 +102,8 @@ public class PomGenerator {
                 artifact = it.next();
             } else if (arg.equals("--version") && it.hasNext()) {
                 version = it.next();
+            } else if (arg.equals("--exclusion")) {
+                exclusions.putAll(it.next(), Splitter.on(',').split(it.next()));
             }
         }
         if (out == null) {
@@ -98,9 +113,10 @@ public class PomGenerator {
         generatePom(in, out, deps, group, artifact, version);
     }
 
-    private void generatePom(File in, File out, List<File> deps2, String group, String artifact, String version) throws Exception {
+    private void generatePom(File in, File out, List<File> pomDependencies, String group,
+            String artifact, String version) throws Exception {
         // Avoid any manipulation if it is a copy:
-        if (in != null && out != null && deps2 == null && group == null && artifact == null && version == null) {
+        if (in != null && out != null && pomDependencies == null && group == null && artifact == null && version == null) {
             Files.copy(in.toPath(), out.toPath());
             return;
         }
@@ -122,17 +138,29 @@ public class PomGenerator {
         if (version != null) {
             model.setVersion(version);
         }
-        if (deps2 != null) {
+        if (pomDependencies != null) {
             List<Dependency> deps = new LinkedList<>();
-            for (File dep : deps2) {
+            for (File pom : pomDependencies) {
                 Dependency dependency = new Dependency();
                 MavenCoordinates coordinates;
-                Model dependent = pomToModel(dep.getAbsolutePath());
+                Model dependent = pomToModel(pom.getAbsolutePath());
                 coordinates = new MavenCoordinates(dependent);
 
                 dependency.setGroupId(coordinates.groupId);
                 dependency.setArtifactId(coordinates.artifactId);
                 dependency.setVersion(coordinates.version);
+
+                Collection<String> exclusionStrings =
+                        exclusions.get(coordinates.groupId + ":" + coordinates.artifactId);
+                if (exclusionStrings != null) {
+                    for (String exclusionString : exclusionStrings) {
+                        List<String> parts = Splitter.on(':').splitToList(exclusionString);
+                        Exclusion exclusion = new Exclusion();
+                        exclusion.setGroupId(parts.get(0));
+                        exclusion.setArtifactId(parts.get(1));
+                        dependency.addExclusion(exclusion);
+                    }
+                }
 
                 deps.add(dependency);
             }

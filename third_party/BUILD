@@ -413,14 +413,14 @@ maven_java_library(
 
 maven_java_library(
     name = "net.sf.proguard_proguard-base",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.2.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "net.sf.proguard_proguard-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.2.1:jar",
     visibility = ["//visibility:public"],
     exports = [":net.sf.proguard_proguard-base"],
 )
@@ -720,17 +720,14 @@ maven_java_library(
     name = "org.jacoco_org.jacoco.core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.5.201505241946:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.ow2.asm_asm-debug-all"],
+    exports = [],
 )
 
 maven_java_library(
     name = "org.jacoco_org.jacoco.report",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.5.201505241946:jar",
     visibility = ["//visibility:public"],
-    exports = [
-        ":org.jacoco_org.jacoco.core",
-        ":org.ow2.asm_asm-debug-all",
-    ],
+    exports = [":org.jacoco_org.jacoco.core"],
 )
 
 maven_java_library(
@@ -786,17 +783,17 @@ maven_java_library(
 )
 
 maven_java_library(
-    name = "org.ow2.asm_asm-debug-all",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.0.1:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-maven_java_library(
     name = "org.ow2.asm_asm-tree",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm"],
+)
+
+maven_java_library(
+    name = "org.ow2.asm_asm-util",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.0.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.ow2.asm_asm-tree"],
 )
 
 maven_java_library(

@@ -34,7 +34,6 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
-import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
 /**
  * Command line tool to download a new Maven artifact to prebuilts, together with all the transitive
@@ -89,7 +88,7 @@ public class AddDependency {
         request.setRepositories(AetherUtils.REPOSITORIES);
 
         mRepo.getmRepositorySystemSession()
-                .setDependencySelector(new ExclusionDependencySelector(EXCLUSIONS));
+                .setDependencySelector(AetherUtils.buildDependencySelector(EXCLUSIONS));
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));
 

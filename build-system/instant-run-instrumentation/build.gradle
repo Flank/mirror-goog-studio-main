@@ -8,12 +8,11 @@ dependencies {
     compile project(':base:common')
     compile project(':base:annotations')
     compile project(':base:builder-model')
-    compile 'org.ow2.asm:asm:5.0.4'
-    compile 'org.ow2.asm:asm-debug-all:5.0.4'
-    compile 'org.ow2.asm:asm-tree:5.0.4'
-    compile 'org.ow2.asm:asm-analysis:5.0.4'
-    compile 'org.ow2.asm:asm-commons:5.0.4'
-    compile 'com.google.guava:guava:18.0'
+    compile libs.asm
+    compile libs.asm_analysis
+    compile libs.asm_commons
+    compile libs.asm_util
+    compile libs.guava
 }
 
 configurations {

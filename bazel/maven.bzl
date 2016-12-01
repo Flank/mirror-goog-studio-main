@@ -59,6 +59,10 @@ def _maven_artifact_impl(ctx):
   if ctx.attr.version:
     args += ["--version", ctx.attr.version]
 
+  # Exclusions
+  for (dependency, exclusions) in ctx.attr.exclusions.items():
+    args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
+
   args += ["--deps", ":".join([dep.path for dep in ctx.files.deps])]
   inputs += ctx.files.deps
 
@@ -102,6 +106,7 @@ maven_pom = rule(
         allow_files = True,
         single_file = True,
     ),
+    "exclusions" : attr.string_list_dict(),
     "_pom": attr.label(
         executable = True,
         cfg = "host",
@@ -123,7 +128,15 @@ maven_pom = rule(
 #     # all java_library attriutes
 #     info = A maven coordinate for this artifact as a string
 # )
-def maven_java_library(name, deps=None, export_artifact=None, srcs=None, exports=None, pom=None, visibility=None, **kwargs):
+def maven_java_library(name,
+                       deps=None,
+                       exclusions=None,
+                       export_artifact=None,
+                       srcs=None,
+                       exports=None,
+                       pom=None,
+                       visibility=None,
+                       **kwargs):
 
   if srcs and export_artifact:
     fail("Ony one of [srcs, export_artifact] can be used at a time")
@@ -147,6 +160,7 @@ def maven_java_library(name, deps=None, export_artifact=None, srcs=None, exports
   maven_pom(
     name = name + "_maven",
     deps = [explicit_target(dep) + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps else None,
+    exclusions = exclusions,
     library = export_artifact if export_artifact else name,
     visibility = visibility,
     source = explicit_target(export_artifact) + "_maven" if export_artifact else pom,

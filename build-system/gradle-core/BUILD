@@ -17,6 +17,10 @@ maven_java_library(
         "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
         "//tools/base/build-system/instant-run-instrumentation:sources",
     ],
+    exclusions = {
+        "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
+        "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
+    },
     pom = ":pom",
     resources = glob([
         "src/main/resources/**",
@@ -54,6 +58,9 @@ maven_java_library(
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/third_party:org.ow2.asm_asm-analysis",
+        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )
@@ -105,8 +112,8 @@ java_test(
         "//tools/base/third_party:org.jsoup_jsoup",
         "//tools/base/third_party:org.mockito_mockito-all",
         "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-debug-all",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
+        "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )

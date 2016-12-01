@@ -19,8 +19,9 @@ java_library(
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-debug-all",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
+        "//tools/base/third_party:org.ow2.asm_asm-analysis",
+        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/base/third_party:org.ow2.asm_asm-util",
     ],
 )
 
@@ -37,9 +38,6 @@ java_library(
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-debug-all",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
 )
 
@@ -102,6 +100,8 @@ java_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-all",
-        "//tools/base/third_party:org.ow2.asm_asm-debug-all",
+        "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/base/third_party:org.ow2.asm_asm-util",
     ],
 )
