@@ -21,8 +21,8 @@ import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -37,20 +37,10 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.DuplicateFileException;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +48,12 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 /**
  * Tasks to generate M+ style pure splits APKs with dex files.
@@ -188,9 +184,14 @@ public class InstantRunSplitApkBuilder extends BaseTask {
         File packageTmpDir = new File(getTemporaryDir(), "package");
         FileUtils.cleanOutputDir(packageTmpDir);
 
-        getBuilder().packageCodeSplitApk(resPackageFile.getAbsolutePath(),
-                file.dexFile, signingConf, alignedOutput, packageTmpDir,
-                ApkCreatorFactories.fromProjectProperties(getProject(), true));
+        getBuilder()
+                .packageCodeSplitApk(
+                        resPackageFile,
+                        file.dexFile,
+                        signingConf,
+                        alignedOutput,
+                        packageTmpDir,
+                        ApkCreatorFactories.fromProjectProperties(getProject(), true));
 
         instantRunBuildContext.addChangedFile(FileType.SPLIT, alignedOutput);
         resPackageFile.delete();
