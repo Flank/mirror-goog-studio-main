@@ -20,28 +20,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.builder.model.AndroidProject;
 import java.io.File;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(FilterableParameterized.class)
 public class ApkLocationTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -54,7 +40,6 @@ public class ApkLocationTest {
     @Test
     public void outputToInjectedLocation() throws Exception {
         project.executor()
-                .withPackaging(mPackaging)
                 .withProperty(
                         AndroidProject.PROPERTY_APK_LOCATION,
                         mTemporaryFolder.getRoot().getAbsolutePath())
@@ -65,11 +50,7 @@ public class ApkLocationTest {
 
         // There can be one or two APKs in the directory, depending on whether we use old or new
         // packaging.
-        if (mPackaging == Packaging.NEW_PACKAGING) {
-            assertThat(files).hasLength(1);
-        } else {
-            assertThat(files).hasLength(2);
-        }
+        assertThat(files).hasLength(1);
 
         for (File file : files) {
             assertThat(file).isFile();

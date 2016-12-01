@@ -18,34 +18,21 @@ package com.android.build.gradle.integration.packaging;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Checks that we can handle a class with non-ASCII name in combination with ProGuard.
  *
  * <p>See http://b.android.com/221057
  */
-@RunWith(FilterableParameterized.class)
 public class AccentCharacterAndProguardTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> parameters() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter public Packaging packaging;
 
     @Rule
     public GradleTestProject project =
@@ -76,6 +63,6 @@ public class AccentCharacterAndProguardTest {
     @Test
     public void assemble() throws Exception {
         GradleBuildResult result =
-                project.executor().withPackaging(packaging).run("assembleMinified");
+                project.executor().run("assembleMinified");
     }
 }

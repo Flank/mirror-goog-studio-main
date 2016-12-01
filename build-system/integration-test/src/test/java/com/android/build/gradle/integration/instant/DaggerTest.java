@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -149,7 +148,7 @@ public class DaggerTest {
     @Test
     public void hotSwap() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, Packaging.DEFAULT, 23, COLDSWAP_MODE);
+                InstantRunTestUtils.doInitialBuild(project, 23, COLDSWAP_MODE);
 
         TestFileUtils.searchAndReplace(mAppModule, "from module", "CHANGE");
 
@@ -178,7 +177,6 @@ public class DaggerTest {
         HotSwapTester tester =
                 new HotSwapTester(
                         project,
-                        Packaging.DEFAULT,
                         "com.android.tests",
                         "MainActivity",
                         this.testProject,

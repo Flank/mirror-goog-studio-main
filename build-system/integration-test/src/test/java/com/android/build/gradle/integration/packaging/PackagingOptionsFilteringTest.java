@@ -20,35 +20,21 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Checks that the packaging options filtering are honored. Currently, only tests for excluding
  * regular expressions.
  */
-@RunWith(FilterableParameterized.class)
 public class PackagingOptionsFilteringTest {
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()

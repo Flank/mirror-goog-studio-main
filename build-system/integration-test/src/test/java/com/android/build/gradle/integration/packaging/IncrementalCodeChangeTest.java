@@ -19,18 +19,13 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Packaging;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 /**
  * test for incremental code change.
  *
@@ -43,16 +38,7 @@ import org.junit.runners.Parameterized;
  * - native multi-dex
  * - legacy multi-dex
  */
-@RunWith(FilterableParameterized.class)
 public class IncrementalCodeChangeTest {
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-        return Packaging.getParameters();
-    }
-
-    @Parameterized.Parameter
-    public Packaging mPackaging;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -68,14 +54,14 @@ public class IncrementalCodeChangeTest {
                 + "    compile project(':library')\n"
                 + "}");
 
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
+        project.executor().run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
                 "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
 
         // class from :library
         assertThatApk(project.getSubproject("app").getApk("debug"))
@@ -100,14 +86,14 @@ public class IncrementalCodeChangeTest {
                 + "    compile project(':library')\n"
                 + "}");
 
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
+        project.executor().run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
                 "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
 
         // class from :library
         assertThatApk(project.getSubproject("app").getApk("debug"))
@@ -137,14 +123,14 @@ public class IncrementalCodeChangeTest {
                 + "    compile project(':library')\n"
                 + "}\n");
 
-        project.executor().withPackaging(mPackaging).run("clean", ":app:assembleDebug");
+        project.executor().run("clean", ":app:assembleDebug");
 
         TestFileUtils.replaceLine(
                 project.file("library/src/main/java/com/example/android/multiproject/library/PersonView.java"),
                 9,
                 "        setTextSize(30);");
 
-        project.executor().withPackaging(mPackaging).run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
 
         // class from :library
         assertThatApk(project.getSubproject("app").getApk("debug"))
