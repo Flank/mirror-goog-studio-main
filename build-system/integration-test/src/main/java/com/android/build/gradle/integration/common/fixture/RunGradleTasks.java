@@ -150,6 +150,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
         args.add("-u"); // -u, --no-search-upward  Don't search in parent folders for a
                         // settings.gradle file.
+        args.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
         args.add("-Pcom.android.build.gradle.integratonTest.useJack="
                 + Boolean.toString(isUseJack));
         args.add("-Pcom.android.build.gradle.integratonTest.minifyEnabled="
