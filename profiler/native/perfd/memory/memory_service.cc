@@ -35,6 +35,9 @@ using profiler::proto::MemoryStartRequest;
 using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
+using profiler::proto::AllocationsInfo;
+using profiler::proto::GetAllocationsInfoStatusRequest;
+using profiler::proto::GetAllocationsInfoStatusResponse;
 
 namespace profiler {
 
@@ -106,7 +109,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::GetHeapDump(
     ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
     DumpDataResponse* response) {
-  Trace trace("MEM:GetFile");
+  Trace trace("MEM:GetHeapDump");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
@@ -139,14 +142,16 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::TrackAllocations(
     ::grpc::ServerContext* context, const TrackAllocationsRequest* request,
     TrackAllocationsResponse* response) {
-  Trace trace("MEM:GetFile");
+  Trace trace("MEM:TrackAllocations");
   int32_t app_id = request->app_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
-  (result->second).TrackAllocations(request->enabled(), response);
+  (result->second)
+      .TrackAllocations(request->enabled(), request->legacy_tracking(),
+                        response);
   switch (response->status()) {
     case TrackAllocationsResponse::SUCCESS:
     case TrackAllocationsResponse::IN_PROGRESS:
@@ -168,6 +173,14 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   return ::grpc::Status(
       ::grpc::StatusCode::UNIMPLEMENTED,
       "Listing allocation tracking environments is WIP.");
+}
+
+::grpc::Status MemoryServiceImpl::GetAllocationsInfoStatus(
+    ::grpc::ServerContext* context,
+    const GetAllocationsInfoStatusRequest* request,
+    GetAllocationsInfoStatusResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
 }
 
 MemoryCollector* MemoryServiceImpl::GetCollector(int32_t app_id) {

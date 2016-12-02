@@ -30,6 +30,7 @@ cc_library(
 cc_test(
     name = "perfd_memory_tests",
     srcs = [
+        "memory_cache_test.cc",
         "memory_levels_sampler_test.cc",
     ],
     copts = [

@@ -1,0 +1,113 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "memory_cache.h"
+#include "proto/memory.pb.h"
+#include "utils/fake_clock.h"
+
+#include <gtest/gtest.h>
+
+using profiler::proto::MemoryData;
+using profiler::proto::AllocationsInfo;
+using profiler::proto::TrackAllocationsResponse;
+
+const int64_t profiler::MemoryCache::kUnfinishedTimestamp;
+
+TEST(MemoryCache, TrackAllocations) {
+  profiler::FakeClock fake_clock(5);
+  profiler::MemoryCache cache(fake_clock, 2);
+  TrackAllocationsResponse response;
+
+  // Ensure stopping does nothing if no current tracking is enabled.
+  cache.TrackAllocations(false, false, &response);
+  EXPECT_EQ(TrackAllocationsResponse::NOT_ENABLED, response.status());
+
+  // Begin a legacy tracking session at t=5.
+  cache.TrackAllocations(true, true, &response);
+  EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
+  EXPECT_EQ(5, response.timestamp());
+  EXPECT_EQ(0, response.info().info_id());
+  EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
+  EXPECT_EQ(5, response.info().start_time());
+  EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
+            response.info().end_time());
+  EXPECT_EQ(true, response.info().legacy_tracking());
+
+  // Ensures enabling tracking while one is already in progress
+  // does nothing.
+  cache.TrackAllocations(true, true, &response);
+  EXPECT_EQ(TrackAllocationsResponse::IN_PROGRESS, response.status());
+
+  // Complete a tracking session at t=10.
+  fake_clock.SetCurrentTime(10);
+  cache.TrackAllocations(false, true, &response);
+  EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
+  EXPECT_EQ(0, response.info().info_id());
+  EXPECT_EQ(AllocationsInfo::POST_PROCESS, response.info().status());
+  EXPECT_EQ(5, response.info().start_time());
+  EXPECT_EQ(10, response.info().end_time());
+  EXPECT_EQ(true, response.info().legacy_tracking());
+
+  // Start a (non-legacy) tracking session at t=10;
+  cache.TrackAllocations(true, false, &response);
+  EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
+  EXPECT_EQ(1, response.info().info_id());
+  EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
+  EXPECT_EQ(10, response.info().start_time());
+  EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
+            response.info().end_time());
+  EXPECT_EQ(false, response.info().legacy_tracking());
+
+  // Ensure LoadMemoryData returns the correct info data.
+  MemoryData data_response;
+  cache.LoadMemoryData(0, 20, &data_response);
+  EXPECT_EQ(2, data_response.allocations_info().size());
+
+  EXPECT_EQ(0, data_response.allocations_info(0).info_id());
+  EXPECT_EQ(AllocationsInfo::POST_PROCESS,
+            data_response.allocations_info(0).status());
+  EXPECT_EQ(5, data_response.allocations_info(0).start_time());
+  EXPECT_EQ(10, data_response.allocations_info(0).end_time());
+  EXPECT_EQ(true, data_response.allocations_info(0).legacy_tracking());
+
+  EXPECT_EQ(1, data_response.allocations_info(1).info_id());
+  EXPECT_EQ(AllocationsInfo::IN_PROGRESS,
+            data_response.allocations_info(1).status());
+  EXPECT_EQ(10, data_response.allocations_info(1).start_time());
+  EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
+            data_response.allocations_info(1).end_time());
+  EXPECT_EQ(false, data_response.allocations_info(1).legacy_tracking());
+
+  // Complete a non-legacy tracking sessino at t=15
+  fake_clock.SetCurrentTime(15);
+  cache.TrackAllocations(false, false, &response);
+  EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
+  EXPECT_EQ(1, response.info().info_id());
+  EXPECT_EQ(AllocationsInfo::COMPLETED, response.info().status());
+  EXPECT_EQ(10, response.info().start_time());
+  EXPECT_EQ(15, response.info().end_time());
+  EXPECT_EQ(false, response.info().legacy_tracking());
+
+  // Ensures a non-legacy session returns COMPLETED status when complete.
+  MemoryData data_response_2;
+  cache.LoadMemoryData(10, 15, &data_response_2);
+  EXPECT_EQ(1, data_response_2.allocations_info().size());
+  EXPECT_EQ(1, data_response_2.allocations_info(0).info_id());
+  EXPECT_EQ(AllocationsInfo::COMPLETED,
+            data_response_2.allocations_info(0).status());
+  EXPECT_EQ(10, data_response_2.allocations_info(0).start_time());
+  EXPECT_EQ(15, data_response_2.allocations_info(0).end_time());
+  EXPECT_EQ(false, data_response_2.allocations_info(0).legacy_tracking());
+}
