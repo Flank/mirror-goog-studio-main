@@ -44,6 +44,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -64,7 +65,7 @@ public class RepoManagerImpl extends RepoManager {
     /**
      * The registered {@link SchemaModule}s.
      */
-    private final Set<SchemaModule<?>> mModules = Sets.newHashSet();
+    private final List<SchemaModule<?>> mModules = new ArrayList<>();
 
     /**
      * The {@link FallbackLocalRepoLoader} to use when loading local packages.
@@ -259,7 +260,7 @@ public class RepoManagerImpl extends RepoManager {
 
     @Override
     @NonNull
-    public Set<SchemaModule<?>> getSchemaModules() {
+    public List<SchemaModule<?>> getSchemaModules() {
         return mModules;
     }
 

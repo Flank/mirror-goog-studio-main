@@ -153,7 +153,7 @@ public abstract class RepoManager {
      * by code within the RepoManager or unit tests.
      */
     @NonNull
-    public abstract Set<SchemaModule<?>> getSchemaModules();
+    public abstract List<SchemaModule<?>> getSchemaModules();
 
     /**
      * Gets the core {@link SchemaModule} created by the RepoManager itself. Contains the base
