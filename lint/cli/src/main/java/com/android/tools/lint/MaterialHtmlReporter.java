@@ -160,6 +160,7 @@ public class MaterialHtmlReporter extends Reporter {
             + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
             + "    padding: 6px;\n"
             + "    border: 1px solid #e0e0e0;\n"
+            + "    overflow: scroll;\n"
             + "}\n"
             + ".prefix {\n"
             + "    color: #9876aa;\n"
@@ -543,7 +544,7 @@ public class MaterialHtmlReporter extends Reporter {
                                         CharSequence s = client.readFile(l.getFile());
                                         if (s.length() > 0) {
                                             int offset = start != null ? start.getOffset() : -1;
-                                            appendCodeBlock(warning.file, s, offset, -1,
+                                            appendCodeBlock(l.getFile(), s, offset, -1,
                                                     warning.severity);
                                         }
                                         shownSnippetsCount++;

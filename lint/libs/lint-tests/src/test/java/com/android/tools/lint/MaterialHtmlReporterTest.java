@@ -197,6 +197,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "    font-size: 0.9rem;    line-height: 0.9rem;\n"
                             + "    padding: 6px;\n"
                             + "    border: 1px solid #e0e0e0;\n"
+                            + "    overflow: scroll;\n"
                             + "}\n"
                             + ".prefix {\n"
                             + "    color: #9876aa;\n"

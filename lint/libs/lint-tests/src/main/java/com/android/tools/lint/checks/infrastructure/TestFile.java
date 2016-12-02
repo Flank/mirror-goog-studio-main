@@ -342,6 +342,14 @@ public class TestFile {
             return this;
         }
 
+        public ImageTestFile fillOval(int x, int y, int width, int height, int argb) {
+            Graphics2D graphics = mImage.createGraphics();
+            graphics.setColor(new Color(argb, true));
+            graphics.fillOval(x, y, width, height);
+            graphics.dispose();
+            return this;
+        }
+
         @Override
         public byte[] getBinaryContents() {
             TestCase.assertNotNull("Must set image type", mFormat);

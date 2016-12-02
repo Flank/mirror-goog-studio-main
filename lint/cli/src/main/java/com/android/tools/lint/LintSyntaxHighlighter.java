@@ -737,6 +737,9 @@ public class LintSyntaxHighlighter {
         if (offset < 0) {
             return 0;
         }
+        if (offset >= source.length()) {
+            offset = source.length();
+        }
         while (--offset >= 0) {
             char c = source.charAt(offset);
             if (c == '\n') {

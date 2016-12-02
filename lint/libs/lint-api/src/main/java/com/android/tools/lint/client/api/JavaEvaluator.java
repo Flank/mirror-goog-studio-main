@@ -29,7 +29,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiEllipsisType;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -44,7 +43,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeVisitor;
 import com.intellij.psi.PsiWildcardType;
-import java.io.File;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
 public abstract class JavaEvaluator {
@@ -462,14 +460,6 @@ public abstract class JavaEvaluator {
     public abstract PsiAnnotation findAnnotation(
             @Nullable PsiModifierListOwner listOwner,
             @NonNull String... annotationNames);
-
-    @Nullable
-    public abstract File getFile(@NonNull PsiFile file);
-
-    @NonNull
-    public CharSequence getFileContents(@NonNull PsiFile file) {
-        return file.getText();
-    }
 
     /**
      * Try to determine the path to the .jar file containing the element, <b>if</b> applicable

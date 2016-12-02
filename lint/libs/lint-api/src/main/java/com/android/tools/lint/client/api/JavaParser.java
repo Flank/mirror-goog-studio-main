@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
 import com.intellij.openapi.util.TextRange;
@@ -168,16 +169,37 @@ public abstract class JavaParser {
                 // Don't bother with this error if it's in a different file during single-file analysis
                 return Location.NONE;
             }
-            JavaEvaluator evaluator = context.getEvaluator();
-            File ioFile = evaluator.getFile(containingFile);
+            File ioFile = getFile(containingFile);
             if (ioFile == null) {
                 return Location.NONE;
             }
             file = ioFile;
-            contents = evaluator.getFileContents(containingFile);
+            contents = getFileContents(containingFile);
         }
         return Location.create(file, contents, range.getStartOffset(),
                                range.getEndOffset());
+    }
+
+    @Nullable
+    public abstract File getFile(@NonNull PsiFile file);
+
+    @NonNull
+    public CharSequence getFileContents(@NonNull PsiFile file) {
+        return file.getText();
+    }
+
+    @NonNull
+    public Location createLocation(@NonNull PsiElement element) {
+        TextRange range = element.getTextRange();
+        PsiFile containingFile = element.getContainingFile();
+        CharSequence contents;
+        File file = getFile(containingFile);
+        if (file == null) {
+            return Location.NONE;
+        }
+        contents = getFileContents(containingFile);
+        return Location.create(file, contents, range.getStartOffset(),
+                range.getEndOffset());
     }
 
     /**
@@ -296,6 +318,16 @@ public abstract class JavaParser {
 
         return getLocation(context, node);
     }
+
+    /**
+     * Returns the leaf element at the given offset (biased towards the right), or null if
+     * not found
+     *
+     * @param offset the offset to search at
+     * @return the leaf element, if any
+     */
+    @Nullable
+    public abstract PsiElement findElementAt(@NonNull JavaContext context, int offset);
 
     /**
      * Returns a {@link Location} for the given node. This attempts to pick a shorter

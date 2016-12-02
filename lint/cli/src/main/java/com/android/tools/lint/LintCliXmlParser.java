@@ -150,6 +150,12 @@ public class LintCliXmlParser extends XmlParser {
         return  PositionXmlParser.getPosition(node).getEndOffset();
     }
 
+    @Nullable
+    @Override
+    public Node findNodeAt(@NonNull XmlContext context, int offset) {
+        return PositionXmlParser.findNodeAtOffset(context.document, offset);
+    }
+
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
     private static class LocationHandle implements Handle {
         private final File file;
