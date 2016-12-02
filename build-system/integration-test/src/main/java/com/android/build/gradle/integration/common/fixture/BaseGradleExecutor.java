@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,6 +83,13 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     }
 
     /**
+     * Return the default build cache location for a project.
+     */
+    public File getBuildCacheDir() {
+        return new File(projectDirectory.toFile(), ".buildCache");
+    }
+
+    /**
      * Upload this builds detailed profile as a benchmark.
      */
     public T recordBenchmark(
@@ -91,6 +99,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 "BenchmarkRecorder must be set for this GradleTestProject when it is created in "
                         + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
+
+        // Disable the build cache for all benchmarks, until we figure out how to measure its
+        // impact.
+        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false");
 
         // Explicitly specify the aapt1, until we start recording both.
         withProperty(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false");
