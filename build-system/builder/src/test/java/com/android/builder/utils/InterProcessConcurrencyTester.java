@@ -27,28 +27,91 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
+import java.util.concurrent.CountDownLatch;
 import org.junit.Assert;
 
 /**
  * Utility class to test inter-process concurrency.
  *
+ * <p>This class is used to check whether or not a set of processes violate a concurrency contract
+ * (e.g., whether they run concurrently when they are not allowed to, or vice versa).
+ *
  * <p>The usage and implementation of this class resemble those of {@link ConcurrencyTester}, except
  * that {@code ConcurrencyTester} supports concurrency testing for threads within the same process
- * whereas this class supports concurrency testing for threads across different processes.
+ * whereas this class supports concurrency testing for different processes.
  *
- * <p>See {@link ConcurrencyTester} for some concepts (e.g., method under test, action under test)
- * that are used in this class.
+ * <p>The following is a usage scenario of this class. Suppose we have a class whose main() method
+ * executes an action (some piece of code) exactly once. When several processes are concurrently
+ * calling the main() method (possibly with different parameter values), the class under test may
+ * make a contract that all the processes can execute the corresponding actions concurrently, or it
+ * may make a contract that all the processes cannot execute the actions concurrently. To check
+ * whether the class under test meets the concurrency contract, we can write a test as follows.
+ *
+ * <pre>{@code
+ * InterProcessConcurrencyTester tester = new InterProcessConcurrencyTester();
+ * for (...) {
+ *     tester.addClassInvocationFromNewProcess(ClassUnderTest.class, new String[] {...});
+ * }
+ * }</pre>
+ *
+ * <p>In the class under test's main() method, before calling the action under test, it needs to
+ * notify {@code InterProcessConcurrencyTester} that the process has started and the action is
+ * running, as follows:
+ *
+ * <pre>{@code
+ *     // The server socket port is added to the list of arguments by InterProcessConcurrencyTester
+ *     // for the client process to communicate with the main process
+ *     int serverSocketPort = Integer.valueOf(args[args.length - 1]);
+ *     InterProcessConcurrencyTester.MainProcessNotifier notifier =
+ *         new InterProcessConcurrencyTester.MainProcessNotifier(serverSocketPort);
+ *     notifier.processStarted();
+ *     notifier.actionStarted();
+ *     ... // Do some action that needs concurrency test
+ * }</pre>
+ *
+ * <p>Then, if the actions are allowed to run concurrently, we can make the following assertion:
+ *
+ * <pre>{@code
+ * tester.assertThatActionsCanRunConcurrently();
+ * }</pre>
+ *
+ * <p>If the actions are not allowed to run concurrently, we can make the following assertion:
+ *
+ * <pre>{@code
+ * tester.assertThatActionsCannotRunConcurrently();
+ * }</pre>
  */
 public final class InterProcessConcurrencyTester {
+
+    /**
+     * The timeout for the main process to wait for a new action to start in the case that there are
+     * one or more actions currently running and the actions are expected to run concurrently. As
+     * this timeout increases, the chance of a falsely failing test (or flaky test) is reduced;
+     * however, a truly failing test (or non-flaky test) will take longer to run. Since it is okay
+     * for a failing test to take a long time to run (it does not happen frequently), we set a large
+     * timeout to prevent flaky tests.
+     */
+    @NonNull private static final Duration TIMEOUT_TO_START_ACTION_WHEN_CONCURRENCY_EXPECTED =
+            Duration.ofSeconds(60);
+
+    /**
+     * The timeout for the main process to wait for a new action to start in the case that there are
+     * one or more actions currently running and the actions are not expected to run concurrently.
+     * As this timeout increases, the chance of a falsely passing test is reduced; however, a truly
+     * passing test will take longer to run. Therefore, we set a small timeout to prevent
+     * long-running passing tests, but make sure it is still large enough for the tests to be
+     * effective.
+     */
+    @NonNull private static final Duration TIMEOUT_TO_START_ACTION_WHEN_NO_CONCURRENCY_EXPECTED =
+            Duration.ofSeconds(2);
 
     /** The running pattern of a set of actions. */
     private enum RunningPattern {
@@ -63,109 +126,137 @@ public final class InterProcessConcurrencyTester {
         MIXED
     }
 
-    @NonNull private List<Class> mMainMethodInvocationList = Lists.newLinkedList();
+    @NonNull private List<Class> classInvocationList = Lists.newLinkedList();
 
-    @NonNull private List<String[]> mArgsList = Lists.newLinkedList();
+    @NonNull private List<String[]> argsList = Lists.newLinkedList();
 
     /**
-     * Adds a new invocation of the main method under test to this {@link
+     * Adds a new invocation of the class under test's main() method to this {@link
      * InterProcessConcurrencyTester} instance. The {@code InterProcessConcurrencyTester} will
      * execute each invocation in a separate process and check whether the corresponding actions
      * under test meet the concurrency requirement.
      *
-     * @param mainMethodInvocation the main method invocation to be executed from a new process
+     * @param classUnderTest the class under test whose main() method will be executed from a new
+     *     process
+     * @param args the arguments for the class under test's main() method
      */
-    public void addMainMethodInvocationFromNewProcess(
-            @NonNull Class mainMethodInvocation, @NonNull String[] args) {
-        mMainMethodInvocationList.add(mainMethodInvocation);
-        mArgsList.add(args);
+    public void addClassInvocationFromNewProcess(
+            @NonNull Class classUnderTest, @NonNull String[] args) {
+        classInvocationList.add(classUnderTest);
+        argsList.add(args);
     }
 
     /**
-     * Executes the main method under test in separate processes and returns {@code true} if all the
-     * actions ran concurrently, and {@code false} otherwise. Note that a {@code false} returned
-     * value means that either the actions were not allowed to run concurrently (which violates the
-     * concurrency requirement) or the actions took too long to start and accidentally ran
-     * sequentially (although the latter case is possible, the implementation of this method makes
-     * sure that it is unlikely to happen).
+     * Executes the invocations of the class under test's main() method in separate processes and
+     * asserts that all the actions ran concurrently. Note that a failed assertion means that either
+     * the actions were not allowed to run concurrently (which violates the concurrency requirement)
+     * or the actions accidentally ran sequentially. However, while the latter case is possible, the
+     * implementation of this method makes sure that it is unlikely to happen.
      */
     public void assertThatActionsCanRunConcurrently() throws IOException {
         Preconditions.checkArgument(
-                mMainMethodInvocationList.size() >= 2,
+                classInvocationList.size() >= 2,
                 "There must be at least 2 actions for concurrency checks.");
         Assert.assertTrue(
                 "Two or more actions ran sequentially"
-                        + " even though all the actions were expected to run concurrently.",
-                executeActionsAndGetRunningPattern() == RunningPattern.CONCURRENT);
+                        + " while all the actions were expected to run concurrently.",
+                executeActionsAndGetRunningPattern(
+                                TIMEOUT_TO_START_ACTION_WHEN_CONCURRENCY_EXPECTED)
+                        == RunningPattern.CONCURRENT);
     }
 
     /**
-     * Executes the main method under test in separate processes and returns {@code true} if all the
-     * actions ran sequentially, and {@code false} otherwise. Note that a {@code true} returned
-     * value means that either the actions were not allowed to run concurrently (which meets the
-     * concurrency requirement) or the actions took too long to start and accidentally ran
-     * sequentially (although the latter case is possible, the implementation of this method makes
-     * sure that it is unlikely to happen).
+     * Executes the invocations of the class under test's main() method in separate processes and
+     * asserts that all the actions ran sequentially. Note that a successful assertion means that
+     * either the actions were not allowed to run concurrently (which meets the concurrency
+     * requirement) or the actions accidentally ran sequentially. However, while the latter case is
+     * possible, the implementation of this method makes sure that it is unlikely to happen.
      */
     public void assertThatActionsCannotRunConcurrently() throws IOException {
         Preconditions.checkArgument(
-                mMainMethodInvocationList.size() >= 2,
+                classInvocationList.size() >= 2,
                 "There must be at least 2 actions for concurrency checks.");
         Assert.assertTrue(
                 "Two or more actions ran concurrently"
-                        + " even though all the actions were expected to run sequentially.",
-                executeActionsAndGetRunningPattern() == RunningPattern.SEQUENTIAL);
+                        + " while all the actions were expected to run sequentially.",
+                executeActionsAndGetRunningPattern(
+                                TIMEOUT_TO_START_ACTION_WHEN_NO_CONCURRENCY_EXPECTED)
+                        == RunningPattern.SEQUENTIAL);
     }
 
     /**
-     * Executes the main method under test in separate processes and returns the running pattern of
-     * their actions.
+     * Executes the invocations of the class under test's main() method in separate processes and
+     * returns the running pattern of their actions.
      *
+     * @param timeoutToStartAction the timeout for the main thread to wait for a new action to start
+     *     in the case that there are one or more actions currently running
      * @return the running pattern of the actions
      */
-    private RunningPattern executeActionsAndGetRunningPattern() throws IOException {
+    private RunningPattern executeActionsAndGetRunningPattern(
+            @NonNull Duration timeoutToStartAction) throws IOException {
         // We use sockets to synchronize processes in a similar manner that latches synchronize
         // threads within the same process. The main process opens a ServerSocket and waits for
-        // client processes to connect. When a client process starts executing an action, we let it
-        // start a Socket with the server and block the client process until the server closes that
-        // socket.
+        // client processes to connect. When a client process has started execution or when it
+        // starts executing the action under test, it opens a socket with the server and blocks
+        // until the server closes that socket.
 
         // First, open the server socket
         ServerSocket serverSocket = new ServerSocket(0);
         int serverSocketPort = serverSocket.getLocalPort();
 
-        // Execute the main methods. For each main method, we create a new thread that will launch
-        // a new process which will execute the main method. The thread will block until the
-        // corresponding process exits.
+        // Execute each invocation in a separate process. For each class under test, we create a new
+        // thread that will launch a new process which will execute the main() method of that class.
+        // The launched thread will block until the corresponding process exits.
         List<IOExceptionRunnable> runnables = Lists.newLinkedList();
-        for (int i = 0; i < mMainMethodInvocationList.size(); i++) {
-            Class mainMethodInvocation = mMainMethodInvocationList.get(i);
-            String[] args = mArgsList.get(i);
-            runnables.add(() -> {
-                launchProcess(mainMethodInvocation, args, serverSocketPort);
-            });
+        for (int i = 0; i < classInvocationList.size(); i++) {
+            Class classUnderTest = classInvocationList.get(i);
+            String[] args = argsList.get(i);
+            runnables.add(() -> launchProcess(classUnderTest, args, serverSocketPort));
         }
         Map<Thread, Optional<Throwable>> threads = executeRunnablesInThreads(runnables);
 
-        int remainingActions = mMainMethodInvocationList.size();
+        // Wait for all the processes to start execution
+        LinkedList<Socket> startedProcesses = Lists.newLinkedList();
+        serverSocket.setSoTimeout(0); // A timeout of 0 is interpreted as infinite timeout
+        while (startedProcesses.size() < runnables.size()) {
+            startedProcesses.add(serverSocket.accept());
+        }
+        while (startedProcesses.size() > 0) {
+            closeSocket(startedProcesses.removeFirst());
+        }
+
+        // Begin to monitor how the actions are executed
+        int remainingActions = classInvocationList.size();
         LinkedList<Socket> runningActions = Lists.newLinkedList();
         int maxConcurrentActions = 0;
 
         // To prevent the actions from *accidentally* running sequentially, when an action is going
         // to finish, we don't let it finish immediately but try waiting for the next action to
         // start. The following loop aims to "force" the actions to run concurrently. If it
-        // succeeds, it means that the actions are allowed to run concurrently. If it doesn't
-        // succeed, it means that either the actions are not allowed to run concurrently, or the
-        // actions take too long to start.
+        // succeeds, it means that the actions are able to run concurrently. If it doesn't succeed,
+        // it means that either the actions are not able to run concurrently, or the actions take
+        // too long to start.
         while (remainingActions > 0) {
+            // Wait for a new action to start. If there are currently no running actions, let's wait
+            // for the new action without a timeout. If there are currently one or more running
+            // actions, the running actions could block new actions and prevent them from starting
+            // (e.g., when the actions are not allowed to run concurrently). To avoid waiting
+            // indefinitely, we need to set a timeout.
             Socket startedAction = null;
-            try {
-                // Wait for a new action to start with a timeout
-                serverSocket.setSoTimeout(2000);
+            if (runningActions.isEmpty()) {
+                serverSocket.setSoTimeout(0); // A timeout of 0 is interpreted as infinite timeout
                 startedAction = serverSocket.accept();
-            } catch (SocketTimeoutException e) {
+            } else {
+                serverSocket.setSoTimeout((int) timeoutToStartAction.toMillis());
+                try {
+                    startedAction = serverSocket.accept();
+                } catch (SocketTimeoutException e) {
+                    // This exception means no action has started, which we will handle below.
+                }
             }
-            // If a new action has started, keep waiting for more actions to start (repeat the loop)
+
+            // If a new action has started, do not let it finish. Instead, we keep waiting for more
+            // actions to start (repeat the loop).
             if (startedAction != null) {
                 remainingActions--;
                 runningActions.add(startedAction);
@@ -173,26 +264,13 @@ public final class InterProcessConcurrencyTester {
                     maxConcurrentActions = runningActions.size();
                 }
             } else {
-                // If no other action has started and there are one or more running actions, it
-                // could be either because the running actions are blocking a new action to start
-                // (i.e., the actions are not allowed to run concurrently), or because the actions
-                // are taking too long to start. Since we cannot distinguish these two cases, we let
-                // all the running actions finish and repeat the loop.
-                if (!runningActions.isEmpty()) {
-                    while (runningActions.size() > 0) {
-                        closeSocket(runningActions.removeFirst());
-                    }
-                } else {
-                    // If no other action has started and there are no running actions, it
-                    // means that the actions are taking too long to start. Let's quit.
-                    for (Optional<Throwable> throwable : threads.values()) {
-                        if (throwable.isPresent()) {
-                            interruptThreadsAndProcesses(threads.keySet());
-                            throw new RuntimeException(throwable.get());
-                        }
-                    }
-                    interruptThreadsAndProcesses(threads.keySet());
-                    throw new RuntimeException("Actions are taking too long to start");
+                // If no action has started (which implies that there are currently one or more
+                // running actions and the timeout expired), it could be that either the running
+                // actions are blocking the new actions, or the new actions are taking too long to
+                // start. Since we cannot distinguish these two cases, we let all the running
+                // actions finish and repeat the loop.
+                while (runningActions.size() > 0) {
+                    closeSocket(runningActions.removeFirst());
                 }
             }
         }
@@ -202,14 +280,15 @@ public final class InterProcessConcurrencyTester {
             closeSocket(runningActions.removeFirst());
         }
 
-        // Wait for the threads and processes to finish
-        waitForThreadsAndProcessesToFinish(threads);
+        // Wait for all the threads (and processes) to finish
+        waitForThreadsToFinish(threads);
 
         // Close the server socket
         serverSocket.close();
 
         // Determine the running pattern based on maxConcurrentActions
-        assert maxConcurrentActions >= 1 && maxConcurrentActions <= runnables.size();
+        Preconditions.checkState(
+                maxConcurrentActions >= 1 && maxConcurrentActions <= runnables.size());
         if (maxConcurrentActions == 1) {
             return RunningPattern.SEQUENTIAL;
         } else if (maxConcurrentActions == runnables.size()) {
@@ -220,23 +299,27 @@ public final class InterProcessConcurrencyTester {
     }
 
     /**
-     * Launches a new process to execute a main method and blocks until the process exits.
+     * Launches a new process to execute the class under test's main() method and blocks until the
+     * process exits.
      *
-     * @param mainMethodInvocation the main method to be executed
-     * @param args the arguments to the main method invocation
+     * @param classUnderTest the class under test whose main() method will be executed from a new
+     *     process
+     * @param args the arguments for the class under test's main() method
      * @param serverSocketPort the port of the server socket for the client process to communicate
      *     with the main process
-     * @throws RuntimeException if a checked exception occurs or the process returns an exit value
-     *     other than 0
+     * @throws RuntimeException if any (checked or runtime) exception occurs or the process returns
+     *     an exit value other than 0
      */
     private void launchProcess(
-            @NonNull Class mainMethodInvocation, String[] args, int serverSocketPort) {
+            @NonNull Class classUnderTest, String[] args, int serverSocketPort) {
         List<String> commandAndArgs = Lists.newLinkedList();
         commandAndArgs.add(FileUtils.join(System.getProperty("java.home"), "bin", "java"));
         commandAndArgs.add("-cp");
         commandAndArgs.add(System.getProperty("java.class.path"));
-        commandAndArgs.add(mainMethodInvocation.getName());
+        commandAndArgs.add(classUnderTest.getName());
         commandAndArgs.addAll(Arrays.asList(args));
+        // Add the server socket port to the list of arguments for the client process to communicate
+        // with the main process
         commandAndArgs.add(String.valueOf(serverSocketPort));
 
         Process process;
@@ -249,76 +332,75 @@ public final class InterProcessConcurrencyTester {
         try {
             process.waitFor();
         } catch (InterruptedException e) {
-            process.destroyForcibly();
             throw new RuntimeException(e);
         }
 
         if (process.exitValue() != 0) {
-            throw new RuntimeException("Process returned exitValue " + process.exitValue());
+            throw new RuntimeException(
+                    "Process returned non-zero exit value: " + process.exitValue());
         }
     }
 
     /**
-     * Executes the runnables in separate threads and returns the threads together with any
-     * exceptions that were thrown during the execution of the threads.
+     * Executes the runnables in separate threads and returns immediately after all the threads have
+     * started execution (this method does not wait until all the threads have terminated).
+     *
+     * This methods returns a map from the threads to any exceptions thrown during the execution of
+     * the threads. Note that the map's values (if any) are not available immediately but only after
+     * the threads have terminated.
      *
      * @param runnables the runnables to be executed
-     * @return map from a thread to a {@code Throwable} (if any)
+     * @return a map from the threads to any exceptions thrown during the execution of the threads
      */
+    @NonNull
     private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
             @NonNull List<IOExceptionRunnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
+        CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
+
         for (IOExceptionRunnable runnable : runnables) {
             Thread thread =
                     new Thread(() -> {
                         try {
+                            allThreadsStartedLatch.countDown();
                             runnable.run();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     });
-            thread.setDaemon(true);
-
             threads.put(thread, Optional.empty());
             thread.setUncaughtExceptionHandler(
-                    (aThread, throwable) -> {
-                        threads.put(aThread, Optional.of(throwable));
-                    });
+                    (aThread, throwable) -> threads.put(aThread, Optional.of(throwable)));
         }
+
         for (Thread thread : threads.keySet()) {
             thread.start();
         }
+
+        // Wait for all the threads to start execution
+        try {
+            allThreadsStartedLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return threads;
     }
 
     /**
-     * Waits for all the threads and processes to finish.
-     *
-     * @throws RuntimeException if a timeout or interrupt occurs while waiting for the threads and
-     *     processes to finish or an exception was thrown during the execution of the threads
+     * Waits for all the threads to finish.
      */
-    private void waitForThreadsAndProcessesToFinish(
-            @NonNull Map<Thread, Optional<Throwable>> threads) {
+    private void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
         // Wait for the threads to finish
         for (Thread thread : threads.keySet()) {
             try {
-                thread.join(2000);
+                thread.join();
             } catch (InterruptedException e) {
-                interruptThreadsAndProcesses(threads.keySet());
                 throw new RuntimeException(e);
             }
         }
 
-        // If a thread is still running, throw an exception
-        for (Thread thread : threads.keySet()) {
-            if (thread.isAlive()) {
-                interruptThreadsAndProcesses(threads.keySet());
-                throw new RuntimeException("Actions are taking too long to finish");
-            }
-        }
-
-        // If the threads have all terminated, throw any exceptions that occurred during the
-        // execution of the threads
+        // Throw any exceptions that occurred during the execution of the threads
         for (Optional<Throwable> throwable : threads.values()) {
             if (throwable.isPresent()) {
                 throw new RuntimeException(throwable.get());
@@ -327,48 +409,51 @@ public final class InterProcessConcurrencyTester {
     }
 
     /**
-     * Interrupts the threads so that they can kill their respective processes. This method should
-     * be called before the main thread terminates.
+     * Class to be used by client processes (which are executing the actions under test) to notify
+     * the main process of events happening in the client processes.
      */
-    private void interruptThreadsAndProcesses(@NonNull Set<Thread> threads) {
-        for (Thread thread : threads) {
-            thread.interrupt();
-            // Wait for the thread to kill its associated process
-            try {
-                thread.join(2000);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
+    public static class MainProcessNotifier {
+
+        private final int serverSocketPort;
+
+        /**
+         * Creates a new instance of {@code MainProcessNotifier}.
+         *
+         * @param serverSocketPort the port of the server socket for client processes to communicate
+         *     with the main process
+         */
+        public MainProcessNotifier(int serverSocketPort) {
+            this.serverSocketPort = serverSocketPort;
+        }
+
+        /**
+         * Notifies the main process that the current client process has started execution. This
+         * method will block until the main process closes the corresponding socket.
+         */
+        public void processStarted() throws IOException {
+            Socket socket = new Socket("localhost", serverSocketPort);
+            new DataOutputStream(socket.getOutputStream()).writeUTF("PROCESS_STARTED");
+            new DataInputStream(socket.getInputStream()).readUTF();
+            socket.close();
+        }
+
+        /**
+         * Notifies the main process that the current client process starts executing the action
+         * under test. This method will block until the main process closes the corresponding
+         * socket.
+         */
+        public void actionStarted() throws IOException {
+            Socket socket = new Socket("localhost", serverSocketPort);
+            new DataOutputStream(socket.getOutputStream()).writeUTF("ACTION_STARTED");
+            new DataInputStream(socket.getInputStream()).readUTF();
+            socket.close();
         }
     }
 
     /**
-     * Executes the action under test.
-     *
-     * @param args the first argument is the port of the server socket for the client process to
-     *     communicate with the main process
-     */
-    public void runActionUnderTest(String[] args) throws IOException {
-        // Let the server know that we're running the action under test
-        int serverSocketPort = Integer.valueOf(args[0]);
-        notifyServerOfActionRunning(serverSocketPort);
-    }
-
-    /**
-     * Notifies the main process that the current client process is executing the action.
-     *
-     * @param serverSocketPort the port of the server socket for the client process to communicate
-     *     with the main process
-     */
-    private void notifyServerOfActionRunning(int serverSocketPort) throws IOException {
-        Socket socket = new Socket("localhost", serverSocketPort);
-        new DataOutputStream(socket.getOutputStream()).writeUTF("STARTED");
-        new DataInputStream(socket.getInputStream()).readUTF();
-        socket.close();
-    }
-
-    /**
-     * Closes a socket.
+     * Closes a socket, thereby unblocking the corresponding client process and allowing it to
+     * resume execution. See {@link MainProcessNotifier#processStarted()} and {@link
+     * MainProcessNotifier#actionStarted()}.
      */
     private void closeSocket(@NonNull Socket socket) throws IOException {
         new DataInputStream(socket.getInputStream()).readUTF();

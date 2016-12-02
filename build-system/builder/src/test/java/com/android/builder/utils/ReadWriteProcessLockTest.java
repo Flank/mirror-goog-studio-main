@@ -16,16 +16,14 @@
 
 package com.android.builder.utils;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.apkzlib.utils.IOExceptionRunnable;
-import com.android.testutils.truth.MoreTruth;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -53,25 +51,24 @@ public class ReadWriteProcessLockTest {
     public void testLockFileNotDeleted() throws IOException {
         // Case 1: lock file already existed
         File lockFile1 = testFolder.newFile("lockfile1");
-        MoreTruth.assertThat(lockFile1).exists();
+        assertThat(lockFile1).exists();
         ReadWriteProcessLock readWriteLock1 = ReadWriteProcessLock.getInstance(lockFile1);
         ReadWriteProcessLock.Lock lock1 = readWriteLock1.readLock();
         lock1.lock();
         lock1.unlock();
-        MoreTruth.assertThat(lockFile1).exists();
+        assertThat(lockFile1).exists();
 
         // Case 2: lock file did not exist
         File lockFile2 = new File(testFolder.getRoot(), "lockfile2");
-        MoreTruth.assertThat(lockFile2).doesNotExist();
+        assertThat(lockFile2).doesNotExist();
         ReadWriteProcessLock readWriteLock2 = ReadWriteProcessLock.getInstance(lockFile2);
         ReadWriteProcessLock.Lock lock2 = readWriteLock2.writeLock();
         lock2.lock();
         lock2.unlock();
-        MoreTruth.assertThat(lockFile2).exists();
+        assertThat(lockFile2).exists();
     }
 
     @Test
-    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testReadAndWriteLocksOnSameLockFile() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
@@ -92,7 +89,6 @@ public class ReadWriteProcessLockTest {
     }
 
     @Test
-    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testReadLocksOnSameLockFile() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
@@ -113,7 +109,6 @@ public class ReadWriteProcessLockTest {
     }
 
     @Test
-    @Ignore("Concurrency tests are flaky. Working on a fix.")
     public void testDifferentLockFiles() throws IOException {
         InterProcessConcurrencyTester interProcessTester = new InterProcessConcurrencyTester();
         ConcurrencyTester<Void, Void> singleProcessTester = new ConcurrencyTester<>();
@@ -148,15 +143,13 @@ public class ReadWriteProcessLockTest {
             File lockFile = lockFiles[i];
             LockType lockType = lockTypes[i];
 
-            interProcessTester.addMainMethodInvocationFromNewProcess(
+            interProcessTester.addClassInvocationFromNewProcess(
                     SampleAction.class, new String[] {lockFile.getPath(), lockType.toString()});
 
             singleProcessTester.addMethodInvocationFromNewThread(
                     (IOExceptionFunction<Void, Void> anActionUnderTest) -> {
                         executeActionWithLock(
-                                () -> anActionUnderTest.apply(null),
-                                lockFile,
-                                lockType);
+                                () -> anActionUnderTest.apply(null), lockFile, lockType);
                     },
                     actionUnderTest);
         }
@@ -168,12 +161,22 @@ public class ReadWriteProcessLockTest {
         public static void main(String[] args) throws IOException {
             File lockFile = new File(args[0]);
             LockType lockType = LockType.valueOf(args[1]);
-            String[] remainingArgs = Arrays.copyOfRange(args, 2, args.length);
+            // The server socket port is added to the list of arguments by
+            // InterProcessConcurrencyTester for the client process to communicate with the main
+            // process
+            int serverSocketPort = Integer.valueOf(args[2]);
 
-            executeActionWithLock(
-                    () -> new InterProcessConcurrencyTester().runActionUnderTest(remainingArgs),
-                    lockFile,
-                    lockType);
+            InterProcessConcurrencyTester.MainProcessNotifier notifier =
+                    new InterProcessConcurrencyTester.MainProcessNotifier(serverSocketPort);
+            notifier.processStarted();
+
+            IOExceptionRunnable actionUnderTest = () -> {
+                notifier.actionStarted();
+                // Do some artificial work here
+                assertThat(1).isEqualTo(1);
+            };
+
+            executeActionWithLock(actionUnderTest, lockFile, lockType);
         }
     }
 
