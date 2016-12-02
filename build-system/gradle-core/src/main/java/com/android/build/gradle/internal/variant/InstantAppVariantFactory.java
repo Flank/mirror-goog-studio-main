@@ -36,14 +36,13 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-
+import java.util.Collections;
+import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * An implementation of VariantFactory for a project that generates IAPKs.
@@ -72,10 +71,15 @@ public class InstantAppVariantFactory implements VariantFactory {
     @Override
     public BaseVariantData createVariantData(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull TaskManager taskManager) {
+            @NonNull TaskManager taskManager,
+            @NonNull Recorder recorder) {
         InstantAppVariantData variant =
-                new InstantAppVariantData(extension, taskManager, variantConfiguration,
-                        androidBuilder.getErrorReporter());
+                new InstantAppVariantData(
+                        extension,
+                        taskManager,
+                        variantConfiguration,
+                        androidBuilder.getErrorReporter(),
+                        recorder);
         variant.createOutput(OutputFile.OutputType.MAIN,
                 Collections.<FilterData>emptyList());
         return variant;

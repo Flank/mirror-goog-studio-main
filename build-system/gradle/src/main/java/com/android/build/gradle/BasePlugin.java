@@ -55,7 +55,6 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
-import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -70,6 +69,8 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
+import com.android.builder.profile.Recorder;
+import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.dx.command.dexer.Main;
@@ -147,6 +148,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     private DependencyManager dependencyManager;
 
+    private Recorder threadRecorder;
+
     private boolean hasCreatedTasks = false;
 
     BasePlugin(@NonNull Instantiator instantiator, @NonNull ToolingModelBuilderRegistry registry) {
@@ -188,7 +191,9 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry);
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder threadRecorder);
+
     protected abstract int getProjectType();
 
     @VisibleForTesting
@@ -223,23 +228,30 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         checkModulesForErrors();
 
         ProfilerInitializer.init(project);
+        threadRecorder = ThreadRecorder.get();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
 
-        SpanRecorders.record(
-                project, null, ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE, this::configureProject);
-
-        SpanRecorders.record(
-                project,
+        threadRecorder.record(
+                ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
+                project.getPath(),
                 null,
+                this::configureProject);
+
+        threadRecorder.record(
                 ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
+                project.getPath(),
+                null,
                 this::configureExtension);
 
-        SpanRecorders.record(
-                project, null, ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION, this::createTasks);
+        threadRecorder.record(
+                ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
+                project.getPath(),
+                null,
+                this::createTasks);
 
         // Apply additional plugins
         for (String plugin : AndroidGradleOptions.getAdditionalPlugins(project)) {
@@ -310,10 +322,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                             public void buildFinished(BuildResult buildResult) {
                                 ExecutorSingleton.shutdown();
                                 sdkHandler.unload();
-                                SpanRecorders.record(
-                                        project,
-                                        null,
+                                threadRecorder.record(
                                         ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
+                                        project.getPath(),
+                                        null,
                                         () -> {
                                             PreDexCache.getCache()
                                                     .clear(
@@ -335,7 +347,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                                             getLogger());
                                             libraryCache.unload();
                                             Main.clearInternTables();
-                                            return null;
                                         });
                             }
                         });
@@ -408,15 +419,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 "gcc",
                 "" /*toolchainVersion*/);
 
-        taskManager = createTaskManager(
-                project,
-                androidBuilder,
-                dataBindingBuilder,
-                extension,
-                sdkHandler,
-                ndkHandler,
-                dependencyManager,
-                registry);
+        taskManager =
+                createTaskManager(
+                        project,
+                        androidBuilder,
+                        dataBindingBuilder,
+                        extension,
+                        sdkHandler,
+                        ndkHandler,
+                        dependencyManager,
+                        registry,
+                        threadRecorder);
 
         variantFactory = createVariantFactory(instantiator, androidBuilder, extension);
 
@@ -427,7 +440,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         extension,
                         variantFactory,
                         taskManager,
-                        instantiator);
+                        instantiator,
+                        threadRecorder);
 
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder = new ModelBuilder(
@@ -487,20 +501,20 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     private void createTasks() {
-        SpanRecorders.record(
-                project,
-                null,
+        threadRecorder.record(
                 ExecutionType.TASK_MANAGER_CREATE_TASKS,
+                project.getPath(),
+                null,
                 () ->
                         taskManager.createTasksBeforeEvaluate(
                                 new TaskContainerAdaptor(project.getTasks())));
 
         project.afterEvaluate(
                 project ->
-                        SpanRecorders.record(
-                                project,
-                                null,
+                        threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                                project.getPath(),
+                                null,
                                 () -> createAndroidTasks(false)));
     }
 
@@ -572,10 +586,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         sdkHandler.addLocalRepositories(project);
 
         taskManager.addDataBindingDependenciesIfNecessary(extension.getDataBinding());
-        SpanRecorders.record(
-                project,
-                null,
+        threadRecorder.record(
                 ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
+                project.getPath(),
+                null,
                 () -> {
                     variantManager.createAndroidTasks();
                     ApiObjectFactory apiObjectFactory =
@@ -611,10 +625,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         boolean forceRegeneration = AndroidGradleOptions.refreshExternalNativeModel(project);
 
         if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(project)) {
-            SpanRecorders.record(
-                    project,
-                    null,
+            threadRecorder.record(
                     ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
+                    project.getPath(),
+                    null,
                     () -> {
                         for (BaseVariantData variantData : variantManager.getVariantDataList()) {
                             ExternalNativeJsonGenerator generator =
@@ -631,7 +645,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                                 generator.readExistingNativeBuildConfigurations());
                             }
                         }
-                        return null;
                     });
         }
     }

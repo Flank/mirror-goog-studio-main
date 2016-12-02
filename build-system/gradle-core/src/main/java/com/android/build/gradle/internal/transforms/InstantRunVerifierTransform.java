@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
@@ -75,6 +74,7 @@ public class InstantRunVerifierTransform extends Transform {
 
     private final InstantRunVariantScope variantScope;
     private final File outputDir;
+    private final Recorder recorder;
 
     /**
      * Object that encapsulates the result of the verification process.
@@ -99,9 +99,11 @@ public class InstantRunVerifierTransform extends Transform {
         }
     }
 
-    public InstantRunVerifierTransform(InstantRunVariantScope variantScope) {
+    public InstantRunVerifierTransform(
+            @NonNull InstantRunVariantScope variantScope, @NonNull Recorder recorder) {
         this.variantScope = variantScope;
         this.outputDir = variantScope.getIncrementalVerifierDir();
+        this.recorder = recorder;
     }
 
     @Override
@@ -324,17 +326,12 @@ public class InstantRunVerifierTransform extends Transform {
         if (!name.endsWith(SdkConstants.DOT_CLASS)) {
             return InstantRunVerifierStatus.COMPATIBLE;
         }
-        InstantRunVerifierStatus status = ThreadRecorder.get().record(
-                ExecutionType.TASK_FILE_VERIFICATION,
-                variantScope.getGlobalScope().getProject().getPath(),
-                variantScope.getFullVariantName(),
-                new Recorder.Block<InstantRunVerifierStatus>() {
-                    @Override
-                    @NonNull
-                    public InstantRunVerifierStatus call() throws Exception {
-                        return InstantRunVerifier.run(originalClass, updatedClass, LOGGER);
-                    }
-                });
+        InstantRunVerifierStatus status =
+                recorder.record(
+                        ExecutionType.TASK_FILE_VERIFICATION,
+                        variantScope.getGlobalScope().getProject().getPath(),
+                        variantScope.getFullVariantName(),
+                        () -> InstantRunVerifier.run(originalClass, updatedClass, LOGGER));
         // TODO: re-add approximation of target.
         if (status == null) {
             LOGGER.warning("No verifier result provided for %1$s", name);

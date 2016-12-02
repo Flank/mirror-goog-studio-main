@@ -21,8 +21,8 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.AtomVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
@@ -39,13 +39,12 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-
+import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.util.List;
 
 public class AtomVariantFactory implements VariantFactory {
 
@@ -69,9 +68,14 @@ public class AtomVariantFactory implements VariantFactory {
     @NonNull
     public BaseVariantData createVariantData(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull TaskManager taskManager) {
-        return new AtomVariantData(extension, taskManager, variantConfiguration,
-                androidBuilder.getErrorReporter());
+            @NonNull TaskManager taskManager,
+            @NonNull Recorder recorder) {
+        return new AtomVariantData(
+                extension,
+                taskManager,
+                variantConfiguration,
+                androidBuilder.getErrorReporter(),
+                recorder);
     }
 
     @Override

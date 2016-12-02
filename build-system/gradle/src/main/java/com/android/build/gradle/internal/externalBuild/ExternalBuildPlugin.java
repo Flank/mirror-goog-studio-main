@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
-
+import com.android.builder.profile.ThreadRecorder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -40,7 +40,7 @@ public class ExternalBuildPlugin implements Plugin<Project> {
         ProfilerInitializer.init(project);
 
         ExternalBuildTaskManager taskManager =
-                new ExternalBuildTaskManager(project);
+                new ExternalBuildTaskManager(project, ThreadRecorder.get());
 
         project.afterEvaluate(project1 -> {
             try {

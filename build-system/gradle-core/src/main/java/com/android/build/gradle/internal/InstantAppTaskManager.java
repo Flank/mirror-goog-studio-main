@@ -48,7 +48,7 @@ import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.profile.ProcessProfileWriter;
-import com.android.builder.profile.ThreadRecorder;
+import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -73,7 +73,8 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder threadRecorder) {
         super(
                 project,
                 androidBuilder,
@@ -82,7 +83,8 @@ public class InstantAppTaskManager extends TaskManager {
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,
-                toolingRegistry);
+                toolingRegistry,
+                threadRecorder);
     }
 
     @Override
@@ -107,15 +109,16 @@ public class InstantAppTaskManager extends TaskManager {
         createCheckManifestTask(tasks, variantScope);
 
         // Add a task to process the manifests.
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                projectPath, variantName, () -> {
-                    createMergeAppManifestsTask(tasks, variantScope);
-                    return null;
-                });
+        recorder.record(
+                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                projectPath,
+                variantName,
+                () -> createMergeAppManifestsTask(tasks, variantScope));
 
         // Add tasks to package the atoms.
         AndroidTask<PackageAtom> lastPackageAtom =
-                ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_ATOM_PACKAGING_TASKS,
+                recorder.record(
+                        ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_ATOM_PACKAGING_TASKS,
                         projectPath,
                         variantName,
                         () -> createAtomPackagingTasks(tasks, variantScope));
@@ -126,17 +129,17 @@ public class InstantAppTaskManager extends TaskManager {
         }
 
         // Add a task to process the resources and generate the instantApp manifest.
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                projectPath, variantName, () -> {
-                    createInstantAppProcessResTask(tasks, variantScope, lastPackageAtom);
-                    return null;
-                });
+        recorder.record(
+                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                projectPath,
+                variantName,
+                () -> createInstantAppProcessResTask(tasks, variantScope, lastPackageAtom));
 
-        ThreadRecorder.get().record(ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath, variantName, () -> {
-                    createInstantAppPackagingTasks(tasks, variantScope);
-                    return null;
-                });
+        recorder.record(
+                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
+                projectPath,
+                variantName,
+                () -> createInstantAppPackagingTasks(tasks, variantScope));
     }
 
     private AndroidTask<PackageAtom> createAtomPackagingTasks(

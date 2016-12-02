@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.ProcessProfileWriter;
+import com.android.builder.profile.ThreadRecorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -90,7 +91,8 @@ public class AppComponentModelPlugin implements Plugin<Project> {
                     sdkHandler,
                     ndkHandler,
                     dependencyManager,
-                    toolingRegistry);
+                    toolingRegistry,
+                    ThreadRecorder.get());
         }
 
         @Model

@@ -24,28 +24,27 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.Message;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
-import org.mockito.Mockito;
-
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
@@ -54,6 +53,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.Project;
+import org.gradle.testfixtures.ProjectBuilder;
+import org.junit.Before;
+import org.mockito.Mockito;
 
 /**
  * Base class for Junit-4 based tests that need to manually instantiate tasks to test them.
@@ -101,6 +104,47 @@ public class TaskTestUtils {
         }
     }
 
+    public static final class FakeRecorder implements Recorder {
+        @Nullable
+        @Override
+        public <T> T record(
+                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
+                @NonNull String projectPath,
+                @Nullable String variant,
+                @NonNull Block<T> block) {
+            try {
+                return block.call();
+            } catch (Exception e) {
+                block.handleException(e);
+            }
+            return null;
+        }
+
+        @Override
+        public void record(
+                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
+                @NonNull String projectPath,
+                @Nullable String variant,
+                @NonNull VoidBlock block) {
+            try {
+                block.call();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        @Nullable
+        @Override
+        public <T> T record(
+                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
+                @Nullable GradleTransformExecution transform,
+                @NonNull String projectPath,
+                @Nullable String variant,
+                @NonNull Block<T> block) {
+            return record(executionType, projectPath, variant, block);
+        }
+    }
+
     @Before
     public void setUp() {
         Project project = ProjectBuilder.builder().withProjectDir(
@@ -108,7 +152,8 @@ public class TaskTestUtils {
 
         scope = getScope();
         errorReporter = new FakeErrorReporter(ErrorReporter.EvaluationMode.IDE);
-        transformManager = new TransformManager(new AndroidTaskRegistry(), errorReporter);
+        transformManager =
+                new TransformManager(new AndroidTaskRegistry(), errorReporter, new FakeRecorder());
         taskFactory = new TaskContainerAdaptor(project.getTasks());
         mTransformTaskFailed = () -> new RuntimeException("Transform task creation failed.");
     }

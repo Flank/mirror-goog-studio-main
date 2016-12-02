@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.publishing.AtomPublishArtifact;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -39,6 +38,7 @@ import com.android.build.gradle.tasks.GenerateAtomMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Set;
@@ -62,7 +62,8 @@ public class AtomTaskManager extends TaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder threadRecorder) {
         super(
                 project,
                 androidBuilder,
@@ -71,7 +72,8 @@ public class AtomTaskManager extends TaskManager {
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,
-                toolingRegistry);
+                toolingRegistry,
+                threadRecorder);
     }
 
     @Override
@@ -90,54 +92,67 @@ public class AtomTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeLibManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createGenerateResValuesTask(tasks, variantScope));
 
         // Add a task to compile renderscript files.
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createRenderscriptTask(tasks, variantScope));
 
         // Create a merge task to merge the resources from this atom and its dependencies. This
         // will get packaged in the atombundle.
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                () -> createMergeResourcesTask(tasks, variantScope));
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                (Recorder.VoidBlock) () -> createMergeResourcesTask(tasks, variantScope));
 
         // Add a task to merge the assets folders
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createBuildConfigTask(tasks, variantScope));
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
-                    if (variantScope.getVariantConfiguration().getPackageDependencies()
-                            .getBaseAtom() == null) {
+                    if (variantScope
+                                    .getVariantConfiguration()
+                                    .getPackageDependencies()
+                                    .getBaseAtom()
+                            == null) {
                         // If this is the base atom, compile the .ap_ that will get packaged in the atombundle.
                         createApkProcessResTask(tasks, variantScope);
                     } else {
                         // If this is not the base atom, add a task to generate the resource source files,
                         // directing the location of the r.txt file to be directly in the atombundle.
-                        createProcessResTask(tasks, variantScope, variantBundleDir,
+                        createProcessResTask(
+                                tasks,
+                                variantScope,
+                                variantBundleDir,
                                 false /*generateResourcePackage*/);
                     }
 
@@ -145,21 +160,24 @@ public class AtomTaskManager extends TaskManager {
                     createProcessJavaResTasks(tasks, variantScope);
                 });
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_AIDL_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createAidlTask(tasks, variantScope));
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_SHADER_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            SpanRecorders.record(
-                    variantScope,
+            recorder.record(
                     ExecutionType.ATOM_TASK_MANAGER_CREATE_NDK_TASK,
+                    project.getPath(),
+                    variantScope.getFullVariantName(),
                     () -> createNdkTasks(tasks, variantScope));
         } else {
             if (variantData.compileTask != null) {
@@ -171,24 +189,27 @@ public class AtomTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     createExternalNativeBuildJsonGenerators(variantScope);
                     createExternalNativeBuildTasks(tasks, variantScope);
                 });
 
         // Add a task to merge the jni libs folders
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeJniLibFoldersTasks(tasks, variantScope));
 
         // Add a compile task
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_COMPILE_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     // create data binding merge task before the javac task so that it can
                     // parse jars before any consumer
@@ -252,15 +273,17 @@ public class AtomTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(tasks, variantScope);
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_BUNDLING_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createAtomBundlingTasks(tasks, variantScope));
 
         // create the lint tasks.
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_LINT_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createLintTasks(tasks, variantScope));
     }
 

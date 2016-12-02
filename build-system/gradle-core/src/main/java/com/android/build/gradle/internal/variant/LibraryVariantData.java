@@ -25,14 +25,13 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.Task;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import org.gradle.api.Task;
 
 /**
  * Data about a variant that produce a Library bundle (.aar)
@@ -48,8 +47,9 @@ public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> im
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output

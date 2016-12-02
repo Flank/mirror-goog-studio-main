@@ -39,17 +39,16 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.internal.reflect.Instantiator;
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
@@ -78,10 +77,15 @@ public class ApplicationVariantFactory implements VariantFactory {
     @NonNull
     public BaseVariantData createVariantData(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull TaskManager taskManager) {
+            @NonNull TaskManager taskManager,
+            @NonNull Recorder recorder) {
         ApplicationVariantData variant =
-                new ApplicationVariantData(extension, variantConfiguration, taskManager,
-                        androidBuilder.getErrorReporter());
+                new ApplicationVariantData(
+                        extension,
+                        variantConfiguration,
+                        taskManager,
+                        androidBuilder.getErrorReporter(),
+                        recorder);
 
         variant.calculateFilters(extension.getSplits());
 

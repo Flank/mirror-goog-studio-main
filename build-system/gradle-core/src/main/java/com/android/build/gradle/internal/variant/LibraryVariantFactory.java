@@ -38,13 +38,12 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-
+import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.util.List;
 
 public class LibraryVariantFactory implements VariantFactory {
 
@@ -68,9 +67,14 @@ public class LibraryVariantFactory implements VariantFactory {
     @NonNull
     public BaseVariantData createVariantData(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull TaskManager taskManager) {
-        return new LibraryVariantData(extension, taskManager, variantConfiguration,
-                androidBuilder.getErrorReporter());
+            @NonNull TaskManager taskManager,
+            @NonNull Recorder recorder) {
+        return new LibraryVariantData(
+                extension,
+                taskManager,
+                variantConfiguration,
+                androidBuilder.getErrorReporter(),
+                recorder);
     }
 
     @Override

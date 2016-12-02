@@ -164,6 +164,7 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
@@ -251,6 +252,8 @@ public abstract class TaskManager {
 
     private Logger logger;
 
+    protected final Recorder recorder;
+
     protected boolean isComponentModelPlugin = false;
 
     // Task names
@@ -293,7 +296,8 @@ public abstract class TaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder recorder) {
         this.project = project;
         this.androidBuilder = androidBuilder;
         this.dataBindingBuilder = dataBindingBuilder;
@@ -301,6 +305,7 @@ public abstract class TaskManager {
         this.extension = extension;
         this.toolingRegistry = toolingRegistry;
         this.dependencyManager = dependencyManager;
+        this.recorder = recorder;
         logger = Logging.getLogger(this.getClass());
 
         globalScope = new GlobalScope(
@@ -2008,11 +2013,14 @@ public abstract class TaskManager {
                 transformManager
                         .addTransform(tasks, variantScope, extractJarsTransform);
 
-        InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(getLogger(),
-                variantScope,
-                variantScope.getTransformManager(),
-                androidTasks,
-                tasks);
+        InstantRunTaskManager instantRunTaskManager =
+                new InstantRunTaskManager(
+                        getLogger(),
+                        variantScope,
+                        variantScope.getTransformManager(),
+                        androidTasks,
+                        tasks,
+                        recorder);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask =

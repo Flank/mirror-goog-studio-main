@@ -16,30 +16,28 @@
 
 package com.android.build.gradle.model;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.DependencyManager;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
-
+import java.util.Collection;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import android.databinding.tool.DataBindingBuilder;
-
-import java.util.Collection;
 
 /**
  * TaskManager for creating tasks in an Android application project with component model plugin.
  */
 public class ApplicationComponentTaskManager extends ApplicationTaskManager {
 
-    public ApplicationComponentTaskManager (
+    public ApplicationComponentTaskManager(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
@@ -47,7 +45,8 @@ public class ApplicationComponentTaskManager extends ApplicationTaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder recorder) {
         super(
                 project,
                 androidBuilder,
@@ -56,7 +55,8 @@ public class ApplicationComponentTaskManager extends ApplicationTaskManager {
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,
-                toolingRegistry);
+                toolingRegistry,
+                recorder);
         isComponentModelPlugin = true;
     }
 

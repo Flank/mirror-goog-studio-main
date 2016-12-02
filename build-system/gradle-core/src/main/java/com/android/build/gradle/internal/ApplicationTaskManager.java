@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.profile.SpanRecorders;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -43,6 +42,7 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.List;
@@ -65,7 +65,8 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder recorder) {
         super(
                 project,
                 androidBuilder,
@@ -74,7 +75,8 @@ public class ApplicationTaskManager extends TaskManager {
                 sdkHandler,
                 ndkHandler,
                 dependencyManager,
-                toolingRegistry);
+                toolingRegistry,
+                recorder);
     }
 
     @Override
@@ -94,44 +96,51 @@ public class ApplicationTaskManager extends TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest(s)
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeAppManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createGenerateResValuesTask(tasks, variantScope));
 
         // Add a task to compile renderscript files.
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createRenderscriptTask(tasks, variantScope));
 
         // Add a task to merge the resource folders
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                () -> createMergeResourcesTask(tasks, variantScope));
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                (Recorder.VoidBlock) () -> createMergeResourcesTask(tasks, variantScope));
 
         // Add a task to merge the asset folders
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createBuildConfigTask(tasks, variantScope));
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     // Add a task to process the Android Resources and generate source files
                     createApkProcessResTask(tasks, variantScope);
@@ -140,21 +149,24 @@ public class ApplicationTaskManager extends TaskManager {
                     createProcessJavaResTasks(tasks, variantScope);
                 });
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createAidlTask(tasks, variantScope));
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin) {
-            SpanRecorders.record(
-                    variantScope,
+            recorder.record(
                     ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK,
+                    project.getPath(),
+                    variantScope.getFullVariantName(),
                     () -> createNdkTasks(tasks, variantScope));
         } else {
             if (variantData.compileTask != null) {
@@ -166,24 +178,28 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-        SpanRecorders.record(
-                variantScope,
+
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     createExternalNativeBuildJsonGenerators(variantScope);
                     createExternalNativeBuildTasks(tasks, variantScope);
                 });
 
         // Add a task to merge the jni libs folders
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createMergeJniLibFoldersTasks(tasks, variantScope));
 
         // Add a compile task
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     CoreJackOptions jackOptions =
                             variantData.getVariantConfiguration().getJackOptions();
@@ -251,15 +267,17 @@ public class ApplicationTaskManager extends TaskManager {
                         "Pure splits can only be used with buildtools 21 and later");
             }
 
-            SpanRecorders.record(
-                    variantScope,
+            recorder.record(
                     ExecutionType.APP_TASK_MANAGER_CREATE_SPLIT_TASK,
+                    project.getPath(),
+                    variantScope.getFullVariantName(),
                     () -> createSplitTasks(tasks, variantScope));
         }
 
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_PACKAGING_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> {
                     @Nullable
                     AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask =
@@ -269,9 +287,10 @@ public class ApplicationTaskManager extends TaskManager {
                 });
 
         // create the lint tasks.
-        SpanRecorders.record(
-                variantScope,
+        recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_LINT_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
                 () -> createLintTasks(tasks, variantScope));
     }
 
