@@ -457,7 +457,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
     private static EnumSet<ResourceType> getAnyRes() {
         EnumSet<ResourceType> types = EnumSet.allOf(ResourceType.class);
         types.remove(ResourceEvaluator.COLOR_INT_MARKER_TYPE);
-        types.remove(ResourceEvaluator.PX_MARKER_TYPE);
+        types.remove(ResourceEvaluator.DIMENSION_MARKER_TYPE);
         return types;
     }
 
@@ -1574,9 +1574,9 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             message = String.format("Should pass resolved color instead of resource id here: " +
               "`getResources().getColor(%1$s)`", argument.getText());
         } else if (actual != null && actual.size() == 1 && actual.contains(
-          ResourceEvaluator.PX_MARKER_TYPE)) {
+          ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
             message = "Expected a dimension resource id (`R.color.`) but received a pixel integer";
-        } else if (expectedType.contains(ResourceEvaluator.PX_MARKER_TYPE)) {
+        } else if (expectedType.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
             message = String.format("Should pass resolved pixel size instead of resource id here: " +
               "`getResources().getDimension*(%1$s)`", argument.getText());
         } else if (expectedType.size() < ResourceType.getNames().length - 2) { // -2: marker types
