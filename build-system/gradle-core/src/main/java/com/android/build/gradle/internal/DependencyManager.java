@@ -59,6 +59,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -770,15 +772,21 @@ public class DependencyManager {
                                         variantName);
 
                             } else {
-                                // If the build cache is enabled, we create and cache the exploded aar
-                                // inside the build cache directory; otherwise, we explode the aar to a
-                                // location inside the project's build directory.
+                                // If the build cache is used, we create and cache the exploded aar
+                                // inside the build cache directory; otherwise, we explode the aar
+                                // to a location inside the project's build directory.
                                 Optional<FileCache> buildCache =
                                         AndroidGradleOptions.getBuildCache(project);
                                 File explodedDir;
-                                if (buildCache.isPresent()) {
-                                    explodedDir = buildCache.get().getFileInCache(
-                                            PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates));
+                                if (PrepareLibraryTask.shouldUseBuildCache(
+                                        buildCache.isPresent(), mavenCoordinates)) {
+                                    try {
+                                        explodedDir = buildCache.get().getFileInCache(
+                                                PrepareLibraryTask.getBuildCacheInputs(
+                                                        mavenCoordinates, artifact.getFile()));
+                                    } catch (IOException e) {
+                                        throw new UncheckedIOException(e);
+                                    }
                                 } else {
                                     // When improved dependency resolution is enabled, the aar is
                                     // exploded to a directory specific to the variant.  Otherwise, it
@@ -788,11 +796,11 @@ public class DependencyManager {
                                             AndroidGradleOptions
                                                     .isImprovedDependencyResolutionEnabled(project)
                                                     ? FileUtils.join(
-                                                    project.getBuildDir(),
-                                                    FD_INTERMEDIATES,
-                                                    EXPLODED_AAR ,
-                                                    configDependencies.getName(),
-                                                    path)
+                                                            project.getBuildDir(),
+                                                            FD_INTERMEDIATES,
+                                                            EXPLODED_AAR ,
+                                                            configDependencies.getName(),
+                                                            path)
                                                     : FileUtils.join(
                                                             project.getBuildDir(),
                                                             FD_INTERMEDIATES,

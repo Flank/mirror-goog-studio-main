@@ -73,12 +73,13 @@ public class PrepareLibraryTaskTest {
         // Run PrepareLibraryTask, expect that the exploded aar is created in the build cache
         // directory
         File explodedDir =
-                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates));
+                buildCache.getFileInCache(
+                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates, aarFile));
         PrepareLibraryTask task = createPrepareLibraryTask(
                 projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
         task.execute();
 
-        assertThat(buildCacheDir.list().length).isEqualTo(2); // Including 1 lock file
+        assertThat(buildCacheDir.list()).hasLength(2); // Including 1 lock file
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
                 .hasContents("Library content");
         long explodedDirTimestamp = explodedDir.lastModified();
@@ -91,40 +92,78 @@ public class PrepareLibraryTaskTest {
         task = createPrepareLibraryTask(
                 projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
         task.execute();
-        assertThat(buildCacheDir.list().length).isEqualTo(2); // Including 1 lock file
+        assertThat(buildCacheDir.list()).hasLength(2); // Including 1 lock file
         assertThat(explodedDir).wasModifiedAt(explodedDirTimestamp);
 
-        // Create a new aar of the same library but with a different version
-        File libraryDir2 = testDir.newFolder("library2");
-        MavenCoordinates mavenCoordinates2 =
-                new MavenCoordinatesImpl("testGroupId", "testArtifact", "1.1");
-        File jarFile2 = new File(libraryDir2, "classes.jar");
+        // Change the contents of the aar
+        MavenCoordinates mavenCoordinates2 = mavenCoordinates;
+        File jarFile2 = new File(libraryDir, "classes.jar");
         Files.write("New library content", jarFile2, StandardCharsets.UTF_8);
-        File aarFile2 = new File(libraryDir2, "library2.aar");
+        File aarFile2 = aarFile;
         createAar(jarFile2, aarFile2);
 
         // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
         // build cache directory
         File explodedDir2 =
                 buildCache.getFileInCache(
-                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates2));
+                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates2, aarFile2));
         assertThat(explodedDir2).isNotEqualTo(explodedDir);
 
         task = createPrepareLibraryTask(
                 projectDir, aarFile2, explodedDir2, Optional.of(buildCache), mavenCoordinates2);
         task.execute();
-        assertThat(buildCacheDir.list().length).isEqualTo(4); // Including 2 lock files
+        assertThat(buildCacheDir.list()).hasLength(4); // Including 2 lock files
         assertThat(FileUtils.join(explodedDir2, "jars", "classes.jar"))
+                .hasContents("New library content");
+
+        // Create a new aar with the same contents but a different version
+        MavenCoordinates mavenCoordinates3 =
+                new MavenCoordinatesImpl("testGroupId", "testArtifact", "1.1");
+        File aarFile3 = aarFile2;
+
+        // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
+        // build cache directory
+        File explodedDir3 =
+                buildCache.getFileInCache(
+                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates3, aarFile3));
+        assertThat(explodedDir3).isNotEqualTo(explodedDir);
+        assertThat(explodedDir3).isNotEqualTo(explodedDir2);
+
+        task = createPrepareLibraryTask(
+                projectDir, aarFile3, explodedDir3, Optional.of(buildCache), mavenCoordinates3);
+        task.execute();
+        assertThat(buildCacheDir.list()).hasLength(6); // Including 3 lock files
+        assertThat(FileUtils.join(explodedDir3, "jars", "classes.jar"))
                 .hasContents("New library content");
     }
 
     @Test
     public void testBuildCacheDisabled() throws IOException {
         // Run PrepareLibraryTask, expect that the exploded aar is created in the exploded
-        // directory
+        // directory outside the build cache directory
         File explodedDir = testDir.newFolder("exploded-aar");
         PrepareLibraryTask task = createPrepareLibraryTask(
                 projectDir, aarFile, explodedDir, Optional.empty(), mavenCoordinates);
+        task.execute();
+        assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
+                .hasContents("Library content");
+
+        // Also expect that the exploded directory is registered as an output directory for Gradle
+        // incremental build
+        assertThat(task.getOutputs().getFiles()).containsExactly(explodedDir);
+    }
+
+    // http://b.android.com/228623
+    @Test
+    public void testBuildCacheEnabledWithSnapshotArtifact() throws IOException {
+        FileCache buildCache = FileCache.getInstanceWithInterProcessLocking(buildCacheDir);
+        mavenCoordinates = new MavenCoordinatesImpl("testGroupId", "testArtifact", "1.0-SNAPSHOT");
+
+        // Run PrepareLibraryTask, expect that the exploded aar is created in the exploded
+        // directory outside the build cache directory (as if the build cache was disabled)
+        File explodedDir = testDir.newFolder("exploded-aar");
+        PrepareLibraryTask task = createPrepareLibraryTask(
+                projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
         task.execute();
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
                 .hasContents("Library content");
