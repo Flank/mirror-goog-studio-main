@@ -27,6 +27,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiAnnotation;
@@ -798,6 +799,32 @@ public class EcjPsiManager {
             assert !mElementMap.containsKey(binding);
             mElementMap.put(binding, element);
         }
+    }
+
+    @Nullable
+    public static PsiElement findElementAt(@NonNull PsiElement element, int offset) {
+        TextRange range = element.getTextRange();
+        if (range == null) {
+            return null;
+        }
+        if (!range.containsOffset(offset)) {
+            return null;
+        }
+
+        PsiElement child = element.getLastChild();
+        if (child == null) {
+            return null;
+        }
+
+        while (child != null) {
+            PsiElement match = findElementAt(child, offset);
+            if (match != null) {
+                return match;
+            }
+            child = child.getPrevSibling();
+        }
+
+        return element;
     }
 
     private static class VariableDeclarationFinder extends JavaRecursiveElementVisitor {

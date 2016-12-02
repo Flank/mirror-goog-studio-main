@@ -424,7 +424,7 @@ public abstract class Detector {
     public interface JavaPsiScanner  {
         /**
          * Create a parse tree visitor to process the parse tree. All
-         * {@link JavaScanner} detectors must provide a visitor, unless they
+         * {@link JavaPsiScanner} detectors must provide a visitor, unless they
          * either return true from {@link #appliesToResourceRefs()} or return
          * non null from {@link #getApplicableMethodNames()}.
          * <p>

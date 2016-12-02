@@ -44,6 +44,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import java.io.File;
@@ -924,6 +925,13 @@ public class EcjParser extends JavaParser {
             return location;
         }
         return super.getNameLocation(context, node);
+    }
+
+    @Nullable
+    @Override
+    public PsiElement findElementAt(@NonNull JavaContext context, int offset) {
+        PsiJavaFile javaFile = context.getJavaFile();
+        return javaFile != null ? EcjPsiManager.findElementAt(javaFile, offset) : null;
     }
 
     @NonNull
