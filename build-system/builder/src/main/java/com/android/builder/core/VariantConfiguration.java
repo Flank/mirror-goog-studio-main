@@ -1230,50 +1230,83 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the dynamic list of {@link ResourceSet} based on the configuration, its dependencies,
-     * as well as tested config if applicable (test of a library).
+     * returns all the resource folders from all the sourcesets.
+     * @return
+     */
+    @NonNull
+    public Set<File> getResourceFolders() {
+        Set<File> files = Sets.newHashSet();
+        getSortedSourceProviders().forEach(sourceProvider -> {
+            files.addAll(sourceProvider.getResDirectories());
+        });
+
+        return files;
+    }
+
+    /**
+     * returns all the resource folders from all the dependencies.
+     * @return
+     */
+    @NonNull
+    public Set<File> getResourceFoldersForDependencies() {
+        Set<File> files = Sets.newHashSet();
+        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies()) {
+            File resFolder = dependency.getResFolder();
+            if (resFolder.isDirectory()) {
+                files.add(resFolder);
+            }
+        }
+
+        return files;
+    }
+
+    /**
+     * Returns the dynamic list of {@link ResourceSet} for the dependencies only.
      *
      * The list is ordered in ascending order of importance, meaning the first set is meant to be
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
      * {@link com.android.ide.common.res2.ResourceMerger}.
      *
-     * @param generatedResFolders a list of generated res folders
-     * @param includeDependencies whether to include in the result the resources of the dependencies
+     * @return a list ResourceSet.
+     */
+    @NonNull
+    public List<ResourceSet> getResourceSetsForDependencies(boolean validateEnabled) {
+        List<ResourceSet> resourceSets = Lists.newArrayList();
+
+        // the list of dependency must be reversed to use the right overlay order.
+        // use the package one to ignore the optional libs.
+        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
+            File resFolder = dependency.getResFolder();
+            if (resFolder.isDirectory()) {
+                ResourceSet resourceSet = new ResourceSet(dependency.getExtractedFolder().getName(),
+                        dependency.getName(), validateEnabled);
+                resourceSet.addSource(resFolder);
+                resourceSet.setFromDependency(true);
+                resourceSets.add(resourceSet);
+            }
+        }
+
+        return resourceSets;
+    }
+
+    /**
+     * Returns the dynamic list of {@link ResourceSet} for the source folders only.
+     *
+     * The list is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
+     * {@link com.android.ide.common.res2.ResourceMerger}.
      *
      * @return a list ResourceSet.
      */
     @NonNull
-    public List<ResourceSet> getResourceSets(@NonNull List<File> generatedResFolders,
-            boolean includeDependencies,
-            boolean validateEnabled) {
+    public List<ResourceSet> getResourceSets(boolean validateEnabled) {
         List<ResourceSet> resourceSets = Lists.newArrayList();
-
-        // the list of dependency must be reversed to use the right overlay order.
-        if (includeDependencies) {
-            // use the package one to ignore the optional libs.
-            for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-                File resFolder = dependency.getResFolder();
-                if (resFolder.isDirectory()) {
-                    ResourceSet resourceSet = new ResourceSet(dependency.getExtractedFolder().getName(),
-                            dependency.getName(), validateEnabled);
-                    resourceSet.addSource(resFolder);
-                    resourceSet.setFromDependency(true);
-                    resourceSets.add(resourceSet);
-                }
-            }
-        }
 
         Collection<File> mainResDirs = mDefaultSourceProvider.getResDirectories();
 
         // the main + generated res folders are in the same ResourceSet
         ResourceSet resourceSet = new ResourceSet(BuilderConstants.MAIN, validateEnabled);
         resourceSet.addSources(mainResDirs);
-        if (!generatedResFolders.isEmpty()) {
-            for (File generatedResFolder : generatedResFolders) {
-                resourceSet.addSource(generatedResFolder);
-
-            }
-        }
         resourceSets.add(resourceSet);
 
         // the list of flavor must be reversed to use the right overlay order.
@@ -1315,6 +1348,23 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return resourceSets;
     }
 
+    @NonNull
+    public List<AssetSet> getAssetSetsForDependencies() {
+        List<AssetSet> assetSets = Lists.newArrayList();
+
+        // use the package one to ignore the optional libs.
+        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
+            File assetFolder = dependency.getAssetsFolder();
+            if (assetFolder.isDirectory()) {
+                AssetSet assetSet = new AssetSet(dependency.getExtractedFolder().getName());
+                assetSet.addSource(assetFolder);
+                assetSets.add(assetSet);
+            }
+        }
+
+        return assetSets;
+    }
+
     /**
      * Returns the dynamic list of {@link AssetSet} based on the configuration, its dependencies,
      * as well as tested config if applicable (test of a library).
@@ -1323,39 +1373,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
      * {@link com.android.ide.common.res2.AssetMerger}.
      *
-     * @param generatedAssetFolders a list of generated assets folder
-     * @param includeDependencies true to include the library dependencies asset folders
-     *
      * @return a list ResourceSet.
      */
     @NonNull
-    public List<AssetSet> getAssetSets(
-            @NonNull List<File> generatedAssetFolders,
-            boolean includeDependencies) {
+    public List<AssetSet> getAssetSets() {
         List<AssetSet> assetSets = Lists.newArrayList();
-
-        if (includeDependencies) {
-            // use the package one to ignore the optional libs.
-            for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-                File assetFolder = dependency.getAssetsFolder();
-                if (assetFolder.isDirectory()) {
-                    AssetSet assetSet = new AssetSet(dependency.getExtractedFolder().getName());
-                    assetSet.addSource(assetFolder);
-                    assetSets.add(assetSet);
-                }
-            }
-        }
 
         Collection<File> mainResDirs = mDefaultSourceProvider.getAssetsDirectories();
 
         // the main + generated asset folders are in the same AssetSet
         AssetSet assetSet = new AssetSet(BuilderConstants.MAIN);
         assetSet.addSources(mainResDirs);
-        if (!generatedAssetFolders.isEmpty()) {
-            for (File generatedResFolder : generatedAssetFolders) {
-                assetSet.addSource(generatedResFolder);
-            }
-        }
         assetSets.add(assetSet);
 
         // the list of flavor must be reversed to use the right overlay order.

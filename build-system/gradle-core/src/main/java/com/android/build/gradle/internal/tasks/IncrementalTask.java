@@ -107,14 +107,4 @@ public abstract class IncrementalTask extends BaseTask {
 
         doIncrementalTaskAction(changedInputs);
     }
-
-    public static List<File> flattenSourceSets(List<? extends SourceSet> resourceSets) {
-        List<File> list = Lists.newArrayList();
-
-        for (SourceSet sourceSet : resourceSets) {
-            list.addAll(sourceSet.getSourceFiles());
-        }
-
-        return list;
-    }
 }

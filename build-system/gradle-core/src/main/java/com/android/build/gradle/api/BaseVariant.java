@@ -30,6 +30,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -267,6 +268,16 @@ public interface BaseVariant {
     void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders);
 
     /**
+     * Adds to the variant new generated resource folders.
+     *
+     * In order to properly wire up tasks, the FileCollection object must include dependency
+     * information about the task that generates the content of this folders.
+     *
+     * @param folders a FileCollection that contains the folders and the task dependency information
+     */
+    void registerGeneratedResFolders(@NonNull FileCollection folders);
+
+    /**
      * Adds to the variant a task that generates Resources.
      *
      * This will make the generate[Variant]Resources task depend on this task and add the
@@ -276,7 +287,10 @@ public interface BaseVariant {
      *
      * @param task the task
      * @param resFolders the folders where the generated resources are.
+     *
+     * @deprecated Use {@link #registerGeneratedResFolders(FileCollection)}
      */
+    @Deprecated
     void registerResGeneratingTask(@NonNull Task task, @NonNull File... resFolders);
 
     /**
@@ -289,7 +303,10 @@ public interface BaseVariant {
      *
      * @param task the task
      * @param resFolders the folders where the generated resources are.
+     *
+     * @deprecated Use {@link #registerGeneratedResFolders(FileCollection)}
      */
+    @Deprecated
     void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> resFolders);
 
     /**

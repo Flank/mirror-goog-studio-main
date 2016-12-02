@@ -52,14 +52,15 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import groovy.lang.Closure;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -67,7 +68,9 @@ import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
@@ -135,7 +138,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private List<ConfigurableFileTree> javaSources;
 
     private List<File> extraGeneratedSourceFolders;
-    private List<File> extraGeneratedResFolders;
+    private FileCollection extraGeneratedResFolders;
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
 
@@ -288,7 +291,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     }
 
     @Nullable
-    public List<File> getExtraGeneratedResFolders() {
+    public FileCollection getExtraGeneratedResFolders() {
         return extraGeneratedResFolders;
     }
 
@@ -340,28 +343,36 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 
-    public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
-        // no need add the folders anywhere, the convention mapping closure for the MergeResources
-        // action will pick them up from here
-        resourceGenTask.dependsOn(task);
-
+    public void registerGeneratedResFolders(@NonNull FileCollection folders) {
         if (extraGeneratedResFolders == null) {
-            extraGeneratedResFolders = Lists.newArrayList();
+            extraGeneratedResFolders = folders;
+        } else {
+            extraGeneratedResFolders = extraGeneratedResFolders.plus(folders);
         }
 
-        Collections.addAll(extraGeneratedResFolders, generatedResFolders);
+        // rewrite the task dependency.
+        // This should go away once we move to a non changing file collection on which we
+        // add new ones.
+        sourceGenTask.dependsOn(extraGeneratedResFolders);
     }
 
+    @Deprecated
+    public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
+        registerResGeneratingTask(task, Arrays.asList(generatedResFolders));
+    }
+
+    @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
-        // no need add the folders anywhere, the convention mapping closure for the MergeResources
-        // action will pick them up from here
-        resourceGenTask.dependsOn(task);
+        System.out.println("registerResGeneratingTask is deprecated, use registerGeneratedFolders(FileCollection)");
 
-        if (extraGeneratedResFolders == null) {
-            extraGeneratedResFolders = Lists.newArrayList();
-        }
-
-        extraGeneratedResFolders.addAll(generatedResFolders);
+        final Project project = scope.getGlobalScope().getProject();
+        registerGeneratedResFolders(project.files(generatedResFolders,
+                new Closure(project) {
+                    public Object doCall(ConfigurableFileCollection fileCollection) {
+                        fileCollection.builtBy(task);
+                        return null;
+                    }
+                }));
     }
 
     /**
@@ -374,12 +385,11 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      * @param splits the splits configuration from the build.gradle.
      */
     public void calculateFilters(Splits splits) {
-
-        List<ResourceSet> resourceSets = variantConfiguration
-                .getResourceSets(getGeneratedResFolders(), false, false /*validate*/);
-        densityFilters = getFilters(resourceSets, DiscoverableFilterType.DENSITY, splits);
-        languageFilters = getFilters(resourceSets, DiscoverableFilterType.LANGUAGE, splits);
-        abiFilters = getFilters(resourceSets, DiscoverableFilterType.ABI, splits);
+        List<File> folders = Lists.newArrayList(getGeneratedResFolders());
+        folders.addAll(variantConfiguration.getResourceFolders());
+        densityFilters = getFilters(folders, DiscoverableFilterType.DENSITY, splits);
+        languageFilters = getFilters(folders, DiscoverableFilterType.LANGUAGE, splits);
+        abiFilters = getFilters(folders, DiscoverableFilterType.ABI, splits);
     }
 
     /**
@@ -415,7 +425,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                 scope.getRenderscriptResOutputDir(),
                 scope.getGeneratedResOutputDir());
         if (extraGeneratedResFolders != null) {
-            generatedResFolders.addAll(extraGeneratedResFolders);
+            generatedResFolders.addAll(extraGeneratedResFolders.getFiles());
         }
         if (getScope().getMicroApkTask() != null &&
                 getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
@@ -427,10 +437,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @NonNull
     public List<String> discoverListOfResourceConfigs() {
         List<String> resFoldersOnDisk = new ArrayList<String>();
-        List<ResourceSet> resourceSets = variantConfiguration.getResourceSets(
-                getGeneratedResFolders(), false /* no libraries resources */, false /*validate*/);
+        Set<File> resourceFolders = variantConfiguration.getResourceFolders();
         resFoldersOnDisk.addAll(getAllFilters(
-                resourceSets,
+                resourceFolders,
                 DiscoverableFilterType.LANGUAGE.folderPrefix,
                 DiscoverableFilterType.DENSITY.folderPrefix));
         return resFoldersOnDisk;
@@ -439,10 +448,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @NonNull
     public List<String> discoverListOfResourceConfigsNotDensities() {
         List<String> resFoldersOnDisk = new ArrayList<String>();
-        List<ResourceSet> resourceSets = variantConfiguration.getResourceSets(
-                getGeneratedResFolders(), false /* no libraries resources */, false /*validate*/);
+        Set<File> resourceFolders = variantConfiguration.getResourceFolders();
         resFoldersOnDisk.addAll(getAllFilters(
-                resourceSets,
+                resourceFolders,
                 DiscoverableFilterType.LANGUAGE.folderPrefix));
         return resFoldersOnDisk;
     }
@@ -518,20 +526,20 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     /**
      * Gets the list of filter values for a filter type either from the user specified build.gradle
      * settings or through a discovery mechanism using folders names.
-     * @param resourceSets the list of source folders to discover from.
+     * @param resourceFolders the list of source folders to discover from.
      * @param filterType the filter type
      * @param splits the variant's configuration for splits.
      * @return a possibly empty list of filter value for this filter type.
      */
     @NonNull
     private static Set<String> getFilters(
-            @NonNull List<ResourceSet> resourceSets,
+            @NonNull List<File> resourceFolders,
             @NonNull DiscoverableFilterType filterType,
             @NonNull Splits splits) {
 
         Set<String> filtersList = new HashSet<String>();
         if (filterType.isAuto(splits)) {
-            filtersList.addAll(getAllFilters(resourceSets, filterType.folderPrefix));
+            filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
         } else {
             filtersList.addAll(filterType.getConfiguredFilters(splits));
         }
@@ -539,25 +547,23 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     }
 
     /**
-     * Discover all sub-folders of all the {@link ResourceSet#getSourceFiles()} which names are
+     * Discover all sub-folders of all the resource folders which names are
      * starting with one of the provided prefixes.
-     * @param resourceSets the list of sources {@link ResourceSet}
+     * @param resourceFolders the list of resource folders
      * @param prefixes the list of prefixes to look for folders.
      * @return a possibly empty list of folders.
      */
     @NonNull
-    private static List<String> getAllFilters(List<ResourceSet> resourceSets, String... prefixes) {
+    private static List<String> getAllFilters(Iterable<File> resourceFolders, String... prefixes) {
         List<String> providedResFolders = new ArrayList<String>();
-        for (ResourceSet resourceSet : resourceSets) {
-            for (File resFolder : resourceSet.getSourceFiles()) {
-                File[] subResFolders = resFolder.listFiles();
-                if (subResFolders != null) {
-                    for (File subResFolder : subResFolders) {
-                        for (String prefix : prefixes) {
-                            if (subResFolder.getName().startsWith(prefix)) {
-                                providedResFolders
-                                        .add(subResFolder.getName().substring(prefix.length()));
-                            }
+        for (File resFolder : resourceFolders) {
+            File[] subResFolders = resFolder.listFiles();
+            if (subResFolders != null) {
+                for (File subResFolder : subResFolders) {
+                    for (String prefix : prefixes) {
+                        if (subResFolder.getName().startsWith(prefix)) {
+                            providedResFolders
+                                    .add(subResFolder.getName().substring(prefix.length()));
                         }
                     }
                 }

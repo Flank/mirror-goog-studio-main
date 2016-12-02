@@ -16,14 +16,15 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.ide.common.res2.AssetMerger;
@@ -33,17 +34,22 @@ import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.MergedAssetWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.utils.FileUtils;
-
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.Set;
+import java.util.function.Supplier;
+import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.ParallelizableTask;
 
 @ParallelizableTask
 public class MergeSourceSetFolders extends IncrementalTask {
@@ -63,22 +69,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
-    @SuppressWarnings("unused") // fake input to detect changes. Not actually used by the task
-    @InputFiles
-    public Iterable<File> getRawInputFolders() {
-        return IncrementalTask.flattenSourceSets(getInputDirectorySets());
-    }
+    private InputSupplier<List<AssetSet>> assetSetSupplier;
+    // for the dependencies
+    private InputSupplier<List<AssetSet>> dependencySetSupplier;
 
-    // actual inputs
-    private List<AssetSet> inputDirectorySets;
-
-    public List<AssetSet> getInputDirectorySets() {
-        return inputDirectorySets;
-    }
-
-    public void setInputDirectorySets(List<AssetSet> inputDirectorySets) {
-        this.inputDirectorySets = inputDirectorySets;
-    }
+    private FileCollection libraries = null;
+    private FileCollection shadersOutputDir = null;
+    private FileCollection copyApk = null;
+    private String ignoreAssets = null;
 
     private final FileValidity<AssetSet> fileValidity = new FileValidity<>();
 
@@ -93,7 +91,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
         File destinationDir = getOutputDir();
         FileUtils.cleanOutputDir(destinationDir);
 
-        List<AssetSet> assetSets = getInputDirectorySets();
+        List<AssetSet> assetSets = computeAssetSetList();
 
         // create a new merger and populate it with the sets.
         AssetMerger merger = new AssetMerger();
@@ -132,7 +130,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             // compare the known state to the current sets to detect incompatibility.
             // This is in case there's a change that's too hard to do incrementally. In this case
             // we'll simply revert to full build.
-            List<AssetSet> assetSets = getInputDirectorySets();
+            List<AssetSet> assetSets = computeAssetSetList();
 
             if (!merger.checkValidUpdate(assetSets)) {
                 getLogger().info("Changed Asset sets: full task run!");
@@ -187,6 +185,139 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getLibraries() {
+        return libraries;
+    }
+
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getShadersOutputDir() {
+        return shadersOutputDir;
+    }
+
+    @VisibleForTesting
+    void setShadersOutputDir(FileCollection shadersOutputDir) {
+        this.shadersOutputDir = shadersOutputDir;
+    }
+
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getCopyApk() {
+        return copyApk;
+    }
+
+    @VisibleForTesting
+    void setCopyApk(FileCollection copyApk) {
+        this.copyApk = copyApk;
+    }
+
+    @SuppressWarnings("unused")
+    @Input
+    @Optional
+    public String getIgnoreAssets() {
+        return ignoreAssets;
+    }
+
+    @VisibleForTesting
+    void setIgnoreAssets(String ignoreAssets) {
+        this.ignoreAssets = ignoreAssets;
+    }
+
+    @VisibleForTesting
+    void setAssetSetSupplier(InputSupplier<List<AssetSet>> assetSetSupplier) {
+        this.assetSetSupplier = assetSetSupplier;
+    }
+
+    @VisibleForTesting
+    void setDependencySetSupplier(InputSupplier<List<AssetSet>> dependencySetSupplier) {
+        this.dependencySetSupplier = dependencySetSupplier;
+    }
+
+    // input list for the source folder based asset folders.
+    @SuppressWarnings("unused")
+    @InputFiles
+    public Set<File> getSourceFolderInputs() {
+        List<AssetSet> sets = assetSetSupplier.get();
+        // collect the files.
+        Set<File> assetSetFolders = Sets.newHashSetWithExpectedSize(sets.size());
+        for (AssetSet assetSet : sets) {
+            assetSetFolders.addAll(assetSet.getSourceFiles());
+        }
+
+        return assetSetFolders;
+    }
+
+    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public Set<File> getDependencyInputs() {
+        if (dependencySetSupplier != null) {
+            List<AssetSet> list = dependencySetSupplier.get();
+            Set<File> files = Sets.newHashSetWithExpectedSize(list.size());
+            for (AssetSet assetSet : list) {
+                files.addAll(assetSet.getSourceFiles());
+            }
+            return files;
+        }
+
+        return ImmutableSet.of();
+    }
+
+    /**
+     * Compute the list of Asset set to be used during execution based all the inputs.
+     */
+    @VisibleForTesting
+    List<AssetSet> computeAssetSetList() {
+        List<AssetSet> assetSets = assetSetSupplier.getLastValue();
+
+        if (copyApk == null
+                && shadersOutputDir == null
+                && ignoreAssets == null
+                && dependencySetSupplier == null) {
+            return assetSets;
+        }
+
+        List<AssetSet> sets = Lists.newArrayList();
+
+        // get the dependency base assets sets.
+        if (dependencySetSupplier != null) {
+            // get the dependencies in first.
+            sets.addAll(dependencySetSupplier.getLastValue());
+        }
+
+        // add the generated folders to the first set of the folder-based sets.
+        List<File> generatedAssetFolders = Lists.newArrayList();
+
+        if (shadersOutputDir != null) {
+            generatedAssetFolders.addAll(shadersOutputDir.getFiles());
+        }
+
+        if (copyApk != null) {
+            generatedAssetFolders.addAll(copyApk.getFiles());
+        }
+
+        // add the generated files to the main set.
+        final AssetSet mainAssetSet = assetSets.get(0);
+        assert mainAssetSet.getConfigName().equals(BuilderConstants.MAIN);
+        mainAssetSet.addSources(generatedAssetFolders);
+
+        sets.addAll(assetSets);
+
+        if (ignoreAssets != null) {
+            for (AssetSet set : sets) {
+                set.setIgnoredPatterns(ignoreAssets);
+            }
+        }
+
+        return sets;
+    }
+
+
     protected abstract static class ConfigAction implements TaskConfigAction<MergeSourceSetFolders> {
         @NonNull
         protected final VariantScope scope;
@@ -230,28 +361,27 @@ public class MergeSourceSetFolders extends IncrementalTask {
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
                     scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+            final Project project = scope.getGlobalScope().getProject();
 
             variantData.mergeAssetsTask = mergeAssetsTask;
 
-            final boolean includeDependencies = !variantConfig.getType()
-                    .equals(VariantType.LIBRARY);
-            ConventionMappingHelper.map(mergeAssetsTask, "inputDirectorySets", () -> {
-                ArrayList<File> generatedAssets = new ArrayList<>();
-                generatedAssets.add(scope.getShadersOutputDir());
-                if (variantData.copyApkTask != null) {
-                    generatedAssets.add(variantData.copyApkTask.getDestinationDir());
-                }
+            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getAssetSets);
 
-                List<AssetSet> assetSets =
-                        variantConfig.getAssetSets(generatedAssets, includeDependencies);
-                AaptOptions options = scope.getGlobalScope().getExtension().getAaptOptions();
-                if (options != null && options.getIgnoreAssets() != null) {
-                    assetSets.forEach(as -> as.setIgnoredPatterns(options.getIgnoreAssets()));
-                }
+            mergeAssetsTask.shadersOutputDir = project.files(scope.getShadersOutputDir());
+            if (variantData.copyApkTask != null) {
+                mergeAssetsTask.copyApk = project.files(variantData.copyApkTask.getDestinationDir());
+            }
 
-                return assetSets;
+            AaptOptions options = scope.getGlobalScope().getExtension().getAaptOptions();
+            if (options != null) {
+                mergeAssetsTask.ignoreAssets = options.getIgnoreAssets();
+            }
 
-            });
+            if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
+                mergeAssetsTask.dependencySetSupplier = InputSupplier.from(
+                        variantConfig::getAssetSetsForDependencies);
+            }
+
             mergeAssetsTask.setOutputDir(scope.getMergeAssetsOutputDir());
         }
     }
@@ -274,12 +404,9 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            ConventionMappingHelper.map(mergeAssetsTask, "inputDirectorySets",
-                    variantConfig::getJniLibsSets);
-
+            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getJniLibsSets);
             mergeAssetsTask.setOutputDir(scope.getMergeNativeLibsOutputDir());
         }
-
     }
 
     public static class MergeShaderSourceFoldersConfigAction extends ConfigAction {
@@ -300,11 +427,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            ConventionMappingHelper.map(mergeAssetsTask, "inputDirectorySets",
-                    (Callable<List<AssetSet>>) variantConfig::getShaderSets);
-
+            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getShaderSets);
             mergeAssetsTask.setOutputDir(scope.getMergeShadersOutputDir());
         }
-
     }
 }
