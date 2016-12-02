@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.ide.common.process.ProcessException;
@@ -46,6 +47,9 @@ public class CMakeAtomTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
+        // b.android.com/227451
+        AssumeUtil.assumeResolveDependencyOnConfiguration();
+
         TestFileUtils.appendToFile(
                 sProject.getSubproject(":atom").getBuildFile(),
                 "\n"

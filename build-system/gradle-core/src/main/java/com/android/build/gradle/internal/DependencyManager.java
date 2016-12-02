@@ -53,6 +53,7 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -788,24 +789,17 @@ public class DependencyManager {
                                         throw new UncheckedIOException(e);
                                     }
                                 } else {
-                                    // When improved dependency resolution is enabled, the aar is
-                                    // exploded to a directory specific to the variant.  Otherwise, it
-                                    // would conflict with the up-to-date check of the original
-                                    // PrepareLibraryTask.
-                                    explodedDir =
-                                            AndroidGradleOptions
-                                                    .isImprovedDependencyResolutionEnabled(project)
-                                                    ? FileUtils.join(
-                                                            project.getBuildDir(),
-                                                            FD_INTERMEDIATES,
-                                                            EXPLODED_AAR ,
-                                                            configDependencies.getName(),
-                                                            path)
-                                                    : FileUtils.join(
-                                                            project.getBuildDir(),
-                                                            FD_INTERMEDIATES,
-                                                            EXPLODED_AAR,
-                                                            path);
+                                    Preconditions.checkState(
+                                            !AndroidGradleOptions
+                                                    .isImprovedDependencyResolutionEnabled(project),
+                                            "Improved dependency resolution must be used with "
+                                                    + "build cache.");
+
+                                    explodedDir = FileUtils.join(
+                                            project.getBuildDir(),
+                                            FD_INTERMEDIATES,
+                                            EXPLODED_AAR,
+                                            path);
                                 }
 
                                 androidDependency = AndroidDependency.createExplodedAarLibrary(

@@ -105,7 +105,7 @@ public class AntennaPodInstantRunTest {
         getExecutor().run("clean");
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(
-                        project.model().getMulti().getModelMap().get(":app"));
+                        project.model().withoutOfflineFlag().getMulti().getModelMap().get(":app"));
 
         getExecutor()
                 .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)

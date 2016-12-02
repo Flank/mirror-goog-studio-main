@@ -262,6 +262,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private void configureProject() {
         extraModelInfo = new ExtraModelInfo(project);
         checkGradleVersion();
+        AndroidGradleOptions.validate(project);
         sdkHandler = new SdkHandler(project, getLogger());
 
         project.afterEvaluate(p -> {

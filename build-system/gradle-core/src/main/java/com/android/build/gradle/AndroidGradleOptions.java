@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 
 /**
@@ -100,6 +101,16 @@ public class AndroidGradleOptions {
             "com.android.build.gradle.overridePathCheck";
 
     public static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
+
+    /**
+     * Validate flag options.
+     */
+    public static void validate(@NonNull Project project) {
+        if (isImprovedDependencyResolutionEnabled(project) && !isBuildCacheEnabled(project)) {
+            throw new InvalidUserDataException("Build cache must be enable to use improved "
+                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.");
+        }
+    }
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);

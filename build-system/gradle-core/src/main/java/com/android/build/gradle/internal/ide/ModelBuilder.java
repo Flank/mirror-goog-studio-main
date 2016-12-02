@@ -28,10 +28,6 @@ import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
-import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
-import com.android.build.gradle.internal.model.NativeLibraryFactory;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
@@ -39,8 +35,13 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
+import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
+import com.android.build.gradle.internal.model.NativeLibraryFactory;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -78,10 +79,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Project;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -90,6 +87,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
+import org.gradle.tooling.provider.model.ToolingModelBuilder;
 
 /**
  * Builder for the custom Android model.
@@ -150,7 +149,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 GlobalLibraryMap.class.getName());
     }
 
-    private void resolveDependencies() {
+    private void resolveDependencies(Project project) {
         for (BaseVariantData variantData : variantManager.getVariantDataList()) {
             final String testedProjectPath = config instanceof TestAndroidConfig
                     ? ((TestAndroidConfig) config).getTargetProjectPath()
@@ -158,11 +157,23 @@ public class ModelBuilder implements ToolingModelBuilder {
             taskManager.getDependencyManager().resolveDependencies(
                     variantData.getVariantDependency(),
                     testedProjectPath);
+            try {
+                ResolveDependenciesTask.extractAarInParallel(
+                        project,
+                        variantData.getVariantConfiguration(),
+                        AndroidGradleOptions.getBuildCache(project));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     @Override
     public Object buildAll(String modelName, Project project) {
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            resolveDependencies(project);
+        }
+
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
@@ -171,15 +182,11 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     }
 
-    private Object buildGlobalLibraryMap(Project project) {
+    private static Object buildGlobalLibraryMap(Project project) {
         return new GlobalLibraryMapImpl(DependenciesLevel2Converter.getGlobalLibMap());
     }
 
-    public Object buildAndroidProject(Project project) {
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-            resolveDependencies();
-        }
-
+    private Object buildAndroidProject(Project project) {
         Integer modelLevelInt = AndroidGradleOptions.buildModelOnlyVersion(project);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;

@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
+import org.gradle.tooling.BuildActionFailureException;
 import org.gradle.tooling.BuildException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -67,9 +68,8 @@ public class AppWithCompileLocalAarFromOlderIdeTest {
             fail("should have failed");
         } catch(BuildException e) {
             assertThat(project.isImprovedDependencyEnabled()).isFalse();
-        } catch (AssertionError e) {
-            // If ImprovedDependencyEnabled, then error happens when we build the model, and the
-            // AssertionError is raised in BuildModel.getSingle()
+        } catch (BuildActionFailureException e) {
+            // If ImprovedDependencyEnabled, then error happens when we build the model.
             assertThat(project.isImprovedDependencyEnabled()).isTrue();
         }
     }

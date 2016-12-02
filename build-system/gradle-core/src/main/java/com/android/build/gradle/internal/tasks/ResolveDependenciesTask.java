@@ -17,28 +17,25 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.DependencyManager;
-import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
-import com.android.builder.core.VariantType;
-
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-import java.io.BufferedOutputStream;
+import com.android.builder.utils.FileCache;
+import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.internal.WaitableExecutor;
+import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -51,21 +48,12 @@ public class ResolveDependenciesTask extends BaseTask {
     private BaseVariantData<? extends BaseVariantOutputData> variantData;
     private DependencyManager dependencyManager;
     private String testedProjectPath;
+    private Optional<FileCache> buildCache;
 
     @TaskAction
-    public void resolveDependencies() {
+    public void resolveDependencies() throws LoggedErrorException, InterruptedException,
+            IOException {
         // Resolve variant dependencies.
-        GradleVariantConfiguration config = variantData.getVariantConfiguration();
-        VariantDependencies testedVariantDeps = null;
-        if (variantData instanceof TestVariantData
-                && config.getTestedConfig() != null
-                && config.getTestedConfig().getType() == VariantType.LIBRARY) {
-            TestedVariantData testedVariantData = ((TestVariantData) variantData).getTestedVariantData();
-            if (testedVariantData instanceof BaseVariantData) {
-                testedVariantDeps = ((BaseVariantData) testedVariantData).getVariantDependency();
-            }
-        }
-
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
                 testedProjectPath);
@@ -74,35 +62,53 @@ public class ResolveDependenciesTask extends BaseTask {
                 variantData.getVariantDependency().getCompileDependencies(),
                 variantData.getVariantDependency().getPackageDependencies());
 
-        // FIXME: Refactor to DependencyManager.  Move to separate task and make it multithreaded.
-        // Explode aar.
-        for (AndroidDependency androidDependency : Iterables.concat(
-                config.getFlatCompileAndroidLibraries(), config.getFlatPackageAndroidLibraries())) {
+        extractAarInParallel(getProject(), variantData.getVariantConfiguration(), buildCache);
+    }
+
+    public static void extractAarInParallel(
+            @NonNull Project project,
+            @NonNull GradleVariantConfiguration config,
+            @NonNull Optional<FileCache> buildCache)
+            throws LoggedErrorException, InterruptedException, IOException {
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+
+        Set<AndroidDependency> dependencies =
+                Sets.newHashSet(config.getFlatCompileAndroidLibraries());
+        dependencies.addAll(config.getFlatPackageAndroidLibraries());
+
+        for (AndroidDependency androidDependency :dependencies) {
             if (androidDependency.getProjectPath() != null) {
                 // Don't need to explode sub-module library.
                 continue;
             }
-            extract(androidDependency.getArtifactFile(), androidDependency.getExtractedFolder());
+            File input = androidDependency.getArtifactFile();
+            File output = androidDependency.getExtractedFolder();
+            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache.isPresent(), androidDependency.getCoordinates());
+            PrepareLibraryTask.prepareLibrary(
+                    input,
+                    output,
+                    buildCache.isPresent() ? buildCache.get() : null,
+                    androidDependency.getCoordinates(),
+                    createAction(project, executor, input),
+                    useBuildCache);
         }
+        executor.waitForTasksWithQuickFail(false);
     }
 
-    private void extract(File bundle, File outputDir) {
-        LibraryCache.unzipAar(bundle, outputDir, getProject());
-        // verify the we have a classes.jar, if we don't just create an empty one.
-        File classesJar = new File(new File(outputDir, "jars"), "classes.jar");
-        if (classesJar.exists()) {
-            return;
-        }
-        try {
-            Files.createParentDirs(classesJar);
-            JarOutputStream jarOutputStream = new JarOutputStream(
-                    new BufferedOutputStream(new FileOutputStream(classesJar)), new Manifest());
-            jarOutputStream.close();
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot create missing classes.jar", e);
-        }
-
+    private static Consumer<File> createAction(
+            @NonNull Project project,
+            @NonNull WaitableExecutor<Void> executor,
+            @NonNull File input) {
+        return (outputDir) -> executor.execute(() -> {
+            PrepareLibraryTask.extract(
+                    input,
+                    outputDir,
+                    project);
+            return null;
+        });
     }
+
+
 
     public static class ConfigAction implements TaskConfigAction<ResolveDependenciesTask> {
         @NonNull
@@ -139,6 +145,8 @@ public class ResolveDependenciesTask extends BaseTask {
                     scope.getGlobalScope().getExtension() instanceof TestAndroidConfig
                             ? ((TestAndroidConfig) scope.getGlobalScope().getExtension()).getTargetProjectPath()
                             : null;
+            task.buildCache =
+                    AndroidGradleOptions.getBuildCache(scope.getGlobalScope().getProject());
         }
     }
 }

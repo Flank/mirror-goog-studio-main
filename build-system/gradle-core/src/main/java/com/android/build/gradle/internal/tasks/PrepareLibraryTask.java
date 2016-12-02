@@ -20,26 +20,21 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LibraryCache;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import org.gradle.api.Project;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
 
 @ParallelizableTask
 public class PrepareLibraryTask extends DefaultAndroidTask {
@@ -70,14 +65,13 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
         if (shouldUseBuildCache) {
             this.buildCache = buildCache.get();
             this.mavenCoordinates = mavenCoordinates;
-        }
-
-        // If the build cache is used, we must not register the exploded directory as the output
-        // directory of this task as there are potential issues with incremental builds when
-        // multiple tasks share the same output directory. Thus, we register the output directory if
-        // and only if the build cache is not used (this action is equivalent to annotating the
-        // exploded directory field as @OutputDirectory, except that we need to do it at run time).
-        if (!shouldUseBuildCache) {
+        } else {
+            // If the build cache is used, we must not register the exploded directory as the output
+            // directory of this task as there are potential issues with incremental builds when
+            // multiple tasks share the same output directory. Thus, we register the output
+            // directory if and only if the build cache is not used (this action is equivalent to
+            // annotating the exploded directory field as @OutputDirectory, except that we need to
+            // do it at run time).
             this.getOutputs().dir(explodedDir);
         }
     }
@@ -96,38 +90,57 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
         }
 
         Consumer<File> unzipAarAction = (File explodedDir) -> {
-            LibraryCache.unzipAar(bundle, explodedDir, getProject());
-            // verify that we have a classes.jar, if we don't just create an empty one.
-            File classesJar = new File(new File(explodedDir, "jars"), "classes.jar");
-            if (classesJar.exists()) {
-                return;
-            }
-            try {
-                Files.createParentDirs(classesJar);
-                JarOutputStream jarOutputStream =
-                        new JarOutputStream(
-                                new BufferedOutputStream(new FileOutputStream(classesJar)),
-                                new Manifest());
-                jarOutputStream.close();
-            } catch (IOException e) {
-                throw new RuntimeException("Cannot create missing classes.jar", e);
-            }
+            extract(bundle, explodedDir, getProject());
         };
+        prepareLibrary(
+                bundle,
+                explodedDir,
+                buildCache,
+                mavenCoordinates,
+                unzipAarAction,
+                shouldUseBuildCache);
+    }
+
+    public static void extract(File bundle, File outputDir, Project project) {
+        LibraryCache.unzipAar(bundle, outputDir, project);
+        // verify the we have a classes.jar, if we don't just create an empty one.
+        File classesJar = new File(new File(outputDir, "jars"), "classes.jar");
+        if (classesJar.exists()) {
+            return;
+        }
+        try {
+            Files.createParentDirs(classesJar);
+            JarOutputStream jarOutputStream = new JarOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(classesJar)), new Manifest());
+            jarOutputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot create missing classes.jar", e);
+        }
+    }
+
+    public static void prepareLibrary(
+            @NonNull File inputAar,
+            @NonNull File outputDir,
+            @Nullable FileCache buildCache,
+            @NonNull MavenCoordinates mavenCoordinates,
+            @NonNull Consumer<File> action,
+            boolean useBuildCache) throws IOException {
 
         // If the build cache is used, we create and cache the exploded aar using the cache's API;
         // otherwise, we explode the aar without using the cache.
-        if (shouldUseBuildCache) {
-            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(mavenCoordinates, bundle);
+        if (useBuildCache) {
+            Preconditions.checkNotNull(buildCache);
+            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(mavenCoordinates, inputAar);
             try {
                 buildCache.createFileInCacheIfAbsent(
                         buildCacheInputs,
-                        (explodedDir) -> unzipAarAction.accept(explodedDir));
+                        action::accept);
             } catch (ExecutionException exception) {
                 throw new RuntimeException(
                         String.format(
                                 "Unable to unzip '%1$s' to '%2$s'",
-                                bundle.getAbsolutePath(),
-                                explodedDir.getAbsolutePath()),
+                                inputAar.getAbsolutePath(),
+                                outputDir.getAbsolutePath()),
                         exception);
             } catch (Exception exception) {
                 throw new RuntimeException(
@@ -139,13 +152,13 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                                         + "To suppress this warning, disable the build cache by"
                                         + " setting android.enableBuildCache=false in the"
                                         + " gradle.properties file.",
-                            bundle.getAbsolutePath(),
-                            explodedDir.getAbsolutePath(),
+                            inputAar.getAbsolutePath(),
+                            outputDir.getAbsolutePath(),
                             buildCache.getCacheDirectory().getAbsolutePath()),
                         exception);
             }
         } else {
-            unzipAarAction.accept(explodedDir);
+            action.accept(outputDir);
         }
     }
 
