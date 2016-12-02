@@ -22,16 +22,14 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
-import com.android.builder.model.AndroidLibrary;
 import com.android.io.FileWrapper;
 import com.android.manifmerger.ManifestProvider;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
@@ -42,7 +40,6 @@ import org.gradle.api.tasks.ParallelizableTask;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -54,8 +51,8 @@ import java.util.Map;
  *
  * <p>Tests in androidTest get that info form the
  * {@link VariantConfiguration#getTestedApplicationId()}, while the test modules get the info from
- * the {@link com.android.build.gradle.internal.publishing.ManifestPublishArtifact} of the
- * tested app.</p>
+ * the {@link com.android.build.gradle.internal.publishing.AndroidArtifacts#buildManifestArtifact(String, FileSupplier)}
+ * of the tested app.</p>
  */
 @ParallelizableTask
 public class ProcessTestManifest extends ManifestProcessorTask {

@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.publishing.AtomPublishArtifact;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -341,10 +341,8 @@ public class AtomTaskManager extends TaskManager {
 
             // add the artifact that will be published
             bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add("default",
-                    new AtomPublishArtifact(
-                            getGlobalScope().getProjectBaseName(),
-                            null,
-                            packageTask)));
+                    AndroidArtifacts.buildAtomArtifact(
+                            getGlobalScope().getProjectBaseName(), null, packageTask)));
 
             getAssembleDefault().dependsOn(variantScope.getAssembleTask().getName());
         }
@@ -354,7 +352,7 @@ public class AtomTaskManager extends TaskManager {
             String classifier =
                     variantData.getVariantDependency().getPublishConfiguration().getName();
             bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
-                    new AtomPublishArtifact(
+                    AndroidArtifacts.buildAtomArtifact(
                             getGlobalScope().getProjectBaseName(),
                             classifier,
                             packageTask)));
