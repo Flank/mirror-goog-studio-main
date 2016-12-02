@@ -5,7 +5,7 @@ def _jasmin_jar_impl(ctx):
 
   cmd = ctx.executable._jasmin.path + " " + " ".join(args)
   ctx.action(
-    inputs = ctx.files.srcs + option_files,
+    inputs = [ctx.executable._jasmin] + ctx.files.srcs + option_files,
     outputs = [class_jar],
     mnemonic = "jasmin",
     command = cmd,
