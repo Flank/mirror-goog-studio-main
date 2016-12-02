@@ -571,6 +571,9 @@ public class TestLintClient extends LintCliClient {
 
     @Override
     public boolean supportsProjectResources() {
+        if (task.supportResourceRepository != null) {
+            return task.supportResourceRepository;
+        }
         return incrementalCheck != null;
     }
 
@@ -584,7 +587,7 @@ public class TestLintClient extends LintCliClient {
     @Override
     public AbstractResourceRepository getResourceRepository(Project project,
             boolean includeDependencies, boolean includeLibraries) {
-        if (incrementalCheck == null) {
+        if (!supportsProjectResources()) {
             return null;
         }
 

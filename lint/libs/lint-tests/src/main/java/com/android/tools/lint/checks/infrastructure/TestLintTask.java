@@ -85,7 +85,7 @@ public class TestLintTask {
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
-
+    Boolean supportResourceRepository;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -389,6 +389,20 @@ public class TestLintTask {
     public TestLintTask forceSymbolResolutionErrors() {
         ensurePreRun();
         this.forceSymbolResolutionErrors = true;
+        return this;
+    }
+
+    /**
+     * Normally resource repositories are only provided in incremental/single-file
+     * lint runs. This method allows you to add support for this in the test.
+     *
+     * @param supportResourceRepository if true, provide a resource repository to detectors that ask
+     *                                  for it.
+     * @return this, for constructor chaining
+     */
+    public TestLintTask supportResourceRepository(boolean supportResourceRepository) {
+        ensurePreRun();
+        this.supportResourceRepository = supportResourceRepository;
         return this;
     }
 
