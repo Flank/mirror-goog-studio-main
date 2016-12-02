@@ -50,9 +50,10 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     // not; see method init of this class.
     @Nullable private File explodedDir;
 
-    @Nullable private Optional<FileCache> buildCache;
+    private boolean shouldUseBuildCache;
 
-    // This field is used only when the build cache is enabled
+    // These fields are used only when the build cache is used
+    @Nullable private FileCache buildCache;
     @Nullable private MavenCoordinates mavenCoordinates;
 
     /**
@@ -65,15 +66,18 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
             @NonNull MavenCoordinates mavenCoordinates) {
         this.bundle = bundle;
         this.explodedDir = explodedDir;
-        this.buildCache = buildCache;
-        this.mavenCoordinates = mavenCoordinates;
+        this.shouldUseBuildCache = shouldUseBuildCache(buildCache.isPresent(), mavenCoordinates);
+        if (shouldUseBuildCache) {
+            this.buildCache = buildCache.get();
+            this.mavenCoordinates = mavenCoordinates;
+        }
 
-        // If the build cache is enabled, we must not register the exploded directory as the output
+        // If the build cache is used, we must not register the exploded directory as the output
         // directory of this task as there are potential issues with incremental builds when
         // multiple tasks share the same output directory. Thus, we register the output directory if
-        // and only if the build cache is disabled (this action is equivalent to annotating the
+        // and only if the build cache is not used (this action is equivalent to annotating the
         // exploded directory field as @OutputDirectory, except that we need to do it at run time).
-        if (!buildCache.isPresent()) {
+        if (!shouldUseBuildCache) {
             this.getOutputs().dir(explodedDir);
         }
     }
@@ -84,10 +88,12 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     }
 
     @TaskAction
-    public void prepare() {
+    public void prepare() throws IOException {
         Preconditions.checkNotNull(explodedDir, "explodedDir must not be null");
-        Preconditions.checkNotNull(buildCache, "buildCache must not be null");
-        Preconditions.checkNotNull(mavenCoordinates, "mavenCoordinates must not be null");
+        if (shouldUseBuildCache) {
+            Preconditions.checkNotNull(buildCache, "buildCache must not be null");
+            Preconditions.checkNotNull(mavenCoordinates, "mavenCoordinates must not be null");
+        }
 
         Consumer<File> unzipAarAction = (File explodedDir) -> {
             LibraryCache.unzipAar(bundle, explodedDir, getProject());
@@ -108,12 +114,12 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
             }
         };
 
-        // If the build cache is enabled, we create and cache the exploded aar using the cache's
-        // API; otherwise, we explode the aar without using the cache.
-        if (buildCache.isPresent()) {
-            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(mavenCoordinates);
+        // If the build cache is used, we create and cache the exploded aar using the cache's API;
+        // otherwise, we explode the aar without using the cache.
+        if (shouldUseBuildCache) {
+            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(mavenCoordinates, bundle);
             try {
-                buildCache.get().createFileInCacheIfAbsent(
+                buildCache.createFileInCacheIfAbsent(
                         buildCacheInputs,
                         (explodedDir) -> unzipAarAction.accept(explodedDir));
             } catch (ExecutionException exception) {
@@ -135,7 +141,7 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                                         + " gradle.properties file.",
                             bundle.getAbsolutePath(),
                             explodedDir.getAbsolutePath(),
-                            buildCache.get().getCacheDirectory().getAbsolutePath()),
+                            buildCache.getCacheDirectory().getAbsolutePath()),
                         exception);
             }
         } else {
@@ -144,26 +150,39 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     }
 
     /**
-     * Returns a {@link FileCache.Inputs} object computed from the given Maven coordinates of a
-     * library for the prepare-library task to use the build cache.
+     * Returns {@code true} if the build cache should be used for the prepare-library task, and
+     * {@code false} otherwise.
+     */
+    public static boolean shouldUseBuildCache(
+            boolean buildCacheEnabled, @NonNull MavenCoordinates mavenCoordinates) {
+        // We use the build cache only when it is enabled *and* the Maven artifact is not a snapshot
+        // version (to address http://b.android.com/228623)
+        return buildCacheEnabled && !mavenCoordinates.getVersion().endsWith("-SNAPSHOT");
+    }
+
+    /**
+     * Returns a {@link FileCache.Inputs} object computed from the given parameters for the
+     * prepare-library task to use the build cache.
      */
     @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(MavenCoordinates mavenCoordinates) {
+    public static FileCache.Inputs getBuildCacheInputs(
+            @NonNull MavenCoordinates mavenCoordinates, @NonNull File artifactFile)
+            throws IOException {
         // Convert mavenCoordinates to a unique string (similar to
         // MavenCoordinatesImpl#computeToString())
-        List<String> segments =
-                Lists.newArrayList(
-                        mavenCoordinates.getGroupId(),
-                        mavenCoordinates.getArtifactId(),
-                        mavenCoordinates.getPackaging());
-        if (!Strings.isNullOrEmpty(mavenCoordinates.getClassifier())) {
-            segments.add(mavenCoordinates.getClassifier());
+        StringBuilder sb = new StringBuilder();
+        sb.append(mavenCoordinates.getGroupId())
+                .append(':').append(mavenCoordinates.getArtifactId())
+                .append(':').append(mavenCoordinates.getVersion());
+        if (mavenCoordinates.getClassifier() != null) {
+            sb.append(':').append(mavenCoordinates.getClassifier());
         }
-        segments.add(mavenCoordinates.getVersion());
-        String mavenCoordinatesString = Joiner.on(':').join(segments).intern();
+        sb.append('@').append(mavenCoordinates.getPackaging());
+        String mavenCoordinatesString = sb.toString().intern();
 
         return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
                 .putString(FileCacheInputParams.MAVEN_COORDINATES.name(), mavenCoordinatesString)
+                .putFileHash(FileCacheInputParams.FILE_HASH.name(), artifactFile)
                 .build();
     }
 
@@ -177,6 +196,9 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     private enum FileCacheInputParams {
 
         /** The Maven coordinates of the library. */
-        MAVEN_COORDINATES
+        MAVEN_COORDINATES,
+
+        /** The hash of the library. */
+        FILE_HASH,
     }
 }
