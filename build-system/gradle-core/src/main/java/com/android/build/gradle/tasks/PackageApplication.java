@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.ParallelizableTask;
 
 /**
@@ -226,10 +227,11 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.dexPackagingPolicy = DexPackagingPolicy.STANDARD;
 
             // Skip files which are not needed for hot/cold swap.
-            for (String prop : ImmutableList.of("dexFolders", "jniFolders", "javaResourceFiles")) {
-                ConventionMappingHelper.map(
-                        packageApplication, prop, Collections::<File>emptySet);
-            }
+            FileCollection emptyCollection = packagingScope.getProject().files();
+
+            packageApplication.dexFolders = emptyCollection;
+            packageApplication.jniFolders = emptyCollection;
+            packageApplication.javaResourceFiles = emptyCollection;
 
             // Don't sign.
             packageApplication.setSigningConfig(null);

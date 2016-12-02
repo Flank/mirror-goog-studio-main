@@ -17,21 +17,29 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformInput;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.TaskDependency;
 
 /**
  * A collection of {@link TransformStream} that can be queried.
  */
 public abstract class FilterableStreamCollection {
+
+    abstract Project getProject();
 
     @NonNull
     abstract Collection<TransformStream> getStreams();
@@ -48,27 +56,48 @@ public abstract class FilterableStreamCollection {
         return streamsByType.build();
     }
 
+    /**
+     * Returns a single collection that contains all the files and task dependencies from the
+     * streams matching the {@link StreamFilter}.
+     * @param streamFilter the stream filter.
+     * @return a collection.
+     */
     @NonNull
-    public Map<File, Format> getPipelineOutput(
+    public FileCollection getPipelineOutputAsFileCollection(
             @NonNull StreamFilter streamFilter) {
         ImmutableList<TransformStream> streams = getStreams(streamFilter);
         if (streams.isEmpty()) {
-            return ImmutableMap.of();
+            return getProject().files();
         }
 
-        ImmutableMap.Builder<File, Format> builder = ImmutableMap.builder();
-        for (TransformStream stream : streams) {
-            // get the input for it
-            TransformInput input = stream.asNonIncrementalInput();
+        // the collection inside the stream cannot be used as is. This is because the intermediate
+        // streams contain the root location rather that the actual inputs of the stream. Therefore
+        // we need to go through them and create a single collection that contains the actual
+        // inputs.
+        // However the content of the intermediate root folder isn't known at configuration
+        // time so we need to pass a callable that will compute the files dynamically.
 
-            for (JarInput jarInput : input.getJarInputs()) {
-                builder.put(jarInput.getFile(), Format.JAR);
-            }
-            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                builder.put(directoryInput.getFile(), Format.DIRECTORY);
-            }
-        }
+        Callable<List<File>> callable = () -> {
+            List<File> files = Lists.newArrayList();
+            for (TransformStream stream : streams) {
+                // get the input for the stream
+                TransformInput input = stream.asNonIncrementalInput();
 
-        return builder.build();
+                // collect the files and dependency info for the collection
+                for (QualifiedContent content : Iterables.concat(
+                        input.getJarInputs(), input.getDirectoryInputs())) {
+                    files.add(content.getFile());
+                }
+            }
+
+            return files;
+        };
+
+        // gather dependencies.
+        List<TaskDependency> dependencies = streams.stream()
+                .map(stream -> stream.getFiles().getBuildDependencies())
+                .collect(Collectors.toList());
+
+        return getProject().files(callable).builtBy(dependencies);
     }
 }

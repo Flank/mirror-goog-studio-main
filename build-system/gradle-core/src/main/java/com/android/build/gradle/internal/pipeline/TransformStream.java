@@ -25,10 +25,8 @@ import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-
-import java.io.File;
-import java.util.List;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Representation of a stream for internal usage of the {@link TransformManager} to wire up
@@ -51,15 +49,15 @@ public abstract class TransformStream {
     @NonNull
     private final Set<? super Scope> scopes;
     @NonNull
-    private final List<? extends Object> dependencies;
+    private final FileCollection files;
 
     protected TransformStream(
             @NonNull Set<ContentType> contentTypes,
             @NonNull Set<? super Scope> scopes,
-            @NonNull List<? extends Object> dependencies) {
+            @NonNull FileCollection files) {
         this.contentTypes = contentTypes;
         this.scopes = scopes;
-        this.dependencies = dependencies;
+        this.files = files;
     }
 
     /**
@@ -85,15 +83,12 @@ public abstract class TransformStream {
     }
 
     /**
-     * Returns the dependency objects that generate the stream files
+     * Returns the stream content as a FileCollection.
      */
     @NonNull
-    public List<? extends Object> getDependencies() {
-        return dependencies;
+    public FileCollection getFiles() {
+        return files;
     }
-
-    @NonNull
-    abstract List<File> getInputFiles();
 
     /**
      * Returns the transform input for this stream.

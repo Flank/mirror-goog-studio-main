@@ -188,8 +188,9 @@ public class InstantRunTaskManager {
                 tasks, new FastDeployRuntimeExtractorTask.ConfigAction(variantScope));
         extractorTask.dependsOn(tasks, buildInfoLoaderTask);
 
+        Project project = variantScope.getGlobalScope().getProject();
         // also add a new stream for the extractor task output.
-        transformManager.addStream(OriginalStream.builder()
+        transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(InternalScope.MAIN_SPLIT)
                 .setJar(variantScope.getIncrementalRuntimeSupportJar())
@@ -206,7 +207,7 @@ public class InstantRunTaskManager {
                 generateAppInfoAndroidTask.get(tasks);
 
         // also add a new stream for the injector task output.
-        transformManager.addStream(OriginalStream.builder()
+        transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(InternalScope.MAIN_SPLIT)
                 .setJar(generateInstantRunAppInfoTask.getOutputFile())

@@ -45,6 +45,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import org.gradle.api.Project;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
@@ -95,6 +101,8 @@ public class TransformManager extends FilterableStreamCollection {
             Scope.PROJECT_LOCAL_DEPS);
 
     @NonNull
+    private final Project project;
+    @NonNull
     private final AndroidTaskRegistry taskRegistry;
     @NonNull
     private final ErrorReporter errorReporter;
@@ -119,9 +127,11 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull private final Recorder recorder;
 
     public TransformManager(
+            @NonNull Project project,
             @NonNull AndroidTaskRegistry taskRegistry,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
+        this.project = project;
         this.taskRegistry = taskRegistry;
         this.errorReporter = errorReporter;
         this.recorder = recorder;
@@ -132,6 +142,11 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public AndroidTaskRegistry getTaskRegistry() {
         return taskRegistry;
+    }
+
+    @Override
+    Project getProject() {
+        return project;
     }
 
     public void addStream(@NonNull TransformStream stream) {
@@ -251,13 +266,6 @@ public class TransformManager extends FilterableStreamCollection {
                                 recorder,
                                 callback));
 
-        for (TransformStream s : inputStreams) {
-            task.dependsOn(taskFactory, s.getDependencies());
-        }
-        for (TransformStream s : referencedStreams) {
-            task.dependsOn(taskFactory, s.getDependencies());
-        }
-
         return Optional.ofNullable(task);
     }
 
@@ -375,11 +383,11 @@ public class TransformManager extends FilterableStreamCollection {
         streams.addAll(oldStreams);
 
         // create the output
-        IntermediateStream outputStream = IntermediateStream.builder()
+        IntermediateStream outputStream = IntermediateStream.builder(project)
                 .addContentTypes(outputTypes)
                 .addScopes(requestedScopes)
                 .setRootLocation(outRootFolder)
-                .setDependency(taskName)
+                .setTaskName(taskName)
                 .build();
         // and add it to the list of available streams for next transforms.
         streams.add(outputStream);

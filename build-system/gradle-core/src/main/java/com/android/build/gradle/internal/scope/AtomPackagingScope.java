@@ -35,6 +35,7 @@ import org.gradle.api.Project;
 
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Packaging scope for an atom.
@@ -98,14 +99,14 @@ public class AtomPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders() {
-        return ImmutableSet.of(variantScope.getDexOutputFolder(atomDependency));
+    public FileCollection getDexFolders() {
+        return getProject().files(variantScope.getDexOutputFolder(atomDependency));
     }
 
     @NonNull
     @Override
-    public Set<File> getJavaResources() {
-        return ImmutableSet.of(atomDependency.getJavaResFolder());
+    public FileCollection getJavaResources() {
+        return getProject().files(atomDependency.getJavaResFolder());
     }
 
     @NonNull
@@ -116,8 +117,8 @@ public class AtomPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getJniFolders() {
-        return ImmutableSet.of(atomDependency.getLibFolder());
+    public FileCollection getJniFolders() {
+        return getProject().files(atomDependency.getLibFolder());
     }
 
     @NonNull

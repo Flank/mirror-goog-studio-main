@@ -59,7 +59,7 @@ import com.google.common.util.concurrent.Callables;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.HashSet;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -69,7 +69,6 @@ import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -98,7 +97,7 @@ public class PackageSplitAbi extends SplitRelatedTask {
 
     private SigningConfig signingConfig;
 
-    private Collection<File> jniFolders;
+    private FileCollection jniFolders;
 
     private ApiVersion minSdkVersion;
 
@@ -203,7 +202,7 @@ public class PackageSplitAbi extends SplitRelatedTask {
     }
 
     @TaskAction
-    protected void doFullTaskAction() throws FileNotFoundException, SigningException,
+    protected void doFullTaskAction() throws SigningException,
             KeytoolException, PackagerException, IOException {
 
         FileUtils.cleanOutputDir(incrementalDir);
@@ -320,12 +319,12 @@ public class PackageSplitAbi extends SplitRelatedTask {
         this.signingConfig = signingConfig;
     }
 
-    @Input
-    public Collection<File> getJniFolders() {
+    @InputFiles
+    public FileCollection getJniFolders() {
         return jniFolders;
     }
 
-    public void setJniFolders(Collection<File> jniFolders) {
+    public void setJniFolders(FileCollection jniFolders) {
         this.jniFolders = jniFolders;
     }
 
@@ -392,18 +391,13 @@ public class PackageSplitAbi extends SplitRelatedTask {
             packageSplitAbiTask.aaptOptions =
                     scope.getGlobalScope().getExtension().getAaptOptions();
             packageSplitAbiTask.manifest = variantOutputScope.getManifestOutputFile();
+            packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
 
             ConventionMappingHelper.map(
                     packageSplitAbiTask,
                     "jniFolders",
                     () -> this.scope.getTransformManager()
-                            .getPipelineOutput(StreamFilter.NATIVE_LIBS)
-                            .keySet());
-
-            ConventionMappingHelper.map(
-                    packageSplitAbiTask,
-                    "jniDebuggable",
-                    () -> config.getBuildType().isJniDebuggable());
+                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS));
         }
     }
 }
