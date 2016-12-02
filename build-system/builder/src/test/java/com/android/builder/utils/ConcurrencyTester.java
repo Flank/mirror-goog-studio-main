@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,17 +40,17 @@ import org.junit.Assert;
 /**
  * Utility class to test concurrency.
  *
- * <p>This class is used to check whether or not a set of runnables violate a concurrency contract
+ * <p>This class is used to check whether or not a set of threads violate a concurrency contract
  * (e.g., whether they run concurrently when they are not allowed to, or vice versa).
  *
  * <p>The following is a usage scenario of this class. Suppose we have a method that accepts an
- * "action" (of type {@link Runnable} or the like) as an argument (e.g., {@code methodUnderTest(...,
+ * action (of type {@link Runnable} or the like) as an argument (e.g., {@code methodUnderTest(...,
  * actionUnderTest)}) and at some point during the method's execution, the method will invoke the
  * action exactly once. When several threads are concurrently calling the method (possibly with
- * different parameter values), the method may make a contract that all the threads can execute the
- * corresponding actions concurrently, or it may make a contract that all the threads cannot execute
- * the actions concurrently. To check whether the method meets the concurrency contract, we can
- * write a test as follows.
+ * different parameter values), the method under test may make a contract that all the threads can
+ * execute the corresponding actions concurrently, or it may make a contract that all the threads
+ * cannot execute the actions concurrently. To check whether the method under test meets the
+ * concurrency contract, we can write a test as follows.
  *
  * <pre>{@code
  * ConcurrencyTester tester = new ConcurrencyTester();
@@ -79,6 +80,28 @@ import org.junit.Assert;
  */
 public final class ConcurrencyTester<F, T> {
 
+    /**
+     * The timeout for the main thread to wait for a new action to start in the case that there are
+     * one or more actions currently running and the actions are expected to run concurrently. As
+     * this timeout increases, the chance of a falsely failing test (or flaky test) is reduced;
+     * however, a truly failing test (or non-flaky test) will take longer to run. Since it is okay
+     * for a failing test to take a long time to run (it does not happen frequently), we set a large
+     * timeout to prevent flaky tests.
+     */
+    @NonNull private static final Duration TIMEOUT_TO_START_ACTION_WHEN_CONCURRENCY_EXPECTED =
+            Duration.ofSeconds(60);
+
+    /**
+     * The timeout for the main thread to wait for a new action to start in the case that there are
+     * one or more actions currently running and the actions are not expected to run concurrently.
+     * As this timeout increases, the chance of a falsely passing test is reduced; however, a truly
+     * passing test will take longer to run. Therefore, we set a small timeout to prevent
+     * long-running passing tests, but make sure it is still large enough for the tests to be
+     * effective.
+     */
+    @NonNull private static final Duration TIMEOUT_TO_START_ACTION_WHEN_NO_CONCURRENCY_EXPECTED =
+            Duration.ofSeconds(1);
+
     /** The running pattern of a set of actions. */
     private enum RunningPattern {
 
@@ -93,78 +116,81 @@ public final class ConcurrencyTester<F, T> {
     }
 
     @NonNull
-    private List<IOExceptionConsumer<IOExceptionFunction<F, T>>> mMethodInvocationList =
+    private List<IOExceptionConsumer<IOExceptionFunction<F, T>>> methodInvocationList =
             Lists.newLinkedList();
 
-    @NonNull private List<IOExceptionFunction<F, T>> mActionUnderTestList = Lists.newLinkedList();
+    @NonNull private List<IOExceptionFunction<F, T>> actionUnderTestList = Lists.newLinkedList();
 
     /**
      * Adds a new invocation of the method under test to this {@link ConcurrencyTester} instance.
      * The {@code ConcurrencyTester} will execute each invocation in a separate thread and check
      * whether the corresponding actions under test meet the concurrency requirement.
      *
-     * @param methodInvocation the method invocation to be executed from a new thread
-     * @param actionUnderTest the action for concurrency checks
+     * @param methodUnderTestInvocation the invocation of the method under test which will be
+     *     executed from a new thread
+     * @param actionUnderTest the action under test
      */
     public void addMethodInvocationFromNewThread(
-            @NonNull IOExceptionConsumer<IOExceptionFunction<F, T>> methodInvocation,
+            @NonNull IOExceptionConsumer<IOExceptionFunction<F, T>> methodUnderTestInvocation,
             @NonNull IOExceptionFunction<F, T> actionUnderTest) {
-        mMethodInvocationList.add(methodInvocation);
-        mActionUnderTestList.add(actionUnderTest);
+        methodInvocationList.add(methodUnderTestInvocation);
+        actionUnderTestList.add(actionUnderTest);
     }
 
     /**
-     * Executes the method under test in separate threads and returns {@code true} if all the
-     * actions ran concurrently, and {@code false} otherwise. Note that a {@code false} returned
-     * value means that either the actions were not allowed to run concurrently (which violates the
-     * concurrency requirement) or the actions took too long to start and accidentally ran
-     * sequentially (although the latter case is possible, the implementation of this method makes
-     * sure that it is unlikely to happen).
+     * Executes the invocations of the method under test in separate threads and asserts that all
+     * the actions ran concurrently. Note that a failed assertion means that either the actions were
+     * not allowed to run concurrently (which violates the concurrency requirement) or the actions
+     * accidentally ran sequentially. However, while the latter case is possible, the implementation
+     * of this method makes sure that it is unlikely to happen.
      */
     public void assertThatActionsCanRunConcurrently() {
         Preconditions.checkArgument(
-                mMethodInvocationList.size() >= 2,
+                methodInvocationList.size() >= 2,
                 "There must be at least 2 actions for concurrency checks.");
         Assert.assertTrue(
                 "Two or more actions ran sequentially"
-                        + " even though all the actions were expected to run concurrently.",
-                executeActionsAndGetRunningPattern() == RunningPattern.CONCURRENT);
+                        + " while all the actions were expected to run concurrently.",
+                executeActionsAndGetRunningPattern(
+                                TIMEOUT_TO_START_ACTION_WHEN_CONCURRENCY_EXPECTED)
+                        == RunningPattern.CONCURRENT);
     }
 
     /**
-     * Executes the method under test in separate threads and returns {@code true} if all the
-     * actions ran sequentially, and {@code false} otherwise. Note that a {@code true} returned
-     * value means that either the actions were not allowed to run concurrently (which meets the
-     * concurrency requirement) or the actions took too long to start and accidentally ran
-     * sequentially (although the latter case is possible, the implementation of this method makes
-     * sure that it is unlikely to happen).
+     * Executes the invocations of the method under test in separate threads and asserts that all
+     * the actions ran sequentially. Note that a successful assertion means that either the actions
+     * were not allowed to run concurrently (which meets the concurrency requirement) or the actions
+     * accidentally ran sequentially. However, while the latter case is possible, the implementation
+     * of this method makes sure that it is unlikely to happen.
      */
     public void assertThatActionsCannotRunConcurrently() {
         Preconditions.checkArgument(
-                mMethodInvocationList.size() >= 2,
+                methodInvocationList.size() >= 2,
                 "There must be at least 2 actions for concurrency checks.");
         Assert.assertTrue(
                 "Two or more actions ran concurrently"
-                        + " even though all the actions were expected to run sequentially.",
-                executeActionsAndGetRunningPattern() == RunningPattern.SEQUENTIAL);
+                        + " while all the actions were expected to run sequentially.",
+                executeActionsAndGetRunningPattern(
+                                TIMEOUT_TO_START_ACTION_WHEN_NO_CONCURRENCY_EXPECTED)
+                        == RunningPattern.SEQUENTIAL);
     }
 
     /**
-     * Executes the method under test in separate threads and returns {@code true} if one and only
-     * one of the actions was executed, and {@code false} otherwise.
+     * Executes the invocations of the method under test in separate threads and asserts that one
+     * and only one of the actions was executed.
      */
     public void assertThatOnlyOneActionIsExecuted() {
         Preconditions.checkArgument(
-                mMethodInvocationList.size() >= 2,
+                methodInvocationList.size() >= 2,
                 "There must be at least 2 actions for concurrency checks.");
 
         AtomicInteger executedActions = new AtomicInteger(0);
-
         List<IOExceptionRunnable> runnables = Lists.newLinkedList();
-        for (int i = 0; i < mMethodInvocationList.size(); i++) {
+
+        for (int i = 0; i < methodInvocationList.size(); i++) {
             IOExceptionConsumer<IOExceptionFunction<F, T>> methodInvocation =
-                    mMethodInvocationList.get(i);
-            IOExceptionFunction<F, T> actionUnderTest = mActionUnderTestList.get(i);
+                    methodInvocationList.get(i);
+            IOExceptionFunction<F, T> actionUnderTest = actionUnderTestList.get(i);
             runnables.add(() -> {
                 methodInvocation.accept(
                         (input) -> {
@@ -178,20 +204,23 @@ public final class ConcurrencyTester<F, T> {
         waitForThreadsToFinish(threads);
 
         Assert.assertTrue(
-                "Either no action or more than one action were executed"
-                        + " even though only one action was expected to run.",
+                executedActions.get()
+                        + " actions were executed while only one action was expected to run.",
                 executedActions.get() == 1);
     }
 
     /**
-     * Executes the method under test in separate threads and returns the running pattern of their
-     * actions.
+     * Executes the invocations of the method under test in separate threads and returns the running
+     * pattern of their actions.
      *
+     * @param timeoutToStartAction the timeout for the main thread to wait for a new action to start
+     *     in the case that there are one or more actions currently running
      * @return the running pattern of the actions
      */
-    private RunningPattern executeActionsAndGetRunningPattern() {
-        // We use blocking queue and count-down latches for the actions to communicate with the main
-        // thread. When an action starts, it notifies the main thread that it has started and
+    private RunningPattern executeActionsAndGetRunningPattern(
+            @NonNull Duration timeoutToStartAction) {
+        // We use blocking queues and count-down latches for the actions to communicate with the
+        // main thread. When an action starts, it notifies the main thread that it has started and
         // continues immediately. When an action is going to finish, it creates a CountDownLatch,
         // sends it to the main thread, and waits for the main thread to allow it to finish.
         BlockingQueue<Thread> startedActionQueue = Queues.newLinkedBlockingQueue();
@@ -213,10 +242,10 @@ public final class ConcurrencyTester<F, T> {
 
         // Attach the event handlers to the actions
         List<IOExceptionRunnable> runnables = Lists.newLinkedList();
-        for (int i = 0; i < mMethodInvocationList.size(); i++) {
+        for (int i = 0; i < methodInvocationList.size(); i++) {
             IOExceptionConsumer<IOExceptionFunction<F, T>> methodInvocation =
-                    mMethodInvocationList.get(i);
-            IOExceptionFunction<F, T> actionUnderTest = mActionUnderTestList.get(i);
+                    methodInvocationList.get(i);
+            IOExceptionFunction<F, T> actionUnderTest = actionUnderTestList.get(i);
 
             IOExceptionFunction<F, T> instrumentedActionUnderTest = (input) -> {
                 actionStartedHandler.run();
@@ -226,15 +255,13 @@ public final class ConcurrencyTester<F, T> {
                     actionFinishedHandler.run();
                 }
             };
-
-            runnables.add(() -> {
-                methodInvocation.accept(instrumentedActionUnderTest);
-            });
+            runnables.add(() -> methodInvocation.accept(instrumentedActionUnderTest));
         }
 
         // Execute each invocation in a separate thread
         Map<Thread, Optional<Throwable>> threads = executeRunnablesInThreads(runnables);
 
+        // Begin to monitor how the actions are executed
         int remainingActions = runnables.size();
         LinkedList<CountDownLatch> finishRequests = Lists.newLinkedList();
         int maxConcurrentActions = 0;
@@ -242,68 +269,65 @@ public final class ConcurrencyTester<F, T> {
         // To prevent the actions from *accidentally* running sequentially, when an action is going
         // to finish, we don't let it finish immediately but try waiting for the next action to
         // start. The following loop aims to "force" the actions to run concurrently. If it
-        // succeeds, it means that the actions are allowed to run concurrently. If it doesn't
-        // succeed, it means that either the actions are not allowed to run concurrently, or the
-        // actions take too long to start.
+        // succeeds, it means that the actions are able to run concurrently. If it doesn't succeed,
+        // it means that either the actions are not able to run concurrently, or the actions take
+        // too long to start.
         while (remainingActions > 0) {
+            // Wait for a new action to start. If there are currently no running actions, let's wait
+            // for the new action without a timeout. If there are currently one or more running
+            // actions, the running actions could block new actions and prevent them from starting
+            // (e.g., when the actions are not allowed to run concurrently). To avoid waiting
+            // indefinitely, we need to set a timeout.
             Thread startedAction;
             try {
-                // Wait for a new action to start with a timeout
-                startedAction = startedActionQueue.poll(1000, TimeUnit.MILLISECONDS);
+                if (finishRequests.isEmpty()) {
+                    startedAction = startedActionQueue.take();
+                } else {
+                    startedAction =
+                            startedActionQueue.poll(
+                                    timeoutToStartAction.toMillis(), TimeUnit.MILLISECONDS);
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            // If a new action has started, let it run, and before it is going to finish, keep
-            // waiting for more actions to start (repeat the loop)
+
+            // If a new action has started, let it run but do not let it finish. Instead, we keep
+            // waiting for more actions to start (repeat the loop).
             if (startedAction != null) {
                 remainingActions--;
                 CountDownLatch finishRequest;
                 try {
-                    finishRequest = finishRequestQueue.poll(2000, TimeUnit.MILLISECONDS);
+                    finishRequest = finishRequestQueue.take();
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if (finishRequest != null) {
-                    finishRequests.add(finishRequest);
-                    if (finishRequests.size() > maxConcurrentActions) {
-                        maxConcurrentActions = finishRequests.size();
-                    }
-                } else {
-                    throw new RuntimeException("Actions are taking too long to run");
+                finishRequests.add(finishRequest);
+                if (finishRequests.size() > maxConcurrentActions) {
+                    maxConcurrentActions = finishRequests.size();
                 }
             } else {
-                // If no other action has started and there are one or more finishing actions, it
-                // could be either because the finishing actions are blocking a new action to start
-                // (i.e., the actions are not allowed to run concurrently), or because the actions
-                // are taking too long to start. Since we cannot distinguish these two cases, we let
-                // all the finishing actions finish and repeat the loop.
-                if (!finishRequests.isEmpty()) {
-                    while (finishRequests.size() > 0) {
-                        finishRequests.removeFirst().countDown();
-                    }
-                } else {
-                    // If no other action has started and there are no finishing actions, it means
-                    // that the actions are taking too long to start. Let's quit.
-                    for (Optional<Throwable> throwable : threads.values()) {
-                        if (throwable.isPresent()) {
-                            throw new RuntimeException(throwable.get());
-                        }
-                    }
-                    throw new RuntimeException("Actions are taking too long to start");
+                // If no action has started (which implies that there are currently one or more
+                // running actions and the timeout expired), it could be that either the running
+                // actions are blocking the new actions, or the new actions are taking too long to
+                // start. Since we cannot distinguish these two cases, we let all the running
+                // actions finish and repeat the loop.
+                while (finishRequests.size() > 0) {
+                    finishRequests.removeFirst().countDown();
                 }
             }
         }
 
-        // Let all the finishing actions finish
+        // Let all the running actions finish
         while (finishRequests.size() > 0) {
             finishRequests.removeFirst().countDown();
         }
 
-        // Wait for the threads to finish
+        // Wait for all the threads to finish
         waitForThreadsToFinish(threads);
 
         // Determine the running pattern based on maxConcurrentActions
-        assert maxConcurrentActions >= 1 && maxConcurrentActions <= runnables.size();
+        Preconditions.checkState(
+                maxConcurrentActions >= 1 && maxConcurrentActions <= runnables.size());
         if (maxConcurrentActions == 1) {
             return RunningPattern.SEQUENTIAL;
         } else if (maxConcurrentActions == runnables.size()) {
@@ -314,63 +338,65 @@ public final class ConcurrencyTester<F, T> {
     }
 
     /**
-     * Executes the runnables in separate threads and returns the threads together with any
-     * exceptions that were thrown during the execution of the threads.
+     * Executes the runnables in separate threads and returns immediately after all the threads have
+     * started execution (this method does not wait until all the threads have terminated).
+     *
+     * This methods returns a map from the threads to any exceptions thrown during the execution of
+     * the threads. Note that the map's values (if any) are not available immediately but only after
+     * the threads have terminated.
      *
      * @param runnables the runnables to be executed
-     * @return map from a thread to a {@code Throwable} (if any)
+     * @return a map from the threads to any exceptions thrown during the execution of the threads
      */
+    @NonNull
     private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
             @NonNull List<IOExceptionRunnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
+        CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
+
         for (IOExceptionRunnable runnable : runnables) {
             Thread thread =
                     new Thread(() -> {
                         try {
+                            allThreadsStartedLatch.countDown();
                             runnable.run();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     });
-            thread.setDaemon(true);
-
             threads.put(thread, Optional.empty());
             thread.setUncaughtExceptionHandler(
-                    (aThread, throwable) -> {
-                        threads.put(aThread, Optional.of(throwable));
-                    });
+                    (aThread, throwable) -> threads.put(aThread, Optional.of(throwable)));
         }
+
         for (Thread thread : threads.keySet()) {
             thread.start();
         }
+
+        // Wait for all the threads to start execution
+        try {
+            allThreadsStartedLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return threads;
     }
 
     /**
      * Waits for all the threads to finish.
-     *
-     * @throws RuntimeException if a timeout or interrupt occurs while waiting for the threads to
-     *     finish or an exception was thrown during the execution of the threads
      */
     private void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
         // Wait for the threads to finish
         for (Thread thread : threads.keySet()) {
             try {
-                thread.join(2000);
+                thread.join();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        // If a thread is still running, throw an exception
-        for (Thread thread : threads.keySet()) {
-            if (thread.isAlive()) {
-                throw new RuntimeException("Actions are taking too long to finish");
-            }
-        }
-
-        // If the threads have all terminated, throw any exceptions that occurred during the
-        // execution of the threads
+        // Throw any exceptions that occurred during the execution of the threads
         for (Optional<Throwable> throwable : threads.values()) {
             if (throwable.isPresent()) {
                 throw new RuntimeException(throwable.get());
