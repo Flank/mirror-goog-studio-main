@@ -18,15 +18,23 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.*;
+import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
+import com.android.tools.lint.detector.api.Scope;
+import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
+import java.util.EnumSet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.util.EnumSet;
 
 /**
  * Checks that byte order marks do not appear in resource names
@@ -108,12 +116,18 @@ public class ByteOrderMarkDetector extends ResourceXmlDetector
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        // The work is done in beforeCheckFile
+        // The work is done in beforeCheckFile()
     }
 
     @Nullable
     @Override
     public JavaElementVisitor createPsiVisitor(@NonNull JavaContext context) {
+        // Java files: work is done in beforeCheckFile()
         return new JavaElementVisitor() { };
+    }
+
+    @Override
+    public void run(@NonNull Context context) {
+        // ProGuard files: work is done in beforeCheckFile()
     }
 }
