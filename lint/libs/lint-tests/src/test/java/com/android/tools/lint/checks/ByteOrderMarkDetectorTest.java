@@ -52,7 +52,13 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
                         + "    public void test2() {\n"
                         + "        String s = \"\uFEFF\"; //OK/suppressed\n"
                         + "    }\n"
-                        + "}\n"))
+                        + "}\n"),
+                source("proguard.cfg", ""
+                        + "-optimizationpasses\uFEFF 5\n"
+                        + "-dontusemixedcaseclassnames\n"
+                        + "-dontskipnonpubliclibraryclasses\n"
+                        + "-dontpreverify\n"
+                        + "-verbose\n"))
                 .run()
                 .expect(""
                         + "AndroidManifest.xml:1: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]\n"
@@ -67,6 +73,9 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
                         + "res/values-zh-rCN/bom.xml:3: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]\n"
                         + " <string name=\"hanping_chinese\uFEFF_lite\uFEFF_app_name\">(Translated name)</string>\n"
                         + "                                    ~\n"
-                        + "4 errors, 0 warnings\n");
+                        + "proguard.cfg:1: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]\n"
+                        + "-optimizationpasses\uFEFF 5\n"
+                        + "                   ~\n"
+                        + "5 errors, 0 warnings\n");
     }
 }
