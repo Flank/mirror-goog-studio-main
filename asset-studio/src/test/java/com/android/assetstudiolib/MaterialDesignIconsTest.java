@@ -18,9 +18,17 @@ package com.android.assetstudiolib;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Function;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,12 +36,12 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
-public final class AssetStudioTest {
+public final class MaterialDesignIconsTest {
 
     @Test
     public void getPathForBasename() {
         Object expected = "images/material_design_icons/places/ic_rv_hookup_black_24dp.xml";
-        assertEquals(expected, AssetStudio.getPathForBasename("ic_rv_hookup_black_24dp"));
+        assertEquals(expected, MaterialDesignIcons.getPathForBasename("ic_rv_hookup_black_24dp"));
     }
 
     @Test
@@ -42,7 +50,7 @@ public final class AssetStudioTest {
                 "ic_search_black_24dp",
                 "images/material_design_icons/action/ic_search_black_24dp.xml");
 
-        assertEquals(expected, AssetStudio.getBasenameToPathMap(mockGenerator()));
+        assertEquals(expected, MaterialDesignIcons.getBasenameToPathMap(mockGenerator()));
     }
 
     @Test
@@ -53,14 +61,16 @@ public final class AssetStudioTest {
                 .thenReturn(Collections.singletonList("ic_search_black_24dp.xml").iterator());
 
         try {
-            AssetStudio.getBasenameToPathMap(generator);
+            MaterialDesignIcons.getBasenameToPathMap(generator);
             fail();
         } catch (IllegalArgumentException ignored) {
         }
     }
 
+    @NonNull
     private static Function<String, Iterator<String>> mockGenerator() {
-        @SuppressWarnings("unchecked") Function<String, Iterator<String>> generator
+        @SuppressWarnings("unchecked")
+        Function<String, Iterator<String>> generator
                 = (Function<String, Iterator<String>>) Mockito.mock(Function.class);
 
         Mockito.when(generator.apply(Matchers.any()))
@@ -70,5 +80,36 @@ public final class AssetStudioTest {
                 .thenReturn(Collections.singletonList("ic_search_black_24dp.xml").iterator());
 
         return generator;
+    }
+
+    @Test
+    public void getCategoriesNullUrl() {
+        assertEquals(Collections.emptyList(), MaterialDesignIcons.getCategories(null));
+    }
+
+    @Test
+    public void getCategoriesUrlProtocolEqualsHttps() throws MalformedURLException {
+        Object actual = MaterialDesignIcons.getCategories(new URL("https://www.google.com/"));
+        assertEquals(Collections.emptyList(), actual);
+    }
+
+    @Test
+    public void getCategoriesFromFile() {
+        Object actual = MaterialDesignIcons.getCategoriesFromFile(Mockito.mock(File.class));
+        assertEquals(Collections.emptyList(), actual);
+    }
+
+    @Test
+    public void getCategoriesFromJar() {
+        JarFile jar = Mockito.mock(JarFile.class);
+
+        Mockito.when(jar.stream()).thenReturn(Stream.of(
+                new JarEntry("images/material_design_icons/alert/"),
+                new JarEntry("images/material_design_icons/action/ic_3d_rotation_black_24dp.xml"),
+                new JarEntry("images/material_design_icons/action/"),
+                new JarEntry("images/material_design_icons/")));
+
+        Object actual = MaterialDesignIcons.getCategoriesFromJar(jar);
+        assertEquals(Arrays.asList("action", "alert"), actual);
     }
 }
