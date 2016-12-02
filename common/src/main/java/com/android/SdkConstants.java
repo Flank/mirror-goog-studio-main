@@ -646,6 +646,7 @@ public final class SdkConstants {
     public static final String CLASS_DATA_BINDING_BASE_BINDING = "android.databinding.ViewDataBinding";
 
     /* Android Support Class Constants */
+    public static final String CLASS_APP_COMPAT_ACTIVITY = "android.support.v7.app.AppCompatActivity"; //$NON-NLS-1$
     public static final String CLASS_COORDINATOR_LAYOUT = "android.support.design.widget.CoordinatorLayout"; //$NON-NLS-1$
     public static final String CLASS_APP_BAR_LAYOUT = "android.support.design.widget.AppBarLayout"; //$NON-NLS-1$
     public static final String CLASS_FLOATING_ACTION_BUTTON = "android.support.design.widget.FloatingActionButton"; //$NON-NLS-1$
