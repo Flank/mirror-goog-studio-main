@@ -22,7 +22,6 @@ ninepatch/
 pixelprobe/
 repository/
 rpclib/
-rule-api/
 sdk-common/
 sdklib/
 templates/
