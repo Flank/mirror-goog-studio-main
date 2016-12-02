@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.publishing;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.FileSupplier;
-import org.gradle.api.AttributeContainer;
 
 /**
  * Custom implementation of PublishArtifact for published manifest files.

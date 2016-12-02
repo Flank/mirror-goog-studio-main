@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import java.io.File;
-import org.gradle.api.AttributeContainer;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
-import org.gradle.api.AttributeContainer;
 
 /**
  * custom implementation of PublishArtifact for published APKs.
