@@ -11,7 +11,7 @@ def _antlr_srcjar_impl(ctx):
 
   # Invoke our custom AntlrCompiler.
   ctx.action(
-      inputs = ctx.files.srcs + [option_file],
+      inputs = [ctx.executable._antlr] + ctx.files.srcs + [option_file],
       outputs = [src_jar],
       mnemonic = "antlr",
       command = cmd,

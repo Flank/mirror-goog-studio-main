@@ -15,7 +15,7 @@ def _kotlin_jar_impl(ctx):
 
   cmd = ctx.executable._kotlinc.path + " " + " ".join(args)
   ctx.action(
-    inputs = ctx.files.srcs + list(all_deps) + option_files,
+    inputs = [ctx.executable._kotlinc] + ctx.files.srcs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     command = cmd,
@@ -60,7 +60,7 @@ def _groovy_jar_impl(ctx):
 
   cmd = ctx.executable._groovy.path + " " + " ".join(args)
   ctx.action(
-      inputs = ctx.files.srcs + list(all_deps) + option_files,
+      inputs = [ctx.executable._groovy] + ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "groovyc",
       command = cmd
@@ -178,7 +178,7 @@ def _form_jar_impl(ctx):
 
   cmd = ctx.executable._formc.path + " " + " ".join(args)
   ctx.action(
-      inputs = ctx.files.srcs + list(all_deps) + option_files,
+      inputs = [ctx.executable._formc] + ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "formc",
       command = cmd
