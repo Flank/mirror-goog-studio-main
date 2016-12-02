@@ -37,17 +37,20 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.tools.lint.psi.EcjPsiJavaEvaluator;
+import com.android.tools.lint.psi.EcjPsiJavaFile;
 import com.android.tools.lint.psi.EcjPsiManager;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -221,6 +224,28 @@ public class EcjParser extends JavaParser {
     @Override
     public EcjPsiJavaEvaluator getEvaluator() {
         return resolver;
+    }
+
+    @Nullable
+    @Override
+    public File getFile(@NonNull PsiFile file) {
+        if (file instanceof EcjPsiJavaFile) {
+            EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
+            return javaFile.getIoFile();
+        }
+
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public CharSequence getFileContents(@NonNull PsiFile file) {
+        if (file instanceof EcjPsiJavaFile) {
+            EcjPsiJavaFile javaFile = (EcjPsiJavaFile) file;
+            return CharBuffer.wrap(javaFile.getFileContents());
+        }
+
+        return super.getFileContents(file);
     }
 
     /**

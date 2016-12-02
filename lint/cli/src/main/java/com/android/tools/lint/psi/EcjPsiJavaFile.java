@@ -35,7 +35,7 @@ import com.intellij.psi.PsiPackageStatement;
 import java.io.File;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 
-class EcjPsiJavaFile extends EcjPsiSourceElement implements PsiJavaFile {
+public class EcjPsiJavaFile extends EcjPsiSourceElement implements PsiJavaFile {
 
     private final EcjSourceFile mSource;
 
