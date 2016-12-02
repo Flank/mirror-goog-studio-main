@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 public final class NoOpRecorder implements Recorder {
 
@@ -37,6 +39,21 @@ public final class NoOpRecorder implements Recorder {
         }
         return null;
     }
+
+
+    @Override
+    public void record(
+            @NonNull GradleBuildProfileSpan.ExecutionType executionType,
+            @NonNull String projectPath,
+            @Nullable String variant,
+            @NonNull VoidBlock block) {
+        try {
+            block.call();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
 
     @Nullable
     @Override

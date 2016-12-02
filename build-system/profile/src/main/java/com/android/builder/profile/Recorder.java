@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
 /**
@@ -55,6 +56,10 @@ public interface Recorder {
         }
     }
 
+    interface VoidBlock {
+        void call() throws IOException;
+    }
+
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
      * GradleBuildProfileSpan} to {@link ProcessProfileWriter}.
@@ -74,6 +79,21 @@ public interface Recorder {
             @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block);
+
+    /**
+     * Records the time elapsed while executing a {@link VoidBlock} and saves the resulting {@link
+     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     *
+     * @param executionType the task type, so aggregation can be performed.
+     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
+     * @param variant the variant that contains this span.
+     * @param block the block of code to execution and measure.
+     */
+    void record(
+            @NonNull ExecutionType executionType,
+            @NonNull String projectPath,
+            @Nullable String variant,
+            @NonNull VoidBlock block);
 
     /**
      * Records the time elapsed while executing a {@link Block} and saves the resulting {@link

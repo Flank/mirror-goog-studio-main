@@ -36,6 +36,7 @@ import com.android.build.gradle.tasks.JackPreDexTransform;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
@@ -43,17 +44,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 
 /**
  * Manages the transforms for a variant.
@@ -112,12 +110,15 @@ public class TransformManager extends FilterableStreamCollection {
     private final List<TransformStream> streams = Lists.newArrayList();
     @NonNull
     private final List<Transform> transforms = Lists.newArrayList();
+    @NonNull private final Recorder recorder;
 
     public TransformManager(
             @NonNull AndroidTaskRegistry taskRegistry,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
         this.taskRegistry = taskRegistry;
         this.errorReporter = errorReporter;
+        this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
 
     }
@@ -231,16 +232,18 @@ public class TransformManager extends FilterableStreamCollection {
         transforms.add(transform);
 
         // create the task...
-        AndroidTask<TransformTask> task = taskRegistry.create(
-                taskFactory,
-                new TransformTask.ConfigAction<>(
-                        scope.getFullVariantName(),
-                        taskName,
-                        transform,
-                        inputStreams,
-                        referencedStreams,
-                        outputStream,
-                        callback));
+        AndroidTask<TransformTask> task =
+                taskRegistry.create(
+                        taskFactory,
+                        new TransformTask.ConfigAction<>(
+                                scope.getFullVariantName(),
+                                taskName,
+                                transform,
+                                inputStreams,
+                                referencedStreams,
+                                outputStream,
+                                recorder,
+                                callback));
 
         for (TransformStream s : inputStreams) {
             task.dependsOn(taskFactory, s.getDependencies());

@@ -23,7 +23,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
-
+import com.android.builder.profile.Recorder;
 import java.util.Collection;
 
 /**
@@ -35,8 +35,9 @@ public class InstantAppVariantData extends InstallableVariantData<InstantAppVari
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
     }
 
     @NonNull

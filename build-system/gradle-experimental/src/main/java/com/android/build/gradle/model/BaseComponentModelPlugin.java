@@ -90,6 +90,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.InstantRun;
+import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.ide.common.internal.ExecutorSingleton;
@@ -531,8 +532,15 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                         SdkHandler.useCachedSdk(project));
             }
 
-            VariantManager variantManager = new VariantManager(project, androidBuilder,
-                    adaptedModel, variantFactory, taskManager, instantiator);
+            VariantManager variantManager =
+                    new VariantManager(
+                            project,
+                            androidBuilder,
+                            adaptedModel,
+                            variantFactory,
+                            taskManager,
+                            instantiator,
+                            ThreadRecorder.get());
 
             variantFactory.validateModel(variantManager);
 

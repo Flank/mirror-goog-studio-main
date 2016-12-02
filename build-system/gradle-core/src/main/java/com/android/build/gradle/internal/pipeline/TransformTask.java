@@ -28,7 +28,6 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +63,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 public class TransformTask extends StreamBasedTask implements Context {
 
     private Transform transform;
+    private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
 
     public Transform getTransform() {
@@ -112,8 +112,12 @@ public class TransformTask extends StreamBasedTask implements Context {
                         .setIsIncremental(isIncremental.getValue())
                         .build();
 
-        ThreadRecorder.get().record(ExecutionType.TASK_TRANSFORM_PREPARATION, preExecutionInfo,
-                getProject().getPath(), getVariantName(), new Recorder.Block<Void>() {
+        recorder.record(
+                ExecutionType.TASK_TRANSFORM_PREPARATION,
+                preExecutionInfo,
+                getProject().getPath(),
+                getVariantName(),
+                new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
 
@@ -121,7 +125,8 @@ public class TransformTask extends StreamBasedTask implements Context {
                         Set<File> removedFiles = Sets.newHashSet();
                         if (isIncremental.getValue()) {
                             // gather the changed files first.
-                            gatherChangedFiles(getLogger(), incrementalTaskInputs, changedMap, removedFiles);
+                            gatherChangedFiles(
+                                    getLogger(), incrementalTaskInputs, changedMap, removedFiles);
 
                             // and check against secondary files, which disables
                             // incremental mode.
@@ -130,17 +135,18 @@ public class TransformTask extends StreamBasedTask implements Context {
 
                         if (isIncremental.getValue()) {
                             // ok create temporary incremental data
-                            List<IncrementalTransformInput> incInputs
-                                    = createIncrementalInputs(consumedInputStreams);
-                            List<IncrementalTransformInput> incReferencedInputs
-                                    = createIncrementalInputs(referencedInputStreams);
+                            List<IncrementalTransformInput> incInputs =
+                                    createIncrementalInputs(consumedInputStreams);
+                            List<IncrementalTransformInput> incReferencedInputs =
+                                    createIncrementalInputs(referencedInputStreams);
 
                             // then compare to changed list and create final Inputs
-                            if (isIncremental.setValue(updateIncrementalInputsWithChangedFiles(
-                                    incInputs,
-                                    incReferencedInputs,
-                                    changedMap,
-                                    removedFiles))) {
+                            if (isIncremental.setValue(
+                                    updateIncrementalInputsWithChangedFiles(
+                                            incInputs,
+                                            incReferencedInputs,
+                                            changedMap,
+                                            removedFiles))) {
                                 consumedInputs.setValue(convertToImmutable(incInputs));
                                 referencedInputs.setValue(convertToImmutable(incReferencedInputs));
                             }
@@ -153,12 +159,11 @@ public class TransformTask extends StreamBasedTask implements Context {
                                     computeNonIncTransformInput(consumedInputStreams));
                             referencedInputs.setValue(
                                     computeNonIncTransformInput(referencedInputStreams));
-                            changedSecondaryInputs.setValue(
-                                    ImmutableList.<SecondaryInput>of());
+                            changedSecondaryInputs.setValue(ImmutableList.<SecondaryInput>of());
                         } else {
                             // gather all secondary input changes.
                             changedSecondaryInputs.setValue(
-                                gatherSecondaryInputChanges(changedMap, removedFiles));
+                                    gatherSecondaryInputChanges(changedMap, removedFiles));
                         }
 
                         return null;
@@ -168,20 +173,26 @@ public class TransformTask extends StreamBasedTask implements Context {
         GradleTransformExecution executionInfo =
                 preExecutionInfo.toBuilder().setIsIncremental(isIncremental.getValue()).build();
 
-        ThreadRecorder.get().record(ExecutionType.TASK_TRANSFORM, executionInfo,
-                getProject().getPath(), getVariantName(), new Recorder.Block<Void>() {
+        recorder.record(
+                ExecutionType.TASK_TRANSFORM,
+                executionInfo,
+                getProject().getPath(),
+                getVariantName(),
+                new Recorder.Block<Void>() {
                     @Override
                     public Void call() throws Exception {
 
-                        transform.transform(new TransformInvocationBuilder(TransformTask.this)
-                                .addInputs(consumedInputs.getValue())
-                                .addReferencedInputs(referencedInputs.getValue())
-                                .addSecondaryInputs(changedSecondaryInputs.getValue())
-                                .addOutputProvider(outputStream != null
-                                        ? outputStream.asOutput()
-                                        : null)
-                                .setIncrementalMode(isIncremental.getValue())
-                                .build());
+                        transform.transform(
+                                new TransformInvocationBuilder(TransformTask.this)
+                                        .addInputs(consumedInputs.getValue())
+                                        .addReferencedInputs(referencedInputs.getValue())
+                                        .addSecondaryInputs(changedSecondaryInputs.getValue())
+                                        .addOutputProvider(
+                                                outputStream != null
+                                                        ? outputStream.asOutput()
+                                                        : null)
+                                        .setIncrementalMode(isIncremental.getValue())
+                                        .build());
                         return null;
                     }
                 });
@@ -418,6 +429,7 @@ public class TransformTask extends StreamBasedTask implements Context {
         private Collection<TransformStream> referencedInputStreams;
         @Nullable
         private IntermediateStream outputStream;
+        @NonNull private final Recorder recorder;
         @Nullable
         private final ConfigActionCallback<T> configActionCallback;
 
@@ -428,6 +440,7 @@ public class TransformTask extends StreamBasedTask implements Context {
                 @NonNull Collection<TransformStream> consumedInputStreams,
                 @NonNull Collection<TransformStream> referencedInputStreams,
                 @Nullable IntermediateStream outputStream,
+                @NonNull Recorder recorder,
                 @Nullable ConfigActionCallback<T> configActionCallback) {
             this.variantName = variantName;
             this.taskName = taskName;
@@ -435,6 +448,7 @@ public class TransformTask extends StreamBasedTask implements Context {
             this.consumedInputStreams = consumedInputStreams;
             this.referencedInputStreams = referencedInputStreams;
             this.outputStream = outputStream;
+            this.recorder = recorder;
             this.configActionCallback = configActionCallback;
         }
 
@@ -457,7 +471,7 @@ public class TransformTask extends StreamBasedTask implements Context {
             task.referencedInputStreams = referencedInputStreams;
             task.outputStream = outputStream;
             task.setVariantName(variantName);
-
+            task.recorder = recorder;
             if (configActionCallback != null) {
                 configActionCallback.callback(transform, task);
             }

@@ -21,7 +21,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
-
+import com.android.builder.profile.Recorder;
 import java.util.Collections;
 import java.util.Set;
 
@@ -36,8 +36,9 @@ public abstract class AndroidArtifactVariantData<T extends BaseVariantOutputData
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter) {
-        super(androidConfig, taskManager, config, errorReporter);
+            @NonNull ErrorReporter errorReporter,
+            @NonNull Recorder recorder) {
+        super(androidConfig, taskManager, config, errorReporter, recorder);
     }
 
     public void setCompatibleScreens(Set<String> compatibleScreens) {

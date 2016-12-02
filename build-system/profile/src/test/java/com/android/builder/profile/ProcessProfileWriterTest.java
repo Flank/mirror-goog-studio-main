@@ -39,17 +39,19 @@ public class ProcessProfileWriterTest {
 
 
     private Path outputFile;
+    private Recorder threadRecorder;
 
     @Before
     public void setUp() throws IOException {
         // reset for each test.
         outputFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto");
         ProcessProfileWriterFactory.initializeForTests(outputFile);
+        threadRecorder = ThreadRecorder.get();
     }
 
     @Test
     public void testBasicRecord() throws Exception {
-        ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
+        threadRecorder.record(ExecutionType.SOME_RANDOM_PROCESSING,
                 ":projectName", null, () -> 10);
         ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
@@ -62,7 +64,7 @@ public class ProcessProfileWriterTest {
 
     @Test
     public void testRecordWithAttributes() throws Exception {
-        ThreadRecorder.get().record(
+        threadRecorder.record(
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", "foo", () -> 10);
         ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
@@ -74,9 +76,9 @@ public class ProcessProfileWriterTest {
 
     @Test
     public void testRecordsOrder() throws Exception {
-        ThreadRecorder.get().record(
+        threadRecorder.record(
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", null, () ->
-                        ThreadRecorder.get().record(ExecutionType.SOME_RANDOM_PROCESSING,
+                        threadRecorder.record(ExecutionType.SOME_RANDOM_PROCESSING,
                                 ":projectName", null, () -> 10));
         ProcessProfileWriterFactory.shutdown();
         GradleBuildProfile profile = loadProfile();
@@ -90,25 +92,25 @@ public class ProcessProfileWriterTest {
     @Test
     public void testMultipleSpans() throws Exception {
 
-        Integer value = ThreadRecorder.get().record(
+        Integer value = threadRecorder.record(
                 ExecutionType.SOME_RANDOM_PROCESSING,
                 ":projectName",
                 null,
-                () -> ThreadRecorder.get().record(
+                () -> threadRecorder.record(
                         ExecutionType.SOME_RANDOM_PROCESSING,
                         ":projectName",
                         null,
                         () -> {
-                            Integer first = ThreadRecorder.get().record(
+                            Integer first = threadRecorder.record(
                                     ExecutionType.SOME_RANDOM_PROCESSING,
                                     ":projectName", null, () -> 1);
-                            Integer second = ThreadRecorder.get().record(
+                            Integer second = threadRecorder.record(
                                     ExecutionType.SOME_RANDOM_PROCESSING,
                                     ":projectName", null, () -> 3);
-                            Integer third = ThreadRecorder.get().record(
+                            Integer third = threadRecorder.record(
                                     ExecutionType.SOME_RANDOM_PROCESSING,
                                     ":projectName", null, () -> {
-                                        Integer value1 = ThreadRecorder.get().record(
+                                        Integer value1 = threadRecorder.record(
                                                 ExecutionType.SOME_RANDOM_PROCESSING,
                                                 ":projectName", null,
                                                 () -> 7);
@@ -151,7 +153,7 @@ public class ProcessProfileWriterTest {
         Runnable recordRunnable =
                 () -> {
                     for (int i = 0; i < 20; i++) {
-                        ThreadRecorder.get()
+                        threadRecorder
                                 .record(
                                         ExecutionType.TASK_EXECUTION,
                                         ":projectName",
@@ -176,7 +178,7 @@ public class ProcessProfileWriterTest {
     public void testThreadNumbering() throws Exception {
         Runnable recordRunnable =
                 () ->
-                        ThreadRecorder.get()
+                        threadRecorder
                                 .record(
                                         ExecutionType.SOME_RANDOM_PROCESSING,
                                         ":projectName",

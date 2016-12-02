@@ -50,10 +50,10 @@ import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -69,10 +69,12 @@ class ExternalBuildTaskManager {
     private final Project project;
     private final AndroidTaskRegistry androidTasks = new AndroidTaskRegistry();
     private final TaskContainerAdaptor tasks;
+    private final Recorder recorder;
 
-    ExternalBuildTaskManager(@NonNull Project project) {
+    ExternalBuildTaskManager(@NonNull Project project, @NonNull Recorder recorder) {
         this.project = project;
         this.tasks = new TaskContainerAdaptor(project.getTasks());
+        this.recorder = recorder;
     }
 
     void createTasks(@NonNull ExternalBuildExtension externalBuildExtension) throws Exception {
@@ -90,7 +92,7 @@ class ExternalBuildTaskManager {
                 file, project, externalBuildContext);
 
         ExtraModelInfo modelInfo = new ExtraModelInfo(project);
-        TransformManager transformManager = new TransformManager(androidTasks, modelInfo);
+        TransformManager transformManager = new TransformManager(androidTasks, modelInfo, recorder);
 
         transformManager.addStream(OriginalStream.builder()
                 .addContentType(QualifiedContent.DefaultContentType.CLASSES)
@@ -143,8 +145,14 @@ class ExternalBuildTaskManager {
         Optional<AndroidTask<TransformTask>> extractJarsTask =
                 transformManager.addTransform(tasks, variantScope, extractJarsTransform);
 
-        InstantRunTaskManager instantRunTaskManager = new InstantRunTaskManager(project.getLogger(),
-                variantScope, transformManager, androidTasks, tasks);
+        InstantRunTaskManager instantRunTaskManager =
+                new InstantRunTaskManager(
+                        project.getLogger(),
+                        variantScope,
+                        transformManager,
+                        androidTasks,
+                        tasks,
+                        recorder);
 
         AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(

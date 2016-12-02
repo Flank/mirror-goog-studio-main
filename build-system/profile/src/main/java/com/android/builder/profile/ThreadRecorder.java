@@ -21,6 +21,8 @@ import com.android.annotations.Nullable;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.atomic.AtomicLong;
@@ -66,6 +68,24 @@ public final class ThreadRecorder implements Recorder {
         return record(executionType, null, projectPath, variant, block);
     }
 
+    @Override
+    public void record(
+            @NonNull ExecutionType executionType,
+            @NonNull String projectPath,
+            @Nullable String variant,
+            @NonNull VoidBlock block) {
+        ProfileRecordWriter profileRecordWriter = ProcessProfileWriter.get();
+        GradleBuildProfileSpan.Builder currentRecord =
+                create(profileRecordWriter, executionType, null);
+        try {
+            block.call();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            write(profileRecordWriter, currentRecord, projectPath, variant);
+        }
+    }
+
     @Nullable
     @Override
     public <T> T record(
@@ -75,6 +95,24 @@ public final class ThreadRecorder implements Recorder {
             @Nullable String variant,
             @NonNull Block<T> block) {
         ProfileRecordWriter profileRecordWriter = ProcessProfileWriter.get();
+
+        GradleBuildProfileSpan.Builder currentRecord =
+                create(profileRecordWriter, executionType, transform);
+        try {
+            return block.call();
+        } catch (Exception e) {
+            block.handleException(e);
+        } finally {
+            write(profileRecordWriter, currentRecord, projectPath, variant);
+        }
+        // we always return null when an exception occurred and was not rethrown.
+        return null;
+    }
+
+    private GradleBuildProfileSpan.Builder create(
+            @NonNull ProfileRecordWriter profileRecordWriter,
+            @NonNull ExecutionType executionType,
+            @Nullable GradleTransformExecution transform) {
         long thisRecordId = profileRecordWriter.allocateRecordId();
 
         // am I a child ?
@@ -97,23 +135,23 @@ public final class ThreadRecorder implements Recorder {
             currentRecord.setParentId(parentId);
         }
 
+        currentRecord.setThreadId(threadId.get());
         recordStacks.get().push(thisRecordId);
-        try {
-            return block.call();
-        } catch (Exception e) {
-            block.handleException(e);
-        } finally {
-            // pop this record from the stack.
-            if (recordStacks.get().pop() != currentRecord.getId()) {
-                Logger.getLogger(ThreadRecorder.class.getName())
-                        .log(Level.SEVERE, "Profiler stack corrupted");
-            }
-            currentRecord.setDurationInMs(
-                    System.currentTimeMillis() - currentRecord.getStartTimeInMs());
-            currentRecord.setThreadId(threadId.get());
-            profileRecordWriter.writeRecord(projectPath, variant, currentRecord);
+        return currentRecord;
+    }
+
+    private void write(
+            @NonNull ProfileRecordWriter profileRecordWriter,
+            @NonNull GradleBuildProfileSpan.Builder currentRecord,
+            @NonNull String projectPath,
+            @Nullable String variant) {
+        // pop this record from the stack.
+        if (recordStacks.get().pop() != currentRecord.getId()) {
+            Logger.getLogger(ThreadRecorder.class.getName())
+                    .log(Level.SEVERE, "Profiler stack corrupted");
         }
-        // we always return null when an exception occurred and was not rethrown.
-        return null;
+        currentRecord.setDurationInMs(
+                System.currentTimeMillis() - currentRecord.getStartTimeInMs());
+        profileRecordWriter.writeRecord(projectPath, variant, currentRecord);
     }
 }
