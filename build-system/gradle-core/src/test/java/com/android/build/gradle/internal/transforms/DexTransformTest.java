@@ -86,18 +86,39 @@ public class DexTransformTest {
     @Test
     public void testPreDexLibraries() throws IOException, TransformException, InterruptedException {
         // Inputs for dexing
-        JarInput externalLibraryJarInput =
-                getJarInput(testDir.newFile("foo"), QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        JarInput nonSnapshotExternalLibraryJarInput =
+                getJarInput(
+                        testDir.newFile("nonSnapshotExtLibJar"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        JarInput snapshotExternalLibraryJarInput =
+                getJarInput(
+                        new File(testDir.newFolder("1.0-SNAPSHOT"), "snapshotExtLibJar"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
         JarInput nonExternalLibraryJarInput =
-                getJarInput(testDir.newFile("bar"), QualifiedContent.Scope.PROJECT);
+                getJarInput(
+                        testDir.newFile("nonExtLibJar"),
+                        QualifiedContent.Scope.PROJECT);
         DirectoryInput directoryInput =
                 getDirectoryInput(
-                        testDir.newFolder("baz"), QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+                        testDir.newFolder("dirInput"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
-        Files.write("Foo content", externalLibraryJarInput.getFile(), StandardCharsets.UTF_8);
-        Files.write("Bar content", nonExternalLibraryJarInput.getFile(), StandardCharsets.UTF_8);
         Files.write(
-                "Baz content", new File(directoryInput.getFile(), "baz"), StandardCharsets.UTF_8);
+                "nonSnapshotExtLibJar",
+                nonSnapshotExternalLibraryJarInput.getFile(),
+                StandardCharsets.UTF_8);
+        Files.write(
+                "snapshotExtLibJar",
+                snapshotExternalLibraryJarInput.getFile(),
+                StandardCharsets.UTF_8);
+        Files.write(
+                "nonExtLibJar",
+                nonExternalLibraryJarInput.getFile(),
+                StandardCharsets.UTF_8);
+        Files.write(
+                "dirInput",
+                new File(directoryInput.getFile(), "baz"),
+                StandardCharsets.UTF_8);
 
         // Output directory of pre-dexing
         File preDexOutputDir = testDir.newFolder("pre-dex");
@@ -111,83 +132,111 @@ public class DexTransformTest {
 
         // Run dexing
         runDexing(
-                ImmutableList.of(externalLibraryJarInput, nonExternalLibraryJarInput),
+                ImmutableList.of(
+                        nonSnapshotExternalLibraryJarInput,
+                        snapshotExternalLibraryJarInput,
+                        nonExternalLibraryJarInput),
                 ImmutableList.of(directoryInput),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
-        // Assert pre-dex results
+        // Assert pre-dex results, expect that all the inputs are pre-dexed
         File[] preDexOutputFiles = preDexOutputDir.listFiles();
-        assertEquals(3, preDexOutputFiles.length);
-        File preDexedExternalLibraryJarInput = null;
+        assertEquals(4, preDexOutputFiles.length);
+        File preDexedNonSnapshotExternalLibraryJarInput = null;
+        File preDexedSnapshotExternalLibraryJarInput = null;
         File preDexedNonExternalLibraryJarInput = null;
         File preDexedDirectoryInput = null;
-        for (int i = 0; i < 3; i++) {
-            if (preDexOutputFiles[i].getName().contains("foo")) {
-                preDexedExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("bar")) {
+        for (int i = 0; i < 4; i++) {
+            if (preDexOutputFiles[i].getName().contains("nonSnapshotExtLibJar")) {
+                preDexedNonSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
+            } else if (preDexOutputFiles[i].getName().contains("snapshotExtLibJar")) {
+                preDexedSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
+            } else if (preDexOutputFiles[i].getName().contains("nonExtLibJar")) {
                 preDexedNonExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("baz")) {
+            } else if (preDexOutputFiles[i].getName().contains("dirInput")) {
                 preDexedDirectoryInput = preDexOutputFiles[i];
             }
         }
-        assertThat(preDexedExternalLibraryJarInput).hasContents("Pre-dexed content of Foo content");
+        assertThat(preDexedNonSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
+        assertThat(preDexedSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of snapshotExtLibJar");
         assertThat(preDexedNonExternalLibraryJarInput)
-                .hasContents("Pre-dexed content of Bar content");
-        assertThat(preDexedDirectoryInput).hasContents("Pre-dexed content of Baz content");
+                .hasContents("Pre-dexed content of nonExtLibJar");
+        assertThat(preDexedDirectoryInput)
+                .hasContents("Pre-dexed content of dirInput");
 
-        // Assert dex results
+        // Assert dex results, expect that all the pre-dexed outputs are merged into 1 file
         File[] dexOutputFiles = dexOutputDir.listFiles();
         assertEquals(1, dexOutputFiles.length);
         File dexOutputFile = dexOutputFiles[0];
         assertThat(dexOutputFile).hasContents("Dexed content");
 
-        // Assert cache results
+        // Assert cache results, expect that only the pre-dexed output of non-snapshot external
+        // library jar file is cached
         File[] cachedFiles = buildCache.getCacheDirectory().listFiles();
         assertEquals(1, cachedFiles.length);
-        File cachedPreDexedExternalLibraryJarInput = new File(cachedFiles[0], "output");
-        assertThat(cachedPreDexedExternalLibraryJarInput)
-                .hasContents("Pre-dexed content of Foo content");
+        File cachedPreDexedNonSnapshotExternalLibraryJarInput = new File(cachedFiles[0], "output");
+        assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
-        long cachedFileTimestamp = cachedPreDexedExternalLibraryJarInput.lastModified();
-        assertThat(preDexedExternalLibraryJarInput).wasModifiedAt(cachedFileTimestamp);
+        long cachedFileTimestamp = cachedPreDexedNonSnapshotExternalLibraryJarInput.lastModified();
+        assertThat(preDexedNonSnapshotExternalLibraryJarInput).wasModifiedAt(cachedFileTimestamp);
+        long preDexedSnapshotExternalLibraryJarInputTimestamp =
+                preDexedSnapshotExternalLibraryJarInput.lastModified();
         long preDexedNonExternalLibraryJarInputTimestamp =
                 preDexedNonExternalLibraryJarInput.lastModified();
-        long preDexedDirectoryInputTimestamp = preDexedDirectoryInput.lastModified();
+        long preDexedDirectoryInputTimestamp =
+                preDexedDirectoryInput.lastModified();
 
         // Re-run dexing
         TestUtils.waitForFileSystemTick();
         runDexing(
-                ImmutableList.of(externalLibraryJarInput, nonExternalLibraryJarInput),
+                ImmutableList.of(
+                        nonSnapshotExternalLibraryJarInput,
+                        snapshotExternalLibraryJarInput,
+                        nonExternalLibraryJarInput),
                 ImmutableList.of(directoryInput),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
-        // Assert pre-dex results
-        assertEquals(3, preDexOutputDir.listFiles().length);
-        assertThat(preDexedExternalLibraryJarInput).hasContents("Pre-dexed content of Foo content");
+        // Assert pre-dex results, expect that the contents are unchanged
+        assertEquals(4, preDexOutputDir.listFiles().length);
+        assertThat(preDexedNonSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
+        assertThat(preDexedSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of snapshotExtLibJar");
         assertThat(preDexedNonExternalLibraryJarInput)
-                .hasContents("Pre-dexed content of Bar content");
-        assertThat(preDexedDirectoryInput).hasContents("Pre-dexed content of Baz content");
+                .hasContents("Pre-dexed content of nonExtLibJar");
+        assertThat(preDexedDirectoryInput)
+                .hasContents("Pre-dexed content of dirInput");
 
-        // Assert dex results
+        // Assert dex results, expect that the contents are unchanged
         assertEquals(1, dexOutputDir.listFiles().length);
         assertThat(dexOutputFile).hasContents("Dexed content");
 
-        // Assert cache results
+        // Assert cache results, expect that the contents are unchanged
         assertEquals(1, buildCache.getCacheDirectory().listFiles().length);
-        assertThat(cachedPreDexedExternalLibraryJarInput)
-                .hasContents("Pre-dexed content of Foo content");
+        assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
+                .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
-        assertThat(cachedPreDexedExternalLibraryJarInput).wasModifiedAt(cachedFileTimestamp);
-        assertThat(preDexedExternalLibraryJarInput).wasModifiedAt(cachedFileTimestamp);
+        // Also verify the timestamps to make sure that the cache's contents are not overwritten,
+        // whereas the pre-dexed directory's non-cached contents are overwritten
+        assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
+                .wasModifiedAt(cachedFileTimestamp);
+        assertThat(preDexedNonSnapshotExternalLibraryJarInput)
+                .wasModifiedAt(cachedFileTimestamp);
+        assertThat(preDexedSnapshotExternalLibraryJarInput)
+                .isNewerThan(preDexedSnapshotExternalLibraryJarInputTimestamp);
         assertThat(preDexedNonExternalLibraryJarInput)
                 .isNewerThan(preDexedNonExternalLibraryJarInputTimestamp);
-        assertThat(preDexedDirectoryInput).isNewerThan(preDexedDirectoryInputTimestamp);
+        assertThat(preDexedDirectoryInput)
+                .isNewerThan(preDexedDirectoryInputTimestamp);
     }
 
     @Test
@@ -220,7 +269,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
-        // Assert cache results
+        // Assert cache results, expect that 2 entries are created
         assertEquals(2, buildCache.getCacheDirectory().listFiles().length);
 
         // Re-run pre-dexing with the same input files and build tools revision
@@ -272,7 +321,7 @@ public class DexTransformTest {
         // Expect the cache to contain 1 more entry
         assertEquals(6, buildCache.getCacheDirectory().listFiles().length);
 
-        // Re-run pre-dexing with 2 exploded-aar files as inputs
+        // Re-run pre-dexing with 2 exploded-aar files with the same contents as inputs
         File explodedAarFile1 =
                 new File(
                         testDir.newFolder(),
@@ -299,7 +348,7 @@ public class DexTransformTest {
         // Expect the cache to contain 1 more entry
         assertEquals(7, buildCache.getCacheDirectory().listFiles().length);
 
-        // Re-run pre-dexing with 2 instant-run.jar files as inputs
+        // Re-run pre-dexing with 2 instant-run.jar files with the same contents as inputs
         File instantRunFile1 = new File(testDir.newFolder(), "instant-run.jar");
         File instantRunFile2 = new File(testDir.newFolder(), "instant-run.jar");
         Files.write("Some content", instantRunFile1, StandardCharsets.UTF_8);

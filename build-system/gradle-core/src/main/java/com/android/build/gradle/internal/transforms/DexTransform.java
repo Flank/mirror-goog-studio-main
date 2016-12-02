@@ -45,6 +45,7 @@ import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -381,7 +382,10 @@ public class DexTransform extends Transform {
                                     entry.getValue(),
                                     hashs,
                                     outputHandler,
-                                    externalLibJarFiles.contains(entry.getKey())
+                                    shouldUseBuildCache(
+                                                    buildCache.isPresent(),
+                                                    entry.getKey(),
+                                                    externalLibJarFiles)
                                             ? buildCache
                                             : Optional.empty());
                     logger.verbose("Adding PreDexTask for %s : %s", entry.getKey(), action);
@@ -494,59 +498,16 @@ public class DexTransform extends Transform {
                 return null;
             };
 
-            // If the cache is available, run pre-dexing using the cache
+            // If the build cache is used, run pre-dexing using the cache
             if (buildCache.isPresent()) {
-                // To use the cache, we need to specify all the inputs that affect the outcome of a
-                // pre-dex (see DxDexKey for an exhaustive list of these inputs)
-                FileCache.Inputs.Builder buildCacheInputs =
-                        new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY);
-
-                // As a general rule, we use the file's path and hash to uniquely identify a file.
-                // However, certain types of files are usually copied/duplicated at different
-                // locations. To recognize those files as the same file, in addition to the file's
-                // hash, we extract a substring of the file's path that can serve as an identifier
-                // of the file.
-                if (from.getPath().contains("exploded-aar")) {
-                    // If the file is exploded from an aar file, we use the path relative to the
-                    // "exploded-aar" directory as the file's identifier, which includes the aar
-                    // artifact information (e.g., "exploded-aar/com.android.support/support-v4/
-                    // 23.3.0/jars/classes.jar")
-                    buildCacheInputs.putString(
-                            FileCacheInputParams.EXPLODED_AAR_FILE_PATH.name(),
-                            from.getPath().substring(from.getPath().lastIndexOf("exploded-aar")));
-                } else if (from.getName().equals("instant-run.jar")) {
-                    // If the file is an instant-run.jar file, we use the the file name itself as
-                    // the file's identifier
-                    buildCacheInputs.putString(
-                            FileCacheInputParams.INSTANT_RUN_JAR_FILE_NAME.name(), from.getName());
-                } else {
-                    // In all other cases, we use the file's path as the file's identifier
-                    buildCacheInputs.putFilePath(FileCacheInputParams.FILE_PATH.name(), from);
-                }
-                // In all cases, in addition to the file's path, we always use the file's hash to
-                // identify an input file, and provide other input parameters to the cache
-                buildCacheInputs
-                        .putFileHash(FileCacheInputParams.FILE_HASH.name(), from)
-                        .putString(
-                                FileCacheInputParams.BUILD_TOOLS_REVISION.name(),
-                                androidBuilder
-                                        .getTargetInfo()
-                                        .getBuildTools()
-                                        .getRevision()
-                                        .toString())
-                        .putBoolean(
-                                FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
-                        .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
-                        .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
-                List<String> additionalParams = dexOptions.getAdditionalParameters();
-                for (int i = 0; i < additionalParams.size(); i++) {
-                    buildCacheInputs.putString(
-                            FileCacheInputParams.ADDITIONAL_PARAMETERS.name() + "[" + i + "]",
-                            additionalParams.get(i));
-                }
-
+                FileCache.Inputs buildCacheInputs =
+                        getBuildCacheInputs(
+                                from,
+                                androidBuilder.getTargetInfo().getBuildTools().getRevision(),
+                                dexOptions,
+                                multiDex);
                 try {
-                    buildCache.get().createFile(to, buildCacheInputs.build(), preDexLibraryAction);
+                    buildCache.get().createFile(to, buildCacheInputs, preDexLibraryAction);
                 } catch (ExecutionException exception) {
                     throw new RuntimeException(
                             String.format(
@@ -581,6 +542,86 @@ public class DexTransform extends Transform {
 
             return null;
         }
+    }
+
+    /**
+     * Returns {@code true} if the build cache should be used for the predex-library task, and
+     * {@code false} otherwise.
+     */
+    private boolean shouldUseBuildCache(
+            boolean buildCacheEnabled,
+            @NonNull File inputFile,
+            @NonNull Set<File> externalLibJarFiles) {
+        // We use the build cache only when it is enabled and the input file is a (non-snapshot)
+        // external-library jar file
+        if (!buildCacheEnabled || !externalLibJarFiles.contains(inputFile)) {
+            return false;
+        }
+        // After the check above, here the build cache should be enabled and the input file is an
+        // external-library jar file. We now check whether it is a snapshot version or not (to
+        // address http://b.android.com/228623).
+        // Note that the current check is based on the file path; if later on there is a more
+        // reliable way to verify whether an input file is a snapshot, we should replace this check
+        // with that.
+        return !inputFile.getPath().contains("-SNAPSHOT");
+    }
+
+    /**
+     * Returns a {@link FileCache.Inputs} object computed from the given parameters for the
+     * predex-library task to use the build cache.
+     */
+    @NonNull
+    private FileCache.Inputs getBuildCacheInputs(
+            @NonNull File inputFile,
+            @NonNull Revision buildToolsRevision,
+            @NonNull DexOptions dexOptions,
+            boolean multiDex) throws IOException {
+        // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
+        // (see DxDexKey for an exhaustive list of these inputs)
+        FileCache.Inputs.Builder buildCacheInputs =
+                new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY);
+
+        // As a general rule, we use the file's path and hash to uniquely identify a file. However,
+        // certain types of files are usually copied/duplicated at different locations. To recognize
+        // those files as the same file, instead of using the full file path, we use a substring of
+        // the file path as the file's identifier.
+        if (inputFile.getPath().contains("exploded-aar")) {
+            // If the file is exploded from an aar file, we use the path relative to the
+            // "exploded-aar" directory as the file's identifier, which contains the aar artifact
+            // information (e.g., "exploded-aar/com.android.support/support-v4/23.3.0/jars/
+            // classes.jar")
+            buildCacheInputs.putString(
+                    FileCacheInputParams.EXPLODED_AAR_FILE_PATH.name(),
+                    inputFile.getPath().substring(inputFile.getPath().lastIndexOf("exploded-aar")));
+        } else if (inputFile.getName().equals("instant-run.jar")) {
+            // If the file is an instant-run.jar file, we use the the file name itself as
+            // the file's identifier
+            buildCacheInputs.putString(
+                    FileCacheInputParams.INSTANT_RUN_JAR_FILE_NAME.name(), inputFile.getName());
+        } else {
+            // In all other cases, we use the file's path as the file's identifier
+            buildCacheInputs.putFilePath(FileCacheInputParams.FILE_PATH.name(), inputFile);
+        }
+
+        // In all cases, in addition to the (full or extracted) file path, we always use the file's
+        // hash to identify an input file, and provide other input parameters to the cache
+        buildCacheInputs
+                .putFileHash(FileCacheInputParams.FILE_HASH.name(), inputFile)
+                .putString(
+                        FileCacheInputParams.BUILD_TOOLS_REVISION.name(),
+                        buildToolsRevision.toString())
+                .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
+                .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
+                .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
+
+        List<String> additionalParams = dexOptions.getAdditionalParameters();
+        for (int i = 0; i < additionalParams.size(); i++) {
+            buildCacheInputs.putString(
+                    FileCacheInputParams.ADDITIONAL_PARAMETERS.name() + "[" + i + "]",
+                    additionalParams.get(i));
+        }
+
+        return buildCacheInputs.build();
     }
 
     /**
