@@ -41,6 +41,7 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -62,6 +63,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -136,6 +138,8 @@ public class SdkManagerCli {
         }
         if (mSettings.isList()) {
             listPackages();
+        } else if (mSettings.islicenses()) {
+            showLicenses();
         } else {
             if (mSettings.isInstallAction()) {
                 installPackages();
@@ -255,6 +259,72 @@ public class SdkManagerCli {
         }
     }
 
+    private void showLicenses() throws CommandFailedException {
+        mRepoManager.loadSynchronously(0, mProgress, mDownloader, mSettings);
+
+        Set<License> licenses =
+                mRepoManager
+                        .getPackages()
+                        .getRemotePackages()
+                        .values()
+                        .stream()
+                        .map(RemotePackage::getLicense)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toCollection(TreeSet::new));
+
+        // Find licences that are not accepted yet.
+        ImmutableList.Builder<License> licensesNotYetAcceptedBuilder = ImmutableList.builder();
+        for (License license : licenses) {
+            boolean accepted = license.checkAccepted(mHandler.getLocation(), mHandler.getFileOp());
+
+            if (!accepted) {
+                licensesNotYetAcceptedBuilder.add(license);
+            }
+
+            if (mSettings.isVerbose()) {
+                printLicense(license);
+                mOut.format(accepted ? "Accepted%n%n" : "Not yet accepted%n%n");
+            }
+        }
+        ImmutableList<License> licensesNotYetAccepted = licensesNotYetAcceptedBuilder.build();
+
+        if (licensesNotYetAccepted.isEmpty()) {
+            mOut.println("All SDK package licenses accepted.");
+            return;
+        }
+
+        mOut.format(
+                "%1$d of %2$d SDK package license%3$s not accepted.%n"
+                        + "Review license%3$s that ha%4$s not been accepted (y/N)? ",
+                licensesNotYetAccepted.size(),
+                licenses.size(),
+                licensesNotYetAccepted.size() == 1 ? "" : "s",
+                licensesNotYetAccepted.size() == 1 ? "s" : "ve");
+        if (!askYesNo()) {
+            return;
+        }
+
+        int newlyAcceptedCount = 0;
+        for (int i = 0; i < licensesNotYetAccepted.size(); i++) {
+            mOut.format("%n%1$d/%2$d: ", i + 1, licensesNotYetAccepted.size());
+            License license = licensesNotYetAccepted.get(i);
+            if (askForLicense(license)) {
+                license.setAccepted(mRepoManager.getLocalPath(), mHandler.getFileOp());
+                newlyAcceptedCount++;
+            }
+        }
+
+        if (newlyAcceptedCount == licensesNotYetAccepted.size()) {
+            mOut.println("All SDK package licenses accepted");
+        } else {
+            int notAccepted = licensesNotYetAccepted.size() - newlyAcceptedCount;
+            mOut.format(
+                    "%1$d license%2$s not accepted%n",
+                    notAccepted,
+                    notAccepted == 1 ? "" : "s");
+        }
+    }
+
     /**
      * Checks whether the licenses for the given packages are accepted. If they are not, request
      * that the user accept them.
@@ -302,12 +372,16 @@ public class SdkManagerCli {
     }
 
     private boolean askForLicense(@NonNull License license) {
+        printLicense(license);
+        mOut.print("Accept? (y/N): ");
+        return askYesNo();
+    }
+
+    private void printLicense(@NonNull License license) {
         mOut.printf("License %s:%n", license.getId());
         mOut.println("---------------------------------------");
         mOut.println(license.getValue());
         mOut.println("---------------------------------------");
-        mOut.print("Accept? (y/N): ");
-        return askYesNo();
     }
 
     private boolean askYesNo() {
@@ -349,6 +423,7 @@ public class SdkManagerCli {
                 + "[--package_file <file>] [<packages>...]");
         out.println("  sdkmanager --update [<common args>]");
         out.println("  sdkmanager --list [<common args>]");
+        out.println("  sdkmanager --licenses [<common args>]");
         out.println();
         out.println("In its first form, installs, or uninstalls, or updates packages.");
         out.println("    By default, the listed packages are installed or (if already installed)");
@@ -368,6 +443,10 @@ public class SdkManagerCli {
         out.println();
         out.println("In its third form, all installed and available packages are printed");
         out.println("    out.");
+        out.println();
+        out.println("In its fourth form (with --licenses), show and offer the option to");
+        out.println("     accept licenses for all available packages that have not already been");
+        out.println("     accepted.");
         out.println();
         out.println("Common Arguments:");
         out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK ");
@@ -397,6 +476,7 @@ public class SdkManagerCli {
     static class Settings implements SettingsController {
 
         private static final String CHANNEL_ARG = "--channel=";
+        private static final String LICENSES_ARG = "--licenses";
         private static final String UNINSTALL_ARG = "--uninstall";
         private static final String UPDATE_ARG = "--update";
         private static final String PKG_FILE_ARG = "--package_file=";
@@ -413,6 +493,7 @@ public class SdkManagerCli {
         private Path mLocalPath;
         private List<String> mPackages = new ArrayList<>();
         private int mChannel = 0;
+        private boolean mIsLicenses = false;
         private boolean mIsInstall = true;
         private boolean mIsUpdate = false;
         private boolean mIsList = false;
@@ -437,6 +518,8 @@ public class SdkManagerCli {
             for (String arg : args) {
                 if (arg.equals(HELP_ARG)) {
                     return null;
+                } else if (arg.equals(LICENSES_ARG)) {
+                    result.mIsLicenses = true;
                 } else if (arg.equals(UNINSTALL_ARG)) {
                     result.mIsInstall = false;
                 } else if (arg.equals(NO_HTTPS_ARG)) {
@@ -498,8 +581,9 @@ public class SdkManagerCli {
                 }
             }
 
-            if (result.mLocalPath == null ||
-                    !result.mPackages.isEmpty() == (result.mIsUpdate || result.mIsList)) {
+            if (result.mLocalPath == null
+                    || !result.mPackages.isEmpty()
+                            == (result.mIsUpdate || result.mIsList || result.mIsLicenses)) {
                 return null;
             }
             if (proxyHost == null ^ result.mProxyType == null ||
@@ -568,6 +652,14 @@ public class SdkManagerCli {
 
         public boolean isList() {
             return mIsList;
+        }
+
+        public boolean islicenses() {
+            return mIsLicenses;
+        }
+
+        public boolean isVerbose() {
+            return mVerbose;
         }
 
         public boolean includeObsolete() {
