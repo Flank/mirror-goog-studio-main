@@ -753,7 +753,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                             + "        android:theme=\"@style/AppTheme\" >\n"
                             + "        <service android:name=\".DataLayerListenerService\">\n"
                             + "            <intent-filter>\n"
-                            + "                <action android:name=\"com.google.android.gms.wearable.BIND_LISTENER\" />\n"
+                            + "                <action android:name=\"com.google.android.gms.wearable.DATA_CHANGED\" />\n"
                             + "            </intent-filter>\n"
                             + "        </service>\n"
                             + "    </application>\n"

@@ -248,14 +248,30 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
         return false;
     }
 
-    private static boolean isWearableBindListener(@NonNull Element element) {
-        // Checks whether a service has an Android Wear bind listener
+    /**
+     * See https://labs.mwrinfosecurity.com/blog/android-wear-security-analysis
+     * for information about why an exported declaration of WearListenerService
+     * does not need a permission. (Since the service itself checks to see if the caller is
+     * Play services)
+     *
+     * @param element The service element to be checked.
+     * @return whether a service has an `intent-filter` action pointing to the ones supported
+     * by WearListenerService.
+     */
+    private static boolean isWearableListenerServiceAction(@NonNull Element element) {
+        // Checks whether a service has an action for a WearableListenerService
+        // see developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
+        // for details on the applicable actions.
         for (Element child : LintUtils.getChildren(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
                 for (Element innerChild : LintUtils.getChildren(child)) {
                     if (innerChild.getTagName().equals(NODE_ACTION)) {
                         String name = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                        if ("com.google.android.gms.wearable.BIND_LISTENER".equals(name)) {
+                        if ("com.google.android.gms.wearable.BIND_LISTENER".equals(name) // deprecated
+                                || "com.google.android.gms.wearable.DATA_CHANGED".equals(name)
+                                || "com.google.android.gms.wearable.MESSAGE_RECEIVED".equals(name)
+                                || "com.google.android.gms.wearable.CAPABILITY_CHANGED".equals(name)
+                                || "com.google.android.gms.wearable.CHANNEL_EVENT".equals(name)) {
                             return true;
                         }
                     }
@@ -300,7 +316,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     private static void checkService(XmlContext context, Element element) {
         if (getExported(element) && isUnprotectedByPermission(element)
-                && !isWearableBindListener(element)) {
+                && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
             context.report(EXPORTED_SERVICE, element, context.getLocation(element),
                            "Exported service does not require permission");
