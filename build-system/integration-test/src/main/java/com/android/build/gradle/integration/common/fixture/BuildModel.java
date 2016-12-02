@@ -217,6 +217,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         List<String> arguments = Lists.newArrayListWithCapacity(5);
         arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "=true");
         arguments.add("-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true");
+        arguments.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
 
         switch (modelLevel) {
             case AndroidProject.MODEL_LEVEL_0_ORIGNAL:

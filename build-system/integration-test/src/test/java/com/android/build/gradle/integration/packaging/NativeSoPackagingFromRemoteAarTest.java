@@ -66,7 +66,7 @@ public class NativeSoPackagingFromRemoteAarTest {
                 + "    maven { url '../testrepo' }\n"
                 + "}\n"
                 + "dependencies {\n"
-                + "    compile 'com.example.android.nativepackaging:library:1.0:release@aar'\n"
+                + "    compile 'com.example.android.nativepackaging:library:1.0-SNAPSHOT:release@aar'\n"
                 + "}\n");
 
         TestFileUtils.appendToFile(libProject.getBuildFile(),
@@ -74,7 +74,7 @@ public class NativeSoPackagingFromRemoteAarTest {
                 + "\n"
                 + "group = 'com.example.android.nativepackaging'\n"
                 + "archivesBaseName = 'library'\n"
-                + "version = '1.0'\n"
+                + "version = '1.0-SNAPSHOT'\n"
                 + "\n"
                 + "uploadArchives {\n"
                 + "    repositories {\n"

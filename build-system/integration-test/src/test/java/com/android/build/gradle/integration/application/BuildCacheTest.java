@@ -69,7 +69,7 @@ public class BuildCacheTest {
         List<File> cachedEntryDirs =
                 Arrays.asList(buildCacheDir.listFiles())
                         .stream()
-                        .filter(file -> file.length() > 0) // Remove the lock files
+                        .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
 
         assertThat(dexFiles).hasSize(2);
@@ -98,7 +98,7 @@ public class BuildCacheTest {
         cachedEntryDirs =
                 Arrays.asList(buildCacheDir.listFiles())
                         .stream()
-                        .filter(file -> file.length() > 0) // Remove the lock files
+                        .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
         assertThat(preDexDir.list()).hasLength(2);
         assertThat(cachedEntryDirs).hasSize(1);
