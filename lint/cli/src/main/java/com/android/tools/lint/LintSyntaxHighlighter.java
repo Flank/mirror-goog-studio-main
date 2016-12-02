@@ -49,6 +49,8 @@ public class LintSyntaxHighlighter {
     private static final int STYLE_JAVADOC_COMMENT = 12;
     private static final int STYLE_ANNOTATION = 13;
 
+    private static final int TAB_WIDTH = 4;
+
     private final String source;
 
     // Map from offset to STYLE_ constant
@@ -62,6 +64,8 @@ public class LintSyntaxHighlighter {
     private boolean forceSingleLineRange = true;
 
     private boolean padCaretLine = false;
+
+    private boolean dedent = false;
 
     public LintSyntaxHighlighter(@NonNull String fileName, @NonNull String source) {
         this.source = source;
@@ -121,6 +125,22 @@ public class LintSyntaxHighlighter {
     public LintSyntaxHighlighter setPadCaretLine(boolean padCaretLine) {
         this.padCaretLine = padCaretLine;
         return this;
+    }
+
+    /**
+     * Whether the highlighter should dedent the code (removing shared whitespace on the left)
+     * to make as much code visible as possible
+     */
+    public boolean isDedent() {
+        return dedent;
+    }
+
+    /**
+     * Whether the highlighter should dedent the code (removing shared whitespace on the left)
+     * to make as much code visible as possible
+     */
+    public void setDedent(boolean dedent) {
+        this.dedent = dedent;
     }
 
     interface KeywordChecker {
@@ -763,6 +783,56 @@ public class LintSyntaxHighlighter {
         return Math.min(offset, length);
     }
 
+    public int computeDedent(int fromOffset, int toOffset) {
+        toOffset = Math.min(source.length(), toOffset);
+        fromOffset = Math.min(toOffset, fromOffset);
+
+        boolean inWhitespace = true;
+        int lineBegin = fromOffset;
+        int dedent = Integer.MAX_VALUE;
+        int column = 0;
+        for (int i = fromOffset; i < toOffset; i++, column++) {
+            char c = source.charAt(i);
+            if (c == '\n') {
+                inWhitespace = true;
+                column = -1;
+            } else if (c == '\t') {
+                column += TAB_WIDTH - 1;
+            } else if (!Character.isWhitespace(c)) {
+                if (inWhitespace) {
+                    dedent = Math.min(dedent, column);
+                    inWhitespace = false;
+                }
+            }
+        }
+
+        if (dedent == Integer.MAX_VALUE || dedent == 0) {
+            return 0;
+        } else {
+            return dedent - 1; // leave at least one padding character
+        }
+    }
+
+    public int computeMaxLineLength(int fromOffset, int toOffset) {
+        toOffset = Math.min(source.length(), toOffset);
+        fromOffset = Math.min(toOffset, fromOffset);
+
+        int maxLineLength = 0;
+        int column = 0;
+        for (int i = fromOffset; i < toOffset; i++, column++) {
+            char c = source.charAt(i);
+            if (c == '\t') {
+                column += TAB_WIDTH - 1;
+            } else if (c == '\n') {
+                maxLineLength = Math.max(maxLineLength, column);
+                column = -1;
+            }
+        }
+
+        maxLineLength = Math.max(maxLineLength, column);
+        return maxLineLength;
+    }
+
     public void generateHtml(@NonNull HtmlBuilder builder,
             int startHighlightOffset,
             int endHighlightOffset,
@@ -806,11 +876,18 @@ public class LintSyntaxHighlighter {
         }
 
         int currentLine = getLineNumber(beginOffset) + 1; // display as 1-based instead of 0-based
-
         int lineWidth = (int) (Math.log10(lineCount)) + 1;
         updateSortedOffsets();
 
         builder.beginPre("errorlines");
+
+        int dedent = this.dedent ? computeDedent(beginOffset, endOffset) : 0;
+        int maxWidth = computeMaxLineLength(beginOffset, endOffset);
+        int available = 96;
+        if (available - maxWidth > 0) {
+            dedent = Math.max(0, dedent - (available - maxWidth));
+        }
+        int cropTo = 0;
 
         int spanBalance = 0;
 
@@ -827,12 +904,37 @@ public class LintSyntaxHighlighter {
                 spanBalance++;
             }
 
-            if (begin == 0 || source.charAt(begin - 1) == '\n') {
+            boolean isNewLine = begin == 0 || source.charAt(begin - 1) == '\n';
+            if (isNewLine) {
                 // new line
                 builder.beginClassSpan("lineno");
-                String lineString = String.format(Locale.ROOT, " %" + lineWidth + "d ", currentLine++);
+                String lineString = String.format(Locale.ROOT, " %" + lineWidth + "d ",
+                        currentLine++);
                 builder.addHtml(lineString);
                 builder.endSpan();
+
+                if (dedent > 0) {
+                    cropTo = begin;
+                    int column = 0;
+                    for (int s = begin, n = Math.min(s + dedent, source.length());
+                            s < n;
+                            s++) {
+                        char c = source.charAt(s);
+                        if (c == '\t') {
+                            column += TAB_WIDTH;
+                        } else if (c == '\n') {
+                            cropTo = s;
+                        } else if (Character.isWhitespace(c)) {
+                            column++;
+                            if (column >= dedent) {
+                                cropTo = s;
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
 
             int style = styles.get(begin);
@@ -847,7 +949,11 @@ public class LintSyntaxHighlighter {
                 builder.beginClassSpan(cssStyle);
                 spanBalance++;
             }
-            builder.add(source.substring(begin, end));
+
+            int from = Math.max(cropTo, begin);
+            if (from < end) {
+                add(builder, from, end);
+            }
 
             //noinspection VariableNotUsedInsideIf
             if (cssStyle != null) {
@@ -876,13 +982,22 @@ public class LintSyntaxHighlighter {
             for (int i = 0; i < spanBalance; i++) {
                 builder.endSpan();
             }
-
         }
 
         builder.endPre();
 
         int lastOffset = sortedOffsets.get(sortedOffsets.size() - 1);
-        builder.add(source.substring(lastOffset, source.length()));
+        add(builder, lastOffset, source.length());
+    }
+
+    void add(HtmlBuilder builder, int from, int to) {
+        String substring = source.substring(from, to);
+        if (substring.indexOf('\t') != -1) {
+            //noinspection ConstantConditions
+            assert TAB_WIDTH == 4; // if not change constant below
+            substring = substring.replace("\t", "    ");
+        }
+        builder.add(substring);
     }
 
     /**
