@@ -44,7 +44,7 @@ class MutableDirectoryInput extends QualifiedContentImpl {
             @NonNull String name,
             @NonNull File file,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         super(name, file, contentTypes, scopes);
     }
 

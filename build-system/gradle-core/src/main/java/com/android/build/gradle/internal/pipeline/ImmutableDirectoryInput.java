@@ -41,7 +41,7 @@ class ImmutableDirectoryInput extends QualifiedContentImpl implements DirectoryI
             @NonNull String name,
             @NonNull File file,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         super(name, file, contentTypes, scopes);
         this.changedFiles = ImmutableMap.of();
     }
@@ -50,7 +50,7 @@ class ImmutableDirectoryInput extends QualifiedContentImpl implements DirectoryI
             @NonNull String name,
             @NonNull File file,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes,
+            @NonNull Set<? super Scope> scopes,
             @NonNull Map<File, Status> changedFiles) {
         super(name, file, contentTypes, scopes);
         this.changedFiles = ImmutableMap.copyOf(changedFiles);

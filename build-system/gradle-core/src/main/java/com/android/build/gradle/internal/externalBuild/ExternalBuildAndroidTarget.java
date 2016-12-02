@@ -103,6 +103,9 @@ class ExternalBuildAndroidTarget implements IAndroidTarget {
 
     @Override
     public String getPath(int pathId) {
+        if (pathId == IAndroidTarget.ANDROID_JAR) {
+            return mAndroidJar.getAbsolutePath();
+        }
         return null;
     }
 

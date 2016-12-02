@@ -423,15 +423,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
                 break;
             case INSTANT_RUN_MULTI_APK:
-                instantRunDexBaseFiles = getDexFolders()
-                        .stream()
-                        .filter(input -> input.getName().contains(InstantRunSlicer.MAIN_SLICE_NAME))
-                        .collect(Collectors.toSet());
                 changedDex = ImmutableMap.copyOf(
                         Maps.filterKeys(
                                 changedDex,
                                 Predicates.compose(
-                                        Predicates.in(instantRunDexBaseFiles),
+                                        Predicates.in(getDexFolders()),
                                         RelativeFile::getBase
                                 )));
 
@@ -1169,10 +1165,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
             ConventionMappingHelper.map(
                     packageAndroidArtifact, "dexFolders",
-                    () -> packagingScope.getDexFolders(
-                            dexPackagingPolicy == DexPackagingPolicy.INSTANT_RUN_MULTI_APK
-                                ? FileType.SPLIT_MAIN
-                                : FileType.MAIN));
+                    () -> packagingScope.getDexFolders());
 
             ConventionMappingHelper.map(
                     packageAndroidArtifact,

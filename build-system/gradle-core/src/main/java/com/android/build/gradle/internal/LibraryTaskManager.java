@@ -314,7 +314,7 @@ public class LibraryTaskManager extends TaskManager {
                             // Check the transform only applies to supported scopes for libraries:
                             // We cannot transform scopes that are not packaged in the library
                             // itself.
-                            Sets.SetView<Scope> difference =
+                            Sets.SetView<? super Scope> difference =
                                     Sets.difference(
                                             transform.getScopes(),
                                             TransformManager.SCOPE_FULL_LIBRARY);

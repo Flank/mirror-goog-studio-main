@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
-import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder;
+import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.builder.core.BuilderConstants;
@@ -60,6 +60,7 @@ import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.logging.Logging;
 
 /**
  * Task Manager for External Build system integration.
@@ -250,15 +251,24 @@ class ExternalBuildTaskManager {
                             }
                         });
 
-        // TODO: dependencies
 
-        AndroidTask<InstantRunSplitApkBuilder> splitApk =
-                androidTasks.create(tasks,
-                        new InstantRunSplitApkBuilder.ConfigAction(packagingScope));
+        InstantRunSliceSplitApkBuilder slicesApkBuilder =
+                new InstantRunSliceSplitApkBuilder(
+                        Logging.getLogger(ExternalBuildTaskManager.class),
+                        project,
+                        variantScope.getInstantRunBuildContext(),
+                        externalBuildContext.getAndroidBuilder(),
+                        packagingScope,
+                        packagingScope.getSigningConfig(),
+                        packagingScope.getAaptOptions(),
+                        packagingScope.getInstantRunSplitApkOutputFolder(),
+                        packagingScope.getInstantRunSupportDir(),
+                        packagingScope.getApplicationId(),
+                        packagingScope.getVersionName(),
+                        packagingScope.getVersionCode());
 
-        for (TransformStream stream : transformManager.getStreams(StreamFilter.DEX)) {
-            splitApk.dependsOn(tasks, stream.getDependencies());
-        }
+        Optional<AndroidTask<TransformTask>> transformTaskAndroidTask =
+                transformManager.addTransform(tasks, variantScope, slicesApkBuilder);
 
         AndroidTask<PackageApplication> packageApp =
                 androidTasks.create(
@@ -266,6 +276,10 @@ class ExternalBuildTaskManager {
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
                                 variantScope.getInstantRunBuildContext().getPatchingPolicy()));
+
+        if (transformTaskAndroidTask.isPresent()) {
+            packageApp.dependsOn(tasks, transformTaskAndroidTask.get());
+        }
 
         variantScope.setPackageApplicationTask(packageApp);
         packageApp.dependsOn(tasks, createAssetsDirectory);

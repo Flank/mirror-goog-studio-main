@@ -21,10 +21,13 @@ com.android.build.api.transform.QualifiedContent$Scope
 com.android.build.api.transform.QualifiedContent$Scope.getValue: int ()
 com.android.build.api.transform.QualifiedContent$Scope.valueOf: com.android.build.api.transform.QualifiedContent$Scope (java.lang.String)
 com.android.build.api.transform.QualifiedContent$Scope.values: com.android.build.api.transform.QualifiedContent$Scope[] ()
+com.android.build.api.transform.QualifiedContent$ScopeType
+com.android.build.api.transform.QualifiedContent$ScopeType.getValue: int ()
+com.android.build.api.transform.QualifiedContent$ScopeType.name: java.lang.String ()
 com.android.build.api.transform.QualifiedContent.getContentTypes: java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType> ()
 com.android.build.api.transform.QualifiedContent.getFile: java.io.File ()
 com.android.build.api.transform.QualifiedContent.getName: java.lang.String ()
-com.android.build.api.transform.QualifiedContent.getScopes: java.util.Set<com.android.build.api.transform.QualifiedContent$Scope> ()
+com.android.build.api.transform.QualifiedContent.getScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
 com.android.build.api.transform.SecondaryFile
 com.android.build.api.transform.SecondaryFile.<init>: com.android.build.api.transform.SecondaryFile (java.io.File, boolean)
 com.android.build.api.transform.SecondaryFile.getFile: java.io.File ()
@@ -43,8 +46,8 @@ com.android.build.api.transform.Transform.getInputTypes: java.util.Set<com.andro
 com.android.build.api.transform.Transform.getName: java.lang.String ()
 com.android.build.api.transform.Transform.getOutputTypes: java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType> ()
 com.android.build.api.transform.Transform.getParameterInputs: java.util.Map<java.lang.String, java.lang.Object> ()
-com.android.build.api.transform.Transform.getReferencedScopes: java.util.Set<com.android.build.api.transform.QualifiedContent$Scope> ()
-com.android.build.api.transform.Transform.getScopes: java.util.Set<com.android.build.api.transform.QualifiedContent$Scope> ()
+com.android.build.api.transform.Transform.getReferencedScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
+com.android.build.api.transform.Transform.getScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
 com.android.build.api.transform.Transform.getSecondaryDirectoryOutputs: java.util.Collection<java.io.File> ()
 com.android.build.api.transform.Transform.getSecondaryFileInputs: java.util.Collection<java.io.File> ()
 com.android.build.api.transform.Transform.getSecondaryFileOutputs: java.util.Collection<java.io.File> ()
@@ -67,7 +70,7 @@ com.android.build.api.transform.TransformInvocation.getSecondaryInputs: java.uti
 com.android.build.api.transform.TransformInvocation.isIncremental: boolean ()
 com.android.build.api.transform.TransformOutputProvider
 com.android.build.api.transform.TransformOutputProvider.deleteAll: void () throws java.io.IOException
-com.android.build.api.transform.TransformOutputProvider.getContentLocation: java.io.File (java.lang.String, java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType>, java.util.Set<com.android.build.api.transform.QualifiedContent$Scope>, com.android.build.api.transform.Format)
+com.android.build.api.transform.TransformOutputProvider.getContentLocation: java.io.File (java.lang.String, java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType>, java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope>, com.android.build.api.transform.Format)
 com.android.build.api.variant.VariantFilter
 com.android.build.api.variant.VariantFilter.getBuildType: com.android.builder.model.BuildType ()
 com.android.build.api.variant.VariantFilter.getDefaultConfig: com.android.builder.model.ProductFlavor ()

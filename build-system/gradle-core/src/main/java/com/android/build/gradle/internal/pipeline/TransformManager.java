@@ -28,6 +28,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
@@ -84,6 +85,11 @@ public class TransformManager extends FilterableStreamCollection {
             Scope.SUB_PROJECTS,
             Scope.SUB_PROJECTS_LOCAL_DEPS,
             Scope.EXTERNAL_LIBRARIES);
+    public static final Set<QualifiedContent.ScopeType> SCOPE_FULL_INSTANT_RUN_PROJECT =
+            new ImmutableSet.Builder<QualifiedContent.ScopeType>()
+                    .addAll(SCOPE_FULL_PROJECT)
+                    .add(InternalScope.MAIN_SPLIT)
+                    .build();
     public static final Set<Scope> SCOPE_FULL_LIBRARY = Sets.immutableEnumSet(
             Scope.PROJECT,
             Scope.PROJECT_LOCAL_DEPS);
@@ -305,7 +311,7 @@ public class TransformManager extends FilterableStreamCollection {
             @NonNull String taskName,
             @NonNull File buildDir) {
 
-        Set<Scope> requestedScopes = transform.getScopes();
+        Set<? super Scope> requestedScopes = transform.getScopes();
         if (requestedScopes.isEmpty()) {
             // this is a no-op transform.
             return null;
@@ -323,11 +329,11 @@ public class TransformManager extends FilterableStreamCollection {
             // sure that the content of the stream is usable (for instance when a stream
             // may contain two scopes, these scopes could be combined or not, impacting consumption)
             Set<ContentType> availableTypes = stream.getContentTypes();
-            Set<Scope> availableScopes = stream.getScopes();
+            Set<? super Scope> availableScopes = stream.getScopes();
 
             Set<ContentType> commonTypes = Sets.intersection(requestedTypes,
                     availableTypes);
-            Set<Scope> commonScopes = Sets.intersection(requestedScopes, availableScopes);
+            Set<? super Scope> commonScopes = Sets.intersection(requestedScopes, availableScopes);
             if (!commonTypes.isEmpty() && !commonScopes.isEmpty()) {
 
                 // check if we need to make another stream from this one with less scopes/types.
@@ -338,7 +344,7 @@ public class TransformManager extends FilterableStreamCollection {
                     // now we'll have a second stream, that's left for consumption later on.
                     // compute remaining scopes/types.
                     Sets.SetView<ContentType> remainingTypes = Sets.difference(availableTypes, commonTypes);
-                    Sets.SetView<Scope> remainingScopes = Sets.difference(availableScopes, commonScopes);
+                    Sets.SetView<? super Scope> remainingScopes = Sets.difference(availableScopes, commonScopes);
 
                     oldStreams.add(stream.makeRestrictedCopy(
                             remainingTypes.isEmpty() ? availableTypes : remainingTypes.immutableCopy(),
@@ -383,7 +389,7 @@ public class TransformManager extends FilterableStreamCollection {
 
     @NonNull
     private List<TransformStream> grabReferencedStreams(@NonNull Transform transform) {
-        Set<Scope> requestedScopes = transform.getReferencedScopes();
+        Set<? super Scope> requestedScopes = transform.getReferencedScopes();
         if (requestedScopes.isEmpty()) {
             return ImmutableList.of();
         }
@@ -398,11 +404,11 @@ public class TransformManager extends FilterableStreamCollection {
             // usable (for instance when a stream
             // may contain two scopes, these scopes could be combined or not, impacting consumption)
             Set<ContentType> availableTypes = stream.getContentTypes();
-            Set<Scope> availableScopes = stream.getScopes();
+            Set<? super Scope> availableScopes = stream.getScopes();
 
             Set<ContentType> commonTypes = Sets.intersection(requestedTypes,
                     availableTypes);
-            Set<Scope> commonScopes = Sets.intersection(requestedScopes, availableScopes);
+            Set<? super Scope> commonScopes = Sets.intersection(requestedScopes, availableScopes);
 
             if (!commonTypes.isEmpty() && !commonScopes.isEmpty()) {
                 streamMatches.add(stream);
@@ -420,7 +426,7 @@ public class TransformManager extends FilterableStreamCollection {
         }
 
         // check some scopes are not consumed.
-        Set<Scope> scopes = transform.getScopes();
+        Set<? super Scope> scopes = transform.getScopes();
         // Allow Jack transform to consume provided classes as the .jack files are needed.
         if (scopes.contains(Scope.PROVIDED_ONLY) && !isJackRuntimeLib(transform)) {
             errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
