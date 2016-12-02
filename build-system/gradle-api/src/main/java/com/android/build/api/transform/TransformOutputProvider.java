@@ -60,6 +60,6 @@ public interface TransformOutputProvider {
     @NonNull
     File getContentLocation(@NonNull String name,
             @NonNull Set<QualifiedContent.ContentType> types,
-            @NonNull Set<QualifiedContent.Scope> scopes,
+            @NonNull Set<? super QualifiedContent.Scope> scopes,
             @NonNull Format format);
 }

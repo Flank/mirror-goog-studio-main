@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.externalBuild;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -83,6 +84,11 @@ public class ExternalBuildManifestLoader {
             @NonNull ExternalBuildApkManifest.ApkManifest manifest) {
         ExternalBuildApkManifest.AndroidSdk sdk = manifest.getAndroidSdk();
 
+        File zipAlign = sdk.getZipalign().isEmpty()
+            ? new File(getAbsoluteFile(executionRoot, sdk.getAapt()).getParentFile(),
+                SdkConstants.FN_ZIPALIGN)
+            : getAbsoluteFile(executionRoot, sdk.getZipalign());
+
         BuildToolInfo buildToolInfo = BuildToolInfo.partial(
                 new Revision(25, 0, 0),
                 project.getProjectDir(),
@@ -90,6 +96,8 @@ public class ExternalBuildManifestLoader {
                         // TODO: Put dx.jar in the proto
                         BuildToolInfo.PathId.DX_JAR,
                         getAbsoluteFile(executionRoot, sdk.getDx()),
+                        BuildToolInfo.PathId.ZIP_ALIGN,
+                        zipAlign,
                         BuildToolInfo.PathId.AAPT,
                         getAbsoluteFile(executionRoot, sdk.getAapt())));
 

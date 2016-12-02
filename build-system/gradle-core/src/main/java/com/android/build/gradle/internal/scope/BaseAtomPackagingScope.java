@@ -43,7 +43,7 @@ public class BaseAtomPackagingScope extends AtomPackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders(@NonNull FileType fileType) {
+    public Set<File> getDexFolders() {
         return ImmutableSet.<File>builder().add(atomDependency.getDexFolder()).build();
     }
 

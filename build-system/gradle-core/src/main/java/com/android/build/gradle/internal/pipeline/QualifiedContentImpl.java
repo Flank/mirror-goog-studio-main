@@ -38,13 +38,13 @@ class QualifiedContentImpl implements QualifiedContent {
     @NonNull
     private final Set<ContentType> contentTypes;
     @NonNull
-    private final Set<Scope> scopes;
+    private final Set<? super Scope> scopes;
 
     protected QualifiedContentImpl(
             @NonNull String name,
             @NonNull File file,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         this.name = name;
         this.file = file;
         this.contentTypes = ImmutableSet.copyOf(contentTypes);
@@ -78,7 +78,7 @@ class QualifiedContentImpl implements QualifiedContent {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         return scopes;
     }
 

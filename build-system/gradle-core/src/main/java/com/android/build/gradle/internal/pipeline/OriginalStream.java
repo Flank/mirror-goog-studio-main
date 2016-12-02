@@ -24,6 +24,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
@@ -63,7 +64,7 @@ public class OriginalStream extends TransformStream {
 
     public static final class Builder {
         private Set<ContentType> contentTypes = Sets.newHashSet();
-        private Scope scope;
+        private QualifiedContent.ScopeType scope;
         private Supplier<Collection<File>> jarFiles;
         private Supplier<Collection<File>> folders;
         private List<? extends Object> dependencies;
@@ -95,7 +96,7 @@ public class OriginalStream extends TransformStream {
             return this;
         }
 
-        public Builder addScope(@NonNull Scope scope) {
+        public Builder addScope(@NonNull QualifiedContent.ScopeType scope) {
             this.scope = scope;
             return this;
         }
@@ -133,11 +134,11 @@ public class OriginalStream extends TransformStream {
 
     private OriginalStream(
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Scope scope,
+            @NonNull QualifiedContent.ScopeType scope,
             @NonNull Supplier<Collection<File>> jarFiles,
             @NonNull Supplier<Collection<File>> folders,
             @NonNull List<? extends Object> dependencies) {
-        super(contentTypes, Sets.immutableEnumSet(scope), dependencies);
+        super(contentTypes, ImmutableSet.of(scope), dependencies);
         this.jarFiles = jarFiles;
         this.folders = folders;
     }
@@ -158,7 +159,7 @@ public class OriginalStream extends TransformStream {
 
         @Override
         protected boolean checkRemovedFolder(
-                @NonNull Set<Scope> transformScopes,
+                @NonNull Set<? super Scope> transformScopes,
                 @NonNull Set<ContentType> transformInputTypes,
                 @NonNull File file,
                 @NonNull List<String> fileSegments) {
@@ -168,7 +169,7 @@ public class OriginalStream extends TransformStream {
 
         @Override
         boolean checkRemovedJarFile(
-                @NonNull Set<Scope> transformScopes,
+                @NonNull Set<? super Scope> transformScopes,
                 @NonNull Set<ContentType> transformInputTypes,
                 @NonNull File file,
                 @NonNull List<String> fileSegments) {
@@ -181,7 +182,7 @@ public class OriginalStream extends TransformStream {
     @Override
     TransformInput asNonIncrementalInput() {
         Set<ContentType> contentTypes = getContentTypes();
-        Set<Scope> scopes = getScopes();
+        Set<? super Scope> scopes = getScopes();
 
         List<JarInput> jarInputs = jarFiles.get().stream()
                 .map(file -> new ImmutableJarInput(
@@ -209,7 +210,7 @@ public class OriginalStream extends TransformStream {
         IncrementalTransformInput input = new OriginalTransformInput();
 
         Set<ContentType> contentTypes = getContentTypes();
-        Set<Scope> scopes = getScopes();
+        Set<? super Scope> scopes = getScopes();
 
         for (File file : jarFiles.get()) {
             input.addJarInput(new QualifiedContentImpl(
@@ -238,7 +239,7 @@ public class OriginalStream extends TransformStream {
     @Override
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         if (!scopes.equals(getScopes())) {
             // since the content itself (jars and folders) don't have they own notion of scopes
             // we cannot do a restricted stream. However, since this stream is always created
@@ -247,7 +248,7 @@ public class OriginalStream extends TransformStream {
         }
         return new OriginalStream(
                 types,
-                Iterables.getOnlyElement(scopes),
+                (QualifiedContent.ScopeType) Iterables.getOnlyElement(scopes),
                 jarFiles,
                 folders,
                 getDependencies());

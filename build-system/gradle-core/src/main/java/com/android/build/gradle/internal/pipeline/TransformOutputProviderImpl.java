@@ -48,7 +48,7 @@ class TransformOutputProviderImpl implements TransformOutputProvider {
     public File getContentLocation(
             @NonNull String name,
             @NonNull Set<QualifiedContent.ContentType> types,
-            @NonNull Set<QualifiedContent.Scope> scopes,
+            @NonNull Set<? super QualifiedContent.Scope> scopes,
             @NonNull Format format) {
         return IntermediateFolderUtils.getContentLocation(rootLocation, name, types, scopes, format);
     }

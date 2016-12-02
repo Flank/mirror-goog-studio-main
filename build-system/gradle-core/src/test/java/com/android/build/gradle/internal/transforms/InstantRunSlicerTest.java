@@ -285,7 +285,7 @@ public class InstantRunSlicerTest {
         for (File slice : outputSlices) {
             // ensure guard class presence.
             File guardClassPackage = new File(slice,
-                    InstantRunSlicer.PACKAGE_FOR_GUARD_CLASSS
+                    InstantRunSlicer.PACKAGE_FOR_GUARD_CLASS
                             + File.separator + slice.getName() + ".class");
             assertThat(guardClassPackage.exists()).isTrue();
         }
@@ -426,7 +426,7 @@ public class InstantRunSlicerTest {
             @Override
             public File getContentLocation(@NonNull String name,
                     @NonNull Set<QualifiedContent.ContentType> types,
-                    @NonNull Set<QualifiedContent.Scope> scopes, @NonNull Format format) {
+                    @NonNull Set<? super QualifiedContent.Scope> scopes, @NonNull Format format) {
                 if (format == Format.DIRECTORY) {
                     return new File(outputDir, name);
                 }

@@ -49,13 +49,13 @@ public abstract class TransformStream {
     @NonNull
     private final Set<ContentType> contentTypes;
     @NonNull
-    private final Set<Scope> scopes;
+    private final Set<? super Scope> scopes;
     @NonNull
     private final List<? extends Object> dependencies;
 
     protected TransformStream(
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes,
+            @NonNull Set<? super Scope> scopes,
             @NonNull List<? extends Object> dependencies) {
         this.contentTypes = contentTypes;
         this.scopes = scopes;
@@ -80,7 +80,7 @@ public abstract class TransformStream {
      * It's never null nor empty, but can contain several scopes.
      */
     @NonNull
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         return scopes;
     }
 
@@ -114,5 +114,5 @@ public abstract class TransformStream {
 
     abstract TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> scopes);
+            @NonNull Set<? super Scope> scopes);
 }

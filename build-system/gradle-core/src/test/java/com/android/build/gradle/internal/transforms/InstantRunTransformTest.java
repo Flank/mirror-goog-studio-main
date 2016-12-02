@@ -167,7 +167,7 @@ public class InstantRunTransformTest {
             @Override
             public File getContentLocation(@NonNull String name,
                     @NonNull Set<ContentType> types,
-                    @NonNull Set<Scope> scopes, @NonNull Format format) {
+                    @NonNull Set<? super Scope> scopes, @NonNull Format format) {
                 assertThat(types).hasSize(1);
                 if (types.iterator().next().equals(QualifiedContent.DefaultContentType.CLASSES)) {
                     return new File("out");
@@ -285,7 +285,7 @@ public class InstantRunTransformTest {
             @Override
             public File getContentLocation(@NonNull String name,
                     @NonNull Set<ContentType> types,
-                    @NonNull Set<Scope> scopes, @NonNull Format format) {
+                    @NonNull Set<? super Scope> scopes, @NonNull Format format) {
                 assertThat(types).hasSize(1);
                 if (types.iterator().next().equals(QualifiedContent.DefaultContentType.CLASSES)) {
                     return outputFolder;

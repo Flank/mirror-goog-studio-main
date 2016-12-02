@@ -41,7 +41,7 @@ class ImmutableJarInput extends QualifiedContentImpl implements JarInput {
             @NonNull File file,
             @NonNull Status status,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         super(name, file, contentTypes, scopes);
         this.status = status;
     }

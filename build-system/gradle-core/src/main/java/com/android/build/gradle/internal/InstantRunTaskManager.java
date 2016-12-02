@@ -191,7 +191,7 @@ public class InstantRunTaskManager {
         // also add a new stream for the extractor task output.
         transformManager.addStream(OriginalStream.builder()
                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                .addScope(InternalScope.MAIN_SPLIT)
                 .setJar(variantScope.getIncrementalRuntimeSupportJar())
                 .setDependency(extractorTask.get(tasks))
                 .build());
@@ -208,7 +208,7 @@ public class InstantRunTaskManager {
         // also add a new stream for the injector task output.
         transformManager.addStream(OriginalStream.builder()
                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                .addScope(InternalScope.MAIN_SPLIT)
                 .setJar(generateInstantRunAppInfoTask.getOutputFile())
                 .setDependency(generateInstantRunAppInfoTask)
                 .build());

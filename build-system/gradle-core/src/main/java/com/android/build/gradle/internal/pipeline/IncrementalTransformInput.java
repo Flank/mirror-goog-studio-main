@@ -106,7 +106,7 @@ abstract class IncrementalTransformInput {
      * @return true if the file was part of this input.
      */
     boolean checkRemovedFolderFile(
-            @NonNull Set<QualifiedContent.Scope> transformScopes,
+            @NonNull Set<? super QualifiedContent.Scope> transformScopes,
             @NonNull Set<QualifiedContent.ContentType> transformInputTypes,
             @NonNull File file, @NonNull List<String> fileSegments) {
         // first check for removed files in existing folders.
@@ -130,7 +130,7 @@ abstract class IncrementalTransformInput {
      * @param fileSegments the removed file path segments for faster checks.   @return true if the file was part of this input.
      */
     abstract boolean checkRemovedJarFile(
-            @NonNull Set<QualifiedContent.Scope> transformScopes,
+            @NonNull Set<? super QualifiedContent.Scope> transformScopes,
             @NonNull Set<QualifiedContent.ContentType> transformInputTypes,
             @NonNull File file,
             @NonNull List<String> fileSegments);
@@ -140,14 +140,14 @@ abstract class IncrementalTransformInput {
      *
      *
      *
-     * @param transformScopes
-     * @param transformInputTypes
+     * @param transformScopes transform scopes
+     * @param transformInputTypes transform input types
      * @param file the removed file
      * @param fileSegments the removed file path segments for faster checks.
      * @return true if the file was part of this input.
      */
     protected abstract boolean checkRemovedFolder(
-            @NonNull Set<QualifiedContent.Scope> transformScopes,
+            @NonNull Set<? super QualifiedContent.Scope> transformScopes,
             @NonNull Set<QualifiedContent.ContentType> transformInputTypes,
             @NonNull File file,
             @NonNull List<String> fileSegments);

@@ -1,0 +1,125 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.transforms;
+
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.api.transform.DirectoryInput;
+import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.TransformException;
+import com.android.build.api.transform.TransformInput;
+import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.pipeline.ExtendedContentType;
+import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.builder.core.AndroidBuilder;
+import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.model.AaptOptions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
+
+/**
+ * Transform to generate the dependencies APK when deploying instant-run enabled application in
+ * multi-apk mode.
+ *
+ * In this context, the transform will consume all external dependencies and package them in a
+ * single split apk file.
+ */
+public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder {
+
+    private static final String APK_FILE_NAME = "dependencies";
+
+    public InstantRunDependenciesApkBuilder(@NonNull Logger logger,
+            @NonNull Project project,
+            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull PackagingScope packagingScope,
+            @Nullable CoreSigningConfig signingConf,
+            @NonNull AaptOptions aaptOptions, @NonNull File outputDirectory,
+            @NonNull File supportDirectory, @NonNull String applicationId,
+            @Nullable String versionName, int versionCode) {
+        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
+                outputDirectory, supportDirectory, applicationId, versionName, versionCode);
+    }
+
+    @NonNull
+    @Override
+    public String getName() {
+        return "instantRunDependenciesApk";
+    }
+
+    @NonNull
+    @Override
+    public Set<QualifiedContent.ContentType> getInputTypes() {
+        return ImmutableSet.of(ExtendedContentType.DEX);
+    }
+
+    @NonNull
+    @Override
+    public Set<QualifiedContent.Scope> getScopes() {
+        return Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
+                QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS);
+    }
+
+    @Override
+    public boolean isIncremental() {
+        // this task is not incremental, each time one of the dependencies dex file has changed,
+        // we need to recreate the APK. This could be revisited once we can create zip file
+        // incrementally.
+        return false;
+    }
+
+
+    @Override
+    public void transform(@NonNull TransformInvocation transformInvocation)
+            throws TransformException, InterruptedException, IOException {
+
+        ImmutableSet.Builder<File> dexFiles = ImmutableSet.builder();
+        for (TransformInput transformInput : transformInvocation.getInputs()) {
+            for (JarInput jarInput : transformInput.getJarInputs()) {
+                logger.error("InstantRunDependenciesApkBuilder received a jar file "
+                        + jarInput.getFile().getAbsolutePath());
+            }
+            for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
+                File[] files = directoryInput.getFile().listFiles();
+                if (files != null) {
+                    dexFiles.add(files);
+                }
+            }
+        }
+        ImmutableSet<File> listOfDexes = dexFiles.build();
+        if (listOfDexes.isEmpty()) {
+            return;
+        }
+        try {
+            generateSplitApk(new DexFiles(listOfDexes, APK_FILE_NAME));
+        } catch (Exception e) {
+            logger.error("Error while generating dependencies split APK", e);
+            throw new TransformException(e);
+        }
+    }
+
+}

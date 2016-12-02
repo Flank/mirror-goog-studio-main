@@ -72,13 +72,31 @@ public interface QualifiedContent {
     }
 
     /**
+     * Definition of a scope.
+     */
+    interface ScopeType {
+
+        /**
+         * Scope name, readable by humans.
+         * @return a scope name.
+         */
+        String name();
+
+        /**
+         * A scope binary flag that will be used to encode directory names. Must be unique.
+         * @return a scope binary flag.
+         */
+        int getValue();
+    }
+
+    /**
      * The scope of the content.
      *
      * <p>
      * This indicates what the content represents, so that Transforms can apply to only part(s)
      * of the classes or resources that the build manipulates.
      */
-    enum Scope {
+    enum Scope implements ScopeType {
         /** Only the project content */
         PROJECT(0x01),
         /** Only the project's local dependencies (local jars) */
@@ -100,6 +118,7 @@ public interface QualifiedContent {
             this.value = value;
         }
 
+        @Override
         public int getValue() {
             return value;
         }
@@ -147,5 +166,5 @@ public interface QualifiedContent {
      * @return a set of one or more scopes, never null nor empty.
      */
     @NonNull
-    Set<Scope> getScopes();
+    Set<? super Scope> getScopes();
 }

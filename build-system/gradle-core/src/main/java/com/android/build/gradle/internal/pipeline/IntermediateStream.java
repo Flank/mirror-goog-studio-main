@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
@@ -49,7 +50,7 @@ class IntermediateStream extends TransformStream {
 
     static final class Builder {
         private Set<ContentType> contentTypes = Sets.newHashSet();
-        private Set<Scope> scopes = Sets.newHashSet();
+        private Set<QualifiedContent.ScopeType> scopes = Sets.newHashSet();
         private Supplier<File> rootLocation;
         private List<? extends Object> dependencies;
 
@@ -59,7 +60,7 @@ class IntermediateStream extends TransformStream {
             Preconditions.checkState(!scopes.isEmpty());
             return new IntermediateStream(
                     ImmutableSet.copyOf(contentTypes),
-                    Sets.immutableEnumSet(scopes),
+                    ImmutableSet.copyOf(scopes),
                     rootLocation,
                     dependencies != null ? dependencies : ImmutableList.of());
         }
@@ -74,8 +75,10 @@ class IntermediateStream extends TransformStream {
             return this;
         }
 
-        Builder addScopes(@NonNull Set<Scope> scopes) {
-            this.scopes.addAll(scopes);
+        Builder addScopes(@NonNull Set<? super Scope> scopes) {
+            for (Object scope : scopes) {
+                this.scopes.add((QualifiedContent.ScopeType) scope);
+            }
             return this;
         }
 
@@ -97,7 +100,7 @@ class IntermediateStream extends TransformStream {
 
     private IntermediateStream(
             @NonNull Set<ContentType> contentTypes,
-            @NonNull Set<Scope> scopes,
+            @NonNull Set<? super Scope> scopes,
             @NonNull Supplier<File> rootLocation,
             @NonNull List<? extends Object> dependencies) {
         super(contentTypes, scopes, dependencies);
@@ -147,7 +150,7 @@ class IntermediateStream extends TransformStream {
     @Override
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
-            @NonNull Set<Scope> scopes) {
+            @NonNull Set<? super Scope> scopes) {
         return new IntermediateStream(
                 types,
                 scopes,

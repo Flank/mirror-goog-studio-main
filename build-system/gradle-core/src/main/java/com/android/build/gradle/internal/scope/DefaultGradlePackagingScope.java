@@ -21,19 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
-import com.android.build.gradle.internal.transforms.InstantRunSlicer;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 
-import java.util.stream.Collectors;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -99,18 +94,12 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders(@NonNull FileType fileType) {
-        return fileType == FileType.SPLIT_MAIN
-                ? mVariantScope.getTransformManager()
-                        .getPipelineOutput(StreamFilter.DEX)
-                        .keySet()
-                        .stream()
-                        .filter(input -> input.getName().contains(InstantRunSlicer.MAIN_SLICE_NAME))
-                        .collect(Collectors.toSet())
-                : mVariantScope.getTransformManager()
-                        .getPipelineOutput(StreamFilter.DEX)
-                        .keySet();
+    public Set<File> getDexFolders() {
+        return mVariantScope.getTransformManager()
+                .getPipelineOutput(StreamFilter.DEX)
+                .keySet();
     }
+
 
     @NonNull
     @Override

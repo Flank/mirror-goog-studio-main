@@ -28,7 +28,7 @@ public interface StreamFilter {
 
     boolean accept(
             @NonNull Set<QualifiedContent.ContentType> types,
-            @NonNull Set<QualifiedContent.Scope> scopes);
+            @NonNull Set<? super QualifiedContent.Scope> scopes);
 
     StreamFilter DEX = (types, scopes) -> types.contains(ExtendedContentType.DEX);
 

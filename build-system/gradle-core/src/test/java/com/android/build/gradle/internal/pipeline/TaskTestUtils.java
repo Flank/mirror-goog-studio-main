@@ -256,7 +256,7 @@ public class TaskTestUtils {
                     .getStreams(new StreamFilter() {
                         @Override
                         public boolean accept(@NonNull Set<QualifiedContent.ContentType> types,
-                                @NonNull Set<QualifiedContent.Scope> scopes) {
+                                @NonNull Set<? super QualifiedContent.Scope> scopes) {
                             return (StreamTester.this.contentTypes.isEmpty() ||
                                     types.equals(contentTypes)) &&
                                     (StreamTester.this.scopes.isEmpty() ||
