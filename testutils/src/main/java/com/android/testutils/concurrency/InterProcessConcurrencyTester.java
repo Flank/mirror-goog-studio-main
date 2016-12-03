@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.builder.utils;
+package com.android.testutils.concurrency;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -207,7 +206,7 @@ public final class InterProcessConcurrencyTester {
         // Execute each invocation in a separate process. For each class under test, we create a new
         // thread that will launch a new process which will execute the main() method of that class.
         // The launched thread will block until the corresponding process exits.
-        List<IOExceptionRunnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = Lists.newLinkedList();
         for (int i = 0; i < classInvocationList.size(); i++) {
             Class classUnderTest = classInvocationList.get(i);
             String[] args = argsList.get(i);
@@ -354,20 +353,15 @@ public final class InterProcessConcurrencyTester {
      */
     @NonNull
     private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
-            @NonNull List<IOExceptionRunnable> runnables) {
+            @NonNull List<Runnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
         CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
 
-        for (IOExceptionRunnable runnable : runnables) {
-            Thread thread =
-                    new Thread(() -> {
-                        try {
-                            allThreadsStartedLatch.countDown();
-                            runnable.run();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        for (Runnable runnable : runnables) {
+            Thread thread = new Thread(() -> {
+                allThreadsStartedLatch.countDown();
+                runnable.run();
+            });
             threads.put(thread, Optional.empty());
             thread.setUncaughtExceptionHandler(
                     (aThread, throwable) -> threads.put(aThread, Optional.of(throwable)));

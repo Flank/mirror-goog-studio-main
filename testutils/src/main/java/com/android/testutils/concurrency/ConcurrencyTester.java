@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.builder.utils;
+package com.android.testutils.concurrency;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.IOExceptionConsumer;
-import com.android.apkzlib.utils.IOExceptionFunction;
-import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +31,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import org.junit.Assert;
 
 /**
@@ -55,9 +53,9 @@ import org.junit.Assert;
  * <pre>{@code
  * ConcurrencyTester tester = new ConcurrencyTester();
  * for (...) {
- *     IOExceptionFunction actionUnderTest = (input) -> { ... };
+ *     Function actionUnderTest = (input) -> { ... };
  *     tester.addMethodInvocationFromNewThread(
- *             (IOExceptionFunction anActionUnderTest) -> {
+ *             (Function anActionUnderTest) -> {
  *                 // ConcurrencyTester requires using anActionUnderTest instead of actionUnderTest
  *                 // when calling methodUnderTest
  *                 methodUnderTest(..., anActionUnderTest);
@@ -115,11 +113,9 @@ public final class ConcurrencyTester<F, T> {
         MIXED
     }
 
-    @NonNull
-    private List<IOExceptionConsumer<IOExceptionFunction<F, T>>> methodInvocationList =
-            Lists.newLinkedList();
+    @NonNull private List<Consumer<Function<F, T>>> methodInvocationList = Lists.newLinkedList();
 
-    @NonNull private List<IOExceptionFunction<F, T>> actionUnderTestList = Lists.newLinkedList();
+    @NonNull private List<Function<F, T>> actionUnderTestList = Lists.newLinkedList();
 
     /**
      * Adds a new invocation of the method under test to this {@link ConcurrencyTester} instance.
@@ -131,8 +127,8 @@ public final class ConcurrencyTester<F, T> {
      * @param actionUnderTest the action under test
      */
     public void addMethodInvocationFromNewThread(
-            @NonNull IOExceptionConsumer<IOExceptionFunction<F, T>> methodUnderTestInvocation,
-            @NonNull IOExceptionFunction<F, T> actionUnderTest) {
+            @NonNull Consumer<Function<F, T>> methodUnderTestInvocation,
+            @NonNull Function<F, T> actionUnderTest) {
         methodInvocationList.add(methodUnderTestInvocation);
         actionUnderTestList.add(actionUnderTest);
     }
@@ -185,12 +181,11 @@ public final class ConcurrencyTester<F, T> {
                 "There must be at least 2 actions for concurrency checks.");
 
         AtomicInteger executedActions = new AtomicInteger(0);
-        List<IOExceptionRunnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = Lists.newLinkedList();
 
         for (int i = 0; i < methodInvocationList.size(); i++) {
-            IOExceptionConsumer<IOExceptionFunction<F, T>> methodInvocation =
-                    methodInvocationList.get(i);
-            IOExceptionFunction<F, T> actionUnderTest = actionUnderTestList.get(i);
+            Consumer<Function<F, T>> methodInvocation = methodInvocationList.get(i);
+            Function<F, T> actionUnderTest = actionUnderTestList.get(i);
             runnables.add(() -> {
                 methodInvocation.accept(
                         (input) -> {
@@ -241,13 +236,12 @@ public final class ConcurrencyTester<F, T> {
         };
 
         // Attach the event handlers to the actions
-        List<IOExceptionRunnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = Lists.newLinkedList();
         for (int i = 0; i < methodInvocationList.size(); i++) {
-            IOExceptionConsumer<IOExceptionFunction<F, T>> methodInvocation =
-                    methodInvocationList.get(i);
-            IOExceptionFunction<F, T> actionUnderTest = actionUnderTestList.get(i);
+            Consumer<Function<F, T>> methodInvocation = methodInvocationList.get(i);
+            Function<F, T> actionUnderTest = actionUnderTestList.get(i);
 
-            IOExceptionFunction<F, T> instrumentedActionUnderTest = (input) -> {
+            Function<F, T> instrumentedActionUnderTest = (input) -> {
                 actionStartedHandler.run();
                 try {
                     return actionUnderTest.apply(input);
@@ -350,20 +344,15 @@ public final class ConcurrencyTester<F, T> {
      */
     @NonNull
     private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
-            @NonNull List<IOExceptionRunnable> runnables) {
+            @NonNull List<Runnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
         CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
 
-        for (IOExceptionRunnable runnable : runnables) {
-            Thread thread =
-                    new Thread(() -> {
-                        try {
-                            allThreadsStartedLatch.countDown();
-                            runnable.run();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        for (Runnable runnable : runnables) {
+            Thread thread = new Thread(() -> {
+                allThreadsStartedLatch.countDown();
+                runnable.run();
+            });
             threads.put(thread, Optional.empty());
             thread.setUncaughtExceptionHandler(
                     (aThread, throwable) -> threads.put(aThread, Optional.of(throwable)));
