@@ -22,7 +22,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.IOExceptionWrapper;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.gradle.internal.annotations.PackageFile;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -31,7 +30,7 @@ import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
+import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -46,12 +45,8 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.res2.FileStatus;
-import com.android.ide.common.signing.CertificateInfo;
-import com.android.ide.common.signing.KeystoreHelper;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
@@ -65,8 +60,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -423,66 +416,26 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         "Unhandled DexPackagingPolicy : " + getDexPackagingPolicy());
         }
 
-        PrivateKey key;
-        X509Certificate certificate;
-        boolean v1SigningEnabled;
-        boolean v2SigningEnabled;
-
-        try {
-            if (signingConfig != null && signingConfig.isSigningReady()) {
-                CertificateInfo certificateInfo =
-                        KeystoreHelper.getCertificateInfo(
-                                signingConfig.getStoreType(),
-                                checkNotNull(signingConfig.getStoreFile()),
-                                checkNotNull(signingConfig.getStorePassword()),
-                                checkNotNull(signingConfig.getKeyPassword()),
-                                checkNotNull(signingConfig.getKeyAlias()));
-                key = certificateInfo.getKey();
-                certificate = certificateInfo.getCertificate();
-                v1SigningEnabled = signingConfig.isV1SigningEnabled();
-                v2SigningEnabled = signingConfig.isV2SigningEnabled();
-            } else {
-                key = null;
-                certificate = null;
-                v1SigningEnabled = false;
-                v2SigningEnabled = false;
-            }
-
-            ApkCreatorFactory.CreationData creationData =
-                    new ApkCreatorFactory.CreationData(
-                            getOutputFile(),
-                            key,
-                            certificate,
-                            v1SigningEnabled,
-                            v2SigningEnabled,
-                            null, // BuiltBy
-                            getBuilder().getCreatedBy(),
-                            getMinSdkVersion(),
-                            PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest),
-                            getNoCompressPredicate());
-
-            getLogger().debug(
-                    "Information to create the APK: apkPath={}, v1SigningEnabled={},"
-                            + " v2SigningEnabled={}, builtBy={}, createdBy={}, minSdkVersion={},"
-                            + " nativeLibrariesPackagingMode={}",
-                    creationData.getApkPath(),
-                    creationData.isV1SigningEnabled(),
-                    creationData.isV2SigningEnabled(),
-                    creationData.getBuiltBy(),
-                    creationData.getCreatedBy(),
-                    creationData.getMinSdkVersion(),
-                    creationData.getNativeLibrariesPackagingMode());
-
-            try (IncrementalPackager packager = createPackager(creationData)) {
-                packager.updateDex(changedDex);
-                packager.updateJavaResources(changedJavaResources);
-                packager.updateAssets(changedAssets);
-                packager.updateAndroidResources(changedAndroidResources);
-                packager.updateNativeLibraries(changedNLibs);
-                packager.updateAtomMetadata(changedAtomMetadata);
-            }
-        } catch (PackagerException | KeytoolException e) {
-            throw new RuntimeException(e);
+        try (IncrementalPackager packager = new IncrementalPackagerBuilder()
+                .withOutputFile(getOutputFile())
+                .withSigning(signingConfig)
+                .withCreatedBy(getBuilder().getCreatedBy())
+                .withMinSdk(getMinSdkVersion())
+                .withNativeLibraryPackagingMode(
+                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest))
+                .withNoCompressPredicate(getNoCompressPredicate())
+                .withIntermediateDir(getIncrementalFolder())
+                .withProject(getProject())
+                .withDebuggableBuild(getDebugBuild())
+                .withAcceptedAbis(getAbiFilters())
+                .withJniDebuggableBuild(getJniDebugBuild())
+                .build()) {
+            packager.updateDex(changedDex);
+            packager.updateJavaResources(changedJavaResources);
+            packager.updateAssets(changedAssets);
+            packager.updateAndroidResources(changedAndroidResources);
+            packager.updateNativeLibraries(changedNLibs);
+            packager.updateAtomMetadata(changedAtomMetadata);
         }
 
         /*
@@ -513,17 +466,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         } catch (IOException e) {
             throw new BuildException(e.getMessage(), e);
         }
-    }
-
-    @NonNull
-    private IncrementalPackager createPackager(ApkCreatorFactory.CreationData creationData)
-            throws PackagerException, IOException {
-        return new IncrementalPackager(
-                creationData,
-                getIncrementalFolder(),
-                ApkCreatorFactories.fromProjectProperties(getProject(), getDebugBuild()),
-                getAbiFilters(),
-                getJniDebugBuild());
     }
 
     @Override
