@@ -69,10 +69,11 @@ public class ResourceEvaluator {
      * have a corresponding {@code *Res} constant (and ResourceType is an enum we can't
      * just create new constants for.)
      */
-    public static final ResourceType PX_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
+    public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
 
     public static final String COLOR_INT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "ColorInt";
     public static final String PX_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Px";
+    public static final String DIMENSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Dimension";
     public static final String RES_SUFFIX = "Res";
 
     private final JavaEvaluator evaluator;
@@ -376,8 +377,8 @@ public class ResourceEvaluator {
             if (signature.equals(COLOR_INT_ANNOTATION)) {
                 return EnumSet.of(COLOR_INT_MARKER_TYPE);
             }
-            if (signature.equals(PX_ANNOTATION)) {
-                return EnumSet.of(PX_MARKER_TYPE);
+            if (signature.equals(PX_ANNOTATION) || signature.equals(DIMENSION_ANNOTATION)) {
+                return EnumSet.of(DIMENSION_MARKER_TYPE);
             }
             if (signature.endsWith(RES_SUFFIX)
                     && signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
@@ -447,8 +448,8 @@ public class ResourceEvaluator {
 
     private static EnumSet<ResourceType> getAnyRes() {
         EnumSet<ResourceType> types = EnumSet.allOf(ResourceType.class);
-        types.remove(ResourceEvaluator.COLOR_INT_MARKER_TYPE);
-        types.remove(ResourceEvaluator.PX_MARKER_TYPE);
+        types.remove(COLOR_INT_MARKER_TYPE);
+        types.remove(DIMENSION_MARKER_TYPE);
         return types;
     }
 }
