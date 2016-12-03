@@ -640,9 +640,17 @@ public class ManifestMerger2SmallTest {
 
     @Test
     public void testInstantRunReplacement() throws Exception {
+
+        // TODO(dancol): figure out why ManifestMerger2 isn't fixing
+        // up the namespace prefixes.  We shouln't need xmlns:android
+        // below, but right now, ManifestMerger2 adds a child node
+        // with android NS prefixes, so we need it at the root
+        // for now.
+
         String xml = ""
                 + "<manifest\n"
                 + "    package=\"com.foo.bar\""
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                 + "    <activity t:name=\"activityOne\"/>\n"
                 + "    <application t:name=\".applicationOne\" "
@@ -658,7 +666,11 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_RUN));
+
+        String merged = mergingReport.getMergedDocument(MergedManifestKind.INSTANT_RUN);
+        System.err.println("XXX: " + "[" + merged + "]");
+
+        Document xmlDocument = parse(merged);
         assertEquals("com.foo.bar.applicationOne",
                 xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION)
                         .item(0).getAttributes().getNamedItem(
