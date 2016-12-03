@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_SINGLE;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
@@ -65,6 +67,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -464,10 +467,33 @@ public class VariantManager implements VariantModel {
      * Create all variants.
      */
     public void populateVariantDataList() {
+        // default configure attribute resolution
+        project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        project.configurationAttributesSchema(schema -> {
+            schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
+            schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_CONTENT, String.class));
+        });
+
         if (productFlavors.isEmpty()) {
             createVariantDataForProductFlavors(Collections.emptyList());
         } else {
             List<String> flavorDimensionList = extension.getFlavorDimensionList();
+
+            // configure resolution strategy.
+            if (flavorDimensionList != null) {
+                project.configurationAttributesSchema(schema -> {
+                    for (String dimension : flavorDimensionList) {
+                        schema.attribute(
+                                Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + dimension, String.class),
+                                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
+                    }
+                });
+            } else {
+                project.configurationAttributesSchema(schema -> {
+                    schema.attribute(Attribute.of(CONFIG_ATTR_FLAVOR_SINGLE, String.class),
+                            strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
+                });
+            }
 
             // Create iterable to get GradleProductFlavor from ProductFlavorData.
             Iterable<CoreProductFlavor> flavorDsl =

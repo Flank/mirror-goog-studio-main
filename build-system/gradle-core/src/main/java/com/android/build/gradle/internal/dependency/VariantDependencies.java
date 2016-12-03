@@ -55,8 +55,8 @@ import java.util.Set;
 public class VariantDependencies {
 
     public static final String CONFIG_ATTR_BUILD_TYPE = "android.buildType";
-    private static final String CONFIG_ATTR_FLAVOR_SINGLE = "android.flavor.dimension.single";
-    private static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.dimension.";
+    public static final String CONFIG_ATTR_FLAVOR_SINGLE = "android.flavor.dimension.single";
+    public static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.dimension.";
 
 
     // TODO this is temporary until we have attributes on artifacts.
