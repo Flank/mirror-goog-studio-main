@@ -22,6 +22,7 @@ import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_EOF;
 import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_PATCHES;
 import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_PING;
 import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_RESTART_ACTIVITY;
+import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_SHELL_COMMAND;
 import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_SHOW_TOAST;
 import static com.android.tools.fd.common.ProtocolConstants.PROTOCOL_IDENTIFIER;
 import static com.android.tools.fd.common.ProtocolConstants.PROTOCOL_VERSION;
@@ -47,6 +48,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.escape.Escaper;
+import com.google.common.escape.Escapers;
 import com.google.common.io.Files;
 
 import java.io.DataInputStream;
@@ -56,16 +59,14 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class InstantRunClient {
-    public static final String BROKEN_RUN_AS = "run-as command broken on this device";
-
-    private static final String LOCAL_HOST = "127.0.0.1";
 
     /** Local port on the desktop machine via which we tunnel to the Android device */
-    private static final int DEFAULT_LOCAL_PORT = 46622; // Note: just a random number, hopefully it is a free/available port on the host
+    // Note: just a random number, hopefully it is a free/available port on the host
+    private static final int DEFAULT_LOCAL_PORT = 46622;
 
     /** Prefix for classes.dex files */
     private static final String CLASSES_DEX_PREFIX = "classes";
@@ -73,22 +74,28 @@ public class InstantRunClient {
     /** Suffix for classes.dex files */
     private static final String CLASSES_DEX_SUFFIX = ".dex";
 
-
     /**
      * Instead of writing to the data folder, we can read/write to a local temp file instead.
-     * This is required because some devices (Samsung Galaxy Edge atleast) doesn't allow access into the package folder even with run-as.
+     * This is required because some devices (Samsung Galaxy Edge atleast)
+     * doesn't allow access into the package folder even with run-as.
      */
     public static final boolean USE_BUILD_ID_TEMP_FILE =
             !Boolean.getBoolean("instantrun.use_datadir");
 
-    @NonNull
-    private final ILogger mLogger;
+    // TODO:  Should probably get this from ManifestMerger2 or SDKConstants.
+    private static final String RUN_AS_SERVICE_PKG_NAME =
+            "com.android.tools.fd.runtime.RunAsServer";
 
     @NonNull
     private final String mPackageName;
 
+    @NonNull
+    private final ILogger mLogger;
+
     private final long mToken;
-    private final int mLocalPort;
+
+    private final ServiceCommunicator mAppService;
+    private ServiceCommunicator mRunAsService;
 
     public InstantRunClient(
             @NonNull String packageName,
@@ -103,10 +110,10 @@ public class InstantRunClient {
             @NonNull ILogger logger,
             long token,
             int port) {
+        mAppService = new ServiceCommunicator(packageName, logger, port);
         mPackageName = packageName;
         mLogger = logger;
         mToken = token;
-        mLocalPort = port;
     }
 
     @NonNull
@@ -129,8 +136,8 @@ public class InstantRunClient {
 
     @NonNull
     private static String copyToDeviceScratchFile(@NonNull IDevice device, @NonNull String pkgName,
-            @NonNull File local)
-            throws IOException, AdbCommandRejectedException, SyncException, TimeoutException {
+            @NonNull File local) throws IOException, AdbCommandRejectedException,
+            SyncException, TimeoutException {
         String remoteTmpBuildId = Paths.DEVICE_TEMP_DIR + "/" + pkgName + "-data.fdr";
         device.pushFile(local.getAbsolutePath(), remoteTmpBuildId);
         return remoteTmpBuildId;
@@ -170,78 +177,25 @@ public class InstantRunClient {
      */
     @NonNull
     public AppState getAppState(@NonNull IDevice device) throws IOException {
-        return talkToApp(device,
+        return mAppService.talkToService(device,
                 new Communicator<AppState>() {
                     @Override
                     public AppState communicate(@NonNull DataInputStream input,
-                            @NonNull DataOutputStream output) throws
-                            IOException {
+                            @NonNull DataOutputStream output) throws IOException {
                         output.writeInt(MESSAGE_PING);
                         boolean foreground = input.readBoolean(); // Wait for "pong"
                         mLogger.info(
-                                "Ping sent and replied successfully, application seems to be running. Foreground="
-                                        + foreground);
+                            "Ping sent and replied successfully, "
+                            + "application seems to be running. Foreground=" + foreground);
                         return foreground ? AppState.FOREGROUND : AppState.BACKGROUND;
                     }
                 });
     }
 
-    @NonNull
-    private <T> T talkToApp(@NonNull IDevice device, @NonNull Communicator<T> communicator)
-            throws IOException {
-
-        try {
-            device.createForward(mLocalPort, mPackageName,
-                    IDevice.DeviceUnixSocketNamespace.ABSTRACT);
-        }
-        catch (TimeoutException | AdbCommandRejectedException e) {
-            throw new IOException(e);
-        }
-
-        try {
-            return talkToAppWithinPortForward(communicator, mLocalPort);
-        } finally {
-            try {
-                device.removeForward(mLocalPort, mPackageName,
-                                     IDevice.DeviceUnixSocketNamespace.ABSTRACT);
-            }
-            catch (IOException | TimeoutException | AdbCommandRejectedException e) {
-                // we don't worry that much about failures while removing port forwarding
-                mLogger.warning("Exception while removing port forward: " + e);
-            }
-        }
-    }
-
-    private static <T> T talkToAppWithinPortForward(@NonNull Communicator<T> communicator,
-            int localPort) throws IOException {
-        try (Socket socket = new Socket(LOCAL_HOST, localPort)) {
-            try (DataInputStream input = new DataInputStream(socket.getInputStream());
-                 DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
-                output.writeLong(PROTOCOL_IDENTIFIER);
-                output.writeInt(PROTOCOL_VERSION);
-
-                socket.setSoTimeout(2 * 1000); // Allow up to 2 seconds before timing out
-                int version = input.readInt();
-                if (version != PROTOCOL_VERSION) {
-                    String msg = String.format(Locale.US,
-                            "Client and server protocol versions don't match (%1$d != %2$d)",
-                            version, PROTOCOL_VERSION);
-                    throw new IOException(msg);
-                }
-
-                socket.setSoTimeout(communicator.getTimeout());
-                T value = communicator.communicate(input, output);
-
-                output.writeInt(MESSAGE_EOF);
-
-                return value;
-            }
-        }
-    }
 
     public void showToast(@NonNull IDevice device, @NonNull final String message)
             throws IOException {
-        talkToApp(device, new Communicator<Boolean>() {
+        mAppService.talkToService(device, new Communicator<Boolean>() {
             @Override
             public Boolean communicate(@NonNull DataInputStream input,
                     @NonNull DataOutputStream output) throws IOException {
@@ -258,7 +212,7 @@ public class InstantRunClient {
     public void restartActivity(@NonNull IDevice device) throws IOException {
         AppState appState = getAppState(device);
         if (appState == AppState.FOREGROUND || appState == AppState.BACKGROUND) {
-            talkToApp(device, new Communicator<Void>() {
+            mAppService.talkToService(device, new Communicator<Void>() {
                 @Override
                 public Void communicate(@NonNull DataInputStream input,
                         @NonNull DataOutputStream output) throws IOException {
@@ -325,7 +279,8 @@ public class InstantRunClient {
                         // Gradle created a reload dex, but the app is no longer running.
                         // If it created a cold swap artifact, we can use it; otherwise we're out of luck.
                         if (!buildInfo.hasOneOf(DEX, SPLIT)) {
-                            throw new InstantRunPushFailedException("Can't apply hot swap patch: app is no longer running");
+                            throw new InstantRunPushFailedException(
+                                "Can't apply hot swap patch: app is no longer running");
                         }
                     }
                     break;
@@ -346,8 +301,8 @@ public class InstantRunClient {
                     throw new InstantRunPushFailedException("Could not read file " + file);
                 }
             }
-            updateMode = pushPatches(device, buildInfo.getTimeStamp(), changes, updateMode, isRestartActivity,
-                    isShowToastEnabled);
+            updateMode = pushPatches(device, buildInfo.getTimeStamp(), changes,
+                                     updateMode, isRestartActivity, isShowToastEnabled);
 
             needRestart = false;
             if (!appInForeground || !buildInfo.canHotswap()) {
@@ -377,9 +332,11 @@ public class InstantRunClient {
             final boolean isRestartActivity,
             final boolean isShowToastEnabled) throws IOException {
         if (changes.isEmpty() || updateMode == UpdateMode.NO_CHANGES) {
-            // Sync the build id to the device; Gradle might rev the build id even when there are no changes,
-            // and we need to make sure that the device id reflects this new build id, or the next
-            // build will discover different id's and will conclude that it needs to do a full rebuild
+            // Sync the build id to the device; Gradle might rev the build id
+            // even when there are no changes, and we need to make sure that the
+            // device id reflects this new build id, or the next build will
+            // discover different id's and will conclude that it needs to do a
+            // full rebuild
             transferLocalIdToDeviceId(device, buildId);
 
             return UpdateMode.NO_CHANGES;
@@ -390,7 +347,7 @@ public class InstantRunClient {
         }
 
         final UpdateMode updateMode1 = updateMode;
-        talkToApp(device, new Communicator<Boolean>() {
+        mAppService.talkToService(device, new Communicator<Boolean>() {
             @Override
             public Boolean communicate(@NonNull DataInputStream input,
                     @NonNull DataOutputStream output) throws IOException {
@@ -436,43 +393,63 @@ public class InstantRunClient {
     // trash any existing build ids saved on the device.
     public static void transferBuildIdToDevice(@NonNull IDevice device,
             @NonNull String buildId,
-            @NonNull String applicationId,
+            @NonNull String pkgName,
             @Nullable ILogger logger) {
         if (logger == null) {
             logger = new NullLogger();
         }
+        final long unused = 0L;
+        InstantRunClient client = new InstantRunClient(pkgName, logger, unused);
+        client.transferBuildIdToDevice(device, buildId);
+    }
 
+    private void transferBuildIdToDevice(@NonNull IDevice device, @NonNull String buildId) {
         try {
             if (USE_BUILD_ID_TEMP_FILE) {
-                String remoteIdFile = getDeviceIdFolder(applicationId);
+                String remoteIdFile = getDeviceIdFolder(mPackageName);
                 //noinspection SSBasedInspection This should work
                 File local = File.createTempFile("build-id", "txt");
                 local.deleteOnExit();
                 Files.write(buildId, local, Charsets.UTF_8);
                 device.pushFile(local.getPath(), remoteIdFile);
             } else {
-                String remote = copyToDeviceScratchFile(device, applicationId, buildId);
-                String dataDir = Paths.getDataDirectory(applicationId);
+                String remote = copyToDeviceScratchFile(device, mPackageName, buildId);
+                String dataDir = Paths.getDataDirectory(mPackageName);
+                // Escape any single quotes that may be in the data directory.
+                // We control it, so its highly unlikely, but it's slightly safer this way.
+                dataDir = shellEscape(dataDir);
 
                 // We used to do this here:
-                //String cmd = "run-as " + pkg + " mkdir -p " + dataDir + "; run-as " + pkg + " cp " + remote + " " + dataDir + "/" + BUILD_ID_TXT;
-                // but it turns out "cp" is missing on API 15! Let's use cat and sh instead which seems to be available everywhere.
+                // String cmd = "run-as " + pkg + " mkdir -p " + dataDir +
+                //   "; run-as " + pkg + " cp " + remote + " " + dataDir + "/" + BUILD_ID_TXT;
+                // but it turns out "cp" is missing on API 15!
+                // Let's use cat and sh instead which seems to be available everywhere.
                 // (Note: echo is not, it's missing on API 19.)
-                String cmd = "run-as " + applicationId + " mkdir -p " + dataDir + "; cat " + remote
-                        + " | run-as " + applicationId + " sh -c 'cat > " + dataDir + "/"
-                        + Paths.BUILD_ID_TXT + "'";
-                CollectingOutputReceiver receiver = new CollectingOutputReceiver();
-                device.executeShellCommand(cmd, receiver);
-                String output = receiver.getOutput();
-                if (!output.trim().isEmpty()) {
-                    logger.warning("Unexpected shell output: " + output);
+                boolean result = runAsCommand(device, "mkdir -p " + dataDir);
+                if (result) {
+                    // There are currently two possible code paths for runAsCommand:
+                    //  1) First it tries "run-as <user> <cmd>"
+                    //  2) If that fails, it tries the RunAsServer.
+                    // In both cases, the server passes <cmd> as a single argument
+                    // to the shell via execvp, with no additional escaping.
+                    runAsCommand(device, "cat > " + dataDir + "/" + Paths.BUILD_ID_TXT);
                 }
             }
         } catch (IOException ioe) {
-            logger.warning("Couldn't write build id file: %s", ioe);
-        } catch (AdbCommandRejectedException | TimeoutException | SyncException | ShellCommandUnresponsiveException e) {
-            logger.warning("%s", Throwables.getStackTraceAsString(e));
+            mLogger.warning("Couldn't write build id file: %s", ioe);
+        } catch (AdbCommandRejectedException
+                 | TimeoutException
+                 | SyncException
+                 | ShellCommandUnresponsiveException e) {
+            mLogger.warning("%s", Throwables.getStackTraceAsString(e));
         }
+    }
+
+    private String shellEscape(@NonNull String str) {
+        Escapers.Builder builder = Escapers.builder();
+        builder.addEscape('\'', "'\"'\"'");
+        Escaper e = builder.build();
+        return e.escape(str);
     }
 
     /**
@@ -484,7 +461,8 @@ public class InstantRunClient {
     }
 
     @Nullable
-    public static String getDeviceBuildTimestamp(@NonNull IDevice device, @NonNull String packageName, @NonNull ILogger logger) {
+    public static String getDeviceBuildTimestamp(@NonNull IDevice device,
+            @NonNull String packageName, @NonNull ILogger logger) {
         try {
             if (USE_BUILD_ID_TEMP_FILE) {
                 String remoteIdFile = getDeviceIdFolder(packageName);
@@ -499,8 +477,7 @@ public class InstantRunClient {
                     localIdFile.delete();
                 }
             } else {
-                String remoteIdFile = Paths.getDataDirectory(packageName) + "/"
-                                      + Paths.BUILD_ID_TXT;
+                String remoteIdFile = Paths.getDataDirectory(packageName) + "/" + Paths.BUILD_ID_TXT;
                 CollectingOutputReceiver receiver = new CollectingOutputReceiver();
                 device.executeShellCommand("run-as " + packageName + " cat " + remoteIdFile,
                                            receiver);
@@ -511,11 +488,11 @@ public class InstantRunClient {
                         // /data/data/my.pkg.path/files/instant-run/build-id.txt: No such file or directory
                         return null;
                     }
-                    // on a user device, we cannot pull from a path where the segments aren't readable (I think this is a ddmlib limitation)
+                    // On a user device, we cannot pull from a path where the segments
+                    // aren't readable (I think this is a ddmlib limitation).
                     // So we first copy to /data/local/tmp and pull from there..
                     String remoteTmpFile = "/data/local/tmp/build-id.txt";
-                    device.executeShellCommand("cp " + remoteIdFile + " " + remoteTmpFile,
-                                               receiver);
+                    device.executeShellCommand("cp " + remoteIdFile + " " + remoteTmpFile, receiver);
                     output = receiver.getOutput().trim();
                     if (!output.isEmpty()) {
                         logger.info(output);
@@ -531,7 +508,10 @@ public class InstantRunClient {
                 return id;
             }
         } catch (IOException ignore) {
-        } catch (AdbCommandRejectedException | SyncException | TimeoutException | ShellCommandUnresponsiveException e) {
+        } catch (AdbCommandRejectedException
+                 | SyncException
+                 | TimeoutException
+                 | ShellCommandUnresponsiveException e) {
             logger.warning("%s", Throwables.getStackTraceAsString(e));
         }
 
@@ -598,7 +578,7 @@ public class InstantRunClient {
             String path;
             // These path names are specially handled on the client side
             // (e.g. it interprets "classes.dex" as meaning create a new
-            // unique class file in the class folder
+            // unique class file in the class folder.
             switch (mode) {
                 case TRANSFER_MODE_SLICE:
                     path = Paths.DEX_SLICE_PREFIX + name;
@@ -623,24 +603,26 @@ public class InstantRunClient {
     /**
      * Stops the given app (via adb).
      *
-     * @param device              the device
+     * @param device the device
      * @param sendChangeBroadcast whether to also send a package change broadcast
      * @throws InstantRunPushFailedException if there's a problem
      */
-    public void stopApp(@NonNull IDevice device, boolean sendChangeBroadcast) throws InstantRunPushFailedException {
+    public void stopApp(@NonNull IDevice device, boolean sendChangeBroadcast)
+            throws InstantRunPushFailedException {
         try {
             runCommand(device, "am force-stop " + mPackageName);
         } catch (Throwable t) {
-            throw new InstantRunPushFailedException("Exception while stopping app: " + t.toString());
+            throw new InstantRunPushFailedException("Exception while stopping app: " + t);
         }
         if (sendChangeBroadcast) {
             try {
-                // We think this might necessary to force the system not hold on to any data from the previous
-                // version of the process, such as the scenario described in
+                // We think this might necessary to force the system not hold on
+                // to any data from the previous version of the process, such as
+                // the scenario described in
                 // https://code.google.com/p/android/issues/detail?id=200895#c9
-                runCommand(device, "am broadcast -a android.intent.action.PACKAGE_CHANGED -p " + mPackageName);
-            }
-            catch (Throwable ignore) {
+                runCommand(device, "am broadcast -a android.intent.action.PACKAGE_CHANGED -p "
+                           + mPackageName);
+            } catch (Throwable ignore) {
                 // We can live with this one not succeeding; may require root etc
                 // See https://code.google.com/p/android/issues/detail?id=201249
             }
@@ -648,9 +630,8 @@ public class InstantRunClient {
     }
 
     /**
-     * Install dex and resource files on the given device (using adb to push files
-     * to the device when the app isn't running so we can't send it patches via
-     * the socket connection.)
+     * Install dex and resource files on the given device when the app isn't running,
+     * using adb since we can't send it patches via the socket connection.
      *
      * @param files the files to push to the device, and the paths to push them as.
      * @param device   the device to push to
@@ -687,14 +668,14 @@ public class InstantRunClient {
                 // Make sure directory exists
                 if (!createdDirs.contains(folder)) {
                     createdDirs.add(folder);
-                    String cmd = "run-as " + mPackageName + " mkdir -p " + folder;
+                    String cmd = "mkdir -p " + folder;
                     if (!runAsCommand(device, cmd)) {
                         mLogger.warning("pushFiles: %s", "Error creating folder with: " + cmd);
                         throw new InstantRunPushFailedException("Error creating folder with: " + cmd);
                     }
                 }
 
-                String cmd = "run-as " + mPackageName + " cp " + remote + " " + folder + "/" + name;
+                String cmd = "cp " + remote + " " + folder + "/" + name;
                 if (!runAsCommand(device, cmd)) {
                     mLogger.warning("pushFiles: %s", "Error copying file with: " + cmd);
                     throw new InstantRunPushFailedException("Error copying file with: " + cmd);
@@ -704,38 +685,65 @@ public class InstantRunClient {
             transferLocalIdToDeviceId(device, buildId);
         } catch (IOException ioe) {
             mLogger.warning("Couldn't write build id file: %s", ioe);
-            throw new InstantRunPushFailedException("IOException while pushing files: " + ioe.toString());
-        } catch (AdbCommandRejectedException e) {
+            throw new InstantRunPushFailedException("IOException while pushing files: " + ioe);
+        } catch (AdbCommandRejectedException
+                 | TimeoutException
+                 | ShellCommandUnresponsiveException
+                 | SyncException e) {
             mLogger.warning("%s", Throwables.getStackTraceAsString(e));
-            throw new InstantRunPushFailedException("Exception while pushing files: " + e.toString());
-        } catch (TimeoutException e) {
-            mLogger.warning("%s", Throwables.getStackTraceAsString(e));
-            throw new InstantRunPushFailedException("Exception while pushing files: " + e.toString());
-        } catch (ShellCommandUnresponsiveException e) {
-            mLogger.warning("%s", Throwables.getStackTraceAsString(e));
-            throw new InstantRunPushFailedException("Exception while pushing files: " + e.toString());
-        } catch (SyncException e) {
-            mLogger.warning("%s", Throwables.getStackTraceAsString(e));
-            throw new InstantRunPushFailedException("Exception while pushing files: " + e.toString());
+            throw new InstantRunPushFailedException("Exception while pushing files: " + e);
         }
     }
 
-    private boolean runAsCommand(@NonNull IDevice device, @NonNull String cmd)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException, InstantRunPushFailedException {
-        String output = getCommandOutput(device, cmd).trim();
-        if (!output.isEmpty()) {
-            mLogger.warning("Unexpected shell output for " + cmd + ": " + output);
-
-            if (output.startsWith("run-as: Package '") && output.endsWith("' is unknown")) {
-                throw new InstantRunPushFailedException(BROKEN_RUN_AS);
+    private boolean runAsCommand(@NonNull IDevice device, @NonNull final String cmd)
+            throws TimeoutException, AdbCommandRejectedException,
+            ShellCommandUnresponsiveException, IOException {
+        // Try using adb with run-as.  Eventually this code path will go away.
+        // You can set FORCE_RUN_AS_SERVER to true to force the RunAsServer code path,
+        // for debugging.
+        boolean FORCE_RUN_AS_SERVER = false;
+        if (!FORCE_RUN_AS_SERVER) {
+            String runAsCmd = "run-as " + mPackageName + " " + cmd;
+            String output = getCommandOutput(device, runAsCmd).trim();
+            if (output.isEmpty()) {
+                return true;  // Worked.
             }
-            return false;
+            // These strings are from com.android.tools.idea.fd.RunAsValidityService:
+            if (!(output.contains("run-as: Package '")
+                  || output.contains("run-as: Could not set capabilities"))) {
+                // Some other error occurred.
+                mLogger.warning("Unexpected shell output for " + runAsCmd + ": " + output);
+                return false;
+            }
         }
-        return true;
+
+        // The device has a broken run-as:  Fall back to talking to the service.
+        // At some point, when we're sure the service is well-tested, we can eliminate
+        // the adb/run-as path above, and always use the service.
+        ensureRunAsService(device);
+
+        return mRunAsService.talkToService(device,
+                new Communicator<Boolean>() {
+                    @Override
+                    public Boolean communicate(@NonNull DataInputStream input,
+                            @NonNull DataOutputStream output) throws IOException {
+                        output.writeInt(MESSAGE_SHELL_COMMAND);
+                        writeToken(output);
+                        output.writeUTF(cmd);  // Don't include "run-as <pkg>" prefix.
+                        boolean result = input.readBoolean();
+                        if (result) {
+                            mLogger.info("Run-as service successfully executed '" + cmd + "'");
+                        } else {
+                            mLogger.warning("Run-as service failed to execute '" + cmd + "'");
+                        }
+                        return result;
+                    }
+                });
     }
 
     private boolean runCommand(@NonNull IDevice device, @NonNull String cmd)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+            throws TimeoutException, AdbCommandRejectedException,
+            ShellCommandUnresponsiveException, IOException {
         String output = getCommandOutput(device, cmd).trim();
         if (!output.isEmpty()) {
             mLogger.warning("Unexpected shell output for " + cmd + ": " + output);
@@ -746,7 +754,8 @@ public class InstantRunClient {
 
     @NonNull
     private static String getCommandOutput(@NonNull IDevice device, @NonNull String cmd)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+            throws TimeoutException, AdbCommandRejectedException,
+            ShellCommandUnresponsiveException, IOException {
         CollectingOutputReceiver receiver;
         receiver = new CollectingOutputReceiver();
         device.executeShellCommand(cmd, receiver);
@@ -772,5 +781,76 @@ public class InstantRunClient {
         sb.append(']');
 
         mLogger.info(sb.toString());
+    }
+
+    private void ensureRunAsService(@NonNull IDevice device) throws IOException {
+        if (!isRunAsServiceRunning(device)) {
+            startRunAsService(device);
+            waitForRunAsService(device);
+        }
+    }
+
+    /**
+     * Begins the startup of the run-as service, via an adb command.
+     */
+    private void startRunAsService(@NonNull IDevice device) throws IOException {
+        try {
+            String serviceName = mPackageName + "/" + RUN_AS_SERVICE_PKG_NAME;
+            String cmd = "am startservice " + serviceName;
+            String output = getCommandOutput(device, cmd).trim();
+            if (!output.startsWith("Starting service:")) {
+                throw new IOException("am produced unexpected output");
+            }
+        } catch (Throwable t) {
+            throw new IOException("Error starting run-as service: " + t);
+        }
+        // Just use port after the one we use for the in-process service.
+        int port = mAppService.getLocalPort() + 1;
+        mRunAsService = new ServiceCommunicator(mPackageName + ".runas", mLogger, port);
+    }
+
+    private boolean isRunAsServiceRunning(@NonNull IDevice device) {
+        if (mRunAsService == null) {
+            return false;
+        }
+        try {
+            return mRunAsService.talkToService(device,
+                    new Communicator<Boolean>() {
+                        @Override
+                        public Boolean communicate(@NonNull DataInputStream input,
+                                @NonNull DataOutputStream output) throws IOException {
+                            output.writeInt(MESSAGE_PING);
+                            boolean result = input.readBoolean(); // Wait for "pong"
+                            mLogger.info("RunAs Service ping sent and replied successfully");
+                            return result;
+                        }
+                    });
+        } catch (IOException iox) {
+            // Service may have died, or may not have been started yet.
+            return false;
+        }
+    }
+
+    /**
+     * Polls until the run-as service starts up.
+     */
+    private void waitForRunAsService(@NonNull IDevice device) throws IOException {
+        final int WAIT_SECONDS = 5;
+        long maxWaitMillis = TimeUnit.SECONDS.toMillis(WAIT_SECONDS);
+        long waitedMillis = 0L;
+        long interval = 1L;
+        try {
+            mLogger.info("Waiting up to " + WAIT_SECONDS + " sec for run-as service...");
+            while (waitedMillis <= maxWaitMillis) {
+                Thread.currentThread().sleep(interval);
+                if (isRunAsServiceRunning(device)) {
+                    return;  // Successful ping.
+                }
+                waitedMillis += interval;
+                interval *= 2;  // Exponential backoff.
+            }
+        } catch (InterruptedException ix) {
+        }
+        throw new IOException("Timed out waiting for run-as server to start up.");
     }
 }
