@@ -40,6 +40,7 @@ import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.io.Files;
@@ -69,26 +70,326 @@ public class MaterialHtmlReporter extends Reporter {
      * Maximum number of warnings allowed for a single issue type before we
      * split up and hide all but the first {@link #SHOWN_COUNT} items.
      */
-    private static final int SPLIT_LIMIT = 8;
+    private static final int SPLIT_LIMIT;
     /**
      * When a warning has at least {@link #SPLIT_LIMIT} items, then we show the
      * following number of items before the "Show more" button/link.
      */
-    private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
+    private static final int SHOWN_COUNT;
 
     /** Number of lines to show around code snippets */
-    static final int CODE_WINDOW_SIZE = 3;
+    static final int CODE_WINDOW_SIZE;
 
-    private static final String LIGHT_COLOR_PROPERTY = "lint.html.light-colors";
+    private static final String REPORT_PREFERENCE_PROPERTY = "lint.html.prefs";
 
-    /** Whether we're syntax highlighting code snippets with Darcula instead of light theme */
-    static final boolean USE_DARCULA_FOR_CODE_SNIPPETS = !Boolean.getBoolean(LIGHT_COLOR_PROPERTY);
+    private static final boolean USE_WAVY_UNDERLINES_FOR_ERRORS;
 
     /**
      * Whether we should try to use browser support for wavy underlines.
-     * Underlines are not working well; see https://bugs.chromium.org/p/chromium/issues/detail?id=165462 for when to re-enable
+     * Underlines are not working well; see https://bugs.chromium.org/p/chromium/issues/detail?id=165462 for when to re-enable.
+     * If false we're using a CSS trick with repeated images instead.
+     * (Only applies if {@link #USE_WAVY_UNDERLINES_FOR_ERRORS} is true.)
      */
-    private static final boolean USE_WAVY_UNDERLINES_FOR_ERRORS = false;
+    private static final boolean USE_CSS_DECORATION_FOR_WAVY_UNDERLINES = false;
+
+    private static String preferredThemeName = "light";
+
+    static {
+        String preferences = System.getProperty(REPORT_PREFERENCE_PROPERTY);
+        int codeWindowSize = 3;
+        int splitLimit = 8;
+        boolean underlineErrors = true;
+        if (preferences != null) {
+            for (String pref : Splitter.on(',').omitEmptyStrings().split(preferences)) {
+                int index = pref.indexOf('=');
+                if (index != -1) {
+                    String key = pref.substring(0, index).trim();
+                    String value = pref.substring(index+1).trim();
+                    if ("theme".equals(key)) {
+                        preferredThemeName = value;
+                    } else if ("window".equals(key)) {
+                        try {
+                            int size = Integer.decode(value);
+                            if (size >= 1 && size < 3000) {
+                                codeWindowSize = size;
+                            }
+                        } catch (NumberFormatException ignore) {
+                        }
+                    } else if ("maxPerIssue".equals(key)) {
+                        try {
+                            int count = Integer.decode(value);
+                            if (count >= 1 && count < 3000) {
+                                splitLimit = count;
+                            }
+                        } catch (NumberFormatException ignore) {
+                        }
+                    } else if ("underlineErrors".equals(key)) {
+                        underlineErrors = Boolean.valueOf(value);
+                    }
+                }
+            }
+        }
+
+        SPLIT_LIMIT = splitLimit;
+        SHOWN_COUNT = Math.max(1, SPLIT_LIMIT - 3);
+        CODE_WINDOW_SIZE = codeWindowSize;
+        USE_WAVY_UNDERLINES_FOR_ERRORS = underlineErrors;
+    }
+
+    /**
+     * CSS themes for syntax highlighting. The following classes map to an IntelliJ color
+     * theme like this:
+     * <ul>
+     * <li> pre.errorlines: General > Text > Default Text
+     * <li> .prefix: XML > Namespace Prefix
+     * <li> .attribute: XML > Attribute name
+     * <li> .value: XML > Attribute value
+     * <li> .tag: XML > Tag name
+     * <li> .comment: XML > Comment
+     * <li> .javado: Comments > JavaDoc > Text
+     * <li> .annotation: Java > Annotations > Annotation name
+     * <li> .string: Java > String > String text
+     * <li> .number: Java > Numbers
+     * <li> .keyword: Java > Keyword
+     * <li> .caretline: General > Editor > Caret row (Background)
+     * <li> .lineno: For color, General > Code > Line number, Foreground, and for
+     *       background-color, Editor > Gutter background
+     * <li> .error: General > Errors and Warnings > Error
+     * <li> .warning: General > Errors and Warnings > Warning
+     * <li>     text-decoration: none;\n"
+     * </ul>
+     */
+
+    @SuppressWarnings("ConstantConditions")
+    private static final String CSS_SYNTAX_COLORS_LIGHT_THEME = ""
+            // Syntax highlighting
+            + "pre.errorlines {\n"
+            + "    background-color: white;\n"
+            + "    font-family: monospace;\n"
+            + "    border: 1px solid #e0e0e0;\n"
+            + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
+            + "    font-size: 0.9rem;"
+            + "    padding: 1px 0px 1px; 1px;\n" // no padding to make gutter look better
+            + "    overflow: scroll;\n"
+            + "}\n"
+            + ".prefix {\n"
+            + "    color: #660e7a;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".attribute {\n"
+            + "    color: #0000ff;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".value {\n"
+            + "    color: #008000;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".tag {\n"
+            + "    color: #000080;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".comment {\n"
+            + "    color: #808080;\n"
+            + "    font-style: italic;\n"
+            + "}\n"
+            + ".javadoc {\n"
+            + "    color: #808080;\n"
+            + "    font-style: italic;\n"
+            + "}\n"
+            + ".annotation {\n"
+            + "    color: #808000;\n"
+            + "}\n"
+            + ".string {\n"
+            + "    color: #008000;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".number {\n"
+            + "    color: #0000ff;\n"
+            + "}\n"
+            + ".keyword {\n"
+            + "    color: #000080;\n"
+            + "    font-weight: bold;\n"
+            + "}\n"
+            + ".caretline {\n"
+            + "    background-color: #fffae3;\n"
+            + "}\n"
+            + ".lineno {\n"
+            + "    color: #999999;\n"
+            + "    background-color: #f0f0f0;\n"
+            + "}\n"
+            + ".error {\n"
+            + (USE_WAVY_UNDERLINES_FOR_ERRORS ? (USE_CSS_DECORATION_FOR_WAVY_UNDERLINES ? ""
+            + "    text-decoration: underline wavy #ff0000;\n"
+            + "    text-decoration-color: #ff0000;\n"
+            + "    -webkit-text-decoration-color: #ff0000;\n"
+            + "    -moz-text-decoration-color: #ff0000;\n"
+            + "" : ""
+            + "    display: inline-block;\n"
+            + "    position:relative;\n"
+            + "    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AwCFR4T/3uLMgAAADxJREFUCNdNyLERQEAABMCjL4lQwIzcjErpguAL+C9AvgKJDbeD/PRpLdm35Hm+MU+cB+tCKaJW4L4YBy+CAiLJrFs9mgAAAABJRU5ErkJggg==) bottom repeat-x;\n"
+            + "") : ""
+            + "    text-decoration: none;\n"
+            + "    background-color: #f8d8d8;\n")
+            + "}\n"
+            + ".warning {\n"
+            + "    text-decoration: none;\n"
+            + "    background-color: #f6ebbc;\n"
+            + "}\n";
+
+    @SuppressWarnings("ConstantConditions")
+    private static final String CSS_SYNTAX_COLORS_DARCULA = ""
+            + "pre.errorlines {\n"
+            + "    background-color: #2b2b2b;\n"
+            + "    color: #a9b7c6;\n"
+            + "    font-family: monospace;\n"
+            + "    font-size: 0.9rem;"
+            + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
+            + "    padding: 6px;\n"
+            + "    border: 1px solid #e0e0e0;\n"
+            + "    overflow: scroll;\n"
+            + "}\n"
+            + ".prefix {\n"
+            + "    color: #9876aa;\n"
+            + "}\n"
+            + ".attribute {\n"
+            + "    color: #BABABA;\n"
+            + "}\n"
+            + ".value {\n"
+            + "    color: #6a8759;\n"
+            + "}\n"
+            + ".tag {\n"
+            + "    color: #e8bf6a;\n"
+            + "}\n"
+            + ".comment {\n"
+            + "    color: #808080;\n"
+            + "}\n"
+            + ".javadoc {\n"
+            + "    font-style: italic;\n"
+            + "    color: #629755;\n"
+            + "}\n"
+            + ".annotation {\n"
+            + "    color: #BBB529;\n"
+            + "}\n"
+            + ".string {\n"
+            + "    color: #6a8759;\n"
+            + "}\n"
+            + ".number {\n"
+            + "    color: #6897bb;\n"
+            + "}\n"
+            + ".keyword {\n"
+            + "    color: #cc7832;\n"
+            + "}\n"
+            + ".caretline {\n"
+            + "    background-color: #323232;\n"
+            + "}\n"
+            + ".lineno {\n"
+            + "    color: #606366;\n"
+            + "    background-color: #313335;\n"
+            + "}\n"
+            + ".error {\n"
+            + (USE_WAVY_UNDERLINES_FOR_ERRORS ? (USE_CSS_DECORATION_FOR_WAVY_UNDERLINES ? ""
+            + "    text-decoration: underline wavy #ff0000;\n"
+            + "    text-decoration-color: #ff0000;\n"
+            + "    -webkit-text-decoration-color: #ff0000;\n"
+            + "    -moz-text-decoration-color: #ff0000;\n"
+            + "" : ""
+            + "    display: inline-block;\n"
+            + "    position:relative;\n"
+            + "    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AwCFR46vckTXgAAAEBJREFUCNdj1NbW/s+ABJj4mJgYork5GNgZGSECYVzsDKd+/WaI5uZgEGVmYmBZ9e0nw6d//xg+/vvJEM7FwQAAPnUOmQBDSmAAAAAASUVORK5CYII=) bottom repeat-x;\n"
+            + "") : ""
+            + "    text-decoration: none;\n"
+            + "    background-color: #52503a;\n")
+            + "}\n"
+            + ".warning {\n"
+            + "    text-decoration: none;\n"
+            + "    background-color: #52503a;\n"
+            + "}\n";
+
+    /** Solarized theme. */
+    @SuppressWarnings({"ConstantConditions", "SpellCheckingInspection"})
+    private static final String CSS_SYNTAX_COLORS_SOLARIZED = ""
+            + "pre.errorlines {\n"
+            + "    background-color: #FDF6E3;\n" // General > Text > Default Text, Background
+            + "    color: #586E75;\n" // General > Text > Default text, Foreground
+            + "    font-family: monospace;\n"
+            + "    font-size: 0.9rem;"
+            + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
+            + "    padding: 0px;\n" // no padding to make gutter look better
+            + "    border: 1px solid #e0e0e0;\n"
+            + "    overflow: scroll;\n"
+            + "}\n"
+            + ".prefix {\n" // XML > Namespace Prefix
+            + "    color: #6C71C4;\n"
+            + "}\n"
+            + ".attribute {\n" // XML > Attribute name
+            + "}\n"
+            + ".value {\n" // XML > Attribute value
+            + "    color: #2AA198;\n"
+            + "}\n"
+            + ".tag {\n" // XML > Tag name
+            + "    color: #268BD2;\n"
+            + "}\n"
+            + ".comment {\n" // XML > Comment
+            + "    color: #DC322F;\n"
+            + "}\n"
+            + ".javadoc {\n" // Comments > JavaDoc > Text
+            + "    font-style: italic;\n"
+            + "    color: #859900;\n"
+            + "}\n"
+            + ".annotation {\n" // Java > Annotations > Annotation name
+            + "    color: #859900;\n"
+            + "}\n"
+            + ".string {\n" // Java > String > String text
+            + "    color: #2AA198;\n"
+            + "}\n"
+            + ".number {\n" // Java > Numbers
+            + "    color: #CB4B16;\n"
+            + "}\n"
+            + ".keyword {\n" // Java > Keyword
+            + "    color: #B58900;\n"
+            + "}\n"
+            + ".caretline {\n" // General > Editor > Caret row, Background
+            + "    background-color: #EEE8D5;\n"
+            + "}\n"
+            + ".lineno {\n"
+            + "    color: #93A1A1;\n" // General > Code > Line number, Foreground
+            + "    background-color: #EEE8D5;\n" // Editor > Gutter background, Background
+            + "}\n"
+            + ".error {\n" // General > Errors and Warnings > Error
+            + (USE_WAVY_UNDERLINES_FOR_ERRORS ? (USE_CSS_DECORATION_FOR_WAVY_UNDERLINES ? ""
+            + "    text-decoration: underline wavy #DC322F;\n"
+            + "    text-decoration-color: #DC322F;\n"
+            + "    -webkit-text-decoration-color: #DC322F;\n"
+            + "    -moz-text-decoration-color: #DC322F;\n"
+            + "" : ""
+            + "    display: inline-block;\n"
+            + "    position:relative;\n"
+            + "    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AwCFRgHs/v4yQAAAD5JREFUCNcBMwDM/wDqe2//++zZ//324v/75NH/AgxKRgDuho8A/OTnAO2KkwAA/fbi//nXxf/mZlz/++TR/4EMI0ZH4MfyAAAAAElFTkSuQmCC) bottom repeat-x;\n"
+            + "") : ""
+            + "    text-decoration: none;\n"
+            + "    color: #073642;\n" // not from theme
+            + "    background-color: #FFA0A3;\n") // not from theme
+            + "}\n"
+            + ".warning {\n" // General > Errors and Warnings > Warning
+            + "    text-decoration: none;\n"
+            + "    color: #073642;\n"
+            + "    background-color: #FFDF80;\n"
+            + "}\n";
+
+    private static final String CSS_SYNTAX_COLORS;
+    static {
+        String css;
+        switch (preferredThemeName) {
+            case "darcula":
+                css = CSS_SYNTAX_COLORS_DARCULA; break;
+            case "solarized":
+                css = CSS_SYNTAX_COLORS_SOLARIZED; break;
+            case "light":
+            default:
+                css = CSS_SYNTAX_COLORS_LIGHT_THEME; break;
+        }
+        CSS_SYNTAX_COLORS = css;
+    }
 
     /**
      * Stylesheet for the HTML report.
@@ -151,160 +452,7 @@ public class MaterialHtmlReporter extends Reporter {
             + "    float: right;\n"
             + "    vertical-align: middle;\n"
             + "}\n"
-            + (USE_DARCULA_FOR_CODE_SNIPPETS ? (""
-            + "pre.errorlines {\n"
-            + "    background-color: #2b2b2b;\n"
-            + "    color: #a9b7c6;\n"
-            + "    font-family: monospace;\n"
-            + "    font-size: 0.9rem;"
-            + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
-            + "    padding: 6px;\n"
-            + "    border: 1px solid #e0e0e0;\n"
-            + "    overflow: scroll;\n"
-            + "}\n"
-            + ".prefix {\n"
-            + "    color: #9876aa;\n"
-            + "}\n"
-            + ".attribute {\n"
-            + "    color: #BABABA;\n"
-            + "}\n"
-            + ".value {\n"
-            + "    color: #6a8759;\n"
-            + "}\n"
-            + ".tag {\n"
-            + "    color: #e8bf6a;\n"
-            + "}\n"
-            + ".comment {\n"
-            + "    color: #808080;\n"
-            + "}\n"
-            + ".javadoc {\n"
-            + "    font-style: italic;\n"
-            + "    color: #629755;\n"
-            + "}\n"
-            + ".annotation {\n"
-            + "    color: #BBB529;\n"
-            + "}\n"
-            + ".string {\n"
-            + "    color: #6a8759;\n"
-            + "}\n"
-            + ".number {\n"
-            + "    color: #6897bb;\n"
-            + "}\n"
-            + ".keyword {\n"
-            + "    color: #cc7832;\n"
-            + "}\n"
-            + ".caretline {\n"
-            + "    background-color: #323232;\n"
-            + "}\n"
-            + ".lineno {\n"
-            + "    color: #606366;\n"
-            + "    background-color: #313335;\n"
-            + "}\n"
-            + ".error {\n"
-            + (!USE_WAVY_UNDERLINES_FOR_ERRORS ? ""
-            + "    text-decoration: none;\n"
-            + "    background-color: #622a2a;\n"
-            + "" : ""
-               // wavy underlines
-            + "    text-decoration: underline wavy #ff0000;\n"
-            + "    text-decoration-color: #ff0000;\n"
-            + "    -webkit-text-decoration-color: #ff0000;\n"
-            + "    -moz-text-decoration-color: #ff0000;\n")
-            + "}\n"
-            + ".warning {\n"
-            + (!USE_WAVY_UNDERLINES_FOR_ERRORS ? ""
-            + "    text-decoration: none;\n"
-            + "    background-color: #52503a;\n"
-            + "" : ""
-            // wavy underlines
-            + "    text-decoration: underline wavy #f49810;\n"
-            + "    text-decoration-color: #f49810;\n"
-            + "    -webkit-text-decoration-color: #f49810;\n"
-            + "    -moz-text-decoration-color: #f49810;\n")
-            + "}\n"
-            + "")
-
-            // Light theme
-            : (""
-                    // Syntax highlighting
-                    + "pre.errorlines {\n"
-                    + "    background-color: white;\n"
-                    + "    font-family: monospace;\n"
-                    + "    border: 1px solid #e0e0e0;\n"
-                    //+ "    line-height: 16px;\n" // ensure line number gutter looks contiguous
-                    + "    line-height: 0.9rem;\n" // ensure line number gutter looks contiguous
-                    + "    font-size: 0.9rem;"
-                    + "}\n"
-                    + ".prefix {\n"
-                    + "    color: #660e7a;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".attribute {\n"
-                    + "    color: #0000ff;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".value {\n"
-                    + "    color: #008000;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".tag {\n"
-                    + "    color: #000080;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".comment {\n"
-                    + "    color: #808080;\n"
-                    + "    font-style: italic;\n"
-                    + "}\n"
-                    + ".javadoc {\n"
-                    + "    color: #808080;\n"
-                    + "    font-style: italic;\n"
-                    + "}\n"
-                    + ".annotation {\n"
-                    + "    color: #808000;\n"
-                    + "}\n"
-                    + ".string {\n"
-                    + "    color: #008000;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".number {\n"
-                    + "    color: #0000ff;\n"
-                    + "}\n"
-                    + ".keyword {\n"
-                    + "    color: #000080;\n"
-                    + "    font-weight: bold;\n"
-                    + "}\n"
-                    + ".caretline {\n"
-                    + "    background-color: #fffae3;\n"
-                    + "}\n"
-                    + ".lineno {\n"
-                    + "    color: #999999;\n"
-                    + "    background-color: #f0f0f0;\n"
-                    + "}\n"
-                    + ".error {\n"
-                    + (!USE_WAVY_UNDERLINES_FOR_ERRORS ? ""
-                    + "    text-decoration: none;\n"
-                    + "    background-color: #f8d8d8;\n"
-                    + "" : ""
-                    // wavy underlines
-                    + "    text-decoration: underline wavy #ff0000;\n"
-                    + "    text-decoration-color: #ff0000;\n"
-                    + "    -webkit-text-decoration-color: #ff0000;\n"
-                    + "    -moz-text-decoration-color: #ff0000;\n")
-                    + "}\n"
-                    + ".warning {\n"
-                    + (!USE_WAVY_UNDERLINES_FOR_ERRORS ? ""
-                    + "    text-decoration: none;\n"
-                    + "    background-color: #f6ebbc;\n"
-                    + "" : ""
-                    // wavy underlines
-                    + "    text-decoration: underline wavy #f49810;\n"
-                    + "    text-decoration-color: #f49810;\n"
-                    + "    -webkit-text-decoration-color: #f49810;\n"
-                    + "    -moz-text-decoration-color: #f49810;\n")
-                    + "}\n"
-            ))
-
-
+            + CSS_SYNTAX_COLORS
             + ".overview {\n"
             + "    padding: 10pt;\n"
             + "    width: 100%;\n"
@@ -331,9 +479,7 @@ public class MaterialHtmlReporter extends Reporter {
             + "   left: -50px;\n"
             + "   padding-top: 20px;\n"
             + "   padding-bottom: 5px;\n"
-            + "}\n"
-            + "\n"
-            ;
+            + "}\n";
 
     protected final Writer writer;
     protected final LintCliFlags flags;
@@ -611,7 +757,7 @@ public class MaterialHtmlReporter extends Reporter {
 
                     append("</div>\n"); // class=warningslist
 
-                    writeIssueMetadata(issue, first.severity, null, true);
+                    writeIssueMetadata(issue, null, true);
 
                     append("</div>\n"); // class=issue
 
@@ -663,18 +809,6 @@ public class MaterialHtmlReporter extends Reporter {
             append("<pre>\n");
             append("    " + NEW_FORMAT_PROPERTY + "=true\n");
             append("</pre>\n");
-
-            if (USE_DARCULA_FOR_CODE_SNIPPETS) {
-                append("<br>\n"
-                        + "You can also switch to light colors in the syntax highlighted snippets "
-                        + "by setting the flag<br/><pre>\n    " + LIGHT_COLOR_PROPERTY
-                        + "=true</pre>");
-            } else {
-                append(""
-                        + "You can also switch to dark colors in the syntax highlighted snippets "
-                        + "by setting the flag<br/><pre>\n    " + LIGHT_COLOR_PROPERTY
-                        + "=false</pre>");
-            }
             append(""
                     + "Please also file a tools bug on <a href=\"http://b.android.com\">http://b.android.com</a> "
                     + "explaining what is wrong with the new format or what it is missing.\n");
@@ -795,8 +929,7 @@ public class MaterialHtmlReporter extends Reporter {
         append("</head>\n");
     }
 
-    private void writeIssueMetadata(Issue issue, Severity severity, String disabledBy,
-            boolean hide) {
+    private void writeIssueMetadata(Issue issue, String disabledBy, boolean hide) {
         append("<div class=\"metadata\">");
 
         if (disabledBy != null) {
@@ -923,7 +1056,7 @@ public class MaterialHtmlReporter extends Reporter {
                     append("<div class=\"issueSeparator\"></div>\n");
                     append("</div>\n");
                     String disabledBy = missing.get(issue);
-                    writeIssueMetadata(issue, issue.getDefaultSeverity(), disabledBy, false);
+                    writeIssueMetadata(issue, disabledBy, false);
                     append("</div>\n");
 
                 }
@@ -1250,6 +1383,7 @@ public class MaterialHtmlReporter extends Reporter {
         if (highlightedFile == null || !highlightedFile.equals(file.getPath())) {
             highlighter = new LintSyntaxHighlighter(file.getName(), contents.toString());
             highlighter.setPadCaretLine(true);
+            highlighter.setDedent(true);
             highlightedFile = file.getPath();
         }
 
