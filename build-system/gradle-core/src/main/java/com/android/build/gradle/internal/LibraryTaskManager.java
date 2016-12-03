@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.publishing.AarPublishArtifact;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -431,7 +431,7 @@ public class LibraryTaskManager extends TaskManager {
         final Configuration publishConfiguration = variantData.getVariantDependency()
                 .getPublishConfiguration();
         project.getArtifacts().add(publishConfiguration.getName(),
-                new AarPublishArtifact(bundle, publishConfiguration.getName()));
+                AndroidArtifacts.getAarArtifact(bundle, publishConfiguration.getName()));
 
         // if the variant is the default published, also add a default artifact to the
         // archives config to have a default one.
