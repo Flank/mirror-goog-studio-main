@@ -73,6 +73,16 @@ public interface ProtocolConstants {
     int MESSAGE_EOF = 7;
 
     /**
+     * Message: ask the run-as server to copy a file as the app userid.
+     */
+    int MESSAGE_SEND_FILE = 8;
+
+    /**
+     * Message: ask the run-as server to execute a shell command as the app userid.
+     */
+    int MESSAGE_SHELL_COMMAND = 9;
+
+    /**
      * No updates
      */
     int UPDATE_MODE_NONE = 0;

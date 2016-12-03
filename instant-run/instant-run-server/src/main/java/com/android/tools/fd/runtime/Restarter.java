@@ -44,9 +44,9 @@ import static com.android.tools.fd.runtime.BootstrapApplication.LOG_TAG;
  * Handler capable of restarting parts of the application in order for changes to become
  * apparent to the user:
  * <ul>
- *     <li> Apply a tiny change immediately (possible if we can detect that the change
+ *     <li> Apply a tiny change immediately - possible if we can detect that the change
  *          is only used in a limited context (such as in a layout) and we can directly
- *          poke the view hierarchy and schedule a paint
+ *          poke the view hierarchy and schedule a paint.
  *     <li> Apply a change to the current activity. We can restart just the activity
  *          while the app continues running.
  *     <li> Restart the app with state persistence (simulates what happens when a user

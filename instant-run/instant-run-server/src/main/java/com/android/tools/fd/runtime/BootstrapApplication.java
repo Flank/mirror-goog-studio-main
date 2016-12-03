@@ -158,6 +158,7 @@ public class BootstrapApplication extends Application {
 
         // Make sure class loader finds these
         @SuppressWarnings("unused") Class<Server> server = Server.class;
+        @SuppressWarnings("unused") Class<RunAsServer> runAsServer = RunAsServer.class;
         @SuppressWarnings("unused") Class<MonkeyPatcher> patcher = MonkeyPatcher.class;
 
         if (!dexList.isEmpty()) {

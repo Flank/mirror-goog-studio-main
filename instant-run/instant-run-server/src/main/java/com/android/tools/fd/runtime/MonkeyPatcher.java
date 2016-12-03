@@ -247,6 +247,10 @@ public class MonkeyPatcher {
         }
     }
 
+    /**
+     * This utility method has nothing to do with the MonkeyPatcher per se.
+     * It simply calls the {@code currentActivityThread} method of {@code ActivityThread}.
+     */
     @Nullable
     public static Object getActivityThread(@Nullable Context context,
                                             @Nullable Class<?> activityThread) {
