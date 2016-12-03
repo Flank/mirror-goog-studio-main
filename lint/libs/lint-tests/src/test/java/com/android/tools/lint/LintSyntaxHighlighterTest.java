@@ -31,9 +31,10 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     @NonNull
     private static String highlight(String source, int beginOffset, int endOffset, boolean error,
-            String fileName) {
+            String fileName, boolean dedent) {
         LintSyntaxHighlighter highlighter = new LintSyntaxHighlighter(fileName, source);
         highlighter.setPadCaretLine(false);
+        highlighter.setDedent(dedent);
         HtmlBuilder builder = new HtmlBuilder();
         highlighter.generateHtml(builder, beginOffset, endOffset, error);
 
@@ -89,7 +90,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "foo.xml");
+        String html = highlight(source, beginOffset, endOffset, error, "foo.xml", false);
 
         Assert.assertEquals(""
                         + "<pre class=\"errorlines\">\n"
@@ -137,7 +138,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "foo.txt");
+        String html = highlight(source, beginOffset, endOffset, error, "foo.txt", false);
 
         Assert.assertEquals(""
                         + "<pre class=\"errorlines\">\n"
@@ -174,7 +175,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "Foo.java");
+        String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
         Assert.assertEquals(""
                         + "<pre class=\"errorlines\">\n"
@@ -223,7 +224,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "Foo.java");
+        String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
         Assert.assertEquals(""
                         + "<pre class=\"errorlines\">\n"
@@ -234,6 +235,45 @@ public class LintSyntaxHighlighterTest extends TestCase {
                         + "<span class=\"lineno\"> 15 </span>        <span class=\"keyword\">int</span> hex = <span class=\"number\">0xAB</span>;\n"
                         + "<span class=\"lineno\"> 16 </span>        String s = <span class=\"string\">\"myString\"</span>;\n"
                         + "<span class=\"lineno\"> 17 </span>        <span class=\"keyword\">int</span> value1 = <span class=\"number\">42</span>;\n"
+                        + "</pre>\n",
+                html);
+    }
+
+    public void testDedent() {
+        //noinspection all // Sample code
+        @Language("Java") String source = ""
+                + "@SuppressWarnings(\"all\")\n"
+                + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
+                + "    public void literals() {\n"
+                + "        char x = 'x';\n"
+                + "        char y = '\\u1234';\n"
+                + "        Object n = null;\n"
+                + "        Boolean b1 = true;\n"
+                + "        int digits = 100_000_000; // This line needs to be long to push the dedent algorithm to not leave it in place. This line needs to be long to push the dedent algorithm to not leave it in place.\n"
+                + "\n"
+                + "        int hex = 0xAB;\n"
+                + "        String s = \"myString\";\n"
+                + "        int value1 = 42;\n"
+                + "    }\n"
+                + "}\n";
+        int beginOffset = source.indexOf("int digits");
+        int endOffset = source.indexOf(';', beginOffset);
+        boolean error = true;
+        assertTrue(beginOffset != -1);
+        assertTrue(endOffset != -1);
+
+        @Language("HTML")
+        String html = highlight(source, beginOffset, endOffset, error, "Foo.java", true);
+
+        Assert.assertEquals(""
+                        + "<pre class=\"errorlines\">\n"
+                        + "<span class=\"lineno\">  5 </span>  <span class=\"keyword\">char</span> y = <span class=\"string\">'\\u1234'</span>;\n"
+                        + "<span class=\"lineno\">  6 </span>  Object n = <span class=\"keyword\">null</span>;\n"
+                        + "<span class=\"lineno\">  7 </span>  Boolean b1 = <span class=\"keyword\">true</span>;\n"
+                        + "<span class=\"caretline\"><span class=\"lineno\">  8 </span>  <span class=\"error\"><span class=\"keyword\">int</span> digits = <span class=\"number\">100_000_000</span></span>; <span class=\"comment\">// This line needs to be long to push the dedent algorithm to not leave it in place. This line needs to be long to push the dedent algorithm to not leave it in place.</span></span>\n"
+                        + "<span class=\"lineno\">  9 </span>\n"
+                        + "<span class=\"lineno\"> 10 </span>  <span class=\"keyword\">int</span> hex = <span class=\"number\">0xAB</span>;\n"
+                        + "<span class=\"lineno\"> 11 </span>  String s = <span class=\"string\">\"myString\"</span>;\n"
                         + "</pre>\n",
                 html);
     }
@@ -257,7 +297,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "Foo.java");
+        String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
         Assert.assertEquals("<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  3 </span><span class=\"javadoc\"> */</span>\n"
@@ -287,7 +327,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         assertTrue(endOffset != -1);
 
         @Language("HTML")
-        String html = highlight(source, beginOffset, endOffset, error, "Foo.java");
+        String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
         Assert.assertEquals(""
                         + "<pre class=\"errorlines\">\n"
