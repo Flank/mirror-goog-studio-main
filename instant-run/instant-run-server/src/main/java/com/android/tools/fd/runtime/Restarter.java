@@ -15,6 +15,8 @@
  */
 package com.android.tools.fd.runtime;
 
+import static com.android.tools.fd.runtime.Logging.LOG_TAG;
+
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -22,23 +24,17 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Build;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-
-import android.os.Handler;
-import android.os.Looper;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
-
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.android.tools.fd.runtime.BootstrapApplication.LOG_TAG;
 
 /**
  * Handler capable of restarting parts of the application in order for changes to become
@@ -194,8 +190,6 @@ public class Restarter {
             Field activitiesField = activityThreadClass.getDeclaredField("mActivities");
             activitiesField.setAccessible(true);
 
-            // TODO: On older platforms, cast this to a HashMap
-
             Collection c;
             Object collection = activitiesField.get(activityThread);
 
@@ -272,37 +266,5 @@ public class Restarter {
         // Note: This doesn't handle manifest changes like changing the application title
 
         restartActivity(activity);
-    }
-
-    /** Show a toast when an activity becomes available (if possible). */
-    public static void showToastWhenPossible(@Nullable Context context, @NonNull String message) {
-        Activity activity = Restarter.getForegroundActivity(context);
-        if (activity != null) {
-            Restarter.showToast(activity, message);
-        } else {
-            // Only try for about 10 seconds
-            showToastWhenPossible(context, message, 10);
-        }
-    }
-
-    private static void showToastWhenPossible(
-            @Nullable final Context context,
-            @NonNull final String message,
-            final int remainingAttempts) {
-        Looper mainLooper = Looper.getMainLooper();
-        Handler handler = new Handler(mainLooper);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Activity activity = getForegroundActivity(context);
-                if (activity != null) {
-                    showToast(activity, message);
-                } else {
-                    if (remainingAttempts > 0) {
-                        showToastWhenPossible(context, message, remainingAttempts - 1);
-                    }
-                }
-            }
-        }, 1000);
     }
 }
