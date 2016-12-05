@@ -594,6 +594,7 @@ public class Location {
 
     private static int findPreviousMatch(@NonNull CharSequence contents, int offset, String pattern,
             @Nullable SearchHints hints) {
+        int loopDecrement = Math.max(1, pattern.length());
         while (true) {
             int index = lastIndexOf(contents, pattern, offset);
             if (index == -1) {
@@ -602,7 +603,7 @@ public class Location {
                 if (isMatch(contents, index, pattern, hints)) {
                     return index;
                 } else {
-                    offset = index - pattern.length();
+                    offset = index - loopDecrement;
                 }
             }
         }
@@ -620,9 +621,10 @@ public class Location {
             }
         }
 
+        int loopIncrement = Math.max(1, pattern.length());
         while (true) {
             int index = indexOf(contents, pattern, offset);
-            if (index == -1) {
+            if (index == -1 || index == contents.length()) {
                 return constructorIndex;
             } else {
                 if (isMatch(contents, index, pattern, hints)) {
@@ -631,7 +633,7 @@ public class Location {
                     }
                     return index;
                 } else {
-                    offset = index + pattern.length();
+                    offset = index + loopIncrement;
                 }
             }
         }
