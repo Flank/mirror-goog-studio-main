@@ -36,6 +36,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -184,6 +185,12 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
                         + "    debugCompile "
                         + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
+
+        // There is an extraneous BOM in the values-ja/strings.xml
+        Files.copy(
+                project.file("WordPress/src/main/res/values-en-rCA/strings.xml").toPath(),
+                project.file("WordPress/src/main/res/values-ja/strings.xml").toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Test
