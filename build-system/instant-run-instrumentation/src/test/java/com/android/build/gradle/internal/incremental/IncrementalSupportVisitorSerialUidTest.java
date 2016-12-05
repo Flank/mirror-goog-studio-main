@@ -55,23 +55,24 @@ public class IncrementalSupportVisitorSerialUidTest {
                             && !Modifier.isStatic(modifier)
                             && !Modifier.isFinal(modifier);
 
-            Truth.assertThat(unchangedAccess).isTrue();
+            Truth.assertWithMessage("If existing, serialVersionUID is not added")
+                    .that(unchangedAccess).isTrue();
         } catch (NoSuchFieldException e) {
             fail();
         }
     }
 
     @Test
-    public void checkSerializableUuidAdded() throws IOException {
+    public void checkSerializableUidAdded() throws IOException {
         try {
-            Field serialUidField = UnchangedClass.class.getField("serialVersionUID");
+            Field serialUidField = UnchangedClass.class.getDeclaredField("serialVersionUID");
             int modifier = serialUidField.getModifiers();
-            boolean correctAccess =
-                    Modifier.isPublic(modifier)
-                            && Modifier.isStatic(modifier)
-                            && Modifier.isFinal(modifier);
+            boolean correctAccess = Modifier.isStatic(modifier) && Modifier.isFinal(modifier);
 
-            Truth.assertThat(correctAccess).isTrue();
+            Truth.assertWithMessage("Added serialVersionUID is static and final")
+                    .that(correctAccess).isTrue();
+            Truth.assertWithMessage("Added serialVersionUID has type long")
+                    .that(serialUidField.getType() == Long.TYPE).isTrue();
         } catch (NoSuchFieldException e) {
             fail();
         }
