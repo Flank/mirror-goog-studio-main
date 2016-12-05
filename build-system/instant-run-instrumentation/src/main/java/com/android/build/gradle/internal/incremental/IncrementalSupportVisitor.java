@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 
-import java.io.ObjectStreamClass;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,7 +38,6 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -107,13 +105,6 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
      *
      * <p>Also updates package_private visibility to public so we can call into this class from
      * outside the package.
-     *
-     * <p>All classes will have a serialVersionUID added (if one does not already exist), as
-     * otherwise, serialVersionUID would be different for instrumented and non-instrumented classes.
-     * We do this for all classes. Due to incremental changes, there could be a class that starts
-     * implementing {@link java.io.Serializable}, thus making all of its subclasses serializable as
-     * well. Those subclasses might be used for persistence, and we need to make sure their
-     * serialVersionUID are stable across instant run and non-instant run builds.
      */
     @Override
     public void visit(int version, int access, String name, String signature, String superName,
@@ -121,7 +112,6 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         visitedClassName = name;
         visitedSuperName = superName;
 
-        addSerialUidIfMissing();
         super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
                 | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT,
             "$change", getRuntimeTypeName(CHANGE_TYPE), null, null);
@@ -761,53 +751,6 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 continue;
             }
             methods.put(key, method);
-        }
-    }
-
-    /**
-     * Adds serialVersionUID for the classes that does not define one. Reason for this is that if a
-     * class does not define a serialVersionUID value, and is used for serialization, instrumented
-     * and non-instrumented class will have different serialVersionUID values, and that will break
-     * serialization.
-     */
-    private void addSerialUidIfMissing() {
-        // noinspection unchecked
-        for (FieldNode f : (List<FieldNode>) classNode.fields) {
-            if (f.name.equals("serialVersionUID")) {
-                // We should not generate serial uuid, field already exists. Although it might
-                // not be static, final, and long, adding would break the instrumented class.
-                return;
-            }
-        }
-        try {
-            String className = Type.getObjectType(classNode.name).getClassName();
-            Class<?> clazz =
-                    Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-
-            ObjectStreamClass objectStreamClass = ObjectStreamClass.lookupAny(clazz);
-            long serialUuid = objectStreamClass.getSerialVersionUID();
-
-            // adds the field
-            super.visitField(
-                    Opcodes.ACC_PUBLIC
-                            | Opcodes.ACC_STATIC
-                            | Opcodes.ACC_FINAL,
-                    "serialVersionUID",
-                    Type.LONG_TYPE.getDescriptor(),
-                    null,
-                    serialUuid);
-
-        } catch (ClassNotFoundException ex) {
-            logger.verbose(
-                    "Unable to add auto-generated serialVersionUID for %1$s : %2$s",
-                    classNode.name, ex.getMessage());
-        } catch (LinkageError | AssertionError e) {
-            // http://b.android.com/220635 - static initializer might be invoked
-            logger.warning(
-                    "Unable to generate serialVersionUID for %1$s. In case you make this class"
-                            + " serializable and use it to persist data in InstantRun mode, please"
-                            + " add a serialVersionUID field.",
-                    classNode.name);
         }
     }
 }

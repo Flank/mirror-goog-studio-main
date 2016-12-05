@@ -52,6 +52,10 @@ public class PackagePrivateClassTest {
                         || Modifier.isProtected(method.getModifiers())).isTrue();
         }
         for (Field field : packagePrivateClass.getDeclaredFields()) {
+            if (field.getName().equals("serialVersionUID")) {
+                // we generate this one, just skip
+                continue;
+            }
             assertWithMessage(field.getName() + " is package private")
                     .that(Modifier.isPublic(field.getModifiers())
                             || Modifier.isPrivate(field.getModifiers())
