@@ -582,7 +582,6 @@ public class IconDetectorTest extends AbstractCheckTest {
 
     public void testSquareLauncherFromNonStandardMipmapName() throws Exception {
         // Checks both launcher icons not named ic_launcher and roundIcon attributes
-        mEnabled = Collections.singleton(IconDetector.ICON_LAUNCHER_SHAPE);
         String expected = ""
                 + "res/mipmap-mdpi/my_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]\n"
                 + "res/mipmap-hdpi/my_launcher_round.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]\n"
@@ -606,6 +605,72 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .issues(IconDetector.ICON_LAUNCHER_SHAPE)
                 .run()
                 .expect(expected);
+    }
+
+    public void testShadow() throws Exception {
+        lint().files(
+                base64gzip("res/mipmap-mdpi/ic_launcher_round.png", ""
+                        + "H4sIAAAAAAAAAAH7CQT2iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABX"
+                        + "AvmHAAAJwklEQVR42sVaa1BU5xmWCLFJbJr8sCm9jalNmpQ/Zjq2nf7p+Kc/"
+                        + "quwuWlIzlmlsOlPHSaZp7DjWNioQ7iCImqAU0Y4IchEEsxXFXXaXm0IocrOA"
+                        + "yB2yQOUqF2V5+77ffufst8s5hwUh7swzHJbvvN/zvLfv+85hzZon/ACAD2It"
+                        + "wo9+ejFeHkv3rnlaH5z8GYSvyt/WI/wRr3LQ9XqVsb5k66kSx99fR+xBpMzP"
+                        + "z5c6HI42hB2vRwh0Td/R32gMH/v6Vy6EQu/h5RAkVYyYQACS9Br8nmKygXhB"
+                        + "aY6VJO4j5Te/3oskWjxIz8/NzTm8AY31ENRCNqWa4NHwWSnya4XrnyHpKoE4"
+                        + "EXrscH5giVhwL/5eRXMozb0S5D9E4nPC5HPLIK0IbsvBU4uuP3xiEeKNaPBT"
+                        + "yevca/MrRd4jBR9Lvz969Chl2SLEboDGMjh5KX9hNeEKhgNmZ2cvIgWfJYkQ"
+                        + "iweNfUbkRaOEqZlJsI910vcrQRi+HOtgNj3qg803MTFxWhDh440AX+75P0ue"
+                        + "9yzSxp4yOF21BwZHu59YgH20C05W7IKGbuuCIsf5HY8fP4aRkZGPRG6L9nnM"
+                        + "v59KBauUNoODdkgv3w8F9VGYq7OqnhWhNIbuza0LhVTrBzA4NKiYTuRETKW5"
+                        + "vr6+X2iuE2Leo+oqoWAVJn4ENY1WOFX+O2jstcgkZ2ZnoPt/zXC76wqUtJyB"
+                        + "wsZYhhstp+FWZwF0DTfhmGl5fH2PCZJsO6G60cJsqjiCcRgdHb2N1J7x5Log"
+                        + "ddDQn4TUUe02Y2NjcLkyCc7e3gd9w/fA1n4RzlbvhRPlb0MyQzDD8fLfyEgq"
+                        + "2wmpt/4IlnsXoHe4DdPwD5BTkQDj4+Oa3YlSiQRiFN5XTCVJEf58Hr3fIvRm"
+                        + "zeK719EKn5W/C6cqd8OJit8y8osJSCrbwXCc/m59B9rRxmLNgLiQUzEKrUaj"
+                        + "8cUFUZAUTU5Ohgje1zQ6OTUOVxpiWQEy8ksUkMgQBJfvRKCtMW/2Tg6sBbh/"
+                        + "//57blEQW9PMzEyxVu67yI9BTt1hRt5TQLIgYCH5nQJ5p4BEmwEya/+2qAiJ"
+                        + "k91uLxFqwUdeIAYHB1/DQRNSC1MzRLlY6Ol5r72vLICQj5FQ62gSJ+RK68JE"
+                        + "WVlZgLy4SW0J8+s9nj7zWnlf3XnVjfhJxOdNx8DUchZSqn6v6H0xfT7Fein5"
+                        + "7z+xO8U5xSD5YzY9w+2OQs16oGqmNGpubt4nt1QpAtgJUtX6voSRiUE4c2uP"
+                        + "7G1CEbZJFM9Q02lc1Ps0RhpfUB/pJuBUxW42h9Y2gwR2dHSco9VZ3F74PHz4"
+                        + "0KYlgG60tmW4kSdcaz4pE6rvMWt6n1DfbZbHG5uS3AQQzK3/Uo2CxG1gYKAC"
+                        + "ObtaqdlsXj89Pd2mJWBq+iGk3dorFKkT5LXy9hz4T9cNSK/ep0Lelftpt/dC"
+                        + "bVcxlN27BMllwW7kE2w6tjZMT0+pCqA0Hxoaao+KinpZFlBXV/cdLM4vtQR0"
+                        + "2hvl9FCCJ3FP8mLrFIvXU0CCVQ8d9gZNAbiI2tPT0zfKAmpqajbhAvZAS0Bl"
+                        + "e4HXxNXJuwsQybsEBEJFW56mAKzXkdzc3DdkARaL5TUtAZSTxY0pqmSXQ17R"
+                        + "+1yAsf6kYh2IAs6dOxcgCygqKvo+LmJ2NQG0pb1cG42TIjkVJOKmLNEqYYeM"
+                        + "YzKCOJC4xQAJFr2MeIuOI5Ah94sINqeaAGwAg8nJyZtkAQcPHnx5ampKtYhp"
+                        + "8cqwhcHfMw1w6KIe/kHIRGTp4eNLiGw9HM4xwJFcPRwl5CEu6yE0H1GAuKKH"
+                        + "sCs6CCsiBEL4VSfoOqxoO8c2COW4UHZYcXcqCcDVuD0kJOSb4n5uHR4ayrQE"
+                        + "5NSEQ7xpB3xSaIDwwiAILwqCTxARnxsgwmiAyH8HQeQ1A0QVB0HU9SCIRsTc"
+                        + "QJQYINZkgDiCWe9EqQgdxJoD3ZBVfURVAP3s7u6uQs7Pixs5X+yt6VoCcmvD"
+                        + "WT4fs+yASKNE2sBIRxYbOGEDIx17E2EK4qQNEF+KKVPK08aqnPeEeI5LNeoC"
+                        + "qDYaGhouIGc/xp1vJXzq6+vfl/bfntsJUQAhgURccwmIukYeN8gej7np8no8"
+                        + "E4BkS/VuAtTIx1u3qwmgncQ81ipcv359P1+JXVuJ8+fPv4U3jSlt5lgK1YYJ"
+                        + "3cQpIqqYC2AR0Dsj4CbAmTLxZqlgdYuSdwpYWAPkfdrMYaqPx8TE/JwvwL7i"
+                        + "dno97khNSttpl4AgNyRYKd9RAJKPRvLRJSjiph7J6xn5WJPOKaCUOg15X7co"
+                        + "+TjrNshSFsA4tbS0WJDrN9yOAlIdWK3WD3j/dUsjNQGsl1sodfRO3HQJkMlL"
+                        + "ApB8vFWNfKBMXkkAHciQ4zxudyA/P5/Sx9ftWCkdz7Zs2fI9DFGr55GSCfgi"
+                        + "VF6APEHpEV2iY3AK0Aned/V4b8gzAdULBLAjJXafts2bN29UPNhzRV8zmUyH"
+                        + "aBFhJ2keBTKWjQI8l363ldRK3te5kY8z65iAOEmARtrIsPzaU4Do/SPEUfH5"
+                        + "kKDIv7+/v0bMOykCWgIkEUyA2Ym4ZZBnAoQUEnK/Frl9lwhmZ2ev1Xoqty4x"
+                        + "MdGAB/xZ/lhxjiJy4855deI2V3FSnpPn43BBii8lbHduEbTIc+KEWERxXTrb"
+                        + "SiDmqPM8ePBgNjQ0NJi44cbTz5tHiy8ZjcYI6rkUPiqH/oE+yLWegFTTXyH1"
+                        + "5n5FnJFQsh9OC5C+d/7+kQf+IiMFkWM5jgeWfqltzuNBC/Ly8mKI06KPFqXW"
+                        + "FBwcTCH6dmVlZQadQfFDD5YcWOD0cAl6e3tXBWSb5qC5aE5yIPb6LOJCnLx+"
+                        + "a8PrgUL1anV1dSGPBAvpaj9el9KG5qyoqLiKHH5AXFTzfpEXHOsQm2w220Xc"
+                        + "rTIRVBLU1VbhvQB7wUFzUNpgNyTP/5A4sBV3OR9+I4nYSHmI4Z3hj2fmV0qI"
+                        + "QJzZGh4ensnKyoqlOZ+IvJhOAQEBz1Ie4rnhnbt379ZQNKhDCUIcS3ztJL3R"
+                        + "ZMTJFtlsbm6uOXDgwG6ai+ZcctpoFTYaIxH0JODNzMzMsI6OjlYKNY8I+0hv"
+                        + "VhZ5xeoQxrN0IVsZGRnhaPvHNAfNtSr/hsB7MKXUtzZs2PBWWlraoTt37liG"
+                        + "hoZGyYPSMZBHx+0jvSSkMbSqYqqM4hbeQjbIFtn0qs+vRDT4JM8hXkH8aNeu"
+                        + "XdtwO/4xbgazMA2qaM+Cx74BXICGCXTd09PThulXRWNoLN2D977BbTxHNo8e"
+                        + "PfpU/meCxLzIiVDhvenv7/+TrVu3/tJgMPyKQNf0Hf2Nj3mF3+P3lf+zh1JE"
+                        + "qFM0NTU9y+tEig79/8PXOV7g3/nx/Paje1Yiz/8PRlkryP/HqzsAAAAASUVO"
+                        + "RK5CYIK+BOPh+wkAAA=="))
+                .issues(IconDetector.ICON_LAUNCHER_SHAPE)
+                .run()
+                .expectClean();
     }
 
     public void testMixNinePatch() throws Exception {
