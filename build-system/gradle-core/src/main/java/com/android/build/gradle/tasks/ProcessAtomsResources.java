@@ -318,6 +318,7 @@ public class ProcessAtomsResources extends IncrementalTask {
     }
 
     @InputFile
+    @Optional
     @NonNull
     public File getBaseAtomPackage() {
         return baseAtomPackage.get();
@@ -504,8 +505,7 @@ public class ProcessAtomsResources extends IncrementalTask {
                                         .getVariantConfiguration()
                                         .getPackageDependencies()
                                         .getBaseAtom();
-                        assert baseAtom != null;
-                        return baseAtom.getResourcePackage();
+                        return baseAtom == null ? null : baseAtom.getResourcePackage();
                     });
         }
 

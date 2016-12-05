@@ -80,9 +80,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File sourceOutputDir;
 
-    private File textSymbolOutputDir;
+    private Supplier<File> textSymbolOutputDir = () -> null;
 
-    private File packageOutputFile;
+    private Supplier<File> packageOutputFile = () -> null;
 
     private File proguardOutputFile;
 
@@ -184,18 +184,18 @@ public class ProcessAndroidResources extends IncrementalTask {
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
 
         protected final VariantOutputScope scope;
-        protected final File symbolLocation;
-        private final boolean generateResourcePackage;
+        protected final Supplier<File> symbolLocation;
+        private final Supplier<File> packageOutputSupplier;
         private final boolean generateLegacyMultidexMainDexProguardRules;
 
         public ConfigAction(
                 @NonNull VariantOutputScope scope,
-                @NonNull File symbolLocation,
-                boolean generateResourcePackage,
+                @NonNull Supplier<File> symbolLocation,
+                @NonNull Supplier<File> packageOutputSupplier,
                 boolean generateLegacyMultidexMainDexProguardRules) {
             this.scope = scope;
             this.symbolLocation = symbolLocation;
-            this.generateResourcePackage = generateResourcePackage;
+            this.packageOutputSupplier = packageOutputSupplier;
             this.generateLegacyMultidexMainDexProguardRules = generateLegacyMultidexMainDexProguardRules;
         }
 
@@ -303,9 +303,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     "resDir",
                     () -> scope.getVariantScope().getFinalResourcesDir());
 
-            if (generateResourcePackage) {
-                processResources.setPackageOutputFile(scope.getProcessResourcePackageOutputFile());
-            }
+            processResources.setPackageOutputFile(packageOutputSupplier);
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -417,10 +415,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public File getTextSymbolOutputDir() {
-        return textSymbolOutputDir;
+        return textSymbolOutputDir.get();
     }
 
-    public void setTextSymbolOutputDir(File textSymbolOutputDir) {
+    public void setTextSymbolOutputDir(Supplier<File> textSymbolOutputDir) {
         this.textSymbolOutputDir = textSymbolOutputDir;
     }
 
@@ -428,10 +426,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public File getPackageOutputFile() {
-        return packageOutputFile;
+        return packageOutputFile.get();
     }
 
-    public void setPackageOutputFile(File packageOutputFile) {
+    public void setPackageOutputFile(Supplier<File> packageOutputFile) {
         this.packageOutputFile = packageOutputFile;
     }
 

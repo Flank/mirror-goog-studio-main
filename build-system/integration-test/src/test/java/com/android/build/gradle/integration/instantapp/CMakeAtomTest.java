@@ -47,9 +47,6 @@ public class CMakeAtomTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-        // b.android.com/227451
-        AssumeUtil.assumeResolveDependencyOnConfiguration();
-
         TestFileUtils.appendToFile(
                 sProject.getSubproject(":atom").getBuildFile(),
                 "\n"
