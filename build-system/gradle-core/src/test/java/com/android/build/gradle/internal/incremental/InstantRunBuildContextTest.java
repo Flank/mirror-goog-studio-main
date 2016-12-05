@@ -30,6 +30,7 @@ import com.google.wireless.android.sdk.stats.InstantRunStatus;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -351,14 +352,14 @@ public class InstantRunBuildContextTest {
     public void testOverlappingAndEmptyChanges()
             throws ParserConfigurationException, IOException, SAXException {
         InstantRunBuildContext initial = new InstantRunBuildContext();
-        initial.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         initial.addChangedFile(FileType.MAIN, new File("/tmp/main.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
         InstantRunBuildContext first = new InstantRunBuildContext();
-        first.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        first.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -367,7 +368,7 @@ public class InstantRunBuildContextTest {
         buildInfo = first.toXml();
 
         InstantRunBuildContext second = new InstantRunBuildContext();
-        second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        second.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
@@ -375,7 +376,7 @@ public class InstantRunBuildContextTest {
         buildInfo = second.toXml();
 
         InstantRunBuildContext third = new InstantRunBuildContext();
-        third.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        third.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-3.apk"));
@@ -555,6 +556,95 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild()).isNotNull();
         assertThat(update.getLastBuild().getArtifacts()).hasSize(4);
 
+    }
+
+    @Test
+    public void testMainSplitReAddingWithSplitAPK() throws Exception {
+        InstantRunBuildContext initial = new InstantRunBuildContext();
+        initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+
+        // set the initial build.
+        initial.addChangedFile(FileType.MAIN, new File("main.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split2.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split3.apk"));
+        initial.close();
+        String buildInfo = initial.toXml();
+
+        // re-add only one of the split apk.
+        InstantRunBuildContext update = new InstantRunBuildContext();
+        update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
+        update.loadFromXml(buildInfo);
+        update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        update.close();
+
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(2);
+        assertThat(update.getLastBuild().getArtifacts().stream().map(
+                InstantRunBuildContext.Artifact::getType).collect(
+                        Collectors.toList())).containsExactlyElementsIn(
+                                ImmutableList.of(FileType.SPLIT_MAIN, FileType.SPLIT));
+    }
+
+    @Test
+    public void testMainSplitNoReAddingWithAlreadyPresent() throws Exception {
+        InstantRunBuildContext initial = new InstantRunBuildContext();
+        initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+
+        // set the initial build.
+        initial.addChangedFile(FileType.MAIN, new File("main.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split2.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split3.apk"));
+        initial.close();
+        String buildInfo = initial.toXml();
+
+        // re-add only the main apk and a split
+        InstantRunBuildContext update = new InstantRunBuildContext();
+        update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
+        update.loadFromXml(buildInfo);
+        update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        update.addChangedFile(FileType.MAIN, new File("main.apk"));
+        update.close();
+
+        // make sure SPLIT_MAIN is not added twice.
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(2);
+        assertThat(update.getLastBuild().getArtifacts().stream().map(
+                InstantRunBuildContext.Artifact::getType).collect(
+                Collectors.toList())).containsExactlyElementsIn(
+                ImmutableList.of(FileType.SPLIT_MAIN, FileType.SPLIT));
+    }
+
+    @Test
+    public void testMainSplitNoReAddingWithSplitAPK() throws Exception {
+        InstantRunBuildContext initial = new InstantRunBuildContext();
+        initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+
+        // set the initial build.
+        initial.addChangedFile(FileType.MAIN, new File("main.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split2.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split3.apk"));
+        initial.close();
+        String buildInfo = initial.toXml();
+
+        // re-add only one of the split apk.
+        InstantRunBuildContext update = new InstantRunBuildContext();
+        update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
+        update.loadFromXml(buildInfo);
+        update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        update.close();
+
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(1);
+        assertThat(update.getLastBuild().getArtifacts().stream().map(
+                InstantRunBuildContext.Artifact::getType).collect(
+                Collectors.toList())).containsExactlyElementsIn(
+                ImmutableList.of(FileType.SPLIT));
     }
 
     private static List<Element> getElementsByName(Node parent, String nodeName) {
