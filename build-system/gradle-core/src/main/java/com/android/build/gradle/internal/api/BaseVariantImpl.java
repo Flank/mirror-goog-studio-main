@@ -35,6 +35,7 @@ import com.android.builder.model.SourceProvider;
 import com.google.common.collect.Lists;
 
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -245,6 +246,11 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders) {
         getVariantData().registerJavaGeneratingTask(task, sourceFolders);
+    }
+
+    @Override
+    public void registerGeneratedResFolders(@NonNull FileCollection folders) {
+        getVariantData().registerGeneratedResFolders(folders);
     }
 
     @Override

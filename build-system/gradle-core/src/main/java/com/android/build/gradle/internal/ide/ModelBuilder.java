@@ -85,9 +85,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 
 /**
@@ -654,11 +656,12 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         List<File> result;
 
-        List<File> extraFolders = variantData.getExtraGeneratedResFolders();
+        FileCollection extraFolders = variantData.getExtraGeneratedResFolders();
         if (extraFolders != null && !extraFolders.isEmpty()) {
-            result = Lists.newArrayListWithCapacity(extraFolders.size() + 2);
+            Set<File> files = extraFolders.getFiles();
 
-            result.addAll(extraFolders);
+            result = Lists.newArrayListWithCapacity(files.size() + 2);
+            result.addAll(files);
         } else {
             result = Lists.newArrayListWithCapacity(2);
         }
