@@ -42,6 +42,7 @@ if (TRACE_OUTPUT)
 endif()
 
 add_unit_test(profiler_utils_test
+              activity_manager_test.cc
               file_reader_test.cc
               clock_test.cc
               current_process_test.cc
