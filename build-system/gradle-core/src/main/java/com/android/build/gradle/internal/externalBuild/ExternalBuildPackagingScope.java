@@ -40,6 +40,7 @@ import org.gradle.api.Project;
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * A {@link PackagingScope} used with external build plugin.
@@ -119,21 +120,21 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders() {
-        return mTransformManager.getPipelineOutput(StreamFilter.DEX).keySet();
+    public FileCollection getDexFolders() {
+        return mTransformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX);
     }
 
     @NonNull
     @Override
-    public Set<File> getJavaResources() {
+    public FileCollection getJavaResources() {
         // TODO: do we want to support java resources?
-        return Collections.emptySet();
+        return getProject().files();
     }
 
     @NonNull
     @Override
-    public Set<File> getJniFolders() {
-        return Collections.emptySet();
+    public FileCollection getJniFolders() {
+        return getProject().files();
     }
 
     @NonNull

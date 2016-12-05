@@ -34,13 +34,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
@@ -179,37 +179,37 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
     }
 
     @InputFiles
-    public Set<File> getJniFolders() {
+    public FileCollection getJniFolders() {
         return jniFolders;
     }
 
-    public void setJniFolders(Set<File> jniFolders) {
+    public void setJniFolders(FileCollection jniFolders) {
         this.jniFolders = jniFolders;
     }
 
     @InputFiles
-    public Set<File> getDexFolders() {
+    public FileCollection getDexFolders() {
         return dexFolders;
     }
 
-    public void setDexFolders(Set<File> dexFolders) {
+    public void setDexFolders(FileCollection dexFolders) {
         this.dexFolders = dexFolders;
     }
 
     @InputFiles
-    public Set<File> getJavaResources() {
+    public FileCollection getJavaResources() {
         return javaResources;
     }
 
-    public void setJavaResources(Set<File> javaResources) {
+    public void setJavaResources(FileCollection javaResources) {
         this.javaResources = javaResources;
     }
 
     private File bundleFolder;
     private File bundleFile;
-    private Set<File> jniFolders;
-    private Set<File> dexFolders;
-    private Set<File> javaResources;
+    private FileCollection jniFolders;
+    private FileCollection dexFolders;
+    private FileCollection javaResources;
 
     // ----- FileSupplierTask -----
 
@@ -255,21 +255,18 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             ConventionMappingHelper.map(
                     bundleAtom,
                     "jniFolders",
-                    () ->
-                            scope.getTransformManager()
-                                    .getPipelineOutput(StreamFilter.NATIVE_LIBS)
-                                    .keySet());
+                    () -> scope.getTransformManager()
+                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS));
             ConventionMappingHelper.map(
                     bundleAtom,
                     "dexFolders",
-                    () -> scope.getTransformManager().getPipelineOutput(StreamFilter.DEX).keySet());
+                    () -> scope.getTransformManager()
+                            .getPipelineOutputAsFileCollection(StreamFilter.DEX));
             ConventionMappingHelper.map(
                     bundleAtom,
                     "javaResources",
-                    () ->
-                            scope.getTransformManager()
-                                    .getPipelineOutput(StreamFilter.RESOURCES)
-                                    .keySet());
+                    () -> scope.getTransformManager()
+                            .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES));
         }
 
         @NonNull

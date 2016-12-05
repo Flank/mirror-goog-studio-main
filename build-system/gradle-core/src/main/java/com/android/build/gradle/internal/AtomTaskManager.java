@@ -321,16 +321,6 @@ public class AtomTaskManager extends TaskManager {
                 // TODO: Remove when Jack is converted to AndroidTask.
                 variantData.javaCompilerTask);
 
-        // TODO Optimize to avoid creating too many actions
-        transformManager.getStreams(StreamFilter.RESOURCES)
-                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
-        // TODO Optimize to avoid creating too many actions
-        transformManager.getStreams(StreamFilter.DEX)
-                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
-        // TODO Optimize to avoid creating too many actions
-        transformManager.getStreams(StreamFilter.NATIVE_LIBS)
-                .forEach(stream -> bundleAtom.dependsOn(tasks, stream.getDependencies()));
-
         variantScope.getAssembleTask().dependsOn(tasks, bundleAtom);
 
         String classifier =

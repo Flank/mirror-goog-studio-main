@@ -65,7 +65,9 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
+import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
@@ -140,19 +142,19 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     @InputFiles
     @Optional
-    public Collection<File> getJavaResourceFiles() {
+    public FileCollection getJavaResourceFiles() {
         return javaResourceFiles;
     }
 
     @InputFiles
     @Optional
-    public Collection<File> getJniFolders() {
+    public FileCollection getJniFolders() {
         return jniFolders;
     }
 
     private File resourceFile;
 
-    private Set<File> dexFolders;
+    protected FileCollection dexFolders;
 
     private File assets;
 
@@ -160,12 +162,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     @InputFiles
     @Optional
-    public Set<File> getDexFolders() {
+    public FileCollection getDexFolders() {
         return dexFolders;
-    }
-
-    public void setDexFolders(Set<File> dexFolders) {
-        this.dexFolders = dexFolders;
     }
 
     @InputDirectory
@@ -184,8 +182,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     }
 
     /** list of folders and/or jars that contain the merged java resources. */
-    private Set<File> javaResourceFiles;
-    private Set<File> jniFolders;
+    protected FileCollection javaResourceFiles;
+    protected FileCollection jniFolders;
 
     @PackageFile
     private File outputFile;
@@ -395,11 +393,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                  * are kept in the apk as dex files. All other dex files are placed as
                  * resources as defined by makeInstantRunResourcesFromDex.
                  */
-                instantRunDexBaseFiles = getDexFolders()
+                Set<File> dexFiles = getDexFolders().getFiles();
+                instantRunDexBaseFiles = dexFiles
                         .stream()
                         .filter(input -> input.getName().contains(INSTANT_RUN_PACKAGES_PREFIX))
                         .collect(Collectors.toSet());
-                Iterable<File> nonInstantRunDexBaseFiles = getDexFolders()
+                Iterable<File> nonInstantRunDexBaseFiles = dexFiles
                         .stream()
                         .filter(f -> !instantRunDexBaseFiles.contains(f))
                         .collect(Collectors.toSet());
@@ -427,7 +426,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         Maps.filterKeys(
                                 changedDex,
                                 Predicates.compose(
-                                        Predicates.in(getDexFolders()),
+                                        Predicates.in(getDexFolders().getFiles()),
                                         RelativeFile::getBase
                                 )));
 
@@ -564,7 +563,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         changedInputs,
                         saveData,
                         InputSet.DEX,
-                        getDexFolders(),
+                        getDexFolders().getFiles(),
                         cacheByPath,
                         cacheUpdates);
 
@@ -573,7 +572,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         changedInputs,
                         saveData,
                         InputSet.JAVA_RESOURCE,
-                        getJavaResourceFiles(),
+                        getJavaResourceFiles().getFiles(),
                         cacheByPath,
                         cacheUpdates);
 
@@ -600,7 +599,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         changedInputs,
                         saveData,
                         InputSet.NATIVE_RESOURCE,
-                        getJniFolders(),
+                        getJniFolders().getFiles(),
                         cacheByPath,
                         cacheUpdates);
 
@@ -1126,12 +1125,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
     public abstract static class ConfigAction<T extends PackageAndroidArtifact>
             implements TaskConfigAction<T> {
 
+        protected final Project project;
         protected final PackagingScope packagingScope;
         protected final DexPackagingPolicy dexPackagingPolicy;
 
         public ConfigAction(
                 @NonNull PackagingScope packagingScope,
                 @Nullable InstantRunPatchingPolicy patchingPolicy) {
+            this.project = packagingScope.getProject();
             this.packagingScope = checkNotNull(packagingScope);
             dexPackagingPolicy = patchingPolicy == null
                     ? DexPackagingPolicy.STANDARD
@@ -1163,30 +1164,21 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
             ConventionMappingHelper.map(
                     packageAndroidArtifact, "resourceFile", packagingScope::getFinalResourcesFile);
 
-            ConventionMappingHelper.map(
-                    packageAndroidArtifact, "dexFolders",
-                    () -> packagingScope.getDexFolders());
-
-            ConventionMappingHelper.map(
-                    packageAndroidArtifact,
-                    "javaResourceFiles",
-                    packagingScope::getJavaResources);
+            packageAndroidArtifact.dexFolders = packagingScope.getDexFolders();
+            packageAndroidArtifact.javaResourceFiles = packagingScope.getJavaResources();
 
             packageAndroidArtifact.setAssets(packagingScope.getAssetsDir());
 
-            ConventionMappingHelper.map(packageAndroidArtifact, "jniFolders", () -> {
-                if (packagingScope.getSplitHandlingPolicy() ==
-                        SplitHandlingPolicy.PRE_21_POLICY) {
-                    return packagingScope.getJniFolders();
-                }
-
+            if (packagingScope.getSplitHandlingPolicy() == SplitHandlingPolicy.PRE_21_POLICY) {
+                packageAndroidArtifact.jniFolders = packagingScope.getJniFolders();
+            } else {
                 Set<String> filters =
                         AbiSplitOptions.getAbiFilters(packagingScope.getAbiFilters());
 
-                return filters.isEmpty()
+                packageAndroidArtifact.jniFolders = filters.isEmpty()
                         ? packagingScope.getJniFolders()
-                        : Collections.emptySet();
-            });
+                        : project.files();
+            }
 
             ConventionMappingHelper.map(packageAndroidArtifact, "abiFilters", () -> {
                 String filter = packagingScope.getMainOutputFile().getFilter(

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Packaging scope specific to the base atom.
@@ -43,8 +44,8 @@ public class BaseAtomPackagingScope extends AtomPackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders() {
-        return ImmutableSet.<File>builder().add(atomDependency.getDexFolder()).build();
+    public FileCollection getDexFolders() {
+        return getProject().files(atomDependency.getDexFolder());
     }
 
 }
