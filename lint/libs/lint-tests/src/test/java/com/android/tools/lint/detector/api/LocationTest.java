@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.tools.lint.detector.api.Location.SearchDirection;
+import com.android.tools.lint.detector.api.Location.SearchHints;
 import java.io.File;
 import java.io.IOException;
 import junit.framework.TestCase;
@@ -62,7 +64,7 @@ public class LocationTest extends TestCase {
         assertSame(location1, location2.getSecondary());
     }
 
-    public void testFaen() throws Exception {
+    public void testCycles() throws Exception {
         File[] paths = new File[] {
                 new File("values-zh-rTW/arrays.xml"), new File("values-zh-rCN/arrays.xml"),
                 new File("values-vi/arrays.xml"), new File("values-uk/arrays.xml"),
@@ -125,5 +127,14 @@ public class LocationTest extends TestCase {
             a = a.getSecondary();
             assert a != null;
         }
+    }
+
+    public void testInfiniteLoop() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=229500
+        // Prior to the fix, these two statements would hang
+        Location.create(new File("foo"), "this is a test", 0, "", "",
+                SearchHints.create(SearchDirection.FORWARD).matchWholeWord());
+        Location.create(new File("foo"), "this is a test", 0, "", "",
+                SearchHints.create(SearchDirection.BACKWARD).matchWholeWord());
     }
 }

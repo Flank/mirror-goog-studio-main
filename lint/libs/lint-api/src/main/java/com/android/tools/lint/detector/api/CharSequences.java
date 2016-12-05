@@ -196,7 +196,7 @@ public class CharSequences {
     public static int indexOf(@NonNull CharSequence haystack, CharSequence needle, int start) {
         int needleLength = needle.length();
         if (needleLength == 0) {
-            return 0;
+            return start;
         }
 
         char first = needle.charAt(0);
