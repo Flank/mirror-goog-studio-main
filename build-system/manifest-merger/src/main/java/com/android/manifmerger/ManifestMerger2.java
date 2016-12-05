@@ -24,7 +24,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.model.AndroidBundle;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Optional;
@@ -57,8 +56,8 @@ public class ManifestMerger2 {
     static final String BOOTSTRAP_APPLICATION
             = "com.android.tools.fd.runtime.BootstrapApplication";
 
-    static final String BOOTSTRAP_RUN_AS_SERVICE
-            = "com.android.tools.fd.runtime.RunAsServer";
+    static final String BOOTSTRAP_INSTANT_RUN_SERVICE
+            = "com.android.tools.fd.runtime.InstantRunService";
 
     @NonNull
     private final File mManifestFile;
@@ -375,49 +374,32 @@ public class ManifestMerger2 {
                 .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
         if (applicationOptional.isPresent()) {
             XmlElement application = applicationOptional.get();
-            Attr nameAttribute = application.getXml().getAttributeNodeNS(
-                    SdkConstants.ANDROID_URI, "name");
+            Attr enabledAttribute = application.getXml().getAttributeNodeNS(
+                    SdkConstants.ANDROID_URI, "enabled");
 
-            if (nameAttribute != null) {
-                String originalAppName = nameAttribute.getValue();
-                if (BOOTSTRAP_APPLICATION.equals(originalAppName)) {
-                    return document;
-                }
-                application.getXml().setAttribute(SdkConstants.ATTR_NAME, originalAppName);
-                setAndroidAttribute(application.getXml(),
-                                    nameAttribute.getLocalName(),
-                                    BOOTSTRAP_APPLICATION);
-            } else {
-                setAndroidAttribute(application.getXml(),
-                                    SdkConstants.ATTR_NAME,
-                                    BOOTSTRAP_APPLICATION);
+            // force it to be true.
+            if (enabledAttribute != null) {
+                application.getXml().setAttributeNS(
+                        SdkConstants.ANDROID_URI,
+                        enabledAttribute.getName(),
+                        SdkConstants.VALUE_TRUE);
             }
-            addRunAsServer(document, application);
+            addService(document, application);
+        } else {
+            throw new RuntimeException("Application not defined in AndroidManifest.xml");
         }
         return document.reparse();
     }
 
-    @NonNull
-    private static void addRunAsServer(XmlDocument document, XmlElement application) {
+    private static void addService(XmlDocument document, XmlElement application ) {
         // <service
-        //     android:name="com.android.tools.fd.runtime.RunAsServer"
-        //     android:exported="true"
-        //     android:process=":RunAsServer" />
+        //     android:name="com.android.tools.fd.runtime.InstantRunService"
+        //     android:exported="true"/>
         Element service = document.getXml().createElement(SdkConstants.TAG_SERVICE);
-        // Add the element to the document first so that we can find
-        // any existing Android XML namespace attributes.
-        application.getXml().appendChild(service);
-        setAndroidAttribute(service, SdkConstants.ATTR_NAME, BOOTSTRAP_RUN_AS_SERVICE);
+        setAndroidAttribute(service, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_SERVICE);
         // Export it so we can start it with a shell command from adb.
         setAndroidAttribute(service, SdkConstants.ATTR_EXPORTED, SdkConstants.VALUE_TRUE);
-        // It turns out that you get a lot better debugging information if you run
-        // it in-process.  But for production it needs to run in a separate process.
-        final boolean RUN_IN_SEPARATE_PROCESS = true;
-        if (RUN_IN_SEPARATE_PROCESS) {
-            int lastDot = BOOTSTRAP_RUN_AS_SERVICE.lastIndexOf('.');
-            String processName = ":" + BOOTSTRAP_RUN_AS_SERVICE.substring(lastDot + 1);
-            setAndroidAttribute(service, SdkConstants.ATTR_PROCESS, processName);
-        }
+        application.getXml().appendChild(service);
     }
 
     /**
@@ -434,8 +416,8 @@ public class ManifestMerger2 {
      * @return String namespace prefix
      */
     private static String findOrInstallNamespacePrefix(Element node,
-                                                       String namespace,
-                                                       String preferredPrefix) {
+            String namespace,
+            String preferredPrefix) {
         String prefix = node.lookupPrefix(namespace);
         if (prefix == null) {
             prefix = preferredPrefix;
@@ -463,8 +445,8 @@ public class ManifestMerger2 {
      */
     private static void setAndroidAttribute(Element node, String localName, String value) {
         String prefix = findOrInstallNamespacePrefix(node,
-                                                     SdkConstants.ANDROID_URI,
-                                                     SdkConstants.ANDROID_NS_NAME);
+                SdkConstants.ANDROID_URI,
+                SdkConstants.ANDROID_NS_NAME);
         node.setAttributeNS(SdkConstants.ANDROID_URI, prefix + ":" + localName, value);
     }
 
