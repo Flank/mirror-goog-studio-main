@@ -16,8 +16,6 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
-
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
@@ -28,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
