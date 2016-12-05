@@ -23,8 +23,6 @@ import org.junit.Ignore
 import org.junit.Test
 /**
  * Integration test for uploadAchives with multiple projects.
- *
- * TODO: Reenable when gradle fix publication with attribute config
  */
 @CompileStatic
 class RepoTest {
