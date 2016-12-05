@@ -33,6 +33,7 @@ import org.gradle.api.Project;
 
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Implementation of {@link PackagingScope} which delegates to *Scope objects available during
@@ -94,27 +95,25 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public Set<File> getDexFolders() {
-        return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.DEX)
-                .keySet();
+    public FileCollection getDexFolders() {
+        return mVariantScope
+                .getTransformManager()
+                .getPipelineOutputAsFileCollection(StreamFilter.DEX);
     }
 
 
     @NonNull
     @Override
-    public Set<File> getJavaResources() {
+    public FileCollection getJavaResources() {
         return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.RESOURCES)
-                .keySet();
+                .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
     }
 
     @NonNull
     @Override
-    public Set<File> getJniFolders() {
+    public FileCollection getJniFolders() {
         return mVariantScope.getTransformManager()
-                .getPipelineOutput(StreamFilter.NATIVE_LIBS)
-                .keySet();
+                .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
     }
 
     @NonNull

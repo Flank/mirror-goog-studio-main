@@ -25,16 +25,15 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
+import groovy.lang.Closure;
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Version of TransformStream handling outputs of transforms.
@@ -42,27 +41,42 @@ import java.util.Set;
 @Immutable
 class IntermediateStream extends TransformStream {
 
-    private final Supplier<File> rootLocation;
-
-    static Builder builder() {
-        return new Builder();
+    static Builder builder(Project project) {
+        return new Builder(project);
     }
 
     static final class Builder {
+
+        private final Project project;
         private Set<ContentType> contentTypes = Sets.newHashSet();
         private Set<QualifiedContent.ScopeType> scopes = Sets.newHashSet();
-        private Supplier<File> rootLocation;
-        private List<? extends Object> dependencies;
+        private File rootLocation;
+        private String taskName;
+
+        public Builder(Project project) {
+            this.project = project;
+        }
 
         public IntermediateStream build() {
             Preconditions.checkNotNull(rootLocation);
+            Preconditions.checkNotNull(taskName);
             Preconditions.checkState(!contentTypes.isEmpty());
             Preconditions.checkState(!scopes.isEmpty());
+
+            // create a file collection with the files and the dependencies.
+            FileCollection fileCollection = project.files(rootLocation,
+                    new Closure(project) {
+                        public Object doCall(ConfigurableFileCollection fileCollection) {
+                            fileCollection.builtBy(taskName);
+                            return null;
+                        }
+                    });
+
+
             return new IntermediateStream(
                     ImmutableSet.copyOf(contentTypes),
                     ImmutableSet.copyOf(scopes),
-                    rootLocation,
-                    dependencies != null ? dependencies : ImmutableList.of());
+                    fileCollection);
         }
 
         Builder addContentTypes(@NonNull Set<ContentType> types) {
@@ -88,12 +102,12 @@ class IntermediateStream extends TransformStream {
         }
 
         Builder setRootLocation(@NonNull final File rootLocation) {
-            this.rootLocation = Suppliers.ofInstance(rootLocation);
+            this.rootLocation = rootLocation;
             return this;
         }
 
-        Builder setDependency(@NonNull Object dependency) {
-            this.dependencies = ImmutableList.of(dependency);
+        Builder setTaskName(@NonNull String taskName) {
+            this.taskName = taskName;
             return this;
         }
     }
@@ -101,18 +115,16 @@ class IntermediateStream extends TransformStream {
     private IntermediateStream(
             @NonNull Set<ContentType> contentTypes,
             @NonNull Set<? super Scope> scopes,
-            @NonNull Supplier<File> rootLocation,
-            @NonNull List<? extends Object> dependencies) {
-        super(contentTypes, scopes, dependencies);
-        this.rootLocation = rootLocation;
+            @NonNull FileCollection fileCollection) {
+        super(contentTypes, scopes, fileCollection);
     }
 
     /**
      * Returns the files that make up the streams. The callable allows for resolving this lazily.
      */
     @NonNull
-    Supplier<File> getRootLocation() {
-        return rootLocation;
+    File getRootLocation() {
+        return getFiles().getSingleFile();
     }
 
     /**
@@ -120,20 +132,14 @@ class IntermediateStream extends TransformStream {
      */
     @NonNull
     TransformOutputProvider asOutput() {
-        return new TransformOutputProviderImpl(rootLocation.get());
-    }
-
-    @NonNull
-    @Override
-    List<File> getInputFiles() {
-        return ImmutableList.of(rootLocation.get());
+        return new TransformOutputProviderImpl(getRootLocation());
     }
 
     @NonNull
     @Override
     TransformInput asNonIncrementalInput() {
         return IntermediateFolderUtils.computeNonIncrementalInputFromFolder(
-                rootLocation.get(),
+                getRootLocation(),
                 getContentTypes(),
                 getScopes());
     }
@@ -142,7 +148,7 @@ class IntermediateStream extends TransformStream {
     @Override
     IncrementalTransformInput asIncrementalInput() {
         return IntermediateFolderUtils.computeIncrementalInputFromFolder(
-                rootLocation.get(),
+                getRootLocation(),
                 getContentTypes(),
                 getScopes());
     }
@@ -154,17 +160,15 @@ class IntermediateStream extends TransformStream {
         return new IntermediateStream(
                 types,
                 scopes,
-                rootLocation,
-                getDependencies());
+                getFiles());
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("rootLocation", rootLocation.get())
                 .add("scopes", getScopes())
                 .add("contentTypes", getContentTypes())
-                .add("dependencies", getDependencies())
+                .add("fileCollection", getFiles())
                 .toString();
     }
 }

@@ -32,6 +32,7 @@ import org.gradle.api.Project;
 
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Data needed by the packaging tasks.
@@ -78,16 +79,16 @@ public interface PackagingScope {
     File getIncrementalDir(@NonNull String name);
 
     @NonNull
-    Set<File> getDexFolders();
+    FileCollection getDexFolders();
 
     @NonNull
-    Set<File> getJavaResources();
+    FileCollection getJavaResources();
 
     @NonNull
     File getAssetsDir();
 
     @NonNull
-    Set<File> getJniFolders();
+    FileCollection getJniFolders();
 
     @NonNull
     SplitHandlingPolicy getSplitHandlingPolicy();

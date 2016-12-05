@@ -93,9 +93,10 @@ class ExternalBuildTaskManager {
                 file, project, externalBuildContext);
 
         ExtraModelInfo modelInfo = new ExtraModelInfo(project);
-        TransformManager transformManager = new TransformManager(androidTasks, modelInfo, recorder);
+        TransformManager transformManager = new TransformManager(
+                project, androidTasks, modelInfo, recorder);
 
-        transformManager.addStream(OriginalStream.builder()
+        transformManager.addStream(OriginalStream.builder(project)
                 .addContentType(QualifiedContent.DefaultContentType.CLASSES)
                 .addScope(QualifiedContent.Scope.PROJECT)
                 .setJars(externalBuildContext::getInputJarFiles)
@@ -104,7 +105,7 @@ class ExternalBuildTaskManager {
         // add an empty java resources directory for now.
         // the folder itself doesn't actually matter, but it has to be consistent
         // for gradle's up-to-date check
-        transformManager.addStream(OriginalStream.builder()
+        transformManager.addStream(OriginalStream.builder(project)
                 .addContentType(QualifiedContent.DefaultContentType.RESOURCES)
                 .addScope(QualifiedContent.Scope.PROJECT)
                 .setFolder(new File(project.getBuildDir(), "temp/streams/resources"))
@@ -113,7 +114,7 @@ class ExternalBuildTaskManager {
         // add an empty native libraries resources directory for now.
         // the folder itself doesn't actually matter, but it has to be consistent
         // for gradle's up-to-date check
-        transformManager.addStream(OriginalStream.builder()
+        transformManager.addStream(OriginalStream.builder(project)
                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                 .addScope(QualifiedContent.Scope.PROJECT)
                 .setFolder(new File(project.getBuildDir(), "temp/streams/native_libs"))
@@ -283,17 +284,6 @@ class ExternalBuildTaskManager {
 
         variantScope.setPackageApplicationTask(packageApp);
         packageApp.dependsOn(tasks, createAssetsDirectory);
-
-        for (TransformStream stream : transformManager.getStreams(StreamFilter.DEX)) {
-            packageApp.dependsOn(tasks, stream.getDependencies());
-        }
-
-        for (TransformStream stream : transformManager.getStreams(StreamFilter.RESOURCES)) {
-            packageApp.dependsOn(tasks, stream.getDependencies());
-        }
-        for (TransformStream stream : transformManager.getStreams(StreamFilter.NATIVE_LIBS)) {
-            packageApp.dependsOn(tasks, stream.getDependencies());
-        }
 
         // finally, generate the build-info.xml
         AndroidTask<BuildInfoWriterTask>buildInfoWriterTask =
