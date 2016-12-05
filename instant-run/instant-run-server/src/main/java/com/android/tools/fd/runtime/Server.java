@@ -28,20 +28,19 @@ import static com.android.tools.fd.common.ProtocolConstants.UPDATE_MODE_COLD_SWA
 import static com.android.tools.fd.common.ProtocolConstants.UPDATE_MODE_HOT_SWAP;
 import static com.android.tools.fd.common.ProtocolConstants.UPDATE_MODE_NONE;
 import static com.android.tools.fd.common.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
-import static com.android.tools.fd.runtime.BootstrapApplication.LOG_TAG;
-import static com.android.tools.fd.runtime.FileManager.CLASSES_DEX_SUFFIX;
+import static com.android.tools.fd.runtime.FileManager.USE_EXTRACTED_RESOURCES;
+import static com.android.tools.fd.runtime.Logging.LOG_TAG;
 import static com.android.tools.fd.runtime.Paths.RELOAD_DEX_FILE_NAME;
 import static com.android.tools.fd.runtime.Paths.RESOURCE_FILE_NAME;
 
-import com.android.annotations.NonNull;
-
 import android.app.Activity;
-import android.app.Application;
+import android.content.Context;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Handler;
 import android.util.Log;
-
+import com.android.annotations.NonNull;
+import dalvik.system.DexClassLoader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -51,8 +50,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import dalvik.system.DexClassLoader;
 
 /**
  * Server running in the app listening for messages from the IDE and updating the code and resources
@@ -77,24 +74,24 @@ public class Server {
      */
     private static final boolean POST_ALIVE_STATUS = false;
 
-    private LocalServerSocket mServerSocket;
+    private LocalServerSocket serverSocket;
 
-    private final Application mApplication;
+    private final Context context;
 
-    private static int sWrongTokenCount;
+    private static int wrongTokenCount;
 
-    public static void create(@NonNull String packageName, @NonNull Application application) {
-        //noinspection ResultOfObjectAllocationIgnored
-        new Server(packageName, application);
+    @NonNull
+    public static Server create(@NonNull Context context) {
+        return new Server(context.getPackageName(), context);
     }
 
-    private Server(@NonNull String packageName, @NonNull Application application) {
-        mApplication = application;
+    private Server(@NonNull String packageName, @NonNull Context context) {
+        this.context = context;
         try {
-            mServerSocket = new LocalServerSocket(packageName);
+            serverSocket = new LocalServerSocket(packageName);
             if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                 Log.v(LOG_TAG, "Starting server socket listening for package " + packageName
-                        + " on " + mServerSocket.getLocalSocketAddress());
+                        + " on " + serverSocket.getLocalSocketAddress());
             }
         } catch (IOException e) {
             Log.e(LOG_TAG, "IO Error creating local socket at " + packageName, e);
@@ -117,6 +114,16 @@ public class Server {
             if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
                 Log.e(LOG_TAG, "Fatal error starting Instant Run server", e);
             }
+        }
+    }
+
+    public void shutdown() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException ignore) {
+            }
+            serverSocket = null;
         }
     }
 
@@ -143,7 +150,7 @@ public class Server {
 
             while (true) {
                 try {
-                    LocalServerSocket serverSocket = mServerSocket;
+                    LocalServerSocket serverSocket = Server.this.serverSocket;
                     if (serverSocket == null) {
                         break; // stopped?
                     }
@@ -157,11 +164,11 @@ public class Server {
                             socket);
                     socketServerReplyThread.run();
 
-                    if (sWrongTokenCount > 50) {
+                    if (wrongTokenCount > 50) {
                         if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                             Log.v(LOG_TAG, "Stopping server: too many wrong token connections");
                         }
-                        mServerSocket.close();
+                        Server.this.serverSocket.close();
                         break;
                     }
                 } catch (Throwable e) {
@@ -175,17 +182,17 @@ public class Server {
 
     private class SocketServerReplyThread extends Thread {
 
-        private final LocalSocket mSocket;
+        private final LocalSocket socket;
 
         SocketServerReplyThread(LocalSocket socket) {
-            mSocket = socket;
+            this.socket = socket;
         }
 
         @Override
         public void run() {
             try {
-                DataInputStream input = new DataInputStream(mSocket.getInputStream());
-                DataOutputStream output = new DataOutputStream(mSocket.getOutputStream());
+                DataInputStream input = new DataInputStream(socket.getInputStream());
+                DataOutputStream output = new DataOutputStream(socket.getOutputStream());
                 try {
                     handle(input, output);
                 } finally {
@@ -238,7 +245,7 @@ public class Server {
                         // Send an "ack" back to the IDE.
                         // The value of the boolean is true only when the app is in the
                         // foreground.
-                        boolean active = Restarter.getForegroundActivity(mApplication) != null;
+                        boolean active = Restarter.getForegroundActivity(context) != null;
                         output.writeBoolean(active);
                         if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                             Log.v(LOG_TAG, "Received Ping message from the IDE; " +
@@ -248,34 +255,46 @@ public class Server {
                     }
 
                     case MESSAGE_PATH_EXISTS: {
-                        String path = input.readUTF();
-                        long size = FileManager.getFileSize(path);
-                        output.writeLong(size);
-                        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                            Log.v(LOG_TAG, "Received path-exists(" + path + ") from the " +
-                                    "IDE; returned size=" + size);
+                        if (USE_EXTRACTED_RESOURCES) {
+                            String path = input.readUTF();
+                            long size = FileManager.getFileSize(path);
+                            output.writeLong(size);
+                            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                                Log.v(LOG_TAG, "Received path-exists(" + path + ") from the " +
+                                        "IDE; returned size=" + size);
+                            }
+                        } else {
+                            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
+                                Log.e(LOG_TAG, "Unexpected message type: " + message);
+                            }
                         }
                         continue;
                     }
 
                     case MESSAGE_PATH_CHECKSUM: {
-                        long begin = System.currentTimeMillis();
-                        String path = input.readUTF();
-                        byte[] checksum = FileManager.getCheckSum(path);
-                        if (checksum != null) {
-                            output.writeInt(checksum.length);
-                            output.write(checksum);
-                            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                                long end = System.currentTimeMillis();
-                                String hash = new BigInteger(1, checksum).toString(16);
-                                Log.v(LOG_TAG, "Received checksum(" + path + ") from the " +
-                                        "IDE: took " + (end - begin) + "ms to compute " + hash);
+                        if (USE_EXTRACTED_RESOURCES) {
+                            long begin = System.currentTimeMillis();
+                            String path = input.readUTF();
+                            byte[] checksum = FileManager.getCheckSum(path);
+                            if (checksum != null) {
+                                output.writeInt(checksum.length);
+                                output.write(checksum);
+                                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                                    long end = System.currentTimeMillis();
+                                    String hash = new BigInteger(1, checksum).toString(16);
+                                    Log.v(LOG_TAG, "Received checksum(" + path + ") from the " +
+                                            "IDE: took " + (end - begin) + "ms to compute " + hash);
+                                }
+                            } else {
+                                output.writeInt(0);
+                                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                                    Log.v(LOG_TAG, "Received checksum(" + path + ") from the " +
+                                            "IDE: returning <null>");
+                                }
                             }
                         } else {
-                            output.writeInt(0);
-                            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                                Log.v(LOG_TAG, "Received checksum(" + path + ") from the " +
-                                        "IDE: returning <null>");
+                            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
+                                Log.e(LOG_TAG, "Unexpected message type: " + message);
                             }
                         }
                         continue;
@@ -286,7 +305,7 @@ public class Server {
                             return;
                         }
 
-                        Activity activity = Restarter.getForegroundActivity(mApplication);
+                        Activity activity = Restarter.getForegroundActivity(context);
                         if (activity != null) {
                             if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                                 Log.v(LOG_TAG, "Restarting activity per user request");
@@ -321,7 +340,7 @@ public class Server {
 
                     case MESSAGE_SHOW_TOAST: {
                         String text = input.readUTF();
-                        Activity foreground = Restarter.getForegroundActivity(mApplication);
+                        Activity foreground = Restarter.getForegroundActivity(context);
                         if (foreground != null) {
                             Restarter.showToast(foreground, text);
                         } else if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
@@ -348,7 +367,7 @@ public class Server {
             if (token != AppInfo.token) {
                 Log.w(LOG_TAG, "Mismatched identity token from client; received " + token
                         + " and expected " + AppInfo.token);
-                sWrongTokenCount++;
+                wrongTokenCount++;
                 return false;
             }
             return true;
@@ -380,25 +399,7 @@ public class Server {
 
         for (ApplicationPatch change : changes) {
             String path = change.getPath();
-            if (path.endsWith(CLASSES_DEX_SUFFIX)) {
-                handleColdSwapPatch(change);
-
-                // Gradle sometimes sends a restart dex even when there is a hotswap patch,
-                // so don't take the presence of a restart dex as a conclusion that we must
-                // do a coldswap. Check.
-                boolean canHotSwap = false;
-                for (ApplicationPatch c : changes) {
-                    if (c.getPath().equals(RELOAD_DEX_FILE_NAME)) {
-                        canHotSwap = true;
-                        break;
-                    }
-                }
-
-                if (!canHotSwap) {
-                    updateMode = UPDATE_MODE_COLD_SWAP;
-                }
-
-            } else if (path.equals(RELOAD_DEX_FILE_NAME)) {
+            if (path.equals(RELOAD_DEX_FILE_NAME)) {
                 updateMode = handleHotSwapPatch(updateMode, change);
             } else if (isResourcePath(path)) {
                 updateMode = handleResourcePatch(updateMode, change, path);
@@ -437,7 +438,7 @@ public class Server {
             }
             String nativeLibraryPath = FileManager.getNativeLibraryFolder().getPath();
             DexClassLoader dexClassLoader = new DexClassLoader(dexFile,
-                    mApplication.getCacheDir().getPath(), nativeLibraryPath,
+                    context.getCacheDir().getPath(), nativeLibraryPath,
                     getClass().getClassLoader());
 
             // we should transform this process with an interface/impl
@@ -475,15 +476,6 @@ public class Server {
         return updateMode;
     }
 
-    private static void handleColdSwapPatch(@NonNull ApplicationPatch patch) {
-        if (patch.path.startsWith(Paths.DEX_SLICE_PREFIX)) {
-            File file = FileManager.writeDexShard(patch.getBytes(), patch.path);
-            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                Log.v(LOG_TAG, "Received dex shard " + file);
-            }
-        }
-    }
-
     private void restart(int updateMode, boolean incrementalResources, boolean toast) {
         if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
             Log.v(LOG_TAG, "Finished loading changes; update mode =" + updateMode);
@@ -495,7 +487,7 @@ public class Server {
             }
 
             if (toast) {
-                Activity foreground = Restarter.getForegroundActivity(mApplication);
+                Activity foreground = Restarter.getForegroundActivity(context);
                 if (foreground != null) {
                     Restarter.showToast(foreground, "Applied code changes without activity " +
                             "restart");
@@ -506,7 +498,7 @@ public class Server {
             return;
         }
 
-        List<Activity> activities = Restarter.getActivities(mApplication, false);
+        List<Activity> activities = Restarter.getActivities(context, false);
 
         if (incrementalResources && updateMode == UPDATE_MODE_WARM_SWAP) {
             // Try to just replace the resources on the fly!
@@ -519,15 +511,14 @@ public class Server {
 
             if (file != null) {
                 String resources = file.getPath();
-                MonkeyPatcher.monkeyPatchApplication(mApplication, null, null, resources);
-                MonkeyPatcher.monkeyPatchExistingResources(mApplication, resources, activities);
+                MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
             } else {
                 Log.e(LOG_TAG, "No resource file found to apply");
                 updateMode = UPDATE_MODE_COLD_SWAP;
             }
         }
 
-        Activity activity = Restarter.getForegroundActivity(mApplication);
+        Activity activity = Restarter.getForegroundActivity(context);
         if (updateMode == UPDATE_MODE_WARM_SWAP) {
             if (activity != null) {
                 if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
@@ -581,7 +572,7 @@ public class Server {
                 Log.v(LOG_TAG, "Performing full app restart");
             }
 
-            Restarter.restartApp(mApplication, activities, toast);
+            Restarter.restartApp(context, activities, toast);
         } else {
             if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                 Log.v(LOG_TAG, "Waiting for app to be killed and restarted by the IDE...");

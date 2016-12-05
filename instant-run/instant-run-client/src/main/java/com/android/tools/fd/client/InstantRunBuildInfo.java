@@ -148,10 +148,14 @@ public class InstantRunBuildInfo {
 
                     String location = element.getAttribute(ATTR_ARTIFACT_LOCATION);
                     String typeAttribute = element.getAttribute(ATTR_ARTIFACT_TYPE);
-                    InstantRunArtifactType type = InstantRunArtifactType.valueOf(typeAttribute);
-                    artifacts.add(
-                            new InstantRunArtifact(
-                                    type, new File(location), currentBuildTimestamp));
+                    try {
+                        InstantRunArtifactType type = InstantRunArtifactType.valueOf(typeAttribute);
+                        artifacts.add(
+                                new InstantRunArtifact(
+                                        type, new File(location), currentBuildTimestamp));
+                    } catch (IllegalArgumentException ignore) {
+                        // Ignore older/unknown artifact types
+                    }
                 }
             }
             mArtifacts = artifacts;

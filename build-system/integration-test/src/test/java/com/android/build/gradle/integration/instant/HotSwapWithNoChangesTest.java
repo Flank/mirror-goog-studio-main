@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -73,6 +74,7 @@ public class HotSwapWithNoChangesTest {
     }
 
     @Test
+    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testRestartOnly() throws Exception {
         doTestArtifacts(() -> {
             // Force cold swap.
@@ -83,6 +85,7 @@ public class HotSwapWithNoChangesTest {
     }
 
     @Test
+    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testIncompatibleChange() throws Exception {
         doTestArtifacts(() -> {
             String newPath = ACTIVITY_PATH.replace("HelloWorld", "HelloWorldCopy");
