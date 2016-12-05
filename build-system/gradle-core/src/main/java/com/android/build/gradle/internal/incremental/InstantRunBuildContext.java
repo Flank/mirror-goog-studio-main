@@ -515,6 +515,29 @@ public class InstantRunBuildContext {
                 previousBuilds.remove(aBuildId);
             }
         }
+
+        // check if we are using split apks on L or M, in that case, we need to add the main split
+        // so deployment can be successful.
+        boolean inMultiAPKOnBefore24 = patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
+                && featureLevel != null && featureLevel < 24;
+        if (inMultiAPKOnBefore24) {
+            // Re-add the SPLIT_MAIN if any SPLIT is present.
+            if (currentBuild.getArtifactForType(FileType.SPLIT_MAIN) == null) {
+                boolean anySplitInCurrentBuild = currentBuild.artifacts.stream()
+                        .anyMatch(artifact -> artifact.fileType == FileType.SPLIT);
+
+                if (anySplitInCurrentBuild) {
+                    // find the SPLIT_MAIN, any is fine since the location does not vary.
+                    for (Build previousBuild : previousBuilds.values()) {
+                        Artifact main = previousBuild.getArtifactForType(FileType.SPLIT_MAIN);
+                        if (main != null) {
+                            currentBuild.artifacts.add(main);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         if (currentBuild.buildMode == InstantRunBuildMode.FULL) {
             collapseMainArtifactsIntoCurrentBuild();
         }
