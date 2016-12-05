@@ -535,6 +535,7 @@ public class MaterialHtmlReporter extends Reporter {
         writeNewHtmlFormatInfoCard();
 
         if (!issues.isEmpty()) {
+            append("\n<a name=\"overview\"></a>\n");
             writeCard(() -> writeOverview(related, missing.size()), "Overview", true);
 
             Category previousCategory = null;
@@ -1073,15 +1074,9 @@ public class MaterialHtmlReporter extends Reporter {
 
         Category previousCategory = null;
         for (List<Warning> warnings : related) {
-            Issue issue = warnings.get(0).issue;
-
-            boolean isError = false;
-            for (Warning warning : warnings) {
-                if (warning.severity.isError()) {
-                    isError = true;
-                    break;
-                }
-            }
+            Warning first = warnings.get(0);
+            Issue issue = first.issue;
+            boolean isError = first.severity.isError();
 
             if (issue.getCategory() != previousCategory) {
                 append("<tr><td class=\"countColumn\"></td><td class=\"categoryColumn\">");
