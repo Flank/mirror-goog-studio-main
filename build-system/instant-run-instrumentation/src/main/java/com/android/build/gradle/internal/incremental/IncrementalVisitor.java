@@ -35,6 +35,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
+import org.objectweb.asm.commons.SerialVersionUIDAdder;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -345,7 +346,21 @@ public class IncrementalVisitor extends ClassVisitor {
         Files.createParentDirs(outputFile);
         IncrementalVisitor visitor =
                 visitorBuilder.build(classNode, parentsNodes, classWriter, logger);
-        classNode.accept(visitor);
+
+        if (visitorBuilder.getOutputType() == OutputType.INSTRUMENT) {
+            /*
+             * Classes that do not have a serial version unique identifier, will be updated to
+             * contain one. This is accomplished by using the {@link SerialVersionUIDAdder} class
+             * visitor that is added when this visitor is created (see the constructor). This way,
+             * the serialVersionUID is the same for instrumented and non-instrumented classes. All
+             * classes will have a serialVersionUID, so if some of the classes that is extended
+             * starts implementing {@link java.io.Serializable}, serialization and deserialization
+             * will continue to work correctly.
+             */
+            classNode.accept(new SerialVersionUIDAdder(visitor));
+        } else {
+            classNode.accept(visitor);
+        }
 
         Files.write(classWriter.toByteArray(), outputFile);
         return outputFile;
