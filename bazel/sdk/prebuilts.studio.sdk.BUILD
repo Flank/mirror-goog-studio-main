@@ -125,6 +125,39 @@ filegroup(
     srcs = glob(["*/platforms/android-25/android.jar"]),
 )
 
+filegroup(
+    name = "espresso_latest",
+    srcs = [":espresso-2.2.2"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "espresso-2.2.2",
+    srcs = glob(
+        include = [
+            "*/extras/android/m2repository/com/android/support/test/espresso/espresso-core/2.2.2/**",
+            "*/extras/android/m2repository/com/android/support/test/espresso/espresso-idling-resource/2.2.2/**",
+        ],
+    ),
+)
+
+filegroup(
+    name = "test-runner_latest",
+    srcs = [":test-runner-0.5"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "test-runner-0.5",
+    srcs = glob(
+        include = [
+            "*/extras/android/m2repository/com/android/support/test/exposed-instrumentation-api-publish/0.5/**",
+            "*/extras/android/m2repository/com/android/support/test/rules/0.5/**",
+            "*/extras/android/m2repository/com/android/support/test/runner/0.5/**",
+        ],
+    ),
+)
+
 java_import(
     name = "android_jar",
     jars = [":_android_jar"],
