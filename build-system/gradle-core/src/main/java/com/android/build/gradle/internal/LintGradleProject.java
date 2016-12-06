@@ -1037,6 +1037,14 @@ public class LintGradleProject extends Project {
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 if (library.getProject() != null) {
                     // Handled below
+
+                    // ...except in that case we don't find custom rule jars (since those are
+                    // tied to the AndroidLibrary); include those here.
+                    File ruleJar = library.getLintJar();
+                    if (ruleJar.exists()) {
+                        customViewRuleJars.add(ruleJar);
+                    }
+
                     continue;
                 }
                 lintProject.addDirectLibrary(getLibrary(client, library, gradleProject, variant));
