@@ -362,6 +362,13 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     /**
+     * Warning that is visible to the user
+     */
+    void warn(String format, Object... args) {
+        androidBuilder.getLogger().warning(format, args);
+    }
+
+    /**
      * General configuration errors that apply to both CMake and ndk-build.
      */
     @NonNull
