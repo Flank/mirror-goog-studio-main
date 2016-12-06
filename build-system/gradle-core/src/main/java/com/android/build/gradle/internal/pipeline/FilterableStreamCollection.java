@@ -65,39 +65,24 @@ public abstract class FilterableStreamCollection {
     @NonNull
     public FileCollection getPipelineOutputAsFileCollection(
             @NonNull StreamFilter streamFilter) {
+        final Project project = getProject();
+
         ImmutableList<TransformStream> streams = getStreams(streamFilter);
         if (streams.isEmpty()) {
-            return getProject().files();
+            return project.files();
         }
 
-        // the collection inside the stream cannot be used as is. This is because the intermediate
-        // streams contain the root location rather that the actual inputs of the stream. Therefore
-        // we need to go through them and create a single collection that contains the actual
-        // inputs.
-        // However the content of the intermediate root folder isn't known at configuration
-        // time so we need to pass a callable that will compute the files dynamically.
+        if (streams.size() == 1) {
+            return streams.get(0).getOutputFileCollection(project, streamFilter);
+        }
 
-        Callable<List<File>> callable = () -> {
-            List<File> files = Lists.newArrayList();
-            for (TransformStream stream : streams) {
-                // get the input for the stream
-                TransformInput input = stream.asNonIncrementalInput();
+        // create a global collection that will return all the collections.
+        ConfigurableFileCollection collection = project.files();
 
-                // collect the files and dependency info for the collection
-                for (QualifiedContent content : Iterables.concat(
-                        input.getJarInputs(), input.getDirectoryInputs())) {
-                    files.add(content.getFile());
-                }
-            }
+        for (TransformStream stream : streams) {
+            collection.from(stream.getOutputFileCollection(project, streamFilter));
+        }
 
-            return files;
-        };
-
-        // gather dependencies.
-        List<TaskDependency> dependencies = streams.stream()
-                .map(stream -> stream.getFiles().getBuildDependencies())
-                .collect(Collectors.toList());
-
-        return getProject().files(callable).builtBy(dependencies);
+        return collection;
     }
 }
