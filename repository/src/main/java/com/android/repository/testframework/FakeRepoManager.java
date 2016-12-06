@@ -30,7 +30,7 @@ import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
@@ -44,12 +44,13 @@ public class FakeRepoManager extends RepoManager {
 
     private RepositoryPackages mPackages;
     private File mLocalPath;
-    private Set<SchemaModule<?>> mModules = Sets
-            .newHashSet(RepoManager.getCommonModule(), RepoManager.getGenericModule());
+    private List<SchemaModule<?>> mModules = Lists
+            .newArrayList(RepoManager.getCommonModule(), RepoManager.getGenericModule());
 
     public FakeRepoManager(@Nullable File localPath, @NonNull RepositoryPackages packages) {
         mLocalPath = localPath;
         mPackages = packages;
+
     }
 
     public FakeRepoManager(@NonNull RepositoryPackages packages) {
@@ -63,7 +64,7 @@ public class FakeRepoManager extends RepoManager {
 
     @NonNull
     @Override
-    public Set<SchemaModule<?>> getSchemaModules() {
+    public List<SchemaModule<?>> getSchemaModules() {
         return mModules;
     }
 

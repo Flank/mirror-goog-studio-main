@@ -18,6 +18,7 @@ package com.android.repository.impl.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.api.DelegatingProgressIndicator;
 import com.android.repository.api.Installer;
 import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
@@ -27,17 +28,19 @@ import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -85,6 +88,10 @@ public abstract class AbstractPackageOperation implements PackageOperation {
 
     private PackageOperation mFallbackOperation;
 
+    private final Object mStateChangeLock = new Object();
+
+    private enum StartTaskStatus {STARTED, ALREADY_DONE, FAILED}
+
     /**
      * Listeners that will be notified when the status changes.
      */
@@ -93,6 +100,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     private final RepoManager mRepoManager;
 
     protected final FileOp mFop;
+
+    private DelegatingProgressIndicator mProgress;
 
     protected AbstractPackageOperation(@NonNull RepoManager repoManager, @NonNull FileOp fop) {
         mRepoManager = repoManager;
@@ -108,20 +117,20 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      * @param progress        For logging and progress display
      */
     protected abstract boolean doPrepare(@NonNull File installTempPath,
-      @NonNull ProgressIndicator progress);
+            @NonNull ProgressIndicator progress);
 
     /**
      * Subclasses should implement this to do any install/uninstall completion actions required.
      *
-     * @param installTemp The temporary dir in which we prepared the (un)install. May be
-     *                    {@code null} if for example the installer removed the installer
-     *                    properties file, but should not be normally.
+     * @param installTemp The temporary dir in which we prepared the (un)install. May be {@code
+     *                    null} if for example the installer removed the installer properties file,
+     *                    but should not be normally.
      * @param progress    For logging and progress indication.
      * @return {@code true} if the operation succeeded, {@code false} otherwise.
      * @see #complete(ProgressIndicator)
      */
     protected abstract boolean doComplete(@Nullable File installTemp,
-      @NonNull ProgressIndicator progress);
+            @NonNull ProgressIndicator progress);
 
     /**
      * Finds the prepared files using the installer metadata, and calls {@link
@@ -133,16 +142,14 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      */
     @Override
     public final boolean complete(@NonNull ProgressIndicator progress) {
-        progress.logInfo(String.format("Finishing \"%1$s\"", getName()));
-        if (!updateStatus(InstallStatus.RUNNING, progress)) {
-            progress.setFraction(1);
-            progress.setIndeterminate(false);
-            progress.logInfo(String.format("\"%1$s\" failed.", getName()));
-            return false;
+        addProgress(progress);
+        StartTaskStatus startResult = startTask(InstallStatus.RUNNING);
+        if (startResult != StartTaskStatus.STARTED) {
+            return startResult == StartTaskStatus.ALREADY_DONE;
         }
         if (mInstallProperties == null) {
             try {
-                mInstallProperties = readInstallProperties(mFop.toPath(getLocation(progress)));
+                mInstallProperties = readInstallProperties(mFop.toPath(getLocation(mProgress)));
             } catch (IOException e) {
                 // We won't have a temp path, but try to continue anyway
             }
@@ -155,18 +162,18 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         File installTemp = installTempPath == null ? null : new File(installTempPath);
         try {
             // Re-validate the install path, in case something was changed since prepare.
-            if (!InstallerUtil.checkValidPath(getLocation(progress), getRepoManager(), progress)) {
+            if (!InstallerUtil
+                    .checkValidPath(getLocation(mProgress), getRepoManager(), mProgress)) {
                 return false;
             }
 
-            result = doComplete(installTemp, progress);
-            progress.logInfo(String.format("\"%1$s\" complete.", getName()));
+            result = doComplete(installTemp, mProgress);
+            mProgress.logInfo(String.format("\"%1$s\" complete.", getName()));
         } finally {
-            if (!result && progress.isCanceled()) {
-                cleanup(progress);
+            if (!result && mProgress.isCanceled()) {
+                cleanup();
             }
-            result &= updateStatus(result ? InstallStatus.COMPLETE : InstallStatus.FAILED,
-              progress);
+            result &= updateStatus(result ? InstallStatus.COMPLETE : InstallStatus.FAILED);
             if (result && installTemp != null) {
                 mFop.deleteFileOrFolder(installTemp);
             }
@@ -174,11 +181,59 @@ public abstract class AbstractPackageOperation implements PackageOperation {
             getRepoManager().markLocalCacheInvalid();
         }
 
-        progress.setFraction(1);
-        progress.setIndeterminate(false);
-        progress
-          .logInfo(String.format("\"%1$s\" %2$s.", getName(), result ? "finished" : "failed"));
+        mProgress.setFraction(1);
+        mProgress.setIndeterminate(false);
+        mProgress.logInfo(
+                String.format("\"%1$s\" %2$s.", getName(), result ? "finished" : "failed"));
         return result;
+    }
+
+    @NonNull
+    private StartTaskStatus startTask(@NonNull InstallStatus inProgress) {
+        boolean alreadyStarted = false;
+        CompletableFuture<Void> f = new CompletableFuture<>();
+        synchronized (mStateChangeLock) {
+            if (mInstallStatus == InstallStatus.FAILED) {
+                return StartTaskStatus.FAILED;
+            } else if (mInstallStatus.compareTo(inProgress) > 0) {
+                return StartTaskStatus.ALREADY_DONE;
+            } else if (mInstallStatus == inProgress) {
+                registerStateChangeListener((op, p) -> {
+                    // Complete only if we've moved on. Since the listeners are retrieved outside
+                    // this synchronized block, it's possible for the update to be to the current
+                    // inProgress state rather than away from it.
+                    if (op.getInstallStatus().compareTo(inProgress) > 0) {
+                        f.complete(null);
+                    }
+                });
+                alreadyStarted = true;
+            } else {
+                // Don't use updateStatus here, since we don't want the listeners to fire in the
+                // synchronized block.
+                mInstallStatus = inProgress;
+            }
+        }
+        boolean success;
+        if (alreadyStarted) {
+            // Method isn't expected to return while task is in process. Wait for existing one.
+            try {
+                f.get();
+                success = getInstallStatus() != InstallStatus.FAILED;
+            } catch (InterruptedException | ExecutionException e) {
+                // Shouldn't happen, but if it does consider us to be failed.
+                success = false;
+            }
+        } else {
+            // Now fire the listeners for actually starting
+            success = updateStatus(inProgress);
+        }
+        if (!success) {
+            mProgress.setFraction(1);
+            mProgress.setIndeterminate(false);
+            mProgress.logInfo(String.format("\"%1$s\" failed.", getName()));
+            return StartTaskStatus.FAILED;
+        }
+        return alreadyStarted ? StartTaskStatus.ALREADY_DONE : StartTaskStatus.STARTED;
     }
 
     /**
@@ -200,52 +255,55 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         return null;
     }
 
-    private void cleanup(@NonNull ProgressIndicator progress) {
-        mFop.deleteFileOrFolder(new File(getLocation(progress), InstallerUtil.INSTALLER_DIR_FN));
+    private void cleanup() {
+        mFop.deleteFileOrFolder(new File(getLocation(mProgress), InstallerUtil.INSTALLER_DIR_FN));
     }
 
     /**
      * Writes information used to restore the operation state if needed, then calls {@link
      * #doPrepare(File, ProgressIndicator)}
      *
-     * @param progress   A {@link ProgressIndicator}, to show progress and facilitate logging.
+     * @param progress A {@link ProgressIndicator}, to show progress and facilitate logging.
      * @return {@code true} if the operation succeeded, {@code false} otherwise.
      */
     @Override
     public final boolean prepare(@NonNull ProgressIndicator progress) {
-        progress.logInfo(String.format("Preparing \"%1$s\".", getName()));
-        try {
-            File dest = getLocation(progress);
-
-            mInstallProperties = readOrCreateInstallProperties(dest, progress);
-        } catch (IOException e) {
-            progress.logWarning("Failed to read or create install properties file.");
-            return false;
+        addProgress(progress);
+        StartTaskStatus startResult = startTask(InstallStatus.PREPARING);
+        if (startResult != StartTaskStatus.STARTED) {
+            return startResult == StartTaskStatus.ALREADY_DONE;
         }
-        if (!updateStatus(InstallStatus.PREPARING, progress)) {
-            progress.logInfo(String.format("\"%1$s\"  failed.", getName()));
+
+        mProgress.logInfo(String.format("Preparing \"%1$s\".", getName()));
+        try {
+            File dest = getLocation(mProgress);
+
+            mInstallProperties = readOrCreateInstallProperties(dest);
+        } catch (IOException e) {
+            mProgress.logWarning("Failed to read or create install properties file.");
             return false;
         }
         getRepoManager().installBeginning(getPackage(), this);
         boolean result = false;
         try {
-            if (!InstallerUtil.checkValidPath(getLocation(progress), getRepoManager(), progress)) {
+            if (!InstallerUtil
+                    .checkValidPath(getLocation(mProgress), getRepoManager(), mProgress)) {
                 return false;
             }
 
-            File installTempPath = writeInstallerMetadata(progress);
+            File installTempPath = writeInstallerMetadata();
             if (installTempPath == null) {
-                progress.logInfo(String.format("\"%1$s\" failed.", getName()));
+                mProgress.logInfo(String.format("\"%1$s\" failed.", getName()));
                 return false;
             }
             File prepareCompleteMarker = new File(installTempPath, PREPARE_COMPLETE_FN);
             if (!mFop.exists(prepareCompleteMarker)) {
-                if (doPrepare(installTempPath, progress)) {
+                if (doPrepare(installTempPath, mProgress)) {
                     mFop.createNewFile(prepareCompleteMarker);
-                    result = updateStatus(InstallStatus.PREPARED, progress);
+                    result = updateStatus(InstallStatus.PREPARED);
                 }
             } else {
-                progress.logInfo("Found existing prepared package.");
+                mProgress.logInfo("Found existing prepared package.");
                 result = true;
             }
         } catch (IOException e) {
@@ -253,14 +311,14 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         } finally {
             if (!result) {
                 getRepoManager().installEnded(getPackage());
-                updateStatus(InstallStatus.FAILED, progress);
+                updateStatus(InstallStatus.FAILED);
                 // If there was a failure don't clean up the files, so we can continue if requested
-                if (progress.isCanceled()) {
-                    cleanup(progress);
+                if (mProgress.isCanceled()) {
+                    cleanup();
                 }
             }
         }
-        progress.logInfo(String.format("\"%1$s\" %2$s.", getName(), result ? "ready" : "failed"));
+        mProgress.logInfo(String.format("\"%1$s\" %2$s.", getName(), result ? "ready" : "failed"));
         return result;
     }
 
@@ -268,13 +326,13 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      * Looks in {@code affectedPath} for an install properties file and returns the contents if
      * found. If not found, creates and populates it.
      *
-     * @param affectedPath The path on which this operation acts (either to write to or delete from)
+     * @param affectedPath The path on which this operation acts (either to write to or delete
+     *                     from)
      * @return The read or created properties.
      */
     @NonNull
-    private Properties readOrCreateInstallProperties(@NonNull File affectedPath,
-            @NonNull ProgressIndicator progress)
-      throws IOException {
+    private Properties readOrCreateInstallProperties(@NonNull File affectedPath)
+            throws IOException {
         Properties installProperties = readInstallProperties(mFop.toPath(affectedPath));
         if (installProperties != null) {
             return installProperties;
@@ -288,7 +346,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         File dataFile = new File(metaDir, INSTALL_DATA_FN);
         File installTempPath = FileOpUtils.getNewTempDir(TEMP_DIR_PREFIX, mFop);
         if (installTempPath == null) {
-            deleteOrphanedTempDirs(progress);
+            deleteOrphanedTempDirs();
             installTempPath = FileOpUtils.getNewTempDir(TEMP_DIR_PREFIX, mFop);
             if (installTempPath == null) {
                 throw new IOException("Failed to create temp path");
@@ -303,7 +361,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         return installProperties;
     }
 
-    private void deleteOrphanedTempDirs(@NonNull ProgressIndicator progress) {
+    private void deleteOrphanedTempDirs() {
         Path root = mFop.toPath(mRepoManager.getLocalPath());
         Path suffixPath = mFop.toPath(new File(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN));
         try {
@@ -315,9 +373,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                     .map(File::new)
                     .collect(Collectors.toSet());
             FileOpUtils.retainTempDirs(tempDirs, TEMP_DIR_PREFIX, mFop);
-        }
-        catch (IOException e) {
-            progress.logWarning("Error while searching for in-use temporary directories.", e);
+        } catch (IOException e) {
+            mProgress.logWarning("Error while searching for in-use temporary directories.", e);
         }
     }
 
@@ -325,21 +382,20 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     private Properties getPathPropertiesOrNull(@NonNull Path path) {
         try {
             return readInstallProperties(path.getParent().getParent());
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return null;
         }
     }
 
     @Nullable
-    private File writeInstallerMetadata(@NonNull ProgressIndicator progress)
-      throws IOException {
-        File installPath = getLocation(progress);
-        Properties installProperties = readOrCreateInstallProperties(installPath, progress);
+    private File writeInstallerMetadata()
+            throws IOException {
+        File installPath = getLocation(mProgress);
+        Properties installProperties = readOrCreateInstallProperties(installPath);
         File installTempPath = new File((String) installProperties.get(PATH_KEY));
         if (!mFop.exists(installPath) && !mFop.mkdirs(installPath) ||
-          !mFop.isDirectory(installPath)) {
-            progress.logWarning("Failed to create output directory: " + installPath);
+                !mFop.isDirectory(installPath)) {
+            mProgress.logWarning("Failed to create output directory: " + installPath);
             return null;
         }
         mFop.deleteOnExit(installTempPath);
@@ -358,7 +414,9 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      */
     @Override
     public final void registerStateChangeListener(@NonNull StatusChangeListener listener) {
-        mListeners.add(listener);
+        synchronized (mStateChangeLock) {
+            mListeners.add(listener);
+        }
     }
 
     /**
@@ -375,13 +433,16 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      * exception we will stop processing listeners and update our status to {@code
      * InstallStatus.FAILED} (calling the listeners again with that status update).
      */
-    protected final boolean updateStatus(@NonNull InstallStatus status,
-      @NonNull ProgressIndicator progress) {
-        mInstallStatus = status;
+    protected final boolean updateStatus(@NonNull InstallStatus status) {
+        List<StatusChangeListener> listeners;
+        synchronized (mStateChangeLock) {
+            mInstallStatus = status;
+            listeners = new ArrayList<>(mListeners);
+        }
         try {
-            for (StatusChangeListener listener : mListeners) {
+            for (StatusChangeListener listener : listeners) {
                 try {
-                    listener.statusChanged(this, progress);
+                    listener.statusChanged(this, mProgress);
                 } catch (Exception e) {
                     if (status != InstallStatus.FAILED) {
                         throw e;
@@ -390,8 +451,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                 }
             }
         } catch (Exception e) {
-            progress.logError("Failed to update status to " + status, e);
-            updateStatus(InstallStatus.FAILED, progress);
+            mProgress.logError("Failed to update status to " + status, e);
+            updateStatus(InstallStatus.FAILED);
             return false;
         }
         return true;
@@ -407,6 +468,18 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     @Override
     public void setFallbackOperation(@Nullable PackageOperation mFallbackOperation) {
         this.mFallbackOperation = mFallbackOperation;
+    }
+
+    private final Object mProgressLock = new Object();
+
+    private void addProgress(@NonNull ProgressIndicator progress) {
+        synchronized (mProgressLock) {
+            if (mProgress == null) {
+                mProgress = new DelegatingProgressIndicator(progress);
+            } else {
+                mProgress.addDelegate(progress);
+            }
+        }
     }
 }
 
