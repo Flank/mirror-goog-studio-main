@@ -60,7 +60,8 @@ dependencies {
             dir:file("$rootProject.ext.androidHostOut/gradle-dist-link/lib"),
             includes: ["*", "plugins/gradle*"])
 
-    includeInJar project(':base:instant-run:instant-run-server')
+    // Package the instant-run-server.jar, nothing else.
+    includeInJar project(path: ':base:instant-run:instant-run-server', configuration: 'archives')
 
     antlr libs.antlr3
 
