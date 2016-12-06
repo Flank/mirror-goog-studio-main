@@ -28,12 +28,13 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -495,18 +496,61 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     }
 
     /**
+     * Merges the flavors by analyzing the specified one and the list. Flavors whose position in the
+     * list is higher will have their values overwritten by the lower-position flavors (in case they
+     * have non-null values for some properties). E.g. if flavor at position 1 specifies
+     * applicationId &quot;my.application&quot;, and flavor at position 0 specifies
+     * &quot;sample.app&quot;, merged flavor will have applicationId &quot;sampleapp&quot; (if there
+     * are no other flavors overwriting this value). Flavor {@code lowestPriority}, as the name
+     * says, has the lowest priority of them all, and will always be overwritten.
+     *
+     * @param lowestPriority flavor with the lowest priority
+     * @param flavors flavors to merge
+     * @return final merged product flavor
+     */
+    static ProductFlavor mergeFlavors(
+            @NonNull ProductFlavor lowestPriority, @NonNull List<? extends ProductFlavor> flavors) {
+        DefaultProductFlavor mergedFlavor = DefaultProductFlavor.clone(lowestPriority);
+        for (ProductFlavor flavor : Lists.reverse(flavors)) {
+            mergedFlavor = DefaultProductFlavor.mergeFlavors(mergedFlavor, flavor);
+        }
+
+        /*
+         * For variants with product flavor dimensions d1, d2 and flavors f1 of d1 and f2 of d2, we
+         * will have final applicationSuffixId suffix(default).suffix(f2).suffix(f1). However, the
+         * previous implementation of product flavor merging would produce
+         * suffix(default).suffix(f1).suffix(f2). We match that behavior below as we do not want to
+         * change application id of developers' applications. The same applies to versionNameSuffix.
+         */
+        String applicationIdSuffix = lowestPriority.getApplicationIdSuffix();
+        String versionNameSuffix = lowestPriority.getVersionNameSuffix();
+        for (ProductFlavor mFlavor : flavors) {
+            applicationIdSuffix =
+                    DefaultProductFlavor.mergeApplicationIdSuffix(
+                            mFlavor.getApplicationIdSuffix(), applicationIdSuffix);
+            versionNameSuffix =
+                    DefaultProductFlavor.mergeVersionNameSuffix(
+                            mFlavor.getVersionNameSuffix(), versionNameSuffix);
+        }
+        mergedFlavor.setApplicationIdSuffix(applicationIdSuffix);
+        mergedFlavor.setVersionNameSuffix(versionNameSuffix);
+
+        return mergedFlavor;
+    }
+
+    /**
      * Merges two flavors on top of one another and returns a new object with the result.
      *
-     * The behavior is that if a value is present in the overlay, then it is used, otherwise
-     * we use the value from the base.
+     * <p>The behavior is that if a value is present in the overlay, then it is used, otherwise we
+     * use the value from the base.
      *
      * @param base the flavor to merge on top of
      * @param overlay the flavor to apply on top of the base.
-     *
      * @return a new ProductFlavor that represents the merge.
      */
     @NonNull
-    static ProductFlavor mergeFlavors(@NonNull ProductFlavor base, @NonNull ProductFlavor overlay) {
+    private static DefaultProductFlavor mergeFlavors(
+            @NonNull ProductFlavor base, @NonNull ProductFlavor overlay) {
         DefaultProductFlavor flavor = new DefaultProductFlavor("");
 
         flavor.mMinSdkVersion = chooseNotNull(
@@ -620,7 +664,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
      * @return a new instance that is a clone of the flavor.
      */
     @NonNull
-    static ProductFlavor clone(@NonNull ProductFlavor productFlavor) {
+    static DefaultProductFlavor clone(@NonNull ProductFlavor productFlavor) {
         DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
         flavor._initWith(productFlavor);
         flavor.mDimension = productFlavor.getDimension();

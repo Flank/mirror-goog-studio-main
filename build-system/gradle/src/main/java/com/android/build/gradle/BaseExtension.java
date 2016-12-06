@@ -428,7 +428,10 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * Specifies names of flavor dimensions.
+     * Specifies names of flavor dimensions. Order in which the dimensions are specified matters,
+     * as it indicates the merging priority that decreases from the first to the last dimensions.
+     * The default product flavor has the lowest priority. In case there are properties that are
+     * defined in multiple product flavors, the one with the higher priority is selected.
      *
      * <p>See <a href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">Multi-flavor variants</a>.
      */

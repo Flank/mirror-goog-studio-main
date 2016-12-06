@@ -46,7 +46,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -548,7 +547,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mFlavors.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
-        mMergedFlavor = DefaultProductFlavor.mergeFlavors(mMergedFlavor, productFlavor);
+        mMergedFlavor = DefaultProductFlavor.mergeFlavors(getDefaultConfig(), mFlavors);
 
         return this;
     }
