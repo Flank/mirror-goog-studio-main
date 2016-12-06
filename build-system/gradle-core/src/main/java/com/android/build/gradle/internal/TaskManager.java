@@ -58,9 +58,7 @@ import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -173,7 +171,6 @@ import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -2700,8 +2697,10 @@ public abstract class TaskManager {
             @Nullable Configuration mappingConfiguration,
             boolean createJarFile) {
         if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
-            logger.warn("Instant Run: Proguard is not compatible with instant run. "
-                            + "It has been disabled for {}",
+            logger.warn(
+                    "ProGuard is disabled for variant {} because it is not compatible with Instant Run. See "
+                            + "http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
+                            + "for details on how to enable a code shrinker that's compatible with Instant Run.",
                     variantScope.getVariantConfiguration().getFullName());
             return;
         }
