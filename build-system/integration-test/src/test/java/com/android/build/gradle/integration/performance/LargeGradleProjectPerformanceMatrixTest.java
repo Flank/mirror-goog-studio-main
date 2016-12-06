@@ -186,6 +186,10 @@ public class LargeGradleProjectPerformanceMatrixTest {
     }
 
     private RunGradleTasks executor() {
-        return project.executor().withoutOfflineFlag().withEnableInfoLogging(false);
+        return project.executor()
+                .withEnableInfoLogging(false)
+                .disableBuildCache()
+                .disableAaptV2()
+                .withoutOfflineFlag();
     }
 }

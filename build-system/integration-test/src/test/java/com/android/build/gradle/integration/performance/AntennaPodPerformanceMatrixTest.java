@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.integration.performance;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -37,8 +40,6 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,9 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class AntennaPodPerformanceMatrixTest {
 
-    private int nonce = 0;
     @Rule public final GradleTestProject mainProject;
     @NonNull private final Set<ProjectScenario> projectScenarios;
+    private int nonce = 0;
     private GradleTestProject project;
 
     public AntennaPodPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
@@ -71,14 +72,27 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> getParameters() {
-        return Arrays.asList(
-                new Object[][] {
-                    {EnumSet.of(ProjectScenario.NORMAL)},
-                    {EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON)},
-                    {EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS)},
-                    {EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)}
-                });
+    public static Set[] getParameters() {
+        return new Set[] {
+            EnumSet.of(ProjectScenario.NORMAL),
+            EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON),
+            EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
+            EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)
+        };
+    }
+
+    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws IOException {
+        TestFileUtils.searchAndReplace(
+                buildGradleFile,
+                "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
+                "buildToolsVersion$1 \"25.0.0\"");
+    }
+
+    private static void disableRetrolambda(@NonNull File buildGradleFile) throws IOException {
+        TestFileUtils.searchAndReplace(
+                buildGradleFile,
+                "apply plugin: \"me.tatarka.retrolambda\"",
+                "// retrolambda disabled");
     }
 
     @Before
@@ -126,20 +140,6 @@ public class AntennaPodPerformanceMatrixTest {
                             "Unknown project scenario" + projectScenario);
             }
         }
-    }
-
-    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws IOException {
-        TestFileUtils.searchAndReplace(
-                buildGradleFile,
-                "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
-                "buildToolsVersion$1 \"25.0.0\"");
-    }
-
-    private static void disableRetrolambda(@NonNull File buildGradleFile) throws IOException {
-        TestFileUtils.searchAndReplace(
-                buildGradleFile,
-                "apply plugin: \"me.tatarka.retrolambda\"",
-                "// retrolambda disabled");
     }
 
     @Test
@@ -229,7 +229,14 @@ public class AntennaPodPerformanceMatrixTest {
                     // Do an initial build for NO_OP.
                     tasks = ImmutableList.of(":app:assembleDebug");
                     executor().run(tasks);
-                    break;
+
+                    GradleBuildResult result =
+                            executor()
+                                    .recordBenchmark(benchmarkMode)
+                                    .withEnableInfoLogging(true)
+                                    .run(tasks);
+                    assertThat(result.getInputChangedTasks()).isEmpty();
+                    continue;
                 case LINT_RUN:
                     continue; // TODO
                 default:
@@ -262,7 +269,11 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     public RunGradleTasks executor() {
-        return project.executor().withEnableInfoLogging(false).withoutOfflineFlag();
+        return project.executor()
+                .withEnableInfoLogging(false)
+                .disableBuildCache()
+                .disableAaptV2()
+                .withoutOfflineFlag();
     }
 
     private boolean isJackOn() {

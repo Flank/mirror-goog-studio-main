@@ -49,21 +49,16 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     final ProjectConnection projectConnection;
 
     @Nullable final BenchmarkRecorder benchmarkRecorder;
-
-    @Nullable private final String heapSize;
-
     @NonNull final List<String> arguments = Lists.newArrayList();
-
     @NonNull final Path profilesDirectory;
-
     @NonNull final Path projectDirectory;
-
+    @Nullable private final String heapSize;
+    @Nullable Logging.BenchmarkMode benchmarkMode;
+    boolean enableInfoLogging;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
-
-    @Nullable Logging.BenchmarkMode benchmarkMode;
-
-    boolean enableInfoLogging;
+    private boolean enableBuildCache = true;
+    private boolean enableAaptV2 = true;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -81,6 +76,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
         this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
+    }
+
+    private static String propertyArg(@NonNull String name, @NonNull String value) {
+        return "-P" + name + "=" + value;
     }
 
     /**
@@ -101,13 +100,16 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                         + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
 
-        // Disable the build cache for all benchmarks, until we figure out how to measure its
-        // impact.
-        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false");
+        return (T) this;
+    }
 
-        // Explicitly specify the aapt1, until we start recording both.
-        withProperty(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false");
+    public T disableBuildCache() {
+        enableBuildCache = false;
+        return (T) this;
+    }
 
+    public T disableAaptV2() {
+        enableAaptV2 = false;
         return (T) this;
     }
 
@@ -128,12 +130,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     }
 
     public T withProperty(@NonNull String propertyName, @NonNull String value) {
-        withArgument("-P" + propertyName + "=" + value);
+        withArgument(propertyArg(propertyName, value));
         return (T) this;
     }
 
     public T withProperty(@NonNull String propertyName, int value) {
-        withArgument("-P" + propertyName + "=" + value);
+        withArgument(propertyArg(propertyName, Integer.toString(value)));
         return (T) this;
     }
 
@@ -168,6 +170,14 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
         } else {
             androidSdkHome = GradleTestProject.BUILD_DIR.toPath().resolve("ANDROID_SDK_HOME");
+        }
+
+        if (!enableAaptV2) {
+            arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false"));
+        }
+
+        if (!enableBuildCache) {
+            arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false"));
         }
 
         try {
