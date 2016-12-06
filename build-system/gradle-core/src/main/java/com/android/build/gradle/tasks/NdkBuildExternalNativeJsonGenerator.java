@@ -197,7 +197,17 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         if (isWindows()) {
             tool += ".cmd";
         }
-        return new File(getNdkFolder(), tool).getAbsolutePath();
+        File toolFile = new File(getNdkFolder(), tool);
+
+        try {
+            // Attempt to shorten ndkFolder which may have segments of "path\.."
+            // File#getAbsolutePath doesn't do this.
+            return toolFile.getCanonicalPath();
+        } catch (IOException e) {
+            warn("Attempted to get ndkFolder canonical path and failed: %s\n"
+                    + "Falling back to absolute path.", e);
+            return toolFile.getAbsolutePath();
+        }
     }
 
     /**
