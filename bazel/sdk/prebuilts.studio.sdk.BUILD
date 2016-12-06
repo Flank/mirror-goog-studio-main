@@ -181,14 +181,3 @@ java_import(
     neverlink = 1,
     visibility = ["//visibility:public"],
 )
-
-filegroup(
-    name = "gms_latest",
-    srcs = [":gms_9.6.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gms_9.6.1",
-    srcs = glob(["*/extras/google/m2repository/com/google/android/gms/*/9.6.1/**"]),
-)
