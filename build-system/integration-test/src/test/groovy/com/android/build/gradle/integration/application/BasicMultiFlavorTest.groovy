@@ -91,7 +91,7 @@ class BasicMultiFlavorTest {
         project.execute("assembleFreeBetaDebug")
 
         // Make sure "beta" overrides "free" and "defaultConfig".
-        assertThatApk(project.getApk("free", "beta", "debug")).hasMaxSdkVersion(19)
+        assertThatApk(project.getApk("free", "beta", "debug")).hasMaxSdkVersion(18)
 
         // Make sure the suffixes are applied in the right order.
         assertThatApk(project.getApk("free", "beta", "debug"))
@@ -107,9 +107,9 @@ class BasicMultiFlavorTest {
                 model.getOnlyModel().getVariants(), "freeBetaDebug")
 
         assertThat(variant.mergedFlavor.resValues.get("VALUE_DEBUG").value)
-                .isEqualTo("13") // Value from "beta".
+                .isEqualTo("10") // Value from "beta".
 
-        assertThat(variant.mergedFlavor.manifestPlaceholders.get("holder")).isEqualTo("beta")
+        assertThat(variant.mergedFlavor.manifestPlaceholders.get("holder")).isEqualTo("free")
     }
 
     @Test

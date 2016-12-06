@@ -65,10 +65,13 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     }
 
     /**
-     * Application id suffix.
+     * Application id suffix. It is appended to the "base" application id when calculating the final
+     * application id for a variant.
      *
-     * <p>This is appended to the "base" application id when calculating the final application id
-     * for a variant.
+     * <p>In case there are product flavor dimensions specified, the final application id suffix
+     * will contain the suffix from the default product flavor, followed by the suffix from product
+     * flavor of the first dimension, second dimension and so on. All of these will have a dot in
+     * between e.g. &quot;defaultSuffix.dimension1Suffix.dimensions2Suffix&quot;.
      */
     @Override
     @Nullable
@@ -86,10 +89,12 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     }
 
     /**
-     * Version name suffix.
+     * Version name suffix. It is appended to the "base" version name when calculating the final
+     * version name for a variant.
      *
-     * <p>This is appended to the "base" version name when calculating the final version name
-     * for a variant.
+     * <p>In case there are product flavor dimensions specified, the final version name suffix will
+     * contain the suffix from the default product flavor, followed by the suffix from product
+     * flavor of the first dimension, second dimension and so on.
      */
     @Override
     @Nullable
