@@ -27,8 +27,8 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
-
 import java.io.File;
 
 /**
@@ -40,19 +40,7 @@ public class SdkHelper {
      * Returns the SDK folder as built from the Android source tree.
      */
     public static File findSdkDir() {
-        String androidHome = System.getenv("ANDROID_HOME");
-        if (androidHome != null) {
-            File f = new File(androidHome);
-            if (f.isDirectory()) {
-                return f;
-            } else {
-                System.out.println("Failed to find SDK in ANDROID_HOME=" + androidHome);
-            }
-        } else {
-            System.out.println("ANDROID_HOME not set.");
-        }
-
-        return null;
+        return TestUtils.getSdk();
     }
 
     @NonNull

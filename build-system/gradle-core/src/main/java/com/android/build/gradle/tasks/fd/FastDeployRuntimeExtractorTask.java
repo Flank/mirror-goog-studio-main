@@ -22,10 +22,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +32,8 @@ import java.net.URLConnection;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to extract the FastDeploy runtime from the gradle-core jar file into a folder to be picked
@@ -59,8 +57,9 @@ public class FastDeployRuntimeExtractorTask extends DefaultAndroidTask {
     // don't have to deal with AppInfo replacement.
     @TaskAction
     public void extract() throws IOException {
-        URL fdrJar = FastDeployRuntimeExtractorTask.class
-                .getResource("/instant-run/instant-run-server.jar");
+        URL fdrJar =
+                FastDeployRuntimeExtractorTask.class.getResource(
+                        "/instant-run/instant-run-server.jar");
         if (fdrJar == null) {
             throw new RuntimeException("Couldn't find Instant-Run runtime library");
         }

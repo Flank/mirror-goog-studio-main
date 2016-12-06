@@ -65,31 +65,33 @@ public class AppWithResolutionStrategyForJarTest {
                 "subprojects {\n" +
                 "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
                 "}\n");
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library\")\n" +
-                "}\n" +
-                "\n" +
-                "configurations { _debugCompile }\n" +
-                "\n" +
-                "configurations._debugCompile {\n" +
-                "  resolutionStrategy {\n" +
-                "    eachDependency { DependencyResolveDetails details ->\n" +
-                "      if (details.requested.name == \"guava\") {\n" +
-                "        details.useVersion \"15.0\"\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n" +
-                "\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile project(\":library\")\n"
+                        + "}\n"
+                        + "\n"
+                        + "configurations { _debugCompile }\n"
+                        + "\n"
+                        + "configurations._debugCompile {\n"
+                        + "  resolutionStrategy {\n"
+                        + "    eachDependency { DependencyResolveDetails details ->\n"
+                        + "      if (details.requested.name == \"guava\") {\n"
+                        + "        details.useVersion \"18.0\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n");
 
-        TestFileUtils.appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile \"com.google.guava:guava:17.0\"\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.google.guava:guava:19.0\"\n"
+                        + "}\n");
 
         models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
         helper = new LibraryGraphHelper(models);
@@ -111,15 +113,15 @@ public class AppWithResolutionStrategyForJarTest {
         Variant debugVariant = ModelHelper.getVariant(appVariants, "debug");
 
         Items items = helper.on(debugVariant.getMainArtifact().getDependencyGraphs());
-        checkJarDependency(items, "15.0", "debug");
-        checkJarDependency(items.forPackage(), "17.0", "debug");
+        checkJarDependency(items, "18.0", "debug");
+        checkJarDependency(items.forPackage(), "19.0", "debug");
 
         Variant releaseVariant = ModelHelper.getVariant(appVariants, "release");
         Truth.assertThat(releaseVariant).isNotNull();
 
         items = helper.on(releaseVariant.getMainArtifact().getDependencyGraphs());
-        checkJarDependency(items, "17.0", "release");
-        checkJarDependency(items.forPackage(), "17.0", "release");
+        checkJarDependency(items, "19.0", "release");
+        checkJarDependency(items.forPackage(), "19.0", "release");
     }
 
     private static void checkJarDependency(

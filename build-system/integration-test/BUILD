@@ -7,7 +7,6 @@ java_library(
     ]) + [
         "//tools/base/build-system/integration-test/src/main/proto:proto_srcs",
     ],
-    visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
@@ -44,15 +43,47 @@ java_library(
 # TODO: Compile Groovy test as well (or just move all of them to Java).
 java_test(
     name = "tests",
-    srcs = glob(["src/test/java/**"]),
+    size = "enormous",
+    srcs = glob(
+        ["src/test/java/**/*.java"],
+        exclude = [
+            "src/test/java/**/CMake*",
+            "src/test/java/**/CheckAll*",
+            "src/test/java/**/Cmake*",
+            "src/test/java/**/ExternalNative*",
+            "src/test/java/**/Ndk*",
+            "src/test/java/**/instant/**",
+            "src/test/java/**/ndk/**",  # TODO: check in the NDK
+            "src/test/java/**/performance/**",
+        ],
+    ),
     data = [
-        "//prebuilts/studio/sdk:build-tools/latest",
+        ":prebuilts_repo_repo.zip",
+        ":test-projects",
+        "//prebuilts/studio/sdk:build-tools/25.0.0",
+        "//prebuilts/studio/sdk:gms_latest",
+        "//prebuilts/studio/sdk:multidex",
+        "//prebuilts/studio/sdk:platform-tools",
+        "//prebuilts/studio/sdk:platforms/android-19",
+        "//prebuilts/studio/sdk:platforms/android-21",
+        "//prebuilts/studio/sdk:platforms/android-23",
+        "//prebuilts/studio/sdk:platforms/android-24",
         "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:support_latest",
+        "//prebuilts/studio/sdk:test_support",
+        "//tools/base/bazel:offline_repo_repo.zip",
+        "//tools/base/build-system:gradle-distrib",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    shard_count = 16,
     tags = ["manual"],
-    test_class = "com.android.testutils.JarTestSuite",
+    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
+    # Need to put this on the classpath before TestRunner_deploy.jar which contains
+    # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
+    runtime_deps = [
+        "//tools/base/third_party:junit_junit",
+    ],
     deps = [
         ":integration-test",
         "//tools/base/annotations",
@@ -81,10 +112,29 @@ java_test(
     ],
 )
 
+filegroup(
+    name = "test-projects",
+    srcs = glob(["test-projects/**"]),
+)
+
 # Maven repo with all the dependencies required by test projects.
 maven_repo(
     name = "prebuilts_repo",
     artifacts = [
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.5.201505241946:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger/2.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/googlecode/jarjar/jarjar/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/com/jakewharton/butterknife/7.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/neenbedankt/gradle/plugins/android-apt/1.8:jar",
+        "//prebuilts/tools/common/m2/repository/com/squareup/dagger/dagger/1.2.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk16/1.46:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
+        "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4:jar",
+        "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.jacoco_org.jacoco.agent",
     ],
 )

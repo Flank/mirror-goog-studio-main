@@ -65,27 +65,26 @@ public class AppWithCompileIndirectJavaProjectTest {
     public static void setUp() throws IOException {
         Files.write("include 'app', 'library', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getBuildFile(),
-"\nsubprojects {\n" +
-"    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
-"}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\nsubprojects {\n"
+                        + "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n"
+                        + "}\n");
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-"\ndependencies {\n" +
-"    compile project(':library')\n" +
-"    apk 'com.google.guava:guava:18.0'\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\ndependencies {\n"
+                        + "    compile project(':library')\n"
+                        + "    apk 'com.google.guava:guava:19.0'\n"
+                        + "}\n");
 
-        appendToFile(project.getSubproject("library").getBuildFile(),
-"\ndependencies {\n" +
-"    compile project(':jar')\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\ndependencies { compile project(':jar') }");
 
-        appendToFile(project.getSubproject("jar").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.google.guava:guava:17.0'\n" +
-"}\n");
-
+        appendToFile(
+                project.getSubproject("jar").getBuildFile(),
+                "\ndependencies { compile 'com.google.guava:guava:18.0' }");
     }
 
     @AfterClass
@@ -222,7 +221,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app->:lib->:jar compile java")
-                    .containsExactly("com.google.guava:guava:17.0@jar");
+                    .containsExactly("com.google.guava:guava:18.0@jar");
         }
 
         // same thing with the package deps. Main difference is guava available as direct
@@ -238,7 +237,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             // dependency on guava.
             assertThat(packageItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app package Java")
-                    .containsExactly("com.google.guava:guava:18.0@jar");
+                    .containsExactly("com.google.guava:guava:19.0@jar");
 
             // look at direct module
             Items moduleItems = packageItems.withType(MODULE);
@@ -284,7 +283,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":app->:lib->:jar package java")
-                    .containsExactly("com.google.guava:guava:18.0@jar");
+                    .containsExactly("com.google.guava:guava:19.0@jar");
         }
 
         // ---
@@ -329,7 +328,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
             assertThat(jarItems.withType(JAVA).mapTo(COORDINATES))
                     .named(":lib->:jar compile java")
-                    .containsExactly("com.google.guava:guava:17.0@jar");
+                    .containsExactly("com.google.guava:guava:18.0@jar");
         }
     }
 }

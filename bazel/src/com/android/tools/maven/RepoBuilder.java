@@ -38,9 +38,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 /**
  * Builds a maven repo inside a zip file. Usage:
  *
- * RepoBuilder repo.zip [a.pom a1.jar a2.jar] [b.pom b1.jar] ...
+ * <p>RepoBuilder repo.zip [a.pom a1.jar a2.jar] [b.pom b1.jar] ...
  *
- * After the zip argument the arguments are a secquence of "pom" + list of artifacts.
+ * <p>After the zip argument the arguments are a sequence of "pom" + list of artifacts.
  */
 public class RepoBuilder {
 

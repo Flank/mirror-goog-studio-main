@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -30,10 +31,12 @@ import java.util.Collection;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** DataBinding tests for atom projects. */
+@Category(FailsUnderBazel.class)
 @RunWith(FilterableParameterized.class)
 public class DataBindingAtomTest {
 

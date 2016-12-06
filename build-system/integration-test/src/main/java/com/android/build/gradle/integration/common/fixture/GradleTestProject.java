@@ -17,12 +17,15 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.model.Version;
@@ -31,6 +34,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -47,6 +51,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -71,9 +77,10 @@ import org.junit.runners.model.Statement;
  * clean environment.
  */
 public final class GradleTestProject implements TestRule {
+    public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
 
-    public static final File TEST_RES_DIR = new File("src/test/resources");
-    public static final File TEST_PROJECT_DIR = new File("test-projects");
+    public static final File TEST_PROJECT_DIR =
+            TestUtils.getWorkspaceFile("tools/base/build-system/integration-test/test-projects");
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
@@ -100,7 +107,19 @@ public final class GradleTestProject implements TestRule {
 
     private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
 
+    static final File BUILD_DIR;
+    static final File OUT_DIR;
+    static final File GRADLE_USER_HOME;
+
     static {
+        assertThat(TEST_PROJECT_DIR).isDirectory();
+
+        String buildDirPath = System.getenv("TEST_TMPDIR");
+        assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
+        BUILD_DIR = new File(buildDirPath);
+        OUT_DIR = new File(BUILD_DIR, "tests");
+        GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
+
         boolean useNightly =
                 Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
         GRADLE_TEST_VERSION =
@@ -142,14 +161,14 @@ public final class GradleTestProject implements TestRule {
     private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     private final String name;
-    private final File outDir;
     @Nullable
     private File testDir;
     private File sourceDir;
     private File buildFile;
     private File localProp;
     private final File ndkDir;
-    private final File sdkDir;
+
+    @NonNull private final File sdkDir;
 
     private final Collection<String> gradleProperties;
 
@@ -181,15 +200,12 @@ public final class GradleTestProject implements TestRule {
             boolean useJack,
             boolean improvedDependencyEnabled,
             String targetGradleVersion,
-            @Nullable File sdkDir,
             @Nullable File ndkDir,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path relativeProfileDirectory) {
-        String buildDir = System.getenv("PROJECT_BUILD_DIR");
-        this.outDir = (buildDir == null) ? new File("build/tests") : new File(buildDir, "tests");
         this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
@@ -198,7 +214,7 @@ public final class GradleTestProject implements TestRule {
         this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
-        this.sdkDir = sdkDir;
+        this.sdkDir = TestUtils.getSdk();
         this.ndkDir = ndkDir;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
@@ -218,13 +234,12 @@ public final class GradleTestProject implements TestRule {
             @NonNull String subProject,
             @NonNull GradleTestProject rootProject) {
         name = subProject;
-        outDir = rootProject.outDir;
 
-        testDir = new File(rootProject.testDir, subProject);
-        assertTrue("No subproject dir at " + testDir.toString(), testDir.isDirectory());
+        testDir = new File(rootProject.getTestDir(), subProject);
+        assertTrue("No subproject dir at " + getTestDir().toString(), getTestDir().isDirectory());
 
-        buildFile = new File(testDir, "build.gradle");
-        sourceDir = new File(testDir, "src");
+        buildFile = new File(getTestDir(), "build.gradle");
+        sourceDir = new File(getTestDir(), "src");
         ndkDir = rootProject.ndkDir;
         sdkDir = rootProject.sdkDir;
         gradleProperties = ImmutableList.of();
@@ -291,9 +306,10 @@ public final class GradleTestProject implements TestRule {
             throws IOException, StreamException {
         // On windows, move the temporary copy as close to root to avoid running into path too
         // long exceptions.
-        testDir = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                ? new File(new File(System.getProperty("user.home")), "android-tests")
-                : outDir;
+        testDir =
+                SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                        ? new File(new File(System.getProperty("user.home")), "android-tests")
+                        : OUT_DIR;
 
         String classDir = testClass.getSimpleName();
         String methodDir = null;
@@ -340,12 +356,13 @@ public final class GradleTestProject implements TestRule {
                 generateVersions(),
                 new File(testDir.getParent(), COMMON_VERSIONS),
                 StandardCharsets.UTF_8);
+        Files.write(
+                generateLocalRepoScript(),
+                new File(testDir.getParent(), COMMON_LOCAL_REPO),
+                StandardCharsets.UTF_8);
         Files.copy(
                 new File(TEST_PROJECT_DIR, COMMON_HEADER),
                 new File(testDir.getParent(), COMMON_HEADER));
-        Files.copy(
-                new File(TEST_PROJECT_DIR, COMMON_LOCAL_REPO),
-                new File(testDir.getParent(), COMMON_LOCAL_REPO));
         Files.copy(
                 new File(TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT),
                 new File(testDir.getParent(), COMMON_BUILD_SCRIPT));
@@ -353,7 +370,7 @@ public final class GradleTestProject implements TestRule {
         if (testProject != null) {
             testProject.write(
                     testDir,
-                    testProject.containsFullBuildScript() ? "" :getGradleBuildscript());
+                    testProject.containsFullBuildScript() ? "" : getGradleBuildscript());
         } else {
             Files.write(
                     getGradleBuildscript(),
@@ -363,6 +380,32 @@ public final class GradleTestProject implements TestRule {
 
         localProp = createLocalProp(testDir, sdkDir, ndkDir);
         createGradleProp();
+    }
+
+    private static String generateLocalRepoScript() {
+        List<Path> repos = new ArrayList<>();
+
+        String customRepo = System.getenv(ENV_CUSTOM_REPO);
+        if (customRepo != null) {
+            // We're running under Gradle.
+            // TODO: support USE_EXTERNAL_REPO
+            repos.add(Paths.get(customRepo));
+        } else {
+            // We're running under Bazel. Make sure the setup is there.
+            assertThat(BazelIntegrationTestsSuite.OFFLINE_REPO)
+                    .named("Offline repo unzipped by BazelIntegrationTestsSuite.")
+                    .isDirectory();
+
+            repos.add(BazelIntegrationTestsSuite.OFFLINE_REPO);
+            repos.add(BazelIntegrationTestsSuite.PREBUILTS_REPO);
+        }
+        StringBuilder script = new StringBuilder();
+        script.append("repositories {\n");
+        for (Path repo : repos) {
+            script.append(String.format("maven { url '%s' }\n", repo.toAbsolutePath()));
+        }
+        script.append("}\n");
+        return script.toString();
     }
 
     private static String generateVersions() {
@@ -403,10 +446,11 @@ public final class GradleTestProject implements TestRule {
         return name;
     }
 
-    /**
-     * Return the directory containing the test project.
-     */
+    /** Return the directory containing the test project. */
+    @NonNull
     public File getTestDir() {
+        Preconditions.checkState(
+                testDir != null, "getTestDir called before the project was properly initialized.");
         return testDir;
     }
 
@@ -414,15 +458,15 @@ public final class GradleTestProject implements TestRule {
      * Return the path to the default Java main source dir.
      */
     public File getMainSrcDir() {
-        assertThat(testDir).isNotNull();
-        return FileUtils.join(testDir, "src", "main", "java");
+        assertThat(getTestDir()).isNotNull();
+        return FileUtils.join(getTestDir(), "src", "main", "java");
     }
 
     /**
      * Return the build.gradle of the test project.
      */
     public File getSettingsFile() {
-        return new File(testDir, "settings.gradle");
+        return new File(getTestDir(), "settings.gradle");
     }
 
     /**
@@ -436,13 +480,11 @@ public final class GradleTestProject implements TestRule {
      * Change the build file used for execute.  Should be run after @Before/@BeforeClass.
      */
     public void setBuildFile(@Nullable String buildFileName) {
-        Preconditions.checkNotNull(
-                buildFile,
-                "Cannot call selectBuildFile before test directory is created.");
+        checkNotNull(buildFile, "Cannot call selectBuildFile before test directory is created.");
         if (buildFileName == null) {
             buildFileName = "build.gradle";
         }
-        buildFile = new File(testDir, buildFileName);
+        buildFile = new File(getTestDir(), buildFileName);
         assertThat(buildFile).exists();
     }
 
@@ -451,15 +493,16 @@ public final class GradleTestProject implements TestRule {
      * Return the output directory from Android plugins.
      */
     public File getOutputDir() {
-        return new File(testDir,
-                Joiner.on(File.separator).join("build", AndroidProject.FD_OUTPUTS));
+        return new File(
+                getTestDir(), Joiner.on(File.separator).join("build", AndroidProject.FD_OUTPUTS));
     }
 
     /**
      * Return the output directory from Android plugins.
      */
     public File getIntermediatesDir() {
-        return new File(testDir,
+        return new File(
+                getTestDir(),
                 Joiner.on(File.separator).join("build", AndroidProject.FD_INTERMEDIATES));
     }
 
@@ -478,7 +521,7 @@ public final class GradleTestProject implements TestRule {
     /** Returns the directory to look for profiles in. Defaults to build/profile/ */
     @NonNull
     public Path getProfileDirectory() {
-        return rootProject.testDir.toPath().resolve(relativeProfileDirectory);
+        return rootProject.getTestDir().toPath().resolve(relativeProfileDirectory);
     }
 
     /**
@@ -540,15 +583,14 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getAtom(String atomName, String... dimensions) {
+    public File getAtom(String... dimensions) {
         return getIntermediateFile(
                 FileUtils.join(
-                        "assets",
-                        Joiner.on("-").join(dimensions),
-                        atomName + SdkConstants.DOT_ATOM));
+                        "assets", Joiner.on("-").join(dimensions), "atom" + SdkConstants.DOT_ATOM));
     }
 
     /** Returns the SDK dir */
+    @NonNull
     public File getSdkDir() {
         return sdkDir;
     }
@@ -705,7 +747,7 @@ public final class GradleTestProject implements TestRule {
         if (result.isAbsolute()) {
             return result;
         } else {
-            return new File(testDir, path);
+            return new File(getTestDir(), path);
         }
     }
 
@@ -723,10 +765,16 @@ public final class GradleTestProject implements TestRule {
         // to start and reuse the daemon.
         ((DefaultGradleConnector) connector).daemonMaxIdleTime(10, TimeUnit.SECONDS);
 
-        projectConnection = connector
-                .useGradleVersion(targetGradleVersion)
-                .forProjectDirectory(testDir)
-                .connect();
+        File distributionDirectory = TestUtils.getWorkspaceFile("tools/external/gradle");
+        String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
+        File distributionZip = new File(distributionDirectory, distributionName);
+
+        projectConnection =
+                connector
+                        .useDistribution(distributionZip.toURI())
+                        .useGradleUserHomeDir(GRADLE_USER_HOME)
+                        .forProjectDirectory(getTestDir())
+                        .connect();
 
         rootProject.openConnections.add(projectConnection);
 
@@ -737,8 +785,12 @@ public final class GradleTestProject implements TestRule {
             @NonNull File project,
             @NonNull File sdkDir,
             @Nullable File ndkDir) throws IOException, StreamException {
-        ProjectPropertiesWorkingCopy localProp = ProjectProperties.create(
-                project.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
+        checkNotNull(project, "project");
+        checkNotNull(sdkDir, "sdkDir");
+
+        ProjectPropertiesWorkingCopy localProp =
+                ProjectProperties.create(
+                        project.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
         localProp.setProperty(ProjectProperties.PROPERTY_SDK, sdkDir.getAbsolutePath());
         if (ndkDir != null) {
             localProp.setProperty(ProjectProperties.PROPERTY_NDK, ndkDir.getAbsolutePath());

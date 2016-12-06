@@ -39,33 +39,32 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for provided local jar in app
- */
+/** test for provided local jar in app */
 public class AppWithProvidedRemoteJarTest {
 
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("projectWithLocalDeps")
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("projectWithLocalDeps").create();
+
     @BeforeClass
     public static void setUp() throws IOException {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "repositories {\n" +
-                "  maven { url System.env.CUSTOM_REPO }\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    provided \"com.google.guava:guava:17.0\"\n" +
-                "}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "apply from: '../commonLocalRepo.gradle'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    provided \"com.google.guava:guava:18.0\"\n"
+                        + "}\n");
 
         project.execute("clean", "assembleDebug");
     }
@@ -83,13 +82,13 @@ public class AppWithProvidedRemoteJarTest {
 
     @Test
     public void checkProvidedRemoteJarIsInTheMainArtifactDependency() {
-        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer = project.model()
-                .withFeature(FULL_DEPENDENCIES).getSingle();
+        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
+                project.model().withFeature(FULL_DEPENDENCIES).getSingle();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getOnlyModel().getVariants(), "debug");
+        Variant variant =
+                ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
@@ -98,7 +97,7 @@ public class AppWithProvidedRemoteJarTest {
 
         assertThat(javaDependencies.mapTo(COORDINATES))
                 .named("java library dependencies")
-                .containsExactly("com.google.guava:guava:17.0@jar");
+                .containsExactly("com.google.guava:guava:18.0@jar");
         // and that it's provided
         GraphItem javaItem = javaDependencies.asSingleGraphItem();
         assertThat(dependencyGraph.getProvidedLibraries())

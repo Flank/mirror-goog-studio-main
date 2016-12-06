@@ -40,17 +40,18 @@ public class TestWithMismatchDep {
 
     @Before
     public void setUp() throws IOException {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    androidTestCompile 'com.google.guava:guava:15.0'\n" +
-                "}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    androidTestCompile 'com.google.guava:guava:18.0'\n"
+                        + "}\n");
     }
 
     private static final String ERROR_MSG =
             "Conflict with dependency \'com.google.guava:guava\' in"
                     + " project 'testDependency'."
-                    + " Resolved versions for app (17.0) and test app (15.0) differ."
+                    + " Resolved versions for app (19.0) and test app (18.0) differ."
                     + " See http://g.co/androidstudio/app-test-app-conflict for details.";
 
     @Test

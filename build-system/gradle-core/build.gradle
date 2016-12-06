@@ -99,6 +99,8 @@ test {
     }
 
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
+
+    exclude "**/GradleCoreBazelSuite*"
 }
 
 javadoc {

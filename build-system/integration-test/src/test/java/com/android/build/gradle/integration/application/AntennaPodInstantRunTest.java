@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -36,7 +37,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(FailsUnderBazel.class)
 public class AntennaPodInstantRunTest {
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();

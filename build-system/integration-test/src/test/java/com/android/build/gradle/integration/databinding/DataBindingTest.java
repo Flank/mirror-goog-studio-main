@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -36,9 +36,11 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+@Category(FailsUnderBazel.class)
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 

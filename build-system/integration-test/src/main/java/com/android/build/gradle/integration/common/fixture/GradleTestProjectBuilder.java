@@ -39,7 +39,6 @@ public final class GradleTestProjectBuilder {
 
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
-    @Nullable private File sdkDir = SdkHelper.findSdkDir();
     @Nullable private File ndkDir = findNdkDir();
     @Nullable private String targetGradleVersion;
     private boolean useJack = GradleTestProject.USE_JACK;
@@ -63,7 +62,6 @@ public final class GradleTestProjectBuilder {
                 useJack,
                 improvedDependencyEnabled,
                 targetGradleVersion,
-                sdkDir,
                 ndkDir,
                 gradleProperties,
                 heapSize,

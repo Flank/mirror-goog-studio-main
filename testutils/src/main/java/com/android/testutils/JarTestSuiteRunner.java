@@ -16,14 +16,6 @@
 
 package com.android.testutils;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -45,6 +37,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 public class JarTestSuiteRunner extends Suite {
 

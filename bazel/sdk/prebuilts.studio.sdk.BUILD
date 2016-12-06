@@ -27,6 +27,7 @@ filegroup(
         "//tools/base/build-system/builder:__pkg__",
         "//tools/base/build-system/gradle:__pkg__",
         "//tools/base/build-system/gradle-core:__pkg__",
+        "//tools/base/build-system/integration-test:__pkg__",
     ],
 )
 
@@ -69,9 +70,34 @@ filegroup(
 
 filegroup(
     name = "support_25.0.0",
-    srcs = glob(
-        include = ["*/extras/android/m2repository/com/android/support/*/25.0.0/**"],
-    ),
+    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.0.0/**"]),
+)
+
+filegroup(
+    name = "gms_latest",
+    srcs = [":gms_9.6.1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gms_9.6.1",
+    srcs = glob(["*/extras/google/m2repository/com/google/android/gms/*/9.6.1/**"]),
+)
+
+filegroup(
+    name = "multidex",
+    srcs = glob(["*/extras/android/m2repository/com/android/support/multidex*/1.0.1/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "test_support",
+    srcs = glob([
+        "*/extras/android/m2repository/com/android/support/test/espresso/*/2.2.2/**",
+        "*/extras/android/m2repository/com/android/support/test/rules/0.5/**",
+        "*/extras/android/m2repository/com/android/support/test/runner/0.5/**",
+    ]),
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
@@ -90,6 +116,7 @@ platform_filegroup(
     name = "platforms/android-24",
     visibility = [
         "//tools/base/build-system/gradle:__pkg__",
+        "//tools/base/build-system/integration-test:__pkg__",
         "//tools/data-binding:__pkg__",
     ],
 )

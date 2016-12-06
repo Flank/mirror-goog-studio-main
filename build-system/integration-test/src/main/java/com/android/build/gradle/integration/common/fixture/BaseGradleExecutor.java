@@ -24,16 +24,15 @@ import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
@@ -58,7 +57,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull final Path profilesDirectory;
 
     @NonNull final Path projectDirectory;
-    protected boolean offline = true;
+
+    private boolean offline = true;
+    private boolean localAndroidSdkHome = false;
 
     @Nullable Logging.BenchmarkMode benchmarkMode;
 
@@ -144,14 +145,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    public T withLocalAndroidSdkHome() throws IOException {
-        Path localAndroidSdkHome = projectDirectory.resolve("android_sdk_home");
-        Files.createDirectories(localAndroidSdkHome);
-        withArgument(
-                String.format(
-                        "-D%s=%s",
-                        AndroidLocation.EnvVar.ANDROID_SDK_HOME.getName(),
-                        localAndroidSdkHome.toAbsolutePath()));
+    public T withLocalAndroidSdkHome() {
+        localAndroidSdkHome = true;
 
         return (T) this;
     }
@@ -161,12 +156,32 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    protected List<String> getOfflineFlag() {
+    protected List<String> getCommonArguments() {
+        List<String> arguments = new ArrayList<>();
+
         if (offline) {
-            return ImmutableList.of("--offline");
-        } else {
-            return Collections.emptyList();
+            arguments.add("--offline");
         }
+
+        Path androidSdkHome;
+        if (localAndroidSdkHome) {
+            androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
+        } else {
+            androidSdkHome = GradleTestProject.BUILD_DIR.toPath().resolve("ANDROID_SDK_HOME");
+        }
+
+        try {
+            Files.createDirectories(androidSdkHome);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        arguments.add(
+                String.format(
+                        "-D%s=%s",
+                        AndroidLocation.EnvVar.ANDROID_SDK_HOME.getName(),
+                        androidSdkHome.toAbsolutePath()));
+
+        return arguments;
     }
 
     protected void setJvmArguments(@NonNull LongRunningOperation launcher) {

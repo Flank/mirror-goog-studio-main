@@ -21,6 +21,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
@@ -36,10 +37,10 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Test for building a transform against version 1.5.
- */
+/** Test for building a transform against version 1.5. */
+@Category(FailsUnderBazel.class)
 public class TransformApiTest {
 
     @Rule

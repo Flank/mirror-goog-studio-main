@@ -1,7 +1,10 @@
-java_library(
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+
+maven_java_library(
     name = "device-provider",
     srcs = glob(["src/main/java/**/*.java"]),
-    resources = glob(["resources/**"]),
+    pom = ":pom",
+    resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -13,4 +16,12 @@ java_library(
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "devicepool",
+    group = "com.android.tools.internal.build.test",
+    source = "//tools/buildSrc/base:build_version",
+    version = "0.1",
 )
