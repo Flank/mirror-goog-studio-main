@@ -91,16 +91,6 @@ filegroup(
 )
 
 filegroup(
-    name = "test_support",
-    srcs = glob([
-        "*/extras/android/m2repository/com/android/support/test/espresso/*/2.2.2/**",
-        "*/extras/android/m2repository/com/android/support/test/rules/0.5/**",
-        "*/extras/android/m2repository/com/android/support/test/runner/0.5/**",
-    ]),
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
     name = "platforms/latest",
     srcs = [":platforms/android-25"],
     visibility = ["//visibility:public"],

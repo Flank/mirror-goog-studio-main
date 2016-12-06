@@ -41,9 +41,8 @@ java_library(
 )
 
 # TODO: Compile Groovy test as well (or just move all of them to Java).
-java_test(
-    name = "tests",
-    size = "enormous",
+java_library(
+    name = "java_tests",
     srcs = glob(
         ["src/test/java/**/*.java"],
         exclude = [
@@ -57,33 +56,7 @@ java_test(
             "src/test/java/**/performance/**",
         ],
     ),
-    data = [
-        ":prebuilts_repo_repo.zip",
-        ":test-projects",
-        "//prebuilts/studio/sdk:build-tools/25.0.0",
-        "//prebuilts/studio/sdk:gms_latest",
-        "//prebuilts/studio/sdk:multidex",
-        "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/android-19",
-        "//prebuilts/studio/sdk:platforms/android-21",
-        "//prebuilts/studio/sdk:platforms/android-23",
-        "//prebuilts/studio/sdk:platforms/android-24",
-        "//prebuilts/studio/sdk:platforms/latest",
-        "//prebuilts/studio/sdk:support_latest",
-        "//prebuilts/studio/sdk:test_support",
-        "//tools/base/bazel:offline_repo_repo.zip",
-        "//tools/base/build-system:gradle-distrib",
-    ],
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    shard_count = 16,
-    tags = ["manual"],
-    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
-    # Need to put this on the classpath before TestRunner_deploy.jar which contains
-    # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
-    runtime_deps = [
-        "//tools/base/third_party:junit_junit",
-    ],
     deps = [
         ":integration-test",
         "//tools/base/annotations",
@@ -109,6 +82,39 @@ java_test(
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.smali_dexlib2",
+    ],
+)
+
+java_test(
+    name = "tests",
+    size = "enormous",
+    data = [
+        ":prebuilts_repo_repo.zip",
+        ":test-projects",
+        "//prebuilts/studio/sdk:build-tools/25.0.0",
+        "//prebuilts/studio/sdk:espresso_latest",
+        "//prebuilts/studio/sdk:gms_latest",
+        "//prebuilts/studio/sdk:multidex",
+        "//prebuilts/studio/sdk:platform-tools",
+        "//prebuilts/studio/sdk:platforms/android-19",
+        "//prebuilts/studio/sdk:platforms/android-21",
+        "//prebuilts/studio/sdk:platforms/android-23",
+        "//prebuilts/studio/sdk:platforms/android-24",
+        "//prebuilts/studio/sdk:platforms/latest",
+        "//prebuilts/studio/sdk:support_latest",
+        "//prebuilts/studio/sdk:test-runner_latest",
+        "//tools/base/bazel:offline_repo_repo.zip",
+        "//tools/base/build-system:gradle-distrib",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    shard_count = 16,
+    tags = ["manual"],
+    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
+    runtime_deps = [
+        # Need to put this on the classpath before TestRunner_deploy.jar which contains
+        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
+        "//tools/base/third_party:junit_junit",
+        ":java_tests",
     ],
 )
 
