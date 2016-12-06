@@ -30,6 +30,11 @@ local_repository(
     path = "external/grpc-grpc",
 )
 
+local_repository(
+      name = "intellij_with_bazel",
+      path = "tools/vendor/google3/blaze",
+)
+
 bind(
     name = "gtest_main",
     actual = "@gtest_repo//:gtest_main"
