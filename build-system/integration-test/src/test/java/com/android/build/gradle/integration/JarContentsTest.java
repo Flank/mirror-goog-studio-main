@@ -19,7 +19,7 @@ package com.android.build.gradle.integration;
 import com.android.apkzlib.utils.IOExceptionConsumer;
 import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.google.api.client.repackaged.com.google.common.base.CharMatcher;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
@@ -29,8 +29,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -115,7 +115,7 @@ public class JarContentsTest {
         }
 
         try (ZipFile zipFile = new ZipFile(jar.toFile())) {
-            for (ZipArchiveEntry entry : Collections.list(zipFile.getEntries())) {
+            for (ZipEntry entry : Collections.list(zipFile.entries())) {
                 String actualName = entry.getName();
                 if (entry.isDirectory() || actualName.endsWith(".class")) {
                     continue;
