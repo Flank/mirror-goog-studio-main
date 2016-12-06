@@ -22,9 +22,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
 import org.jetbrains.kotlin.cli.common.ExitCode;
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
+import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot;
+import org.jetbrains.kotlin.config.CommonConfigurationKeys;
+import org.jetbrains.kotlin.config.CompilerConfiguration;
+
 
 /**
  * A wrapper for the Kotlin compiler.
@@ -51,8 +58,19 @@ public class KotlinCompiler extends JarOutputCompiler {
         args.add(outDir.getAbsolutePath());
         args.add("-cp");
         args.add(classPath.replaceAll(":", File.pathSeparator));
-        args.addAll(files);
-        ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[]{}));
+        args.addAll(files.stream().map(name -> name.replaceAll(":.*$", "")).collect(Collectors.toList()));
+        ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler() {
+            @Override
+            protected void configureEnvironment(@NotNull CompilerConfiguration configuration,
+                    @NotNull K2JVMCompilerArguments arguments) {
+                super.configureEnvironment(configuration, arguments);
+                for (String file : files) {
+                    if (file.contains(":")) {
+                        String[] split = file.split(":");
+                        configuration.add(CommonConfigurationKeys.CONTENT_ROOTS, new JavaSourceRoot(new File(split[0]), split[1]));
+                    }
+                }
+            }}, args.toArray(new String[]{}));
         return exit == ExitCode.OK;
     }
 }
