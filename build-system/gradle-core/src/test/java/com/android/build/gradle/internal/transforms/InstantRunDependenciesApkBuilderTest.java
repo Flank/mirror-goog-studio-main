@@ -133,7 +133,69 @@ public class InstantRunDependenciesApkBuilderTest {
                 QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS);
         assertThat(instantRunSliceSplitApkBuilder.getInputTypes()).containsExactly(
                 ExtendedContentType.DEX);
-        assertThat(instantRunSliceSplitApkBuilder.isIncremental()).isFalse();
+        assertThat(instantRunSliceSplitApkBuilder.isIncremental()).isTrue();
+    }
+
+    @Test
+    public void testIncremental() throws IOException, TransformException, InterruptedException {
+
+        TransformOutputProvider transformOutputProvider = new TransformOutputProviderForTests() {};
+
+        File dexFolderOne = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-2.dex"), "some dex");
+
+        File dexFolderTwo = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderTwo, "dexFile2-1.dex"), "some dex");
+
+        File dexFolderThree = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-2.dex"), "some dex");
+
+        TransformInvocation transformInvocation =
+                new TransformInvocationForTests(transformOutputProvider) {
+
+                    @Override
+                    public boolean isIncremental() {
+                        return true;
+                    }
+
+                    @NonNull
+                    @Override
+                    public Collection<TransformInput> getInputs() {
+                        return ImmutableSet.of(new TransformInput() {
+                            @NonNull
+                            @Override
+                            public Collection<JarInput> getJarInputs() {
+                                return ImmutableList.of();
+                            }
+
+                            @NonNull
+                            @Override
+                            public Collection<DirectoryInput> getDirectoryInputs() {
+                                return ImmutableList.of(
+                                        new DirectoryInputForTests("dex-one",
+                                                QualifiedContent.Scope.PROJECT,
+                                                dexFolderOne),
+                                        new IncrementalInputForTests("dex-two",
+                                                QualifiedContent.Scope.SUB_PROJECTS,
+                                                dexFolderTwo,
+                                                ImmutableMap.of(dexFolderTwo, Status.CHANGED)),
+                                        new DirectoryInputForTests("dex-three",
+                                                QualifiedContent.Scope.PROJECT,
+                                                dexFolderThree));
+                            }
+                        });
+                    }
+                };
+
+        instantRunSliceSplitApkBuilder.transform(transformInvocation);
+        assertThat(dexFilesList).hasSize(1);
+        assertThat(dexFilesList.get(0).getDexFiles()).hasSize(5);
+        assertThat(dexFilesList.get(0).getDexFiles().stream().map(File::getName)
+                .collect(Collectors.toList()))
+                .containsExactly("dexFile1-1.dex", "dexFile1-2.dex", "dexFile2-1.dex",
+                        "dexFile3-1.dex", "dexFile3-2.dex");
     }
 
     @Test
@@ -189,6 +251,64 @@ public class InstantRunDependenciesApkBuilderTest {
                 .collect(Collectors.toList()))
                 .containsExactly("dexFile1-1.dex", "dexFile1-2.dex", "dexFile2-1.dex",
                         "dexFile3-1.dex", "dexFile3-2.dex");
+    }
+
+    /**
+     * Test that in incremental mode, if no file of interest has changed, no new apk is produced.
+     */
+    @Test
+    public void testIncrementalNoChangeOfInterest() throws IOException, TransformException, InterruptedException {
+
+        TransformOutputProvider transformOutputProvider = new TransformOutputProviderForTests() {};
+
+        File dexFolderOne = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-2.dex"), "some dex");
+
+        File dexFolderTwo = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderTwo, "dexFile2-1.dex"), "some dex");
+
+        File dexFolderThree = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-2.dex"), "some dex");
+
+        TransformInvocation transformInvocation =
+                new TransformInvocationForTests(transformOutputProvider) {
+                    @Override
+                    public boolean isIncremental() {
+                        return true;
+                    }
+
+                    @NonNull
+                    @Override
+                    public Collection<TransformInput> getInputs() {
+                        return ImmutableSet.of(new TransformInput() {
+                            @NonNull
+                            @Override
+                            public Collection<JarInput> getJarInputs() {
+                                return ImmutableList.of();
+                            }
+
+                            @NonNull
+                            @Override
+                            public Collection<DirectoryInput> getDirectoryInputs() {
+                                return ImmutableList.of(
+                                        new DirectoryInputForTests("dex-one",
+                                                QualifiedContent.Scope.PROJECT,
+                                                dexFolderOne),
+                                        new DirectoryInputForTests("dex-two",
+                                                QualifiedContent.Scope.SUB_PROJECTS,
+                                                dexFolderTwo),
+                                        new DirectoryInputForTests("dex-three",
+                                                QualifiedContent.Scope.PROJECT,
+                                                dexFolderThree));
+                            }
+                        });
+                    }
+                };
+
+        instantRunSliceSplitApkBuilder.transform(transformInvocation);
+        assertThat(dexFilesList).hasSize(0);
     }
 
     public abstract static class TransformOutputProviderForTests implements TransformOutputProvider {
@@ -293,6 +413,23 @@ public class InstantRunDependenciesApkBuilderTest {
         @Override
         public Map<File, Status> getChangedFiles() {
             return ImmutableMap.of();
+        }
+    }
+
+    private static class IncrementalInputForTests extends DirectoryInputForTests {
+
+        private final Map<File, Status> changedFiles;
+
+        protected IncrementalInputForTests(String name,
+                ScopeType scopeType, File file, Map<File, Status> changedFiles) {
+            super(name, scopeType, file);
+            this.changedFiles = changedFiles;
+        }
+
+        @NonNull
+        @Override
+        public Map<File, Status> getChangedFiles() {
+            return changedFiles;
         }
     }
 }
