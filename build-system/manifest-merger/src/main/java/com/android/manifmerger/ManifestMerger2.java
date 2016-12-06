@@ -360,14 +360,11 @@ public class ManifestMerger2 {
     private static XmlDocument addTestOnlyAttribute(XmlDocument document) {
         Optional<XmlElement> applicationOptional = document
                 .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
-        String prefix = document.getXml().lookupPrefix(SdkConstants.ANDROID_URI);
-        prefix = prefix == null ? SdkConstants.ANDROID_NS_NAME_PREFIX : prefix + ":";
         if (applicationOptional.isPresent()) {
             XmlElement application = applicationOptional.get();
-            application.getXml().setAttributeNS(
-                    SdkConstants.ANDROID_URI,
-                    prefix + SdkConstants.ATTR_TEST_ONLY,
-                    "true");
+            setAndroidAttribute(application.getXml(),
+                                SdkConstants.ATTR_TEST_ONLY,
+                                SdkConstants.VALUE_TRUE);
         }
         return document.reparse();
     }
@@ -387,15 +384,13 @@ public class ManifestMerger2 {
                     return document;
                 }
                 application.getXml().setAttribute(SdkConstants.ATTR_NAME, originalAppName);
-                application.getXml().setAttributeNS(
-                        SdkConstants.ANDROID_URI,
-                        nameAttribute.getName(),
-                        BOOTSTRAP_APPLICATION);
+                setAndroidAttribute(application.getXml(),
+                                    nameAttribute.getLocalName(),
+                                    BOOTSTRAP_APPLICATION);
             } else {
-                application.getXml().setAttributeNS(
-                        SdkConstants.ANDROID_URI,
-                        SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_NAME,
-                        BOOTSTRAP_APPLICATION);
+                setAndroidAttribute(application.getXml(),
+                                    SdkConstants.ATTR_NAME,
+                                    BOOTSTRAP_APPLICATION);
             }
             addRunAsServer(document, application);
         }
@@ -409,27 +404,68 @@ public class ManifestMerger2 {
         //     android:exported="true"
         //     android:process=":RunAsServer" />
         Element service = document.getXml().createElement(SdkConstants.TAG_SERVICE);
-        service.setAttributeNS(
-            SdkConstants.ANDROID_URI,
-            SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_NAME,
-            BOOTSTRAP_RUN_AS_SERVICE);
+        // Add the element to the document first so that we can find
+        // any existing Android XML namespace attributes.
+        application.getXml().appendChild(service);
+        setAndroidAttribute(service, SdkConstants.ATTR_NAME, BOOTSTRAP_RUN_AS_SERVICE);
         // Export it so we can start it with a shell command from adb.
-        service.setAttributeNS(
-            SdkConstants.ANDROID_URI,
-            SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_EXPORTED,
-            SdkConstants.VALUE_TRUE);
+        setAndroidAttribute(service, SdkConstants.ATTR_EXPORTED, SdkConstants.VALUE_TRUE);
         // It turns out that you get a lot better debugging information if you run
         // it in-process.  But for production it needs to run in a separate process.
         final boolean RUN_IN_SEPARATE_PROCESS = true;
         if (RUN_IN_SEPARATE_PROCESS) {
             int lastDot = BOOTSTRAP_RUN_AS_SERVICE.lastIndexOf('.');
             String processName = ":" + BOOTSTRAP_RUN_AS_SERVICE.substring(lastDot + 1);
-            service.setAttributeNS(
-                SdkConstants.ANDROID_URI,
-                SdkConstants.ANDROID_NS_NAME_PREFIX + SdkConstants.ATTR_PROCESS,
-                processName);
+            setAndroidAttribute(service, SdkConstants.ATTR_PROCESS, processName);
         }
-        application.getXml().appendChild(service);
+    }
+
+    /**
+     * Find an appropriate namespace prefix to use for Android attributes.  If this
+     * element already has some prefix that points to ANDROID_URI, use that.  Otherwise,
+     * we need to find a prefix to use --- try variations of ANDROID_NS_NAME_PREFIX until
+     * we find one that's unused.
+     *
+     * The node must be part of some document.
+     *
+     * @param node Node where we want the Android namespace to be available
+     * @param namespace Namespace name (conventionally a URI)
+     * @param preferredPrefix Prefix we'd prefer to use
+     * @return String namespace prefix
+     */
+    private static String findOrInstallNamespacePrefix(Element node,
+                                                       String namespace,
+                                                       String preferredPrefix) {
+        String prefix = node.lookupPrefix(namespace);
+        if (prefix == null) {
+            prefix = preferredPrefix;
+            String existingMapping = node.lookupNamespaceURI(prefix);
+            // Seems prettier to start with "android2" if "android" is taken.
+            for (int i = 2; existingMapping != null && i >= 2; ++i) {
+                prefix = String.format("%s%d", preferredPrefix, i);
+                existingMapping = node.lookupNamespaceURI(prefix);
+            }
+            if (existingMapping != null) {
+                throw new IllegalStateException("could not allocate namespace prefix");
+            }
+            Element root = node.getOwnerDocument().getDocumentElement();
+            root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + prefix, namespace);
+        }
+        return prefix;
+    }
+
+    /**
+     * Set an Android-namespaced XML attribute on the given node.
+     *
+     * @param node Node in which to set the attribute; must be part of a document
+     * @param localName Non-prefixed attribute name
+     * @param value value of the attribute
+     */
+    private static void setAndroidAttribute(Element node, String localName, String value) {
+        String prefix = findOrInstallNamespacePrefix(node,
+                                                     SdkConstants.ANDROID_URI,
+                                                     SdkConstants.ANDROID_NS_NAME);
+        node.setAttributeNS(SdkConstants.ANDROID_URI, prefix + ":" + localName, value);
     }
 
     /**
