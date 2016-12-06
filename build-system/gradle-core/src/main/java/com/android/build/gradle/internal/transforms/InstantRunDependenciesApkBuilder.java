@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
@@ -36,7 +37,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 
@@ -86,10 +90,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
 
     @Override
     public boolean isIncremental() {
-        // this task is not incremental, each time one of the dependencies dex file has changed,
-        // we need to recreate the APK. This could be revisited once we can create zip file
-        // incrementally.
-        return false;
+        return true;
     }
 
 
@@ -103,6 +104,17 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 logger.error("InstantRunDependenciesApkBuilder received a jar file "
                         + jarInput.getFile().getAbsolutePath());
             }
+            // we are not really an incremental transform. All we need to know is that at least
+            // one of our file has changed in any way and trigger a full rebuild of the
+            // dependencies split apk.
+            boolean anyChangeOfInterest = transformInput.getDirectoryInputs().stream().anyMatch(
+                    directoryInput -> !directoryInput.getChangedFiles().isEmpty());
+
+            // if we are in incremental mode, and not change interest us, just return.
+            if (transformInvocation.isIncremental() && !anyChangeOfInterest) {
+                return;
+            }
+
             for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
                 File[] files = directoryInput.getFile().listFiles();
                 if (files != null) {
