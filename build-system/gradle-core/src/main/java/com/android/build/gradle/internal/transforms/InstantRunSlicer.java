@@ -187,6 +187,11 @@ public class InstantRunSlicer extends Transform {
                     // In theory, it would not require to rebuild but it will confuse Android
                     // Studio is there is nothing to push so just be safe and rebuild.
                     if (fileToProcess.isFile()) {
+
+                        if (!sliceOutputLocation.exists() && !sliceOutputLocation.mkdirs()) {
+                            throw new IOException(
+                                    "Cannot create folder " + sliceOutputLocation);
+                        }
                         Files.write(
                                 String.valueOf(
                                         variantScope.getInstantRunBuildContext().getBuildId()),
@@ -333,6 +338,8 @@ public class InstantRunSlicer extends Transform {
                     TransformManager.CONTENT_CLASS,
                     Sets.immutableEnumSet(Scope.PROJECT, Scope.SUB_PROJECTS),
                     Format.DIRECTORY);
+
+            FileUtils.cleanOutputDir(sliceOutputLocation);
 
             // always write our dummy guard class, nobody will ever delete this file which mean
             // the slice will continue existing even it there is no other .class file in it.
