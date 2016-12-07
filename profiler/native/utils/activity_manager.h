@@ -20,15 +20,14 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <memory>
 
 #include "bash_command.h"
 
 namespace profiler {
 
-
-
-// Singleton rapper around Android executable "am" (Activity Manager).
-class ActivityManager : public BashCommandRunner {
+// Singleton wrapper around Android executable "am" (Activity Manager).
+class ActivityManager {
  public:
   enum ProfilingMode { SAMPLING, INSTRUMENTED };
 
@@ -54,9 +53,13 @@ class ActivityManager : public BashCommandRunner {
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;
 
+ protected:
+  // A protected constructor designed for testing.
+  ActivityManager(std::unique_ptr<BashCommandRunner> bash)
+      : bash_(std::move(bash)) {}
+
  private:
   ActivityManager();
-
   // Entry storing all data related to an ongoing profiling.
   class ArtOnGoingProfiling {
    public:
@@ -84,6 +87,8 @@ class ActivityManager : public BashCommandRunner {
   // Only call this method if you are certain the app is being profiled.
   // Otherwise result is undefined.
   std::string GetProfiledAppTracePath(const std::string& app_package_name) const;
+
+  std::unique_ptr<BashCommandRunner> bash_;
 };
 }  // namespace profiler
 
