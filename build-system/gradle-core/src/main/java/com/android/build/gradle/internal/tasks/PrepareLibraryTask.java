@@ -130,7 +130,7 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
         // otherwise, we explode the aar without using the cache.
         if (useBuildCache) {
             Preconditions.checkNotNull(buildCache);
-            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(mavenCoordinates, inputAar);
+            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(inputAar);
             try {
                 buildCache.createFileInCacheIfAbsent(
                         buildCacheInputs,
@@ -178,24 +178,12 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
      * prepare-library task to use the build cache.
      */
     @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(
-            @NonNull MavenCoordinates mavenCoordinates, @NonNull File artifactFile)
+    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile)
             throws IOException {
-        // Convert mavenCoordinates to a unique string (similar to
-        // MavenCoordinatesImpl#computeToString())
-        StringBuilder sb = new StringBuilder();
-        sb.append(mavenCoordinates.getGroupId())
-                .append(':').append(mavenCoordinates.getArtifactId())
-                .append(':').append(mavenCoordinates.getVersion());
-        if (mavenCoordinates.getClassifier() != null) {
-            sb.append(':').append(mavenCoordinates.getClassifier());
-        }
-        sb.append('@').append(mavenCoordinates.getPackaging());
-        String mavenCoordinatesString = sb.toString().intern();
-
         return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
-                .putString(FileCacheInputParams.MAVEN_COORDINATES.name(), mavenCoordinatesString)
-                .putFileHash(FileCacheInputParams.FILE_HASH.name(), artifactFile)
+                .putFilePath(FileCacheInputParams.FILE_PATH.name(), artifactFile)
+                .putLong(FileCacheInputParams.FILE_SIZE.name(), artifactFile.length())
+                .putLong(FileCacheInputParams.FILE_TIMESTAMP.name(), artifactFile.lastModified())
                 .build();
     }
 
@@ -208,10 +196,13 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
      */
     private enum FileCacheInputParams {
 
-        /** The Maven coordinates of the library. */
-        MAVEN_COORDINATES,
+        /** The path of the library. */
+        FILE_PATH,
 
-        /** The hash of the library. */
-        FILE_HASH,
+        /** The size of the library. */
+        FILE_SIZE,
+
+        /** The timestamp of the library. */
+        FILE_TIMESTAMP,
     }
 }
