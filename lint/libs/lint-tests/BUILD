@@ -32,7 +32,11 @@ java_test(
         "//tools/adt/idea/android/annotations",
         "//tools/base/files/typos",
     ],
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+        # TODO: Inject the cache directory into tests.
+        "-Duser.home=/tmp",
+    ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",
