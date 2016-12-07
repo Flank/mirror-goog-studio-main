@@ -27,9 +27,7 @@ public class StudioConfiguration implements Configuration {
     @Override
     public String nameRule(String pkg, String rel, String name) {
         String prefix = "";
-        if (pkg.equals("tools") && rel.startsWith("tools/idea")) {
-            prefix = "idea.";
-        } else if (rel.startsWith("tools/base")) {
+        if (rel.startsWith("tools/base")) {
             prefix = "studio.";
         } else if (rel.startsWith("tools/data-binding")) {
             prefix = "studio.";
