@@ -208,6 +208,66 @@ public class SdkManagerCliTest {
     }
 
     /**
+     * Verbosely list the packages we have installed and available.
+     */
+    @Test
+    public void verboseList() throws Exception {
+        SdkManagerCli.Settings settings = SdkManagerCli.Settings
+                .createSettings(ImmutableList.of("--list", "--sdk_root=/sdk", "--verbose"),
+                        mFileOp.getFileSystem());
+        assertNotNull("Arguments should be valid", settings);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        SdkManagerCli downloader = new SdkManagerCli(settings,
+                new PrintStream(out),
+                null,
+                mDownloader,
+                mSdkHandler);
+        downloader.run();
+        String expected = "Installed packages:\n"
+                + "--------------------------------------\n"
+                + "test;p1\n"
+                + "    Description:        package 1\n"
+                + "    Version:            1\n"
+                + "    Installed Location: /sdk/test/p1\n"
+                + "\n"
+                + "upgrade\n"
+                + "    Description:        upgrade v1\n"
+                + "    Version:            1\n"
+                + "    Installed Location: /sdk/upgrade\n"
+                + "\n"
+                + "Available Packages:\n"
+                + "--------------------------------------\n"
+                + "depended_on\n"
+                + "    Description:        fake package\n"
+                + "    Version:            1\n"
+                + "\n"
+                + "depends_on\n"
+                + "    Description:        fake package\n"
+                + "    Version:            1\n"
+                + "    Dependencies:\n"
+                + "        depended_on\n"
+                + "\n"
+                + "test;remote1\n"
+                + "    Description:        fake package\n"
+                + "    Version:            1\n"
+                + "\n"
+                + "upgrade\n"
+                + "    Description:        upgrade v2\n"
+                + "    Version:            2\n"
+                + "\n"
+                + "Available Updates:\n"
+                + "--------------------------------------\n"
+                + "obsolete\n"
+                + "    Local Version:  1\n"
+                + "    Remote Version: 2\n"
+                + "    (Obsolete)\n"
+                + "upgrade\n"
+                + "    Local Version:  1\n"
+                + "    Remote Version: 2\n";
+        assertEquals(expected, out.toString());
+    }
+
+    /**
      * Verify that the --channel sets us up with the right channel.
      */
     @Test
