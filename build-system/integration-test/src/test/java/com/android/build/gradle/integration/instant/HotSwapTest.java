@@ -92,7 +92,7 @@ public class HotSwapTest {
         apkFile.hasClass("Lcom/example/helloworld/HelloWorld;",
                 AbstractAndroidSubject.ClassFileScope.MAIN)
                 .that().hasMethod("onCreate");
-        apkFile.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
+        apkFile.hasClass("Lcom/android/tools/fd/runtime/InstantRunService;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
 
         createActivityClass("CHANGE");

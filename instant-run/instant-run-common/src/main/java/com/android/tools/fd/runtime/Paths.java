@@ -22,9 +22,6 @@ import com.android.annotations.NonNull;
  * Shared path-related logic between Android Studio and the Instant Run server.
  */
 public final class Paths {
-    /** Name of the dex folder in the app's data directory */
-    public static final String DEX_DIRECTORY_NAME = "dex";
-
     /** Temp directory on the device */
     public static final String DEVICE_TEMP_DIR = "/data/local/tmp";
 
@@ -37,9 +34,6 @@ public final class Paths {
     /** Name for reload dex files */
     public static final String RELOAD_DEX_FILE_NAME = "classes.dex.3";
 
-    /** Prefix for dex shard files */
-    public static final String DEX_SLICE_PREFIX = "slice-";
-
     @NonNull
     public static String getMainApkDataDirectory(@NonNull String applicationId) {
         return "/data/data/" + applicationId;
@@ -48,16 +42,6 @@ public final class Paths {
     @NonNull
     public static String getDataDirectory(@NonNull String applicationId) {
         return "/data/data/" + applicationId + "/files/instant-run";
-    }
-
-    @NonNull
-    public static String getDexFileDirectory(@NonNull String applicationId) {
-        return getDataDirectory(applicationId) + "/" + DEX_DIRECTORY_NAME;
-    }
-
-    @NonNull
-    public static String getInboxDirectory(@NonNull String applicationId) {
-        return getDataDirectory(applicationId) + "/inbox";
     }
 
     @NonNull
