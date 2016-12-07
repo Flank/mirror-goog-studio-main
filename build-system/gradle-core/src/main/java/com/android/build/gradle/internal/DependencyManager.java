@@ -784,7 +784,7 @@ public class DependencyManager {
                                     try {
                                         explodedDir = buildCache.get().getFileInCache(
                                                 PrepareLibraryTask.getBuildCacheInputs(
-                                                        mavenCoordinates, artifact.getFile()));
+                                                        artifact.getFile()));
                                     } catch (IOException e) {
                                         throw new UncheckedIOException(e);
                                     }

@@ -839,6 +839,15 @@ public final class FileCache {
             }
 
             /**
+             * Adds an input parameter with a Long value. If a parameter with the same name
+             * exists, the parameter's value is overwritten.
+             */
+            public Builder putLong(@NonNull String name, @NonNull long value) {
+                parameters.put(name, String.valueOf(value));
+                return this;
+            }
+
+            /**
              * Builds an {@code Inputs} instance.
              *
              * @throws IllegalStateException if the inputs are empty

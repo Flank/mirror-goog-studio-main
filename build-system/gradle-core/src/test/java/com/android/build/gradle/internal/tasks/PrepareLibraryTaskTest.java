@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
@@ -67,14 +68,13 @@ public class PrepareLibraryTaskTest {
     }
 
     @Test
-    public void testBuildCacheEnabled() throws IOException {
+    public void testBuildCacheEnabled() throws Exception {
         FileCache buildCache = FileCache.getInstanceWithInterProcessLocking(buildCacheDir);
 
         // Run PrepareLibraryTask, expect that the exploded aar is created in the build cache
         // directory
         File explodedDir =
-                buildCache.getFileInCache(
-                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates, aarFile));
+                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
         PrepareLibraryTask task = createPrepareLibraryTask(
                 projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
         task.execute();
@@ -105,8 +105,7 @@ public class PrepareLibraryTaskTest {
         // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
         // build cache directory
         File explodedDir2 =
-                buildCache.getFileInCache(
-                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates2, aarFile2));
+                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile2));
         assertThat(explodedDir2).isNotEqualTo(explodedDir);
 
         task = createPrepareLibraryTask(
@@ -116,16 +115,16 @@ public class PrepareLibraryTaskTest {
         assertThat(FileUtils.join(explodedDir2, "jars", "classes.jar"))
                 .hasContents("New library content");
 
-        // Create a new aar with the same contents but a different version
-        MavenCoordinates mavenCoordinates3 =
-                new MavenCoordinatesImpl("testGroupId", "testArtifact", "1.1");
+        // Create a new aar with the same contents but a different timestamp
+        MavenCoordinates mavenCoordinates3 = mavenCoordinates2;
         File aarFile3 = aarFile2;
+        TestUtils.waitForFileSystemTick();
+        aarFile3.setLastModified(System.currentTimeMillis());
 
         // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
         // build cache directory
         File explodedDir3 =
-                buildCache.getFileInCache(
-                        PrepareLibraryTask.getBuildCacheInputs(mavenCoordinates3, aarFile3));
+                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile3));
         assertThat(explodedDir3).isNotEqualTo(explodedDir);
         assertThat(explodedDir3).isNotEqualTo(explodedDir2);
 
