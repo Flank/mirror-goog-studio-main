@@ -387,7 +387,8 @@ public final class GradleTestProject implements TestRule {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
         for (Path repo : getRepos()) {
-            script.append(String.format("maven { url '%s' }\n", repo.toAbsolutePath()));
+            script.append(String.format("maven { url '%s' }\n",
+                    repo.toAbsolutePath().toString().replace("\\", "\\\\")));
         }
         script.append("}\n");
         return script.toString();
