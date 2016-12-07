@@ -36,6 +36,8 @@ java_library(
         "//tools/base/third_party:org.jacoco_org.jacoco.agent",
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
+        "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.smali_dexlib2",
     ],
 )
