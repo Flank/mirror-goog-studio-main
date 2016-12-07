@@ -70,11 +70,10 @@ public class Workspace {
 
 
     private File findBuildDirectory(@NotNull File dir) {
-        File file = new File(dir, "BUILD");
-        while (file != null && !(file.exists() && !file.isDirectory())) {
-            dir = dir.getParentFile();
-            file = (dir == null) ? null : new File(dir, "BUILD");
+        if (new File(dir, "BUILD").isFile()) {
+            return dir;
         }
-        return dir;
+        File parent = dir.getParentFile();
+        return (parent == null) ? null : findBuildDirectory(parent);
     }
 }
