@@ -26,6 +26,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -107,7 +108,25 @@ public abstract class TransformStream {
     @NonNull
     abstract IncrementalTransformInput asIncrementalInput();
 
+    @NonNull
     abstract TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes);
+
+    /**
+     * Returns a FileCollection that contains the outputs.
+     *
+     * The type/scope of the output is filtered by a StreamFilter.
+     *
+     * @param project a Projet object to create new FileCollection
+     * @param streamFilter the stream filter.
+     *
+     * @return the FileCollection
+     */
+    @NonNull
+    FileCollection getOutputFileCollection(
+            @NonNull Project project,
+            @NonNull StreamFilter streamFilter) {
+        return getFiles();
+    }
 }

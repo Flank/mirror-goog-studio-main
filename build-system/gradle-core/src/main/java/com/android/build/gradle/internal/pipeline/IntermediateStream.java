@@ -26,11 +26,15 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -153,6 +157,7 @@ class IntermediateStream extends TransformStream {
                 getScopes());
     }
 
+    @NonNull
     @Override
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
@@ -161,6 +166,38 @@ class IntermediateStream extends TransformStream {
                 types,
                 scopes,
                 getFiles());
+    }
+
+    @Override
+    @NonNull
+    FileCollection getOutputFileCollection(@NonNull Project project, @NonNull StreamFilter streamFilter) {
+        // create a collection that only returns the requested content type/scope,
+        // and contain the dependency information.
+
+        // the collection inside this type of stream cannot be used as is. This is because it
+        // contains the root location rather that the actual inputs of the stream. Therefore
+        // we need to go through them and create a single collection that contains the actual
+        // inputs.
+        // However the content of the intermediate root folder isn't known at configuration
+        // time so we need to pass a callable that will compute the files dynamically.
+        Callable<List<File>> callable = () -> {
+            List<File> files = Lists.newArrayList();
+
+            // get the inputs
+            TransformInput input = asNonIncrementalInput();
+
+            // collect the files and dependency info for the collection
+            for (QualifiedContent content : Iterables.concat(
+                    input.getJarInputs(), input.getDirectoryInputs())) {
+                if (streamFilter.accept(content.getContentTypes(), content.getScopes())) {
+                    files.add(content.getFile());
+                }
+            }
+
+            return files;
+        };
+
+        return project.files(callable).builtBy(getFiles().getBuildDependencies());
     }
 
     @Override
