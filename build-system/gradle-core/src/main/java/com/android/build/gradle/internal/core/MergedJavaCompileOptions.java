@@ -29,6 +29,7 @@ public class MergedJavaCompileOptions implements CoreJavaCompileOptions {
     private AnnotationProcessorOptions annotationProcessorOptions =
             new AnnotationProcessorOptions();
 
+    @NonNull
     @Override
     public CoreAnnotationProcessorOptions getAnnotationProcessorOptions() {
         return annotationProcessorOptions;

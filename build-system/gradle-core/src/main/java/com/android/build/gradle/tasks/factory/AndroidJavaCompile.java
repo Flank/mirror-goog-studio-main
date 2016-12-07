@@ -19,8 +19,9 @@ package com.android.build.gradle.tasks.factory;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-
+import java.util.List;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
@@ -45,6 +46,7 @@ public class AndroidJavaCompile extends JavaCompile {
                         + "JDK 1.8 or later to compile.");
             }
         }
+
         mBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
         super.compile(inputs);
         mBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);

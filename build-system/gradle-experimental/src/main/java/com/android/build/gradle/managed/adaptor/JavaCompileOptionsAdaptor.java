@@ -33,6 +33,7 @@ public class JavaCompileOptionsAdaptor implements CoreJavaCompileOptions {
         this.javaCompileOptions = javaCompileOptions;
     }
 
+    @NonNull
     @Override
     public CoreAnnotationProcessorOptions getAnnotationProcessorOptions() {
         return new AnnotationProcessorOptionsAdaptor(

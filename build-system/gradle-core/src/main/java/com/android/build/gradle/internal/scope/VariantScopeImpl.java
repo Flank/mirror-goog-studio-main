@@ -71,7 +71,6 @@ import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AtomDependency;
-import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -122,6 +121,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private File ndkObjFolder;
     @NonNull
     private Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
+    @NonNull
+    private List<String> annotationProcessorArguments = Lists.newArrayList();
 
     @Nullable
     private File mergeResourceOutputDir;
