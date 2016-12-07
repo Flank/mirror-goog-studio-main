@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
 import com.android.ide.common.util.ReadWriteProcessLock;
+import com.android.ide.common.util.ReadWriteThreadLock;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -34,13 +35,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Cache for already-created files/directories.
@@ -53,7 +50,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * file/directory does not yet exist.
  *
  * <p>Note that if a cache entry exists but is found to be corrupted, the cache entry will be
- * deleted first and will be treated as if it never existed.
+ * deleted and recreated.
+ *
+ * <p>This class is thread-safe.
  */
 @Immutable
 public final class FileCache {
@@ -95,56 +94,18 @@ public final class FileCache {
         EXCLUSIVE
     }
 
-    /**
-     * Map from a cache directory to an instance of {@code FileCache}, used to make sure that there
-     * is only one instance of {@code FileCache} per cache directory (within the same process).
-     */
-    @NonNull
-    private static final ConcurrentMap<File, FileCache> sFileCacheMap = new ConcurrentHashMap<>();
-
     @NonNull private final File mCacheDirectory;
 
     @NonNull private final LockingScope mLockingScope;
-
-    /**
-     * Map from an entry in the cache to an instance of {@code ReentrantReadWriteLock}, used to make
-     * sure that there is only once instance of {@code ReentrantReadWriteLock} per entry.
-     */
-    @NonNull
-    private final ConcurrentMap<File, ReentrantReadWriteLock> mLockMap = new ConcurrentHashMap<>();
 
     // Additional fields used for testing only
     @NonNull private final AtomicInteger mMisses = new AtomicInteger(0);
     @NonNull private final AtomicInteger mHits = new AtomicInteger(0);
 
-    private FileCache(@NonNull File canonicalCacheDirectory, @NonNull LockingScope lockingScope) {
-        mCacheDirectory = canonicalCacheDirectory;
+    private FileCache(@NonNull File cacheDirectory, @NonNull LockingScope lockingScope)
+            throws IOException {
+        mCacheDirectory = cacheDirectory.getCanonicalFile();
         mLockingScope = lockingScope;
-    }
-
-    private static FileCache getInstance(
-            @NonNull File cacheDirectory, @NonNull LockingScope lockingScope) throws IOException {
-        FileCache fileCache =
-                sFileCacheMap.computeIfAbsent(
-                        cacheDirectory.getCanonicalFile(),
-                        (canonicalCacheDirectory) ->
-                                new FileCache(canonicalCacheDirectory, lockingScope));
-
-        if (lockingScope != fileCache.mLockingScope) {
-            if (lockingScope == LockingScope.INTER_PROCESS) {
-                throw new IllegalStateException(
-                        "Unable to create FileCache with inter-process locking enabled"
-                                + " since inter-process locking was previously disabled"
-                                + " on the same cache.");
-            } else {
-                throw new IllegalStateException(
-                        "Unable to create FileCache with inter-process locking disabled"
-                                + " since inter-process locking was previously enabled"
-                                + " on the same cache.");
-            }
-        }
-
-        return fileCache;
     }
 
     /**
@@ -162,10 +123,6 @@ public final class FileCache {
      * preferable to configure the cache with {@code SINGLE_PROCESS} locking scope instead since
      * there will be less synchronization overhead.
      *
-     * <p>This method guarantees that there is only one {@code FileCache} instance per process for a
-     * given cache directory (there could still be multiple {@code FileCache} instances on different
-     * processes for a given cache directory).
-     *
      * @param cacheDirectory the directory that will contain the cached files/directories (may not
      *     already exist)
      * @see #getInstanceWithSingleProcessLocking(File)
@@ -173,7 +130,7 @@ public final class FileCache {
     @NonNull
     public static FileCache getInstanceWithInterProcessLocking(@NonNull File cacheDirectory)
             throws IOException {
-        return getInstance(cacheDirectory, LockingScope.INTER_PROCESS);
+        return new FileCache(cacheDirectory, LockingScope.INTER_PROCESS);
     }
 
     /**
@@ -193,10 +150,6 @@ public final class FileCache {
      * configure the cache with {@code INTER_PROCESS} locking scope instead, even though there
      * will be more synchronization overhead.
      *
-     * <p>This method guarantees that there is only one {@code FileCache} instance per process for a
-     * given cache directory (there could still be multiple {@code FileCache} instances on different
-     * processes for a given cache directory).
-     *
      * @param cacheDirectory the directory that will contain the cached files/directories (may not
      *     already exist)
      * @see #getInstanceWithInterProcessLocking(File)
@@ -204,7 +157,7 @@ public final class FileCache {
     @NonNull
     public static FileCache getInstanceWithSingleProcessLocking(@NonNull File cacheDirectory)
             throws IOException {
-        return getInstance(cacheDirectory, LockingScope.SINGLE_PROCESS);
+        return new FileCache(cacheDirectory, LockingScope.SINGLE_PROCESS);
     }
 
     @NonNull
@@ -713,9 +666,9 @@ public final class FileCache {
                         ? new File(System.getProperty("java.io.tmpdir"), lockFileName)
                         : new File(mCacheDirectory, lockFileName);
 
-        // The contract of ReadWriteProcessLock.getInstance() makes sure that there is only one
-        // ReadWriteProcessLock instance (per process) for a given lock file
-        ReadWriteProcessLock readWriteProcessLock = ReadWriteProcessLock.getInstance(lockFile);
+        // ReadWriteProcessLock will normalize the lock file's path so that the paths can be
+        // correctly compared by equals(), we don't need to normalize it here.
+        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
         ReadWriteProcessLock.Lock lock =
                 lockingType == LockingType.SHARED
                         ? readWriteProcessLock.readLock()
@@ -736,14 +689,13 @@ public final class FileCache {
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
             throws ExecutionException, IOException {
-        ReadWriteLock readWriteLock =
-                mLockMap.computeIfAbsent(
-                        accessedFile.getCanonicalFile(),
-                        (canonicalAccessedFile) -> new ReentrantReadWriteLock());
-        Lock lock =
+        // We normalize the lock file's path so that the paths can be correctly compared by equals()
+        ReadWriteThreadLock readWriteThreadLock =
+                new ReadWriteThreadLock(accessedFile.toPath().normalize());
+        ReadWriteThreadLock.Lock lock =
                 lockingType == LockingType.SHARED
-                        ? readWriteLock.readLock()
-                        : readWriteLock.writeLock();
+                        ? readWriteThreadLock.readLock()
+                        : readWriteThreadLock.writeLock();
         lock.lock();
         try {
             return action.call();
