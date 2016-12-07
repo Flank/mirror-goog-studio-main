@@ -243,15 +243,24 @@ public class InstantRunBuildContext {
 
     private String density = null;
     private String abi = null;
-    private final Build currentBuild =
-            new Build(
-                    System.nanoTime(),
-                    InstantRunVerifierStatus.NO_CHANGES,
-                    InstantRunBuildMode.HOT_WARM);
+    private final Build currentBuild;
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private boolean isInstantRunMode = false;
     private final AtomicLong token = new AtomicLong(0);
     private boolean buildHasFailed = false;
+
+    public InstantRunBuildContext() {
+        this(defaultBuildIdAllocator);
+    }
+
+    @VisibleForTesting
+    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
+        currentBuild =  new Build(
+                buildIdAllocator.allocatedBuildId(),
+                InstantRunVerifierStatus.NO_CHANGES,
+                InstantRunBuildMode.HOT_WARM);
+    }
+
 
     public void setInstantRunMode(boolean instantRunMode) {
         isInstantRunMode = instantRunMode;
@@ -818,4 +827,11 @@ public class InstantRunBuildContext {
         Files.createParentDirs(tmpBuildInfo);
         Files.write(toXml(PersistenceMode.TEMP_BUILD), tmpBuildInfo, Charsets.UTF_8);
     }
+
+    @VisibleForTesting
+    interface BuildIdAllocator {
+        long allocatedBuildId();
+    }
+
+    private static final BuildIdAllocator defaultBuildIdAllocator = System::currentTimeMillis;
 }
