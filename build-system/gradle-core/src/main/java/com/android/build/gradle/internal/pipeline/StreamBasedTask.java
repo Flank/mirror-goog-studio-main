@@ -16,20 +16,18 @@
 
 package com.android.build.gradle.internal.pipeline;
 
+import static java.util.stream.Stream.concat;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.util.Collection;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * A base task with stream fields that properly use Gradle's input/output annotations to
@@ -41,21 +39,21 @@ public class StreamBasedTask extends BaseTask {
     protected Collection<TransformStream> referencedInputStreams;
     protected IntermediateStream outputStream;
 
-    private FileCollection allInputs;
+    private Iterable<FileCollection> allInputs;
 
+    @SuppressWarnings("unused")
     @NonNull
     @InputFiles
-    public FileCollection getStreamInputs() {
+    public Iterable<FileCollection> getStreamInputs() {
         if (allInputs == null) {
-            List<TransformStream> streams = Lists.newArrayList(consumedInputStreams);
-            streams.addAll(referencedInputStreams);
-            allInputs = combineFileCollections(
-                    streams.stream().map(TransformStream::getFiles).collect(Collectors.toList()));
+            allInputs = concat(consumedInputStreams.stream(), referencedInputStreams.stream())
+                    .map(TransformStream::getFiles).collect(Collectors.toList());
         }
 
         return allInputs;
     }
 
+    @SuppressWarnings("unused")
     @Nullable
     @Optional
     @OutputDirectory
@@ -65,26 +63,5 @@ public class StreamBasedTask extends BaseTask {
         }
 
         return null;
-    }
-
-    public static FileCollection combineFileCollections(
-            @NonNull Iterable<FileCollection> fileCollections) {
-        FileCollection fileCollection = null;
-        boolean secondPass = true;
-        for (FileCollection fc : fileCollections) {
-            if (fileCollection == null) {
-                fileCollection = fc;
-            } else if (secondPass) {
-                // at this point fileCollection is an input from the list, so call plus()
-                // to get a new FileCollection
-                fileCollection = fileCollection.plus(fc);
-                secondPass = false;
-            } else {
-                // at this point fileCollection is a new instance, just call add()
-                fileCollection.add(fc);
-            }
-        }
-
-        return fileCollection;
     }
 }

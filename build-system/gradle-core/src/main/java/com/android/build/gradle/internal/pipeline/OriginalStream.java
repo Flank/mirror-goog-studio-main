@@ -263,6 +263,7 @@ public class OriginalStream extends TransformStream {
         return Hashing.sha1().hashString(file.getPath(), Charsets.UTF_16LE).toString();
     }
 
+    @NonNull
     @Override
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
