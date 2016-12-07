@@ -17,14 +17,11 @@
 package com.android.tools.fd.runtime;
 
 import static com.android.tools.fd.runtime.AppInfo.applicationId;
-import static com.android.tools.fd.runtime.BootstrapApplication.LOG_TAG;
+import static com.android.tools.fd.runtime.Logging.LOG_TAG;
 
+import android.util.Log;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
-import android.content.Context;
-import android.util.Log;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -41,11 +38,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -55,11 +47,14 @@ import java.util.zip.ZipInputStream;
  */
 public class FileManager {
     /**
+     * Whether we're using extracted resources rather than just pointing to a .zip
+     * archive for the resource ap_ file.
+     * <p>
      * According to Dianne, using an extracted directory tree of resources rather than
      * in an archive was implemented before 1.0 and never used or tested... so we should
      * tread carefully here.
      */
-    private static final boolean USE_EXTRACTED_RESOURCES = false;
+    static final boolean USE_EXTRACTED_RESOURCES = false;
 
     /** Name of file to write resource data into, if not extracting resources */
     private static final String RESOURCE_FILE_NAME = Paths.RESOURCE_FILE_NAME;
@@ -83,7 +78,7 @@ public class FileManager {
     public static final String CLASSES_DEX_SUFFIX = ".dex";
 
     /** Whether we've purged temp dex files in this session */
-    private static boolean sHavePurgedTempDexFolder;
+    private static boolean havePurgedTempDexFolder;
 
     /**
      * The folder where resources and code are located. Within this folder we have two
@@ -104,25 +99,6 @@ public class FileManager {
     private static File getResourceFile(File base) {
         //noinspection ConstantConditions
         return new File(base, USE_EXTRACTED_RESOURCES ? RESOURCE_FOLDER_NAME : RESOURCE_FILE_NAME);
-    }
-
-    /**
-     * Returns the folder used for .dex files used during the next app start
-     */
-    @Nullable
-    private static File getDexFileFolder(File base, boolean createIfNecessary) {
-        File file = new File(base, Paths.DEX_DIRECTORY_NAME);
-        if (createIfNecessary) {
-            if (!file.isDirectory()) {
-                boolean created = file.mkdirs();
-                if (!created) {
-                    Log.e(LOG_TAG, "Failed to create directory " + file);
-                    return null;
-                }
-            }
-        }
-
-        return file;
     }
 
     /**
@@ -237,31 +213,6 @@ public class FileManager {
         }
     }
 
-    /** Looks in the inbox for new changes sent while the app wasn't running and apply them */
-    public static void checkInbox() {
-        File inbox = new File(Paths.getInboxDirectory(applicationId));
-        if (inbox.isDirectory()) {
-            File resources = new File(inbox, RESOURCE_FILE_NAME);
-            if (resources.isFile()) {
-                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                    Log.v(LOG_TAG, "Processing resource file from inbox (" + resources + ")");
-                }
-                byte[] bytes = readRawBytes(resources);
-                if (bytes != null) {
-                    FileManager.startUpdate();
-                    FileManager.writeAaptResources(RESOURCE_FILE_NAME, bytes);
-                    FileManager.finishUpdate(true);
-                    boolean deleted = resources.delete();
-                    if (!deleted) {
-                        if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                            Log.e(LOG_TAG, "Couldn't remove inbox resource file: " + resources);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     /** Returns the current/active resource file, if it exists */
     @Nullable
     public static File getExternalResourceFile() {
@@ -274,235 +225,6 @@ public class FileManager {
         }
 
         return file;
-    }
-
-    /** Returns the list of available .dex files to be loaded, possibly empty
-     * @param apkModified main apk installation time to purge old dex files from previous
-     *                    installation.
-     */
-    @NonNull
-    public static List<String> getDexList(Context context, long apkModified) {
-        File dataFolder = getDataFolder();
-
-        long newestHotswapPatch = FileManager.getMostRecentTempDexTime(dataFolder);
-
-        // We don't need "double buffering" for dex files - we never rewrite files, so we
-        // can accumulate in the same dir
-        File dexFolder = getDexFileFolder(dataFolder, false);
-
-        // Extract slices.
-        //
-        // Imagine this scenario -- you run your app (so the device dex folder is filled).
-        // Then you do a clean build etc -- so Gradle doesn't know there is existing state
-        // on the device. If we *only* extract slices when there are no slices there already,
-        // then we'd end up here just running the old slices already on the device.
-        // On the other hand, we can't just always extract slices, since then each time
-        // you run we'll overwrite coldswap and freezeswap slices.
-        //
-        // So what this code does is pass the APK timestamp to the extractor, and in the
-        // extractor, if the timestamp is positive, we check before writing each slice that
-        // it doesn't already exist and is newer than the APK.
-        boolean extractedSlices = false;
-        File[] dexFiles;
-        if (dexFolder == null || !dexFolder.isDirectory()) {
-            // It's the first run of a freshly installed app, and we need to extract the
-            // slices from within the APK into the dex folder
-            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                Log.v(LOG_TAG, "No local dex slice folder: First run since installation.");
-            }
-            dexFolder = getDexFileFolder(dataFolder, true);
-            if (dexFolder == null) {
-                // Failed to create dex folder.
-                Log.wtf(LOG_TAG, "Couldn't create dex code folder");
-                return Collections.emptyList(); // unreachable
-            }
-            dexFiles = extractSlices(dexFolder, null, -1); // -1: unconditionally extract all
-            extractedSlices = dexFiles.length > 0;
-        } else {
-            dexFiles = dexFolder.listFiles();
-        }
-        if (dexFiles == null || dexFiles.length == 0) {
-            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                Log.v(LOG_TAG, "Cannot find dex classes, not patching them in");
-            }
-            return Collections.emptyList();
-        }
-
-        // See if any of the slices are older than the APK. This will only be the case
-        // if it's not the first run, and the APK has been reinstalled while there are some
-        // potentially stale dex files.
-        //
-        // Note that we're *also* computing the timestamp of the *newest* coldswap slice.
-        // We'll use that below to post a toast if the app seems to be missing hotswap patches.
-        long newestColdswapPatch = apkModified;
-        if (!extractedSlices && dexFiles.length > 0) {
-            long oldestColdSwapPatch = apkModified;
-            for (File dex : dexFiles) {
-                long dexModified = dex.lastModified();
-                oldestColdSwapPatch = Math.min(dexModified, oldestColdSwapPatch);
-                newestColdswapPatch = Math.max(dexModified, newestColdswapPatch);
-            }
-            if (oldestColdSwapPatch < apkModified) {
-                // At least one slice is older than the APK: re-extract those that
-                // need it
-                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                    Log.v(LOG_TAG, "One or more slices were older than APK: extracting newer slices");
-                }
-                dexFiles = extractSlices(dexFolder, dexFiles, apkModified);
-            }
-        } else if (newestHotswapPatch > 0L) {
-            // If the code is newer than the hotswap patches, delete them such that we don't
-            // have to keep iterating through them each successive startup
-            purgeTempDexFiles(dataFolder);
-        }
-
-        if (newestHotswapPatch > newestColdswapPatch) {
-            String message = "Your app does not have the latest code changes because it "
-                    + "was restarted manually. Please run from IDE instead.";
-
-            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                Log.v(LOG_TAG, message);
-            }
-
-            // We now want to show a toast to the user showing that the app is older.
-            // However, it's too early to show it here:
-            Restarter.showToastWhenPossible(context, message);
-        }
-
-        List<String> list = new ArrayList<String>(dexFiles.length);
-        for (File dex : dexFiles) {
-            if (dex.getName().endsWith(CLASSES_DEX_SUFFIX)) {
-                list.add(dex.getPath());
-            }
-        }
-
-        // Dex files should be sorted in reverse order such that the class loader finds
-        // most recent updates first
-        Collections.sort(list, Collections.reverseOrder());
-
-        return list;
-    }
-
-    /**
-     * Extracts the slices found in the APK root directory (instant-run.zip) into the dex folder,
-     * and skipping any files that already exist and are newer than apkModified (unless apkModified
-     * <= 0). It <b>also</b> deletes any <b>unrecognized</b> slices. This is necessary
-     * since there are scenarios (such as b.android.com/204341) where we end up with slice files
-     * in the dex folder that should <b>not</b> be loaded.
-     */
-    private static File[] extractSlices(@NonNull File dexFolder, @Nullable File[] dexFolderFiles,
-            long apkModified) {
-        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-            Log.v(LOG_TAG, "Extracting slices into " + dexFolder);
-        }
-        InputStream stream = BootstrapApplication.class.getResourceAsStream("/instant-run.zip");
-        if (stream == null) {
-            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                Log.e(LOG_TAG, "Could not find slices in APK; aborting.");
-            }
-            return new File[0];
-        }
-        List<File> slices = new ArrayList<File>(30);
-        Set<String> sliceNames = new HashSet<String>(30);
-        try {
-            ZipInputStream zipInputStream = new ZipInputStream(stream);
-            try {
-                byte[] buffer = new byte[2000];
-
-                for (ZipEntry entry = zipInputStream.getNextEntry();
-                        entry != null;
-                        entry = zipInputStream.getNextEntry()) {
-                    String name = entry.getName();
-                    // Don't extract META-INF data
-                    if (name.startsWith("META-INF")) {
-                        continue;
-                    }
-                    if (!entry.isDirectory()
-                            && name.indexOf('/') == -1 // only files in root directory
-                            && name.endsWith(CLASSES_DEX_SUFFIX)) {
-                        // Using / as separators in both .zip files and on Android, no need to convert
-                        // to File.separator
-
-                        // Map slice name to the scheme already used by the code to push slices
-                        // via the embedded server as well as the code to push via adb:
-                        //   slice-<slicedir>
-                        String sliceName = Paths.DEX_SLICE_PREFIX + name;
-                        sliceNames.add(sliceName);
-                        File dest = new File(dexFolder, sliceName);
-                        slices.add(dest);
-
-                        if (apkModified > 0) {
-                            long sliceModified = dest.lastModified();
-                            if (sliceModified > apkModified) {
-                                // Ignore this slice: disk copy more recent than APK copy
-                                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                                    Log.v(LOG_TAG, "Ignoring slice " + name
-                                            + ": newer on disk than in APK");
-                                }
-                                continue;
-                            }
-                        }
-                        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                            Log.v(LOG_TAG, "Extracting slice " + name + " into " + dest);
-                        }
-                        File parent = dest.getParentFile();
-                        if (parent != null && !parent.exists()) {
-                            boolean created = parent.mkdirs();
-                            if (!created) {
-                                Log.wtf(LOG_TAG, "Failed to create directory " + dest);
-                                return new File[0];
-                            }
-                        }
-
-                        OutputStream src = new BufferedOutputStream(new FileOutputStream(dest));
-                        try {
-                            int bytesRead;
-                            while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-                                src.write(buffer, 0, bytesRead);
-                            }
-                        } finally {
-                            src.close();
-                        }
-                        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                            Log.v(LOG_TAG, "File written at " + System.currentTimeMillis());
-                            Log.v(LOG_TAG, "File last modified reported : " + dest.lastModified());
-                        }
-                    }
-                }
-
-                // Remove old slice names
-                if (dexFolderFiles != null) {
-                    for (File file : dexFolderFiles) {
-                        if (!sliceNames.contains(file.getName())) {
-                            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                                Log.v(LOG_TAG, "Removing old slice " + file);
-                            }
-                            boolean deleted = file.delete();
-                            if (!deleted) {
-                                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                                    Log.v(LOG_TAG, "Could not delete " + file);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return slices.toArray(new File[slices.size()]);
-            } catch (IOException ioe) {
-                Log.wtf(LOG_TAG, "Failed to extract slices into directory " + dexFolder, ioe);
-                return new File[0];
-            } finally {
-                try {
-                    zipInputStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        } finally {
-            try {
-                stream.close();
-            } catch (IOException ignore) {
-            }
-        }
     }
 
     /** Produces the next available dex file name */
@@ -519,14 +241,14 @@ public class FileManager {
             }
 
             // There was nothing to purge, but leave the folder be from now on.
-            sHavePurgedTempDexFolder = true;
+            havePurgedTempDexFolder = true;
         } else {
             // The *first* time we write a reload dex file in the new process, we'll
             // delete previously stashes reload dex files. (We keep them around
             // such that we can (repeatedly) warn an app on startup if its hotswap patches
             // are more recent than the app itself, such that developers aren't confused
             // when the app is not reflecting the most recent changes
-            if (!sHavePurgedTempDexFolder) {
+            if (!havePurgedTempDexFolder) {
                 purgeTempDexFiles(dataFolder);
             }
         }
@@ -583,57 +305,59 @@ public class FileManager {
     }
 
     public static boolean extractZip(@NonNull File destination, @NonNull byte[] zipBytes) {
-        InputStream inputStream = new ByteArrayInputStream(zipBytes);
-        return extractZip(destination, inputStream);
-    }
-
-    public static boolean extractZip(@NonNull File destDir, @NonNull InputStream inputStream) {
-        ZipInputStream zipInputStream = new ZipInputStream(inputStream);
-        try {
-            byte[] buffer = new byte[2000];
-
-            for (ZipEntry entry = zipInputStream.getNextEntry();
-                    entry != null;
-                    entry = zipInputStream.getNextEntry()) {
-                String name = entry.getName();
-                // Don't extract META-INF data
-                if (name.startsWith("META-INF")) {
-                    continue;
-                }
-                if (!entry.isDirectory()) {
-                    // Using / as separators in both .zip files and on Android, no need to convert
-                    // to File.separator
-                    File dest = new File(destDir, name);
-                    File parent = dest.getParentFile();
-                    if (parent != null && !parent.exists()) {
-                        boolean created = parent.mkdirs();
-                        if (!created) {
-                            Log.e(LOG_TAG, "Failed to create directory " + dest);
-                            return false;
-                        }
-                    }
-
-                    OutputStream src = new BufferedOutputStream(new FileOutputStream(dest));
-                    try {
-                        int bytesRead;
-                        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-                            src.write(buffer, 0, bytesRead);
-                        }
-                    } finally {
-                        src.close();
-                    }
-                }
-            }
-
-            return true;
-        } catch (IOException ioe) {
-            Log.e(LOG_TAG, "Failed to extract zip contents into directory " + destDir, ioe);
-            return false;
-        } finally {
+        if (USE_EXTRACTED_RESOURCES) {
+            InputStream inputStream = new ByteArrayInputStream(zipBytes);
+            ZipInputStream zipInputStream = new ZipInputStream(inputStream);
             try {
-                zipInputStream.close();
-            } catch (IOException ignore) {
+                byte[] buffer = new byte[2000];
+
+                for (ZipEntry entry = zipInputStream.getNextEntry();
+                        entry != null;
+                        entry = zipInputStream.getNextEntry()) {
+                    String name = entry.getName();
+                    // Don't extract META-INF data
+                    if (name.startsWith("META-INF")) {
+                        continue;
+                    }
+                    if (!entry.isDirectory()) {
+                        // Using / as separators in both .zip files and on Android, no need to convert
+                        // to File.separator
+                        File dest = new File(destination, name);
+                        File parent = dest.getParentFile();
+                        if (parent != null && !parent.exists()) {
+                            boolean created = parent.mkdirs();
+                            if (!created) {
+                                Log.e(LOG_TAG, "Failed to create directory " + dest);
+                                return false;
+                            }
+                        }
+
+                        OutputStream src = new BufferedOutputStream(new FileOutputStream(dest));
+                        try {
+                            int bytesRead;
+                            while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+                                src.write(buffer, 0, bytesRead);
+                            }
+                        } finally {
+                            src.close();
+                        }
+                    }
+                }
+
+                return true;
+            } catch (IOException ioe) {
+                Log.e(LOG_TAG, "Failed to extract zip contents into directory " + destination,
+                        ioe);
+                return false;
+            } finally {
+                try {
+                    zipInputStream.close();
+                } catch (IOException ignore) {
+                }
             }
+        } else {
+            Log.wtf(LOG_TAG, "");
+            return false;
         }
     }
 
@@ -646,17 +370,6 @@ public class FileManager {
         if (wroteResources) {
             swapFolders();
         }
-    }
-
-    @Nullable
-    public static File writeDexShard(@NonNull byte[] bytes, @NonNull String name) {
-        File dexFolder = getDexFileFolder(getDataFolder(), true);
-        if (dexFolder == null) {
-            return null;
-        }
-        File file = new File(dexFolder, name);
-        writeRawBytes(file, bytes);
-        return file;
     }
 
     public static void writeAaptResources(@NonNull String relativePath, @NonNull byte[] bytes) {
@@ -702,34 +415,10 @@ public class FileManager {
     }
 
     /**
-     * Returns the modification time of the newest hotswap (reload) dex file
-     * or 0 if there are no hotswap dex files in the passed dataFolder
-     */
-    public static long getMostRecentTempDexTime(@NonNull File dataFolder) {
-        File dexFolder = getTempDexFileFolder(dataFolder);
-        if (!dexFolder.isDirectory()) {
-            return 0L;
-        }
-        File[] files = dexFolder.listFiles();
-        if (files == null) {
-            return 0L;
-        }
-
-        long newest = 0L;
-        for (File file : files) {
-            if (file.getPath().endsWith(CLASSES_DEX_SUFFIX)) {
-                newest = Math.max(newest, file.lastModified());
-            }
-        }
-
-        return newest;
-    }
-
-    /**
      * Removes .dex files from the temp dex file folder
      */
     public static void purgeTempDexFiles(@NonNull File dataFolder) {
-        sHavePurgedTempDexFolder = true;
+        havePurgedTempDexFolder = true;
 
         File dexFolder = getTempDexFileFolder(dataFolder);
         if (!dexFolder.isDirectory()) {
@@ -751,11 +440,13 @@ public class FileManager {
     }
 
     public static long getFileSize(@NonNull String path) {
-        // Currently only handle this for resource files
-        if (path.equals(RESOURCE_FILE_NAME)) {
-            File file = getExternalResourceFile();
-            if (file != null) {
-                return file.length();
+        if (USE_EXTRACTED_RESOURCES) {
+            // Currently only handle this for resource files
+            if (path.equals(RESOURCE_FILE_NAME)) {
+                File file = getExternalResourceFile();
+                if (file != null) {
+                    return file.length();
+                }
             }
         }
 
@@ -764,11 +455,13 @@ public class FileManager {
 
     @Nullable
     public static byte[] getCheckSum(@NonNull String path) {
-        // Currently only handle this for resource files
-        if (path.equals(RESOURCE_FILE_NAME)) {
-            File file = getExternalResourceFile();
-            if (file != null) {
-                return getCheckSum(file);
+        if (USE_EXTRACTED_RESOURCES) {
+            // Currently only handle this for resource files
+            if (path.equals(RESOURCE_FILE_NAME)) {
+                File file = getExternalResourceFile();
+                if (file != null) {
+                    return getCheckSum(file);
+                }
             }
         }
 
@@ -783,79 +476,37 @@ public class FileManager {
      */
     @Nullable
     public static byte[] getCheckSum(@NonNull File file) {
-        try {
-            // Create MD5 Hash
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            byte[] buffer = new byte[4096];
-            BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
+        if (USE_EXTRACTED_RESOURCES) {
             try {
-                while (true) {
-                    int read = input.read(buffer);
-                    if (read == -1) {
-                        break;
+                // Create MD5 Hash
+                MessageDigest digest = MessageDigest.getInstance("MD5");
+                byte[] buffer = new byte[4096];
+                BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
+                try {
+                    while (true) {
+                        int read = input.read(buffer);
+                        if (read == -1) {
+                            break;
+                        }
+                        digest.update(buffer, 0, read);
                     }
-                    digest.update(buffer, 0, read);
+                    return digest.digest();
+                } finally {
+                    input.close();
                 }
-                return digest.digest();
-            } finally {
-                input.close();
-            }
-        } catch (NoSuchAlgorithmException e) {
-            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                Log.e(LOG_TAG, "Couldn't look up message digest", e);
-            }
-        } catch (IOException ioe) {
-            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                Log.e(LOG_TAG, "Failed to read file " + file, ioe);
-            }
-        } catch (Throwable t) {
-            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                Log.e(LOG_TAG, "Unexpected checksum exception", t);
-            }
-        }
-        return null;
-    }
-
-    public static byte[] readRawBytes(@NonNull File source) {
-        try {
-            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                Log.v(LOG_TAG, "Reading the bytes for file " + source);
-            }
-            long length = source.length();
-            if (length > Integer.MAX_VALUE) {
-                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                    Log.v(LOG_TAG, "File too large (" + length + ")");
+            } catch (NoSuchAlgorithmException e) {
+                if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
+                    Log.e(LOG_TAG, "Couldn't look up message digest", e);
                 }
-                return null;
-            }
-            byte[] result = new byte[(int)length];
-
-            BufferedInputStream input = new BufferedInputStream(new FileInputStream(source));
-            try {
-                int index = 0;
-                int remaining = result.length - index;
-                while (remaining > 0) {
-                    int numRead = input.read(result, index, remaining);
-                    if (numRead == -1) {
-                        break;
-                    }
-                    index += numRead;
-                    remaining -= numRead;
+            } catch (IOException ioe) {
+                if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
+                    Log.e(LOG_TAG, "Failed to read file " + file, ioe);
                 }
-                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                    Log.v(LOG_TAG, "Returning length " + result.length + " for file " + source);
+            } catch (Throwable t) {
+                if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
+                    Log.e(LOG_TAG, "Unexpected checksum exception", t);
                 }
-                return result;
-            } finally {
-                input.close();
             }
-        } catch (IOException ioe) {
-            if (Log.isLoggable(LOG_TAG, Log.ERROR)) {
-                Log.e(LOG_TAG, "Failed to read file " + source, ioe);
-            }
-        }
-        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-            Log.v(LOG_TAG, "I/O error, no bytes returned for " + source);
         }
         return null;
     }

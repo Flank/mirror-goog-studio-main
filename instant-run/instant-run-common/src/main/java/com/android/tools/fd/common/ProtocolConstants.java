@@ -46,6 +46,9 @@ public interface ProtocolConstants {
      * may not pick up on edits in the middle of the file but should be a
      * quick way to determine if a path exists and some basic information
      * about it.
+     * <p>
+     * <b>Currently disabled.</b>. Tied to using extracted resource
+     * directories (controlled by FileManager#USE_EXTRACTED_RESOURCES).
      */
     int MESSAGE_PATH_EXISTS = 3;
 
@@ -54,6 +57,9 @@ public interface ProtocolConstants {
      * its checksum. (This is used to determine whether the app can receive
      * a small delta on top of a (typically resource ) file instead of resending the whole
      * file over again.)
+     * <p>
+     * <b>Currently disabled.</b>. Tied to using extracted resource
+     * directories (controlled by FileManager#USE_EXTRACTED_RESOURCES).
      */
     int MESSAGE_PATH_CHECKSUM = 4;
 
