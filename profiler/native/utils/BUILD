@@ -72,6 +72,7 @@ cc_library(
 cc_test(
     name = "profiler_utils_test",
     srcs = [
+        "activity_manager_test.cc",
         "clock_test.cc",
         "current_process_test.cc",
         "file_reader_test.cc",

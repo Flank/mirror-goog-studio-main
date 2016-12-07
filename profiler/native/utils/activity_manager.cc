@@ -32,7 +32,9 @@ const char *const kAmExecutable = "/system/bin/am";
 
 namespace profiler {
 
-ActivityManager::ActivityManager() : BashCommandRunner(kAmExecutable) {}
+ActivityManager::ActivityManager()
+    : bash_(new BashCommandRunner(kAmExecutable)) {}
+
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
                                      string *trace_path,
@@ -49,13 +51,16 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
   // Run command via actual am.
   string parameters;
   parameters.append("profile start ");
-  if (profiling_mode == ActivityManager::INSTRUMENTED) {
-    parameters.append("--sampling 0 ");
+  if (profiling_mode == ActivityManager::SAMPLING) {
+    // A sample interval in microseconds is required after '--sampling'.
+    // Note that '--sampling 0' would direct ART into instrumentation mode.
+    // If there's no '--samepling X', instrumentation is used.
+    parameters.append("--sampling 1000 ");
   }
   parameters.append(app_package_name);
   parameters.append(" ");
   parameters.append(*trace_path);
-  if(!Run(parameters, error_string)) {
+  if(!bash_->Run(parameters, error_string)) {
     *error_string = "Unable to run profile start command";
     return false;
   }
@@ -84,7 +89,7 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   string parameters;
   parameters.append("profile stop ");
   parameters.append(app_package_name);
-  if (!Run(parameters, error_string)) {
+  if (!bash_->Run(parameters, error_string)) {
     *error_string = "Unable to run profile stop command";
     return false;
   }
@@ -103,7 +108,7 @@ bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,
                                       std::string *error_string) const {
   std::stringstream ss;
   ss << "dumpheap " << pid << " " << file_path;
-  return Run(ss.str(), error_string);
+  return bash_->Run(ss.str(), error_string);
 }
 
 std::string ActivityManager::GenerateTracePath(
