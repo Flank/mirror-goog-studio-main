@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 public class Workspace {
     private final File directory;
@@ -68,12 +69,12 @@ public class Workspace {
     }
 
 
-    private File findBuildDirectory(File child) {
-        File file = child == null ? null : new File(child, "BUILD");
+    private File findBuildDirectory(@NotNull File dir) {
+        File file = new File(dir, "BUILD");
         while (file != null && !(file.exists() && !file.isDirectory())) {
-            child = child.getParentFile();
-            file = child == null ? null : new File(child, "BUILD");
+            dir = dir.getParentFile();
+            file = (dir == null) ? null : new File(dir, "BUILD");
         }
-        return child;
+        return dir;
     }
 }
