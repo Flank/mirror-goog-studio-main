@@ -26,7 +26,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.wireless.android.sdk.stats.InstantRunStatus;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -44,9 +43,11 @@ import org.xml.sax.SAXException;
  */
 public class InstantRunBuildContextTest {
 
+    private static final InstantRunBuildContext.BuildIdAllocator idAllocator = System::nanoTime;
+
     @Test
     public void testTaskDurationRecording() throws ParserConfigurationException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.VERIFIER);
         try {
             Thread.sleep(10);
@@ -61,7 +62,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testPersistenceFromCleanState() throws ParserConfigurationException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         String persistedState = instantRunBuildContext.toXml();
         assertThat(persistedState).isNotEmpty();
@@ -70,7 +71,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testFormatPresence() throws ParserConfigurationException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         String persistedState = instantRunBuildContext.toXml();
         assertThat(persistedState).isNotEmpty();
@@ -80,7 +81,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testDuplicateEntries() throws ParserConfigurationException, IOException {
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
         context.setApiLevel(21, ColdswapMode.MULTIDEX.name(), null /* targetArchitecture */);
         context.addChangedFile(
                 FileType.DEX, new File("/tmp/dependencies.dex"));
@@ -96,7 +97,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testLoadingFromCleanState()
             throws ParserConfigurationException, SAXException, IOException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null);
         File file = new File("/path/to/non/existing/file");
         instantRunBuildContext.loadFromXmlFile(file);
@@ -109,7 +110,7 @@ public class InstantRunBuildContextTest {
     public void testLoadingFromADifferentPluginVersion() throws Exception {
         String xml;
         {
-            InstantRunBuildContext context = new InstantRunBuildContext();
+            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
             context.setApiLevel(23, ColdswapMode.MULTIDEX.name(), null);
             context.addChangedFile(
                     FileType.MAIN, new File("/tmp/main.apk"));
@@ -119,7 +120,7 @@ public class InstantRunBuildContextTest {
         }
         xml = xml.replace(Version.ANDROID_GRADLE_PLUGIN_VERSION, "Other");
         {
-            InstantRunBuildContext context = new InstantRunBuildContext();
+            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
             context.setApiLevel(23, ColdswapMode.MULTIDEX.name(), null);
             context.loadFromXml(xml);
             assertThat(context.getVerifierResult())
@@ -133,7 +134,7 @@ public class InstantRunBuildContextTest {
             throws IOException, ParserConfigurationException, SAXException {
         File tmpFile = createMarkedBuildInfo();
 
-        InstantRunBuildContext newContext = new InstantRunBuildContext();
+        InstantRunBuildContext newContext = new InstantRunBuildContext(idAllocator);
         newContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
 
         newContext.loadFromXmlFile(tmpFile);
@@ -144,17 +145,17 @@ public class InstantRunBuildContextTest {
     @Test
     public void testPersistingAndLoadingPastBuilds()
             throws IOException, ParserConfigurationException, SAXException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         instantRunBuildContext.setSecretToken(12345L);
         File buildInfo = createBuildInfo(instantRunBuildContext);
-        instantRunBuildContext = new InstantRunBuildContext();
+        instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         instantRunBuildContext.loadFromXmlFile(buildInfo);
         assertThat(instantRunBuildContext.getPreviousBuilds()).hasSize(1);
         saveBuildInfo(instantRunBuildContext, buildInfo);
 
-        instantRunBuildContext = new InstantRunBuildContext();
+        instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         instantRunBuildContext.loadFromXmlFile(buildInfo);
         assertThat(instantRunBuildContext.getSecretToken()).isEqualTo(12345L);
@@ -163,14 +164,14 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testXmlFormat() throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext first = new InstantRunBuildContext();
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
         first.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         first.setDensity("xxxhdpi");
         first.addChangedFile(FileType.MAIN, new File("main.apk"));
         first.addChangedFile(FileType.SPLIT, new File("split.apk"));
         String buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext();
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
         second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.setDensity("xhdpi");
         second.loadFromXml(buildInfo);
@@ -227,7 +228,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testArtifactsPersistence()
             throws IOException, ParserConfigurationException, SAXException {
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         instantRunBuildContext.addChangedFile(FileType.MAIN,
                 new File("main.apk"));
@@ -236,7 +237,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = instantRunBuildContext.toXml();
 
         // check xml format, the IDE depends on it.
-        instantRunBuildContext = new InstantRunBuildContext();
+        instantRunBuildContext = new InstantRunBuildContext(idAllocator);
         instantRunBuildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         instantRunBuildContext.loadFromXml(buildInfo);
         assertThat(instantRunBuildContext.getPreviousBuilds()).hasSize(1);
@@ -252,13 +253,13 @@ public class InstantRunBuildContextTest {
     @Test
     public void testOldReloadPurge()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext();
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
         first.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
@@ -267,7 +268,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext();
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
         second.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
@@ -288,13 +289,13 @@ public class InstantRunBuildContextTest {
     @Test
     public void testMultipleReloadCollapse()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext();
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
         first.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
@@ -303,7 +304,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext();
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
         second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
@@ -312,7 +313,7 @@ public class InstantRunBuildContextTest {
         second.close();
         buildInfo = second.toXml();
 
-        InstantRunBuildContext third = new InstantRunBuildContext();
+        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator);
         third.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.RESOURCES,
@@ -323,7 +324,7 @@ public class InstantRunBuildContextTest {
         third.close();
         buildInfo = third.toXml();
 
-        InstantRunBuildContext fourth = new InstantRunBuildContext();
+        InstantRunBuildContext fourth = new InstantRunBuildContext(idAllocator);
         fourth.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         fourth.loadFromXml(buildInfo);
         fourth.addChangedFile(FileType.RESOURCES,
@@ -351,14 +352,14 @@ public class InstantRunBuildContextTest {
     @Test
     public void testOverlappingAndEmptyChanges()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         initial.addChangedFile(FileType.MAIN, new File("/tmp/main.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext();
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
         first.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
@@ -367,7 +368,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext();
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
         second.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -375,7 +376,7 @@ public class InstantRunBuildContextTest {
         second.close();
         buildInfo = second.toXml();
 
-        InstantRunBuildContext third = new InstantRunBuildContext();
+        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator);
         third.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -430,20 +431,20 @@ public class InstantRunBuildContextTest {
     @Test
     public void testTemporaryBuildProduction()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(21, ColdswapMode.MULTIDEX.name(), null /* targetArchitecture */);
         initial.addChangedFile(FileType.DEX, new File("/tmp/split-1.apk"));
         initial.addChangedFile(FileType.DEX, new File("/tmp/split-2.apk"));
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext();
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
         first.setApiLevel(21, null /* coldswapMode */, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RESOURCES, new File("/tmp/resources_ap"));
         first.close();
         String tmpBuildInfo = first.toXml(InstantRunBuildContext.PersistenceMode.TEMP_BUILD);
 
-        InstantRunBuildContext fixed = new InstantRunBuildContext();
+        InstantRunBuildContext fixed = new InstantRunBuildContext(idAllocator);
         fixed.setApiLevel(21, ColdswapMode.MULTIDEX.name(), null /* targetArchitecture */);
         fixed.loadFromXml(buildInfo);
         fixed.mergeFrom(tmpBuildInfo);
@@ -467,7 +468,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testX86InjectedArchitecture() {
 
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
         context.setApiLevel(20, null /* coldswapMode */, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.PRE_LOLLIPOP);
 
@@ -492,7 +493,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testResourceRemovalWhenBuildingMainApp() throws Exception {
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
         context.setApiLevel(19,
                 ColdswapMode.MULTIDEX.name(), null /* targetArchitecture */);
 
@@ -511,7 +512,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testFullAPKRequestWithSplits() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
 
         // set the initial build.
@@ -523,7 +524,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only the main apk.
-        InstantRunBuildContext update = new InstantRunBuildContext();
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -534,7 +535,7 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild().getArtifacts()).hasSize(4);
 
         // now add only one split apk.
-        update = new InstantRunBuildContext();
+        update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -545,7 +546,7 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild().getArtifacts()).hasSize(4);
 
         // and one of each type.
-        update = new InstantRunBuildContext();
+        update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -560,7 +561,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitReAddingWithSplitAPK() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
 
         // set the initial build.
@@ -572,7 +573,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only one of the split apk.
-        InstantRunBuildContext update = new InstantRunBuildContext();
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -589,7 +590,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitNoReAddingWithAlreadyPresent() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
 
         // set the initial build.
@@ -601,7 +602,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only the main apk and a split
-        InstantRunBuildContext update = new InstantRunBuildContext();
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -620,7 +621,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitNoReAddingWithSplitAPK() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext();
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
         initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
 
         // set the initial build.
@@ -632,7 +633,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only one of the split apk.
-        InstantRunBuildContext update = new InstantRunBuildContext();
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
         update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -660,7 +661,7 @@ public class InstantRunBuildContextTest {
     }
 
     private static File createMarkedBuildInfo() throws IOException, ParserConfigurationException {
-        InstantRunBuildContext originalContext = new InstantRunBuildContext();
+        InstantRunBuildContext originalContext = new InstantRunBuildContext(idAllocator);
         originalContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
         return createBuildInfo(originalContext);
     }
