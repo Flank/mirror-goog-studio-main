@@ -70,7 +70,7 @@ public class Workspace {
 
 
     private File findBuildDirectory(@NotNull File dir) {
-        if (new File(dir, "BUILD").isFile()) {
+        if (new File(dir, "BUILD.bazel").isFile() || new File(dir, "BUILD").isFile()) {
             return dir;
         }
         File parent = dir.getParentFile();

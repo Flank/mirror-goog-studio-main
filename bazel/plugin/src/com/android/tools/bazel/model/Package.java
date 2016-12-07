@@ -46,13 +46,19 @@ public class Package {
 
     public Build getBuildFile() throws IOException {
         if (buildFile == null) {
-            File file = new File(getPackageDir(), "BUILD");
+            File file = buildFile(getPackageDir());
             Tokenizer tokenizer = new Tokenizer(file);
             BuildParser parser = new BuildParser(tokenizer);
             buildFile = parser.parse();
             buildFile.hideManagedStatements();
         }
         return buildFile;
+    }
+
+    @NotNull
+    private File buildFile(@NotNull File dir) {
+        File buildDotBazelFile = new File(dir, "BUILD.bazel");
+        return buildDotBazelFile.isFile() ? buildDotBazelFile : new File(dir, "BUILD");
     }
 
     public void generate(PrintWriter progress) throws IOException {
@@ -68,7 +74,7 @@ public class Package {
         if (!hasRules) return;
 
         File dir = getPackageDir();
-        File build = new File(dir, "BUILD");
+        File build = buildFile(dir);
         for (BazelRule rule : rules.values()) {
             if (!rule.isEmpty() && rule.isExport() && rule.shouldUpdate()) {
                 rule.update();
