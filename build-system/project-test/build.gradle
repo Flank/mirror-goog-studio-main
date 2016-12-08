@@ -23,5 +23,5 @@ applicationDistribution.from(file('../tests/regular')) {
     into 'tests'
 }
 
-task dist << {}
+task('dist').doLast {}
 dist.dependsOn distZip

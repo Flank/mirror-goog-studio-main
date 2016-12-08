@@ -218,12 +218,12 @@ task buildTestDependencies {
 
 DevicePool devicePool = new DevicePool();
 
-task startDevicePool << {
+task('startDevicePool').doLast {
     // This port number needs to be kept in sync with DevicePoolClient.
     devicePool.start(3431)
 }
 
-task stopDevicePool << {
+task('stopDevicePool').doLast {
     devicePool.stop()
 }
 
