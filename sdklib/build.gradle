@@ -171,7 +171,8 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     }
 }
 
-task initSdkForConnectedTests(type: JavaExec, dependsOn: initSdkForTests) {
+
+task initSdkForConnectedTests(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.SdkManagerCli"
@@ -179,11 +180,64 @@ task initSdkForConnectedTests(type: JavaExec, dependsOn: initSdkForTests) {
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
             '--channel=3',
             '--verbose',
-            // When you remove an entry below, please add it to removeSdkComponents above.
+            'system-images;android-25;google_apis;x86',
             'system-images;android-23;google_apis;x86',
             'system-images;android-21;google_apis;x86',
             'system-images;android-19;google_apis;x86',
             'system-images;android-17;google_apis;x86',
+            'tools',
+            'platform-tools',
+            'build-tools;25.0.0',
+            'platforms;android-25',
+            'platforms;android-24',
+            'platforms;android-23',
+            'platforms;android-22',
+            'platforms;android-21',
+            'platforms;android-20',
+            'platforms;android-19',
+            'platforms;android-18',
+            'platforms;android-15',
+            'add-ons;addon-google_apis-google-21',
+            'add-ons;addon-google_apis-google-22',
+            'add-ons;addon-google_apis-google-23',
+            'add-ons;addon-google_apis-google-24',
+            'extras;android;support',
+            'extras;google;m2repository',
+            'extras;android;m2repository',
+            'cmake;3.6.3155560',
+            'ndk-bundle',
+    ]
+}
+
+task initSdkForPerformanceTests(type: JavaExec) {
+    standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
+    main = "com.android.sdklib.tool.SdkManagerCli"
+
+    args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
+            '--channel=3',
+            '--verbose',
+            'tools',
+            'platform-tools',
+            'build-tools;25.0.0',
+            'platforms;android-25',
+            'platforms;android-24',
+            'platforms;android-23',
+            'platforms;android-22',
+            'platforms;android-21',
+            'platforms;android-20',
+            'platforms;android-19',
+            'platforms;android-18',
+            'platforms;android-15',
+            'add-ons;addon-google_apis-google-21',
+            'add-ons;addon-google_apis-google-22',
+            'add-ons;addon-google_apis-google-23',
+            'add-ons;addon-google_apis-google-24',
+            'extras;android;support',
+            'extras;google;m2repository',
+            'extras;android;m2repository',
+            'cmake;3.6.3155560',
+            'ndk-bundle',
     ]
 }
 
