@@ -332,7 +332,7 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
         String propertyName = (String) property;
 
         String qualifiedName = targetClass.getQualifiedName();
-        if (qualifiedName == null) {
+        if (qualifiedName == null || qualifiedName.indexOf('.') == -1) { // resolve error?
             return;
         }
 
