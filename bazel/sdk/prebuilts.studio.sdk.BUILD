@@ -96,6 +96,13 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+java_import(
+    name = "platforms/latest_jar",
+    jars = glob(["*/platforms/android-25/android.jar"]),
+    neverlink = 1,
+    visibility = ["//tools/base/instant-run/instant-run-server:__pkg__"],
+)
+
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
