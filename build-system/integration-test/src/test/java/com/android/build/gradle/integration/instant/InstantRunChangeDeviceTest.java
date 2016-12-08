@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +52,7 @@ public class InstantRunChangeDeviceTest {
 
     private static final Set<BuildTarget> buildTargetsToTest = EnumSet.allOf(BuildTarget.class);
 
-    @Parameterized.Parameters(name = "from {0} to {1}, {2}")
+    @Parameterized.Parameters(name = "from {0} to {1}")
     public static Collection<Object[]> scenarios() {
         // Test all change combinations (plus packaging modes).
         // We want (BuildTarget x BuildTarget) (i.e. including id(BuildTarget))
@@ -78,13 +77,6 @@ public class InstantRunChangeDeviceTest {
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
 
-    @NonNull
-    private static File getMainApk(@NonNull List<InstantRunArtifact> artifacts) {
-        InstantRunArtifact apk = Iterables.getOnlyElement(artifacts);
-        assertThat(apk.type).named("Main apk type").isEqualTo(InstantRunArtifactType.MAIN);
-        return apk.file;
-    }
-
     @Before
     public void checkEnvironment() {
         // IR currently does not work with Jack - http://b.android.com/224374
@@ -92,7 +84,6 @@ public class InstantRunChangeDeviceTest {
     }
 
     @Test
-    @Ignore // IR now only works with cold swap = multi apk mode, this test needs to be updated
     public void switchScenario() throws Exception {
         AndroidProject model = mProject.model().getSingle().getOnlyModel();
         File apk = model.getVariants().stream()
@@ -113,12 +104,13 @@ public class InstantRunChangeDeviceTest {
             mProject.executor()
                     .withInstantRun(
                             firstBuild.getApiLevel(),
-                            ColdswapMode.AUTO,
+                            ColdswapMode.MULTIAPK,
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
             startBuildId = initialContext.getTimeStamp();
-            checkApk(initialContext, firstBuild);
+            checkSplitApk(initialContext.getArtifacts());
+
         }
 
         if (secondBuild == BuildTarget.NO_INSTANT_RUN) {
@@ -128,37 +120,19 @@ public class InstantRunChangeDeviceTest {
             mProject.executor()
                     .withInstantRun(
                             secondBuild.getApiLevel(),
-                            ColdswapMode.AUTO,
+                            ColdswapMode.MULTIAPK,
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo buildContext = InstantRunTestUtils.loadContext(instantRunModel);
             assertThat(buildContext.getSecretToken()).isNotEqualTo(0);
             assertThat(buildContext.getTimeStamp()).isNotEqualTo(startBuildId);
-            checkApk(buildContext, secondBuild);
-        }
-    }
-
-    private void checkApk(
-            @NonNull InstantRunBuildInfo context,
-            @NonNull BuildTarget target) throws Exception {
-        switch (target) {
-            case INSTANT_RUN_NO_COLD_SWAP:
-                checkHotswappableApk(getMainApk(context.getArtifacts()));
-                break;
-            case INSTANT_RUN_MULTI_DEX:
-                checkMultidexApk(getMainApk(context.getArtifacts()));
-                break;
-            case INSTANT_RUN_MULTI_APK:
-                checkSplitApk(context.getArtifacts());
-                break;
-            default:
-                throw new AssertionError("Should have called checkNormalApk directly");
+            checkSplitApk(buildContext.getArtifacts());
 
         }
     }
 
     private void checkSplitApk(@NonNull List<InstantRunArtifact> artifacts) throws Exception {
-        assertThat(artifacts.size()).named("Artifact count").isAtLeast(2);
+        assertThat(artifacts).hasSize(11);
         InstantRunArtifact main = artifacts.stream()
                 .filter(artifact -> artifact.type == InstantRunArtifactType.SPLIT_MAIN)
                 .findFirst().orElseThrow(() -> new AssertionError("Main artifact not found"));
@@ -166,32 +140,8 @@ public class InstantRunChangeDeviceTest {
         ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(main.file);
 
         apkSubject.doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
+        apkSubject.hasClass("Lcom/android/tools/fd/runtime/Server;",
                 AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
-    }
-
-    private void checkMultidexApk(@NonNull File apk) throws Exception {
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
-
-        apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
-                .that().hasMethod("onCreate");
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
-    }
-
-    private void checkHotswappableApk(@NonNull File apk) throws Exception {
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
-
-        apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
-                .that().hasMethod("onCreate");
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
     }
 
     private void checkNormalApk(@NonNull File apk) throws Exception {
@@ -200,7 +150,7 @@ public class InstantRunChangeDeviceTest {
         apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
                 AbstractAndroidSubject.ClassFileScope.MAIN)
                 .that().hasMethod("onCreate");
-        apkSubject.doesNotContainClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
+        apkSubject.doesNotContainClass("Lcom/android/tools/fd/runtime/Server;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
         apkSubject.doesNotContainClass("Lcom/android/tools/fd/runtime/AppInfo;",
                 AbstractAndroidSubject.ClassFileScope.MAIN);
@@ -209,9 +159,8 @@ public class InstantRunChangeDeviceTest {
 
     private enum BuildTarget {
         NO_INSTANT_RUN(23),
-        INSTANT_RUN_NO_COLD_SWAP(19),
-        INSTANT_RUN_MULTI_DEX(23),
-        INSTANT_RUN_MULTI_APK(24);
+        INSTANT_RUN_MULTI_APK_23(23),
+        INSTANT_RUN_MULTI_APK_24(24);
 
         private final int apiLevel;
 
