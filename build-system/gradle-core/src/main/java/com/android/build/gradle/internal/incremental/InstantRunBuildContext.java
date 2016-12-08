@@ -635,14 +635,6 @@ public class InstantRunBuildContext {
     private void loadFromDocument(@NonNull Document document) {
         Element instantRun = document.getDocumentElement();
 
-        if (!String.valueOf(getFeatureLevel()).equals(instantRun.getAttribute(ATTR_API_LEVEL))) {
-            // Don't load if we've changed api level.
-            Logging.getLogger(InstantRunBuildContext.class)
-                    .quiet("Instant Run: Target device API level has changed.");
-            setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
-            return;
-        }
-
         if (!(Version.ANDROID_GRADLE_PLUGIN_VERSION.equals(
                 instantRun.getAttribute(ATTR_PLUGIN_VERSION)))) {
             // Don't load if the plugin version has changed.
