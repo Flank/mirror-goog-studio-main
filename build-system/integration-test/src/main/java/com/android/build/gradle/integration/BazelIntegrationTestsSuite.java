@@ -38,8 +38,8 @@ import org.junit.runner.RunWith;
 @Categories.ExcludeCategory({DeviceTests.class, OnlineTests.class, FailsUnderBazel.class})
 public class BazelIntegrationTestsSuite {
 
-    public static final Path OFFLINE_REPO = Paths.get("offlineRepo");
-    public static final Path PREBUILTS_REPO = Paths.get("prebuiltsRepo");
+    public static final Path OFFLINE_REPO = Paths.get("offlineRepo").toAbsolutePath();
+    public static final Path PREBUILTS_REPO = Paths.get("prebuiltsRepo").toAbsolutePath();
 
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
