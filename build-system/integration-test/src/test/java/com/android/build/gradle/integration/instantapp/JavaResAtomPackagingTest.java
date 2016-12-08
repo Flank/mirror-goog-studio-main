@@ -60,7 +60,7 @@ public class JavaResAtomPackagingTest {
         assertThatAtomBundle(sProject.getSubproject(":atom").getAtomBundle("release"))
                 .containsJavaResourceWithContent("com/foo/atom.txt", "atom:abcd");
 
-        assertThatApk(sProject.getSubproject(":instantApp").getAtom("release"))
+        assertThatApk(sProject.getSubproject(":instantApp").getAtom("atom", "release"))
                 .containsJavaResourceWithContent("com/foo/atom.txt", "atom:abcd");
     }
 }
