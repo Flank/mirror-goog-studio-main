@@ -175,6 +175,12 @@ filegroup(
     ),
 )
 
+filegroup(
+    name = "docs",
+    srcs = glob(["*/docs/**"]),
+    visibility = ["//visibility:public"],
+)
+
 java_import(
     name = "android_jar",
     jars = [":_android_jar"],
