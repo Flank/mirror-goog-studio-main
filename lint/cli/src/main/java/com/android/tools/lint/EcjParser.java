@@ -164,8 +164,8 @@ public class EcjParser extends JavaParser {
     /** Whether parser errors should be dumped to stdout */
     private static final boolean DEBUG_DUMP_PARSE_ERRORS = false;
 
-    /** Whether we can skip computing ECJ error messages */
-    public static boolean skipComputingEcjErrors = true;
+    /** Whether we can skip computing ECJ error messages (not a constant) */
+    public static boolean skipComputingEcjErrors = !DEBUG_DUMP_PARSE_ERRORS;
 
     /**
      * Whether library sources should be parsed (instead of the compiled
@@ -784,11 +784,19 @@ public class EcjParser extends JavaParser {
             if (index != -1) {
                 return path.substring(index + 13);
             }
+            index = path.indexOf("output");
+            if (index > 1) {
+                int begin = path.lastIndexOf(File.separatorChar, index - 2);
+                if (begin != -1) {
+                    return path.substring(begin+1);
+                }
+            }
+            index = path.indexOf("build-cache");
+            if (index != -1) {
+                return path.substring(index);
+            }
         }
-        File parent = library.getParentFile();
-        if (parent != null) {
-            return parent.getName() + File.separatorChar + name;
-        }
+
         return name;
     }
 

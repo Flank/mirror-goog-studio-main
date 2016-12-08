@@ -288,4 +288,66 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected);
     }
+
+    public void test229545() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=229545
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.objectanimatorbinding;\n"
+                        + "\n"
+                        + "import android.animation.ArgbEvaluator;\n"
+                        + "import android.animation.ObjectAnimator;\n"
+                        + "import android.databinding.DataBindingUtil;\n"
+                        + "import android.graphics.Color;\n"
+                        + "import android.support.v7.app.AppCompatActivity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "import android.support.v7.widget.CardView;\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "import com.example.objectanimatorbinding.databinding.ActivityMainBinding;\n"
+                        + "\n"
+                        + "public class MainActivity extends AppCompatActivity {\n"
+                        + "\n"
+                        + "    private ActivityMainBinding binding;\n"
+                        + "\n"
+                        + "    boolean isChecked = false;\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);\n"
+                        + "        binding.activityMain.setOnClickListener(new View.OnClickListener() {\n"
+                        + "            @Override\n"
+                        + "            public void onClick(View view) {\n"
+                        + "                animateColorChange(binding.activityMain, isChecked);\n"
+                        + "                isChecked = !isChecked;\n"
+                        + "            }\n"
+                        + "        });\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private void animateColorChange (CardView view, boolean isChecked){\n"
+                        + "        ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(view,\n"
+                        + "                \"cardBackgroundColor\",\n"
+                        + "                new ArgbEvaluator(),\n"
+                        + "                isChecked ? Color.BLUE : Color.GRAY,\n"
+                        + "                isChecked ? Color.GRAY : Color.BLUE);\n"
+                        + "        backgroundColorAnimator.setDuration(200);\n"
+                        + "        backgroundColorAnimator.start();\n"
+                        + "    }\n"
+                        + "}"),
+                gradle(""
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        release {\n"
+                        + "            minifyEnabled false\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(ObjectAnimatorDetector.MISSING_KEEP)
+                .allowCompilationErrors()
+                .run()
+                .expectClean();
+    }
 }
