@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
@@ -85,7 +84,6 @@ public final class AaptGradleFactory {
                 new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())),
                 crunchPng,
                 scope.getGlobalScope().getProject(),
-                scope.getVariantConfiguration().getType(),
                 intermediateDir,
                 scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
     }
@@ -96,7 +94,6 @@ public final class AaptGradleFactory {
      * @param builder the android builder project model
      * @param crunchPng should PNGs be crunched?
      * @param project the Gradle project
-     * @param variantType type of the variant to process
      * @param intermediateDir intermediate directory for aapt to use
      * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
      * used
@@ -107,7 +104,6 @@ public final class AaptGradleFactory {
             @NonNull AndroidBuilder builder,
             boolean crunchPng,
             @NonNull Project project,
-            @NonNull VariantType variantType,
             @NonNull File intermediateDir,
             int cruncherProcesses) {
         return make(
@@ -115,7 +111,6 @@ public final class AaptGradleFactory {
                 null,
                 crunchPng,
                 project,
-                variantType,
                 intermediateDir,
                 cruncherProcesses);
     }
@@ -127,7 +122,6 @@ public final class AaptGradleFactory {
      * @param outputHandler the output handler to use
      * @param crunchPng should PNGs be crunched?
      * @param project the Gradle project
-     * @param variantType type of the variant to process
      * @param intermediateDir intermediate directory for aapt to use
      * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
      * used
@@ -139,7 +133,6 @@ public final class AaptGradleFactory {
             @Nullable ProcessOutputHandler outputHandler,
             boolean crunchPng,
             @NonNull Project project,
-            @NonNull VariantType variantType,
             @NonNull File intermediateDir,
             int cruncherProcesses) {
         TargetInfo target = builder.getTargetInfo();
