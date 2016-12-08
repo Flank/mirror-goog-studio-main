@@ -60,8 +60,6 @@ public class StudioConfiguration implements Configuration {
             || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
             || rule.getName().endsWith("devkit")  // Kotlin compilation fails
             || rule.getName().endsWith("devkit-tests")  // depends on devkit
-            || rule.getName().endsWith("cvs-core")  // Java compilation fails
-            || rule.getName().endsWith("cvs-plugin")  // depends on cvs-core
             || rule.getName().endsWith("community-main_and_others")  // big nasty build-graph cycle
             || rule.getName().endsWith("community-main-tests")  // depends on community-main
             || rule.getName().endsWith("android-uitests")  // depends on community-main
