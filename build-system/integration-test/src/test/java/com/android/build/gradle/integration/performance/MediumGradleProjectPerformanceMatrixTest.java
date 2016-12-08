@@ -236,6 +236,10 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @NonNull
     private RunGradleTasks executor() {
-        return project.executor().withoutOfflineFlag();
+        return project.executor()
+                .withEnableInfoLogging(false)
+                .disableBuildCache()
+                .disableAaptV2()
+                .withoutOfflineFlag();
     }
 }
