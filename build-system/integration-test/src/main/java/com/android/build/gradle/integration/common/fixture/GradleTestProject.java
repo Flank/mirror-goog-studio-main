@@ -100,6 +100,8 @@ public final class GradleTestProject implements TestRule {
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
+    @NonNull public static final File ANDROID_HOME;
+
     public static final boolean USE_JACK;
     public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
 
@@ -147,6 +149,14 @@ public final class GradleTestProject implements TestRule {
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
+
+        String envCustomAndroidHome =
+                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
+        if (envCustomAndroidHome != null) {
+            ANDROID_HOME = new File(envCustomAndroidHome);
+        } else {
+            ANDROID_HOME = TestUtils.getSdk();
+        }
     }
 
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
@@ -167,8 +177,6 @@ public final class GradleTestProject implements TestRule {
     private File buildFile;
     private File localProp;
     private final File ndkDir;
-
-    @NonNull private final File sdkDir;
 
     private final Collection<String> gradleProperties;
 
@@ -214,7 +222,6 @@ public final class GradleTestProject implements TestRule {
         this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
-        this.sdkDir = TestUtils.getSdk();
         this.ndkDir = ndkDir;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
@@ -241,7 +248,6 @@ public final class GradleTestProject implements TestRule {
         buildFile = new File(getTestDir(), "build.gradle");
         sourceDir = new File(getTestDir(), "src");
         ndkDir = rootProject.ndkDir;
-        sdkDir = rootProject.sdkDir;
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
@@ -378,7 +384,7 @@ public final class GradleTestProject implements TestRule {
                     Charsets.UTF_8);
         }
 
-        localProp = createLocalProp(testDir, sdkDir, ndkDir);
+        localProp = createLocalProp(testDir, ANDROID_HOME, ndkDir);
         createGradleProp();
     }
 
@@ -599,7 +605,7 @@ public final class GradleTestProject implements TestRule {
     /** Returns the SDK dir */
     @NonNull
     public File getSdkDir() {
-        return sdkDir;
+        return ANDROID_HOME;
     }
 
     /**
