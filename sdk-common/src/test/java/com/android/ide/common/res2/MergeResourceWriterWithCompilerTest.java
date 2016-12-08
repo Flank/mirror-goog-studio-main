@@ -25,6 +25,7 @@ import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +51,7 @@ public class MergeResourceWriterWithCompilerTest {
 
     private ResourcePreprocessor mEmptyPreprocessor;
 
-    private ResourceCompiler mSimpleCompiler;
+    private QueueableResourceCompiler mSimpleCompiler;
 
     @Before
     public final void before() throws Exception {
@@ -71,10 +72,24 @@ public class MergeResourceWriterWithCompilerTest {
             }
         };
 
-        mSimpleCompiler = (@NonNull File file, @NonNull File output) -> {
-            File outputPath = new File(output, file.getName() + "-c");
-            Files.copy(file, outputPath);
-            return Futures.immediateFuture(outputPath);
+        mSimpleCompiler = new QueueableResourceCompiler() {
+            @NonNull
+            @Override
+            public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
+                    throws Exception {
+                File outputPath = new File(output, file.getName() + "-c");
+                Files.copy(file, outputPath);
+                return Futures.immediateFuture(outputPath);            }
+
+            @Override
+            public void start() {
+
+            }
+
+            @Override
+            public void end() throws InterruptedException {
+
+            }
         };
 
         createSourceResourcesFiles();
