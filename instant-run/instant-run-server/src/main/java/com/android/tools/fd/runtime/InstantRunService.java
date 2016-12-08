@@ -18,11 +18,15 @@ package com.android.tools.fd.runtime;
 
 import static com.android.tools.fd.runtime.Logging.LOG_TAG;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.Process;
 import android.util.Log;
-
+import java.util.List;
 /**
  * Service which starts the Instant Run server; started by the IDE via
  * adb shell am startservice pkg/service
@@ -46,13 +50,70 @@ public class InstantRunService extends Service {
     public void onCreate() {
         Log.i(LOG_TAG, "Starting Instant Run Server for " + getPackageName());
         super.onCreate();
-        server = Server.create(this);
+
+        // Start server, unless we're in a multi-process scenario and this isn't the
+        // primary process
+        if (AppInfo.applicationId != null) {
+            try {
+                boolean foundPackage = false;
+                int pid = Process.myPid();
+                ActivityManager manager = (ActivityManager) getSystemService(
+                        Context.ACTIVITY_SERVICE);
+                List<RunningAppProcessInfo> processes = manager.getRunningAppProcesses();
+
+                boolean startServer;
+                if (processes != null && processes.size() > 1) {
+                    // Multiple processes: look at each, and if the process name matches
+                    // the package name (for the current pid), it's the main process.
+                    startServer = false;
+                    for (RunningAppProcessInfo processInfo : processes) {
+                        if (AppInfo.applicationId.equals(processInfo.processName)) {
+                            foundPackage = true;
+                            if (processInfo.pid == pid) {
+                                startServer = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!startServer && !foundPackage) {
+                        // Safety check: If for some reason we didn't even find the main package,
+                        // start the server anyway. This safeguards against apps doing strange
+                        // things with the process name.
+                        startServer = true;
+                        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                            Log.v(LOG_TAG, "Multiprocess but didn't find process with package: "
+                                    + "starting server anyway");
+                        }
+                    }
+                } else {
+                    // If there is only one process, start the server.
+                    startServer = true;
+                }
+
+                if (startServer) {
+                    server = Server.create(this);
+                } else {
+                    if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                        Log.v(LOG_TAG, "In secondary process: Not starting server");
+                    }
+                }
+            } catch (Throwable t) {
+                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                    Log.v(LOG_TAG, "Failed during multi process check", t);
+                }
+                server = Server.create(this);
+            }
+        } else {
+            server = Server.create(this);
+        }
     }
 
     @Override
     public void onDestroy() {
-        Log.i(LOG_TAG, "Stopping Instant Run Server for " + getPackageName());
-        server.shutdown();
+        if (server != null) {
+            Log.i(LOG_TAG, "Stopping Instant Run Server for " + getPackageName());
+            server.shutdown();
+        }
         super.onDestroy();
     }
 }
