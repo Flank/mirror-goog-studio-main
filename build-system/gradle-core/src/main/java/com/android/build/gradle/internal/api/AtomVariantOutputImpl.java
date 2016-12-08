@@ -22,7 +22,6 @@ import com.android.build.gradle.api.AtomVariantOutput;
 import com.android.build.gradle.internal.variant.AtomVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.BundleAtom;
-import com.android.build.gradle.tasks.PackageAtom;
 
 /**
  * Implementation of variant output for atom variants.
