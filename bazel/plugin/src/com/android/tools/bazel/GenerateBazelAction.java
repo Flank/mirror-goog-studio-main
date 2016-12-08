@@ -161,9 +161,8 @@ public class GenerateBazelAction extends AnAction {
                     }
 
                     JavaLibrary namedLib = null;
-                    String libName = libraryEntry.getLibraryName();
-                    if (libName != null) {
-                        libName = libName.replaceAll(":","_");
+                    if (!libraryEntry.isModuleLevel()) {
+                        String libName = libraryEntry.getLibraryName().replaceAll(":","_");
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(libPkg, libName);
