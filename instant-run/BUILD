@@ -27,6 +27,10 @@ iml_module(
 java_library(
     name = "instant-run-common",
     srcs = glob(["instant-run-common/src/main/java/**/*.java"]),
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//tools/base/annotations"],
 )

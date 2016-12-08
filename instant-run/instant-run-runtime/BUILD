@@ -21,6 +21,10 @@ iml_module(
 java_library(
     name = "instant-run-runtime",
     srcs = glob(["src/main/java/**/*.java"]),
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
