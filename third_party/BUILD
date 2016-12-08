@@ -413,14 +413,14 @@ maven_java_library(
 
 maven_java_library(
     name = "net.sf.proguard_proguard-base",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.2.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "net.sf.proguard_proguard-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.2.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [":net.sf.proguard_proguard-base"],
 )
