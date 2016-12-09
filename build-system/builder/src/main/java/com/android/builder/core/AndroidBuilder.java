@@ -57,6 +57,7 @@ import com.android.builder.symbols.RGeneration;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
 import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
@@ -77,12 +78,12 @@ import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.ManifestSystemProperty;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.PlaceholderHandler;
-import com.android.multidex.MainDexListBuilder;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.android.utils.LineCollector;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -99,7 +100,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -1357,22 +1357,35 @@ public class AndroidBuilder {
     public Set<String> createMainDexList(
             @NonNull File allClassesJarFile,
             @NonNull File jarOfRoots,
-            @NonNull EnumSet<MainDexListOption> options)
-            throws ProcessException {
+            @NonNull EnumSet<MainDexListOption> options) throws ProcessException {
 
-        boolean keepAnnotated =
-                !options.contains(MainDexListOption.DISABLE_ANNOTATION_RESOLUTION_WORKAROUND);
+        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        try {
-            MainDexListBuilder mainDexListBuilder =
-                    new MainDexListBuilder(
-                            keepAnnotated,
-                            jarOfRoots.getAbsolutePath(),
-                            allClassesJarFile.getAbsolutePath());
-            return Collections.unmodifiableSet(mainDexListBuilder.getMainDexList());
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to get list of classes for the main dex.", e);
+        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX_JAR);
+        if (dx == null || !new File(dx).isFile()) {
+            throw new IllegalStateException("dx.jar is missing");
         }
+
+        builder.setClasspath(dx);
+        builder.setMain("com.android.multidex.ClassReferenceListBuilder");
+
+        if (options.contains(MainDexListOption.DISABLE_ANNOTATION_RESOLUTION_WORKAROUND)) {
+            builder.addArgs("--disable-annotation-resolution-workaround");
+        }
+
+        builder.addArgs(jarOfRoots.getAbsolutePath());
+        builder.addArgs(allClassesJarFile.getAbsolutePath());
+
+        CachedProcessOutputHandler processOutputHandler = new CachedProcessOutputHandler();
+
+        mJavaProcessExecutor.execute(builder.createJavaProcess(), processOutputHandler)
+                .rethrowFailure()
+                .assertNormalExitValue();
+
+        LineCollector lineCollector = new LineCollector();
+        processOutputHandler.getProcessOutput().processStandardOutputLines(lineCollector);
+        return ImmutableSet.copyOf(lineCollector.getResult());
     }
 
     /**
