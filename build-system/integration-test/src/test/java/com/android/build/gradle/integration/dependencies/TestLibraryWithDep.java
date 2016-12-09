@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.BeforeClass;
@@ -39,7 +38,7 @@ public class TestLibraryWithDep {
 
     @Test
     public void checkLibDependencyJarIsPackaged() throws IOException, ProcessException {
-        assertThatApk(project.getTestApk("debug"))
+        TruthHelper.assertThat(project.getTestApk("debug"))
                 .containsClass("Lcom/google/common/base/Splitter;");
     }
 }

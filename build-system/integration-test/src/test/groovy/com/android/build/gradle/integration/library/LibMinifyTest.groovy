@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -26,7 +25,6 @@ import org.junit.ClassRule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-
 /**
  * Assemble tests for libMinify.
  */
@@ -57,9 +55,8 @@ class LibMinifyTest {
 
     @Test
     void "check R class is not packaged"() {
-        assertThatAar(project.getAar("debug")).doesNotContainClass(
-                "Lcom/android/tests/basic.R;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
+        assertThatAar(project.getAar("debug"))
+                .doesNotContainClass("Lcom/android/tests/basic.R;")
     }
 
 }

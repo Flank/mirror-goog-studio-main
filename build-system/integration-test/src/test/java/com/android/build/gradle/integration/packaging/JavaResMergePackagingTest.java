@@ -22,8 +22,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldAppWithJavaLibs;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
-import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -73,7 +73,7 @@ public class JavaResMergePackagingTest {
     @Test
     public void checkMergeAppWithLibs() throws IOException, ProcessException {
         assembleDebug();
-        File apk = project.getSubproject(":app").getApk("debug");
+        Apk apk = project.getSubproject(":app").getApk("debug");
 
         // In tests, newline is standardized on \n
         assertThatApk(apk).containsFileWithMatch(META_INF_SERVICES, APP_IMPL);
@@ -104,7 +104,7 @@ public class JavaResMergePackagingTest {
         FileUtils.delete(appProject.file("src/main/resources/" + META_INF_SERVICES));
 
         assembleDebug();
-        File apk = project.getSubproject(":app").getApk("debug");
+        Apk apk = project.getSubproject(":app").getApk("debug");
 
         // in tests, newline is standardized on \n
         assertThatApk(apk).containsFileWithMatch(META_INF_SERVICES, LIB1_IMPL);
@@ -123,7 +123,7 @@ public class JavaResMergePackagingTest {
         FileUtils.createFile(libProject.file("src/main/resources/" + resPath), "lib1Data");
 
         assembleDebug();
-        File apk = appProject.getApk("debug");
+        Apk apk = appProject.getApk("debug");
 
         assertThatApk(apk).containsJavaResourceWithContent(resPath, "appData");
     }
@@ -141,7 +141,7 @@ public class JavaResMergePackagingTest {
                 "}\n");
 
         assembleDebug();
-        File apk = project.getSubproject(":app").getApk("debug");
+        Apk apk = project.getSubproject(":app").getApk("debug");
 
         assertThatApk(apk).containsFileWithMatch(META_INF_SERVICES, APP_IMPL);
     }
@@ -165,7 +165,7 @@ public class JavaResMergePackagingTest {
         FileUtils.createFile(lib2Project.file("src/main/resources/" + resPath), "lib2Data");
 
         assembleDebug();
-        File apk = appProject.getApk("debug");
+        Apk apk = appProject.getApk("debug");
 
         assertThatApk(apk).containsJavaResource(resPath);
         assertThatApk(apk).containsFileWithMatch(resPath, "[^(\n)]");

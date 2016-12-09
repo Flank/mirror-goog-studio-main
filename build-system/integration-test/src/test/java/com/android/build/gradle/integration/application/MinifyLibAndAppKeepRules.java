@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assume.assumeFalse;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -72,7 +72,7 @@ public class MinifyLibAndAppKeepRules {
                         "}");
 
         project.execute(":app:assembleRelease");
-        assertThatApk(project.getSubproject("app").getApk("release"))
+        assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
     }
 }

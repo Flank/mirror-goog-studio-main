@@ -27,12 +27,8 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.LineCollector;
 import com.android.utils.StdLogger;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import com.google.common.io.LineProcessor;
-
 import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,42 +48,20 @@ public class ApkHelper {
      * @param processInfo the process info to run
      *
      * @return the output as a list of output lines.
-     * @throws ProcessException
      */
     @NonNull
-    public static List<String> runAndGetOutput(@NonNull ProcessInfo processInfo)
-            throws ProcessException {
+    public static List<String> runAndGetOutput(@NonNull ProcessInfo processInfo) {
 
         ProcessExecutor executor = new DefaultProcessExecutor(
                 new StdLogger(StdLogger.Level.ERROR));
         LineCollector lineCollector = new LineCollector();
-        runAndProcessOutput(processInfo, executor, lineCollector);
+        try {
+            runAndProcessOutput(processInfo, executor, lineCollector);
+        } catch (ProcessException e) {
+            throw new RuntimeException(e);
+        }
         return lineCollector.getResult();
     }
-
-    /**
-     * Runs a process, and returns the output.
-     *
-     * @param processInfo the process info to run
-     * @param processExecutor the process executor
-     *
-     * @return the output as a {@link Reader}, that should be closed once used.
-     * @throws ProcessException
-     */
-    @NonNull
-    public static Reader runAndGetRawOutput(
-            @NonNull ProcessInfo processInfo,
-            @NonNull ProcessExecutor processExecutor)
-            throws ProcessException {
-        CachedProcessOutputHandler handler = new CachedProcessOutputHandler();
-        processExecutor.execute(processInfo, handler).rethrowFailure().assertNormalExitValue();
-        try {
-            return handler.getProcessOutput().getStandardOutputAsReader();
-        } catch (IOException e) {
-            throw new ProcessException(e);
-        }
-    }
-
 
     /**
      * Runs a process, and tunnel the output to a {@link LineProcessor}.
@@ -97,7 +71,6 @@ public class ApkHelper {
      * @param lineProcessor the processor to handle the process output line by line
      * @param <T> the expected result from the line processor
      * @return the result from the line processor
-     * @throws ProcessException
      */
     public static <T> T runAndProcessOutput(
             @NonNull ProcessInfo processInfo,
@@ -111,7 +84,7 @@ public class ApkHelper {
     }
 
     @NonNull
-    public static List<String> getApkBadging(@NonNull File apk) throws ProcessException {
+    public static List<String> getApkBadging(@NonNull File apk) {
         File aapt = SdkHelper.getAapt();
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
@@ -125,12 +98,11 @@ public class ApkHelper {
      * Returns the locales of an apk as found in the badging information
      * @param apk the apk
      * @return the list of locales or null.
-     * @throws ProcessException
      *
      * @see #getApkBadging(File)
      */
     @Nullable
-    public static List<String> getLocales(@NonNull File apk) throws ProcessException {
+    public static List<String> getLocales(@NonNull File apk) {
         List<String> output = getApkBadging(apk);
 
         for (String line : output) {

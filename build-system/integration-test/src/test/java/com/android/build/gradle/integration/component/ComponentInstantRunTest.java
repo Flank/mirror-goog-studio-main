@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.component;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -12,6 +11,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -67,9 +67,9 @@ public class ComponentInstantRunTest {
                 .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         AndroidProject model = project.model().getSingle().getOnlyModel();
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertThat(apk).exists();
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
 
         File src = project.file("src/main/jni/hello-jni.c");
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);

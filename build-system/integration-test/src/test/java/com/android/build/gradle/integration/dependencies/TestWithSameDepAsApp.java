@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Lists;
@@ -162,13 +161,13 @@ public class TestWithSameDepAsApp {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
 
         if (plugin.contains("application")) {
-            assertThatApk(project.getApk("debug")).containsClass(this.className);
-            assertThatApk(project.getTestApk("debug")).doesNotContainClass(this.className);
+            TruthHelper.assertThat(project.getApk("debug")).containsClass(this.className);
+            TruthHelper.assertThat(project.getTestApk("debug")).doesNotContainClass(this.className);
         } else {
             // External dependencies are not packaged in AARs.
-            assertThatAar(project.getAar("debug")).doesNotContainClass(this.className);
+            TruthHelper.assertThat(project.getAar("debug")).doesNotContainClass(this.className);
             // But should be in the test APK.
-            assertThatApk(project.getTestApk("debug")).containsClass(this.className);
+            TruthHelper.assertThat(project.getTestApk("debug")).containsClass(this.className);
         }
     }
 

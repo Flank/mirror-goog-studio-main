@@ -16,6 +16,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito",
         "//tools/idea/.idea/libraries:truth",
         "//tools/idea/.idea/libraries:dexlib2",
+        "//tools/idea/.idea/libraries:jimfs",
     ],
 )
 
@@ -26,6 +27,7 @@ java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
@@ -42,6 +44,9 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.testutils",
+        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:org.smali_dexlib2",
     ],
 )

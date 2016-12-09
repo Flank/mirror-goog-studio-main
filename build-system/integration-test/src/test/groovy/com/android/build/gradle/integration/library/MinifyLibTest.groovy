@@ -21,6 +21,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils
+import com.android.testutils.apk.Aar
+import com.android.testutils.apk.Apk
 import com.google.common.io.Files
 import groovy.transform.CompileStatic
 import org.junit.Rule
@@ -30,6 +32,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 import java.nio.charset.Charset
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 /**
  * Assemble tests for minifyLib.
@@ -60,7 +64,7 @@ class MinifyLibTest {
         }
 
         project.execute(":app:assembleDebug")
-        File apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("debug")
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;")
     }
@@ -71,13 +75,13 @@ class MinifyLibTest {
 
         project.execute(":app:assembleDebug")
 
-        File aar = project.getSubproject(":lib").getAar("release")
-        TruthHelper.assertThatAar(aar).containsClass("Lcom/android/tests/basic/StringProvider;")
-        TruthHelper.assertThatAar(aar).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
+        Aar aar = project.getSubproject(":lib").getAar("release")
+        assertThat(aar).containsClass("Lcom/android/tests/basic/StringProvider;")
+        assertThat(aar).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
 
-        File apk = project.getSubproject(":app").getApk("debug")
-        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
-        TruthHelper.assertThatApk(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
+        Apk apk = project.getSubproject(":app").getApk("debug")
+        assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
+        assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
     }
 
     /**

@@ -22,21 +22,18 @@ import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -108,20 +105,21 @@ public class HotSwapWithNoChangesTest {
                 .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
-        ApkSubject apkFile = expect.about(ApkSubject.FACTORY)
-                .that(project.getApk("debug"));
-        apkFile.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
-                .that().hasMethod("onCreate");
-        apkFile.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
+
+        SplitApks allApks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+
+        assertThat(allApks)
+                .hasClass("Lcom/example/helloworld/HelloWorld;")
+                .that()
+                .hasMethod("onCreate");
+
+        assertThat(allApks).hasClass("Lcom/android/tools/fd/runtime/Server;");
 
         makeHotSwapChange();
         runColdSwapBuild.run();
 
-        List<InstantRunArtifact> dexFiles =
-                InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel, COLDSWAP_MODE);
-        assertThat(dexFiles).hasSize(1);
+        SplitApks splitApks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        assertThat(splitApks).hasSize(1);
 
         // now run again the incremental build.
         project.executor()

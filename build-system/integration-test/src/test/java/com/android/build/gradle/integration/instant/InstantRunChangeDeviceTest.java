@@ -21,13 +21,12 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -131,29 +130,27 @@ public class InstantRunChangeDeviceTest {
         }
     }
 
-    private void checkSplitApk(@NonNull List<InstantRunArtifact> artifacts) throws Exception {
+    private static void checkSplitApk(@NonNull List<InstantRunArtifact> artifacts)
+            throws Exception {
         assertThat(artifacts).hasSize(11);
         InstantRunArtifact main = artifacts.stream()
                 .filter(artifact -> artifact.type == InstantRunArtifactType.SPLIT_MAIN)
                 .findFirst().orElseThrow(() -> new AssertionError("Main artifact not found"));
 
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(main.file);
+        Apk apk = new Apk(main.file);
 
-        apkSubject.doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
-        apkSubject.hasClass("Lcom/android/tools/fd/runtime/Server;",
-                AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
+        assertThat(apk).doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
+        assertThat(apk).containsClass("Lcom/android/tools/fd/runtime/Server;");
     }
 
-    private void checkNormalApk(@NonNull File apk) throws Exception {
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
-
-        apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
-                .that().hasMethod("onCreate");
-        apkSubject.doesNotContainClass("Lcom/android/tools/fd/runtime/Server;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
-        apkSubject.doesNotContainClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
+    private static void checkNormalApk(@NonNull File apkFile) throws Exception {
+        Apk apk = new Apk(apkFile);
+        assertThat(apk)
+                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
+                .that()
+                .hasMethod("onCreate");
+        assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/Server;");
+        assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
     }
 
 

@@ -29,6 +29,10 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.testutils.apk.Aar;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
+import com.android.testutils.apk.AtomBundle;
 import com.android.testutils.incremental.FileRecord;
 import com.android.testutils.truth.FileRecordSubject;
 import com.android.testutils.truth.FileSubject;
@@ -72,6 +76,8 @@ import com.google.common.truth.TableSubject;
 import com.google.common.truth.TestVerb;
 import com.google.common.truth.ThrowableSubject;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.Map;
@@ -104,16 +110,48 @@ public class TruthHelper {
 
     @NonNull
     public static ApkSubject assertThatApk(@Nullable File apk) {
+        try {
+            return assertThat(new Apk(apk.toPath()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @NonNull
+    public static ApkSubject assertThatApk(@Nullable Apk apk) {
         return assert_().about(ApkSubject.FACTORY).that(apk);
     }
 
     @NonNull
-    public static AarSubject assertThatAar(@Nullable File aar) {
-        return assert_().about(AarSubject.Factory.get()).that(aar);
+    public static ApkSubject assertThat(@Nullable Apk apk) {
+        return assert_().about(ApkSubject.FACTORY).that(apk);
     }
 
     @NonNull
-    public static AtomBundleSubject assertThatAtomBundle(@Nullable File atombundle) {
+    public static SplitApksSubject assertThat(@NonNull SplitApks apks) {
+        return assert_().about(SplitApksSubject.FACTORY).that(apks);
+    }
+
+    @NonNull
+    public static AarSubject assertThatAar(@NonNull File aar) {
+        try {
+            return assertThat(new Aar(aar.toPath()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static AarSubject assertThat(@NonNull Aar aar) {
+        return assert_().about(AarSubject.FACTORY).that(aar);
+    }
+
+
+    public static AarSubject assertThatAar(@NonNull Aar aar) {
+        return assert_().about(AarSubject.FACTORY).that(aar);
+    }
+
+    @NonNull
+    public static AtomBundleSubject assertThat(@NonNull AtomBundle atombundle) {
         return assert_().about(AtomBundleSubject.FACTORY).that(atombundle);
     }
 

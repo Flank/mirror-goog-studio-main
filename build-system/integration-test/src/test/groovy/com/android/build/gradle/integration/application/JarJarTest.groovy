@@ -16,26 +16,24 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
+import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidArtifactOutput
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.Variant
+import com.android.testutils.apk.Apk
 import com.google.common.collect.Iterators
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
+import org.junit.AfterClass
+import org.junit.BeforeClass
+import org.junit.ClassRule
+import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.builder.core.BuilderConstants.DEBUG;
-import static org.junit.Assert.assertEquals;
-
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.builder.core.BuilderConstants.DEBUG
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertNotNull
 
 /**
  * Test for the jarjar integration.
@@ -77,8 +75,9 @@ public class JarJarTest {
         assertEquals(1, debugOutputs.size())
 
         // make sure the Gson library has been renamed and the original one is not present.
-        File outputFile = Iterators.getOnlyElement(debugOutputs.iterator()).mainOutputFile.
-                getOutputFile()
+        Apk outputFile =
+                new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).mainOutputFile
+                        .getOutputFile())
         assertThatApk(outputFile).containsClass("Lcom/google/repacked/gson/Gson;");
         assertThatApk(outputFile).doesNotContainClass("Lcom/google/gson/Gson;")
     }

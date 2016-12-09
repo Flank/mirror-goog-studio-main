@@ -23,23 +23,19 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.apk.Zip;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import java.io.InputStream;
-import org.junit.Assert;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -47,6 +43,11 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import org.junit.Assert;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
 /**
  * Helper to help read/test the content of generated zip file.
@@ -69,6 +70,24 @@ public class ZipHelper {
         } catch (IOException e) {
             throw new IOException("Failed to open " + zipFile, e);
         }
+    }
+
+    @Nullable
+    public static File extractFile(Zip zip, String path) throws IOException {
+        Path entry = zip.getEntry(path);
+        if (entry == null) {
+            return null;
+        }
+
+        // extract the file
+        File apk = File.createTempFile("findAndExtractFromZip", "apk");
+        apk.deleteOnExit();
+        try {
+            java.nio.file.Files.copy(entry, apk.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new IOException("Failed to open " + zip, e);
+        }
+        return apk;
     }
 
     @Nullable

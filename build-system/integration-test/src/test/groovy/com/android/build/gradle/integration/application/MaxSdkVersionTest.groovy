@@ -23,7 +23,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Assemble tests for maxSdkVersion.
  */
@@ -46,7 +46,7 @@ class MaxSdkVersionTest {
 
     @Test
     void maxSdkVersion() {
-        assertThatApk(project.getApk("f1", "debug")).hasMaxSdkVersion(21)
-        assertThatApk(project.getApk("f2", "debug")).hasMaxSdkVersion(19)
+        assertThat(project.getApk("f1", "debug")).hasMaxSdkVersion(21)
+        assertThat(project.getApk("f2", "debug")).hasMaxSdkVersion(19)
     }
 }

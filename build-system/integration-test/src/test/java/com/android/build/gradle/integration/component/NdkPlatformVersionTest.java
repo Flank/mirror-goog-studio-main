@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.component;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -11,7 +10,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
-import java.io.File;
+import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -61,16 +60,16 @@ public class NdkPlatformVersionTest {
                 project.executeAndReturnModel(NativeAndroidProject.class, "assembleDebug");
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("debug");
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
-        assertThatZip(apk).contains("lib/mips/libhello-jni.so");
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so");
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/mips/libhello-jni.so");
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so");
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so");
 
         // 64-bits binaries will not be produced if platform version 19 is used.
-        assertThatZip(apk).doesNotContain("lib/x86_64/libhello-jni.so");
-        assertThatZip(apk).doesNotContain("lib/arm64-v8a/libhello-jni.so");
-        assertThatZip(apk).doesNotContain("lib/mips64/libhello-jni.so");
+        assertThat(apk).doesNotContain("lib/x86_64/libhello-jni.so");
+        assertThat(apk).doesNotContain("lib/arm64-v8a/libhello-jni.so");
+        assertThat(apk).doesNotContain("lib/mips64/libhello-jni.so");
 
         assertThat(model.getArtifacts()).hasSize(8); // 4 ABI * 2 variants.
         for (NativeArtifact artifact : model.getArtifacts()) {

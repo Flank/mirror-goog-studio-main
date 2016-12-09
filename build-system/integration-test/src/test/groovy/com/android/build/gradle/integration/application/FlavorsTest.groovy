@@ -17,9 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper
@@ -35,13 +33,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import static com.google.common.truth.Truth.assertThat
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertNotNull
-
 /**
  * Assemble tests for flavors.
  */
@@ -162,12 +158,12 @@ android{
     public void "check version name with buildTypes only suffix"() throws Exception{
         addBuildTypesVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        TruthHelper.assertThatApk(project.getApk("f1", "fa", "debug")).hasVersionName("1.0-debug")
-        TruthHelper.assertThatApk(project.getApk("f1", "fb", "debug")).hasVersionName("1.0-debug")
+        assertThat(project.getApk("f1", "fa", "debug")).hasVersionName("1.0-debug")
+        assertThat(project.getApk("f1", "fb", "debug")).hasVersionName("1.0-debug")
 
-        TruthHelper.assertThatApk(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
                 .hasVersionName("1.0release")
-        TruthHelper.assertThatApk(project.getApk("f1", "fb", "release", "unsigned"))
+        assertThat(project.getApk("f1", "fb", "release", "unsigned"))
                 .hasVersionName("1.0release")
     }
 
@@ -175,12 +171,12 @@ android{
     public void "check version name  with productFlavors only suffix"() throws Exception{
         addProductFlavorsVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        TruthHelper.assertThatApk(project.getApk("f1", "fb", "debug")).hasVersionName("1.0f1fb")
-        TruthHelper.assertThatApk(project.getApk("f1", "fa", "debug")).hasVersionName("1.0f1-fa")
+        assertThat(project.getApk("f1", "fb", "debug")).hasVersionName("1.0f1fb")
+        assertThat(project.getApk("f1", "fa", "debug")).hasVersionName("1.0f1-fa")
 
-        TruthHelper.assertThatApk(project.getApk("f1", "fb", "release", "unsigned"))
+        assertThat(project.getApk("f1", "fb", "release", "unsigned"))
                 .hasVersionName("1.0f1fb")
-        TruthHelper.assertThatApk(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
                 .hasVersionName("1.0f1-fa")
     }
 
@@ -190,14 +186,14 @@ android{
         addProductFlavorsVersionNameSuffixes()
 
         project.execute("clean", "assembleDebug", "assembleRelease")
-        TruthHelper.assertThatApk(project.getApk("f1", "fb", "debug"))
+        assertThat(project.getApk("f1", "fb", "debug"))
                 .hasVersionName("1.0f1fb-debug")
-        TruthHelper.assertThatApk(project.getApk("f2", "fb", "debug"))
+        assertThat(project.getApk("f2", "fb", "debug"))
                 .hasVersionName("1.0-f2fb-debug")
 
-        TruthHelper.assertThatApk(project.getApk("f2", "fa", "release", "unsigned"))
+        assertThat(project.getApk("f2", "fa", "release", "unsigned"))
                 .hasVersionName("1.0-f2-farelease")
-        TruthHelper.assertThatApk(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
                 .hasVersionName("1.0f1-farelease")
     }
 }

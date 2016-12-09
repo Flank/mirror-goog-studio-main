@@ -37,11 +37,11 @@ import com.android.builder.model.Variant
 import com.android.ddmlib.IDevice
 import com.android.sdklib.AndroidVersion
 import com.android.testutils.TestUtils
+import com.android.testutils.apk.Apk
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Range
 import com.google.common.io.Resources
 import groovy.transform.CompileStatic
-import java.security.NoSuchAlgorithmException
 import org.hamcrest.Matcher
 import org.junit.Before
 import org.junit.Rule
@@ -50,8 +50,9 @@ import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
+import java.security.NoSuchAlgorithmException
+
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static com.android.builder.core.BuilderConstants.RELEASE
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS
@@ -60,11 +61,9 @@ import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FI
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V1_ENABLED
 import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V2_ENABLED
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
-
 /**
  * Integration test for all signing-related features.
  */
@@ -181,9 +180,9 @@ class SigningTest {
     @Test
     void "signing DSL"() throws Exception {
         execute("assembleDebug")
-        File apk = project.getApk("debug")
-        assertThatZip(apk).contains("META-INF/$certEntryName")
-        assertThatZip(apk).contains("META-INF/CERT.SF")
+        Apk apk = project.getApk("debug")
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
     }
@@ -198,11 +197,11 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD)
 
         project.executor().withArguments(args).run("assembleRelease")
-        File apk = project.getApk("release")
+        Apk apk = project.getApk("release")
 
         // Check for signing file inside the archive.
-        assertThatZip(apk).contains("META-INF/$certEntryName")
-        assertThatZip(apk).contains("META-INF/CERT.SF")
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
     }
@@ -262,17 +261,17 @@ class SigningTest {
 
     @Test
     public void 'SHA algorithm change'() throws Exception {
-        File apk = project.getApk("debug")
+
 
         if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
             execute("assembleDebug")
-
-            assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-256-Digest");
-            assertThatApk(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
+            Apk apk = project.getApk("debug")
+            assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-256-Digest");
+            assertThat(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
 
             TestFileUtils.searchAndReplace(
                     project.buildFile,
@@ -282,21 +281,21 @@ class SigningTest {
 
         TestUtils.waitForFileSystemTick()
         execute("assembleDebug")
-
+        Apk apk = project.getApk("debug")
         if ((certEntryName.endsWith(SignatureAlgorithm.RSA.keyAlgorithm))
                 || (certEntryName.endsWith(SignatureAlgorithm.ECDSA.keyAlgorithm))) {
-            assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
-            assertThatApk(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA-256-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA-256-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
         } else {
-            assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-256-Digest");
-            assertThatApk(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
-            assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
+            assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-256-Digest");
+            assertThat(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
+            assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
         }
 
         TestFileUtils.searchAndReplace(
@@ -306,12 +305,12 @@ class SigningTest {
 
         TestUtils.waitForFileSystemTick()
         execute("assembleDebug")
-
-        assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
-        assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
-        assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
-        assertThatApk(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA-256-Digest");
-        assertThatApk(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
+        apk = project.getApk("debug")
+        assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
+        assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
+        assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
+        assertThat(apk).containsFileWithMatch("META-INF/MANIFEST.MF", "SHA-256-Digest");
+        assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
     }
 
     /**
@@ -373,13 +372,13 @@ class SigningTest {
 
     @Test
     public void 'signing scheme toggle'() throws Exception {
-        File apk = project.getApk("debug")
 
         // Toggles not specified -- testing their default values
         execute("clean", "assembleDebug")
-        assertThatApk(apk).contains("META-INF/$certEntryName")
-        assertThatApk(apk).contains("META-INF/CERT.SF")
-        assertThatApk(apk).containsApkSigningBlock()
+        Apk apk = project.getApk("debug")
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
+        assertThat(apk).containsApkSigningBlock()
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
         assertTrue(verificationResult.isVerifiedUsingV2Scheme())
@@ -389,11 +388,13 @@ class SigningTest {
                 project.buildFile,
                 "customDebug \\{",
                 "customDebug {\nv1SigningEnabled false\nv2SigningEnabled false")
+
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
-        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
-        assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
-        assertThatApk(apk).doesNotContainApkSigningBlock()
+        apk = project.getApk("debug")
+        assertThat(apk).doesNotContain("META-INF/$certEntryName")
+        assertThat(apk).doesNotContain("META-INF/CERT.SF")
+        assertThat(apk).doesNotContainApkSigningBlock()
         assertApkSignaturesDoNotVerify(apk, minSdkVersion)
 
         // Specified: v1SigningEnabled true, v2SigningEnabled false
@@ -401,11 +402,13 @@ class SigningTest {
                 project.buildFile,
                 "v1SigningEnabled false",
                 "v1SigningEnabled true")
+
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
-        assertThatApk(apk).contains("META-INF/$certEntryName")
-        assertThatApk(apk).contains("META-INF/CERT.SF")
-        assertThatApk(apk).doesNotContainApkSigningBlock()
+        apk = project.getApk("debug")
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
+        assertThat(apk).doesNotContainApkSigningBlock()
         verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
         assertFalse(verificationResult.isVerifiedUsingV2Scheme())
@@ -419,11 +422,13 @@ class SigningTest {
                 project.buildFile,
                 "v2SigningEnabled false",
                 "v2SigningEnabled true")
+
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
-        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
-        assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
-        assertThatApk(apk).containsApkSigningBlock()
+        apk = project.getApk("debug")
+        assertThat(apk).doesNotContain("META-INF/$certEntryName")
+        assertThat(apk).doesNotContain("META-INF/CERT.SF")
+        assertThat(apk).containsApkSigningBlock()
         // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
         assertApkSignaturesDoNotVerify(apk, Math.min(23, minSdkVersion))
         verificationResult = assertApkSignaturesVerify(apk, Math.max(24, minSdkVersion))
@@ -435,11 +440,13 @@ class SigningTest {
                 project.buildFile,
                 "v1SigningEnabled false",
                 "v1SigningEnabled true")
+
         TestUtils.waitForFileSystemTick()
         execute("clean", "assembleDebug")
-        assertThatApk(apk).contains("META-INF/$certEntryName")
-        assertThatApk(apk).contains("META-INF/CERT.SF")
-        assertThatApk(apk).containsApkSigningBlock()
+        apk = project.getApk("debug")
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
+        assertThat(apk).containsApkSigningBlock()
         verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
         assertTrue(verificationResult.isVerifiedUsingV2Scheme())
@@ -457,11 +464,11 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_V2_ENABLED + "=false");
 
         project.executor().withArguments(args).run("assembleRelease")
-        File apk = project.getApk("release")
+        Apk apk = project.getApk("release")
 
-        assertThatApk(apk).contains("META-INF/$certEntryName")
-        assertThatApk(apk).contains("META-INF/CERT.SF")
-        assertThatApk(apk).doesNotContainApkSigningBlock()
+        assertThat(apk).contains("META-INF/$certEntryName")
+        assertThat(apk).contains("META-INF/CERT.SF")
+        assertThat(apk).doesNotContainApkSigningBlock()
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion)
         assertTrue(verificationResult.isVerifiedUsingV1Scheme())
         assertFalse(verificationResult.isVerifiedUsingV2Scheme())
@@ -479,11 +486,11 @@ class SigningTest {
                 "-P" + PROPERTY_SIGNING_V2_ENABLED + "=true");
 
         project.executor().withArguments(args).run("assembleRelease")
-        File apk = project.getApk("release")
+        Apk apk = project.getApk("release")
 
-        assertThatApk(apk).doesNotContain("META-INF/$certEntryName")
-        assertThatApk(apk).doesNotContain("META-INF/CERT.SF")
-        assertThatApk(apk).containsApkSigningBlock()
+        assertThat(apk).doesNotContain("META-INF/$certEntryName")
+        assertThat(apk).doesNotContain("META-INF/CERT.SF")
+        assertThat(apk).containsApkSigningBlock()
         // API Level 24 is the lowest level at which APKs don't have to be signed with v1 scheme
         assertApkSignaturesDoNotVerify(apk, 23)
         ApkVerifier.Result verificationResult =
@@ -492,10 +499,10 @@ class SigningTest {
         assertTrue(verificationResult.isVerifiedUsingV2Scheme())
     }
 
-    private static ApkVerifier.Result assertApkSignaturesVerify(File apk, int minSdkVersion)
+    private static ApkVerifier.Result assertApkSignaturesVerify(Apk apk, int minSdkVersion)
             throws IOException, NoSuchAlgorithmException, ZipFormatException {
         ApkVerifier.Result result =
-                new ApkVerifier.Builder(apk)
+                new ApkVerifier.Builder(apk.getFile().toFile())
                         .setMinCheckedPlatformVersion(minSdkVersion)
                         .build()
                         .verify()
@@ -511,13 +518,14 @@ class SigningTest {
         for (ApkVerifier.Result.V2SchemeSignerInfo signer : result.getV2SchemeSigners()) {
             errors.addAll(signer.getErrors())
         }
-        fail("APK signatures failed to verify. " + errors.size() + " error(s): " + errors)
+        fail("APK signatures failed to verify. " + errors.size() + " error(s): " + errors);
+        return null;
     }
 
-    private static ApkVerifier.Result assertApkSignaturesDoNotVerify(File apk, int minSdkVersion)
+    private static ApkVerifier.Result assertApkSignaturesDoNotVerify(Apk apk, int minSdkVersion)
             throws IOException, NoSuchAlgorithmException, ZipFormatException {
         ApkVerifier.Result result =
-                new ApkVerifier.Builder(apk)
+                new ApkVerifier.Builder(apk.getFile().toFile())
                         .setMinCheckedPlatformVersion(minSdkVersion)
                         .build()
                         .verify()

@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.integration.packaging;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
@@ -64,11 +63,11 @@ public class IncrementalCodeChangeTest {
         project.executor().run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/MainActivity;");
     }
 
@@ -96,15 +95,15 @@ public class IncrementalCodeChangeTest {
         project.executor().run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/MainActivity;");
 
         // class from legacy multi-dex lib
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Landroid/support/multidex/MultiDex;");
     }
 
@@ -133,11 +132,11 @@ public class IncrementalCodeChangeTest {
         project.executor().run(":app:assembleDebug");
 
         // class from :library
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/library/PersonView;");
 
         // class from :app
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        TruthHelper.assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/MainActivity;");
     }
 }

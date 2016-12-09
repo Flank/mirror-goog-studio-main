@@ -36,6 +36,9 @@ import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.testutils.TestUtils;
+import com.android.testutils.apk.Aar;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.AtomBundle;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -50,6 +53,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -552,15 +556,23 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getApk(String... dimensions) {
+    @NonNull
+    public Apk getApk(String... dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        return getOutputFile(
-                "apk/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ANDROID_PACKAGE);
+        File apkFile =
+                getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
+                        + SdkConstants.DOT_ANDROID_PACKAGE);
+        try {
+            return new Apk(apkFile);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    public File getTestApk(String... dimensions) {
+    @NonNull
+    public Apk getTestApk(String... dimensions) {
         List<String> dimensionList = Lists.newArrayList(dimensions);
         dimensionList.add("androidTest");
         return getApk(Iterables.toArray(dimensionList, String.class));
@@ -572,11 +584,16 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getAar(String... dimensions) {
+    public Aar getAar(String... dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        return getOutputFile("aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR);
+        try {
+            return new Aar(getOutputFile(
+                    "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -585,14 +602,18 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getAtomBundle(String... dimensions) {
+    public AtomBundle getAtomBundle(String... dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        return getOutputFile(
-                FileUtils.join(
-                        "atombundle",
-                        Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE));
+        try {
+            return new AtomBundle(getOutputFile(
+                    FileUtils.join(
+                            "atombundle",
+                            Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -601,12 +622,16 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getAtom(String atomName, String... dimensions) {
-        return getIntermediateFile(
-                FileUtils.join(
-                        "assets",
-                        Joiner.on("-").join(dimensions),
-                        atomName + SdkConstants.DOT_ATOM));
+    public Apk getAtom(String atomName, String... dimensions) {
+        try {
+            return new Apk(getIntermediateFile(
+                    FileUtils.join(
+                            "assets",
+                            Joiner.on("-").join(dimensions),
+                            atomName + SdkConstants.DOT_ATOM)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** Returns the SDK dir */

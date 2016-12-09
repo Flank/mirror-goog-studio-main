@@ -16,20 +16,27 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.testutils.truth.MoreTruth.assertThatDex;
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.MoreTruth.assertThat;
+import static org.junit.Assert.assertNotNull;
 
+import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
+import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
-import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
-import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.testutils.apk.Dex;
+import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.tools.fd.client.InstantRunArtifactType;
+import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest.ApkManifest;
@@ -51,19 +58,19 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.xml.sax.SAXException;
 
 /** Integration test for the ExternalBuildPlugin. */
+@Category(FailsUnderBazel.class)
 public class ExternalBuildPluginTest {
 
     private File manifestFile;
@@ -79,7 +86,7 @@ public class ExternalBuildPluginTest {
     @Before
     public void setUp() throws IOException {
         IAndroidTarget target = SdkHelper.getTarget(23);
-        assertThat(target).isNotNull();
+        TruthHelper.assertThat(target).isNotNull();
 
         ApkManifest.Builder apkManifest =
                 ApkManifest.newBuilder()
@@ -118,8 +125,7 @@ public class ExternalBuildPluginTest {
     }
 
     @Test
-    public void testBuild()
-            throws ProcessException, IOException, ParserConfigurationException, SAXException {
+    public void testBuild() throws Exception {
         FileUtils.write(mProject.getBuildFile(), ""
 + "apply from: \"../commonHeader.gradle\"\n"
 + "buildscript {\n "
@@ -134,31 +140,21 @@ public class ExternalBuildPluginTest {
 + "  buildManifestPath = $/" + manifestFile.getAbsolutePath() + "/$\n"
 + "}\n");
 
-        mProject.executor()
-            .withInstantRun(23, ColdswapMode.AUTO)
-            .run("clean", "process");
+        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("clean", "process");
 
-        InstantRunBuildContext instantRunBuildContext = loadFromBuildInfo();
-        assertThat(instantRunBuildContext.getPreviousBuilds()).hasSize(1);
-        assertThat(instantRunBuildContext.getLastBuild()).isNotNull();
-        assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(1);
-        InstantRunBuildContext.Build fullBuild  = instantRunBuildContext.getLastBuild();
-        assertThat(fullBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
-        assertThat(fullBuild.getArtifacts()).hasSize(1);
-        InstantRunBuildContext.Artifact artifact = fullBuild.getArtifacts().get(0);
-        assertThat(artifact.getType()).isEqualTo(FileType.MAIN);
-        assertThat(artifact.getLocation().exists()).isTrue();
+        InstantRunBuildInfo info = loadBuildInfo();
 
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(artifact.getLocation());
-        apkSubject.contains("instant-run.zip");
-        apkSubject.hasMainDexFile();
+        TruthHelper.assertThat(info.getVerifierStatus())
+                .isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD.toString());
+
+        InstantRunTestUtils.getCompiledColdSwapChange(info.getArtifacts());
 
         // now perform a hot swap test.
         File mainClasses = new File(mProject.getTestDir(), "jars/main/classes.jar");
-        assertThat(mainClasses.exists()).isTrue();
+        TruthHelper.assertThat(mainClasses.exists()).isTrue();
 
         File originalFile = new File(mainClasses.getParentFile(), "original_classes.jar");
-        assertThat(mainClasses.renameTo(originalFile)).isTrue();
+        TruthHelper.assertThat(mainClasses.renameTo(originalFile)).isTrue();
 
         try (JarFile inputJar = new JarFile(originalFile);
              JarOutputStream jarOutputFile = new JarOutputStream(new BufferedOutputStream(
@@ -188,22 +184,30 @@ public class ExternalBuildPluginTest {
             }
         }
 
-        mProject.executor()
-                .withInstantRun(23, ColdswapMode.AUTO)
-                .run("process");
+        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("process");
 
-        instantRunBuildContext = loadFromBuildInfo();
-        assertThat(instantRunBuildContext.getPreviousBuilds()).hasSize(2);
-        InstantRunBuildContext.Build lastBuild = instantRunBuildContext.getLastBuild();
-        assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getVerifierStatus()).isEqualTo(InstantRunVerifierStatus.COMPATIBLE);
-        assertThat(lastBuild.getArtifacts()).hasSize(1);
-        artifact = lastBuild.getArtifacts().get(0);
-        assertThat(artifact.getType()).isEqualTo(FileType.RELOAD_DEX);
-        assertThatDex(artifact.getLocation())
-                .containsClasses(
-                        "Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;",
-                        "Lcom/example/jedo/blazeapp/MainActivity$override;");
+        info = loadBuildInfo();
+        assertThat(info.getVerifierStatus())
+                .isEqualTo(InstantRunVerifierStatus.COMPATIBLE.toString());
+        assertThat(info.getArtifacts()).hasSize(1);
+
+        InstantRunArtifact hotSwap = info.getArtifacts().get(0);
+        assertThat(hotSwap.type).isEqualTo(InstantRunArtifactType.RELOAD_DEX);
+
+        Dex dex = new Dex(hotSwap.file);
+        assertThat(dex).containsClass("Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;");
+        assertThat(dex).containsClass("Lcom/example/jedo/blazeapp/MainActivity$override;");
+    }
+
+    @NonNull
+    private InstantRunBuildInfo loadBuildInfo() throws IOException {
+        File buildInfoFile =
+                new File(mProject.getTestDir(), "build/reload-dex/debug/build-info.xml");
+        TruthHelper.assertThat(buildInfoFile).exists();
+        InstantRunBuildInfo buildInfo =
+                InstantRunBuildInfo.get(Files.toString(buildInfoFile, Charsets.UTF_8));
+        assertNotNull(buildInfo);
+        return buildInfo;
     }
 
     private static byte[] hotswapChange(byte[] inputClass) {
@@ -237,16 +241,6 @@ public class ExternalBuildPluginTest {
         return cw.toByteArray();
     }
 
-    private InstantRunBuildContext loadFromBuildInfo()
-            throws ParserConfigurationException, SAXException, IOException {
-        // assert build-info.xml presence.
-        File buildInfo = new File(mProject.getTestDir(), "build/reload-dex/debug/build-info.xml");
-        assertThat(buildInfo.exists()).isTrue();
-        InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
-        instantRunBuildContext.setApiLevel(23, ColdswapMode.AUTO.toString(), "arm");
-        instantRunBuildContext.loadFromXmlFile(buildInfo);
-        return instantRunBuildContext;
-    }
 }
 
 

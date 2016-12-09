@@ -16,7 +16,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
@@ -100,7 +99,7 @@ public class JackTest {
     @Test
     public void assembleDebug() throws IOException {
         project.execute("clean", "assembleDebug");
-        assertThatApk(project.getApk("debug")).contains("classes.dex");
+        assertThat(project.getApk("debug")).contains("classes.dex");
         assertThat(project.getBuildResult().getTask(":transformJackWithJackDexerForDebug"))
                 .wasExecuted();
     }

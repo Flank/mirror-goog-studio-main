@@ -25,6 +25,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
+import com.android.testutils.apk.Apk
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
@@ -117,7 +118,7 @@ android {
     @Test
     void "check apk content"() {
         project.execute("clean", "assembleDebug")
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1)
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
@@ -142,7 +143,7 @@ android {
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "invalid-abi,x86,armeabi")
                 .run("clean", "assembleDebug")
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");

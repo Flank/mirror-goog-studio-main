@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getTaskFailureMessage;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -28,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -61,7 +59,6 @@ public class ResourceValidationTest {
 
         project.execute("assembleDebug");
 
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable/not_a_drawable.ext");
+        assertThat(project.getApk("debug")).containsResource("drawable/not_a_drawable.ext");
     }
 }

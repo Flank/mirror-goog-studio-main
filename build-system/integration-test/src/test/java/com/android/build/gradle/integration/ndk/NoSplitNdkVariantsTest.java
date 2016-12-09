@@ -27,9 +27,9 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.IDevice;
+import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.zip.ZipFile;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -101,12 +101,11 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleX86Release");
 
         // Verify .so are built for all platform.
-        try (ZipFile apk = new ZipFile(project.getApk("x86", "release", "unsigned"))) {
-            assertNotNull(apk.getEntry("lib/x86/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-        }
+        Apk apk = project.getApk("x86", "release", "unsigned");
+        assertNotNull(apk.getEntry("lib/x86/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
     }
 
     @Test
@@ -114,12 +113,11 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleArmRelease");
 
         // Verify .so are built for all platform.
-        try (ZipFile apk = new ZipFile(project.getApk("arm", "release", "unsigned"))) {
-            assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
-            assertNotNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-            assertNotNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-        }
+        Apk apk = project.getApk("arm", "release", "unsigned");
+        assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
+        assertNotNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
+        assertNotNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
 
     }
 
@@ -128,12 +126,11 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleMipsRelease");
 
         // Verify .so are built for all platform.
-        try (ZipFile apk = new ZipFile(project.getApk("mips", "release", "unsigned"))) {
-            assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-            assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-            assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-        }
+        Apk apk = project.getApk("mips", "release", "unsigned");
+        assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
+        assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
+        assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
     }
 
     @Test

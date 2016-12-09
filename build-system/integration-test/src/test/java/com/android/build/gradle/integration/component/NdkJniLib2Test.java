@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.integration.component;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
+
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
@@ -25,6 +28,8 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.testutils.apk.Aar;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -32,10 +37,6 @@ import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
 /**
  * Integration test library plugin with JNI sources.
@@ -112,11 +113,11 @@ public class NdkJniLib2Test {
     public void checkSoAreIncludedInBothAppAndLibrary() throws IOException, InterruptedException {
         project.execute("clean", ":app:assembleDebug");
 
-        File releaseAar = project.getSubproject("lib").getAar("release");
-        assertThatAar(releaseAar).contains("jni/x86/libhello-jni.so");
+        Aar releaseAar = project.getSubproject("lib").getAar("release");
+        assertThat(releaseAar).contains("jni/x86/libhello-jni.so");
 
-        File app = project.getSubproject("app").getApk("debug");
-        assertThatAar(app).contains("lib/x86/libhello-jni.so");
+        Apk app = project.getSubproject("app").getApk("debug");
+        assertThat(app).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();

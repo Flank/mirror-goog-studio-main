@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.ide.common.process.ProcessException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -54,15 +53,15 @@ public class NdkJniLibTest {
     @Test
     public void checkVersionCode() throws ProcessException {
         GradleTestProject app = project.getSubproject("app");
-        
-        assertThatApk(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123);
-        assertThatApk(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123);
-        assertThatApk(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123);
-        assertThatApk(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123);
-        assertThatApk(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123);
-        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123);
-        assertThatApk(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123);
-        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123);
+
+        TruthHelper.assertThat(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123);
+        TruthHelper.assertThat(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123);
+        TruthHelper.assertThat(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123);
+        TruthHelper.assertThat(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123);
+        TruthHelper.assertThat(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123);
+        TruthHelper.assertThat(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123);
+        TruthHelper.assertThat(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123);
+        TruthHelper.assertThat(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123);
     }
 
     @Test

@@ -107,14 +107,14 @@ class CombinedAbiDensityPureSplits {
 
                 if (outputFile.getFilterTypes().contains(OutputFile.ABI)) {
                     // if this is an ABI split, ensure the .so file presence (and only one)
-                    assertThatZip(outputFile.getOutputFile()).entries("lib/.*").hasSize(1)
+                    assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").hasSize(1)
                     assertThatZip(outputFile.getOutputFile()).contains(
                             "lib/" + filter + "/libhello-jni.so");
                 }
 
             } else {
                 // main file should not have any lib/ entries.
-                assertThatZip(outputFile.getOutputFile()).entries("lib/.*").isEmpty()
+                assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").isEmpty()
             }
         }
 

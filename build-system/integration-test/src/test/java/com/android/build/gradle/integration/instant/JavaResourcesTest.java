@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
+import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -96,7 +97,7 @@ public class JavaResourcesTest {
                     .collect(Collectors.toList());
         }
         assertThat(mainArtifacts).hasSize(1);
-        assertThatApk(Iterables.getOnlyElement(mainArtifacts).file)
+        assertThatApk(new Apk(Iterables.getOnlyElement(mainArtifacts).file))
                 .containsFileWithContent("foo.txt", "foo");
         Files.write("bar", resource, Charsets.UTF_8);
 
@@ -110,7 +111,7 @@ public class JavaResourcesTest {
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
         assertThat(context2.getLastBuild().getArtifacts()).hasSize(1);
 
-        assertThatApk(context2.getLastBuild().getArtifacts().get(0).getLocation())
+        assertThatApk(new Apk(context2.getLastBuild().getArtifacts().get(0).getLocation()))
                 .containsFileWithContent("foo.txt", "bar");
     }
 }

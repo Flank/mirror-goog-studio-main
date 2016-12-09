@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instant;
 
-import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.INSTANT_RUN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
@@ -36,6 +35,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -48,7 +49,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ButterKnifeTest {
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String ORIGINAL_MESSAGE = "original";
     private static final String ACTIVITY_DESC = "Lcom/example/bk/Activ;";
 
@@ -76,11 +77,11 @@ public class ButterKnifeTest {
     @Test
     public void coldSwapBuild() throws Exception {
         new ColdSwapTester(project)
-                .testMultiDex(
+                .testMultiApk(
                         new ColdSwapTester.Steps() {
                             @Override
-                            public void checkApk(@NonNull File apk) throws Exception {
-                                assertThatApk(apk).hasClass(ACTIVITY_DESC, INSTANT_RUN);
+                            public void checkApks(@NonNull SplitApks apks) throws Exception {
+                                assertThat(apks).hasClass(ACTIVITY_DESC);
                             }
 
                             @Override
@@ -113,8 +114,8 @@ public class ButterKnifeTest {
                                     throws Exception {
                                 InstantRunBuildContext.Artifact artifact =
                                         Iterables.getOnlyElement(artifacts);
-                                assertThatDex(artifact.getLocation())
-                                        .containsClass(ACTIVITY_DESC)
+                                assertThatApk(new Apk(artifact.getLocation()))
+                                        .hasClass(ACTIVITY_DESC)
                                         .that()
                                         .hasMethod("getMessage");
                             }

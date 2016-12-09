@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
 import com.android.builder.core.BuilderConstants
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -30,8 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-import static com.google.common.truth.Truth.assertThat
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 /**
  * Integration test of the native plugin with multiple variants.
@@ -108,11 +108,11 @@ model {
         project.execute("assembleX86Debug")
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("x86", "debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/mips/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("x86", "debug")
+        assertThat(apk).contains("lib/x86/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
     }
 
     @Test
@@ -120,11 +120,11 @@ model {
         project.execute("assembleArmDebug")
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("arm", "debug")
-        assertThatZip(apk).doesNotContain("lib/x86/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/mips/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("arm", "debug")
+        assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
     }
 
     @Test
@@ -132,20 +132,20 @@ model {
         project.execute("assembleMipsDebug")
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("mips", "debug")
-        assertThatZip(apk).doesNotContain("lib/x86/libhello-jni.so")
-        assertThatZip(apk).contains("lib/mips/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("mips", "debug")
+        assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
+        assertThat(apk).contains("lib/mips/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
     }
 
     @Test
     public void "check release build"() {
         project.execute("assembleArmRelease")
 
-        File apk = project.getApk("arm", "release", "unsigned")
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("arm", "release", "unsigned")
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
     }
 
     @Test

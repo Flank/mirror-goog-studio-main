@@ -15,10 +15,11 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -26,9 +27,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assume.assumeFalse
+
 /**
  * Tests that ensure that java resources files accessed with a relative or absolute path are
  * packaged correctly.
@@ -63,17 +65,16 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     void testDebugPackaging() {
         project.execute(":app:assembleDebug")
-        File debugApk = project.getSubproject("app").getApk("debug")
+        Apk debugApk = project.getSubproject("app").getApk("debug")
         assertNotNull(debugApk)
-        ApkSubject apkSubject = assertThatApk(debugApk);
         // check that resources with relative path lookup code have a matching obfuscated package
         // name.
-        apkSubject.contains("com/android/tests/util/resources.properties")
-        apkSubject.contains("com/android/tests/other/resources.properties")
+        assertThat(debugApk).contains("com/android/tests/util/resources.properties")
+        assertThat(debugApk).contains("com/android/tests/other/resources.properties")
         // check that resources with absolute path lookup remain in the original package name.
-        apkSubject.contains("com/android/tests/util/another.properties")
-        apkSubject.contains("com/android/tests/other/some.xml")
-        apkSubject.contains("com/android/tests/other/another.properties")
+        assertThat(debugApk).contains("com/android/tests/util/another.properties")
+        assertThat(debugApk).contains("com/android/tests/other/some.xml")
+        assertThat(debugApk).contains("com/android/tests/other/another.properties")
     }
 
     @Test
@@ -81,19 +82,18 @@ public class MinifyLibAndAppWithJavaResTest {
         assumeFalse("Ignore until Jack fixed proguard confusion", GradleTestProject.USE_JACK)
 
         project.execute(":app:assembleRelease")
-        File releaseApk = project.getSubproject("app").getApk("release")
+        Apk releaseApk = project.getSubproject("app").getApk("release")
         assertNotNull(releaseApk)
-        ApkSubject apkSubject = assertThatApk(releaseApk);
         // check that resources with absolute path lookup remain in the original package name.
-        apkSubject.contains("com/android/tests/util/another.properties")
-        apkSubject.contains("com/android/tests/other/some.xml")
-        apkSubject.contains("com/android/tests/other/another.properties")
+        assertThat(releaseApk).contains("com/android/tests/util/another.properties")
+        assertThat(releaseApk).contains("com/android/tests/other/some.xml")
+        assertThat(releaseApk).contains("com/android/tests/other/another.properties")
 
         if (useProguard) {
             // check that resources with relative path lookup code have a matching obfuscated package
             // name.
-            apkSubject.contains("com/android/tests/b/resources.properties")
-            apkSubject.contains("com/android/tests/a/resources.properties")
+            assertThat(releaseApk).contains("com/android/tests/b/resources.properties")
+            assertThat(releaseApk).contains("com/android/tests/a/resources.properties")
         }
     }
 }

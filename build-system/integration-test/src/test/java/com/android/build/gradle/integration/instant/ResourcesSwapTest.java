@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.instant.HotSwapTester.COLDSWAP_MODE;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
@@ -34,6 +33,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.logcat.LogCatMessage;
+import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunClient;
@@ -84,10 +84,10 @@ public class ResourcesSwapTest {
                 InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(mProject, 21, COLDSWAP_MODE);
-        File apk = mProject.getApk("debug");
-        assertThatApk(apk).contains("assets/movie.mp4");
-        assertThatApk(apk).contains("classes.dex");
-        assertThatApk(apk).contains("instant-run.zip");
+        Apk apk = mProject.getApk("debug");
+        assertThat(apk).contains("assets/movie.mp4");
+        assertThat(apk).contains("classes.dex");
+        assertThat(apk).contains("instant-run.zip");
 
         TestFileUtils.appendToFile(asset, " upgraded");
 

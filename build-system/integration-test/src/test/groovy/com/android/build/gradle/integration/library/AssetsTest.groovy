@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.testutils.apk.Apk
 import com.google.common.io.Files
 import com.google.common.io.Resources
 import groovy.transform.CompileStatic
@@ -94,8 +95,8 @@ class AssetsTest {
     @Test
     void checkJarLocations() {
         // Obtain the apk file.
-        File apk = project.getSubproject("app").getApk(DEBUG);
-        assertThat(apk).isNotNull()
+        Apk apk = project.getSubproject("app").getApk(DEBUG);
+        assertThat(apk).exists()
 
         // a1.jar was placed in libs so it should have been merged into the dex.
         assertThatApk(apk).doesNotContain("jars/a1.jar");

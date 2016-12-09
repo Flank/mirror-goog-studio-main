@@ -15,16 +15,18 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.utils.FileUtils.createFile
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
+import static com.android.utils.FileUtils.createFile
 /**
  * General Model tests
  */
@@ -52,16 +54,17 @@ android {
 }
 """
         project.execute("clean", "assembleDebug")
-        File apk = project.getApk("debug")
-        assertThatApk(apk).containsFileWithContent("res/raw/kept", "kept")
-        assertThatApk(apk).doesNotContain("res/raw/ignored")
+        Apk apk = project.getApk("debug")
+        assertThat(apk).containsFileWithContent("res/raw/kept", "kept")
+        assertThat(apk).doesNotContain("res/raw/ignored")
 
         createFile(project.file("src/main/res/raw/ignored2"), "ignored2")
         createFile(project.file("src/main/res/raw/kept2"), "kept2")
 
         project.execute("assembleDebug")
-        assertThatApk(apk).containsFileWithContent("res/raw/kept2", "kept2")
-        assertThatApk(apk).doesNotContain("res/raw/ignored2")
+        apk = project.getApk("debug")
+        assertThat(apk).containsFileWithContent("res/raw/kept2", "kept2")
+        assertThat(apk).doesNotContain("res/raw/ignored2")
 
         searchAndReplace(
                 project.buildFile,
@@ -69,9 +72,10 @@ android {
                 "")
 
         project.execute("assembleDebug")
-        assertThatApk(apk).containsFileWithContent("res/raw/kept", "kept")
-        assertThatApk(apk).containsFileWithContent("res/raw/ignored", "ignored")
-        assertThatApk(apk).containsFileWithContent("res/raw/kept2", "kept2")
-        assertThatApk(apk).containsFileWithContent("res/raw/ignored2", "ignored2")
+        apk = project.getApk("debug")
+        assertThat(apk).containsFileWithContent("res/raw/kept", "kept")
+        assertThat(apk).containsFileWithContent("res/raw/ignored", "ignored")
+        assertThat(apk).containsFileWithContent("res/raw/kept2", "kept2")
+        assertThat(apk).containsFileWithContent("res/raw/ignored2", "ignored2")
     }
 }

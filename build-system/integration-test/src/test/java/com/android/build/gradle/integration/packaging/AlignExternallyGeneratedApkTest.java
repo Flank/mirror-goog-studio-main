@@ -25,6 +25,7 @@ import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -32,13 +33,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Tests that users can align an APK externally generated.
@@ -115,7 +112,7 @@ public class AlignExternallyGeneratedApkTest {
         /*
          * Make sure alignedApk exists and it is different from the original APK.
          */
-        assertThatApk(alignedApk).contains("classes.dex");
+        assertThatApk(new Apk(alignedApk)).contains("classes.dex");
         assertFalse(Files.equal(alignedApk, testApk));
 
         /*

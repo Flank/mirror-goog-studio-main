@@ -20,9 +20,9 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
+import com.android.testutils.apk.Apk
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import groovy.transform.CompileStatic
@@ -77,9 +77,9 @@ android {
     @Test
     void "check apk content"() {
         GradleTestProject app = project.getSubproject("app");
-        File gingerbreadUniversal = app.getApk("gingerbread", "universal", "debug");
+        Apk gingerbreadUniversal = app.getApk("gingerbread", "universal", "debug");
         if (!gingerbreadUniversal.exists()) {
-            throw new RuntimeException(String.format("Could not find %s", gingerbreadUniversal.canonicalPath));
+            throw new RuntimeException(String.format("Could not find %s", gingerbreadUniversal));
         }
         assertThatApk(app.getApk("gingerbread", "universal", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");

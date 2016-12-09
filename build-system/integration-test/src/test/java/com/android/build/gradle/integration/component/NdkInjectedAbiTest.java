@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.integration.component;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -62,9 +63,10 @@ public class NdkInjectedAbiTest {
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
                 .run("clean", "assembleDebug");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).doesNotContain("lib/x86/libhello-jni.so");
+        Apk debug = sProject.getApk("debug");
+        assertThat(debug).contains("lib/armeabi/libhello-jni.so");
+        assertThat(debug).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(debug).doesNotContain("lib/x86/libhello-jni.so");
     }
 
     @Test
@@ -73,9 +75,10 @@ public class NdkInjectedAbiTest {
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi,x86")
                 .run("clean", "assembleDebug");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).doesNotContain("lib/x86/libhello-jni.so");
+        Apk debug = sProject.getApk("debug");
+        assertThat(debug).contains("lib/armeabi/libhello-jni.so");
+        assertThat(debug).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(debug).doesNotContain("lib/x86/libhello-jni.so");
     }
 
     @Test
@@ -84,9 +87,10 @@ public class NdkInjectedAbiTest {
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "")
                 .run("clean", "assembleDebug");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).contains("lib/x86/libhello-jni.so");
+        Apk debug = sProject.getApk("debug");
+        assertThat(debug).contains("lib/armeabi/libhello-jni.so");
+        assertThat(debug).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(debug).contains("lib/x86/libhello-jni.so");
     }
 
     @Test
@@ -94,8 +98,9 @@ public class NdkInjectedAbiTest {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
                 .run("clean", "assembleDebug");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(sProject.getApk("debug")).contains("lib/x86/libhello-jni.so");
+        Apk debug = sProject.getApk("debug");
+        assertThat(debug).contains("lib/armeabi/libhello-jni.so");
+        assertThat(debug).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(debug).contains("lib/x86/libhello-jni.so");
     }
 }

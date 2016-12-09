@@ -24,7 +24,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.google.common.truth.TruthJUnit.assume
 
 /**
@@ -50,7 +50,7 @@ class RenderscriptNdkTest {
 
     @Test
     void "check packaged .so files"() {
-        assertThatZip(project.getApk("debug")).contains("lib/armeabi-v7a/librs.mono.so")
-        assertThatZip(project.getApk("debug")).contains("lib/armeabi-v7a/librenderscript.so")
+        assertThat(project.getApk("debug")).contains("lib/armeabi-v7a/librs.mono.so")
+        assertThat(project.getApk("debug")).contains("lib/armeabi-v7a/librenderscript.so")
     }
 }

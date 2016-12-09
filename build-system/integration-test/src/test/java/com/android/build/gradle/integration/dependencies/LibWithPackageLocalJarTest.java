@@ -18,12 +18,10 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -80,9 +78,8 @@ public class LibWithPackageLocalJarTest {
     @Test
     public void checkPackagedLocalJarIsPackaged() throws IOException, ProcessException {
         // search in secondary jars only.
-        assertThatAar(project.getAar("debug")).containsClass(
-                "Lcom/example/android/multiproject/person/People;",
-                AbstractAndroidSubject.ClassFileScope.SECONDARY);
+        assertThat(project.getAar("debug"))
+                .containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
