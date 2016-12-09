@@ -37,6 +37,7 @@ import com.android.ide.common.res2.GeneratedResourceSet;
 import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.NoOpResourcePreprocessor;
+import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.ide.common.res2.ResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
@@ -142,17 +143,15 @@ public class MergeResources extends IncrementalTask {
             }
 
             // get the merged set and write it down.
-            ResourceCompiler resourceCompiler;
+            QueueableResourceCompiler resourceCompiler;
             if (getProcessResources()) {
-                Aapt aapt =
-                        AaptGradleFactory.make(
-                                getBuilder(),
-                                getCrunchPng(),
-                                variantScope,
-                                getAaptTempDir());
-                resourceCompiler = aapt;
+                resourceCompiler = AaptGradleFactory.make(
+                        getBuilder(),
+                        getCrunchPng(),
+                        variantScope,
+                        getAaptTempDir());
             } else {
-                resourceCompiler = ResourceCompiler.NONE;
+                resourceCompiler = QueueableResourceCompiler.NONE;
             }
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir,
@@ -224,17 +223,15 @@ public class MergeResources extends IncrementalTask {
             }
 
 
-            ResourceCompiler resourceCompiler;
+            QueueableResourceCompiler resourceCompiler;
             if (getProcessResources()) {
-                Aapt aapt =
-                        AaptGradleFactory.make(
-                                getBuilder(),
-                                getCrunchPng(),
-                                variantScope,
-                                getAaptTempDir());
-                resourceCompiler = aapt::compile;
+                resourceCompiler = AaptGradleFactory.make(
+                        getBuilder(),
+                        getCrunchPng(),
+                        variantScope,
+                        getAaptTempDir());
             } else {
-                resourceCompiler = ResourceCompiler.NONE;
+                resourceCompiler = QueueableResourceCompiler.NONE;
             }
 
             MergedResourceWriter writer = new MergedResourceWriter(
