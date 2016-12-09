@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 292;
+    static final int INITIAL_CAPACITY = 293;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -142,6 +142,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(IconDetector.ICON_DIP_SIZE);
         issues.add(IconDetector.ICON_EXPECTED_SIZE);
         issues.add(IconDetector.ICON_EXTENSION);
+        issues.add(IconDetector.ICON_LAUNCHER_FORMAT);
         issues.add(IconDetector.ICON_LAUNCHER_SHAPE);
         issues.add(IconDetector.ICON_LOCATION);
         issues.add(IconDetector.ICON_MISSING_FOLDER);

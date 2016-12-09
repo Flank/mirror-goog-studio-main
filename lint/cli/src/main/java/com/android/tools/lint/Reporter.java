@@ -41,6 +41,7 @@ import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.DuplicateResourceDetector;
 import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.checks.GridLayoutDetector;
+import com.android.tools.lint.checks.IconDetector;
 import com.android.tools.lint.checks.IncludeDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.JavaPerformanceDetector;
@@ -510,6 +511,9 @@ public abstract class Reporter {
                     GradleDetector.REMOTE_VERSION,
                     GradleDetector.STRING_INTEGER,
                     GridLayoutDetector.ISSUE,
+                    IconDetector.ICON_LAUNCHER_FORMAT,
+                    IconDetector.WEBP_ELIGIBLE,
+                    IconDetector.WEBP_UNSUPPORTED,
                     IncludeDetector.ISSUE,
                     InefficientWeightDetector.BASELINE_WEIGHTS,
                     InefficientWeightDetector.INEFFICIENT_WEIGHT,

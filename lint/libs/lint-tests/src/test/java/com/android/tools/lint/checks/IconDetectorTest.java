@@ -873,64 +873,109 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     public void testWebpEligible() throws Exception {
-        mEnabled = ImmutableSet.of(IconDetector.WEBP_ELIGIBLE);
+        String expected = ""
+                + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion (but launcher icons should use PNG). [ConvertToWebp]\n"
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                manifest().minSdk(18),
+                image("res/drawable-mdpi/random.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF))
+                .issues(IconDetector.WEBP_ELIGIBLE)
+                .run()
+                .expect(expected);
 
-        assertEquals(""
-                    + "res/drawable/ic_launcher.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion. [ConvertToWebp]\n"
-                    + "0 errors, 1 warnings\n",
+    }
 
-                lintProject(
-                        manifest().minSdk(17),
-                        image("res/drawable/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF)));
+    public void testWebpNotEligibleForLauncherIcons() throws Exception {
+        lint().files(
+                manifest().minSdk(18),
+                image("res/drawable-mdpi/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF))
+                .issues(IconDetector.WEBP_ELIGIBLE)
+                .run()
+                .expectClean();
     }
 
     public void testWebpUnsupported() throws Exception {
-        mEnabled = ImmutableSet.of(IconDetector.WEBP_ELIGIBLE, IconDetector.WEBP_UNSUPPORTED);
-        assertEquals(""
-                    + "res/mipmap-mdpi/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 10 [WebpUnsupported]\n"
-                    + "res/drawable-mdpi-v13/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 13 [WebpUnsupported]\n"
-                    + "res/drawable-mdpi/my_lossy.webp: Error: WebP requires Android 4.0 (API 15); current minSdkVersion is 10 [WebpUnsupported]\n"
-                    + "3 errors, 0 warnings\n",
+        String expected = ""
+                + "res/drawable-mdpi/ic_launcher.webp: Error: Launcher icons must be in PNG format [WebpUnsupported]\n"
+                + "res/mipmap-mdpi/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 10 [WebpUnsupported]\n"
+                + "res/drawable-mdpi-v13/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 13 [WebpUnsupported]\n"
+                + "res/drawable-mdpi/my_lossy.webp: Error: WebP requires Android 4.0 (API 15); current minSdkVersion is 10 [WebpUnsupported]\n"
+                + "4 errors, 0 warnings\n";
 
-                lintProject(
-                        manifest().minSdk(10),
-                        // "PNG" format: cheating since we don't have a WEBP encoder outside of
-                        // Studio, but we know lint won't actually look inside these files
-                        // yet
+        lint().files(
+                manifest().minSdk(10),
+                // "PNG" format: cheating since we don't have a WEBP encoder outside of
+                // Studio, but we know lint won't actually look inside these files
+                // yet
 
-                        // OK: lossy webp okay in API 15 and up
-                        base64gzip("res/drawable-mdpi-v15/my_lossy.webp", ""
-                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
-                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
-                                + "AADVeQHzUAAAAA=="),
+                // OK: lossy webp okay in API 15 and up
+                base64gzip("res/drawable-mdpi-v15/my_lossy.webp", ""
+                        + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                        + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                        + "AADVeQHzUAAAAA=="),
 
-                        // Error: requires API level 15
-                        base64gzip("res/drawable-mdpi/my_lossy.webp", ""
-                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
-                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
-                                + "AADVeQHzUAAAAA=="),
+                // Error: requires API level 15
+                base64gzip("res/drawable-mdpi/my_lossy.webp", ""
+                        + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                        + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                        + "AADVeQHzUAAAAA=="),
 
-                        // Error: requires API level 18
-                        base64gzip("res/mipmap-mdpi/my_lossless.webp", ""
-                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
-                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+                // Error: requires API level 18
+                base64gzip("res/mipmap-mdpi/my_lossless.webp", ""
+                        + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                        + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
 
-                        // Error: requires API level 18; has minSdk 13
-                        base64gzip("res/drawable-mdpi-v13/my_lossless.webp", ""
-                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
-                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+                // Error: requires API level 18; has minSdk 13
+                base64gzip("res/drawable-mdpi-v13/my_lossless.webp", ""
+                        + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                        + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
 
-                        // OK: requires API 15 but is in v16 folder
-                        base64gzip("res/drawable-mdpi-v16/my_lossless.webp", "" // still not okay needs 18
-                                + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
-                                + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
-                                + "AADVeQHzUAAAAA=="),
+                // OK: requires API 15 but is in v16 folder
+                base64gzip("res/drawable-mdpi-v16/my_lossless.webp", "" // still not okay needs 18
+                        + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                        + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                        + "AADVeQHzUAAAAA=="),
 
-                        // OK: requires API 18 but is in v18 folder
-                        base64gzip("res/drawable-mdpi-v18/my_lossless.webp", "" // OK 18
-                                + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
-                                + "P/XrXb/Yf2VkAABv2HPZLAAAAA==")
-                ));
+                // OK: requires API 18 but is in v18 folder
+                base64gzip("res/drawable-mdpi-v18/my_lossless.webp", "" // OK 18
+                        + "H4sIAAAAAAAAAAvydHNTYWBgCHd1CggLsPARB7L1LQ/wMrBf2O/3ddt/RgXF"
+                        + "P/XrXb/Yf2VkAABv2HPZLAAAAA=="),
+
+                // Error: launcher icons can't be in WEBP or XML
+                base64gzip("res/drawable-mdpi/ic_launcher.webp", ""
+                        + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                        + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                        + "AADVeQHzUAAAAA=="))
+                .issues(IconDetector.WEBP_ELIGIBLE, IconDetector.WEBP_UNSUPPORTED)
+                .run()
+                .expect(expected);
+    }
+
+    public void testWebpUnsupportedApi24() throws Exception {
+        // Unlike other WEBP checks, you can't use launcher icons on any API level, including
+        // those higher than 18
+        String expected = ""
+                + "res/drawable-mdpi/ic_launcher.webp: Error: Launcher icons must be in PNG format [IconLauncherFormat]\n"
+                + "res/drawable-v21/ic_launcher.xml: Error: Launcher icons must be in PNG format [IconLauncherFormat]\n"
+                + "2 errors, 0 warnings\n";
+
+        lint().files(
+                manifest().minSdk(24),
+                // OK: bitmaps are fine
+                image("res/drawable-hdpi/ic_launcher.png", 48, 48),
+
+                // Error: vectors can't be launcher icons
+                xml("res/drawable-v21/ic_launcher.xml", ""
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" />\n"),
+
+                // Error: launcher icons can't be in WEBP or XML
+                base64gzip("res/drawable-mdpi/ic_launcher.webp", ""
+                        + "H4sIAAAAAAAAAAvydHPzYGBgCHd1CggLsFCwAbIvMDPMZdSyYrBgsJvoscBH"
+                        + "dYmykhIHwwYhzkyGMgYGhbxlC7g+chcxMPw7vf3/Wx8ht6D//wV23zjUANTK"
+                        + "AADVeQHzUAAAAA=="))
+                .issues(IconDetector.ICON_LAUNCHER_FORMAT)
+                .run()
+                .expect(expected);
     }
 
     public void test118398_a() throws Exception {
