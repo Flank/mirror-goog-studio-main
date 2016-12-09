@@ -16,6 +16,9 @@
 
 package com.android.ide.common.res2;
 
+import com.android.annotations.NonNull;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
 /**
@@ -23,6 +26,24 @@ import java.io.File;
  * them all using slave threads or processes.
  */
 public interface QueueableResourceCompiler extends ResourceCompiler {
+
+    QueueableResourceCompiler NONE = new QueueableResourceCompiler() {
+
+        @NonNull
+        @Override
+        public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
+                throws Exception {
+            return Futures.immediateFuture(null);
+        }
+
+        @Override
+        public void start() {
+        }
+
+        @Override
+        public void end() throws InterruptedException {
+        }
+    };
 
     /**
      * Start a new queueing request for compile activities. All calls made to
