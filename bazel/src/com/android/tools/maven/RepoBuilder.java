@@ -76,7 +76,7 @@ public class RepoBuilder {
                     if (i == 1) {
                         throw new IllegalArgumentException("First file to add must be a pom file.");
                     }
-                    String path = mRepo.relativize(mRepo.getJarPath(model)).toString();
+                    String path = mRepo.relativize(mRepo.getArtifactPath(model)).toString();
                     zipper.addFileToZip(file, out, path, false);
                 }
             }

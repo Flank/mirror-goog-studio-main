@@ -1,11 +1,18 @@
 load(":utils.bzl", "explicit_target")
 
-def _maven_artifact_impl(ctx):
+def _maven_pom_impl(ctx):
+  # Contains both *.jar and *.aar files.
   jars = set()
 
   if ctx.attr.library:
-    jars = set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
+    if (ctx.attr.file):
+      fail("Cannot set both file and library for a maven_pom.")
+    jars = jars | set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
 
+  if ctx.attr.file:
+    if (ctx.attr.library):
+      fail("Cannot set both file and library for a maven_pom.")
+    jars = jars | ctx.attr.file.files
 
   parent_poms = set([], order="compile")
   parent_jars = {}
@@ -89,10 +96,13 @@ def _maven_artifact_impl(ctx):
 
 
 maven_pom = rule(
-  implementation = _maven_artifact_impl,
+  implementation = _maven_pom_impl,
   attrs = {
     "deps": attr.label_list(),
     "library": attr.label(
+        allow_files = True
+    ),
+    "file": attr.label(
         allow_files = True
     ),
     "group" : attr.string(),
@@ -167,21 +177,32 @@ def maven_java_library(name,
   )
 
 # A java_import rule extended with pom and parent attributes for maven libraries.
-def maven_java_import(name, pom=None, visibility=None, parent=None, **kwargs):
+def maven_java_import(name, pom, visibility=None, **kwargs):
   native.java_import(
     name = name,
     visibility = visibility,
     **kwargs
   )
-  if not pom:
-    fail("maven_java_import must specify a pom file.")
 
   maven_pom(
     name = name + "_maven",
     library = name,
     visibility = visibility,
     source = pom,
-    parent = parent,
+  )
+
+def maven_aar(name, aar, pom, visibility=None):
+  native.filegroup(
+      name = name,
+      srcs = [aar],
+      visibility = visibility
+  )
+
+  maven_pom(
+    name = name + "_maven",
+    file = aar,
+    visibility = visibility,
+    source = pom,
   )
 
 def _maven_repo_impl(ctx):
