@@ -103,8 +103,9 @@ def _fileset_impl(ctx):
 
   cmd = ""
   for f in ctx.files.srcs:
-    if f.path in remap:
-      dest = remap[f.path]
+    # Use short_path, which for outputs of other rules doesn't include "bazel-out" etc.
+    if f.short_path in remap:
+      dest = remap[f.short_path]
       fd = ctx.new_file(dest)
       cmd += "mkdir -p " + fd.dirname + "\n"
       cmd += "cp -f " + f.path + " " + fd.path + "\n"
