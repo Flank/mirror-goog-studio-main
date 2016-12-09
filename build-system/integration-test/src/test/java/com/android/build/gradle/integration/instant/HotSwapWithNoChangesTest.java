@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,7 +44,7 @@ import org.junit.Test;
  */
 public class HotSwapWithNoChangesTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
 
     private static final String LOG_TAG = "NoCodeChangeAfterCompatibleChangeTest";
 
@@ -71,18 +70,16 @@ public class HotSwapWithNoChangesTest {
     }
 
     @Test
-    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testRestartOnly() throws Exception {
         doTestArtifacts(() -> {
             // Force cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
+                    .withInstantRun(24, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
                     .run("assembleDebug");
         });
     }
 
     @Test
-    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testIncompatibleChange() throws Exception {
         doTestArtifacts(() -> {
             String newPath = ACTIVITY_PATH.replace("HelloWorld", "HelloWorldCopy");
@@ -92,7 +89,7 @@ public class HotSwapWithNoChangesTest {
 
             // Adding a new class will force a cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE)
+                    .withInstantRun(24, COLDSWAP_MODE)
                     .run("assembleDebug");
         });
     }
@@ -102,7 +99,7 @@ public class HotSwapWithNoChangesTest {
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(24, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
 
@@ -123,11 +120,11 @@ public class HotSwapWithNoChangesTest {
 
         // now run again the incremental build.
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE)
+                .withInstantRun(24, COLDSWAP_MODE)
                 .run("assembleDebug");
 
         InstantRunBuildContext instantRunBuildContext =
-                InstantRunTestUtils.loadBuildContext(23, instantRunModel);
+                InstantRunTestUtils.loadBuildContext(24, instantRunModel);
 
         assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(0);
         assertThat(instantRunBuildContext.getLastBuild().getVerifierStatus())
