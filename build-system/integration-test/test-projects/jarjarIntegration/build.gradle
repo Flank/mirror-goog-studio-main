@@ -21,9 +21,7 @@ android {
   registerTransform(new com.android.test.jarjar.JarJarTransform())
 }
 
-repositories {
-  maven { url System.env.CUSTOM_REPO }
-}
+apply from: "../commonLocalRepo.gradle"
 
 dependencies {
   compile 'com.google.code.gson:gson:2.3'

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SigningConfig;
-import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
 import java.io.File;
 import java.io.IOException;
@@ -46,25 +45,16 @@ public final class SigningConfigHelper {
     public SigningConfigHelper(
             @NonNull SigningConfig signingConfig,
             @NonNull String name,
-            boolean isDebug)
+            @NonNull File storeFile)
             throws AndroidLocation.AndroidLocationException {
         assertNotNull(String.format("SigningConfig '%s' null-check", name), signingConfig);
         this.signingConfig = signingConfig;
         this.name = name;
-
-        if (isDebug) {
-            storeFile =  new File(KeystoreHelper.defaultDebugKeystoreLocation());
-            storePassword = DEFAULT_PASSWORD;
-            keyAlias = DEFAULT_ALIAS;
-            keyPassword = DEFAULT_PASSWORD;
-            isSigningReady = true;
-        }
-    }
-
-    @NonNull
-    public SigningConfigHelper setStoreFile(File storeFile) {
         this.storeFile = storeFile;
-        return this;
+        this.storePassword = DEFAULT_PASSWORD;
+        this.keyAlias = DEFAULT_ALIAS;
+        this.keyPassword = DEFAULT_PASSWORD;
+        this.isSigningReady = true;
     }
 
     @NonNull
@@ -82,18 +72,6 @@ public final class SigningConfigHelper {
     @NonNull
     public SigningConfigHelper setKeyPassword(String keyPassword) {
         this.keyPassword = keyPassword;
-        return this;
-    }
-
-    @NonNull
-    public SigningConfigHelper setStoreType(String storeType) {
-        this.storeType = storeType;
-        return this;
-    }
-
-    @NonNull
-    public SigningConfigHelper setSigningReady(boolean isSigningReady) {
-        this.isSigningReady = isSigningReady;
         return this;
     }
 

@@ -29,7 +29,6 @@ import org.junit.ClassRule
 import org.junit.Test
 
 import static com.android.testutils.truth.MoreTruth.assertThatZip
-
 /**
  * Tests for native dependencies
  */

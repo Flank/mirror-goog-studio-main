@@ -15,13 +15,16 @@
  */
 
 package com.android.build.gradle.integration.dsl
+
 import com.android.build.gradle.integration.application.BuildConfigTest
+import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import groovy.util.slurpersupport.GPathResult
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
@@ -108,6 +111,7 @@ android {
     }
 
     @Test
+    @Category(FailsUnderBazel) // groovyc encoding under Bazel?
     public void buildConfigEncoding() {
         project.getBuildFile() << """
 android {

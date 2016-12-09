@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
@@ -57,7 +56,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -66,7 +64,6 @@ import org.objectweb.asm.Opcodes;
 import org.xml.sax.SAXException;
 
 /** Integration test for the ExternalBuildPlugin. */
-@Category(FailsUnderBazel.class)
 public class ExternalBuildPluginTest {
 
     private File manifestFile;

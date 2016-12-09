@@ -161,6 +161,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     protected List<String> getCommonArguments() {
         List<String> arguments = new ArrayList<>();
 
+        arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
+
         if (offline) {
             arguments.add("--offline");
         }
@@ -169,7 +171,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (localAndroidSdkHome) {
             androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
         } else {
-            androidSdkHome = GradleTestProject.BUILD_DIR.toPath().resolve("ANDROID_SDK_HOME");
+            androidSdkHome = GradleTestProject.ANDROID_SDK_HOME.toPath();
         }
 
         if (!enableAaptV2) {
@@ -185,6 +187,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+
         arguments.add(
                 String.format(
                         "-D%s=%s",

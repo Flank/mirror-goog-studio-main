@@ -43,7 +43,6 @@ import com.google.common.io.Resources
 import groovy.transform.CompileStatic
 import java.security.NoSuchAlgorithmException
 import org.hamcrest.Matcher
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -114,9 +113,10 @@ class SigningTest {
     public int minSdkVersion
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.noBuildFile())
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    .create()
 
     @Rule
     public Adb adb = new Adb();
@@ -238,11 +238,10 @@ class SigningTest {
         assertThat(signingConfigs.collect {it.name}).containsExactly("debug", "customDebug")
 
         SigningConfig debugSigningConfig = ModelHelper.getSigningConfig(signingConfigs, DEBUG)
-        new SigningConfigHelper(debugSigningConfig, DEBUG, true).test()
+        new SigningConfigHelper(debugSigningConfig, DEBUG, GradleTestProject.ANDROID_SDK_HOME).test()
 
         SigningConfig mySigningConfig = ModelHelper.getSigningConfig(signingConfigs, "customDebug")
-        new SigningConfigHelper(mySigningConfig, "customDebug", true)
-                .setStoreFile(keystore)
+        new SigningConfigHelper(mySigningConfig, "customDebug", keystore)
                 .setStorePassword(STORE_PASSWORD)
                 .setKeyAlias(ALIAS_NAME)
                 .setKeyPassword(KEY_PASSWORD)

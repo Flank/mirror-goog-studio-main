@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** DataBinding tests for atom projects. */
-@Category(FailsUnderBazel.class)
+@Category(FailsUnderBazel.class) // Fix DataBinding packaging to include version file.
 @RunWith(FilterableParameterized.class)
 public class DataBindingAtomTest {
 
