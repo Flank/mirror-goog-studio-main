@@ -130,6 +130,7 @@ java_library(
     srcs = glob(["src/**/maven/*.java"]),
     deps = [
         ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
         "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
