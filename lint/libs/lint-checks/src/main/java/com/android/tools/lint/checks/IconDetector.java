@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ICON;
+import static com.android.SdkConstants.ATTR_ROUND_ICON;
 import static com.android.SdkConstants.DOT_9PNG;
 import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JPEG;
@@ -35,6 +36,7 @@ import static com.android.SdkConstants.DRAWABLE_XXHDPI;
 import static com.android.SdkConstants.MIPMAP_FOLDER;
 import static com.android.SdkConstants.MIPMAP_PREFIX;
 import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_ACTIVITY_ALIAS;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_PROVIDER;
@@ -44,6 +46,7 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ProductFlavor;
@@ -382,6 +385,19 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             IMPLEMENTATION_JAVA).addMoreInfo(
                 "http://developer.android.com/design/style/iconography.html");
 
+    /** Launcher icon using wrong format */
+    public static final Issue ICON_LAUNCHER_FORMAT = Issue.create(
+            "IconLauncherFormat",
+            "Wrong launcher icon format",
+
+            "Launcher icons should be in the PNG format. This requirement is enforced by the " +
+            "The Google Play Developer Console.",
+            Category.ICONS,
+            6,
+            Severity.ERROR,
+            IMPLEMENTATION_JAVA).addMoreInfo(
+            "https://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size");
+
     /** Switch to webp? */
     public static final Issue WEBP_ELIGIBLE = Issue.create(
             "ConvertToWebp",
@@ -389,7 +405,9 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
             "The WebP format is typically more compact than PNG and JPEG. As of Android 4.2.1 " +
             "it supports transparency and lossless conversion as well. Note that there is a " +
-            "quickfix in the IDE which lets you perform conversion.",
+            "quickfix in the IDE which lets you perform conversion.\n" +
+            "\n" +
+            "Launcher icons must be in the PNG format.",
             Category.ICONS,
             6,
             Severity.WARNING,
@@ -503,12 +521,16 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 }
 
                 // Report webp-conversion-eligible images
-                // We only check for 17 here, which supports transparency and lossless
+                // We only check for 18 here, which supports transparency and lossless
                 // encoding. We could also offer this for API 15, but in that case we'd need to
                 // (1) skip images with alpha, and (2) make it clear that only lossy conversion
                 // should be used.
+                // (It's Android 4.2.1 which starts supporting transparent WebP, whereas
+                // API level 17 corresponds to 4.2 and API level 18 corresponds to 4.3; we can't
+                // use API level 17 to determine whether WebP is safe since that also includes
+                // 4.2.0)
 
-                if (checkWebp && context.getMainProject().getMinSdkVersion().getApiLevel() >= 17) {
+                if (checkWebp && context.getMainProject().getMinSdkVersion().getApiLevel() >= 18) {
                     // (1) See if we have any png or jpeg images
                     // (2) Use the location of the largest such image
                     File largest = null;
@@ -517,9 +539,15 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                         File f = entry.getKey();
                         String name = f.getName();
                         if (endsWithIgnoreCase(name, DOT_PNG)
-                                && !endsWithIgnoreCase(name, DOT_9PNG) ||
-                                 endsWithIgnoreCase(name, DOT_JPG) ||
-                                endsWithIgnoreCase(name, DOT_JPEG)) {
+                                && !endsWithIgnoreCase(name, DOT_9PNG)
+                                ||endsWithIgnoreCase(name, DOT_JPG)
+                                || endsWithIgnoreCase(name, DOT_JPEG)) {
+                            // Launcher icons are not eligible for WEBP conversion
+                            String folderName = f.getParentFile().getName();
+                            if (isLauncherIcon(folderName, getBaseName(name))) {
+                                continue;
+                            }
+
                             Long sizeLong = entry.getValue();
                             if (sizeLong != null && sizeLong > size) {
                                 size = sizeLong;
@@ -532,7 +560,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                         Location location = Location.create(largest);
                         String message = "One or more images in this project can be converted to "
                                 + "the WebP format which typically results in smaller file sizes, "
-                                + "even for lossless conversion.";
+                                + "even for lossless conversion (but launcher icons should use PNG).";
                         context.report(WEBP_ELIGIBLE, location, message);
                     }
                 }
@@ -1411,14 +1439,20 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             }
         }
 
-        if (context.isEnabled(ICON_LAUNCHER_SHAPE)) {
-            // Look up launcher icon name
+        boolean checkLauncherShape = context.isEnabled(ICON_LAUNCHER_SHAPE);
+        boolean checkLauncherFormat = context.isEnabled(ICON_LAUNCHER_FORMAT);
+        if (checkLauncherShape || checkLauncherFormat) {
             for (File file : files) {
                 String name = file.getName();
-                if (isLauncherIcon(folderName, getBaseName(name))
-                        && !endsWith(name, DOT_XML)
-                        && !endsWith(name, DOT_9PNG)) {
-                    checkLauncherShape(context, folderName, file);
+                if (isLauncherIcon(folderName, getBaseName(name))) {
+                    if (checkLauncherShape
+                            && !endsWith(name, DOT_XML)
+                            && !endsWith(name, DOT_9PNG)) {
+                        checkLauncherShape(context, folderName, file);
+                    }
+                    if (checkLauncherFormat) {
+                        checkLauncherIconFormat(context, file);
+                    }
                 }
             }
         }
@@ -1457,7 +1491,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         imageCache = null;
     }
 
-    private static void checkWebpSupported(@NonNull Context context, @NonNull File[] files) {
+    private void checkWebpSupported(@NonNull Context context, @NonNull File[] files) {
         // all files in this folder have the same folder minSdkVersion
         int minSdk = Math.max(context.getMainProject().getMinSdk(),
                 context.getDriver().getResourceFolderVersion(files[0]));
@@ -1466,10 +1500,18 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         }
 
         for (File file : files) {
-            String name = file.getPath();
-            if (!endsWithIgnoreCase(name, DOT_WEBP)) {
+            String path = file.getPath();
+            if (!endsWithIgnoreCase(path, DOT_WEBP)) {
                 continue;
             }
+            String name = file.getName();
+            if (isLauncherIcon(file.getParentFile().getName(), getBaseName(name))) {
+                Location location = Location.create(file);
+                String message = "Launcher icons must be in PNG format";
+                context.report(WEBP_UNSUPPORTED, location, message);
+                continue;
+            }
+
             WebpHeader header = WebpHeader.getWebpHeader(file);
             if (header != null && header.format != null) {
                 boolean simpleFormat = "VP8".equals(header.format);
@@ -1484,6 +1526,19 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 }
             }
         }
+    }
+
+    /**
+     * Check that launcher icons are PNG or JPEG
+     */
+    private static void checkLauncherIconFormat(Context context, File file) {
+        String path = file.getPath();
+        if (endsWithIgnoreCase(path, DOT_PNG) || endsWithIgnoreCase(path, DOT_JPEG)) {
+            return;
+        }
+        Location location = Location.create(file);
+        String message = "Launcher icons must be in PNG format";
+        context.report(ICON_LAUNCHER_FORMAT, location, message);
     }
 
     /**
@@ -2356,6 +2411,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 // Manifest
                 TAG_APPLICATION,
                 TAG_ACTIVITY,
+                TAG_ACTIVITY_ALIAS,
                 TAG_SERVICE,
                 TAG_PROVIDER,
                 TAG_RECEIVER,
@@ -2369,7 +2425,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String icon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
         addIcon(context, element, icon);
-        icon = element.getAttributeNS(ANDROID_URI, "roundIcon");
+        icon = element.getAttributeNS(ANDROID_URI, ATTR_ROUND_ICON);
         String key = addIcon(context, element, icon);
         if (key != null) {
             if (roundIcons == null) {
