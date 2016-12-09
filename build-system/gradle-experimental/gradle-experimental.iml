@@ -37,7 +37,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../external/gradle/gradle-api-3.3-20161202145356+0000.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../external/gradle/gradle-api-3.4-20161207091511+0000.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
