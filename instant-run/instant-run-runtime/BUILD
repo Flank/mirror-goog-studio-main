@@ -1,15 +1,3 @@
-java_library(
-    name = "instant-run-runtime",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tools/base/annotations",
-        "//tools/base/instant-run:instant-run-common",
-    ],
-)
-
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
@@ -27,5 +15,31 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/instant-run:studio.instant-run-client[module, test]",
         "//tools/idea/.idea/libraries:guava-tools[test]",
+    ],
+)
+
+java_library(
+    name = "instant-run-runtime",
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/instant-run:instant-run-common",
+    ],
+)
+
+java_test(
+    name = "tests",
+    srcs = glob(["src/test/java/**/*.java"]),
+    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":instant-run-runtime",
+        "//tools/base/instant-run:instant-run-client",
+        "//tools/base/instant-run:instant-run-common",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
