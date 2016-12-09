@@ -26,6 +26,9 @@ android {
         enabled = true
         addDefaultAdapters = true
     }
+    lintOptions {
+        disable 'IconLauncherFormat'
+    }
 }
 
 dependencies {
