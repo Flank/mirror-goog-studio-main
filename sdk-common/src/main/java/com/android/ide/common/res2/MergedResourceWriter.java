@@ -88,7 +88,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * Compiler for resources
      */
     @NonNull
-    private final QueueableResourceCompiler mResourceCompiler;
+    private final ResourceCompiler mResourceCompiler;
 
     /**
      * map of XML values files to write after parsing all the files. the key is the qualifier.
@@ -146,7 +146,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @Nullable File publicFile,
             @Nullable File blameLogFolder,
             @NonNull ResourcePreprocessor preprocessor,
-            @NonNull QueueableResourceCompiler resourceCompiler,
+            @NonNull ResourceCompiler resourceCompiler,
             @NonNull File temporaryDirectory) {
         super(rootFolder);
         mResourceCompiler = resourceCompiler;
@@ -182,25 +182,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 publicFile,
                 blameLogFolder,
                 preprocessor,
-                new QueueableResourceCompiler() {
-
-                    @NonNull
-                    @Override
-                    public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
-                            throws Exception {
-                        SettableFuture<File> future = SettableFuture.create();
-                        future.set(null);
-                        return future;                    }
-
-                    @Override
-                    public void start() {
-
-                    }
-
-                    @Override
-                    public void end() throws InterruptedException {
-
-                    }
+                (@NonNull File file, @NonNull File output) -> {
+                    SettableFuture<File> future = SettableFuture.create();
+                    future.set(null);
+                    return future;
                 },
                 temporaryDirectory
         );
@@ -220,7 +205,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         super.end();
         // now perform all the PNG crunching.
         try {
-            mResourceCompiler.start();
+            if (mResourceCompiler instanceof QueueableResourceCompiler) {
+                ((QueueableResourceCompiler) mResourceCompiler).start();
+            }
             while (!mPngCrunchRequests.isEmpty()) {
                 PngCrunchRequest request = mPngCrunchRequests.poll();
                 try {
@@ -266,7 +253,9 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     throw MergingException.wrapException(e).withFile(request.in).build();
                 }
             }
-            mResourceCompiler.end();
+            if (mResourceCompiler instanceof QueueableResourceCompiler) {
+                ((QueueableResourceCompiler) mResourceCompiler).end();
+            }
 
         } catch (Exception e) {
             throw new ConsumerException(e);
