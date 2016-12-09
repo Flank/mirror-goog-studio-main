@@ -29,4 +29,7 @@ android {
         androidTestCompile "com.android.support.test:runner:${project.testSupportLibVersion}"
         androidTestCompile "com.android.support:support-annotations:${project.supportLibVersion}"
     }
+    lintOptions {
+        disable 'IconLauncherFormat'
+    }
 }
