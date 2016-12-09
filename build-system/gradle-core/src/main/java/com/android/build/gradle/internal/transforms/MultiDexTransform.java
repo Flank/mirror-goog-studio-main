@@ -77,8 +77,6 @@ public class MultiDexTransform extends BaseProguardAction {
     private final File userMainDexKeepFile;
     @NonNull
     private final VariantScope variantScope;
-    @Nullable
-    private final File includeInMainDexJarFile;
 
     private final boolean keepRuntimeAnnotatedClasses;
 
@@ -90,14 +88,12 @@ public class MultiDexTransform extends BaseProguardAction {
 
     public MultiDexTransform(
             @NonNull VariantScope variantScope,
-            @NonNull DexOptions dexOptions,
-            @Nullable File includeInMainDexJarFile) {
+            @NonNull DexOptions dexOptions) {
         super(variantScope);
         this.manifestKeepListProguardFile = variantScope.getManifestKeepListProguardFile();
         this.userMainDexKeepProguard = variantScope.getVariantConfiguration().getMultiDexKeepProguard();
         this.userMainDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
         this.variantScope = variantScope;
-        this.includeInMainDexJarFile = includeInMainDexJarFile;
         configFileOut = new File(variantScope.getGlobalScope().getBuildDir() + "/" + FD_INTERMEDIATES
                 + "/multi-dex/" + variantScope.getVariantConfiguration().getDirName()
                 + "/components.flags");
@@ -141,8 +137,7 @@ public class MultiDexTransform extends BaseProguardAction {
         return Arrays.asList(
                         manifestKeepListProguardFile,
                         userMainDexKeepFile,
-                        userMainDexKeepProguard,
-                        includeInMainDexJarFile)
+                        userMainDexKeepProguard)
                 .stream()
                 .filter(file -> file != null)
                 .map(SecondaryFile::nonIncremental)
@@ -266,21 +261,6 @@ public class MultiDexTransform extends BaseProguardAction {
                 _allClassesJarFile,
                 variantScope.getProguardComponentsJarFile());
 
-        // add additional classes specified via a jar file.
-        if (includeInMainDexJarFile != null) {
-            // proguard shrinking is overly aggressive when it comes to removing
-            // interface classes: even if an interface is implemented by a concrete
-            // class, if no code actually references the interface class directly
-            // (i.e., code always references the concrete class), proguard will
-            // remove the interface class when shrinking.  This is problematic,
-            // as the runtime verifier still needs the interface class to be
-            // present, or the concrete class won't be valid.  Use a
-            // ClassReferenceListBuilder here (only) to pull in these missing
-            // interface classes.  Note that doing so brings in other unnecessary
-            // stuff, too; next time we're low on main dex space, revisit this!
-            mainDexClasses.addAll(callDx(_allClassesJarFile, includeInMainDexJarFile));
-        }
-
         if (userMainDexKeepFile != null) {
             mainDexClasses = ImmutableSet.<String>builder()
                     .addAll(mainDexClasses)
@@ -304,7 +284,6 @@ public class MultiDexTransform extends BaseProguardAction {
                     "Not including classes with runtime retention annotations in the main dex.\n"
                             + "This can cause issues with reflection in older platforms.");
         }
-
 
         return variantScope.getGlobalScope().getAndroidBuilder().createMainDexList(
                 allClassesJarFile, jarOfRoots, mainDexListOptions);
