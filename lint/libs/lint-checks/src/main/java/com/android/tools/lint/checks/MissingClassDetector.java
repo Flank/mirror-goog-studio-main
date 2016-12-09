@@ -95,7 +95,9 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     MissingClassDetector.class,
                     EnumSet.of(Scope.MANIFEST, Scope.CLASS_FILE,
                             Scope.JAVA_LIBRARIES, Scope.RESOURCE_FILE)))
-            .addMoreInfo("http://developer.android.com/guide/topics/manifest/manifest-intro.html");
+            .addMoreInfo("http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+            // Until http://b.android.com/229868 is fixed
+            .setEnabledByDefault(false);
 
     /** Are activity, service, receiver etc subclasses instantiatable? */
     public static final Issue INSTANTIATABLE = Issue.create(
