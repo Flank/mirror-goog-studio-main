@@ -43,7 +43,7 @@ maven_java_library(
 maven_pom(
     name = "pom",
     artifact = "repository",
-    group = "com.android.tools.repository",
+    group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
 )
 

@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.integration;
 
-import com.android.apkzlib.utils.IOExceptionConsumer;
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.model.Version;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -28,15 +30,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Checks what we distribute in our jars. */
-@Category(FailsUnderBazel.class)
 public class JarContentsTest {
+
+    private static final Set<String> IGNORED_ARTIFACTS =
+            ImmutableSet.of(
+                    "swt",
+                    "ddmuilib",
+                    "asset-studio",
+                    "monkeyrunner",
+                    "uiautomatorviewer",
+                    "hierarchyviewer2lib",
+                    "traceview");
 
     private static final Set<String> GLOBAL_WHITELIST =
             ImmutableSet.of("NOTICE", "META-INF/MANIFEST.MF");
@@ -44,6 +56,11 @@ public class JarContentsTest {
     private static final Multimap<String, String> EXPECTED;
 
     static {
+        // Useful command for getting these lists:
+        // unzip -l path/to.jar | grep -v class | grep -v "/$" | tail -n +2 | awk '{print "\"" $4 "\","}'
+
+        // Feel free to change these to be a regexp pattern if it becomes too tedious to maintain.
+
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
                 "com/android/tools/build/builder/",
@@ -71,11 +88,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/test/report/report.js",
                 "com/android/build/gradle/proguard-android.txt",
                 "com/android/build/gradle/proguard-android-optimize.txt",
-                "instant-run/instant-run-server.jar",
-                "atom_metadata.proto",
-                "atom_dependency.proto",
-                "apk_manifest.proto",
-                "iapk_metadata.proto");
+                "instant-run/instant-run-server.jar");
         expected.putAll(
                 "com/android/tools/build/gradle-experimental/",
                 "com/android/build/gradle/model/version.properties",
@@ -86,23 +99,119 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/tools/internal/build/test/devicepool/",
                 "META-INF/gradle-plugins/devicepool.properties");
+        expected.putAll(
+                "com/android/tools/dvlib/",
+                "com/android/dvlib/devices-1.xsd",
+                "com/android/dvlib/devices-2.xsd");
+        expected.putAll(
+                "com/android/tools/sdklib/",
+                "com/android/sdklib/internal/build/BuildConfig.template",
+                "com/android/sdklib/devices/wear.xml",
+                "com/android/sdklib/devices/tv.xml",
+                "com/android/sdklib/devices/devices.xml",
+                "com/android/sdklib/devices/nexus.xml",
+                "com/android/sdklib/repository/sdk-common-custom.xjb",
+                "com/android/sdklib/repository/sdk-common.xjb",
+                "com/android/sdklib/repository/sdk-repository-01.xsd",
+                "com/android/sdklib/repository/sdk-sys-img-01.xsd",
+                "com/android/sdklib/repository/sdk-addon-01.xsd",
+                "com/android/sdklib/repository/sdk-common-01.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-02.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-11.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-03.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-07.xsd",
+                "com/android/sdklib/repository/legacy/sdk-sys-img-03.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-08.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-05.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-01.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-04.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-10.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-12.xsd",
+                "com/android/sdklib/repository/legacy/sdk-sys-img-01.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-07.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-01.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-04.xsd",
+                "com/android/sdklib/repository/legacy/sdk-sys-img-02.xsd",
+                "com/android/sdklib/repository/legacy/sdk-stats-1.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-02.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addons-list-2.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addon-06.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-03.xsd",
+                "com/android/sdklib/repository/legacy/sdk-addons-list-1.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-06.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-05.xsd",
+                "com/android/sdklib/repository/legacy/sdk-repository-09.xsd",
+                "com/android/sdklib/repository/sources/sdk-sites-list-1.xsd",
+                "com/android/sdklib/repository/sources/sdk-sites-list-3.xsd",
+                "com/android/sdklib/repository/sources/sdk-sites-list-2.xsd",
+                "com/android/sdklib/repository/README.txt");
+        expected.putAll(
+                "com/android/tools/lint/lint/",
+                "com/android/tools/lint/lint-warning.png",
+                "com/android/tools/lint/lint-run.png",
+                "com/android/tools/lint/default.css",
+                "com/android/tools/lint/lint-error.png",
+                "com/android/tools/lint/hololike.css");
+        expected.putAll(
+                "com/android/tools/lint/lint-checks/",
+                "com/android/tools/lint/checks/api-versions-support-library.xml");
+        expected.putAll(
+                "com/android/tools/repository/",
+                "com/android/repository/api/common.xjb",
+                "com/android/repository/api/generic.xjb",
+                "com/android/repository/api/global.xjb",
+                "com/android/repository/api/generic-01.xsd",
+                "com/android/repository/api/catalog.xml",
+                "com/android/repository/api/list-common.xjb",
+                "com/android/repository/api/repo-common-01.xsd",
+                "com/android/repository/api/repo-sites-common-1.xsd",
+                "com/android/repository/impl/meta/common-custom.xjb",
+                "com/android/repository/impl/meta/generic-custom.xjb",
+                "com/android/repository/impl/sources/repo-sites-common-custom.xjb");
+
         EXPECTED = expected.build();
     }
 
     @Test
     public void checkAllJars() throws Exception {
+        boolean foundAndroidRepo = false;
+
         for (Path repo : GradleTestProject.getRepos()) {
             Path androidTools = repo.resolve("com/android/tools");
             if (!Files.isDirectory(androidTools)) {
                 continue;
+            } else {
+                foundAndroidRepo = true;
             }
 
-            Files.walk(androidTools)
-                    .filter(path -> path.toString().endsWith(".jar"))
-                    .filter(path -> !path.toString().endsWith("-sources.jar"))
-                    .filter(path -> path.toString().contains("/swt/"))
-                    .forEach(IOExceptionConsumer.asConsumer(jar -> checkJar(jar, repo)));
+            List<Path> ourJars =
+                    Files.walk(androidTools)
+                            .filter(path -> path.toString().endsWith(".jar"))
+                            .filter(path -> !path.toString().endsWith("-sources.jar"))
+                            .filter(path -> !isIgnored(path))
+                            .filter(JarContentsTest::isCurrentVersion)
+                            .collect(Collectors.toList());
+
+            assertThat(ourJars).named("jars to check").isNotEmpty();
+
+            for (Path jar : ourJars) {
+                checkJar(jar, repo);
+            }
         }
+
+        assertTrue("Failed to find android repo.", foundAndroidRepo);
+    }
+
+    private static boolean isIgnored(Path path) {
+        return IGNORED_ARTIFACTS
+                .stream()
+                .anyMatch(name -> path.toString().contains("/" + name + "/"));
+    }
+
+    private static boolean isCurrentVersion(Path path) {
+        return path.toString().contains(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                || path.toString().contains(Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION)
+                || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
     private static void checkJar(Path jar, Path repo) throws IOException {
@@ -126,6 +235,12 @@ public class JarContentsTest {
                 }
 
                 if (actualName.startsWith("META-INF/services/")) {
+                    continue;
+                }
+
+                if (actualName.endsWith(".proto")) {
+                    // Gradle packages the proto files in jars.
+                    // TODO: Can we remove these from the jars?
                     continue;
                 }
 

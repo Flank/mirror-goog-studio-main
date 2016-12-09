@@ -1,9 +1,25 @@
 load("//tools/base/bazel:antlr.bzl", "antlr_sources")
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 antlr_sources(
     name = "proguard-parser",
     srcs = glob(["src/main/antlr/**"]),
+)
+
+fileset(
+    name = "resources",
+    srcs = glob([
+        "src/main/resources/**",
+        "src/fromGradle/resources/**",
+    ]) + [
+        "//tools/base/instant-run/instant-run-server:libinstant-run-server.jar",
+    ],
+    mappings = {
+        "//tools/base/instant-run/instant-run-server:libinstant-run-server.jar": "instant-run/instant-run-server.jar",
+        "src/main/resources/": "",
+        "src/fromGradle/resources/": "",
+    },
 )
 
 maven_java_library(
@@ -22,10 +38,8 @@ maven_java_library(
         "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
     },
     pom = ":pom",
-    resources = glob([
-        "src/main/resources/**",
-        "src/fromGradle/resources/**",
-    ]),
+    resource_strip_prefix = "tools/base/build-system/gradle-core",
+    resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
@@ -69,7 +83,7 @@ maven_pom(
     name = "pom",
     artifact = "gradle-core",
     group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:base_version",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 java_test(

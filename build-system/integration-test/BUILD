@@ -67,6 +67,7 @@ java_library(
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-core",
+        "//tools/base/build-system/gradle-experimental",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/instant-run:instant-run-client",
