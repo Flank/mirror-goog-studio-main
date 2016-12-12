@@ -42,10 +42,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -83,7 +87,7 @@ public class ProcessInstantAppResources extends IncrementalTask {
                     .setDebuggable(getDebuggable())
                     .setPseudoLocalize(getPseudoLocalesEnabled())
                     .setBaseFeature(getBaseAtomResourcePackage())
-                    .setPreviousFeatures(getAtomResourcePackages());
+                    .setPreviousFeatures(getAtomResourcePackages().getFiles());
 
             builder.processResources(aapt, config, true);
         } catch (IOException | InterruptedException | ProcessException e) {
@@ -104,21 +108,21 @@ public class ProcessInstantAppResources extends IncrementalTask {
 
     @NonNull
     @InputFiles
-    public Set<File> getAtomResourcePackages() {
-        return atomResourcePackages;
+    public FileCollection getAtomResourcePackages() {
+        return atomResourcePackages == null ? getProject().files() : atomResourcePackages;
     }
 
-    public void setAtomResourcePackages(@NonNull Set<File> atomResourcePackages) {
+    public void setAtomResourcePackages(@NonNull FileCollection atomResourcePackages) {
         this.atomResourcePackages = atomResourcePackages;
     }
 
-    @NonNull
     @InputFile
+    @Optional
     public File getBaseAtomResourcePackage() {
-        return baseAtomResourcePackage;
+        return baseAtomResourcePackage == null ? null : baseAtomResourcePackage.get();
     }
 
-    public void setBaseAtomResourcePackage(@NonNull File baseAtomResourcePackage) {
+    public void setBaseAtomResourcePackage(@NonNull Supplier<File> baseAtomResourcePackage) {
         this.baseAtomResourcePackage = baseAtomResourcePackage;
     }
 
@@ -181,8 +185,8 @@ public class ProcessInstantAppResources extends IncrementalTask {
 
 
     private File manifestFile;
-    private Set<File> atomResourcePackages;
-    private File baseAtomResourcePackage;
+    private FileCollection atomResourcePackages;
+    private Supplier<File> baseAtomResourcePackage;
     private VariantType type;
     private boolean debuggable;
     private boolean pseudoLocalesEnabled;
@@ -233,21 +237,32 @@ public class ProcessInstantAppResources extends IncrementalTask {
             processInstantAppResources.setOutputResourcePackage(
                     scope.getProcessResourcePackageOutputFile());
 
-            AtomDependency baseAtom = config.getPackageDependencies().getBaseAtom();
+            processInstantAppResources.setBaseAtomResourcePackage(() -> {
+                AtomDependency baseAtom = config.getPackageDependencies().getBaseAtom();
+                return baseAtom == null ? null : baseAtom.getResourcePackage();
+            });
 
-            // This will happen for the first sync. Just ignore and exit early.
-            if (baseAtom == null) {
-                return;
-            }
-            processInstantAppResources.setBaseAtomResourcePackage(baseAtom.getResourcePackage());
-
-            List<AtomDependency> androidAtoms = config.getFlatAndroidAtomsDependencies();
-            ImmutableSet.Builder<File> builder = ImmutableSet.builder();
-            for (AtomDependency atom : androidAtoms) {
-                if (atom != baseAtom)
-                    builder.add(scope.getProcessResourcePackageOutputFile(atom));
-            }
-            processInstantAppResources.setAtomResourcePackages(builder.build());
+            processInstantAppResources.setAtomResourcePackages(
+                    scope.getGlobalScope().getProject().files(
+                            new Callable<Set<File>>() {
+                                @Override
+                                public Set<File> call() throws Exception {
+                                    AtomDependency baseAtom = config.getPackageDependencies().getBaseAtom();
+                                    if (baseAtom == null) {
+                                        return ImmutableSet.of();
+                                    }
+                                    List<AtomDependency> androidAtoms = config
+                                            .getFlatAndroidAtomsDependencies();
+                                    ImmutableSet.Builder<File> builder = ImmutableSet.builder();
+                                    for (AtomDependency atom : androidAtoms) {
+                                        if (config.getPackageDependencies().getBaseAtom() != baseAtom)
+                                            builder.add(scope.getProcessResourcePackageOutputFile(
+                                                    atom));
+                                    }
+                                    return builder.build();
+                                }
+                            }
+                    ));
 
         }
 

@@ -183,8 +183,8 @@ public class LibraryTaskManager extends TaskManager {
                     createProcessResTask(
                             tasks,
                             variantScope,
-                            variantBundleDir,
-                            false /*generateResourcePackage*/);
+                            () -> variantBundleDir,
+                            (vod) -> null /*packageOutputSupplier*/);
 
                     // process java resources
                     createProcessJavaResTasks(tasks, variantScope);

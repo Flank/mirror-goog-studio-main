@@ -32,18 +32,19 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.wireless.android.instantapps.iapk.AtomDependencyProto;
 import com.google.wireless.android.instantapps.iapk.AtomMetadataProto;
-
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to generate the Atom Metadata files.
@@ -111,18 +112,18 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
     }
 
     @InputFiles
-    public Set<File> getAtomMetadataDependency() {
+    public FileCollection getAtomMetadataDependency() {
         return atomMetadataDependency;
     }
 
-    public void setAtomMetadataDependency(Set<File> atomMetadataDependency) {
+    public void setAtomMetadataDependency(FileCollection atomMetadataDependency) {
         this.atomMetadataDependency = atomMetadataDependency;
     }
 
     private File atomMetadataFolder;
     private String atomVersion;
     private String atomName;
-    private Set<File> atomMetadataDependency;
+    private FileCollection atomMetadataDependency;
 
     public static class ConfigAction implements TaskConfigAction<GenerateAtomMetadata> {
 
@@ -147,16 +148,26 @@ public class GenerateAtomMetadata extends DefaultAndroidTask {
             AtomVariantOutputData variantOutputData = (AtomVariantOutputData) scope
                     .getVariantOutputData();
 
-            // only care about first level direct atoms?
-            DependencyContainer dependencyContainer =
-                    scope.getVariantScope().getVariantConfiguration().getPackageDependencies();
+            Project project = scope.getGlobalScope().getProject();
 
-            ImmutableSet.Builder<File> atomMetadataBuilder = ImmutableSet.builder();
-            for (AtomDependency atom : dependencyContainer.getDirectAtomDependencies()) {
-                atomMetadataBuilder.add(atom.getAtomMetadataFile());
-            }
-            generateAtomMetadata.setAtomMetadataDependency(atomMetadataBuilder.build());
-            generateAtomMetadata.setAtomName(scope.getGlobalScope().getProject().getName());
+            generateAtomMetadata.setAtomMetadataDependency(project.files(
+                    new Callable<Set<File>>() {
+                        @Override
+                        public Set<File> call() throws Exception {
+                            // only care about first level direct atoms?
+                            DependencyContainer dependencyContainer =
+                                    scope.getVariantScope().getVariantConfiguration()
+                                            .getPackageDependencies();
+
+                            ImmutableSet.Builder<File> atomMetadataBuilder = ImmutableSet.builder();
+                            for (AtomDependency atom :
+                                    dependencyContainer.getDirectAtomDependencies()) {
+                                atomMetadataBuilder.add(atom.getAtomMetadataFile());
+                            }
+                            return atomMetadataBuilder.build();
+                        }
+                    }));
+            generateAtomMetadata.setAtomName(project.getName());
 
             String versionName = variantOutputData.getVersionName();
             checkState(!Strings.isNullOrEmpty(versionName), "versionName is not specified.");

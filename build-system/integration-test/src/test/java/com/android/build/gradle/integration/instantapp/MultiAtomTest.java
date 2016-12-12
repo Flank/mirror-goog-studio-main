@@ -58,12 +58,6 @@ public class MultiAtomTest {
             .withoutNdk()
             .create();
 
-    @BeforeClass
-    public static void setUp() {
-        // b.android.com/227451
-        AssumeUtil.assumeResolveDependencyOnConfiguration();
-    }
-
     @AfterClass
     public static void cleanUp() {
         sProject = null;

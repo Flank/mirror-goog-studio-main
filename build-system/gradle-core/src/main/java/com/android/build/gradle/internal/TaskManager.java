@@ -184,6 +184,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.Action;
@@ -866,16 +868,16 @@ public abstract class TaskManager {
         createProcessResTask(
                 tasks,
                 scope,
-                new File(globalScope.getIntermediatesDir(),
+                () -> new File(globalScope.getIntermediatesDir(),
                         "symbols/" + scope.getVariantData().getVariantConfiguration().getDirName()),
-                true);
+                BaseVariantOutputData::getProcessResourcePackageOutputFile);
     }
 
     public void createProcessResTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
-            @Nullable File symbolLocation,
-            boolean generateResourcePackage) {
+            @NonNull Supplier<File> symbolLocation,
+            @NonNull Function<BaseVariantOutputData, File> packageOutputSupplier) {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
@@ -888,8 +890,10 @@ public abstract class TaskManager {
             final VariantOutputScope variantOutputScope = vod.getScope();
 
             variantOutputScope.setProcessResourcesTask(androidTasks.create(tasks,
-                    new ProcessAndroidResources.ConfigAction(variantOutputScope, symbolLocation,
-                            generateResourcePackage,
+                    new ProcessAndroidResources.ConfigAction(
+                            variantOutputScope,
+                            symbolLocation,
+                            () -> packageOutputSupplier.apply(vod),
                             useAaptToGenerateLegacyMultidexMainDexProguardRules)));
 
             // always depend on merge res,
