@@ -21,11 +21,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,12 +38,6 @@ public class SingleAtomTest {
             .fromTestProject("singleAtom")
             .withoutNdk()
             .create();
-
-    @BeforeClass
-    public static void setUp() {
-        // b.android.com/227451
-        AssumeUtil.assumeResolveDependencyOnConfiguration();
-    }
 
     @AfterClass
     public static void cleanUp() {

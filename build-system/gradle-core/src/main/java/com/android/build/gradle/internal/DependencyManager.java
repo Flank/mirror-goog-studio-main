@@ -789,17 +789,29 @@ public class DependencyManager {
                                         throw new UncheckedIOException(e);
                                     }
                                 } else {
-                                    Preconditions.checkState(
-                                            !AndroidGradleOptions
-                                                    .isImprovedDependencyResolutionEnabled(project),
-                                            "Improved dependency resolution must be used with "
-                                                    + "build cache.");
+                                    if (AndroidGradleOptions
+                                                .isImprovedDependencyResolutionEnabled(project)) {
+                                        // When using the improved dependency resolution, the output
+                                        // directory has to be different from the the normal
+                                        // exploded-aar path in order to not interfere with the
+                                        // up-to-date-check
 
-                                    explodedDir = FileUtils.join(
-                                            project.getBuildDir(),
-                                            FD_INTERMEDIATES,
-                                            EXPLODED_AAR,
-                                            path);
+                                        // TODO: ResolveDependencyTask does not perform up-to-date
+                                        // check.  Need to figure out a way to avoid repeatedly
+                                        // exploding snapshots.
+                                        explodedDir = FileUtils.join(
+                                                project.getBuildDir(),
+                                                FD_INTERMEDIATES,
+                                                EXPLODED_AAR,
+                                                "snapshots",
+                                                path);
+                                    } else {
+                                        explodedDir = FileUtils.join(
+                                                project.getBuildDir(),
+                                                FD_INTERMEDIATES,
+                                                EXPLODED_AAR,
+                                                path);
+                                    }
                                 }
 
                                 androidDependency = AndroidDependency.createExplodedAarLibrary(

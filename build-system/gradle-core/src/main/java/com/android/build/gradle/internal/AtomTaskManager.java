@@ -38,6 +38,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Set;
@@ -138,22 +139,35 @@ public class AtomTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    if (variantScope
-                                    .getVariantConfiguration()
-                                    .getPackageDependencies()
-                                    .getBaseAtom()
-                            == null) {
-                        // If this is the base atom, compile the .ap_ that will get packaged in the atombundle.
-                        createApkProcessResTask(tasks, variantScope);
-                    } else {
-                        // If this is not the base atom, add a task to generate the resource source files,
-                        // directing the location of the r.txt file to be directly in the atombundle.
-                        createProcessResTask(
-                                tasks,
-                                variantScope,
-                                variantBundleDir,
-                                false /*generateResourcePackage*/);
-                    }
+                    // If this is the base atom, compile the .ap_ that will get packaged in the
+                    // atombundle.
+                    // If this is not the base atom, add a task to generate the resource source
+                    // files, directing the location of the r.txt file to be directly in the
+                    // atombundle.
+                    createProcessResTask(
+                            tasks,
+                            variantScope,
+                            () -> {
+                                boolean isBaseAtom = variantScope
+                                        .getVariantConfiguration()
+                                        .getPackageDependencies()
+                                        .getBaseAtom() == null;
+                                return isBaseAtom
+                                        ? FileUtils.join(
+                                                variantScope.getGlobalScope().getIntermediatesDir(),
+                                                "symbols",
+                                                variantScope.getVariantData().getVariantConfiguration().getDirName())
+                                        : variantBundleDir;
+                            },
+                            (vod) -> {
+                                boolean isBaseAtom = variantScope
+                                        .getVariantConfiguration()
+                                        .getPackageDependencies()
+                                        .getBaseAtom() == null;
+                                return isBaseAtom
+                                        ? vod.getProcessResourcePackageOutputFile()
+                                        : null;
+                            });
 
                     // process java resources
                     createProcessJavaResTasks(tasks, variantScope);

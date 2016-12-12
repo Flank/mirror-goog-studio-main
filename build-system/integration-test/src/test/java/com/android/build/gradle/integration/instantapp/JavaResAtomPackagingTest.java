@@ -38,9 +38,6 @@ public class JavaResAtomPackagingTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-        // b.android.com/227451
-        AssumeUtil.assumeResolveDependencyOnConfiguration();
-
         GradleTestProject atomProject = sProject.getSubproject(":atom");
         File atomAssetDir =
                 FileUtils.join(atomProject.getTestDir(), "src", "main", "resources", "com", "foo");
