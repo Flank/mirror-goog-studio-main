@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <globals>
+    <global id="manifestPackageName" value="${manifestPackageName!packageName}" />
     <global id="topOut" value="." />
     <global id="projectOut" value="." />
     <global id="manifestOut" value="${manifestDir}" />
@@ -12,7 +13,4 @@
     <global id="buildToolsVersion" value="18.0.1" />
     <global id="gradlePluginVersion" value="0.6.+" />
     <global id="unitTestsSupported" type="boolean" value="${(compareVersions(gradlePluginVersion, '1.1.0') >= 0)?string}" />
-    <global id="whSupportLibRewriteAttrs" value="${whSdkPath!""}/rewriteAttrs" />
-    <global id="whSupportLibApk" value="${whSdkPath!""}/com.android.support/com.android.support_support-shared-lib_23.1.1.apk" />
-    <global id="whSupportLibJars" value="${whSdkPath!""}/com.android.support/support-lib-jars" />
 </globals>
