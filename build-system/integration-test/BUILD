@@ -142,7 +142,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4:jar",
         "//prebuilts/tools/common/m2/repository/javax/annotation/jsr250-api/1.0:jar",
         "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
-        "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk16/1.46:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
