@@ -596,10 +596,12 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public File getAtom(String... dimensions) {
+    public File getAtom(String atomName, String... dimensions) {
         return getIntermediateFile(
                 FileUtils.join(
-                        "assets", Joiner.on("-").join(dimensions), "atom" + SdkConstants.DOT_ATOM));
+                        "assets",
+                        Joiner.on("-").join(dimensions),
+                        atomName + SdkConstants.DOT_ATOM));
     }
 
     /** Returns the SDK dir */

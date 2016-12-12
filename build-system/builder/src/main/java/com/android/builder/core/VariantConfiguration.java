@@ -38,6 +38,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
+import com.android.manifmerger.ManifestProvider;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
@@ -718,6 +719,18 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public ImmutableList<AndroidDependency> getFlatPackageAndroidLibraries() {
         return getPackageDependencies().getAllAndroidDependencies();
+    }
+
+    /**
+     * Returns all the package dependencies that provide a manifest.
+     */
+    @NonNull
+    public ImmutableList<? extends ManifestProvider> getPackageManifestProviders() {
+        if (getType() == VariantType.INSTANTAPP) {
+            return getFlatAndroidAtomsDependencies();
+        } else {
+            return getFlatPackageAndroidLibraries();
+        }
     }
 
     @NonNull

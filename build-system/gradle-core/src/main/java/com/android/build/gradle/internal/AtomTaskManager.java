@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -96,7 +95,7 @@ public class AtomTaskManager extends TaskManager {
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeLibManifestsTask(tasks, variantScope));
+                () -> createMergeAppManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
         recorder.record(

@@ -16,7 +16,6 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
@@ -26,32 +25,23 @@ import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
-import com.android.builder.dependency.level2.ExtractedDependency;
-import com.android.builder.model.AndroidBundle;
-import com.android.builder.model.AndroidLibrary;
+import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import java.util.function.Function;
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * A task that processes the manifest
@@ -276,24 +266,29 @@ public class MergeManifests extends ManifestProcessorTask {
                         (ApkVariantOutputData) variantOutputData;
             }
 
-            ConventionMappingHelper.map(processManifestTask, "providers",
+            ConventionMappingHelper.map(
+                    processManifestTask,
+                    "providers",
                     () -> {
-                        List<ManifestProvider> manifests = Lists.newArrayList(
-                                config.getFlatPackageAndroidLibraries());
-                        manifests.addAll(config.getFlatAndroidAtomsDependencies());
+                        List<ManifestProvider> manifests =
+                                Lists.newArrayList(config.getPackageManifestProviders());
 
-                        if (scope.getVariantScope().getMicroApkTask() != null &&
-                                variantData.getVariantConfiguration().getBuildType().
-                                        isEmbedMicroApp()) {
-                            manifests.add(new ManifestProviderImpl(
-                                    scope.getVariantScope().getMicroApkManifestFile(),
-                                    "Wear App sub-manifest"));
+                        if (scope.getVariantScope().getMicroApkTask() != null
+                                && variantData
+                                        .getVariantConfiguration()
+                                        .getBuildType()
+                                        .isEmbedMicroApp()) {
+                            manifests.add(
+                                    new ManifestProviderImpl(
+                                            scope.getVariantScope().getMicroApkManifestFile(),
+                                            "Wear App sub-manifest"));
                         }
 
                         if (scope.getCompatibleScreensManifestTask() != null) {
-                            manifests.add(new ManifestProviderImpl(
-                                    scope.getCompatibleScreensManifestFile(),
-                                    "Compatible-Screens sub-manifest"));
+                            manifests.add(
+                                    new ManifestProviderImpl(
+                                            scope.getCompatibleScreensManifestFile(),
+                                            "Compatible-Screens sub-manifest"));
                         }
 
                         return manifests;
