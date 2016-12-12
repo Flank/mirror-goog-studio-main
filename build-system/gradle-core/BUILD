@@ -13,6 +13,7 @@ fileset(
         "src/main/resources/**",
         "src/fromGradle/resources/**",
     ]) + [
+        # TODO: this jar needs to contain classes from instant-run-runtime as well.
         "//tools/base/instant-run/instant-run-server:libinstant-run-server.jar",
     ],
     mappings = {
