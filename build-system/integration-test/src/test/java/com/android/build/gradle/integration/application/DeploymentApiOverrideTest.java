@@ -60,4 +60,14 @@ public class DeploymentApiOverrideTest {
         assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
 
     }
+
+    @Test
+    public void testMultiDexOnReleaseBuild() throws Exception {
+        GradleBuildResult lastBuild = project.executor()
+                .withProperty(AndroidProject.PROPERTY_BUILD_API, 21)
+                .run("clean", "assembleIcsRelease");
+        assertThat(lastBuild).isNotNull();
+        assertThat(lastBuild.getStdout()).contains("Multidexlist");
+
+    }
 }
