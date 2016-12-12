@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.instantapp;
 import static com.android.SdkConstants.FD_RES_CLASS;
 import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
@@ -27,6 +28,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -123,6 +125,41 @@ public class MultiAtomTest {
         atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomb/R;");
         atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomc/BuildConfig;");
         atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/atomc/R;");
+
+        // Check that atomC contains LibC classes.
+        ApkSubject atomC =
+                assertThatApk(sProject.getSubproject("instantApp").getAtom("atomc", "release"));
+        atomC.containsClass("Lcom/android/tests/multiatom/libc/LibC;");
+        atomC.containsClass("Lcom/android/tests/multiatom/libc/LibCActivity;");
+
+        // Check that libC manifest is included in atomC.
+        File atomCManifest =
+                sProject.getSubproject("atomc")
+                        .getIntermediateFile(
+                                FileUtils.join("atombundles", "default", "AndroidManifest.xml"));
+        assertThat(atomCManifest)
+                .named("atomC manifest")
+                .containsAllOf(
+                        "        <activity android:name=\"com.android.tests.multiatom.libc.LibCActivity\" >",
+                        "            <meta-data",
+                        "                android:name=\"test\"",
+                        "                android:value=\"42\" />",
+                        "        </activity>");
+
+        //Check that libC manifest is included in the instantApp manifest.
+        File instantAppManifest =
+                sProject.getSubproject("instantApp")
+                        .getIntermediateFile(
+                                FileUtils.join(
+                                        "manifests", "full", "release", "AndroidManifest.xml"));
+        assertThat(instantAppManifest)
+                .named("instantApp manifest")
+                .containsAllOf(
+                        "        <activity android:name=\"com.android.tests.multiatom.libc.LibCActivity\" >",
+                        "            <meta-data",
+                        "                android:name=\"test\"",
+                        "                android:value=\"42\" />",
+                        "        </activity>");
     }
 
     @Test
@@ -169,13 +206,6 @@ public class MultiAtomTest {
                 .named("InstantApp Atoms dependencies")
                 .hasSize(3);
 
-        // TODO: do we need this?
-        //AndroidAtom baseAtom = instantAppDeps.getBaseAtom();
-        //assertThat(baseAtom).named("Base atom").isNotNull();
-        //assertThat(baseAtom.getResolvedCoordinates())
-        //        .named("Base atom resolved coordinates")
-        //        .isEqualTo("multiAtom", "base", "unspecified", "atombundle", null);
-
         AndroidProject atomCModel = models.get(":atomc");
         assertThat(atomCModel).named("AtomC model").isNotNull();
 
@@ -193,15 +223,5 @@ public class MultiAtomTest {
         assertThat(helper.on(atomCDeps).withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("AtomC module dependencies")
                 .containsAllOf(":libc", ":base");
-
-        //AndroidLibrary libC = Iterables.getOnlyElement(atomCDeps.getLibraries());
-        //assertThat(libC.getResolvedCoordinates())
-        //        .named("LibC resolved coordinates")
-        //        .isEqualTo("multiAtom", "libc", "unspecified", "aar", null);
-        //
-        //assertThat(atomCDeps.getAtoms()).named("AtomC atom dependencies").hasSize(1);
-        //assertThat(Iterables.getOnlyElement(atomCDeps.getAtoms()))
-        //        .named("AtomC atom dependency")
-        //        .isEqualTo(atomCDeps.getBaseAtom());
     }
 }
