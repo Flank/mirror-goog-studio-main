@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.internal.coverage;
 import com.android.annotations.Nullable;
-import com.google.common.collect.Lists;
-
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -25,9 +24,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvableDependencies;
 import org.gradle.api.artifacts.ResolvedArtifact;
-
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -41,7 +37,8 @@ public class JacocoPlugin implements Plugin<Project> {
     public static final String ANT_CONFIGURATION_NAME = "androidJacocoAnt";
     public static final String AGENT_CONFIGURATION_NAME = "androidJacocoAgent";
 
-    private static final String DEFAULT_JACOCO_VERSION = "0.7.5.201505241946";
+    /** This version must be kept in sync with the version that the gradle plugin depends on. */
+    private static final String DEFAULT_JACOCO_VERSION = "0.7.4.201502262128";
 
     private Project project;
 
