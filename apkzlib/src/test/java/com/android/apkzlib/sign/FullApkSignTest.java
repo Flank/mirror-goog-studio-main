@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Tests that verify {@link FullApkSignExtension}.
+ * Tests that verify APK Signature Scheme v2 signing using {@link SigningExtension}.
  */
 public class FullApkSignTest {
 
@@ -63,9 +63,8 @@ public class FullApkSignTest {
          * Generate a signed zip.
          */
         ZFile zf = new ZFile(out, options);
-        FullApkSignExtension signExtension =
-                new FullApkSignExtension(zf, 13, signData.v2, signData.v1);
-        signExtension.register();
+        new SigningExtension(13, signData.v2, signData.v1, false, true)
+                .register(zf);
         String f1Name = "abc";
         byte[] f1Data = new byte[] { 1, 1, 1, 1 };
         zf.add(f1Name, new ByteArrayInputStream(f1Data));

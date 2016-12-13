@@ -365,6 +365,13 @@ public class StoredEntry {
     }
 
     /**
+     * Returns {@code true} if this entry has been deleted/replaced.
+     */
+    public boolean isDeleted() {
+        return mDeleted;
+    }
+
+    /**
      * Obtains the CDH associated with this entry.
      *
      * @return the CDH
