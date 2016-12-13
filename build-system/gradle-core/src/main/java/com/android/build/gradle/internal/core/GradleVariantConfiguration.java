@@ -39,6 +39,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -286,17 +287,20 @@ public class GradleVariantConfiguration
     @Override
     protected ApiVersions getApiVersionsNonTestVariant() {
         ApiVersions apiVersions = super.getApiVersionsNonTestVariant();
-        if (!project.hasProperty(AndroidProject.PROPERTY_BUILD_API)) {
+        if (project.hasProperty(AndroidProject.PROPERTY_BUILD_API)
+                && getBuildType().isDebuggable()) {
+            // Consider runtime API only if the app is debuggable.
+            Integer targetAPILevel = Integer.parseInt(
+                    project.property(AndroidProject.PROPERTY_BUILD_API).toString());
+
+            int minVersion = apiVersions.targetSdkVersion.getApiLevel() > 0
+                    ? Integer.min(apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
+                    : targetAPILevel;
+
+            return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
+        } else {
             return apiVersions;
         }
-        Integer targetAPILevel = Integer.parseInt(
-                project.property(AndroidProject.PROPERTY_BUILD_API).toString());
-
-        int minVersion = apiVersions.targetSdkVersion.getApiLevel() > 0
-                ? Integer.min(apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
-                : targetAPILevel;
-
-        return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
     }
 
     @NonNull
