@@ -211,7 +211,6 @@ public class AnnotationProcessorTest {
     }
 
     @Test
-    //@Category(FailsUnderBazel.class)
     public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
         // check for jack and non-component plugin
         Assume.assumeTrue(forJack && !forComponentPlugin);

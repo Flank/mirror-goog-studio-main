@@ -43,9 +43,7 @@ public final class SigningConfigHelper {
     private boolean isSigningReady = false;
 
     public SigningConfigHelper(
-            @NonNull SigningConfig signingConfig,
-            @NonNull String name,
-            @NonNull File storeFile)
+            @NonNull SigningConfig signingConfig, @NonNull String name, @NonNull File storeFile)
             throws AndroidLocation.AndroidLocationException {
         assertNotNull(String.format("SigningConfig '%s' null-check", name), signingConfig);
         this.signingConfig = signingConfig;

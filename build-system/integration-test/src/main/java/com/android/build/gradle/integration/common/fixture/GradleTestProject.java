@@ -68,12 +68,11 @@ import org.junit.runners.model.Statement;
 /**
  * JUnit4 test rule for integration test.
  *
- * This rule create a gradle project in a temporary directory.
- * It can be use with the @Rule or @ClassRule annotations.  Using this class with @Rule will create
- * a gradle project in separate directories for each unit test, whereas using it with @ClassRule
- * creates a single gradle project.
+ * <p>This rule create a gradle project in a temporary directory. It can be use with the @Rule
+ * or @ClassRule annotations. Using this class with @Rule will create a gradle project in separate
+ * directories for each unit test, whereas using it with @ClassRule creates a single gradle project.
  *
- * The test directory is always deleted if it already exists at the start of the test to ensure a
+ * <p>The test directory is always deleted if it already exists at the start of the test to ensure a
  * clean environment.
  */
 public final class GradleTestProject implements TestRule {
@@ -122,7 +121,7 @@ public final class GradleTestProject implements TestRule {
         BUILD_DIR = new File(buildDirPath);
         OUT_DIR = new File(BUILD_DIR, "tests");
         GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
-        ANDROID_SDK_HOME = new File(BUILD_DIR,"ANDROID_SDK_HOME");
+        ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
         boolean useNightly =
                 Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
@@ -146,8 +145,8 @@ public final class GradleTestProject implements TestRule {
         String envJack = System.getenv().get("CUSTOM_JACK");
         USE_JACK = !Strings.isNullOrEmpty(envJack);
 
-        IMPROVED_DEPENDENCY_RESOLUTION = !Strings.isNullOrEmpty(
-                System.getenv().get("IMPROVED_DEPENDENCY_RESOLUTION"));
+        IMPROVED_DEPENDENCY_RESOLUTION =
+                !Strings.isNullOrEmpty(System.getenv().get("IMPROVED_DEPENDENCY_RESOLUTION"));
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
@@ -173,8 +172,7 @@ public final class GradleTestProject implements TestRule {
     private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     private final String name;
-    @Nullable
-    private File testDir;
+    @Nullable private File testDir;
     private File sourceDir;
     private File buildFile;
     private File localProp;
@@ -182,16 +180,14 @@ public final class GradleTestProject implements TestRule {
 
     private final Collection<String> gradleProperties;
 
-    @Nullable
-    private final TestProject testProject;
+    @Nullable private final TestProject testProject;
 
     private final String targetGradleVersion;
 
     private final boolean useJack;
     private final boolean minifyEnabled;
     private final boolean improvedDependencyEnabled;
-    @Nullable
-    private final String buildToolsVersion;
+    @Nullable private final String buildToolsVersion;
 
     @Nullable private final BenchmarkRecorder benchmarkRecorder;
     @NonNull private final Path relativeProfileDirectory;
@@ -236,12 +232,11 @@ public final class GradleTestProject implements TestRule {
 
     /**
      * Create a GradleTestProject representing a subProject of another GradleTestProject.
+     *
      * @param subProject name of the subProject.
      * @param rootProject root GradleTestProject.
      */
-    private GradleTestProject(
-            @NonNull String subProject,
-            @NonNull GradleTestProject rootProject) {
+    private GradleTestProject(@NonNull String subProject, @NonNull GradleTestProject rootProject) {
         name = subProject;
 
         testDir = new File(rootProject.getTestDir(), subProject);
@@ -290,8 +285,6 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-
-
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
@@ -337,7 +330,8 @@ public final class GradleTestProject implements TestRule {
 
             if (totalLen > MAX_TEST_NAME_DIR_WINDOWS) {
                 String hash =
-                        Hashing.sha1().hashString(classDir + methodDir, Charsets.US_ASCII)
+                        Hashing.sha1()
+                                .hashString(classDir + methodDir, Charsets.US_ASCII)
                                 .toString();
                 classDir = hash.substring(0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS));
                 methodDir = null;
@@ -377,13 +371,9 @@ public final class GradleTestProject implements TestRule {
 
         if (testProject != null) {
             testProject.write(
-                    testDir,
-                    testProject.containsFullBuildScript() ? "" : getGradleBuildscript());
+                    testDir, testProject.containsFullBuildScript() ? "" : getGradleBuildscript());
         } else {
-            Files.write(
-                    getGradleBuildscript(),
-                    buildFile,
-                    Charsets.UTF_8);
+            Files.write(getGradleBuildscript(), buildFile, Charsets.UTF_8);
         }
 
         localProp = createLocalProp(testDir, ANDROID_HOME, ndkDir);
@@ -395,8 +385,10 @@ public final class GradleTestProject implements TestRule {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
         for (Path repo : getRepos()) {
-            script.append(String.format("maven { url '%s' }\n",
-                    repo.toAbsolutePath().toString().replace("\\", "\\\\")));
+            script.append(
+                    String.format(
+                            "maven { url '%s' }\n",
+                            repo.toAbsolutePath().toString().replace("\\", "\\\\")));
         }
         script.append("}\n");
         return script.toString();
@@ -445,9 +437,7 @@ public final class GradleTestProject implements TestRule {
                 SUPPORT_LIB_MIN_SDK);
     }
 
-    /**
-     * Create a GradleTestProject representing a subproject.
-     */
+    /** Create a GradleTestProject representing a subproject. */
     public GradleTestProject getSubproject(String name) {
         if (name.startsWith(":")) {
             name = name.substring(1);
@@ -455,9 +445,7 @@ public final class GradleTestProject implements TestRule {
         return new GradleTestProject(name, rootProject);
     }
 
-    /**
-     * Return the name of the test project.
-     */
+    /** Return the name of the test project. */
     public String getName() {
         return name;
     }
@@ -470,30 +458,22 @@ public final class GradleTestProject implements TestRule {
         return testDir;
     }
 
-    /**
-     * Return the path to the default Java main source dir.
-     */
+    /** Return the path to the default Java main source dir. */
     public File getMainSrcDir() {
         return FileUtils.join(getTestDir(), "src", "main", "java");
     }
 
-    /**
-     * Return the build.gradle of the test project.
-     */
+    /** Return the build.gradle of the test project. */
     public File getSettingsFile() {
         return new File(getTestDir(), "settings.gradle");
     }
 
-    /**
-     * Return the build.gradle of the test project.
-     */
+    /** Return the build.gradle of the test project. */
     public File getBuildFile() {
         return buildFile;
     }
 
-    /**
-     * Change the build file used for execute.  Should be run after @Before/@BeforeClass.
-     */
+    /** Change the build file used for execute. Should be run after @Before/@BeforeClass. */
     public void setBuildFile(@Nullable String buildFileName) {
         checkNotNull(buildFile, "Cannot call selectBuildFile before test directory is created.");
         if (buildFileName == null) {
@@ -503,27 +483,20 @@ public final class GradleTestProject implements TestRule {
         assertThat(buildFile).exists();
     }
 
-
-    /**
-     * Return the output directory from Android plugins.
-     */
+    /** Return the output directory from Android plugins. */
     public File getOutputDir() {
         return new File(
                 getTestDir(), Joiner.on(File.separator).join("build", AndroidProject.FD_OUTPUTS));
     }
 
-    /**
-     * Return the output directory from Android plugins.
-     */
+    /** Return the output directory from Android plugins. */
     public File getIntermediatesDir() {
         return new File(
                 getTestDir(),
                 Joiner.on(File.separator).join("build", AndroidProject.FD_INTERMEDIATES));
     }
 
-    /**
-     * Return a File under the output directory from Android plugins.
-     */
+    /** Return a File under the output directory from Android plugins. */
     public File getOutputFile(String path) {
         return new File(getOutputDir(), path);
     }
@@ -542,10 +515,8 @@ public final class GradleTestProject implements TestRule {
     /**
      * Return the output apk File from the application plugin for the given dimension.
      *
-     * Expected dimensions orders are:
-     *   - product flavors
-     *   - build type
-     *   - other modifiers (e.g. "unsigned", "aligned")
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
      */
     public File getApk(String... dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
@@ -564,10 +535,8 @@ public final class GradleTestProject implements TestRule {
     /**
      * Return the output aar File from the library plugin for the given dimension.
      *
-     * Expected dimensions orders are:
-     *   - product flavors
-     *   - build type
-     *   - other modifiers (e.g. "unsigned", "aligned")
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
      */
     public File getAar(String... dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
@@ -612,21 +581,17 @@ public final class GradleTestProject implements TestRule {
         return ANDROID_HOME;
     }
 
-    /**
-     * Returns the NDK dir
-     */
+    /** Returns the NDK dir */
     public File getNdkDir() {
         return ndkDir;
     }
 
-    /**
-     * Returns a string that contains the gradle buildscript content
-     */
+    /** Returns a string that contains the gradle buildscript content */
     public static String getGradleBuildscript() {
-        return "apply from: \"../commonHeader.gradle\"\n" +
-               "buildscript { apply from: \"../commonBuildScript.gradle\" }\n" +
-               "\n" +
-               "apply from: \"../commonLocalRepo.gradle\"\n";
+        return "apply from: \"../commonHeader.gradle\"\n"
+                + "buildscript { apply from: \"../commonBuildScript.gradle\" }\n"
+                + "\n"
+                + "apply from: \"../commonLocalRepo.gradle\"\n";
     }
 
     @Nullable
@@ -646,7 +611,7 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project.  Throws exception on failure.
+     * Runs gradle on the project. Throws exception on failure.
      *
      * @param tasks Variadic list of tasks to execute.
      */
@@ -654,13 +619,12 @@ public final class GradleTestProject implements TestRule {
         lastBuildResult = executor().run(tasks);
     }
 
-
     public void execute(@NonNull List<String> arguments, @NonNull String... tasks) {
         lastBuildResult = executor().withArguments(arguments).run(tasks);
     }
 
     public GradleConnectionException executeExpectingFailure(@NonNull String... tasks) {
-        lastBuildResult =  executor().expectFailure().run(tasks);
+        lastBuildResult = executor().expectFailure().run(tasks);
         return lastBuildResult.getException();
     }
 
@@ -673,10 +637,9 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project, and returns the project model.  Throws exception on failure.
+     * Runs gradle on the project, and returns the project model. Throws exception on failure.
      *
      * @param tasks Variadic list of tasks to execute.
-     *
      * @return the AndroidProject model for the project.
      */
     @NonNull
@@ -686,12 +649,11 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project, and returns the model of the specified type.
-     * Throws exception on failure.
+     * Runs gradle on the project, and returns the model of the specified type. Throws exception on
+     * failure.
      *
      * @param modelClass Class of the model to return
      * @param tasks Variadic list of tasks to execute.
-     *
      * @return the model for the project with the specified type.
      */
     @NonNull
@@ -701,11 +663,10 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project, and returns the project model.  Throws exception on failure.
+     * Runs gradle on the project, and returns the project model. Throws exception on failure.
      *
      * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      * @param tasks Variadic list of tasks to execute.
-     *
      * @return the AndroidProject model for the project.
      */
     @NonNull
@@ -715,29 +676,24 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project, and returns the project model.  Throws exception on failure.
+     * Runs gradle on the project, and returns the project model. Throws exception on failure.
      *
      * @param modelClass Class of the model to return
      * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      * @param tasks Variadic list of tasks to execute.
-     *
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public <T> T executeAndReturnModel(
-            Class<T> modelClass,
-            int modelLevel,
-            String... tasks) {
+    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks) {
         lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle(modelClass);
     }
 
     /**
-     * Runs gradle on the project, and returns a project model for each sub-project.
-     * Throws exception on failure.
+     * Runs gradle on the project, and returns a project model for each sub-project. Throws
+     * exception on failure.
      *
      * @param tasks Variadic list of tasks to execute.
-     *
      * @return the AndroidProject model for the project.
      */
     @NonNull
@@ -746,18 +702,15 @@ public final class GradleTestProject implements TestRule {
         return model().getMulti();
     }
 
-    /**
-     * Returns the latest build result.
-     */
+    /** Returns the latest build result. */
     public GradleBuildResult getBuildResult() {
         return lastBuildResult;
-
     }
 
     /**
-     * Create a File object.  getTestDir will be the base directory if a relative path is supplied.
+     * Create a File object. getTestDir will be the base directory if a relative path is supplied.
      *
-     * @param path Full path of the file.  May be a relative path.
+     * @param path Full path of the file. May be a relative path.
      */
     public File file(String path) {
         File result = new File(FileUtils.toSystemDependentPath(path));
@@ -768,9 +721,7 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-    /**
-     * Returns a Gradle project Connection
-     */
+    /** Returns a Gradle project Connection */
     @NonNull
     private ProjectConnection getProjectConnection() {
         if (projectConnection != null) {
@@ -799,9 +750,8 @@ public final class GradleTestProject implements TestRule {
     }
 
     private static File createLocalProp(
-            @NonNull File project,
-            @NonNull File sdkDir,
-            @Nullable File ndkDir) throws IOException, StreamException {
+            @NonNull File project, @NonNull File sdkDir, @Nullable File ndkDir)
+            throws IOException, StreamException {
         checkNotNull(project, "project");
         checkNotNull(sdkDir, "sdkDir");
 
