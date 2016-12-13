@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.component
 
 import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.builder.model.AndroidProject
@@ -31,6 +32,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 /**
  * Test various options can be set without necessarily using it.
  */
+@Category(FailsUnderBazel) // NDK
 @CompileStatic
 public class ComponentDslTest {
 

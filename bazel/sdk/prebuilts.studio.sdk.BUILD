@@ -36,6 +36,9 @@ filegroup(
     srcs = glob(
         include = ["*/build-tools/24.0.3/**"],
     ),
+    visibility = [
+        "//tools/base/build-system/integration-test:__pkg__",
+    ],
 )
 
 filegroup(

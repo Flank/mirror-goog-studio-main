@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.OutputFile
+import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -29,6 +30,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.android.builder.core.BuilderConstants.DEBUG
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertTrue
 /**
  * Test drive for the CombinedAbiDensityPureSplits samples test.
  */
+@Category(FailsUnderBazel)
 class CombinedAbiDensityPureSplits {
     static AndroidProject model
 

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -31,10 +30,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** test for flavored dependency on a different package. */
-@Category(FailsUnderBazel.class)
 public class AppWithNonExistentResolutionStrategyForAarTest {
 
     @ClassRule

@@ -109,9 +109,10 @@ public final class GradleTestProject implements TestRule {
 
     private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
 
-    static final File BUILD_DIR;
-    static final File OUT_DIR;
-    static final File GRADLE_USER_HOME;
+    public static final File BUILD_DIR;
+    public static final File OUT_DIR;
+    public static final File GRADLE_USER_HOME;
+    public static final File ANDROID_SDK_HOME;
 
     static {
         assertThat(TEST_PROJECT_DIR).isDirectory();
@@ -121,6 +122,7 @@ public final class GradleTestProject implements TestRule {
         BUILD_DIR = new File(buildDirPath);
         OUT_DIR = new File(BUILD_DIR, "tests");
         GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
+        ANDROID_SDK_HOME = new File(BUILD_DIR,"ANDROID_SDK_HOME");
 
         boolean useNightly =
                 Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));

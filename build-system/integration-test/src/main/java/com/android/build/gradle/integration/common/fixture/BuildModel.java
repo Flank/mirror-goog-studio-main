@@ -145,7 +145,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      */
     private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) {
         ModelContainer<T> container =
-                buildModel(projectConnection, new GetAndroidModelAction<>(modelClass), modelLevel);
+                buildModel(new GetAndroidModelAction<>(modelClass), modelLevel);
 
         // ensure there was only one project
         assertThat(container.getModelMap())
@@ -183,7 +183,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         boolean isMultithreaded = !NativeAndroidProject.class.equals(modelClass);
 
         return buildModel(
-                projectConnection,
                 new GetAndroidModelAction<>(modelClass, isMultithreaded),
                 modelLevel);
     }
@@ -191,26 +190,26 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /** Return a list of all task names of the project. */
     @NonNull
     public List<String> getTaskList() {
-        GradleProject project = projectConnection.getModel(GradleProject.class);
-        return project.getTasks().stream()
-                .map(GradleTask::getName)
-                .collect(Collectors.toList());
+        GradleProject project =
+                projectConnection
+                        .model(GradleProject.class)
+                        .withArguments(getCommonArguments())
+                        .get();
 
+        return project.getTasks().stream().map(GradleTask::getName).collect(Collectors.toList());
     }
 
     /**
      * Returns a project model for each sub-project;
      *
-     * @param connection the opened ProjectConnection
      * @param action     the build action to gather the model
      * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      */
     @NonNull
     private <T> ModelContainer<T> buildModel(
-            @NonNull ProjectConnection connection,
             @NonNull BuildAction<ModelContainer<T>> action,
             int modelLevel) {
-        BuildActionExecuter<ModelContainer<T>> executor = connection.action(action);
+        BuildActionExecuter<ModelContainer<T>> executor = this.projectConnection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(5);
         arguments.addAll(getCommonArguments());
@@ -252,8 +251,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         // See ProfileCapturer javadoc for explanation.
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
-            executor.withArguments(Iterables.toArray(arguments, String.class));
-            return executor.run();
+            return executor.withArguments(arguments).run();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

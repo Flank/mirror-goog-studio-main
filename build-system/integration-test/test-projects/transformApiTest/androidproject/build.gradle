@@ -9,16 +9,10 @@ buildscript {
         maven {
             url='../testrepo'
         }
-        maven { url System.env.CUSTOM_REPO }
     }
     dependencies {
         classpath 'com.example.transformapi:jarjarplugin:0.1'
     }
-}
-
-
-if (buildToolsVersion < '21.0.0') {
-    println ("Warning : this sample requires build-tools version 21 or above")
 }
 
 apply plugin: 'com.android.application'
@@ -33,10 +27,6 @@ android {
     minSdkVersion 16
     targetSdkVersion 20
   }
-}
-
-repositories {
-  maven { url System.env.CUSTOM_REPO }
 }
 
 dependencies {

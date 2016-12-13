@@ -66,7 +66,7 @@ def _groovy_jar_impl(ctx):
       command = cmd
   )
 
-_groovy_jar = rule(
+groovy_jar = rule(
     attrs = {
         "srcs": attr.label_list(
             non_empty = True,
@@ -264,7 +264,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
         name = stub,
         srcs = groovies
     )
-    _groovy_jar(
+    groovy_jar(
         name = name + ".groovies",
         srcs = groovies,
         deps = ["@local_jdk//:langtools-neverlink"] + deps + [":" + name + ".javas"],

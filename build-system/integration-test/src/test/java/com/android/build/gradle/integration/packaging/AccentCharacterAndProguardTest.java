@@ -34,7 +34,7 @@ import org.junit.experimental.categories.Category;
  *
  * <p>See http://b.android.com/221057
  */
-@Category(FailsUnderBazel.class)
+@Category(FailsUnderBazel.class) // We need a way to set LC_ALL in the sandbox.
 public class AccentCharacterAndProguardTest {
 
     @Rule
