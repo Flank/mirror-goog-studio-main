@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -102,10 +101,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
         Files.copy(
                 project.file("WordPress/gradle.properties-example").toPath(),
                 project.file("WordPress/gradle.properties").toPath());
-
-        Files.write(
-                project.file("local.properties").toPath(),
-                ImmutableList.of("sdk.dir=" + SdkHelper.findSdkDir()));
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
