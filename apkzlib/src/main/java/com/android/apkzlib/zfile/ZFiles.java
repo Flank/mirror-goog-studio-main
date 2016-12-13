@@ -16,12 +16,10 @@
 
 package com.android.apkzlib.zfile;
 
-import com.android.apkzlib.sign.FullApkSignExtension;
 import com.android.apkzlib.sign.ManifestGenerationExtension;
-import com.android.apkzlib.sign.SignatureExtension;
+import com.android.apkzlib.sign.SigningExtension;
 import com.android.apkzlib.zip.AlignmentRule;
 import com.android.apkzlib.zip.AlignmentRules;
-import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.apkzlib.zip.ZFileOptions;
 import java.io.File;
@@ -118,35 +116,12 @@ public class ZFiles {
 
         if (key != null && certificate != null) {
             try {
-                if (v1SigningEnabled) {
-                    String apkSignedHeaderValue =
-                            (v2SigningEnabled)
-                                    ? SignatureExtension
-                                            .SIGNATURE_ANDROID_APK_SIGNER_VALUE_WHEN_V2_SIGNED
-                                    : null;
-                    SignatureExtension jarSignatureSchemeExt = new SignatureExtension(manifestExt,
-                            minSdkVersion, certificate, key,
-                            apkSignedHeaderValue);
-                    jarSignatureSchemeExt.register();
-                }
-                if (v2SigningEnabled) {
-                    FullApkSignExtension apkSignatureSchemeV2Ext =
-                            new FullApkSignExtension(
-                                    zfile,
-                                    minSdkVersion,
-                                    certificate,
-                                    key);
-                    apkSignatureSchemeV2Ext.register();
-                }
-                if (!v1SigningEnabled) {
-                    // Remove v1 signature files from the APK
-                    for (StoredEntry entry : zfile.entries()) {
-                        if (SignatureExtension.isIgnoredFile(
-                                entry.getCentralDirectoryHeader().getName())) {
-                            entry.delete();
-                        }
-                    }
-                }
+                new SigningExtension(
+                        minSdkVersion,
+                        certificate,
+                        key,
+                        v1SigningEnabled,
+                        v2SigningEnabled).register(zfile);
             } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                 throw new IOException("Failed to create signature extensions", e);
             }

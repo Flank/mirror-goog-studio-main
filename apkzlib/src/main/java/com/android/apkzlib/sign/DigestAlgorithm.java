@@ -40,14 +40,15 @@ public enum DigestAlgorithm {
     SHA256("SHA-256", "SHA-256");
 
     /**
-     * API level which supports {@link #SHA256} with {@link SignatureAlgorithm#RSA}.
+     * API level which supports {@link #SHA256} with {@link SignatureAlgorithm#RSA} and
+     * {@link SignatureAlgorithm#ECDSA}.
      */
-    public static final int API_SHA_256_RSA = 18;
+    public static final int API_SHA_256_RSA_AND_ECDSA = 18;
 
     /**
      * API level which supports {@link #SHA256} for all {@link SignatureAlgorithm}s.
      *
-     * <p>Before that, SHA256 can only be used with RSA.
+     * <p>Before that, SHA256 can only be used with RSA and ECDSA.
      */
     public static final int API_SHA_256_ALL_ALGORITHMS = 21;
 
@@ -79,27 +80,5 @@ public enum DigestAlgorithm {
         this.messageDigestName = messageDigestName;
         this.entryAttributeName = attributeName + "-Digest";
         this.manifestAttributeName = attributeName + "-Digest-Manifest";
-    }
-
-    /**
-     * Finds the best digest algorithm applicable for a given SDK.
-     *
-     * @param minSdk the minimum SDK
-     * @param signatureAlgorithm signature algorithm used
-     * @return the best algorithm found
-     */
-    @Nonnull
-    public static DigestAlgorithm findBest(
-            int minSdk,
-            @Nonnull SignatureAlgorithm signatureAlgorithm) {
-        if (signatureAlgorithm == SignatureAlgorithm.RSA) {
-            // PKCS #7 RSA signatures with SHA-256 are
-            // supported only since API Level 18 (JB MR2).
-            return minSdk >= API_SHA_256_RSA ? SHA256 : SHA1;
-        } else {
-            // PKCS #7 ECDSA and DSA signatures with SHA-256
-            // are supported only since API Level 21 (Android L).
-            return minSdk >= API_SHA_256_ALL_ALGORITHMS ? SHA256 : SHA1;
-        }
     }
 }

@@ -89,12 +89,7 @@ class SigningTest {
         parameters.add([
                 "dsa_keystore.jks",
                 "CERT.DSA",
-                // TODO: Switch back to SignatureAlgorithm.DSA.minSdkVersion once packaging code
-                // uses apksig library.
-                // DSA signatures are supported for APKs since API Level 1. However, packaging
-                // code outputs a form of DSA signatures which aren't supported prior to API
-                // Level 9.
-                9] as Object[]);
+                SignatureAlgorithm.DSA.minSdkVersion] as Object[]);
         parameters.add([
                 "ec_keystore.jks",
                 "CERT.EC",
@@ -269,7 +264,7 @@ class SigningTest {
     public void 'SHA algorithm change'() throws Exception {
         File apk = project.getApk("debug")
 
-        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA) {
+        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
             execute("assembleDebug")
 
             assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
@@ -282,13 +277,14 @@ class SigningTest {
             TestFileUtils.searchAndReplace(
                     project.buildFile,
                     "minSdkVersion \\d+",
-                    "minSdkVersion $DigestAlgorithm.API_SHA_256_RSA")
+                    "minSdkVersion $DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA")
         }
 
         TestUtils.waitForFileSystemTick()
         execute("assembleDebug")
 
-        if (certEntryName.endsWith(SignatureAlgorithm.RSA.name())) {
+        if ((certEntryName.endsWith(SignatureAlgorithm.RSA.keyAlgorithm))
+                || (certEntryName.endsWith(SignatureAlgorithm.ECDSA.keyAlgorithm))) {
             assertThatApk(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
             assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
             assertThatApk(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
@@ -329,10 +325,10 @@ class SigningTest {
     public void 'SHA algorithm change - on device'() throws Exception {
         List<Matcher<AndroidVersion>> matchers = [
                 AndroidVersionMatcher.forRange(
-                        Range.lessThan(DigestAlgorithm.API_SHA_256_RSA)),
+                        Range.lessThan(DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA)),
                 AndroidVersionMatcher.forRange(
                         Range.closedOpen(
-                                DigestAlgorithm.API_SHA_256_RSA,
+                                DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA,
                                 DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS)),
                 AndroidVersionMatcher.forRange(
                         Range.atLeast(DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS))
@@ -341,7 +337,7 @@ class SigningTest {
         List<IDevice> devices = matchers.collect{ m -> adb.getDevice(m)}
 
         // Check APK with minimum SDK 1. Skip this for ECDSA.
-        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA) {
+        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
             for (IDevice device : devices) {
                 checkOnDevice(device)
             }
@@ -349,7 +345,7 @@ class SigningTest {
             TestFileUtils.searchAndReplace(
                     project.buildFile,
                     "minSdkVersion \\d+",
-                    "minSdkVersion $DigestAlgorithm.API_SHA_256_RSA")
+                    "minSdkVersion $DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA")
         }
 
         // Check APK with minimum SDK 18. Build script was set to 18 from the start or was just

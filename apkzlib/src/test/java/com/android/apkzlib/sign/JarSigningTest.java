@@ -55,9 +55,7 @@ public class JarSigningTest {
             ApkZLibPair<PrivateKey, X509Certificate> p =
                     SignatureTestUtils.generateSignaturePre18();
 
-            SignatureExtension signatureExtension =
-                    new SignatureExtension(manifestExtension, 12, p.v2, p.v1, null);
-            signatureExtension.register();
+            new SigningExtension(12, p.v2, p.v1, true, false).register(zf);
         }
 
         try (ZFile verifyZFile = new ZFile(zipFile)) {
@@ -85,7 +83,7 @@ public class JarSigningTest {
         try (ZFile zf2 = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension("Merry", "Christmas");
             me.register(zf2);
-            new SignatureExtension(me, 10, p.v2, p.v1, null).register();
+            new SigningExtension(10, p.v2, p.v1, true, false).register(zf2);
         }
 
         try (ZFile zf3 = new ZFile(zipFile)) {
@@ -121,7 +119,7 @@ public class JarSigningTest {
             Attributes signAttrs = signature.getAttributes("directory/file");
             assertNotNull(signAttrs);
             assertEquals(1, signAttrs.size());
-            assertEquals("OOQgIEXBissIvva3ydRoaXk29Rk=", signAttrs.getValue("SHA1-Digest"));
+            assertEquals("LGSOwy4uGcUWoc+ZhS8ukzmf0fY=", signAttrs.getValue("SHA1-Digest"));
 
             StoredEntry rsaEntry = zf3.get("META-INF/CERT.RSA");
             assertNotNull(rsaEntry);
@@ -141,7 +139,7 @@ public class JarSigningTest {
         try (ZFile zf2 = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension("Merry", "Christmas");
             me.register(zf2);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf2);
         }
 
         try (ZFile zf3 = new ZFile(zipFile)) {
@@ -178,7 +176,7 @@ public class JarSigningTest {
             Attributes signAttrs = signature.getAttributes("directory/file");
             assertNotNull(signAttrs);
             assertEquals(1, signAttrs.size());
-            assertEquals("QjupZsopQM/01O6+sWHqH64ilMmoBEtljg9VEqN6aI4=",
+            assertEquals("dBnaLpqNjmUnLlZF4tNqOcDWL8wy8Tsw1ZYFqTZhjIs=",
                     signAttrs.getValue("SHA-256-Digest"));
 
             StoredEntry ecdsaEntry = zf3.get("META-INF/CERT.EC");
@@ -196,9 +194,7 @@ public class JarSigningTest {
 
             ApkZLibPair<PrivateKey, X509Certificate> p = SignatureTestUtils.generateSignaturePre18();
 
-            FullApkSignExtension signatureExtension =
-                    new FullApkSignExtension(zf, 12, p.v2, p.v1);
-            signatureExtension.register();
+            new SigningExtension(12, p.v2, p.v1, false, true).register(zf);
         }
 
         try (ZFile verifyZFile = new ZFile(zipFile)) {
@@ -227,7 +223,7 @@ public class JarSigningTest {
             zf1.add(file1Name, new ByteArrayInputStream(file1Contents));
             ManifestGenerationExtension me = new ManifestGenerationExtension(builtBy, createdBy);
             me.register(zf1);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf1);
 
             zf1.update();
 
@@ -279,7 +275,7 @@ public class JarSigningTest {
         try (ZFile zf2 = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension(builtBy, createdBy);
             me.register(zf2);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf2);
 
             zf2.add(file1Name, new ByteArrayInputStream(file1Contents));
 
@@ -312,7 +308,7 @@ public class JarSigningTest {
         try (ZFile zf = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
             me.register(zf);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf);
 
             zf.add(fileName, new ByteArrayInputStream(fileContents));
         }
@@ -327,7 +323,7 @@ public class JarSigningTest {
         try (ZFile zf = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
             me.register(zf);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf);
         }
 
         /*
@@ -364,7 +360,7 @@ public class JarSigningTest {
         try (ZFile zf = new ZFile(zipFile)) {
             ManifestGenerationExtension me = new ManifestGenerationExtension("I", "Android");
             me.register(zf);
-            new SignatureExtension(me, 21, p.v2, p.v1, null).register();
+            new SigningExtension(21, p.v2, p.v1, true, false).register(zf);
         }
 
         /*
