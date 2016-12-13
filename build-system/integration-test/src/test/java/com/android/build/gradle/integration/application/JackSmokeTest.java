@@ -6,38 +6,27 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.util.List;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Simple Jack test for a few test project.
- */
+/** Simple Jack test for a few test project. */
 public class JackSmokeTest {
 
-    @Rule
-    public Adb adb = new Adb();
+    @ClassRule
+    public static GradleTestProject sBasic =
+            GradleTestProject.builder().fromTestProject("basic").withJack(true).create();
 
     @ClassRule
-    public static GradleTestProject sBasic = GradleTestProject.builder().withName("basic")
-            .fromTestProject("basic").create();
+    public static GradleTestProject sMinify =
+            GradleTestProject.builder().fromTestProject("minify").withJack(true).create();
 
     @ClassRule
-    public static GradleTestProject sMinify = GradleTestProject.builder().withName("minify")
-            .fromTestProject("minify").create();
-
-    @ClassRule
-    public static GradleTestProject sMultiDex = GradleTestProject.builder().withName("multiDex")
-            .fromTestProject("multiDex").create();
-
-    private static final List<String> JACK_OPTIONS = ImmutableList
-            .of("-Pcom.android.build.gradle.integratonTest.useJack=true",
-                    "-PCUSTOM_BUILDTOOLS=" + GradleTestProject.UPCOMING_BUILD_TOOL_VERSION);
+    public static GradleTestProject sMultiDex =
+            GradleTestProject.builder().fromTestProject("multiDex").withJack(true).create();
 
     @AfterClass
     public static void cleanUp() {
@@ -46,11 +35,12 @@ public class JackSmokeTest {
         sMultiDex = null;
     }
 
+    @Rule public Adb adb = new Adb();
+
     @Test
     public void assembleBasicDebug() throws Exception {
-        GradleBuildResult result = sBasic
-                .executor().withArguments(JACK_OPTIONS)
-                .run("clean", "assembleDebug", "assembleDebugAndroidTest");
+        GradleBuildResult result =
+                sBasic.executor().run("clean", "assembleDebug", "assembleDebugAndroidTest");
         assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
 
         assertThat(sBasic.getApk("debug")).contains("classes.dex");
@@ -58,16 +48,21 @@ public class JackSmokeTest {
 
     @Test
     public void assembleMinifyDebug() {
-        GradleBuildResult result = sMinify.executor().withArguments(JACK_OPTIONS)
-                .run("clean", "assembleDebug", "assembleDebugAndroidTest");
+        GradleBuildResult result =
+                sMinify.executor().run("clean", "assembleDebug", "assembleDebugAndroidTest");
         assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
     }
 
     @Test
     public void assembleMultiDexDebug() {
-        GradleBuildResult result = sMultiDex.executor().withArguments(JACK_OPTIONS)
-                .run("clean", "assembleIcsDebugAndroidTest", "assembleDebug",
-                        "assembleLollipopDebugAndroidTest");
+        GradleBuildResult result =
+                sMultiDex
+                        .executor()
+                        .run(
+                                "clean",
+                                "assembleIcsDebugAndroidTest",
+                                "assembleDebug",
+                                "assembleLollipopDebugAndroidTest");
         assertThat(result.getTask(":transformJackAndJavaSourcesWithJackCompileForIcsDebug"))
                 .wasExecuted();
         assertThat(result.getTask(":transformJackAndJavaSourcesWithJackCompileForLollipopDebug"))
@@ -80,17 +75,16 @@ public class JackSmokeTest {
     @Test
     @Category(DeviceTests.class)
     public void basicConnectedCheck() {
-        sBasic.executeConnectedCheck(JACK_OPTIONS);
+        sBasic.executeConnectedCheck();
     }
 
     @Test
     @Category(DeviceTests.class)
     public void multiDexConnectedCheck() throws IOException {
-        sMultiDex.execute(JACK_OPTIONS, "assembleDebug",
-                "assembleIcsDebugAndroidTest",
-                "assembleLollipopDebugAndroidTest");
+        sMultiDex.execute(
+                "assembleDebug", "assembleIcsDebugAndroidTest", "assembleLollipopDebugAndroidTest");
         adb.exclusiveAccess();
-        sMultiDex.execute(JACK_OPTIONS, "connectedCheck");
+        sMultiDex.execute("connectedCheck");
     }
 
     @Test
@@ -100,12 +94,13 @@ public class JackSmokeTest {
 
     @Test
     public void minifyUnitTestsWithJack() {
-        sMinify.execute(JACK_OPTIONS, "clean", "testMinified");
+        sMinify.execute("clean", "testMinified");
 
         // Make sure javac was run.
         assertThat(sMinify.file("build/intermediates/classes/minified")).exists();
 
         // Make sure jack was not run.
-        assertThat(sMinify.file("build/intermediates/transforms/preDexJackRuntimeLibraries")).doesNotExist();
+        assertThat(sMinify.file("build/intermediates/transforms/preDexJackRuntimeLibraries"))
+                .doesNotExist();
     }
 }

@@ -209,7 +209,6 @@ public final class GradleTestProject implements TestRule {
     private final String targetGradleVersion;
 
     private final boolean useJack;
-    private final boolean minifyEnabled;
     private final boolean improvedDependencyEnabled;
     @Nullable private final String buildToolsVersion;
 
@@ -226,7 +225,6 @@ public final class GradleTestProject implements TestRule {
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
-            boolean minifyEnabled,
             boolean useJack,
             boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
@@ -239,7 +237,6 @@ public final class GradleTestProject implements TestRule {
         this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
-        this.minifyEnabled = minifyEnabled;
         this.improvedDependencyEnabled = improvedDependencyEnabled;
         this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
@@ -272,7 +269,6 @@ public final class GradleTestProject implements TestRule {
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
-        minifyEnabled = false;
         useJack = false;
         improvedDependencyEnabled = rootProject.isImprovedDependencyEnabled();
         openConnections = null;
@@ -418,9 +414,10 @@ public final class GradleTestProject implements TestRule {
                 generateLocalRepoScript(),
                 new File(testDir.getParent(), COMMON_LOCAL_REPO),
                 StandardCharsets.UTF_8);
-        Files.copy(
-                new File(TEST_PROJECT_DIR, COMMON_HEADER),
-                new File(testDir.getParent(), COMMON_HEADER));
+        Files.write(
+                generateCommonHeader(),
+                new File(testDir.getParent(), COMMON_HEADER),
+                StandardCharsets.UTF_8);
         Files.copy(
                 new File(TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT),
                 new File(testDir.getParent(), COMMON_BUILD_SCRIPT));
@@ -434,6 +431,38 @@ public final class GradleTestProject implements TestRule {
 
         localProp = createLocalProp();
         createGradleProp();
+    }
+
+    @NonNull
+    private String generateCommonHeader() {
+        return String.format(
+                "ext {\n"
+                + "    buildToolsVersion = '%1$s'\n"
+                + "    latestCompileSdk = %2$s\n"
+                + "    useJack = %3$s\n"
+                + "\n"
+                + "    plugins.withId('com.android.application') {\n"
+                + "        apply plugin: 'devicepool'\n"
+                + "    }\n"
+                + "    plugins.withId('com.android.library') {\n"
+                + "        apply plugin: 'devicepool'\n"
+                + "    }\n"
+                + "    plugins.withId('com.android.model.application') {\n"
+                + "        apply plugin: 'devicepool'\n"
+                + "    }\n"
+                + "    plugins.withId('com.android.model.library') {\n"
+                + "        apply plugin: 'devicepool'\n"
+                + "    }\n"
+                + "}\n"
+                + "\n"
+                + "plugins.withId(\"com.android.application\") { plugin ->\n"
+                + "    if (ext.useJack != null) {\n"
+                + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
+                + "    }\n"
+                + "}",
+                DEFAULT_BUILD_TOOL_VERSION,
+                DEFAULT_COMPILE_SDK_VERSION,
+                useJack);
     }
 
     @NonNull
@@ -847,10 +876,6 @@ public final class GradleTestProject implements TestRule {
 
     boolean isUseJack() {
         return useJack;
-    }
-
-    boolean isMinifyEnabled() {
-        return minifyEnabled;
     }
 
     public boolean isImprovedDependencyEnabled() {

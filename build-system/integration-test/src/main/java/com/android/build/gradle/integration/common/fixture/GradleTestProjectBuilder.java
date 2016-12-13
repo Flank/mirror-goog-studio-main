@@ -41,7 +41,6 @@ public final class GradleTestProjectBuilder {
     private boolean useJack = GradleTestProject.USE_JACK;
     private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
-    private boolean useMinify = false;
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
@@ -56,7 +55,6 @@ public final class GradleTestProjectBuilder {
         return new GradleTestProject(
                 name,
                 testProject,
-                useMinify,
                 useJack,
                 improvedDependencyEnabled,
                 targetGradleVersion,
@@ -201,20 +199,6 @@ public final class GradleTestProjectBuilder {
         public boolean containsFullBuildScript() {
             return true;
         }
-    }
-
-    /** Returns the NDK folder as built from the Android source tree. */
-    private static File findNdkDir() {
-        String androidHome = System.getenv("ANDROID_NDK_HOME");
-        if (androidHome != null) {
-            File f = new File(androidHome);
-            if (f.isDirectory()) {
-                return f;
-            } else {
-                System.out.println("Failed to find NDK in ANDROID_NDK_HOME=" + androidHome);
-            }
-        }
-        return null;
     }
 
     /** Add all files in a directory to an AndroidTestApp. */

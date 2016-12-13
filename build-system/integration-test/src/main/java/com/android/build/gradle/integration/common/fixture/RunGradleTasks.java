@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
-
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -48,7 +47,6 @@ import org.gradle.tooling.ResultHandler;
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private final boolean isUseJack;
-    private final boolean isMinifyEnabled;
     @Nullable private final String buildToolsVersion;
     private final boolean isImproveDependencyEnabled;
 
@@ -66,7 +64,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
-        isMinifyEnabled = gradleTestProject.isMinifyEnabled();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
         isImproveDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     }
@@ -74,7 +71,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     /**
      * Assert that the task called fails.
      *
-     * The resulting exception is stored in the {@link GradleBuildResult}.
+     * <p>The resulting exception is stored in the {@link GradleBuildResult}.
      */
     public RunGradleTasks expectFailure() {
         isExpectingFailure = true;
@@ -88,7 +85,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * @param coldswapMode The cold swap strategy to use.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
-    public RunGradleTasks withInstantRun(int apiLevel,
+    public RunGradleTasks withInstantRun(
+            int apiLevel,
             @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
@@ -107,8 +105,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @NonNull IDevice device,
             @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
-        setInstantRunArgs(device.getVersion(),
-                Density.getEnum(device.getDensity()), coldswapMode, flags);
+        setInstantRunArgs(
+                device.getVersion(), Density.getEnum(device.getDensity()), coldswapMode, flags);
         return this;
     }
 
@@ -120,7 +118,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     /**
      * Call connected check.
      *
-     * Uses deviceCheck in the background to support the device pool.
+     * <p>Uses deviceCheck in the background to support the device pool.
      */
     public GradleBuildResult executeConnectedCheck() {
         return run("deviceCheck");
@@ -150,15 +148,16 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             args.add("-i"); // -i, --info Set log level to info.
         }
         args.add("-u"); // -u, --no-search-upward  Don't search in parent folders for a
-                        // settings.gradle file.
+        // settings.gradle file.
         args.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
-        args.add("-Pcom.android.build.gradle.integratonTest.useJack="
-                + Boolean.toString(isUseJack));
-        args.add("-Pcom.android.build.gradle.integratonTest.minifyEnabled="
-                + Boolean.toString(isMinifyEnabled));
+        args.add(
+                "-Pcom.android.build.gradle.integrationTest.useJack="
+                        + Boolean.toString(isUseJack));
         if (isImproveDependencyEnabled) {
-            args.add("-P" + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
-                    + "=true");
+            args.add(
+                    "-P"
+                            + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
+                            + "=true");
         }
         if (buildToolsVersion != null) {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
@@ -167,19 +166,19 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         if (!isSdkAutoDownload) {
             args.add(
                     String.format(
-                            "-P%s=%s",
-                            AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD,
-                            "false"));
+                            "-P%s=%s", AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD, "false"));
         }
 
         args.addAll(arguments);
 
-        System.out.println("[GradleTestProject] Executing tasks: gradle "
-                + Joiner.on(' ').join(args) + " " + Joiner.on(' ').join(tasksList));
+        System.out.println(
+                "[GradleTestProject] Executing tasks: gradle "
+                        + Joiner.on(' ').join(args)
+                        + " "
+                        + Joiner.on(' ').join(tasksList));
 
-
-        BuildLauncher launcher = projectConnection.newBuild()
-                .forTasks(Iterables.toArray(tasksList, String.class));
+        BuildLauncher launcher =
+                projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
 
@@ -205,7 +204,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
         return new GradleBuildResult(stdout, stderr, failure);
     }
-
 
     private static class WaitingResultHandler implements ResultHandler<Void> {
 
@@ -254,13 +252,15 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         withProperty(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, coldswapMode.name());
 
-        StringBuilder optionalSteps = new StringBuilder()
-                .append("-P").append("android.optional.compilation").append('=')
-                .append("INSTANT_DEV");
+        StringBuilder optionalSteps =
+                new StringBuilder()
+                        .append("-P")
+                        .append("android.optional.compilation")
+                        .append('=')
+                        .append("INSTANT_DEV");
         for (OptionalCompilationStep step : flags) {
             optionalSteps.append(',').append(step);
         }
         arguments.add(optionalSteps.toString());
     }
-
 }
