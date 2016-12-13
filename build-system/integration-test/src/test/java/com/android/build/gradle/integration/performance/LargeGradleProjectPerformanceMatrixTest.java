@@ -41,12 +41,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
+@Ignore
 public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
