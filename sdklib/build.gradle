@@ -108,6 +108,7 @@ task removeSdkComponents(type: JavaExec) {
       // 'extras;android;gapid;3',  // added 2016-11-18
       'extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-beta3',  // added 2016-11-21
       'extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta3',  // added 2016-11-21
+      'extras;android;support', // added 2016-12-13
     ]
 }
 
@@ -159,7 +160,6 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
                     'add-ons;addon-google_apis-google-22',
                     'add-ons;addon-google_apis-google-23',
                     'add-ons;addon-google_apis-google-24',
-                    'extras;android;support',
                     'extras;google;m2repository',
                     'extras;android;m2repository',
                     'cmake;3.6.3155560',
@@ -201,7 +201,6 @@ task initSdkForConnectedTests(type: JavaExec) {
             'add-ons;addon-google_apis-google-22',
             'add-ons;addon-google_apis-google-23',
             'add-ons;addon-google_apis-google-24',
-            'extras;android;support',
             'extras;google;m2repository',
             'extras;android;m2repository',
             'cmake;3.6.3155560',
@@ -233,7 +232,6 @@ task initSdkForPerformanceTests(type: JavaExec) {
             'add-ons;addon-google_apis-google-22',
             'add-ons;addon-google_apis-google-23',
             'add-ons;addon-google_apis-google-24',
-            'extras;android;support',
             'extras;google;m2repository',
             'extras;android;m2repository',
             'cmake;3.6.3155560',
