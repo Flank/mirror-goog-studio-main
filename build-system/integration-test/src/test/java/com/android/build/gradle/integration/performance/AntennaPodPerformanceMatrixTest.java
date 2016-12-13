@@ -196,7 +196,7 @@ public class AntennaPodPerformanceMatrixTest {
                     instantRunModel = InstantRunTestUtils.getInstantRunModel(models.get(":app"));
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
-                    project.executor()
+                    executor()
                             .withInstantRun(24, ColdswapMode.MULTIDEX)
                             .withEnableInfoLogging(false)
                             .run(tasks);
@@ -220,7 +220,7 @@ public class AntennaPodPerformanceMatrixTest {
                     break;
                 case GENERATE_SOURCES:
                     executor().run("clean");
-                    project.executor()
+                    executor()
                             .withArgument("-Pandroid.injected.generateSourcesOnly=true")
                             .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
                             .run(ModelHelper.getDebugGenerateSourcesCommands(models));
