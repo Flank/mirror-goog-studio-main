@@ -19,7 +19,6 @@ package com.android.prefs;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
-
 import java.io.File;
 
 /**
@@ -220,9 +219,7 @@ public final class AndroidLocation {
 
         // if the above failed, we throw an exception.
         if (home == null) {
-            throw new AndroidLocationException(
-              "Unable to get the Android SDK home directory.\n" +
-              "Make sure the environment variable ANDROID_SDK_HOME is set up.");
+            throw new AndroidLocationException("prop: " + System.getProperty("ANDROID_SDK_HOME"));
         }
         if (!home.endsWith(File.separator)) {
             home += File.separator;

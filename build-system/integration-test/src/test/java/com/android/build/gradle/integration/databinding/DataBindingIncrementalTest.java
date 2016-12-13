@@ -41,7 +41,7 @@ import org.junit.runners.Parameterized;
 import org.xml.sax.SAXException;
 
 
-@Category(FailsUnderBazel.class)
+@Category(FailsUnderBazel.class) // Fix DataBinding packaging to include version file.
 @RunWith(FilterableParameterized.class)
 public class DataBindingIncrementalTest {
 

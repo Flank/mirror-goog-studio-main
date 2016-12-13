@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(FailsUnderBazel.class)
+@Category(FailsUnderBazel.class) // AntennaPod sources are not in test data.
 public class AntennaPodInstantRunTest {
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();

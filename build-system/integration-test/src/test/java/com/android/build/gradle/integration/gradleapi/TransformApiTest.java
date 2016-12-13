@@ -20,8 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeFalse;
 
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
@@ -30,17 +31,16 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterators;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.Assume;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Test for building a transform against version 1.5. */
-@Category(FailsUnderBazel.class)
 public class TransformApiTest {
 
     @Rule
@@ -49,13 +49,24 @@ public class TransformApiTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
-        Assume.assumeFalse("Transform api cannot be used with jack.", GradleTestProject.USE_JACK);
+    public static void skipOnJack() throws IOException {
+        assumeFalse("Transform api cannot be used with jack.", GradleTestProject.USE_JACK);
+    }
+
+    @Before
+    public void moveLocalProperties() throws IOException {
+        // Only one of the projects is an Android project, and there is no top-level
+        // settings.gradle, so local.properties ends up not being picked up. Just move
+        // it to the project that needs it.
+        Files.move(
+                wholeProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
+                wholeProject
+                        .getSubproject("androidproject")
+                        .file(SdkConstants.FN_LOCAL_PROPERTIES));
     }
 
     @Test
     public void checkRepackagedGsonLibrary() throws IOException, ProcessException {
-
         wholeProject.getSubproject("plugin").execute("uploadArchives");
 
         AndroidProject model = wholeProject.getSubproject("androidproject")

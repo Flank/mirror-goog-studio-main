@@ -1,4 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:bazel.bzl", "groovy_jar")
 
 java_library(
     name = "integration-test",
@@ -42,6 +43,35 @@ java_library(
     ],
 )
 
+TEST_DEPS = [
+    ":integration-test",
+    "//tools/apksig",
+    "//tools/base/annotations",
+    "//tools/base/build-system:gradle-api",
+    "//tools/base/build-system:tools.builder-test-api",
+    "//tools/base/build-system/builder",
+    "//tools/base/build-system/builder-model",
+    "//tools/base/build-system/gradle-core",
+    "//tools/base/build-system/gradle-experimental",
+    "//tools/base/common:tools.common",
+    "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/instant-run:instant-run-client",
+    "//tools/base/repository:tools.repository",
+    "//tools/base/sdk-common:tools.sdk-common",
+    "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/testutils:tools.testutils",
+    "//tools/base/third_party:com.google.guava_guava",
+    "//tools/base/third_party:com.google.protobuf_protobuf-java",
+    "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
+    "//tools/base/third_party:com.google.truth_truth",
+    "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
+    "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+    "//tools/base/third_party:org.mockito_mockito-all",
+    "//tools/base/third_party:org.ow2.asm_asm",
+    "//tools/base/third_party:org.ow2.asm_asm-tree",
+    "//tools/base/third_party:org.smali_dexlib2",
+]
+
 # TODO: Compile Groovy test as well (or just move all of them to Java).
 java_library(
     name = "java_tests",
@@ -52,39 +82,30 @@ java_library(
             "src/test/java/**/CheckAll*",
             "src/test/java/**/Cmake*",
             "src/test/java/**/ExternalNative*",
-            "src/test/java/**/Ndk*",
+            "src/test/java/**/*Ndk*",
             "src/test/java/**/ndk/**",  # TODO: check in the NDK
             "src/test/java/**/performance/**",
         ],
     ),
     resources = glob(["src/test/resources/**"]),
-    deps = [
-        ":integration-test",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/build-system:tools.builder-test-api",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/gradle-experimental",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/instant-run:instant-run-client",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.mockito_mockito-all",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:org.smali_dexlib2",
-    ],
+    deps = TEST_DEPS,
+)
+
+groovy_jar(
+    name = "groovy_tests",
+    srcs = glob(
+        ["src/test/groovy/**/*.groovy"],
+        exclude = [
+            "src/test/groovy/**/*CMake*",
+            "src/test/groovy/**/*Cmake*",
+            "src/test/groovy/**/*ExternalNative*",
+            "src/test/groovy/**/*ExternalBuild*",
+            "src/test/groovy/**/*Native*",
+            "src/test/groovy/**/*Ndk*",
+            "src/test/groovy/**/ndk/**",  # TODO: check in the NDK
+        ],
+    ),
+    deps = TEST_DEPS,
 )
 
 java_test(
@@ -93,6 +114,7 @@ java_test(
     data = [
         ":prebuilts_repo_repo.zip",
         ":test-projects",
+        "//prebuilts/studio/sdk:build-tools/24.0.3",
         "//prebuilts/studio/sdk:build-tools/25.0.0",
         "//prebuilts/studio/sdk:espresso_latest",
         "//prebuilts/studio/sdk:gms_latest",
@@ -108,7 +130,11 @@ java_test(
         "//tools/base/bazel:offline_repo_repo.zip",
         "//tools/base/build-system:gradle-distrib",
     ],
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+        "-Dfile.encoding=UTF-8",
+        "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
+    ],
     shard_count = 16,
     tags = ["manual"],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
@@ -117,6 +143,7 @@ java_test(
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
         "//tools/base/third_party:junit_junit",
         ":java_tests",
+        ":libgroovy_tests.jar",
     ],
 )
 
@@ -129,7 +156,9 @@ filegroup(
 maven_repo(
     name = "prebuilts_repo",
     artifacts = [
+        "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/2.0.1:jar",  # TODO: single version.
         "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-compiler/2.6:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-producers/2.6:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger/2.6:jar",
@@ -139,15 +168,24 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/neenbedankt/gradle/plugins/android-apt/1.8:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/dagger/dagger-compiler/1.2.2:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/dagger/dagger/1.2.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.1.1:jar",
         "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4:jar",
+        "//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.2:jar",
         "//prebuilts/tools/common/m2/repository/javax/annotation/jsr250-api/1.0:jar",
         "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.1:jar",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk16/1.46:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-android-aar/1.2.2:aar",
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-android-aar/1.2.3:aar",
+        "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.2:jar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.jacoco_org.jacoco.agent",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

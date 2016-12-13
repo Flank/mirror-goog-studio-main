@@ -34,9 +34,11 @@ import static org.junit.Assert.assertEquals
 @CompileStatic
 class FilteredOutBuildTypeTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("filteredOutBuildType")
-            .create()
+    static public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("filteredOutBuildType")
+                    .create()
+
     static AndroidProject model
 
     @BeforeClass

@@ -20,7 +20,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -212,7 +211,7 @@ public class AnnotationProcessorTest {
     }
 
     @Test
-    @Category(FailsUnderBazel.class)
+    //@Category(FailsUnderBazel.class)
     public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
         // check for jack and non-component plugin
         Assume.assumeTrue(forJack && !forComponentPlugin);
@@ -220,9 +219,8 @@ public class AnnotationProcessorTest {
         GradleTestProject proc = project.getSubproject("lib-compiler");
         TestFileUtils.appendToFile(
                 proc.getBuildFile(),
-                "repositories {\n"
-                        + "    maven { url System.env.CUSTOM_REPO }\n"
-                        + "}\n"
+                "apply from: '../../commonLocalRepo.gradle'"
+                        + "\n"
                         + "dependencies {\n"
                         + "    compile 'com.google.dagger:dagger:2.6'\n"
                         + "}\n");
@@ -249,7 +247,6 @@ public class AnnotationProcessorTest {
     }
 
     @Test
-    @Category(FailsUnderBazel.class)
     public void checkWarningWhenAptAndAnnotationProcessor() throws IOException {
         // this warning is shown only for the javac toolchain and non-component plugin
         Assume.assumeTrue(!forJack && !forComponentPlugin);
