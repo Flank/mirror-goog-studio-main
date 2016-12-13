@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
@@ -33,9 +32,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
@@ -43,8 +40,10 @@ import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.transforms.DexTransform;
+import com.android.build.gradle.internal.transforms.DexingMode;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
+import com.android.build.gradle.internal.transforms.PreDexTransform;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.builder.core.BuilderConstants;
@@ -203,21 +202,7 @@ class ExternalBuildTaskManager {
             instantRunTaskManager.createSlicerTask();
         }
 
-        boolean multiDex =
-                variantScope.getInstantRunBuildContext().getPatchingPolicy().useMultiDex();
-        DexTransform dexTransform =
-                new DexTransform(
-                        new DefaultDexOptions(),
-                        true,
-                        multiDex,
-                        null,
-                        variantScope.getPreDexOutputDir(),
-                        externalBuildContext.getAndroidBuilder(),
-                        project.getLogger(),
-                        variantScope.getInstantRunBuildContext(),
-                        globalScope.getBuildCache());
-
-        transformManager.addTransform(tasks, variantScope, dexTransform);
+        createDexTasks(externalBuildContext, transformManager, variantScope);
 
         SigningConfig manifestSigningConfig = createManifestSigningConfig(externalBuildContext);
 
@@ -293,6 +278,41 @@ class ExternalBuildTaskManager {
 
         for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
             task.dependsOn(tasks, preColdswapTask);
+        }
+    }
+
+    private void createDexTasks(
+            @NonNull ExternalBuildContext externalBuildContext,
+            @NonNull TransformManager transformManager,
+            @NonNull ExternalBuildVariantScope variantScope) {
+        InstantRunPatchingPolicy patchingPolicy =
+                variantScope.getInstantRunBuildContext().getPatchingPolicy();
+        final DexingMode dexingMode;
+        if (patchingPolicy != null && patchingPolicy.useMultiDex()) {
+            dexingMode = DexingMode.NATIVE_MULTIDEX;
+        } else {
+            dexingMode = DexingMode.MONO_DEX;
+        }
+
+        PreDexTransform preDexTransform =
+                new PreDexTransform(
+                        new DefaultDexOptions(),
+                        externalBuildContext.getAndroidBuilder(),
+                        variantScope.getGlobalScope().getBuildCache().orElse(null),
+                        dexingMode,
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
+        transformManager.addTransform(tasks, variantScope, preDexTransform);
+
+        if (dexingMode != DexingMode.NATIVE_MULTIDEX) {
+            DexTransform dexTransform =
+                    new DexTransform(
+                            new DefaultDexOptions(),
+                            dexingMode,
+                            true,
+                            null,
+                            externalBuildContext.getAndroidBuilder());
+
+            transformManager.addTransform(tasks, variantScope, dexTransform);
         }
     }
 
