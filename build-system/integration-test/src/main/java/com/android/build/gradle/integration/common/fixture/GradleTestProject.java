@@ -88,7 +88,7 @@ public final class GradleTestProject implements TestRule {
     public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.2";
+    public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
     public static final String DEVICE_PROVIDER_NAME =
