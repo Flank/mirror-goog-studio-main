@@ -42,12 +42,18 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
     @Override
     public void setFallbackFactory(@Nullable InstallerFactory fallback) {
         mFallbackFactory = fallback;
+        if (mFallbackFactory != null && mListenerFactory != null) {
+            mFallbackFactory.setListenerFactory(mListenerFactory);
+        }
     }
 
     @Override
     public void setListenerFactory(
             @NonNull StatusChangeListenerFactory listenerFactory) {
         mListenerFactory = listenerFactory;
+        if (mFallbackFactory != null) {
+            mFallbackFactory.setListenerFactory(listenerFactory);
+        }
     }
 
     @NonNull
