@@ -58,7 +58,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.PERF_ANDROID_LARGE, projectScenarios))
-                        .withHeap("20G")
+                        .withHeap("4096M")
                         .create();
     }
 

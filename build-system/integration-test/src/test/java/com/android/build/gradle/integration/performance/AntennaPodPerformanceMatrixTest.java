@@ -65,6 +65,7 @@ public class AntennaPodPerformanceMatrixTest {
                                         Logging.Benchmark.ANTENNA_POD, projectScenarios))
                         .withRelativeProfileDirectory(
                                 Paths.get("AntennaPod", "build", "android-profile"))
+                        .withHeap("1536M")
                         .create();
     }
 

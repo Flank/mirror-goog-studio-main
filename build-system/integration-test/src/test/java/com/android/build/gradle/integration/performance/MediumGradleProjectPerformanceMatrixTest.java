@@ -61,7 +61,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenarios))
-                        .withHeap("20G")
+                        .withHeap("1536M")
                         .create();
     }
 
