@@ -48,7 +48,7 @@ java_test(
     srcs = glob(["src/test/java/**/*.java"]),
     data = [
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
-        "//prebuilts/studio/sdk:build-tools/25.0.0",
+        "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/android-24",
     ],
     jvm_flags = [

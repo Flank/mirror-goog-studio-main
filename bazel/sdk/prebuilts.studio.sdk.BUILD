@@ -8,27 +8,17 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-# TODO: Bump up to 25.0.0 once we fix AS tests.
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/24.0.3"],
+    srcs = [":build-tools/25.0.0"],
     visibility = ["//visibility:public"],
 )
 
-# TODO: Migrate the packages below that depend on specific versions.
 filegroup(
     name = "build-tools/25.0.0",
     srcs = glob(
         include = ["*/build-tools/25.0.0/**"],
     ),
-    visibility = [
-        "//tools/adt/idea/android:__pkg__",
-        "//tools/adt/idea/designer:__pkg__",
-        "//tools/base/build-system/builder:__pkg__",
-        "//tools/base/build-system/gradle:__pkg__",
-        "//tools/base/build-system/gradle-core:__pkg__",
-        "//tools/base/build-system/integration-test:__pkg__",
-    ],
 )
 
 filegroup(

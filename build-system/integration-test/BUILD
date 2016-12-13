@@ -115,7 +115,7 @@ java_test(
         ":prebuilts_repo_repo.zip",
         ":test-projects",
         "//prebuilts/studio/sdk:build-tools/24.0.3",
-        "//prebuilts/studio/sdk:build-tools/25.0.0",
+        "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:espresso_latest",
         "//prebuilts/studio/sdk:gms_latest",
         "//prebuilts/studio/sdk:multidex",

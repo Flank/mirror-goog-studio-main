@@ -3,11 +3,12 @@
 # Match both adb and adb.exe.
 platform-tools:{adb*,api/*,package.xml,*.dll}
 
-# Latest platform and build tools.
+# Build tools
 build-tools;25.0.0
-platforms;android-25
+build-tools;24.0.3
 
-# There's no Google APIs for 25.
+# Platforms. There's no Google APIs for 25.
+platforms;android-25
 platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
