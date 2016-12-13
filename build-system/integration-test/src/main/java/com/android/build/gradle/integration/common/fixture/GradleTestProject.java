@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.model.Version;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
@@ -87,7 +88,7 @@ public final class GradleTestProject implements TestRule {
     public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
+    public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.2";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
     public static final String DEVICE_PROVIDER_NAME =
@@ -136,7 +137,9 @@ public final class GradleTestProject implements TestRule {
         // when testing cross product of versions of buildtools, compile sdks, plugin versions,
         // there are corresponding system environment variable that you are able to set.
         String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
-        DEFAULT_BUILD_TOOL_VERSION = MoreObjects.firstNonNull(envBuildToolVersion, "25.0.0");
+        DEFAULT_BUILD_TOOL_VERSION =
+                MoreObjects.firstNonNull(
+                        envBuildToolVersion, AndroidBuilder.MIN_BUILD_TOOLS_REV.toString());
 
         String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
         ANDROID_GRADLE_PLUGIN_VERSION =

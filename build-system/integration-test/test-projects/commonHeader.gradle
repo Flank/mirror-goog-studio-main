@@ -27,8 +27,8 @@ Boolean getBooleanValue(String environmentVariable, String projectProperty) {
 }
 
 ext {
-    buildToolsVersion = [System.env.CUSTOM_BUILDTOOLS, project.properties["CUSTOM_BUILDTOOLS"], '25.0.0'].find()
-    latestCompileSdk = [System.env.CUSTOM_COMPILE_SDK, project.properties["CUSTOM_COMPILE_SDK"], 24].find() as int
+    buildToolsVersion = [System.env.CUSTOM_BUILDTOOLS, project.properties["CUSTOM_BUILDTOOLS"]].find()
+    latestCompileSdk = [System.env.CUSTOM_COMPILE_SDK, project.properties["CUSTOM_COMPILE_SDK"]].find() as int
 
     useJack = getBooleanValue("CUSTOM_JACK", "com.android.build.gradle.integratonTest.useJack")
     jackInProcess = getBooleanValue("USE_JACK_API", "com.android.build.gradle.integratonTest.jackInProcess")
