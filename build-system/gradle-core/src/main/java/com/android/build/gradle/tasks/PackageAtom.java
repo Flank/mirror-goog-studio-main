@@ -569,7 +569,9 @@ public class PackageAtom extends IncrementalTask {
     @SuppressWarnings("unused")
     @Input
     public Collection<String> getNoCompressExtensions() {
-        return MoreObjects.firstNonNull(aaptOptions.getNoCompress(), Collections.emptyList());
+        return MoreObjects.firstNonNull(
+                aaptOptions.getNoCompress(),
+                Collections.<String>emptyList());
     }
 
     @Input
