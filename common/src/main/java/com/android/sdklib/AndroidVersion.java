@@ -70,7 +70,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     public static final class AndroidVersionException extends Exception {
         private static final long serialVersionUID = 1L;
 
-        AndroidVersionException(String message, Throwable cause) {
+        public AndroidVersionException(String message, Throwable cause) {
             super(message, cause);
         }
     }
