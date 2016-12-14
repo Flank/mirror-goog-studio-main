@@ -31,3 +31,5 @@ extras;m2repository;com;android;support;constraint;constraint-layout;1.0.0-beta4
 extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.0-beta4
 
 cmake;3.6.3155560:**:docs/**
+
+ndk-bundle:**:{platforms/android-9/**,platforms/android-10/**,platforms/android-11,platforms/android-12/**,platforms/android-13/**,platforms/android-14/**,platforms/android-15/**,platforms/android-16/**,platforms/android-17/**,platforms/android-18/**,platforms/android-19/**,platforms/android-20/**,platforms/android-21/**,platforms/android-22/**,platforms/android-23/**,sources/**,toolchains/**}
