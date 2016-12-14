@@ -10,8 +10,15 @@ filegroup(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/25.0.0"],
+    srcs = [":build-tools/25.0.1"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/25.0.1",
+    srcs = glob(
+        include = ["*/build-tools/25.0.1/**"],
+    ),
 )
 
 filegroup(
@@ -19,6 +26,9 @@ filegroup(
     srcs = glob(
         include = ["*/build-tools/25.0.0/**"],
     ),
+    visibility = [
+        "//tools/base/build-system/gradle:__pkg__",
+    ],
 )
 
 filegroup(
@@ -57,13 +67,13 @@ filegroup(
 
 filegroup(
     name = "support_latest",
-    srcs = [":support_25.0.0"],
+    srcs = [":support_25.0.1"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "support_25.0.0",
-    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.0.0/**"]),
+    name = "support_25.0.1",
+    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.0.1/**"]),
 )
 
 filegroup(
