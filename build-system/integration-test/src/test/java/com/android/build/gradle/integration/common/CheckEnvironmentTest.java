@@ -243,7 +243,7 @@ public class CheckEnvironmentTest {
                 .put("lib/shrinkedAndroid.jar", 955060792)
                 .put("bcc_compat", 1234502710)
                 .put("mainDexClasses", 1946903551)
-                .put("package.xml", 246326811)
+                .put("package.xml", 1719484311)
                 .put("mipsel-linux-android-ld", 1800388034)
                 .put("zipalign", 780410456)
                 .put("apksigner", -2110055040)
