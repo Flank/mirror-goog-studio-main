@@ -41,7 +41,7 @@ class RenderscriptNdkTest {
 
     @Before
     public void setUp() {
-        Revision ndkRevision = NdkHandler.findRevision(project.getNdkDir())
+        Revision ndkRevision = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME)
         // ndk r11, r12 are missing renderscript, ndk r10 does support it and has null revision
         assume().that(ndkRevision).isNull()
 

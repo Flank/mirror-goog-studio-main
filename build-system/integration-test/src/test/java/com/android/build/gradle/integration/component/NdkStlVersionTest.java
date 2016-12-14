@@ -60,8 +60,11 @@ public class NdkStlVersionTest {
 
     @Test
     public void checkCustomStlVersion() throws IOException {
-        File libstdc = FileUtils.join(project.getNdkDir(), "sources", "cxx-stl", "gnu-libstdc++");
-        assertThat(libstdc.isDirectory() && libstdc.listFiles() != null).isTrue();
+        File libstdc =
+                FileUtils.join(
+                        GradleTestProject.ANDROID_NDK_HOME, "sources", "cxx-stl", "gnu-libstdc++");
+        assertThat(libstdc).isDirectory();
+        assertThat(libstdc.listFiles()).named("libstdc++ files list").isNotNull();
 
         List<String> stlVersions = Lists.newArrayList();
         //noinspection ConstantConditions - listFiles() will never return null

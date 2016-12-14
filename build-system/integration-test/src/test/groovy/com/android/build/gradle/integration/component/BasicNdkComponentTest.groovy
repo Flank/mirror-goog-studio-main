@@ -126,7 +126,7 @@ model {
 
         // Clang do not use response file with NDK <= r12 due to b.android.com/204552.
         if (toolchain.equals("clang")
-                || NdkHandler.findRevision(project.getNdkDir()).getMajor() >= 13) {
+                || NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME).getMajor() >= 13) {
             assertThat(project.file("build/tmp/compileHello-jniArmeabiDebugSharedLibraryHello-jniArmeabiDebugSharedLibraryMainCpp/options.txt")).exists()
             assertThat(project.file("build/tmp/linkHello-jniArmeabiDebugSharedLibrary/options.txt")).exists()
         }

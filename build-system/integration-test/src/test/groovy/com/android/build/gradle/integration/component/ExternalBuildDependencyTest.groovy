@@ -108,7 +108,9 @@ include \$(BUILD_SHARED_LIBRARY)
     void "check standalone lib properly creates library"() {
         // File a clang compiler.  Doesn't matter which one.
         boolean isWindows = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
-        File compiler = new File(project.getNdkDir(), "ndk-build" + (isWindows ? ".cmd" : ""));
+        File compiler =
+                new File(
+                        GradleTestProject.ANDROID_NDK_HOME, "ndk-build" + (isWindows ? ".cmd" : ""))
         GradleTestProject lib = project.getSubproject("lib")
         lib.buildFile << """
 apply plugin: "com.android.model.external"

@@ -68,7 +68,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         isUseJack = gradleTestProject.isUseJack();
         isMinifyEnabled = gradleTestProject.isMinifyEnabled();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
-        isImproveDependencyEnabled = gradleTestProject.isImprovedDependencyEnabled();
+        isImproveDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     }
 
     /**

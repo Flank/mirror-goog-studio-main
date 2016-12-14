@@ -106,7 +106,8 @@ public class NdkPlatformVersionTest {
             } else {
                 int expected =
                         NdkHelper.getPlatformSupported(
-                                project.getNdkDir(), GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
+                                GradleTestProject.ANDROID_NDK_HOME,
+                                GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
                 assertThat(sysrootFlag.get()).contains("android-" + expected);
             }
         }

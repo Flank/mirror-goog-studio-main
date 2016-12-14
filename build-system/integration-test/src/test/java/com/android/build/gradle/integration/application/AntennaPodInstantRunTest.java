@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -30,6 +31,7 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
@@ -51,8 +53,13 @@ public class AntennaPodInstantRunTest {
     private GradleTestProject project;
 
     @Before
-    public void updateToLatestVersionsAndSetOptions() throws IOException {
+    public void setUp() throws IOException {
         project = mainProject.getSubproject("AntennaPod");
+
+        Files.move(
+                mainProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
+                project.file(SdkConstants.FN_LOCAL_PROPERTIES));
+
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "classpath \"com.android.tools.build:gradle:\\d+.\\d+.\\d+\"",

@@ -225,11 +225,10 @@ public class TestUtils {
     }
 
     /**
-     * Return the SDK directory.
+     * Returns the SDK directory.
      *
      * @throws IllegalStateException if the current OS is not supported.
      * @throws IllegalArgumentException if the path results in a file not found.
-     *
      * @return a valid File object pointing at the SDK directory.
      */
     @NonNull
@@ -242,6 +241,16 @@ public class TestUtils {
 
         String hostDir = osType.getFolderName();
         return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir);
+    }
+
+    /**
+     * Returns the path to checked-in NDK.
+     *
+     * @see #getSdk()
+     */
+    @NonNull
+    public static File getNdk() {
+        return new File(getSdk(), SdkConstants.FD_NDK);
     }
 
     @NonNull
