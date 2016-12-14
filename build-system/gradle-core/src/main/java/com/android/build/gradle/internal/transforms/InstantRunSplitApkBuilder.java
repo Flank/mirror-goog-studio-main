@@ -36,6 +36,7 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
@@ -213,9 +214,15 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                      new OutputStreamWriter(new FileOutputStream(androidManifest), "UTF-8")) {
             fileWriter.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
                     .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-                    .append("      package=\"").append(applicationId).append("\"\n")
-                    .append("      android:versionCode=\"").append(String.valueOf(versionCode)).append("\"\n")
-                    .append("      android:versionName=\"").append(versionNameToUse).append("\"\n")
+                    .append("      package=\"").append(applicationId).append("\"\n");
+            if (versionCode != VersionQualifier.DEFAULT_VERSION) {
+                fileWriter
+                        .append("      android:versionCode=\"").append(String.valueOf(versionCode))
+                        .append("\"\n")
+                        .append("      android:versionName=\"").append(versionNameToUse)
+                        .append("\"\n");
+            }
+            fileWriter
                     .append("      split=\"lib_").append(uniqueName).append("_apk\">\n")
                     .append("</manifest>\n");
             fileWriter.flush();
