@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  */
 public final class VersionQualifier extends ResourceQualifier {
     /** Default version. This means the property is not set. */
-    private static final int DEFAULT_VERSION = -1;
+    public static final int DEFAULT_VERSION = -1;
 
     private static final Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
 

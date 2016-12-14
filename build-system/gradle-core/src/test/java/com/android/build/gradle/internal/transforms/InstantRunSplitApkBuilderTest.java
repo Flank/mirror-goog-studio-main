@@ -200,4 +200,50 @@ public class InstantRunSplitApkBuilderTest {
                 eq(outApkLocation.getValue()));
 
     }
+
+    @Test
+    public void testNoVersionGeneration()
+            throws InterruptedException, KeytoolException, IOException, ProcessException,
+            PackagerException, TransformException {
+        InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =
+                new InstantRunSliceSplitApkBuilder(
+                    logger,
+                    project,
+                    instantRunBuildContext,
+                    androidBuilder,
+                    packagingScope,
+                    coreSigningConfig,
+                    aaptOptions,
+                    outputDirectory.getRoot(),
+                    supportDirectory.getRoot(),
+                    "com.foo.test",
+                    "-1",
+                    -1 /* noVersion */) {
+            @Override
+            protected Aapt getAapt() {
+                return aapt;
+            }
+        };
+
+        Map<String, Object> parameterInputs = instantRunSliceSplitApkBuilder.getParameterInputs();
+        assertThat(parameterInputs).containsEntry("versionCode", -1);
+        assertThat(parameterInputs).hasSize(4);
+
+        ImmutableSet<File> files = ImmutableSet.of(
+                new File("/tmp", "dexFile1"), new File("/tmp", "dexFile2"));
+
+        InstantRunSplitApkBuilder.DexFiles dexFiles =
+                new InstantRunSplitApkBuilder.DexFiles(files, "folderName");
+
+        instantRunSliceSplitApkBuilder.generateSplitApk(dexFiles);
+        File folder = new File(supportDirectory.getRoot(), "folderName");
+        assertThat(folder.isDirectory()).isTrue();
+        assertThat(folder.getName()).isEqualTo("folderName");
+        File[] folderFiles = folder.listFiles();
+        assertThat(folderFiles).hasLength(1);
+        assertThat(folderFiles[0].getName()).isEqualTo("AndroidManifest.xml");
+        String androidManifest = Files.toString(folderFiles[0], Charsets.UTF_8);
+        assertThat(androidManifest).doesNotContain("android:versionCode");
+        assertThat(androidManifest).doesNotContain("android:versionName");
+    }
 }
