@@ -85,8 +85,8 @@
     <instantiate from="root/CMakeLists.txt.ftl"
                    to="${escapeXmlAttribute(projectOut)}/CMakeLists.txt" />
 
-    <mkdir at="${nativeSrcOut}" />
-    <instantiate from="root/native-lib.cpp.ftl" to="${nativeSrcOut}/native-lib.cpp" />
+    <mkdir at="${escapeXmlAttribute(nativeSrcOut)}" />
+    <instantiate from="root/native-lib.cpp.ftl" to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
 </#if>
 
 </recipe>
