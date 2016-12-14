@@ -93,6 +93,11 @@ public class AntennaPodInstantRunTest {
         for (File buildFile : filesWithSupportLibVersion) {
             TestFileUtils.searchAndReplace(
                     buildFile,
+                    " 23",
+                    " " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
+
+            TestFileUtils.searchAndReplace(
+                    buildFile,
                     "23.1.1",
                     GradleTestProject.SUPPORT_LIB_VERSION);
         }
