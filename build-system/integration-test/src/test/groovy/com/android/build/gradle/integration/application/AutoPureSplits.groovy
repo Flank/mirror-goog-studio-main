@@ -36,7 +36,6 @@ import static org.junit.Assert.assertTrue
 /**
  * Test to ensure that "auto" resConfig setting only package application's languages.
  */
-@Ignore("http://b.android.com/228274")
 class AutoPureSplits {
 
     @Rule
@@ -64,7 +63,6 @@ class AutoPureSplits {
                 }
               }
               dependencies {
-                compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
                 compile 'com.android.support:support-v4:$GradleTestProject.SUPPORT_LIB_VERSION'
               }
         }"""
