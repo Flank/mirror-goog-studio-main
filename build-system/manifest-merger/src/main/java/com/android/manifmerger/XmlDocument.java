@@ -457,8 +457,10 @@ public class XmlDocument {
         if (!checkUsesSdkMinVersion(lowerPriorityDocument, mergingReport)) {
             String error = String.format(
                             "uses-sdk:minSdkVersion %1$s cannot be smaller than version "
-                                    + "%2$s declared in library %3$s\n"
-                                    + "\tSuggestion: use tools:overrideLibrary=\"%4$s\" to force usage",
+                                    + "%2$s declared in library %3$s as the library might be using APIs not available in %1$s\n"
+                                    + "\tSuggestion: use a compatible library with a minSdk of at most %1$s,\n"
+                                    + "\t\tor increase this project's minSdk version to at least %2$s,\n"
+                                    + "\t\tor use tools:overrideLibrary=\"%4$s\" to force usage (may lead to runtime failures)",
                             getMinSdkVersion(),
                             lowerPriorityDocument.getRawMinSdkVersion(),
                             lowerPriorityDocument.getSourceFile().print(false),
