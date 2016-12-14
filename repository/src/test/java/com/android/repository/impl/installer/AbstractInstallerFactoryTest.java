@@ -181,6 +181,34 @@ public class AbstractInstallerFactoryTest {
         assertTrue(didComplete.get());
     }
 
+    @Test
+    public void addInstallerListenersToFallback() throws Exception {
+
+        InstallerFactory testFactory = new TestInstallerFactory();
+
+        InstallerFactory mockFallbackFactory = Mockito.mock(InstallerFactory.class);
+        InstallerFactory.StatusChangeListenerFactory mockListenerFactory = Mockito.mock(InstallerFactory.StatusChangeListenerFactory.class);
+
+        testFactory.setFallbackFactory(mockFallbackFactory);
+        testFactory.setListenerFactory(mockListenerFactory);
+
+        Mockito.verify(mockFallbackFactory).setListenerFactory(mockListenerFactory);
+    }
+
+    @Test
+    public void addInstallerListenersToFallbackWhenSettingFallback() throws Exception {
+
+        InstallerFactory testFactory = new TestInstallerFactory();
+
+        InstallerFactory mockFallbackFactory = Mockito.mock(InstallerFactory.class);
+        InstallerFactory.StatusChangeListenerFactory mockListenerFactory = Mockito.mock(InstallerFactory.StatusChangeListenerFactory.class);
+
+        testFactory.setListenerFactory(mockListenerFactory);
+        testFactory.setFallbackFactory(mockFallbackFactory);
+
+        Mockito.verify(mockFallbackFactory).setListenerFactory(mockListenerFactory);
+    }
+
     private static class TestInstallerFactory extends AbstractInstallerFactory {
 
         @NonNull
