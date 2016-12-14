@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.annotations.NonNull;
+
 /**
  * Options for configuring Java compilation.
  */
 public interface CoreJavaCompileOptions {
+    @NonNull
     CoreAnnotationProcessorOptions getAnnotationProcessorOptions();
 }

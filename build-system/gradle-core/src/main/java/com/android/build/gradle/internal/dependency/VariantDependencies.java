@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import static org.gradle.api.artifacts.Configuration.State.RESOLVED;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
@@ -517,54 +519,31 @@ public class VariantDependencies {
     }
 
     @NonNull
-    public Set<File> resolveAndGetAnnotationProcessorClassPath(
-            boolean includeClasspath,
-            @NonNull ErrorReporter errorReporter) {
-        if (getAnnotationProcessorConfiguration().getAllDependencies().isEmpty()) {
+    public Set<File> getAnnotationProcessorClassPath() {
+        if (getAnnotationProcessorConfiguration().getAllDependencies().isEmpty()
+                || getAnnotationProcessorConfiguration().getState() != RESOLVED) {
             return Collections.emptySet();
         }
 
-        if (getAnnotationProcessorConfiguration().getState() != Configuration.State.RESOLVED
-                && includeClasspath) {
-            getAnnotationProcessorConfiguration().extendsFrom(
-                    getCompileConfiguration(),
-                    getPackageConfiguration());
-        }
         ResolvedConfiguration resolvedConfiguration =
                 getAnnotationProcessorConfiguration().getResolvedConfiguration();
         if (resolvedConfiguration.hasError()) {
-            try {
-                resolvedConfiguration.rethrowFailure();
-            } catch (Exception e) {
-                errorReporter.handleSyncError(
-                        "annotationProcessor",
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        e.getMessage());
-                return Collections.emptySet();
-            }
+            resolvedConfiguration.rethrowFailure();
         }
         return getAnnotationProcessorConfiguration().getFiles();
     }
 
     @NonNull
-    public Set<File> resolveAndGetJackPluginClassPath(
-            @NonNull ErrorReporter errorReporter) {
-        if (getJackPluginConfiguration().getAllDependencies().isEmpty()) {
+    public Set<File> getJackPluginClassPath() {
+        if (getJackPluginConfiguration().getAllDependencies().isEmpty()
+                || getJackPluginConfiguration().getState() != RESOLVED) {
             return Collections.emptySet();
         }
 
         ResolvedConfiguration resolvedConfiguration =
                 getJackPluginConfiguration().getResolvedConfiguration();
         if (resolvedConfiguration.hasError()) {
-            try {
-                resolvedConfiguration.rethrowFailure();
-            } catch (Exception e) {
-                errorReporter.handleSyncError(
-                        "jackPlugin",
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "Unable to find Jack plugin. " + e.getMessage());
-                return Collections.emptySet();
-            }
+            resolvedConfiguration.rethrowFailure();
         }
         return getJackPluginConfiguration().getFiles();
     }

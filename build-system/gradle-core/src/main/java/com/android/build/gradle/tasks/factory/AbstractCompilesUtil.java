@@ -28,10 +28,10 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
@@ -107,14 +107,14 @@ public class AbstractCompilesUtil {
     }
 
     public static boolean isIncremental(Project project, VariantScope variantScope,
-            CompileOptions compileOptions, Collection<File> processorPath, ILogger log) {
+            CompileOptions compileOptions, Configuration processorConfiguration, ILogger log) {
         boolean incremental;
         if (compileOptions.getIncremental() != null) {
             incremental = compileOptions.getIncremental();
             log.verbose("Incremental flag set to %1$b in DSL", incremental);
         } else {
             if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                    || !processorPath.isEmpty()
+                    || !processorConfiguration.getAllDependencies().isEmpty()
                     || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
                     || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
                 incremental = false;

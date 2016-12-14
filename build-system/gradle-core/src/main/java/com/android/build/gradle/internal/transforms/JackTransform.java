@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -41,7 +42,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
 import com.android.builder.core.JackToolchain;
-import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
@@ -51,11 +51,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.logging.LogLevel;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,6 +58,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.logging.LogLevel;
 
 /**
  * Transform for compiling using Jack.
@@ -103,6 +101,10 @@ public class JackTransform extends Transform {
 
     private final List<ConfigurableFileTree> sourceFileTrees = Lists.newArrayList();
 
+    private VariantDependencies variantDependencies;
+
+    CoreAnnotationProcessorOptions annotationProcessorOptions;
+
     @NonNull
     @Override
     public String getName() {
@@ -119,7 +121,12 @@ public class JackTransform extends Transform {
                 Iterables.transform(options.getJarJarRuleFiles(), SecondaryFile::nonIncremental));
         builder.addAll(
                 Iterables.transform(
-                        options.getAnnotationProcessorClassPath(), SecondaryFile::nonIncremental));
+                        variantDependencies.getAnnotationProcessorClassPath(),
+                        SecondaryFile::nonIncremental));
+        builder.addAll(
+                Iterables.transform(
+                        variantDependencies.getJackPluginClassPath(),
+                        SecondaryFile::nonIncremental));
         builder.addAll(Iterables.transform(getSourceFiles(), SecondaryFile::incremental));
 
         builder.add(
@@ -222,6 +229,19 @@ public class JackTransform extends Transform {
         options.setImportFiles(TransformInputUtil.getAllFiles(transformInvocation.getInputs()));
         options.setInputFiles(getSourceFiles());
 
+
+        checkNotNull(annotationProcessorOptions.getIncludeCompileClasspath());
+        ArrayList<File> processorPath = Lists.newArrayList(
+                variantDependencies.getAnnotationProcessorClassPath());
+        if (annotationProcessorOptions.getIncludeCompileClasspath()) {
+            processorPath.addAll(options.getClasspaths());
+        }
+        options.setAnnotationProcessorClassPath(processorPath);
+
+        List<File> pluginClassPath =
+                Lists.newArrayList(variantDependencies.getJackPluginClassPath());
+        options.setJackPluginClassPath(pluginClassPath);
+
         JackToolchain toolchain =
                 new JackToolchain(
                         androidBuilder.getTargetInfo().getBuildTools(),
@@ -275,34 +295,24 @@ public class JackTransform extends Transform {
         options.setOutputFile(scope.getJackClassesZip());
         options.setResourceDirectories(ImmutableList.of(scope.getJavaResourcesDestinationDir()));
 
-        CoreAnnotationProcessorOptions annotationProcessorOptions =
-                config.getJavaCompileOptions().getAnnotationProcessorOptions();
-        checkNotNull(annotationProcessorOptions.getIncludeCompileClasspath());
-        ArrayList<File> processorPath = Lists.newArrayList(
-                scope.getVariantData().getVariantDependency()
-                        .resolveAndGetAnnotationProcessorClassPath(
-                                annotationProcessorOptions.getIncludeCompileClasspath(),
-                                androidBuilder.getErrorReporter()));
-        options.setAnnotationProcessorClassPath(processorPath);
+        annotationProcessorOptions = config.getJavaCompileOptions().getAnnotationProcessorOptions();
         options.setAnnotationProcessorNames(annotationProcessorOptions.getClassNames());
         options.setAnnotationProcessorOptions(annotationProcessorOptions.getArguments());
         options.setAnnotationProcessorOutputDirectory(scope.getAnnotationProcessorOutputDir());
         options.setEcjOptionFile(scope.getJackEcjOptionsFile());
         options.setAdditionalParameters(config.getJackOptions().getAdditionalParameters());
-        List<File> pluginClassPath =
-                Lists.newArrayList(
-                        scope.getVariantData()
-                                .getVariantDependency()
-                                .resolveAndGetJackPluginClassPath(
-                                        androidBuilder.getErrorReporter()));
-        options.setJackPluginClassPath(pluginClassPath);
         options.setJackPluginNames(config.getJackOptions().getPluginNames());
 
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
 
+        variantDependencies = scope.getVariantData().getVariantDependency();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
-                        project, scope, compileOptions, processorPath, LOG);
+                        project,
+                        scope,
+                        compileOptions,
+                        variantDependencies.getAnnotationProcessorConfiguration(),
+                        LOG);
 
         if (incremental) {
             String taskName =

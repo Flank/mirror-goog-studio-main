@@ -302,6 +302,37 @@ public class DependencyManager {
 
         variantDeps.setDependencies(compileDependencies, packagedGraph, needPackageScope);
 
+        // Resolve annotationProcessorConfiguration.
+        Configuration annotationProcessorConfiguration =
+                variantDeps.getAnnotationProcessorConfiguration();
+        annotationProcessorConfiguration.resolve();
+        if (extraModelInfo.getMode() != STANDARD &&
+                annotationProcessorConfiguration.getResolvedConfiguration().hasError()) {
+            try {
+                annotationProcessorConfiguration.getResolvedConfiguration().rethrowFailure();
+            } catch (Exception e) {
+                extraModelInfo.handleSyncError(
+                        "annotationProcessor",
+                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                        e.getMessage());
+            }
+        }
+
+        // Resolve jackPluginConfiguration.
+        Configuration jackPluginConfiguration = variantDeps.getJackPluginConfiguration();
+        jackPluginConfiguration.resolve();
+        if (extraModelInfo.getMode() != STANDARD &&
+                jackPluginConfiguration.getResolvedConfiguration().hasError()) {
+            try {
+                jackPluginConfiguration.getResolvedConfiguration().rethrowFailure();
+            } catch (Exception e) {
+                extraModelInfo.handleSyncError(
+                        "jackPlugin",
+                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                        "Unable to find Jack plugin. " + e.getMessage());
+            }
+        }
+
         if (DEBUG_DEPENDENCY) {
             System.out.println("*** COMPILE DEPS ***");
             /*
