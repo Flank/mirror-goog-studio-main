@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.util.Collection;
 import org.gradle.api.internal.file.collections.DefaultConfigurableFileTree;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -180,6 +181,7 @@ public class JackCompileTransformTest {
     }
 
     @Test
+    @Ignore
     public void testIncrementalModifiedFile()
             throws IOException, TransformException, InterruptedException {
         when(sourceFiles.getFiles())
