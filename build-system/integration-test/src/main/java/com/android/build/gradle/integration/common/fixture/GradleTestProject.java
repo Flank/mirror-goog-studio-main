@@ -280,24 +280,30 @@ public final class GradleTestProject implements TestRule {
 
         // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
         Pattern gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-\\d+\\+\\d+)?-bin\\.zip$");
-        List<Pair<String, String>> versions = Lists.newArrayList();
+
+        Comparator<Pair<String, String>> revisionsCmp =
+                Comparator.nullsFirst(
+                        Comparator.comparing(
+                                (Pair<String, String> versionTimestamp) ->
+                                        GradleVersion.version(versionTimestamp.getFirst()))
+                                .thenComparing(Pair::getSecond));
+
+        Pair<String, String> highestRevision = null;
         //noinspection ConstantConditions
         for (File f : gradleDir.listFiles()) {
             Matcher matcher = gradleVersion.matcher(f.getName());
             if (matcher.matches()) {
-                versions.add(Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2))));
+                Pair<String, String> current =
+                        Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2)));
+
+                if (revisionsCmp.compare(highestRevision, current) < 0) {
+                    highestRevision = current;
+                }
             }
         }
 
-        Comparator<Pair<String, String>> revisionsCmp =
-                Comparator.<Pair<String, String>, GradleVersion>comparing(
-                                versionTimestamp ->
-                                        GradleVersion.version(versionTimestamp.getFirst()))
-                        .thenComparing(Pair::getSecond)
-                        .reversed();
-
-        versions.sort(revisionsCmp);
-        return versions.get(0).getFirst() + versions.get(0).getSecond();
+        assertNotNull("No gradle binary found.", highestRevision);
+        return highestRevision.getFirst() + highestRevision.getSecond();
     }
 
     /**
