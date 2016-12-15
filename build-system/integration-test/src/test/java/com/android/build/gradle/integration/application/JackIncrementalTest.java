@@ -35,12 +35,15 @@ import org.junit.Test;
  * Test for incremental compilation with Jack.
  */
 public class JackIncrementalTest {
+    private static final String JACK_INCREMENTAL_DIR =
+            "build/intermediates/incremental/jackSourcesDebug";
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .withJack(true)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .withJack(true)
+                    .create();
 
     @Before
     public void setUp() throws IOException {
@@ -54,7 +57,9 @@ public class JackIncrementalTest {
         project.execute("clean", "assembleDebug");
         File classesDex =
                 FileUtils.find(
-                        project.file("build/intermediates/transforms/jack"), "classes.dex").get();
+                                project.file("build/intermediates/transforms/jackDexer"),
+                                "classes.dex")
+                        .get();
         long classesDexTimestamp = classesDex.lastModified();
 
         // Check pre-dexed library is not updated
@@ -69,8 +74,7 @@ public class JackIncrementalTest {
 
         project.execute("assembleDebug");
 
-        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug"))
-                .isDirectory();
+        assertThat(project.file(JACK_INCREMENTAL_DIR)).isDirectory();
 
         assertThat(classesDex).isNewerThan(classesDexTimestamp);
         assertThat(androidJar).wasModifiedAt(androidJarTimestamp);
@@ -81,8 +85,7 @@ public class JackIncrementalTest {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.compileOptions.incremental false\n");
         project.execute("clean", "assembleDebug");
-        assertThat(project.file("build/intermediates/incremental/transformJackWithJackForDebug"))
-                .doesNotExist();
+        assertThat(project.file(JACK_INCREMENTAL_DIR)).doesNotExist();
     }
 
     @Test

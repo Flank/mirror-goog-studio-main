@@ -41,7 +41,7 @@ import java.io.IOException;
  * and the version of the build tools are used as keys in the cache.
  *
  * <p>The API is fairly simple, just call {@link #convertLibrary(File, File, JackProcessOptions,
- * boolean, BuildToolInfo, ILogger, ErrorReporter, JavaProcessExecutor)}
+ * BuildToolInfo, ILogger, ErrorReporter, JavaProcessExecutor)}
  *
  * <p>The call will be blocking until the conversion happened, either through actually running Jack
  * or through copying the output of a previous Jack run.
@@ -52,11 +52,6 @@ import java.io.IOException;
 public class JackConversionCache extends PreProcessCache<JackDexKey> {
 
     private static final JackConversionCache sSingleton = new JackConversionCache();
-
-    // If Jack has been used for conversion
-    private static final String JACK_USED = "jack";
-    // If Jill has been used for conversion
-    private static final String JILL_USED = "jill";
 
     public static JackConversionCache getCache() {
         return sSingleton;
@@ -78,7 +73,6 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
             @NonNull File inputFile,
             @NonNull File outFile,
             @NonNull JackProcessOptions options,
-            boolean isJackInProcess,
             @NonNull BuildToolInfo buildToolInfo,
             @NonNull ILogger logger,
             @NonNull ErrorReporter errorReporter,
@@ -89,10 +83,10 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
                 JackDexKey.of(
                         inputFile,
                         buildToolInfo.getRevision(),
-                        options.getJumboMode(),
-                        options.getDexOptimize(),
+                        options.isJumboMode(),
+                        options.isDexOptimize(),
                         options.getMinSdkVersion().getApiString(),
-                        options.getUseJill() ? JILL_USED : JACK_USED,
+                        options.getProcessingToolUsed().toString(),
                         options.getAdditionalParameters());
 
         Pair<PreProcessCache.Item, Boolean> pair = getItem(logger, itemKey);
@@ -103,7 +97,7 @@ public class JackConversionCache extends PreProcessCache<JackDexKey> {
             try {
                 // haven't process this file yet so do it and record it.
                 JackToolchain toolchain = new JackToolchain(buildToolInfo, logger, errorReporter);
-                toolchain.convert(options, javaProcessExecutor, isJackInProcess);
+                toolchain.convert(options, javaProcessExecutor, options.isRunInProcess());
 
 
                 item.getOutputFiles().add(outFile);

@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -201,17 +200,13 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    CoreJackOptions jackOptions =
-                            variantData.getVariantConfiguration().getJackOptions();
                     // create data binding merge task before the javac task so that it can
                     // parse jars before any consumer
                     createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
                     AndroidTask<? extends JavaCompile> javacTask =
                             createJavacTask(tasks, variantScope);
-                    if (jackOptions.isEnabled()) {
-                        AndroidTask<TransformTask> jackTask =
-                                createJackTask(tasks, variantScope, true /*compileJavaSource*/);
-                        setJavaCompilerTask(jackTask, tasks, variantScope);
+                    if (variantData.getVariantConfiguration().isJackEnabled()) {
+                        createJackTask(tasks, variantScope);
                     } else {
                         // Prevent the use of java 1.8 without jack, which would otherwise cause an
                         // internal javac error.

@@ -48,7 +48,9 @@ public class AnalyticsUtilTest {
                 Transform.class,
                 AnalyticsUtil::getTransformType,
                 AnalyticsUtil::getPotentialTransformTypeName,
-                "com.android.build.gradle.internal.pipeline.TestTransform");
+                "com.android.build.gradle.internal.pipeline.TestTransform",
+                "com.android.build.gradle.internal.transforms.JackGenerateDexTransform",
+                "com.android.build.gradle.internal.transforms.JackCompileTransform");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(

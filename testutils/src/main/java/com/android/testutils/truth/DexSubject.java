@@ -24,4 +24,6 @@ public interface DexSubject {
     IndirectSubject<DexClassSubject> containsClass(@NonNull String className) throws IOException;
 
     void containsClasses(@NonNull String... classNames) throws IOException;
+
+    void doesNotContainClasses(@NonNull String... classNames) throws IOException;
 }

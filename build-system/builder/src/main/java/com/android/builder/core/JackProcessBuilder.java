@@ -30,10 +30,12 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -89,8 +91,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
 
         builder.addArgs("-D", "jack.dex.debug.vars=" + options.isDebuggable());
 
-        if (!options.getClasspaths().isEmpty()) {
-            builder.addArgs("--classpath", FileUtils.joinFilePaths(options.getClasspaths()));
+        if (!options.getClassPaths().isEmpty()) {
+            builder.addArgs("--classpath", FileUtils.joinFilePaths(options.getClassPaths()));
         }
 
         for (File lib : options.getImportFiles()) {
@@ -101,12 +103,9 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             builder.addArgs("--output-dex", options.getDexOutputDirectory().getAbsolutePath());
         }
 
-        if (options.getOutputFile() != null) {
-            builder.addArgs("--output-jack", options.getOutputFile().getAbsolutePath());
+        if (options.getJackOutputFile() != null) {
+            builder.addArgs("--output-jack", options.getJackOutputFile().getAbsolutePath());
         }
-
-        builder.addArgs("-D", "jack.import.type.policy=keep-first");
-        builder.addArgs("-D", "jack.import.resource.policy=keep-first");
 
         for (File file : options.getProguardFiles()) {
             builder.addArgs("--config-proguard", file.getAbsolutePath());
@@ -134,7 +133,7 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             builder.addArgs("-D", "jack.java.source.version=" + options.getSourceCompatibility());
         }
 
-        if (options.getIncrementalDir() != null && options.getIncrementalDir().exists()) {
+        if (options.getIncrementalDir() != null) {
             builder.addArgs("--incremental-folder", options.getIncrementalDir().getAbsolutePath());
         }
 
@@ -192,11 +191,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
         }
 
         // apply all additional params
-        for (String paramKey: options.getAdditionalParameters().keySet()) {
-            String paramValue = options.getAdditionalParameters().get(paramKey);
-            builder.addArgs(
-                "-D",
-                paramKey + "=" + paramValue);
+        for (Map.Entry<String, String> param : options.getAdditionalParameters().entrySet()) {
+            builder.addArgs("-D", param.getKey() + "=" + param.getValue());
         }
 
         return builder.createJavaProcess();
@@ -204,6 +200,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
 
     private void api04Specific(
             @NonNull BuildToolInfo buildToolInfo, @NonNull ProcessInfoBuilder builder) {
+        List<File> pluginPaths = Lists.newArrayList(options.getJackPluginClassPath());
+        List<String> pluginNames = Lists.newArrayList(options.getJackPluginNames());
         if (options.getCoverageMetadataFile() != null) {
             String coveragePluginPath =
                     buildToolInfo.getPath(BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN);
@@ -212,8 +210,8 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
                         "Unable to find coverage plugin '%s'.  Disabling code coverage.",
                         coveragePluginPath);
             } else {
-                options.addJackPluginClassPath(new File(coveragePluginPath));
-                options.addJackPluginName(JackProcessOptions.COVERAGE_PLUGIN_NAME);
+                pluginPaths.add(new File(coveragePluginPath));
+                pluginNames.add(JackProcessOptions.COVERAGE_PLUGIN_NAME);
                 builder.addArgs(
                         "-D",
                         "jack.coverage.metadata.file="
@@ -222,12 +220,11 @@ public class JackProcessBuilder extends ProcessEnvBuilder<JackProcessBuilder> {
             }
         }
 
-        if (!options.getJackPluginClassPath().isEmpty()) {
-            builder.addArgs(
-                    "--pluginpath", FileUtils.joinFilePaths(options.getJackPluginClassPath()));
+        if (!pluginPaths.isEmpty()) {
+            builder.addArgs("--pluginpath", FileUtils.joinFilePaths(pluginPaths));
         }
-        if (!options.getJackPluginNames().isEmpty()) {
-            builder.addArgs("--plugin", Joiner.on(",").join(options.getJackPluginNames()));
+        if (!pluginNames.isEmpty()) {
+            builder.addArgs("--plugin", Joiner.on(",").join(pluginNames));
         }
     }
 

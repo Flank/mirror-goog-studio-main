@@ -69,26 +69,12 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
 
     @Override
     public void containsClasses(@NonNull String... expected) throws IOException {
-        for (String clazz : expected) {
-            checkClassName(clazz);
-        }
+        validateDexClasses(true, expected);
+    }
 
-        if (assertSubjectIsNonNull()) {
-            Set<String> actualClasses =
-                    getSubject()
-                            .getClasses()
-                            .stream()
-                            .map(DexBackedClassDef::getType)
-                            .collect(Collectors.toSet());
-
-            Sets.SetView<String> missing =
-                    Sets.difference(ImmutableSet.copyOf(expected), actualClasses);
-
-            if (!missing.isEmpty()) {
-                failWithBadResults(
-                        "contains classes", Arrays.toString(expected), "is missing", missing);
-            }
-        }
+    @Override
+    public void doesNotContainClasses(@NonNull String... classNames) throws IOException {
+        validateDexClasses(false, classNames);
     }
 
     @Override
@@ -111,5 +97,35 @@ public class DexBackedDexFileSubject extends Subject<DexBackedDexFileSubject, De
                 className.startsWith("L") && className.endsWith(";"),
                 "Class name '%s' must be in the type descriptor format, e.g. Lcom/foo/Main;",
                 className);
+    }
+
+    private void validateDexClasses(boolean shouldContain, @NonNull String... expected) {
+        for (String clazz : expected) {
+            checkClassName(clazz);
+        }
+
+        if (assertSubjectIsNonNull()) {
+            Set<String> actualClasses =
+                    getSubject()
+                            .getClasses()
+                            .stream()
+                            .map(DexBackedClassDef::getType)
+                            .collect(Collectors.toSet());
+
+            Sets.SetView<String> unexpected;
+            if (shouldContain) {
+                unexpected = Sets.difference(ImmutableSet.copyOf(expected), actualClasses);
+            } else {
+                unexpected = Sets.intersection(ImmutableSet.copyOf(expected), actualClasses);
+            }
+
+            if (!unexpected.isEmpty()) {
+                failWithBadResults(
+                        shouldContain ? "contains classes" : "does not contain",
+                        Arrays.toString(expected),
+                        shouldContain ? "is missing" : "contains",
+                        unexpected);
+            }
+        }
     }
 }

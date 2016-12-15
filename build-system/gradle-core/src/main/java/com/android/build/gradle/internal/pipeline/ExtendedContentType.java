@@ -57,8 +57,10 @@ public enum ExtendedContentType implements ContentType {
     /**
      * The content is an artifact exported by the data binding compiler.
      */
-    DATA_BINDING(0x10000);
+    DATA_BINDING(0x10000),
 
+    /** The content is Java source file. */
+    JAVA_SOURCES(0x20000);
 
     private final int value;
 

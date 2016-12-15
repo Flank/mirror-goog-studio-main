@@ -2,7 +2,6 @@ package com.android.build.gradle.tasks.factory;
 
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.android.builder.core.VariantType.UNIT_TEST;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
@@ -13,13 +12,10 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
@@ -68,7 +64,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         // if jack is used to compile code for the app and this compile task is created only for
         // unit test.  In which case, we want to keep the default bootstrap classpath.
         final boolean keepDefaultBootstrap =
-                scope.getVariantConfiguration().getJackOptions().isEnabled()
+                scope.getVariantConfiguration().isJackEnabled()
                         && JavaVersion.current().isJava8Compatible();
 
         if (!keepDefaultBootstrap) {
@@ -129,7 +125,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask,
                 compileOptions,
                 scope.getGlobalScope().getExtension().getCompileSdkVersion(),
-                scope.getVariantConfiguration().getJackOptions().isEnabled());
+                scope.getVariantConfiguration().isJackEnabled());
 
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
 

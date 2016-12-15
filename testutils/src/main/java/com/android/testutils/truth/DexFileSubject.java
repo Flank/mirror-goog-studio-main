@@ -63,4 +63,9 @@ public class DexFileSubject extends Subject<DexFileSubject, File> implements Dex
     public void containsClasses(@NonNull String... classNames) throws IOException {
         getDelegate().containsClasses(classNames);
     }
+
+    @Override
+    public void doesNotContainClasses(@NonNull String... classNames) throws IOException {
+        getDelegate().doesNotContainClasses(classNames);
+    }
 }

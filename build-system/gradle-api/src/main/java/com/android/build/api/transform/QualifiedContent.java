@@ -17,8 +17,6 @@
 package com.android.build.api.transform;
 
 import com.android.annotations.NonNull;
-import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Set;
 
@@ -54,9 +52,7 @@ public interface QualifiedContent {
          */
         CLASSES(0x01),
 
-        /**
-         * The content is standard Java resources.
-         */
+        /** The content is standard Java resources. */
         RESOURCES(0x02);
 
         private final int value;

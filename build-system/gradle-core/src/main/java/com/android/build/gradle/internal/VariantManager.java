@@ -535,7 +535,7 @@ public class VariantManager implements VariantModel {
                                 variantFactory.getVariantConfigurationType(),
                                 signingOverride);
 
-        if (variantConfig.getType() == LIBRARY && variantConfig.getJackOptions().isEnabled()) {
+        if (variantConfig.getType() == LIBRARY && variantConfig.isJackEnabled()) {
             project.getLogger().warn(
                     "{}, {}: Jack compiler is not supported in library projects, falling back to javac.",
                     project.getPath(),
@@ -815,7 +815,7 @@ public class VariantManager implements VariantModel {
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
                 ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
                         .setIsDebug(variantConfig.getBuildType().isDebuggable())
-                        .setUseJack(variantConfig.getJackOptions().isEnabled())
+                        .setUseJack(variantConfig.isJackEnabled())
                         .setMinifyEnabled(variantConfig.isMinifyEnabled())
                         .setUseMultidex(variantConfig.isMultiDexEnabled())
                         .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
@@ -828,8 +828,7 @@ public class VariantManager implements VariantModel {
                     variantDataList.add(unitTestVariantData);
 
                     if (buildTypeData == testBuildTypeData) {
-                        if (variantConfig.isMinifyEnabled()
-                                && variantConfig.getJackOptions().isEnabled()) {
+                        if (variantConfig.isMinifyEnabled() && variantConfig.isJackEnabled()) {
                             androidBuilder.getErrorReporter().handleSyncError(
                                     variantConfig.getFullName(),
                                     SyncIssue.TYPE_JACK_IS_NOT_SUPPORTED,
