@@ -153,7 +153,7 @@ public class BasicTest2 {
 
         Map<String, Integer> coordinates = ImmutableMap.of(
                 "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION + "@aar", 0,
-                "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar", 1,
+                "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar", 0,
                 "com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar", 0);
 
         Set<String> coordinateCopies = Sets.newHashSet(coordinates.keySet());
