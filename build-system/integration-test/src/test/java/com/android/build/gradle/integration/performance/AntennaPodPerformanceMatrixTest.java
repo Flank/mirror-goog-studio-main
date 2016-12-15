@@ -75,9 +75,9 @@ public class AntennaPodPerformanceMatrixTest {
     public static Set[] getParameters() {
         return new Set[] {
             EnumSet.of(ProjectScenario.NORMAL),
-            EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON),
+            //EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON),
             EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
-            EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS)
+            //EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS),
         };
     }
 
