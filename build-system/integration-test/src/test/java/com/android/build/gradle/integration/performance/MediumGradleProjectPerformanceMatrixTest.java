@@ -72,9 +72,9 @@ public class MediumGradleProjectPerformanceMatrixTest {
         return Arrays.asList(
                 new Object[][] {
                     {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)},
+                    //{EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)},
                     {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
+                    //{EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
                 });
     }
 
