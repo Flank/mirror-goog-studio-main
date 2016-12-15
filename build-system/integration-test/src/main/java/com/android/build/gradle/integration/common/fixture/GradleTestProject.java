@@ -37,6 +37,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -56,12 +57,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
+import org.gradle.util.GradleVersion;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -267,6 +272,32 @@ public final class GradleTestProject implements TestRule {
 
     public static GradleTestProjectBuilder builder() {
         return new GradleTestProjectBuilder();
+    }
+
+    /** Crawls the tools/external/gradle dir, and gets the latest gradle binary. */
+    public static String getLatestGradleCheckedIn() {
+        File gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle");
+
+        // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
+        Pattern gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-\\d+\\+\\d+)?-bin\\.zip$");
+        List<Pair<String, String>> versions = Lists.newArrayList();
+        //noinspection ConstantConditions
+        for (File f : gradleDir.listFiles()) {
+            Matcher matcher = gradleVersion.matcher(f.getName());
+            if (matcher.matches()) {
+                versions.add(Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2))));
+            }
+        }
+
+        Comparator<Pair<String, String>> revisionsCmp =
+                Comparator.<Pair<String, String>, GradleVersion>comparing(
+                                versionTimestamp ->
+                                        GradleVersion.version(versionTimestamp.getFirst()))
+                        .thenComparing(Pair::getSecond)
+                        .reversed();
+
+        versions.sort(revisionsCmp);
+        return versions.get(0).getFirst() + versions.get(0).getSecond();
     }
 
     /**
