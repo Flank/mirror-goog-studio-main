@@ -67,13 +67,13 @@ filegroup(
 
 filegroup(
     name = "support_latest",
-    srcs = [":support_25.0.1"],
+    srcs = [":support_25.1.0"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "support_25.0.1",
-    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.0.1/**"]),
+    name = "support_25.1.0",
+    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.1.0/**"]),
 )
 
 filegroup(
