@@ -333,9 +333,9 @@ class NativeModelTest {
                 [Config.ANDROID_MK_FILE_C_CLANG].toArray(),
                 [Config.ANDROID_MK_FILE_CPP_CLANG].toArray(),
                 [Config.ANDROID_MK_GOOGLE_TEST].toArray(),
-/*              disabled due to http://b.android.com/230228
                 [Config.ANDROID_MK_FILE_CPP_GCC].toArray(),
-                [Config.ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK].toArray(),*/
+                // disabled due to http://b.android.com/230228
+                //[Config.ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK].toArray(),
                 [Config.ANDROID_MK_CUSTOM_BUILD_TYPE].toArray(),
                 [Config.CMAKELISTS_FILE_C].toArray(),
                 [Config.CMAKELISTS_FILE_CPP].toArray(),
