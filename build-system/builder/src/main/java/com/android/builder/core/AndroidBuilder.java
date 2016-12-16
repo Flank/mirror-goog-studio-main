@@ -48,11 +48,8 @@ import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.packaging.PackagerException;
-import com.android.builder.packaging.SigningException;
-import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
-import com.android.builder.signing.SignedJarApkCreator;
 import com.android.builder.symbols.RGeneration;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
@@ -96,7 +93,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -1631,67 +1627,6 @@ public class AndroidBuilder {
                 RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
                 packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
             }
-        }
-    }
-
-    /**
-     * Signs a single jar file using the passed {@link SigningConfig}.
-     *
-     * @param in the jar file to sign.
-     * @param signingConfig the signing configuration
-     * @param out the file path for the signed jar.
-     * @throws IOException failed
-     * @throws KeytoolException failed
-     * @throws SigningException failed
-     * @throws NoSuchAlgorithmException failed
-     * @throws ZipAbortException failed
-     * @throws com.android.builder.signing.SigningException failed
-     */
-    public static void signApk(
-            @NonNull File in,
-            @Nullable SigningConfig signingConfig,
-            @NonNull File out)
-            throws KeytoolException, SigningException, NoSuchAlgorithmException, ZipAbortException,
-            com.android.builder.signing.SigningException, IOException {
-
-        PrivateKey key;
-        X509Certificate certificate;
-        boolean v1SigningEnabled;
-        boolean v2SigningEnabled;
-
-        if (signingConfig != null && signingConfig.isSigningReady()) {
-            CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-                    signingConfig.getStoreType(),
-                    Preconditions.checkNotNull(signingConfig.getStoreFile()),
-                    Preconditions.checkNotNull(signingConfig.getStorePassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyPassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyAlias()));
-            key = certificateInfo.getKey();
-            certificate = certificateInfo.getCertificate();
-            v1SigningEnabled = signingConfig.isV1SigningEnabled();
-            v2SigningEnabled = signingConfig.isV2SigningEnabled();
-        } else {
-            key = null;
-            certificate = null;
-            v1SigningEnabled = false;
-            v2SigningEnabled = false;
-        }
-
-        ApkCreatorFactory.CreationData creationData =
-                new ApkCreatorFactory.CreationData(
-                        out,
-                        key,
-                        certificate,
-                        v1SigningEnabled,
-                        v2SigningEnabled,
-                        null,
-                        null,
-                        1,
-                        NativeLibrariesPackagingMode.COMPRESSED,
-                        s -> false);
-
-        try (SignedJarApkCreator signedJarBuilder = new SignedJarApkCreator(creationData)) {
-            signedJarBuilder.writeZip(in);
         }
     }
 
