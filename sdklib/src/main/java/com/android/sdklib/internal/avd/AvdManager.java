@@ -25,7 +25,9 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
+import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.MockFileOp;
@@ -131,6 +133,11 @@ public class AvdManager {
     public static final String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
 
     /**
+     * AVD/config.ini key name representing the name of the AVD
+     */
+    public static final String AVD_INI_AVD_ID = "AvdId";
+
+    /**
      * AVD/config.ini key name representing the CPU architecture of the specific avd
      */
     public static final String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
@@ -154,6 +161,11 @@ public class AvdManager {
      * AVD/config.ini key name representing the name of the device this avd was based on.
      */
     public static final String AVD_INI_DEVICE_NAME = "hw.device.name"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing the display name of the AVD
+     */
+    public static final String AVD_INI_DISPLAY_NAME = "avd.ini.displayname";
 
     /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
@@ -326,6 +338,8 @@ public class AvdManager {
     public static final int SDCARD_NOT_SIZE_PATTERN = -2;
 
     public static final String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
+
+    private class AvdMgrException extends Exception { };
 
     // A map where the keys are the locations of the SDK and the values are the corresponding
     // AvdManagers. This prevents us from creating multiple AvdManagers for the same SDK and having
@@ -719,315 +733,59 @@ public class AvdManager {
         File iniFile = null;
         boolean needCleanup = false;
         try {
-            if (mFop.exists(avdFolder)) {
-                if (removePrevious) {
-                    // AVD already exists and removePrevious is set, try to remove the
-                    // directory's content first (but not the directory itself).
-                    try {
-                        deleteContentOf(avdFolder);
-                    } catch (SecurityException e) {
-                        log.warning("Failed to delete %1$s: %2$s", avdFolder.getAbsolutePath(), e);
-                    }
-                } else if (!editExisting) {
-                    // AVD shouldn't already exist if removePrevious is false and
-                    // we're not editing an existing AVD.
-                    log.warning("Folder %1$s is in the way. Move it away to continue.",
-                            avdFolder.getAbsolutePath());
-                    return null;
-                }
-            } else {
+            if ( !mFop.exists(avdFolder) ) {
                 // create the AVD folder.
                 mFop.mkdirs(avdFolder);
                 // We're not editing an existing AVD.
                 editExisting = false;
+            } else if (removePrevious) {
+                // AVD already exists and removePrevious is set, try to remove the
+                // directory's content first (but not the directory itself).
+                try {
+                    deleteContentOf(avdFolder);
+                } catch (SecurityException e) {
+                    log.warning("Failed to delete %1$s: %2$s", avdFolder.getAbsolutePath(), e);
+                }
+            } else if (!editExisting) {
+                // The AVD already exists, we want to keep it, and we're not
+                // editing it. We must be making a copy. Duplicate the folder.
+                return duplicateAvd(avdFolder, avdName, systemImage, log);
             }
 
             // actually write the ini file
             iniFile = createAvdIniFile(avdName, avdFolder, removePrevious,
               systemImage.getAndroidVersion());
 
-            // writes the userdata.img in it.
-            File imageFolder = systemImage.getLocation();
-            File userdataSrc = new File(imageFolder, USERDATA_IMG);
+            needCleanup = true;
+            HashMap<String, String> configValues = new HashMap<>();
 
-            String abiType = systemImage.getAbiType();
+            createAvdUserdata(systemImage, avdFolder, log);
+            createAvdConfigFile(systemImage, configValues, log);
+            createAvdSnapshot(createSnapshot, editExisting, configValues, avdFolder, log);
 
-            if (!mFop.exists(userdataSrc)) {
-                log.warning("Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
-                        USERDATA_IMG,
-                        abiType);
-                needCleanup = true;
-                return null;
-            }
-
-            File userdataDest = new File(avdFolder, USERDATA_IMG);
-
-            if (!mFop.exists(userdataDest)) {
-                mFop.copyFile(userdataSrc, userdataDest);
-
-                if (!mFop.exists(userdataDest)) {
-                    log.warning("Unable to create '%1$s' file in the AVD folder.",
-                                userdataDest);
-                    needCleanup = true;
-                    return null;
-                }
-            }
-
-            // Config file.
-            HashMap<String, String> values = new HashMap<>();
-
-            if (!setImagePathProperties(systemImage, values, log)) {
-               log.warning("Failed to set image path properties in the AVD folder.");
-               needCleanup = true;
-               return null;
-            }
-
-            // Create the snapshot file
-            if (createSnapshot) {
-                File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
-                if (mFop.isFile(snapshotDest) && editExisting) {
-                    log.info("Snapshot image already present, was not changed.\n");
-
-                } else {
-                    File toolsLib = new File(mSdkHandler.getLocation(),
-                                             SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER);
-                    File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
-                    if (!mFop.exists(snapshotBlank)) {
-                        log.warning(
-                                "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
-                                SNAPSHOTS_IMG, toolsLib);
-                        needCleanup = true;
-                        return null;
-                    }
-
-                    mFop.copyFile(snapshotBlank, snapshotDest);
-                }
-                values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
-            }
-
-            // Now the tag &amp; abi type
+            // Tag and abi type
             IdDisplay tag = systemImage.getTag();
-            values.put(AVD_INI_TAG_ID,      tag.getId());
-            values.put(AVD_INI_TAG_DISPLAY, tag.getDisplay());
-            values.put(AVD_INI_ABI_TYPE,    abiType);
+            configValues.put(AVD_INI_TAG_ID, tag.getId());
+            configValues.put(AVD_INI_TAG_DISPLAY, tag.getDisplay());
+            configValues.put(AVD_INI_ABI_TYPE, systemImage.getAbiType());
 
-            // and the cpu arch.
-            Abi abi = Abi.getEnum(abiType);
-            if (abi != null) {
-                values.put(AVD_INI_CPU_ARCH, abi.getCpuArch());
+            writeCpuArch(systemImage, configValues, log);
 
-                String model = abi.getCpuModel();
-                if (model != null) {
-                    values.put(AVD_INI_CPU_MODEL, model);
-                }
-            } else {
-                log.warning("ABI %1$s is not supported by this version of the SDK Tools", abiType);
-                needCleanup = true;
-                return null;
-            }
+            createAvdSkin(skinFolder, skinName, configValues, log);
+            createAvdSdCard(sdcard, editExisting, configValues, avdFolder, log);
 
-            // Now the skin.
-            String skinPath = null;
-
-            if (skinFolder == null && skinName != null &&
-                    NUMERIC_SKIN_SIZE.matcher(skinName).matches()) {
-                // Numeric skin size. Set both skinPath and skinName to the same size.
-                skinPath = skinName;
-
-            } else if (skinFolder != null && skinName == null) {
-                // Skin folder is specified, but not skin name. Adjust it.
-                skinName = skinFolder.getName();
-
-            }
-
-            if (skinFolder != null) {
-                // skin does not exist!
-                if (!mFop.exists(skinFolder)) {
-                    log.warning("Skin '%1$s' does not exist at %2$s.", skinName, skinFolder.getPath());
-                    return null;
-                }
-
-                // if skinFolder is in the sdk, use the relative path
-                if (skinFolder.getPath().startsWith(mSdkHandler.getLocation().getPath())) {
-                    try {
-                        skinPath = FileOpUtils.makeRelative(mSdkHandler.getLocation(), skinFolder,
-                                mFop);
-                    } catch (IOException e) {
-                        // In case it fails, just use the absolute path
-                        skinPath = skinFolder.getAbsolutePath();
-                    }
-                } else {
-                    // Skin isn't in the sdk. Just use the absolute path.
-                    skinPath = skinFolder.getAbsolutePath();
-                }
-            }
-
-            // Set skin.name for display purposes in the AVD manager and
-            // set skin.path for use by the emulator.
-            if (skinName != null) {
-                values.put(AVD_INI_SKIN_NAME, skinName);
-            }
-            if (skinPath != null) {
-                values.put(AVD_INI_SKIN_PATH, skinPath);
-            }
-
-            if (sdcard != null && !sdcard.isEmpty()) {
-                // Sdcard is possibly a size. In that case we create a file called 'sdcard.img'
-                // in the AVD folder, and do not put any value in config.ini.
-
-                long sdcardSize = parseSdcardSize(sdcard, null);
-
-                if (sdcardSize == SDCARD_SIZE_NOT_IN_RANGE) {
-                    log.warning("SD Card size must be in the range 9 MiB..1023 GiB.");
-                    needCleanup = true;
-                    return null;
-
-                } else if (sdcardSize == SDCARD_SIZE_INVALID) {
-                    log.warning("Unable to parse SD Card size");
-                    needCleanup = true;
-                    return null;
-
-                } else if (sdcardSize == SDCARD_NOT_SIZE_PATTERN) {
-                    File sdcardFile = new File(sdcard);
-                    if (mFop.isFile(sdcardFile)) {
-                        // sdcard value is an external sdcard, so we put its path into the config.ini
-                        values.put(AVD_INI_SDCARD_PATH, sdcard);
-                    } else {
-                        log.warning("'%1$s' is not recognized as a valid sdcard value.\n"
-                                + "Value should be:\n" + "1. path to an sdcard.\n"
-                                + "2. size of the sdcard to create: <size>[K|M]", sdcard);
-                        needCleanup = true;
-                        return null;
-                    }
-                } else {
-                    // create the sdcard.
-                    File sdcardFile = new File(avdFolder, SDCARD_IMG);
-
-                    boolean runMkSdcard = true;
-                    if (mFop.exists(sdcardFile)) {
-                        if (sdcardFile.length() == sdcardSize && editExisting) {
-                            // There's already an sdcard file with the right size and we're
-                            // not overriding it... so don't remove it.
-                            runMkSdcard = false;
-                            log.info("SD Card already present with same size, was not changed.\n");
-                        }
-                    }
-                    if (mFop instanceof MockFileOp) {
-                        // We don't have a real filesystem, so we won't be able to run the tool. Skip.
-                        runMkSdcard = false;
-                    }
-
-                    if (runMkSdcard) {
-                        String path = sdcardFile.getAbsolutePath();
-
-                        // execute mksdcard with the proper parameters.
-                        LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
-                        LocalPackage p = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR, progress);
-                        if (p == null) {
-                            p = mSdkHandler.getLocalPackage(SdkConstants.FD_TOOLS, progress);
-                        }
-                        if (p == null) {
-                            progress.logWarning(String.format(
-                                    "Unable to find %1$s in the %2$s or %3$s components",
-                                    SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR,
-                                    SdkConstants.FD_TOOLS));
-                            needCleanup = true;
-                            return null;
-                        }
-                        File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());
-
-                        if (!mFop.isFile(mkSdCard)) {
-                            log.warning("'%1$s' is missing from the SDK tools folder.",
-                                    mkSdCard.getName());
-                            needCleanup = true;
-                            return null;
-                        }
-
-                        if (!createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log)) {
-                            log.warning("Failed to create sdcard in the AVD folder.");
-                            needCleanup = true;
-                            return null; // mksdcard output has already been displayed, no need to
-                                         // output anything else.
-                        }
-                    }
-
-                    // add a property containing the size of the sdcard for display purpose
-                    // only when the dev does 'android list avd'
-                    values.put(AVD_INI_SDCARD_SIZE, sdcard);
-                }
-            }
-
-            // add the hardware config to the config file.
-            // priority order is:
-            // - values provided by the user
-            // - values provided by the skin
-            // - values provided by the sys img
-            // In order to follow this priority, we'll add the lowest priority values first and then
-            // override by higher priority values.
-            // In the case of a platform with override values from the user, the skin value might
-            // already be there, but it's ok.
-
-            HashMap<String, String> finalHardwareValues = new HashMap<>();
-
-            FileOpFileWrapper sysImgHardwareFile =
-              new FileOpFileWrapper(new File(systemImage.getLocation(), HARDWARE_INI),
-                mFop, false);
-            if (sysImgHardwareFile.exists()) {
-                Map<String, String> imageHardwardConfig = ProjectProperties.parsePropertyFile(
-                        sysImgHardwareFile, log);
-
-                if (imageHardwardConfig != null) {
-                    finalHardwareValues.putAll(imageHardwardConfig);
-                    values.putAll(imageHardwardConfig);
-                }
-            }
-
-            // get the hardware properties for this skin
-            if (skinFolder != null) {
-                FileOpFileWrapper skinHardwareFile = new FileOpFileWrapper(
-                  new File(skinFolder, HARDWARE_INI), mFop, false);
-                if (skinHardwareFile.exists()) {
-                    Map<String, String> skinHardwareConfig =
-                        ProjectProperties.parsePropertyFile(skinHardwareFile, log);
-
-                    if (skinHardwareConfig != null) {
-                        finalHardwareValues.putAll(skinHardwareConfig);
-                        values.putAll(skinHardwareConfig);
-                    }
-                }
-            }
-
-            // finally put the hardware provided by the user.
-            if (hardwareConfig != null) {
-                finalHardwareValues.putAll(hardwareConfig);
-                values.putAll(hardwareConfig);
-            }
-
-            File configIniFile = new File(avdFolder, CONFIG_INI);
-            writeIniFile(configIniFile, values, true);
+            addHardwareConfig(systemImage, skinFolder, avdFolder, hardwareConfig, configValues, log);
 
             if (bootProps != null && !bootProps.isEmpty()) {
                 File bootPropsFile = new File(avdFolder, BOOT_PROP);
                 writeIniFile(bootPropsFile, bootProps, false);
             }
 
-            // create the AvdInfo object, and add it to the list
-            AvdInfo newAvdInfo = new AvdInfo(
-                    avdName,
-                    iniFile,
-                    avdFolder.getAbsolutePath(),
-                    systemImage,
-                    values);
-
             AvdInfo oldAvdInfo = getAvd(avdName, false /*validAvdOnly*/);
 
-            synchronized (mAllAvdList) {
-                if (oldAvdInfo != null && (removePrevious || editExisting)) {
-                    mAllAvdList.remove(oldAvdInfo);
-                }
-                mAllAvdList.add(newAvdInfo);
-                mValidAvdList = mBrokenAvdList = null;
-            }
+            AvdInfo newAvdInfo = createAvdInfoObject(systemImage, avdName,
+                    removePrevious, editExisting,
+                    iniFile, avdFolder, oldAvdInfo, configValues);
 
             if ((removePrevious || editExisting) &&
                     newAvdInfo != null &&
@@ -1045,7 +803,10 @@ public class AvdManager {
                 }
             }
 
+            needCleanup = false;
             return newAvdInfo;
+        } catch (AvdMgrException e) {
+            // Warning has already been logged
         } catch (SecurityException | AndroidLocationException | IOException e) {
             log.warning("%1$s", e);
         } finally {
@@ -1064,6 +825,57 @@ public class AvdManager {
         }
 
         return null;
+    }
+
+    /**
+     * Duplicates an existing AVD.
+     *
+     * @param origAvd the AVD to be duplicated
+     * @param newAvdName name of the new copy
+     * @param systemImage system image that the AVD uses
+     * @param log error logger
+     */
+    @Nullable
+    private AvdInfo duplicateAvd(
+            @NonNull File         origAvd,
+            @NonNull String       newAvdName,
+            @NonNull ISystemImage systemImage,
+            @NonNull ILogger      log) {
+
+        try {
+            File destAvdFolder = new File(origAvd.getParent(), newAvdName + AVD_FOLDER_EXTENSION);
+
+            ProgressIndicator progInd = new ConsoleProgressIndicator();
+            progInd.setText("Copying files");
+            progInd.setIndeterminate(true);
+            FileOpUtils.recursiveCopy(origAvd, destAvdFolder, mFop, progInd);
+
+            // Modify the ID and display name in the new config.ini
+            File configIni = new File(destAvdFolder, CONFIG_INI);
+            Map<String, String> configVals = parseIniFile(
+                    new FileOpFileWrapper(configIni, mFop, false),
+                    log);
+            configVals.put(AVD_INI_AVD_ID, newAvdName);
+            configVals.put(AVD_INI_DISPLAY_NAME, newAvdName);
+
+            File destConfigIni = new File(destAvdFolder, CONFIG_INI);
+            writeIniFile(destConfigIni, configVals, true);
+
+            // Create <AVD name>.ini
+            File iniFile = createAvdIniFile(newAvdName, destAvdFolder, false,
+                                            systemImage.getAndroidVersion());
+
+            // Create an AVD object from these files
+            return new AvdInfo(
+                    newAvdName,
+                    iniFile,
+                    destAvdFolder.getAbsolutePath(),
+                    systemImage,
+                    configVals);
+        } catch (AndroidLocationException | IOException e) {
+            log.warning("Exception while duplicating an AVD: %1$s", e);
+            return null;
+        }
     }
 
     /**
@@ -1867,4 +1679,405 @@ public class AvdManager {
     public AndroidSdkHandler getSdkHandler() {
         return mSdkHandler;
     }
+
+    /**
+     * Create the user data file for an AVD
+     * @param systemImage the system image of the AVD
+     * @param avdFolder where the AVDs live
+     * @param log receives error messages
+     */
+    private void createAvdUserdata(
+            @NonNull ISystemImage systemImage,
+            @NonNull File         avdFolder,
+            @NonNull ILogger      log)
+            throws IOException, AvdMgrException {
+        // writes the userdata.img into the *.avd directory
+        File imageFolder = systemImage.getLocation();
+        File userdataSrc = new File(imageFolder, USERDATA_IMG);
+
+        String abiType = systemImage.getAbiType();
+
+        if (!mFop.exists(userdataSrc)) {
+            log.warning("Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
+                    USERDATA_IMG,
+                    abiType);
+            throw new AvdMgrException();
+        }
+
+        File userdataDest = new File(avdFolder, USERDATA_IMG);
+
+        if (!mFop.exists(userdataDest)) {
+            mFop.copyFile(userdataSrc, userdataDest);
+
+            if (!mFop.exists(userdataDest)) {
+                log.warning("Unable to create '%1$s' file in the AVD folder.",
+                            userdataDest);
+                throw new AvdMgrException();
+            }
+        }
+        return;
+    }
+
+    /**
+     * Create the configuration file for an AVD
+     * @param systemImage the system image of the AVD
+     * @param values settings for the AVD
+     * @param log receives error messages
+     */
+    private void createAvdConfigFile(
+            @NonNull  ISystemImage            systemImage,
+            @Nullable HashMap<String, String> values,
+            @NonNull  ILogger                 log)
+            throws AvdMgrException {
+
+        if (!setImagePathProperties(systemImage, values, log)) {
+           log.warning("Failed to set image path properties in the AVD folder.");
+           throw new AvdMgrException();
+        }
+        return;
+    }
+
+    /**
+     * Create the snapshot file for an AVD
+     * @param createSnapshot whether this method should actually do something
+     * @param editExisting true if modifying an existing AVD
+     * @param values settings for the AVD
+     * @param avdFolder where the AVDs live
+     * @param log receives error messages
+     */
+    private void createAvdSnapshot(
+                      boolean            createSnapshot,
+                      boolean            editExisting,
+            @Nullable Map<String,String> values,
+            @NonNull  File               avdFolder,
+            @NonNull  ILogger            log)
+            throws IOException, AvdMgrException {
+
+        if ( !createSnapshot ) {
+            return;
+        }
+        // Create the snapshot file
+        File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
+        if (mFop.isFile(snapshotDest) && editExisting) {
+            log.info("Snapshot image already present, was not changed.\n");
+
+        } else {
+            File toolsLib = new File(mSdkHandler.getLocation(),
+                                     SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER);
+            File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
+            if (!mFop.exists(snapshotBlank)) {
+                log.warning(
+                        "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
+                        SNAPSHOTS_IMG, toolsLib);
+                throw new AvdMgrException();
+            }
+
+            mFop.copyFile(snapshotBlank, snapshotDest);
+        }
+        values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
+
+        return;
+    }
+
+    /**
+     * Write the CPU architecture to a new AVD
+     * @param systemImage the system image of the AVD
+     * @param values settings for the AVD
+     * @param log receives error messages
+     */
+    private void writeCpuArch(
+            @NonNull ISystemImage        systemImage,
+            @Nullable Map<String,String> values,
+            @NonNull  ILogger            log)
+            throws AvdMgrException {
+
+        String abiType = systemImage.getAbiType();
+        Abi abi = Abi.getEnum(abiType);
+        if (abi != null) {
+            values.put(AVD_INI_CPU_ARCH, abi.getCpuArch());
+
+            String model = abi.getCpuModel();
+            if (model != null) {
+                values.put(AVD_INI_CPU_MODEL, model);
+            }
+        } else {
+            log.warning("ABI %1$s is not supported by this version of the SDK Tools", abiType);
+            throw new AvdMgrException();
+        }
+        return;
+    }
+
+    /**
+     * Link a skin with the new AVD
+     * @param skinFolder where the skin is
+     * @param skinName the name of the skin
+     * @param values settings for the AVD
+     * @param log receives error messages
+     */
+    private void createAvdSkin(
+            @Nullable File               skinFolder,
+            @Nullable String             skinName,
+            @Nullable Map<String,String> values,
+            @NonNull  ILogger            log)
+            throws AvdMgrException {
+
+        // Now the skin.
+        String skinPath = null;
+
+        if (skinFolder == null && skinName != null &&
+                NUMERIC_SKIN_SIZE.matcher(skinName).matches()) {
+            // Numeric skin size. Set both skinPath and skinName to the same size.
+            skinPath = skinName;
+
+        } else if (skinFolder != null && skinName == null) {
+            // Skin folder is specified, but not skin name. Adjust it.
+            skinName = skinFolder.getName();
+        }
+
+        if (skinFolder != null) {
+            // skin does not exist!
+            if (!mFop.exists(skinFolder)) {
+                log.warning("Skin '%1$s' does not exist at %2$s.", skinName, skinFolder.getPath());
+                throw new AvdMgrException();
+            }
+
+            // if skinFolder is in the sdk, use the relative path
+            if (skinFolder.getPath().startsWith(mSdkHandler.getLocation().getPath())) {
+                try {
+                    skinPath = FileOpUtils.makeRelative(mSdkHandler.getLocation(), skinFolder,
+                            mFop);
+                } catch (IOException e) {
+                    // In case it fails, just use the absolute path
+                    skinPath = skinFolder.getAbsolutePath();
+                }
+            } else {
+                // Skin isn't in the sdk. Just use the absolute path.
+                skinPath = skinFolder.getAbsolutePath();
+            }
+        }
+
+        // Set skin.name for display purposes in the AVD manager and
+        // set skin.path for use by the emulator.
+        if (skinName != null) {
+            values.put(AVD_INI_SKIN_NAME, skinName);
+        }
+        if (skinPath != null) {
+            values.put(AVD_INI_SKIN_PATH, skinPath);
+        }
+    }
+
+    /**
+     * Create an SD card for the AVD
+     * @param sdcard either a size indicator or the name of a file
+     * @param editExisting true if modifying an existing AVD
+     * @param values settings for the AVD
+     * @param avdFolder where the AVDs live
+     * @param log receives error messages
+     */
+    private void createAvdSdCard(
+            @Nullable String             sdcard,
+                      boolean            editExisting,
+            @Nullable Map<String,String> values,
+            @NonNull  File               avdFolder,
+            @NonNull  ILogger            log)
+            throws AvdMgrException {
+
+        if (sdcard == null || sdcard.isEmpty()) {
+            return;
+        }
+
+        // Sdcard is possibly a size. In that case we create a file called 'sdcard.img'
+        // in the AVD folder, and do not put any value in config.ini.
+
+        long sdcardSize = parseSdcardSize(sdcard, null);
+
+        if (sdcardSize == SDCARD_SIZE_NOT_IN_RANGE) {
+            log.warning("SD Card size must be in the range 9 MiB..1023 GiB.");
+            throw new AvdMgrException();
+        }
+
+        if (sdcardSize == SDCARD_SIZE_INVALID) {
+            log.warning("Unable to parse SD Card size");
+            throw new AvdMgrException();
+        }
+
+        if (sdcardSize == SDCARD_NOT_SIZE_PATTERN) {
+            File sdcardFile = new File(sdcard);
+            if ( !mFop.isFile(sdcardFile) ) {
+                log.warning("'%1$s' is not recognized as a valid sdcard value.\n"
+                        + "Value should be:\n" + "1. path to an sdcard.\n"
+                        + "2. size of the sdcard to create: <size>[K|M]", sdcard);
+                throw new AvdMgrException();
+            }
+            // sdcard value is an external sdcard, so we put its path into the config.ini
+            values.put(AVD_INI_SDCARD_PATH, sdcard);
+            return;
+        }
+
+        // create the sdcard.
+        File sdcardFile = new File(avdFolder, SDCARD_IMG);
+
+        boolean runMkSdcard = true;
+        if (mFop.exists(sdcardFile)) {
+            if (sdcardFile.length() == sdcardSize && editExisting) {
+                // There's already an sdcard file with the right size and we're
+                // not overriding it... so don't remove it.
+                runMkSdcard = false;
+                log.info("SD Card already present with same size, was not changed.\n");
+            }
+        }
+        if (mFop instanceof MockFileOp) {
+            // We don't have a real filesystem, so we won't be able to run the tool. Skip.
+            runMkSdcard = false;
+        }
+
+        if (runMkSdcard) {
+            String path = sdcardFile.getAbsolutePath();
+
+            // execute mksdcard with the proper parameters.
+            LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
+            LocalPackage p = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR, progress);
+            if (p == null) {
+                p = mSdkHandler.getLocalPackage(SdkConstants.FD_TOOLS, progress);
+            }
+            if (p == null) {
+                progress.logWarning(String.format(
+                        "Unable to find %1$s in the %2$s or %3$s components",
+                        SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR,
+                        SdkConstants.FD_TOOLS));
+                throw new AvdMgrException();
+            }
+            File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());
+
+            if (!mFop.isFile(mkSdCard)) {
+                log.warning("'%1$s' is missing from the SDK tools folder.",
+                        mkSdCard.getName());
+                throw new AvdMgrException();
+            }
+
+            if (!createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log)) {
+                // mksdcard output has already been displayed, no need to
+                // output anything else.
+                log.warning("Failed to create sdcard in the AVD folder.");
+                throw new AvdMgrException();
+            }
+        }
+
+        // add a property containing the size of the sdcard for display purpose
+        // only when the dev does 'android list avd'
+        values.put(AVD_INI_SDCARD_SIZE, sdcard);
+        return;
+    }
+
+    /**
+     * Add the hardware configuration to an AVD
+     * @param systemImage the system image of the AVD
+     * @param skinFolder where the skin is
+     * @param avdFolder where the AVDs live
+     * @param hardwareConfig map of configuration values
+     * @param values settings for the resulting AVD
+     * @param log receives error messages
+     */
+    private void addHardwareConfig(
+            @NonNull  ISystemImage       systemImage,
+            @Nullable File               skinFolder,
+            @NonNull  File               avdFolder,
+            @Nullable Map<String,String> hardwareConfig,
+            @Nullable Map<String,String> values,
+            @NonNull  ILogger            log)
+            throws IOException {
+
+        // add the hardware config to the config file.
+        // priority order is:
+        // - values provided by the user
+        // - values provided by the skin
+        // - values provided by the sys img
+        // In order to follow this priority, we'll add the lowest priority values first and then
+        // override by higher priority values.
+        // In the case of a platform with override values from the user, the skin value might
+        // already be there, but it's ok.
+
+        HashMap<String, String> finalHardwareValues = new HashMap<>();
+
+        FileOpFileWrapper sysImgHardwareFile =
+          new FileOpFileWrapper(new File(systemImage.getLocation(), HARDWARE_INI),
+            mFop, false);
+        if (sysImgHardwareFile.exists()) {
+            Map<String, String> imageHardwardConfig = ProjectProperties.parsePropertyFile(
+                    sysImgHardwareFile, log);
+
+            if (imageHardwardConfig != null) {
+                finalHardwareValues.putAll(imageHardwardConfig);
+                values.putAll(imageHardwardConfig);
+            }
+        }
+
+        // get the hardware properties for this skin
+        if (skinFolder != null) {
+            FileOpFileWrapper skinHardwareFile = new FileOpFileWrapper(
+              new File(skinFolder, HARDWARE_INI), mFop, false);
+            if (skinHardwareFile.exists()) {
+                Map<String, String> skinHardwareConfig =
+                    ProjectProperties.parsePropertyFile(skinHardwareFile, log);
+
+                if (skinHardwareConfig != null) {
+                    finalHardwareValues.putAll(skinHardwareConfig);
+                    values.putAll(skinHardwareConfig);
+                }
+            }
+        }
+
+        // finally put the hardware provided by the user.
+        if (hardwareConfig != null) {
+            finalHardwareValues.putAll(hardwareConfig);
+            values.putAll(hardwareConfig);
+        }
+
+        File configIniFile = new File(avdFolder, CONFIG_INI);
+        writeIniFile(configIniFile, values, true);
+
+        return;
+    }
+
+    /**
+     * Create an AvdInfo object from the new AVD.
+     * @param systemImage the system image of the AVD
+     * @param avdName the name of the AVD
+     * @param removePrevious true if the existing AVD should be deleted
+     * @param editExisting true if modifying an existing AVD
+     * @param iniFile the .ini file of this AVD
+     * @param avdFolder where the AVD resides
+     * @param oldAvdInfo configuration of the old AVD
+     * @param values a map of the AVD's info
+     */
+    @NonNull
+    private AvdInfo createAvdInfoObject(
+            @NonNull  ISystemImage       systemImage,
+            @NonNull  String             avdName,
+                      boolean            removePrevious,
+                      boolean            editExisting,
+            @NonNull  File               iniFile,
+            @NonNull  File               avdFolder,
+            @Nullable AvdInfo            oldAvdInfo,
+            @Nullable Map<String,String> values)
+            throws AvdMgrException {
+
+        // create the AvdInfo object, and add it to the list
+        AvdInfo theAvdInfo = new AvdInfo(
+                avdName,
+                iniFile,
+                avdFolder.getAbsolutePath(),
+                systemImage,
+                values);
+
+        synchronized (mAllAvdList) {
+            if (oldAvdInfo != null && (removePrevious || editExisting)) {
+                mAllAvdList.remove(oldAvdInfo);
+            }
+            mAllAvdList.add(theAvdInfo);
+            mValidAvdList = mBrokenAvdList = null;
+        }
+        return theAvdInfo;
+    }
+
 }
