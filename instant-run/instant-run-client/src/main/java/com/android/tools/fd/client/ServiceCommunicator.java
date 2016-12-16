@@ -16,48 +16,21 @@
 
 package com.android.tools.fd.client;
 
-import static com.android.tools.fd.client.InstantRunArtifactType.DEX;
-import static com.android.tools.fd.client.InstantRunArtifactType.SPLIT;
 import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_EOF;
-import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_PATCHES;
-import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_PING;
-import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_RESTART_ACTIVITY;
-import static com.android.tools.fd.common.ProtocolConstants.MESSAGE_SHOW_TOAST;
 import static com.android.tools.fd.common.ProtocolConstants.PROTOCOL_IDENTIFIER;
 import static com.android.tools.fd.common.ProtocolConstants.PROTOCOL_VERSION;
-import static com.android.tools.fd.runtime.Paths.getDeviceIdFolder;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ddmlib.AdbCommandRejectedException;
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
-import com.android.tools.fd.runtime.ApplicationPatch;
-import com.android.tools.fd.runtime.Paths;
 import com.android.utils.ILogger;
-import com.android.utils.NullLogger;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 /**
  * Wrapper for talking to either the hotswap service or the run-as service.
@@ -80,10 +53,6 @@ public class ServiceCommunicator {
         mPackageName = packageName;
         mLogger = logger;
         mLocalPort = port;
-    }
-
-    public int getLocalPort() {
-        return mLocalPort;
     }
 
     @NonNull

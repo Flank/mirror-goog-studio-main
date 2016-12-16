@@ -37,13 +37,6 @@ public enum InstantRunArtifactType {
     SPLIT,
 
     /**
-     * Shard dex file that can be deployed on L devices
-     * @deprecated No longer used; remove once the Gradle parts are gone (FileType.DEX)
-     */
-    @Deprecated
-    DEX,
-
-    /**
      * Hot swappable classes
      */
     RELOAD_DEX,

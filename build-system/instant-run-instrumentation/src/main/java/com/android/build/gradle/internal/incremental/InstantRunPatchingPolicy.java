@@ -38,14 +38,6 @@ public enum InstantRunPatchingPolicy {
     PRE_LOLLIPOP(DexPackagingPolicy.STANDARD, false /* useMultidex */),
 
     /**
-     * For Lollipop and before N, the application will be split in shards of dex files upon initial
-     * build and packaged as a native multi dex application. Each incremental changes will trigger
-     * rebuilding the affected shard dex files. Such dex files will be pushed on the device using
-     * the embedded micro-server and installed by it.
-     */
-    MULTI_DEX(DexPackagingPolicy.INSTANT_RUN_SHARDS_IN_SINGLE_APK, true /* useMultidex */),
-
-    /**
      * For N and above, each shard dex file described above will be packaged in a single pure
      * split APK that will be pushed and installed on the device using adb install-multiple
      * commands.
@@ -94,10 +86,8 @@ public enum InstantRunPatchingPolicy {
         if (featureLevel < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return PRE_LOLLIPOP;
         } else {
-            // whe dealing with Lollipop or Marshmallow, by default, we use MULTI_DEX
-            // , but starting with 24, use MULT_APK
-            InstantRunPatchingPolicy defaultModeForArchitecture =
-                    featureLevel < 24 ? MULTI_DEX : MULTI_APK;
+            // whe dealing with Lollipop or above, use MULT_APK
+            InstantRunPatchingPolicy defaultModeForArchitecture = MULTI_APK;
 
             if (Strings.isNullOrEmpty(coldswapMode)) {
                 return defaultModeForArchitecture;
@@ -106,7 +96,6 @@ public enum InstantRunPatchingPolicy {
             ColdswapMode coldswap = ColdswapMode.valueOf(coldswapMode.toUpperCase(Locale.US));
             switch(coldswap) {
                 case MULTIAPK: return MULTI_APK;
-                case MULTIDEX: return MULTI_DEX;
                 case AUTO:
                     return defaultModeForArchitecture;
                 case DEFAULT:

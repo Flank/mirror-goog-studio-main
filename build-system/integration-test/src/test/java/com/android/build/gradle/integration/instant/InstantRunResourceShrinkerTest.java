@@ -50,7 +50,7 @@ public class InstantRunResourceShrinkerTest {
     public void checkPackaging() throws Exception {
         project.execute("clean");
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
     }
 }

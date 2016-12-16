@@ -94,7 +94,7 @@ public class InstantRunAddLibraryTest {
         // Use that dependency
         writeClass("com.google.common.base.Strings.nullToEmpty(null);");
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIDEX)
+        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -103,15 +103,15 @@ public class InstantRunAddLibraryTest {
                 InstantRunVerifierStatus.DEPENDENCY_CHANGED.toString());
 
         boolean foundDependencies = false;
-        assertThat(context.getArtifacts()).hasSize(2);
+        assertThat(context.getArtifacts()).hasSize(3);
         for (InstantRunArtifact artifact: context.getArtifacts()) {
-            expect.that(artifact.type).isEqualTo(InstantRunArtifactType.DEX);
-            if (artifact.file.getParentFile().getName().contains("guava")) {
-                //TODO: a real test for the dependencies dex being rebuilt.
+            expect.that(artifact.type).isAnyOf(
+                    InstantRunArtifactType.SPLIT, InstantRunArtifactType.SPLIT_MAIN);
+            if (artifact.file.getName().contains("dependencies")) {
                 foundDependencies = true;
             }
         }
-        assertTrue("The dependencies dex needs to be redeployed", foundDependencies);
+        assertTrue("The dependencies split apk needs to be redeployed", foundDependencies);
     }
 
 

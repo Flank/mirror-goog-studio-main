@@ -45,7 +45,7 @@ import org.mockito.Mockito;
  */
 public class HotSwapTester {
 
-    public static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    public static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     @NonNull
     private final GradleTestProject project;
     @NonNull
@@ -232,5 +232,5 @@ public class HotSwapTester {
                 }
             }
         }
-    };
+    }
 }

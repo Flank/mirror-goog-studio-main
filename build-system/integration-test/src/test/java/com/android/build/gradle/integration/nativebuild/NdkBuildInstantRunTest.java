@@ -91,9 +91,8 @@ public class NdkBuildInstantRunTest {
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        File apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel).file;
-        assertThat(apk).exists();
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        assertThat(apks.getEntries("lib/x86/libhello-jni.so")).hasSize(1);
 
         TemporaryProjectModification.doTest(
                 sProject,

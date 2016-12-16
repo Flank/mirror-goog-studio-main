@@ -283,12 +283,6 @@ public class DexTransform extends Transform {
                         mainDexListFile,
                         dexOptions,
                         outputHandler);
-
-                for (File file : Files.fileTreeTraverser().breadthFirstTraversal(outputDir)) {
-                    if (file.isFile()) {
-                        instantRunBuildContext.addChangedFile(FileType.DEX, file);
-                    }
-                }
             } else {
                 // Figure out if we need to do a dx merge.
                 // The ony case we don't need it is in native multi-dex mode when doing debug
@@ -539,13 +533,6 @@ public class DexTransform extends Transform {
             } else {
                 preDexLibraryAction.call();
             }
-
-            for (File file : Files.fileTreeTraverser().breadthFirstTraversal(to)) {
-                if (file.isFile()) {
-                    instantRunBuildContext.addChangedFile(FileType.DEX, file);
-                }
-            }
-
             return null;
         }
     }

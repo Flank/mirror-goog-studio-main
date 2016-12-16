@@ -53,8 +53,8 @@ public class LibDependencyTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                .fromTestProject("libDependency")
-                .create();
+                    .fromTestProject("libDependency")
+                    .create();
 
     @Before
     public void activityClass() throws IOException {
@@ -99,10 +99,10 @@ public class LibDependencyTest {
         ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
         createJavaLibraryClass("changed");
-        project.executor().withInstantRun(23, ColdswapMode.MULTIDEX)
+        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(

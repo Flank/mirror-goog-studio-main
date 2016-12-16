@@ -46,7 +46,7 @@ public class InstantRunAnalyticsHelperTest {
         when(mInstantRunBuildContext.getLastBuild()).thenReturn(mBuild);
         when(mInstantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
         when(mInstantRunBuildContext.getPatchingPolicy())
-                .thenReturn(InstantRunPatchingPolicy.MULTI_DEX);
+                .thenReturn(InstantRunPatchingPolicy.MULTI_APK);
         when(mInstantRunBuildContext.getVerifierResult())
                 .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
         when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
@@ -60,7 +60,7 @@ public class InstantRunAnalyticsHelperTest {
                 InstantRunAnalyticsHelper.generateAnalyticsProto(mInstantRunBuildContext);
 
         assertEquals(InstantRunStatus.BuildMode.HOT_WARM, proto.getBuildMode());
-        assertEquals(InstantRunStatus.PatchingPolicy.MULTI_DEX, proto.getPatchingPolicy());
+        assertEquals(InstantRunStatus.PatchingPolicy.MULTI_APK, proto.getPatchingPolicy());
         assertEquals(InstantRunStatus.VerifierStatus.COMPATIBLE, proto.getVerifierStatus());
 
         assertEquals(2, proto.getArtifactCount());

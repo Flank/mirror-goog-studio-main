@@ -45,7 +45,7 @@ import org.junit.Test;
  */
 public class HotSwapWithNoChangesTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
 
     private static final String LOG_TAG = "NoCodeChangeAfterCompatibleChangeTest";
 

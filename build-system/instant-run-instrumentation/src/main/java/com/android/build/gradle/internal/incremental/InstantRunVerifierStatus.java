@@ -25,12 +25,10 @@ public enum InstantRunVerifierStatus {
     // There were no changes.
     NO_CHANGES(
             InstantRunBuildMode.HOT_WARM,
-            InstantRunBuildMode.HOT_WARM,
             InstantRunBuildMode.HOT_WARM),
 
     // changes are compatible with current InstantRun features.
     COMPATIBLE(
-            InstantRunBuildMode.HOT_WARM,
             InstantRunBuildMode.HOT_WARM,
             InstantRunBuildMode.HOT_WARM),
 
@@ -74,8 +72,7 @@ public enum InstantRunVerifierStatus {
     // reflection use
     REFLECTION_USED,
 
-    JAVA_RESOURCES_CHANGED(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.COLD),
+    JAVA_RESOURCES_CHANGED,
 
     DEPENDENCY_CHANGED,
 
@@ -85,36 +82,31 @@ public enum InstantRunVerifierStatus {
      * <p>Changes to resource ids referenced by the binary manifest will be {@link
      * #BINARY_MANIFEST_FILE_CHANGE}.
      */
-    MANIFEST_FILE_CHANGE(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.COLD),
+    MANIFEST_FILE_CHANGE,
 
     // the binary manifest file changed, probably due to references to resources which ID changed
     // since last build.
-    BINARY_MANIFEST_FILE_CHANGE(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.COLD),
+    BINARY_MANIFEST_FILE_CHANGE,
 
-    COLD_SWAP_REQUESTED(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.COLD, InstantRunBuildMode.COLD),
+    COLD_SWAP_REQUESTED,
 
     FULL_BUILD_REQUESTED(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.FULL),
+            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL),
 
-    INITIAL_BUILD(InstantRunBuildMode.FULL, InstantRunBuildMode.FULL, InstantRunBuildMode.FULL);
+    INITIAL_BUILD(InstantRunBuildMode.FULL, InstantRunBuildMode.FULL);
 
     private final ImmutableMap<InstantRunPatchingPolicy, InstantRunBuildMode> buildMode;
 
     InstantRunVerifierStatus() {
-        this(InstantRunBuildMode.FULL, InstantRunBuildMode.COLD, InstantRunBuildMode.COLD);
+        this(InstantRunBuildMode.FULL, InstantRunBuildMode.COLD);
     }
 
     InstantRunVerifierStatus(
             @NonNull InstantRunBuildMode preLollipopBuildMode,
-            @NonNull InstantRunBuildMode multiDexBuildMode,
             @NonNull InstantRunBuildMode multiApkBuildMode) {
         buildMode =
                 ImmutableMap.of(
                         InstantRunPatchingPolicy.PRE_LOLLIPOP, preLollipopBuildMode,
-                        InstantRunPatchingPolicy.MULTI_DEX, multiDexBuildMode,
                         InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode);
     }
 
