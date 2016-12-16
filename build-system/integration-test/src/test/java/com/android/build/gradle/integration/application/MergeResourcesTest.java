@@ -17,11 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.nio.file.Files;
@@ -57,7 +58,7 @@ public class MergeResourcesTest {
 
         project.execute(":app:assembleDebug");
 
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
 
         File inIntermediate = FileUtils.join(
@@ -90,12 +91,13 @@ public class MergeResourcesTest {
 
         project.execute(":app:assembleDebug");
 
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 3 });
         assertThat(inIntermediate).contains(new byte[] { 3 });
         long intermediateModified = inIntermediate.lastModified();
         long apUModified = apUnderscore.lastModified();
-        long apkModified = project.getSubproject("app").getApk("debug").lastModified();
+        long apkModified =
+                project.getSubproject("app").getApk("debug").getFile().toFile().lastModified();
 
         /*
          * Now, modify the library's and check that nothing changed.
@@ -104,7 +106,7 @@ public class MergeResourcesTest {
 
         project.execute(":app:assembleDebug");
 
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 3 });
 
         // See http://b.android.com/212089
@@ -142,7 +144,7 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
-        assertThatApk(apUnderscore)
+        assertThatZip(apUnderscore)
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
 
         /*
@@ -155,7 +157,7 @@ public class MergeResourcesTest {
          * Check that the file has been removed from the intermediates and from the apk.
          */
         assertThat(inIntermediate).doesNotExist();
-        assertThatApk(apUnderscore).doesNotContain("res/raw/me.raw");
+        assertThatZip(apUnderscore).doesNotContain("res/raw/me.raw");
     }
 
     @Test
@@ -187,7 +189,7 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
-        assertThatApk(apUnderscore)
+        assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
 
         /*
@@ -200,7 +202,7 @@ public class MergeResourcesTest {
          * Check that the file has been updated in the intermediates directory and in the project.
          */
         assertThat(inIntermediate).contains(new byte[] { 1, 2, 3, 4 });
-        assertThatApk(apUnderscore)
+        assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 1, 2, 3, 4 });
     }
 
@@ -233,7 +235,7 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
-        assertThatApk(apUnderscore)
+        assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
 
         /*
@@ -250,8 +252,8 @@ public class MergeResourcesTest {
         assertThat(inIntermediate).doesNotExist();
         assertThat(new File(inIntermediate.getParent(), "me.war"))
                 .contains(new byte[] { 1, 2, 3, 4});
-        assertThatApk(apUnderscore).doesNotContain("res/raw/me.raw");
-        assertThatApk(apUnderscore)
+        assertThat(apUnderscore).doesNotContain("res/raw/me.raw");
+        assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.war", new byte[] { 1, 2, 3, 4 });
     }
 }

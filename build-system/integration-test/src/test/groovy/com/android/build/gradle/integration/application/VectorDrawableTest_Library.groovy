@@ -21,13 +21,14 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.apk.Apk
 import com.google.common.io.Files
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 /**
  * Tests for PNG generation in case of libraries.
@@ -103,32 +104,32 @@ class VectorDrawableTest_Library {
         """
 
         project.execute(":app:assembleDebug")
-        File apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("debug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
 
         modifyVector()
 
         // Verify incremental build.
         project.execute(":app:assembleDebug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
     }
 
     private void modifyVector() {
@@ -148,31 +149,31 @@ class VectorDrawableTest_Library {
         """
 
         project.execute(":app:assembleDebug")
-        File apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("debug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
 
         modifyVector()
 
         project.execute(":app:assembleDebug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
     }
 
     @Test
@@ -190,59 +191,59 @@ class VectorDrawableTest_Library {
         """
 
         project.execute(":app:assembleDebug")
-        File apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("debug")
 
-        assertThatApk(apk).containsResource("drawable/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
 
-        assertThatApk(apk).containsResource("drawable/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
 
         modifyVector()
 
         project.execute(":app:assembleDebug")
-        assertThatApk(apk).containsResource("drawable/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
 
-        assertThatApk(apk).containsResource("drawable/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
     }
 
     @Test
     public void "None use support library"() throws Exception {
         project.execute(":app:assembleDebug")
-        File apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("debug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
 
         modifyVector()
         
         project.execute(":app:assembleDebug")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
 
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThatApk(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
     }
 }

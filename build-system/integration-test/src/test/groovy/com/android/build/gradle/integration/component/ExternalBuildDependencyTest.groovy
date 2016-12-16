@@ -23,15 +23,19 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestA
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.testutils.apk.Apk
 import com.android.utils.FileUtils
+import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * Tests for native dependencies
  */
+@CompileStatic
 class ExternalBuildDependencyTest {
     static MultiModuleTestProject base = new MultiModuleTestProject(
             app: new HelloWorldJniApp(),
@@ -142,7 +146,7 @@ model {
 """
         project.execute("clean", ":app:assembleDebug");
 
-        File apk = project.getSubproject("app").getApk("debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        Apk apk = project.getSubproject("app").getApk("debug")
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 }

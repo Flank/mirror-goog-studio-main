@@ -28,13 +28,13 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -53,7 +53,7 @@ import org.junit.experimental.categories.Category;
  */
 public class HotSwapTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String LOG_TAG = "hotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
     private static final int CHANGES_COUNT = 3;
@@ -86,14 +86,16 @@ public class HotSwapTest {
 
         InstantRunTestUtils.doInitialBuild(project, 19, COLDSWAP_MODE);
 
+        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        assertThat(apks).hasSize(1);
+        Apk apk = apks.get(0);
+
         // As no injected API level, will default to no splits.
-        ApkSubject apkFile = expect.about(ApkSubject.FACTORY)
-                .that(project.getApk("debug"));
-        apkFile.hasClass("Lcom/example/helloworld/HelloWorld;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
-                .that().hasMethod("onCreate");
-        apkFile.hasClass("Lcom/android/tools/fd/runtime/InstantRunService;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
+        assertThat(apk)
+                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
+                .that()
+                .hasMethod("onCreate");
+        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunService;");
 
         createActivityClass("CHANGE");
 

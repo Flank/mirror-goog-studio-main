@@ -31,7 +31,6 @@ import org.junit.Rule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 /**
  * Assemble tests for packagingOptions.
  *
@@ -113,7 +112,7 @@ dependencies {
 }
 """
         project.execute("clean", "assembleDebug")
-        assertThatZip(project.getApk("debug")).contains("conflict.txt")
+        assertThat(project.getApk("debug")).contains("conflict.txt")
     }
 
     @Test
@@ -131,7 +130,7 @@ dependencies {
 }
 """
         project.execute("clean", "assembleDebug")
-        assertThatZip(project.getApk("debug")).doesNotContain("conflict.txt")
+        assertThat(project.getApk("debug")).doesNotContain("conflict.txt")
     }
 
     @Test
@@ -145,7 +144,7 @@ android {
 """
         createFile('src/main/resources/conflict.txt')
         project.execute("clean", "assembleDebug")
-        assertThatZip(project.getApk("debug")).doesNotContain('conflict.txt')
+        assertThat(project.getApk("debug")).doesNotContain('conflict.txt')
     }
 
     @Test
@@ -164,7 +163,7 @@ dependencies {
 """
         project.execute("clean", "assembleDebug")
 
-        assertThatZip(project.getApk("debug"))
+        assertThat(project.getApk("debug"))
                 .containsFileWithContent("conflict.txt", "foo\nfoo")
     }
 
@@ -181,7 +180,7 @@ android {
         createFile('src/main/resources/file.txt') << "main"
         createFile('src/debug/resources/file.txt') << "debug"
         project.execute("clean", "assembleDebug")
-        assertThatZip(project.getApk("debug")).containsFileWithContent("file.txt", "debug")
+        assertThat(project.getApk("debug")).containsFileWithContent("file.txt", "debug")
     }
 
     @Test
@@ -194,7 +193,7 @@ dependencies {
         createFile('src/main/resources/conflict.txt') << "project-foo"
         project.execute("clean", "assembleDebug")
         // we expect to only see the one in src/main because it overrides the dependency one.
-        assertThatZip(project.getApk("debug")).
+        assertThat(project.getApk("debug")).
                 containsFileWithContent("conflict.txt", "project-foo")
     }
 
@@ -214,7 +213,7 @@ android{
         createFile('src/main/resources/conflict.txt') << "project-foo"
         project.execute("clean", "assembleDebug")
         // files should be merged
-        assertThatZip(project.getApk("debug")).
+        assertThat(project.getApk("debug")).
                 containsFileWithContent("conflict.txt", "foo\nproject-foo")
     }
 

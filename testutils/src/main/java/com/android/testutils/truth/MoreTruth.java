@@ -20,12 +20,15 @@ import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.apk.Dex;
+import com.android.testutils.apk.Zip;
 import com.android.testutils.incremental.FileRecord;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -48,21 +51,24 @@ public class MoreTruth {
     }
 
     @NonNull
-    public static ZipFileSubject assertThatZip(@Nullable File file) {
-        return assert_()
-                .about(
-                        new SubjectFactory<ZipFileSubject, File>() {
-                            @Override
-                            public ZipFileSubject getSubject(FailureStrategy fs, File that) {
-                                return new ZipFileSubject(fs, that);
-                            }
-                        })
-                .that(file);
+    public static ZipFileSubject assertThat(@Nullable Zip zip) throws IOException {
+        return  assert_().about(ZipFileSubject.FACTORY).that(zip);
     }
 
     @NonNull
-    public static DexFileSubject assertThatDex(@Nullable File dex) {
-        return assert_().about(DexFileSubject.FACTORY).that(dex);
+    public static ZipFileSubject assertThatZip(@Nullable File file) throws IOException {
+        Zip zip = new Zip(file.toPath());
+        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+    }
+
+    @NonNull
+    public static DexSubject assertThatDex(@Nullable File dex) {
+        return assertThat(dex != null ? new Dex(dex.toPath()) : null);
+    }
+
+    @NonNull
+    public static DexSubject assertThat(@Nullable Dex dex) {
+        return assert_().about(DexSubject.FACTORY).that(dex);
     }
 
     @NonNull

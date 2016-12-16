@@ -98,11 +98,6 @@ public class ConnectedColdSwapTest {
         doTest(ColdswapMode.MULTIAPK, adb.getDevice(thatUsesArt()));
     }
 
-    @Test
-    public void multidexTest() throws Exception {
-        doTest(ColdswapMode.MULTIDEX, adb.getDevice(thatUsesArt()));
-    }
-
     private InstantRun instantRunModel;
 
     private void doTest(@NonNull ColdswapMode coldswapMode, @NonNull IDevice device)

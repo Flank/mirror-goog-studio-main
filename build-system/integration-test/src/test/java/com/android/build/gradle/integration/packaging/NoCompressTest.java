@@ -26,6 +26,7 @@ import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
@@ -77,9 +78,9 @@ public class NoCompressTest {
         /*
          * Get the apk.
          */
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertTrue(apk.exists());
-        try (ZFile zf = new ZFile(apk)) {
+        try (ZFile zf = new ZFile(apk.getFile().toFile())) {
             StoredEntry jres_yes = zf.get("jres.yes");
             assertNotNull(jres_yes);
             assertEquals(

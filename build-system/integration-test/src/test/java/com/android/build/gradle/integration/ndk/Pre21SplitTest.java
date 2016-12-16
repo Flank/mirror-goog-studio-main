@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
-
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.File;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.truth.MoreTruth;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -78,9 +77,9 @@ public class Pre21SplitTest {
         project.execute("assembleX86Debug");
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("x86", "debug");
-        assertThatZip(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatZip(apk).doesNotContain("lib/mips/libhello-jni.so");
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        Apk apk = project.getApk("x86", "debug");
+        MoreTruth.assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        MoreTruth.assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
+        MoreTruth.assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 }

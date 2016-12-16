@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.StdLogger
+import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -28,11 +29,11 @@ import org.junit.Test
 
 import java.security.KeyStore
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
+import static com.android.testutils.truth.MoreTruth.assertThat
 /**
  * Integration test with signing config.
  */
+@CompileStatic
 class ComponentSigningConfigTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
@@ -100,7 +101,7 @@ model {
     @Test
     public void assembleRelease() {
         project.execute("clean", "assembleRelease")
-        assertThatZip(project.getApk("release")).contains("META-INF/CERT.RSA")
+        assertThat(project.getApk("release")).contains("META-INF/CERT.RSA")
     }
 
 

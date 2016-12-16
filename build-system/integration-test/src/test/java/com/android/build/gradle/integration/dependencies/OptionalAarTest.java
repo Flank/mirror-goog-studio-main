@@ -31,12 +31,13 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Aar;
+import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
@@ -87,21 +88,21 @@ public class OptionalAarTest {
 
     @Test
     public void checkAppDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
-        File apk = project.getSubproject("app").getApk("debug");
+        Apk apk = project.getSubproject("app").getApk("debug");
 
         assertThatApk(apk).doesNotContainResource("layout/lib2layout.xml");
     }
 
     @Test
     public void checkAppDoesNotContainProvidedLibsCode() throws IOException, ProcessException {
-        File apk = project.getSubproject("app").getApk("debug");
+        Apk apk = project.getSubproject("app").getApk("debug");
 
         assertThatApk(apk).doesNotContainClass("Lcom/example/android/multiproject/library2/PersonView2;");
     }
 
     @Test
     public void checkLibDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
-        File aar = project.getSubproject("library").getAar("debug");
+        Aar aar = project.getSubproject("library").getAar("debug");
 
         assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
         assertThatAar(aar).textSymbolFile().contains("int layout liblayout");

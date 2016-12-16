@@ -20,7 +20,6 @@ import static com.android.SdkConstants.FD_RES_CLASS;
 import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
@@ -30,7 +29,6 @@ import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -42,7 +40,6 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Map;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -95,7 +92,7 @@ public class MultiAtomTest {
 
         // Tests that the BuildConfig and R class are generated in the proper package.
         AtomBundleSubject baseAtomBundle =
-                assertThatAtomBundle(sProject.getSubproject("base").getAtomBundle("release"));
+                assertThat(sProject.getSubproject("base").getAtomBundle("release"));
         baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/BuildConfig;");
         baseAtomBundle.containsClass("Lcom/android/tests/multiatom/base/R;");
         baseAtomBundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
@@ -103,7 +100,7 @@ public class MultiAtomTest {
 
         // Tests that the BuildConfig and R class are not packaged twice.
         AtomBundleSubject atomABundle =
-                assertThatAtomBundle(sProject.getSubproject("atoma").getAtomBundle("release"));
+                assertThat(sProject.getSubproject("atoma").getAtomBundle("release"));
         atomABundle.containsClass("Lcom/android/tests/multiatom/atoma/BuildConfig;");
         atomABundle.containsClass("Lcom/android/tests/multiatom/atoma/R;");
         atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");
@@ -112,7 +109,7 @@ public class MultiAtomTest {
         atomABundle.doesNotContainClass("Lcom/android/tests/multiatom/base/R;");
 
         AtomBundleSubject atomEBundle =
-                assertThatAtomBundle(sProject.getSubproject("atome").getAtomBundle("release"));
+                assertThat(sProject.getSubproject("atome").getAtomBundle("release"));
         atomEBundle.containsClass("Lcom/android/tests/multiatom/atome/BuildConfig;");
         atomEBundle.containsClass("Lcom/android/tests/multiatom/atome/R;");
         atomEBundle.doesNotContainClass("Lcom/android/tests/multiatom/BuildConfig;");

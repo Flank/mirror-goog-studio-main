@@ -17,12 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -30,7 +30,7 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import java.io.File;
+import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.Before;
@@ -102,8 +102,8 @@ public class AutoResConfig {
         assertEquals(1, output.getOutputs().size());
 
         System.out.println(output.getMainOutputFile().getOutputFile().getAbsolutePath());
-        File apk = output.getMainOutputFile().getOutputFile();
+        Apk apk = new Apk(output.getMainOutputFile().getOutputFile());
 
-        TruthHelper.assertThatApk(apk).locales().containsAllOf("en", "fr", "fr-CA", "fr-BE");
+        assertThatApk(apk).locales().containsAllOf("en", "fr", "fr-CA", "fr-BE");
     }
 }

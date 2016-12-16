@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunBuildInfo;
-import java.io.File;
 import java.util.List;
 
 /** Helper class for testing cold-swap scenarios. */
@@ -42,15 +42,11 @@ class ColdSwapTester {
         doTest(steps, 19, ColdswapMode.AUTO);
     }
 
-    void testMultiDex(Steps steps) throws Exception {
-        doTest(steps, 21, ColdswapMode.MULTIDEX);
-    }
-
     private void doTest(Steps steps, int apiLevel, ColdswapMode coldswapMode) throws Exception {
         InstantRun instantRunModel =
                 InstantRunTestUtils.doInitialBuild(mProject, apiLevel, coldswapMode);
 
-        steps.checkApk(mProject.getApk("debug"));
+        steps.checkApks(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel));
 
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
         String startBuildId = initialContext.getTimeStamp();
@@ -74,11 +70,11 @@ class ColdSwapTester {
     }
 
     void testMultiApk(Steps steps) throws Exception {
-        doTest(steps, 24, ColdswapMode.AUTO);
+        doTest(steps, 24, ColdswapMode.MULTIAPK);
     }
 
     interface Steps {
-        void checkApk(@NonNull File apk) throws Exception;
+        void checkApks(@NonNull SplitApks apks) throws Exception;
 
         void makeChange() throws Exception;
 

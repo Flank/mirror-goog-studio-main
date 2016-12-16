@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
@@ -65,16 +64,16 @@ public class JacocoTransformTest {
     public void addAndRemoveClass() throws Exception {
 
         mProject.execute("assembleDebug");
-        assertThatApk(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
+        assertThat(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
 
         TemporaryProjectModification.doTest(mProject,
                 modifiedProject -> {
                     modifiedProject.addFile(CLASS_SRC_LOCATION, CLASS_CONTENT);
                     mProject.execute("assembleDebug");
-                    assertThatApk(mProject.getApk("debug")).containsClass(CLASS_FULL_TYPE);
+                    assertThat(mProject.getApk("debug")).containsClass(CLASS_FULL_TYPE);
                 });
         mProject.execute("assembleDebug");
-        assertThatApk(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
+        assertThat(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
     }
 
     @Test

@@ -19,13 +19,14 @@ package com.android.build.gradle.integration.test
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.android.builder.model.level2.DependencyGraphs
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -90,25 +91,25 @@ dependencies {
 
     @Test
     void "check app doesn't contain test app's code"() {
-        File apk = project.getSubproject('test').getApk("debug")
+        Apk apk = project.getSubproject('test').getApk("debug")
         assertThatApk(apk).doesNotContainClass("Lcom/android/tests/basic/Main;")
     }
 
     @Test
     void "check app doesn't contain test app's layout"() {
-        File apk = project.getSubproject('test').getApk("debug")
+        Apk apk = project.getSubproject('test').getApk("debug")
         assertThatApk(apk).doesNotContainResource("layout/main.xml")
     }
 
     @Test
     void "check app doesn't contain test app's dependency lib's code"() {
-        File apk = project.getSubproject('test').getApk("debug")
+        Apk apk = project.getSubproject('test').getApk("debug")
         assertThatApk(apk).doesNotContainClass("Landroid/support/v7/app/ActionBar;")
     }
 
     @Test
     void "check app doesn't contain test app's dependency lib's resources"() {
-        File apk = project.getSubproject('test').getApk("debug")
+        Apk apk = project.getSubproject('test').getApk("debug")
         assertThatApk(apk).doesNotContainResource("layout/abc_action_bar_title_item.xml")
     }
 

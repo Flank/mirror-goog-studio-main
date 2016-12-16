@@ -16,12 +16,17 @@
 
 package com.android.testutils.truth;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 import org.jf.dexlib2.Opcodes;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 
 public final class DexUtils {
@@ -32,19 +37,39 @@ public final class DexUtils {
     private DexUtils() {
     }
 
-    @Nullable
-    public static DexBackedDexFile loadDex(@Nullable byte[] bytes) {
-        return bytes != null ? new DexBackedDexFile(DEX_LIB_OPCODES, bytes) : null;
+    @NonNull
+    public static DexBackedDexFile loadDex(@NonNull byte[] bytes) {
+        return new DexBackedDexFile(DEX_LIB_OPCODES, bytes);
+    }
+
+    @NonNull
+    public static DexBackedDexFile loadDex(@NonNull Path path) throws IOException {
+        return loadDex(Files.readAllBytes(path));
+    }
+
+    @NonNull
+    public static DexBackedDexFile loadDex(@NonNull File file) throws IOException {
+        return loadDex(file.toPath());
+    }
+
+    public static DexBackedClassDef getClass(@Nullable DexBackedDexFile dex, @NonNull String name) {
+        return dex != null ? getClass(Collections.singleton(dex), name) : null;
     }
 
     @Nullable
-    public static DexBackedDexFile loadDex(@Nullable Path path) throws IOException {
-        return loadDex(path != null ? Files.readAllBytes(path) : null);
-    }
-
-    @Nullable
-    public static DexBackedDexFile loadDex(@Nullable File file) throws IOException {
-        return loadDex(file != null ? file.toPath() : null);
+    public static DexBackedClassDef getClass(
+            @NonNull Collection<DexBackedDexFile> dexFiles, @NonNull String name) {
+        for (DexBackedDexFile dexFile : dexFiles) {
+            Optional<? extends DexBackedClassDef> classDef =
+                    dexFile.getClasses()
+                            .parallelStream()
+                            .filter(clazz -> clazz.getType().equals(name))
+                            .findAny();
+            if (classDef.isPresent()) {
+                return classDef.get();
+            }
+        }
+        return null;
     }
 
 

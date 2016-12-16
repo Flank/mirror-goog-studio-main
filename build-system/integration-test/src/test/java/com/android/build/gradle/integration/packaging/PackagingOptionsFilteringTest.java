@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.integration.packaging;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -89,7 +88,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource(".svn/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/.svn/ignored-2");
@@ -121,7 +120,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource("CVS/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/cvs/ignored-2");
@@ -153,7 +152,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource("SCCS/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/SCCS/ignored-2");
@@ -185,7 +184,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource("_/ignored-1");
         apk.containsJavaResourceWithContent("not-ignored-1", c0);
         apk.doesNotContainJavaResource("foo/__/ignored-2");
@@ -222,7 +221,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource("I_am_ign");
         apk.containsJavaResourceWithContent("ssccs/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");
@@ -261,7 +260,7 @@ public class PackagingOptionsFilteringTest {
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = assertThatApk(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
         apk.doesNotContainJavaResource("I_am_ign");
         apk.containsJavaResourceWithContent("sccs/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");

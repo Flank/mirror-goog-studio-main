@@ -17,15 +17,16 @@
 package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.TestUtils;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -502,7 +503,7 @@ public class NativeSoPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, InterruptedException {
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         check(assertThatApk(apk), "lib", filename, content);
         PackagingTests.checkZipAlign(apk);
     }
@@ -521,7 +522,7 @@ public class NativeSoPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatApk(project.getTestApk("debug")), "lib", filename, content);
+        check(TruthHelper.assertThat(project.getTestApk("debug")), "lib", filename, content);
     }
 
     /**
@@ -538,7 +539,7 @@ public class NativeSoPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatAar(project.getAar("debug")), "jni", filename, content);
+        check(TruthHelper.assertThat(project.getAar("debug")), "jni", filename, content);
     }
 
     private static void check(

@@ -36,6 +36,8 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.sdklib.AndroidVersion;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.AppState;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
@@ -50,6 +52,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -57,8 +60,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public final class InstantRunTestUtils {
-
-    private static final int SLEEP_TIME_MSEC = 200;
 
     // each test class, has a port used for IR to avoid interference
     public static final Map<String, Integer> PORTS =
@@ -70,6 +71,7 @@ public final class InstantRunTestUtils {
                     .put("DaggerTest", 8119)
                     .put("ResourcesSwapTest", 8120)
                     .build();
+    private static final int SLEEP_TIME_MSEC = 200;
 
     @NonNull
     public static InstantRunBuildInfo loadContext(@NonNull InstantRun instantRunModel)
@@ -105,7 +107,7 @@ public final class InstantRunTestUtils {
             @NonNull IDevice device,
             @NonNull List<InstantRunArtifact> artifacts) throws DeviceException,
             InstallException {
-        if (artifacts.size()==1 && artifacts.get(0).type == InstantRunArtifactType.MAIN) {
+        if (artifacts.size() == 1 && artifacts.get(0).type == InstantRunArtifactType.MAIN) {
             device.installPackage(artifacts.get(0).file.getAbsolutePath(), true /*reinstall*/);
             return;
         }
@@ -187,12 +189,10 @@ public final class InstantRunTestUtils {
         return Iterables.getOnlyElement(context.getArtifacts());
     }
 
-    /**
-     * Gets the RELOAD_DEX {@link InstantRunArtifact} produced by last build.
-     */
+    /** Gets the RELOAD_DEX {@link InstantRunArtifact} produced by last build. */
     @NonNull
-    public static InstantRunArtifact getReloadDexArtifact(
-            @NonNull InstantRun instantRunModel) throws Exception {
+    public static InstantRunArtifact getReloadDexArtifact(@NonNull InstantRun instantRunModel)
+            throws Exception {
         InstantRunArtifact artifact = getOnlyArtifact(instantRunModel);
         assertThat(artifact.type).isEqualTo(InstantRunArtifactType.RELOAD_DEX);
         return artifact;
@@ -210,31 +210,30 @@ public final class InstantRunTestUtils {
     }
 
     @NonNull
-    public static List<InstantRunArtifact> getCompiledColdSwapChange(
-            @NonNull InstantRun instantRunModel,
-            @NonNull ColdswapMode coldswapMode) throws Exception {
-        List<InstantRunArtifact> artifacts =  loadContext(instantRunModel).getArtifacts();
+    public static SplitApks getCompiledColdSwapChange(@NonNull InstantRun instantRunModel)
+            throws Exception {
+        return getCompiledColdSwapChange(loadContext(instantRunModel).getArtifacts());
+    }
+
+    @NonNull
+    public static SplitApks getCompiledColdSwapChange(@NonNull List<InstantRunArtifact> artifacts)
+            throws Exception {
         assertThat(artifacts).isNotEmpty();
 
-        EnumSet<InstantRunArtifactType> allowedArtifactTypes;
-        switch (coldswapMode) {
-            case MULTIAPK:
-                allowedArtifactTypes = EnumSet.of(
-                        InstantRunArtifactType.SPLIT, InstantRunArtifactType.SPLIT_MAIN);
-                break;
-            case MULTIDEX:
-                allowedArtifactTypes = EnumSet.of(InstantRunArtifactType.DEX);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "Expecting cold swap mode to be explicitly specified");
-        }
-        for (InstantRunArtifact artifact: artifacts) {
+        EnumSet<InstantRunArtifactType> allowedArtifactTypes =
+                EnumSet.of(
+                        InstantRunArtifactType.SPLIT,
+                        InstantRunArtifactType.SPLIT_MAIN,
+                        InstantRunArtifactType.MAIN);
+
+        List<Apk> apks = new ArrayList<>();
+        for (InstantRunArtifact artifact : artifacts) {
             if (!allowedArtifactTypes.contains(artifact.type)) {
                 throw new AssertionError("Unexpected artifact " + artifact);
             }
+            apks.add(new Apk(artifact.file.toPath()));
         }
-        return artifacts;
+        return new SplitApks(apks);
     }
 
     public static void printBuildInfoFile(@Nullable InstantRun instantRunModel) {

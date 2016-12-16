@@ -24,6 +24,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.testutils.truth.MoreTruth.assertThat
 import static com.android.testutils.truth.MoreTruth.assertThatZip
 /**
  * Integration test for extracting annotations.
@@ -116,7 +117,7 @@ class ExtractAnnotationTest {
                 "com/android/tests/extractannotations/annotations.xml", expectedContent)
 
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        assertThatZip(project.getAar("debug")).contains("annotations.zip")
+        assertThat(project.getAar("debug")).contains("annotations.zip")
 
         // Check typedefs removals:
 

@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
@@ -27,8 +28,6 @@ import org.junit.ClassRule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 /**
@@ -55,12 +54,12 @@ class GenFolderApiTest {
 
     @Test
     void "check the custom java generation task ran"() throws Exception {
-        assertThatApk(project.getApk("debug")).containsClass("Lcom/custom/Foo;")
+        assertThat(project.getApk("debug")).containsClass("Lcom/custom/Foo;")
     }
 
     @Test
     void "check the custom res generation task ran"() throws Exception {
-        assertThatZip(project.getApk("debug")).contains("res/xml/generated.xml")
+        assertThat(project.getApk("debug")).contains("res/xml/generated.xml")
     }
 
     @Test

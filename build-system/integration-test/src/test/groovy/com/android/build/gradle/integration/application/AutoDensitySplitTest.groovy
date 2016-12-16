@@ -21,14 +21,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static org.junit.Assert.assertEquals
 /**
  * MultiAPK test where densities are obtained automatically.
@@ -71,31 +71,31 @@ class AutoDensitySplitTest {
             }
             assertEquals(5, mainArtifact.getOutputs().size())
 
-            File mdpiApk = project.getApk("mdpi", "debug")
-            assertThatZip(mdpiApk).contains("res/drawable-mdpi-v4/other.png")
+            Apk mdpiApk = project.getApk("mdpi", "debug")
+            assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png")
         }
     }
 
     @Test
     void "check version code in apk"() {
-        File universalApk = project.getApk("universal", "debug")
-        assertThatApk(universalApk).hasVersionCode(112)
-        assertThatApk(universalApk).hasVersionName("version 112")
+        Apk universalApk = project.getApk("universal", "debug")
+        assertThat(universalApk).hasVersionCode(112)
+        assertThat(universalApk).hasVersionName("version 112")
 
-        File mdpiApk = project.getApk("mdpi", "debug")
-        assertThatApk(mdpiApk).hasVersionCode(212)
-        assertThatApk(mdpiApk).hasVersionName("version 212")
+        Apk mdpiApk = project.getApk("mdpi", "debug")
+        assertThat(mdpiApk).hasVersionCode(212)
+        assertThat(mdpiApk).hasVersionName("version 212")
 
-        File hdpiApk = project.getApk("hdpi", "debug")
-        assertThatApk(hdpiApk).hasVersionCode(312)
-        assertThatApk(hdpiApk).hasVersionName("version 312")
+        Apk hdpiApk = project.getApk("hdpi", "debug")
+        assertThat(hdpiApk).hasVersionCode(312)
+        assertThat(hdpiApk).hasVersionName("version 312")
 
-        File xhdpiApk = project.getApk("xhdpi", "debug")
-        assertThatApk(xhdpiApk).hasVersionCode(412)
-        assertThatApk(xhdpiApk).hasVersionName("version 412")
+        Apk xhdpiApk = project.getApk("xhdpi", "debug")
+        assertThat(xhdpiApk).hasVersionCode(412)
+        assertThat(xhdpiApk).hasVersionName("version 412")
 
-        File xxhdiApk = project.getApk("xxhdpi", "debug")
-        assertThatApk(xxhdiApk).hasVersionCode(512)
-        assertThatApk(xxhdiApk).hasVersionName("version 512")
+        Apk xxhdiApk = project.getApk("xxhdpi", "debug")
+        assertThat(xxhdiApk).hasVersionCode(512)
+        assertThat(xxhdiApk).hasVersionName("version 512")
     }
 }

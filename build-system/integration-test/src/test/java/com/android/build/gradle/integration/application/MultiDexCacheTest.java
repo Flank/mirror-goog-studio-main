@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -52,10 +52,10 @@ public class MultiDexCacheTest {
     }
 
     private void verifyGuavaClassesExist() throws Exception {
-        assertThatApk(mProject.getApk("f1", "debug"))
+        assertThat(mProject.getApk("f1", "debug"))
                 .containsClass("Lcom/google/common/collect/Maps;");
 
-        assertThatApk(mProject.getApk("f2", "debug"))
+        assertThat(mProject.getApk("f2", "debug"))
                 .containsClass("Lcom/google/common/collect/Maps;");
     }
 

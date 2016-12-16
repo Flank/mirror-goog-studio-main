@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 import static com.google.common.base.Charsets.UTF_8;
@@ -29,6 +28,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.testutils.TestUtils;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
@@ -57,18 +57,18 @@ public class VectorDrawableTest {
     @Test
     public void vectorFileIsMovedAndPngsAreGenerated() throws Exception {
         project.execute("clean", "assembleDebug");
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
 
         // Check HDPI. Test project contains the hdpi png, it should be used instead of the
         // generated one.
@@ -100,35 +100,36 @@ public class VectorDrawableTest {
                 .isEqualTo(FileUtils.sha1(generatedPng));
 
         // Check interactions with other qualifiers.
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/modern_heart.xml");
-        assertThatApk(apk).containsResource("drawable-fr-anydpi-v21/french_heart.xml");
-        assertThatApk(apk).containsResource("drawable-fr-anydpi-v21/french_heart.xml");
-        assertThatApk(apk).containsResource("drawable-fr-hdpi-v4/french_heart.png");
-        assertThatApk(apk).containsResource("drawable-hdpi-v16/modern_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-fr-hdpi-v21/french_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-fr-xhdpi-v21/french_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-fr/french_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-fr/french_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v16/modern_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/french_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/modern_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/modern_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/french_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/modern_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi/french_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi/modern_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-v16/modern_heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-v16/modern_heart.xml");
+        apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/modern_heart.xml");
+        assertThat(apk).containsResource("drawable-fr-anydpi-v21/french_heart.xml");
+        assertThat(apk).containsResource("drawable-fr-anydpi-v21/french_heart.xml");
+        assertThat(apk).containsResource("drawable-fr-hdpi-v4/french_heart.png");
+        assertThat(apk).containsResource("drawable-hdpi-v16/modern_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-fr-hdpi-v21/french_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-fr-xhdpi-v21/french_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-fr/french_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-fr/french_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v16/modern_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/french_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/modern_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/modern_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/french_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/modern_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi/french_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi/modern_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-v16/modern_heart.png");
+        assertThat(apk).doesNotContainResource("drawable-v16/modern_heart.xml");
     }
 
     @Test
     public void incrementalBuildAddXml() throws Exception {
         project.execute("assembleDebug");
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
 
         // Sanity check:
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart_copy.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart_copy.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart_copy.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart_copy.png");
 
         File intermediatesXml =
                 project.file("build/intermediates/res/merged/debug/drawable-anydpi-v21/heart.xml");
@@ -145,16 +146,16 @@ public class VectorDrawableTest {
         project.execute("assembleDebug");
         assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
         assertThat(intermediatesHdpiPng).wasModifiedAt(pngTimestamp);
-
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart_copy.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart_copy.png");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart_copy.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart_copy.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart_copy.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart_copy.xml");
+        apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart_copy.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart_copy.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart_copy.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart_copy.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart_copy.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart_copy.xml");
     }
 
     @Test
@@ -169,14 +170,14 @@ public class VectorDrawableTest {
         TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
 
         assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
@@ -307,14 +308,14 @@ public class VectorDrawableTest {
         TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
 
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable/heart.xml");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi/heart.png");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable/heart.xml");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
         File heartXmlToUse = new File(
                 project.getTestDir(),
@@ -343,14 +344,14 @@ public class VectorDrawableTest {
                 project.file("build/intermediates/res/merged/debug/drawable/icon.png");
         long timestamp = intermediatesIconPng.lastModified();
 
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable/heart.xml");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi/heart.png");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable/heart.xml");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
         File heartXmlToUse = new File(
                 project.getTestDir(),
@@ -362,13 +363,13 @@ public class VectorDrawableTest {
         Files.write(vectorDrawable, heartXml, UTF_8);
         TestUtils.waitForFileSystemTick();
         project.execute("assembleDebug");
-
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
 
         assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
@@ -379,44 +380,44 @@ public class VectorDrawableTest {
         TestFileUtils.searchAndReplace(project.getBuildFile(), "generatedDensities.*\n", "");
 
         project.execute("clean", "assembleDebug");
-        File apk = project.getApk("debug");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-xxxhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-xxhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-mdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-ldpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-ldpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-xxxhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-xxhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-mdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-ldpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-ldpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
     }
 
     @Test
     public void nothingIsDoneWhenMinSdk21AndAbove() throws Exception {
         searchAndReplace(project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion 21");
         project.execute("clean", "assembleDebug");
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
 
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/special_heart.png");
-        assertThatApk(apk).containsResource("drawable-v16/modern_heart.xml");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).containsResource("drawable/heart.xml");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).containsResource("drawable/special_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v16/modern_heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v22/no_need.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-hdpi-v4/special_heart.png");
+        assertThat(apk).containsResource("drawable-v16/modern_heart.xml");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable/heart.xml");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).containsResource("drawable/special_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v16/modern_heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v22/no_need.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
     }
 
     @Test
@@ -425,7 +426,7 @@ public class VectorDrawableTest {
                 "android.defaultConfig.vectorDrawables.generatedDensities = []");
 
         project.execute("clean", "assembleDebug");
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertPngGenerationDisabled(apk);
     }
 
@@ -435,66 +436,67 @@ public class VectorDrawableTest {
                 "android.defaultConfig.generatedDensities = []");
 
         project.execute("clean", "assembleDebug");
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertPngGenerationDisabled(apk);
     }
 
     @Test
     public void incrementalBuildDisablingPngGeneration() throws Exception {
-        File apk = project.getApk("debug");
 
         project.execute("clean", "assembleDebug");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
 
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.vectorDrawables.useSupportLibrary = true");
 
         project.execute("assembleDebug");
-        assertPngGenerationDisabled(apk);
+        assertPngGenerationDisabled(project.getApk("debug"));
     }
 
     @Test
     public void incrementalBuildChangingDensities() throws Exception {
-        File apk = project.getApk("debug");
 
         project.execute("clean", "assembleDebug");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).containsResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
 
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.vectorDrawables.generatedDensities = ['hdpi']");
 
         project.execute("assembleDebug");
-        assertThatApk(apk).containsResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).containsResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable/heart.xml");
+        apk = project.getApk("debug");
+        assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/heart.xml");
     }
 
     @Test
@@ -540,17 +542,17 @@ public class VectorDrawableTest {
         assertThat(hdpiOnlyDebug.getGeneratedDensities()).containsExactly("hdpi");
     }
 
-    private static void assertPngGenerationDisabled(File apk) throws Exception {
-        assertThatApk(apk).containsResource("drawable/heart.xml");
-        assertThatApk(apk).containsResource("drawable/icon.png");
-        assertThatApk(apk).containsResource("drawable-v22/no_need.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-anydpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
-        assertThatApk(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
-        assertThatApk(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+    private static void assertPngGenerationDisabled(Apk apk) throws Exception {
+        assertThat(apk).containsResource("drawable/heart.xml");
+        assertThat(apk).containsResource("drawable/icon.png");
+        assertThat(apk).containsResource("drawable-v22/no_need.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
     }
 
 }

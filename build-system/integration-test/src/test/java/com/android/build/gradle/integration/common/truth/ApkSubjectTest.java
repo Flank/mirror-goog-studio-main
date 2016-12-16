@@ -18,31 +18,37 @@ package com.android.build.gradle.integration.common.truth;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 
 public class ApkSubjectTest {
 
     @Test
-    public void notInBadgingOutput() {
+    public void notInBadgingOutput() throws IOException {
         List<String> strings = Lists.newArrayList(
                 "");
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File("/tmp/foo");
-        ApkSubject subject = new ApkSubject(failure, file);
+        ApkSubject subject = new ApkSubject(failure, new Apk(file));
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
 
         subject.checkMaxSdkVersion(strings, 1);
 
-        assertThat(failure.message).isEqualTo("maxSdkVersion not found in badging output for <" + file.getAbsolutePath() + ">");
+        assertThat(failure.message)
+                .isEqualTo(
+                        "maxSdkVersion not found in badging output for <Apk<"
+                                + file.getAbsolutePath()
+                                + ">>");
     }
 
     @Test
-    public void findValidValue() {
+    public void findValidValue() throws IOException {
         List<String> strings = Lists.newArrayList(
                 "foo",
                 "maxSdkVersion:'14'",
@@ -50,7 +56,7 @@ public class ApkSubjectTest {
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File("foo");
-        ApkSubject subject = new ApkSubject(failure, file);
+        ApkSubject subject = new ApkSubject(failure, new Apk(file));
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
 
@@ -60,7 +66,7 @@ public class ApkSubjectTest {
     }
 
     @Test
-    public void findDifferentValue() {
+    public void findDifferentValue() throws IOException {
         List<String> strings = Lists.newArrayList(
                 "foo",
                 "maxSdkVersion:'20'",
@@ -68,12 +74,16 @@ public class ApkSubjectTest {
 
         FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File("/tmp/foo");
-        ApkSubject subject = new ApkSubject(failure, file);
+        ApkSubject subject = new ApkSubject(failure, new Apk(file));
         // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
         failure.reset();
 
         subject.checkMaxSdkVersion(strings, 14);
 
-        assertThat(failure.message).isEqualTo("Not true that <" + file.getAbsolutePath() + "> has maxSdkVersion <14>. It is <20>");
+        assertThat(failure.message)
+                .isEqualTo(
+                        "Not true that <Apk<"
+                                + file.getAbsolutePath()
+                                + ">> has maxSdkVersion <14>. It is <20>");
     }
 }

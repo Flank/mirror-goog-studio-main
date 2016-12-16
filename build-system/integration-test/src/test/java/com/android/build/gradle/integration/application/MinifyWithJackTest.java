@@ -16,11 +16,10 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,12 +51,13 @@ public class MinifyWithJackTest {
 
     @Test
     public void checkApkIsMinified() throws Exception {
-        ApkSubject apkSubject = assertThatApk(project.getApk("minified"));
+        ApkSubject apkSubject = assertThat(project.getApk("minified"));
 
         apkSubject.doesNotContainClass("Lcom/android/tests/basic/UnusedTestClass;");
         apkSubject.containsClass("Lcom/android/tests/basic/a;");
 
-        apkSubject.hasClass("Lcom/android/tests/basic/Main;", ClassFileScope.MAIN)
+        apkSubject
+                .hasMainClass("Lcom/android/tests/basic/Main;")
                 .that()
                 // Make sure default ProGuard rules were applied.
                 .hasMethod("handleOnClick");
@@ -65,7 +65,7 @@ public class MinifyWithJackTest {
 
     @Test
     public void checkTestApkNotMinified() throws Exception {
-        ApkSubject apkSubject = assertThatApk(project.getTestApk("debug"));
+        ApkSubject apkSubject = assertThat(project.getTestApk("debug"));
 
         apkSubject.containsClass("Lcom/android/tests/basic/MainTest;");
         apkSubject.containsClass("Lcom/android/tests/basic/UnusedTestClass;");

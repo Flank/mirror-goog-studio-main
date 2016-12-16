@@ -22,14 +22,13 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestA
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
 /**
  * Tests for standalone NDK plugin and native dependencies.
  *
@@ -180,8 +179,8 @@ model {
         // Check that release lib is not compiled.
         assertThat(lib1.file("build/intermediates/binaries/release/obj/x86/libhello-jni.so")).doesNotExist();
 
-        File apk = project.getSubproject("app").getApk("release", "unsigned")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
-        assertThatZip(apk).contains("lib/x86/prebuilt.so");
+        Apk apk = project.getSubproject("app").getApk("release", "unsigned")
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/prebuilt.so");
     }
 }

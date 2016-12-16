@@ -28,8 +28,7 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Tests C/C++/ld flags in an NDK project.
  */
@@ -175,19 +174,19 @@ model {
     @Test
     public void "assemble C project"() {
         cProject.execute("assembleDebug")
-        assertThatZip(cProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
+        assertThat(cProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
     }
 
     @Test
     public void "assemble C++ project"() {
         cppProject.execute("assembleDebug")
-        assertThatZip(cppProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
+        assertThat(cppProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
     }
 
     @Test
     public void "assemble ld project"() {
         ldProject.execute("assembleDebug")
-        assertThatZip(ldProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
+        assertThat(ldProject.getApk("debug")).contains("lib/x86/libhello-jni.so")
     }
 
     @Test

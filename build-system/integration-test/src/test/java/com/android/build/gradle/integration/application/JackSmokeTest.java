@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
@@ -54,7 +53,7 @@ public class JackSmokeTest {
                 .run("clean", "assembleDebug", "assembleDebugAndroidTest");
         assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
 
-        assertThatApk(sBasic.getApk("debug")).contains("classes.dex");
+        assertThat(sBasic.getApk("debug")).contains("classes.dex");
     }
 
     @Test

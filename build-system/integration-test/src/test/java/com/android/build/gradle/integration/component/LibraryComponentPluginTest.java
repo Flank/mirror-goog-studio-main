@@ -16,21 +16,18 @@
 
 package com.android.build.gradle.integration.component;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
-import com.android.testutils.TestUtils;
-import java.io.File;
+import com.android.testutils.apk.Aar;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 /**
  * Basic integration test for LibraryComponentModelPlugin.
@@ -46,7 +43,7 @@ public class LibraryComponentPluginTest {
 
 
     @Test
-    public void checBuildConfigFileIsIncluded() throws IOException, ProcessException {
+    public void checkBuildConfigFileIsIncluded() throws IOException, ProcessException {
         appendToFile(project.getSubproject("app").getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
                 + "\n"
@@ -77,8 +74,8 @@ public class LibraryComponentPluginTest {
                 + "}\n");
 
         project.execute("assemble");
-        File releaseAar = project.getSubproject("lib").getAar("release");
-        assertThatAar(releaseAar).containsClass("Lcom/example/helloworld/BuildConfig;");
+        Aar releaseAar = project.getSubproject("lib").getAar("release");
+        assertThat(releaseAar).containsClass("Lcom/example/helloworld/BuildConfig;");
     }
 
     @Test

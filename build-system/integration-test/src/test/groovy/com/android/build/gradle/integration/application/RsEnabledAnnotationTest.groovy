@@ -23,8 +23,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
+import static com.android.testutils.truth.MoreTruth.assertThat
 /**
  * Integration test for extracting RS enabled annotations.
  */
@@ -49,6 +48,6 @@ class RsEnabledAnnotationTest {
     @Test
     void "check extract annotation"() {
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        assertThatZip(project.getAar("debug")).contains("annotations.zip")
+        assertThat(project.getAar("debug")).contains("annotations.zip")
     }
 }

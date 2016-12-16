@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
@@ -32,9 +31,9 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.AfterClass;
@@ -73,9 +72,9 @@ public class AppWithCompileLibTest {
 
     @Test
     public void checkCompiledLibraryIsPackaged() throws IOException, ProcessException {
-        File apk = project.getSubproject("app").getApk("debug");
+        Apk apk = project.getSubproject("app").getApk("debug");
 
-        assertThatApk(apk).containsClass("Lcom/example/android/multiproject/library/PersonView;");
+        assertThat(apk).containsClass("Lcom/example/android/multiproject/library/PersonView;");
     }
 
     @Test

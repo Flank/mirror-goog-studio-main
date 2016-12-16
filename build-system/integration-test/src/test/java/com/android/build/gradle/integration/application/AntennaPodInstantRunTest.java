@@ -116,18 +116,18 @@ public class AntennaPodInstantRunTest {
                         project.model().withoutOfflineFlag().getMulti().getModelMap().get(":app"));
 
         getExecutor()
-                .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         // Test the incremental build
         makeHotSwapChange(1);
         getExecutor()
-                .withInstantRun(23, ColdswapMode.MULTIDEX, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         makeHotSwapChange(100);
 
-        getExecutor().withInstantRun(23, ColdswapMode.MULTIDEX).run("assembleDebug");
+        getExecutor().withInstantRun(23, ColdswapMode.MULTIAPK).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
@@ -139,9 +139,9 @@ public class AntennaPodInstantRunTest {
         // Test cold swap
         makeColdSwapChange(100);
 
-        getExecutor().withInstantRun(23, ColdswapMode.MULTIDEX).run(":app:assembleDebug");
+        getExecutor().withInstantRun(23, ColdswapMode.MULTIAPK).run(":app:assembleDebug");
 
-        InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel, ColdswapMode.MULTIDEX);
+        InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
     }
 
     @NonNull

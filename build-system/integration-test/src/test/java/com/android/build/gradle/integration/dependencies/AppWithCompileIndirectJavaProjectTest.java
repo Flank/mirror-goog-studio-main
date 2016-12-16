@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
@@ -38,11 +37,11 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -96,10 +95,10 @@ public class AppWithCompileIndirectJavaProjectTest {
     public void checkPackagedJar() throws IOException, ProcessException {
         project.execute("clean", ":app:assembleDebug");
 
-        File apk = project.getSubproject("app").getApk("debug");
+        Apk apk = project.getSubproject("app").getApk("debug");
 
-        assertThatApk(apk).containsClass("Lcom/example/android/multiproject/person/People;");
-        assertThatApk(apk).containsClass("Lcom/example/android/multiproject/library/PersonView;");
+        assertThat(apk).containsClass("Lcom/example/android/multiproject/person/People;");
+        assertThat(apk).containsClass("Lcom/example/android/multiproject/library/PersonView;");
     }
 
     @Test

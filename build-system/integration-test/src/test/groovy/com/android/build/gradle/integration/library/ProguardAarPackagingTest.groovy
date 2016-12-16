@@ -1,24 +1,26 @@
 package com.android.build.gradle.integration.library
+
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject
+import com.android.testutils.apk.Aar
 import com.google.common.base.Joiner
+import groovy.transform.CompileStatic
 import org.apache.commons.io.FileUtils
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
   * Integration test to check that libraries included directly as jar files are correctly handled
   * when using proguard.
  */
+@CompileStatic
 class ProguardAarPackagingTest {
 
     static public AndroidTestApp testApp = HelloWorldApp.noBuildFile()
@@ -113,29 +115,25 @@ android {
     public void "check debug AAR packaging"() {
         androidProject.execute("assembleDebug")
 
+        Aar debug = androidProject.getAar("debug");
+
         // check that the classes from the local jars are still in a local jar
-        assertThatAar(androidProject.getAar("debug")).containsClass(
-                "Lcom/example/libinjar/LibInJar;",
-                AbstractAndroidSubject.ClassFileScope.SECONDARY)
+        assertThat(debug).containsSecondaryClass("Lcom/example/libinjar/LibInJar;")
 
         // check that it's not in the main class file.
-        assertThatAar(androidProject.getAar("debug")).doesNotContainClass(
-                "Lcom/example/libinjar/LibInJar;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
+        assertThat(debug).doesNotContainMainClass("Lcom/example/libinjar/LibInJar;")
     }
 
     @Test
     public void "check release AAR packaging"() {
         androidProject.execute("assembleRelease")
 
+        Aar release = androidProject.getAar("release");
+
         // check that the classes from the local jars are in the main class file
-        assertThatAar(androidProject.getAar("release")).containsClass(
-                "Lcom/example/libinjar/a;",
-                AbstractAndroidSubject.ClassFileScope.MAIN)
+        assertThat(release).containsMainClass("Lcom/example/libinjar/a;");
 
         // check that it's not in any local jar
-        assertThatAar(androidProject.getAar("release")).doesNotContainClass(
-                "Lcom/example/libinjar/LibInJar;",
-                AbstractAndroidSubject.ClassFileScope.SECONDARY)
+        assertThat(release).doesNotContainSecondaryClass("Lcom/example/libinjar/LibInJar;");
     }
 }

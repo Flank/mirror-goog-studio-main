@@ -17,10 +17,9 @@
 package com.android.build.gradle.integration.instantapp;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -54,7 +53,7 @@ public class JavaResAtomPackagingTest {
     public void javaResArePresent() throws IOException, ProcessException {
         sProject.execute("clean", ":instantApp:assembleRelease");
 
-        assertThatAtomBundle(sProject.getSubproject(":atom").getAtomBundle("release"))
+        TruthHelper.assertThat(sProject.getSubproject(":atom").getAtomBundle("release"))
                 .containsJavaResourceWithContent("com/foo/atom.txt", "atom:abcd");
 
         assertThatApk(sProject.getSubproject(":instantApp").getAtom("atom", "release"))

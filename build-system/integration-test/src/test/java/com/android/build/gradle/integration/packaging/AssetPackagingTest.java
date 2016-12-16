@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.integration.packaging;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -548,10 +547,11 @@ public class AssetPackagingTest {
 
         execute("app:assembleDebug");
 
-        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/aa");
-        assertThatApk(appProject.getApk("debug")).containsFileWithContent("assets/ab", abData);
-        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/ba");
-        assertThatApk(appProject.getApk("debug")).doesNotContain("assets/bb");
+        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/aa");
+        TruthHelper.assertThat(appProject.getApk("debug"))
+                .containsFileWithContent("assets/ab", abData);
+        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/ba");
+        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/bb");
     }
 
     /**
@@ -568,7 +568,7 @@ public class AssetPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatApk(project.getApk("debug")), filename, content);
+        check(TruthHelper.assertThat(project.getApk("debug")), filename, content);
     }
 
     /**
@@ -585,7 +585,7 @@ public class AssetPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatApk(project.getTestApk("debug")), filename, content);
+        check(TruthHelper.assertThat(project.getTestApk("debug")), filename, content);
     }
 
     /**
@@ -602,13 +602,23 @@ public class AssetPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException {
-        check(assertThatAar(project.getAar("debug")), filename, content);
+        check(TruthHelper.assertThat(project.getAar("debug")), filename, content);
     }
 
     private static void check(
             @NonNull AbstractAndroidSubject subject,
             @NonNull String filename,
             @Nullable String content) throws IOException {
+        if (content != null) {
+            subject.containsFileWithContent("assets/" + filename, content);
+        } else {
+            subject.doesNotContain("assets/" + filename);
+        }
+    }
+
+    private static void check(
+            @NonNull ApkSubject subject, @NonNull String filename, @Nullable String content)
+            throws IOException {
         if (content != null) {
             subject.containsFileWithContent("assets/" + filename, content);
         } else {

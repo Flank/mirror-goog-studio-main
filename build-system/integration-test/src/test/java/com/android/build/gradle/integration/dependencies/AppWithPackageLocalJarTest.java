@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -72,7 +71,7 @@ public class AppWithPackageLocalJarTest {
 
     @Test
     public void checkPackageLocalJarIsPackaged() throws IOException, ProcessException {
-        assertThatApk(project.getApk("debug"))
+        assertThat(project.getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 

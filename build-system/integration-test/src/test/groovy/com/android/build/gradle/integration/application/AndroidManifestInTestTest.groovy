@@ -19,6 +19,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ApkHelper
 import com.android.build.gradle.integration.common.utils.SdkHelper
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -48,12 +49,12 @@ class AndroidManifestInTestTest {
 
     @Test
     public void testUserProvidedTestAndroidManifest() throws Exception {
-        File testApk = project.getTestApk("debug")
+        Apk testApk = project.getTestApk("debug")
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder()
         builder.setExecutable(SdkHelper.getAapt())
 
-        builder.addArgs("l", "-a", testApk.getPath())
+        builder.addArgs("l", "-a", testApk.getFile().toString())
 
         List<String> output = ApkHelper.runAndGetOutput(builder.createProcess())
 

@@ -78,7 +78,8 @@ model {
             if (!artifact.isSigned()) {
                 dimensions.add("unsigned")
             }
-            assertThat(outputFiles).containsExactly(project.getApk(dimensions as String[]))
+            assertThat(outputFiles)
+                    .containsExactly(project.getApk(dimensions as String[]).getFile().toFile())
             assertThat(outputFiles.first().isFile()).isTrue()
         }
     }
