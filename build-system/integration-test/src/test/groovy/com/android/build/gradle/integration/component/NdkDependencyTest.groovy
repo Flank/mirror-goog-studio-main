@@ -33,6 +33,7 @@ import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeLibrary
 import com.android.builder.model.NativeSettings
+import com.android.testutils.apk.Apk
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -45,8 +46,6 @@ import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
 /**
  * Test for dependencies on NDK projects.
  */
@@ -269,7 +268,7 @@ model {
 
         AndroidProject model = models.get(":app")
 
-        final File apk = project.getSubproject("app").getApk("debug")
+        final Apk apk = project.getSubproject("app").getApk("debug")
         for (String abi : ABIS) {
             NativeLibrary libModel = findNativeLibraryByAbi(model, "debug", abi)
             assertThat(libModel).isNotNull();
@@ -287,7 +286,7 @@ model {
                     "libprebuilt.so"]
             for (String expectedLib : expectedLibs) {
                 String path = "lib/$abi/$expectedLib";
-                assertThatZip(apk).contains(path);
+                assertThat(apk).contains(path);
                 File lib = ZipHelper.extractFile(apk, path)
                 assertThatNativeLib(lib).isStripped()
             }
@@ -339,11 +338,11 @@ model {
         Map<String, NativeAndroidProject> models =
                 project.model().getMulti(NativeAndroidProject.class);
         NativeAndroidProject model = models.get(":app")
-        File apk = project.getSubproject("app").getApk("debug")
+        Apk apk = project.getSubproject("app").getApk("debug")
         for (String abi : ABIS) {
-            assertThatZip(apk).contains("lib/$abi/libhello-jni.so")
-            assertThatZip(apk).contains("lib/$abi/libstlport_shared.so")
-            assertThatZip(apk).doesNotContain("lib/$abi/libget-string.so")
+            assertThat(apk).contains("lib/$abi/libhello-jni.so")
+            assertThat(apk).contains("lib/$abi/libstlport_shared.so")
+            assertThat(apk).doesNotContain("lib/$abi/libget-string.so")
 
             // Check that the static library is compiled, but not the shared library.
             GradleTestProject lib2 = project.getSubproject("lib2")
@@ -372,9 +371,9 @@ model {
         GradleTestProject lib1 = project.getSubproject("lib1")
         GradleTestProject lib2 = project.getSubproject("lib2")
 
-        File apk = project.getSubproject("app").getApk("debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so")
-        assertThatZip(apk).contains("lib/x86/libstlport_shared.so")
+        Apk apk = project.getSubproject("app").getApk("debug")
+        assertThat(apk).contains("lib/x86/libhello-jni.so")
+        assertThat(apk).contains("lib/x86/libstlport_shared.so")
 
         lib2.file("src/main/jni/lib2.cpp") << "void foo() {}"
 

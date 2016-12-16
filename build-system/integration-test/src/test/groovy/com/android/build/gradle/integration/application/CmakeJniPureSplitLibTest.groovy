@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.AssumeUtil
@@ -24,7 +25,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Assemble tests for pure splits under CMake
  */
@@ -61,19 +62,19 @@ android {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThatApk(app.getApk("free", "debug_armeabi-v7a")).hasVersionCode(123)
-        assertThatApk(app.getApk("free", "debug_mips")).hasVersionCode(123)
-        assertThatApk(app.getApk("free", "debug_x86")).hasVersionCode(123)
-        assertThatApk(app.getApk("paid", "debug_armeabi-v7a")).hasVersionCode(123)
-        assertThatApk(app.getApk("paid", "debug_mips")).hasVersionCode(123)
-        assertThatApk(app.getApk("paid", "debug_x86")).hasVersionCode(123)
+        assertThat(app.getApk("free", "debug_armeabi-v7a")).hasVersionCode(123)
+        assertThat(app.getApk("free", "debug_mips")).hasVersionCode(123)
+        assertThat(app.getApk("free", "debug_x86")).hasVersionCode(123)
+        assertThat(app.getApk("paid", "debug_armeabi-v7a")).hasVersionCode(123)
+        assertThat(app.getApk("paid", "debug_mips")).hasVersionCode(123)
+        assertThat(app.getApk("paid", "debug_x86")).hasVersionCode(123)
     }
 
     @Test
     void "check so"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThatApk(app.getApk("free", "debug_armeabi-v7a"))
+        assertThat(app.getApk("free", "debug_armeabi-v7a"))
                 .contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("paid", "debug_mips")).contains("lib/mips/libhello-jni.so");
+        assertThat(app.getApk("paid", "debug_mips")).contains("lib/mips/libhello-jni.so");
     }
 }

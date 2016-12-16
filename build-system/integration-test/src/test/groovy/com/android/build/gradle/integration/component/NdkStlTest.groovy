@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.repository.Revision
+import com.android.testutils.apk.Apk
 import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.gradle.tooling.BuildException
@@ -29,10 +30,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.google.common.truth.TruthJUnit.assume
 import static org.junit.Assert.fail
-
 /**
  * Integration test for STL containers.
  *
@@ -105,17 +105,17 @@ model {
         } else {
             project.execute("assembleDebug");
 
-            File apk = project.getApk("debug");
-            assertThatZip(apk).contains("lib/x86/libhello-jni.so");
-            assertThatZip(apk).contains("lib/mips/libhello-jni.so");
-            assertThatZip(apk).contains("lib/armeabi/libhello-jni.so");
-            assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so");
+            Apk apk = project.getApk("debug");
+            assertThat(apk).contains("lib/x86/libhello-jni.so");
+            assertThat(apk).contains("lib/mips/libhello-jni.so");
+            assertThat(apk).contains("lib/armeabi/libhello-jni.so");
+            assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so");
 
             if (stl.endsWith("shared")) {
-                assertThatZip(apk).contains("lib/x86/lib" + stl + ".so");
-                assertThatZip(apk).contains("lib/mips/lib" + stl + ".so");
-                assertThatZip(apk).contains("lib/armeabi/lib" + stl + ".so");
-                assertThatZip(apk).contains("lib/armeabi-v7a/lib" + stl + ".so");
+                assertThat(apk).contains("lib/x86/lib" + stl + ".so");
+                assertThat(apk).contains("lib/mips/lib" + stl + ".so");
+                assertThat(apk).contains("lib/armeabi/lib" + stl + ".so");
+                assertThat(apk).contains("lib/armeabi-v7a/lib" + stl + ".so");
             }
         }
     }
@@ -142,17 +142,17 @@ Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz) {
 
 """
         project.execute("assembleDebug");
-        File apk = project.getApk("debug");
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
-        assertThatZip(apk).contains("lib/mips/libhello-jni.so");
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so");
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so");
+        Apk apk = project.getApk("debug");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/mips/libhello-jni.so");
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so");
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so");
 
         if (stl.endsWith("shared")) {
-            assertThatZip(apk).contains("lib/x86/lib" + stl + ".so");
-            assertThatZip(apk).contains("lib/mips/lib" + stl + ".so");
-            assertThatZip(apk).contains("lib/armeabi/lib" + stl + ".so");
-            assertThatZip(apk).contains("lib/armeabi-v7a/lib" + stl + ".so");
+            assertThat(apk).contains("lib/x86/lib" + stl + ".so");
+            assertThat(apk).contains("lib/mips/lib" + stl + ".so");
+            assertThat(apk).contains("lib/armeabi/lib" + stl + ".so");
+            assertThat(apk).contains("lib/armeabi-v7a/lib" + stl + ".so");
         }
 
     }

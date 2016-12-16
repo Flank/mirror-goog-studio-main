@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.integration.databinding;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.DexBackedDexFileSubject;
+import com.android.testutils.truth.DexSubject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -74,8 +73,7 @@ public class DataBindingWithDaggerTest {
         project.setBuildFile("build" + buildSuffix);
         project.execute("assembleDebug");
 
-        DexBackedDexFileSubject mainDex = assertThatApk(project.getApk("debug"))
-                .hasMainDexFile().that();
+        DexSubject mainDex = assertThat(project.getApk("debug")).hasMainDexFile().that();
         mainDex.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
         mainDex.containsClass(DAGGER_APP_COMPONENT);
     }
@@ -85,7 +83,7 @@ public class DataBindingWithDaggerTest {
         project.setBuildFile("build.atom" + buildSuffix);
         project.execute("assembleDebug");
 
-        AtomBundleSubject atombundle = assertThatAtomBundle(project.getAtomBundle("debug"));
+        AtomBundleSubject atombundle = assertThat(project.getAtomBundle("debug"));
         atombundle.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
         atombundle.containsClass(DAGGER_APP_COMPONENT);
     }

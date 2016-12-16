@@ -27,24 +27,28 @@ import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
+import com.android.testutils.apk.Zip
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Sets
+import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.android.builder.core.BuilderConstants.DEBUG
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
+
 /**
  * Test drive for the abiPureSplits samples test.
  */
 @Category(FailsUnderBazel.class) // Needs NDK.
+@CompileStatic
 class AbiPureSplits {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -80,15 +84,16 @@ class AbiPureSplits {
 
                 if (outputFile.getFilterTypes().contains(OutputFile.ABI)) {
                     // if this is an ABI split, ensure the .so file presence (and only one)
-                    assertThatZip(outputFile.getOutputFile()).entries("lib/.*")
-                            .containsExactly("lib/" + filter + "/libhello-jni.so");
+                    assertThatZip(outputFile.getOutputFile()).entries("/lib/.*")
+                            .containsExactly("/lib/" + filter + "/libhello-jni.so");
                 }
 
             } else {
+                Zip zip = new Zip(outputFile.getOutputFile());
                 // main file should not have any lib/ entries.
-                assertThatZip(outputFile.getOutputFile()).entries("lib/.*").isEmpty()
+                assertThat(zip.getEntries(~'/lib/.*')).isEmpty()
                 // assert that our resources got packaged in the main file.
-                assertThatZip(outputFile.getOutputFile()).entries("res/.*").hasSize(5)
+                assertThat(zip.getEntries(~'/res/.*')).hasSize(5)
             }
         }
 
@@ -131,12 +136,11 @@ class AbiPureSplits {
 
                 String filter = ModelHelper.getFilter(output, OutputFile.ABI)
 
-                if (filter.equals("armeabi")) {
+                if (filter == "armeabi") {
                     // found our added abi, done.
                     foundAddedAPK = true;
                 } else {
                     // check that the APK was not rebuilt.
-                    assertNotNull("Cannot find initial APK for ABI : " + filter);
                     // uncomment once packageAbiRes is incremental.
 //                    assertTrue("APK should not have been rebuilt in incremental mode : " + filter,
 //                            lastModifiedTimePerAbi.get(filter).longValue()
@@ -171,11 +175,11 @@ class AbiPureSplits {
             for (OutputFile output : outputs) {
 
                 String filter = ModelHelper.getFilter(output, OutputFile.ABI)
-                if (filter.equals("mips")) {
+                if (filter == "mips") {
                     fail("Found deleted ABI split : mips")
                 } else {
                     // check that the APK was not rebuilt.
-                    assertNotNull("Cannot find initial APK for ABI : " + filter);
+//                    assertNotNull("Cannot find initial APK for ABI : " + filter);
                     // uncomment once packageAbiRes is incremental.
 //                    assertTrue("APK should not have been rebuilt in incremental mode",
 //                            lastModifiedTimePerAbi.get(filter).longValue()
@@ -185,7 +189,7 @@ class AbiPureSplits {
         }
     }
 
-    private Collection<? extends OutputFile> getOutputs(AndroidProject projectModel) {
+    private List<? extends OutputFile> getOutputs(AndroidProject projectModel) {
         // Load the custom model for the project
         Collection<Variant> variants = projectModel.getVariants()
         assertEquals("Variant Count", 2 , variants.size())
@@ -205,7 +209,7 @@ class AbiPureSplits {
         // all splits have the same version.
         assertEquals(123, output.getVersionCode())
 
-        return output.getOutputs();
+        return new ArrayList(output.getOutputs());
     }
 
     @NonNull

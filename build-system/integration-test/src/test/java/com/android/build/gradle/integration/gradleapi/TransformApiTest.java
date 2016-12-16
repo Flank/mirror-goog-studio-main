@@ -30,9 +30,9 @@ import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.Before;
@@ -88,8 +88,8 @@ public class TransformApiTest {
         assertEquals(1, debugOutputs.size());
 
         // make sure the Gson library has been renamed and the original one is not present.
-        File outputFile = Iterators.getOnlyElement(debugOutputs.iterator()).getMainOutputFile().
-                getOutputFile();
+        Apk outputFile = new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).getMainOutputFile().
+                getOutputFile());
         assertThatApk(outputFile).containsClass("Lcom/google/repacked/gson/Gson;");
         assertThatApk(outputFile).doesNotContainClass("Lcom/google/gson/Gson;");
     }

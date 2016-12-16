@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.google.common.io.Files.write;
 
@@ -516,7 +514,7 @@ public class JavaResPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, ProcessException {
-        check(assertThatApk(project.getApk("debug")), filename, content);
+        check(assertThat(project.getApk("debug")), filename, content);
     }
 
     /**
@@ -533,7 +531,7 @@ public class JavaResPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, ProcessException {
-        check(assertThatApk(project.getTestApk("debug")), filename, content);
+        check(assertThat(project.getTestApk("debug")), filename, content);
     }
 
     /**
@@ -550,7 +548,7 @@ public class JavaResPackagingTest {
             @NonNull GradleTestProject project,
             @NonNull String filename,
             @Nullable String content) throws IOException, ProcessException {
-        check(assertThatAar(project.getAar("debug")), filename, content);
+        check(assertThat(project.getAar("debug")), filename, content);
     }
 
     private static void check(

@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.sdklib.BuildToolInfo;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -28,6 +29,11 @@ import java.io.IOException;
  * Utilities common to all packaging tests.
  */
 public class PackagingTests {
+
+    public static void checkZipAlign(@NonNull Apk apk, String ... additionalFlags)
+            throws IOException, InterruptedException {
+        checkZipAlign(apk.getFile().toFile(), additionalFlags);
+    }
 
     public static void checkZipAlign(File apk, String... additionalFlags)
             throws IOException, InterruptedException {
@@ -46,7 +52,7 @@ public class PackagingTests {
                 .isEqualTo(0);
     }
 
-    public static void checkZipAlignWithPageAlignedSoFiles(File apk)
+    public static void checkZipAlignWithPageAlignedSoFiles(@NonNull Apk apk)
             throws IOException, InterruptedException {
         checkZipAlign(apk, "-p");
     }

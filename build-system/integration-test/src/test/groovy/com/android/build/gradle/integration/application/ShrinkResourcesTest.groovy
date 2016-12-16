@@ -15,9 +15,11 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.model.AndroidProject
+import com.android.testutils.apk.Apk
 import com.google.common.base.Joiner
 import com.google.common.collect.Lists
 import com.google.common.io.ByteStreams
@@ -29,18 +31,21 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.jar.JarInputStream
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY
+import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static java.io.File.separator
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+
 /**
  * Assemble tests for shrink.
  */
@@ -69,13 +74,13 @@ class ShrinkResourcesTest {
         // The proguardNoShrink target has proguard but no shrinking enabled.
         // The debug target has neither proguard nor shrinking enabled.
 
-        File apkRelease = project.getApk("release", "unsigned")
-        File apkDebug = project.getApk("debug")
-        File apkProguardOnly = project.getApk("proguardNoShrink", "unsigned")
+        Apk apkRelease = project.getApk("release", "unsigned");
+        Apk apkDebug = project.getApk("debug");
+        Apk apkProguardOnly = project.getApk("proguardNoShrink", "unsigned");
 
-        assertTrue(apkDebug.toString() + " is not a file", apkDebug.isFile())
-        assertTrue(apkRelease.toString() + " is not a file", apkRelease.isFile())
-        assertTrue(apkProguardOnly.toString() + " is not a file", apkProguardOnly.isFile())
+        assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
+        assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
+        assertTrue(apkProguardOnly.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
 
         File compressed = new File(intermediates,
                 "res" + separator + "resources-release-stripped.ap_")
@@ -233,9 +238,9 @@ res/layout/used21.xml"""
 
         // The debug target should have everything there in the APK
         assertEquals("The debug target should have everything there in the APK",
-                expectedUnstrippedApk, dumpZipContents(apkDebug))
+                expectedUnstrippedApk, dumpZipContents(apkDebug.getFile()))
         assertEquals("The debug target should have everything there in the APK",
-                expectedUnstrippedApk, dumpZipContents(apkProguardOnly))
+                expectedUnstrippedApk, dumpZipContents(apkProguardOnly.getFile()))
 
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
@@ -252,7 +257,7 @@ res/layout/used21.xml"""
                     expectedCompressed.contains("unused"))
         }
         assertEquals("expectedStrippedApkContents",
-                expectedStrippedApkContents, dumpZipContents(apkRelease))
+                expectedStrippedApkContents, dumpZipContents(apkRelease.getFile()))
 
         // Check splits -- just sample one of them
         //noinspection SpellCheckingInspection
@@ -486,6 +491,10 @@ res/layout/used21.xml"""
 
     private static String dumpZipContents(File zipFile) throws IOException {
         return dumpZipContents(zipFile, false)
+    }
+
+    private static String dumpZipContents(Path zipFile) throws IOException {
+        return dumpZipContents(zipFile.toFile(), false)
     }
 
     private static String dumpZipContents(File zipFile, final boolean includeMethod)

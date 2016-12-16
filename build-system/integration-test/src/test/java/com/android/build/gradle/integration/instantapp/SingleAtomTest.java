@@ -16,11 +16,10 @@
 
 package com.android.build.gradle.integration.instantapp;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
-
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -51,7 +50,7 @@ public class SingleAtomTest {
 
         // Tests that the BuildConfig and R class are generated in the proper package.
         AtomBundleSubject atomBundle =
-                assertThatAtomBundle(sProject.getSubproject("atom").getAtomBundle("release"));
+                TruthHelper.assertThat(sProject.getSubproject("atom").getAtomBundle("release"));
         atomBundle.containsClass("Lcom/android/tests/singleatom/atom/BuildConfig;");
         atomBundle.containsClass("Lcom/android/tests/singleatom/atom/R;");
         atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/BuildConfig;");

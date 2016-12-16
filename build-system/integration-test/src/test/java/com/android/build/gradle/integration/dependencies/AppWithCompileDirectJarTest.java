@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -68,7 +67,7 @@ public class AppWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsPackaged() throws IOException, ProcessException {
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 

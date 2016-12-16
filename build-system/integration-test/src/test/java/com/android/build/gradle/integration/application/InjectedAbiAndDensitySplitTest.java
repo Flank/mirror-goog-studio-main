@@ -17,15 +17,14 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.builder.model.AndroidProject;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.File;
 import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -73,7 +72,7 @@ public class InjectedAbiAndDensitySplitTest {
                 .run("clean", "assembleDebug");
 
         assertThat(sProject.getApk("armeabi-v7a", "debug")).exists();
-        assertThatApk(sProject.getApk("armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libprebuilt.so");
+        assertThat(sProject.getApk("armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libprebuilt.so");
         assertThat(sProject.getApk("ldpiArmeabi-v7a", "debug")).doesNotExist();
         assertThat(sProject.getApk("hdpiArmeabi-v7a", "debug")).doesNotExist();
         assertThat(sProject.getApk("x86", "debug")).doesNotExist();
@@ -88,7 +87,7 @@ public class InjectedAbiAndDensitySplitTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
                 .run("clean", "assembleDebug");
 
-        File apk;
+        Apk apk;
         // Either ldpi or universal density can match the injected density.
         if (sProject.getApk("armeabi-v7a", "debug").exists()) {
             apk = sProject.getApk("armeabi-v7a", "debug");
@@ -98,7 +97,7 @@ public class InjectedAbiAndDensitySplitTest {
             assertThat(sProject.getApk("armeabi-v7a", "debug")).doesNotExist();
         }
         assertThat(apk).exists();
-        assertThatApk(apk).contains("lib/armeabi-v7a/libprebuilt.so");
+        assertThat(apk).contains("lib/armeabi-v7a/libprebuilt.so");
         assertThat(sProject.getApk("hdpiArmeabi-v7a", "debug")).doesNotExist();
         assertThat(sProject.getApk("x86", "debug")).doesNotExist();
         assertThat(sProject.getApk("ldpiX86", "debug")).doesNotExist();

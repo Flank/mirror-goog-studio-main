@@ -19,16 +19,14 @@ package com.android.build.gradle.integration.application;
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_RAW;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.junit.AfterClass;
@@ -75,18 +73,18 @@ public class WearVariantTest {
         for (List<String> data : variantData) {
             String apkName = data.get(0);
             String versionName = data.get(1);
-            File fullApk = project.getSubproject("main").getApk(apkName);
-            File embeddedApk = ZipHelper.extractFile(fullApk, embeddedApkPath);
+            Apk fullApk = project.getSubproject("main").getApk(apkName);
+            assertNotNull(fullApk);
 
             if (versionName == null) {
-                assertNull("Expected no embedded app for " + apkName, embeddedApk);
+                assertThat(fullApk).doesNotContain(embeddedApkPath);
                 break;
             }
 
-            assertNotNull("Failed to find embedded micro app for " + apkName, embeddedApk);
+            Apk embeddedApk = new Apk(fullApk.getEntryAsZip(embeddedApkPath).getFile());
 
             // check for the versionName
-            assertThatApk(embeddedApk).hasVersionName(versionName);
+            assertThat(embeddedApk).hasVersionName(versionName);
         }
     }
 }

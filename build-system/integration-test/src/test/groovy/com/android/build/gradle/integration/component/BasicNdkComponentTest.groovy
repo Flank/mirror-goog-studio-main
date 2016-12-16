@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -32,7 +33,7 @@ import org.junit.runners.Parameterized
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.android.testutils.truth.MoreTruth.assertThat
 
 /**
  * Basic integration test for native plugin.
@@ -90,11 +91,11 @@ model {
         project.execute("assembleRelease")
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("release", "unsigned")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so")
-        assertThatZip(apk).contains("lib/mips/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("release", "unsigned")
+        assertThat(apk).contains("lib/x86/libhello-jni.so")
+        assertThat(apk).contains("lib/mips/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
@@ -107,16 +108,16 @@ model {
         project.execute("assembleDebug")
 
         // Verify .so are built for all platform.
-        File apk = project.getApk("debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so")
-        assertThatZip(apk).contains("lib/mips/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi/libhello-jni.so")
-        assertThatZip(apk).contains("lib/armeabi-v7a/libhello-jni.so")
+        Apk apk = project.getApk("debug")
+        assertThat(apk).contains("lib/x86/libhello-jni.so")
+        assertThat(apk).contains("lib/mips/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
+        assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
 
         // 64-bits binaries will not be produced if platform version 19 is used.
-        assertThatZip(apk).doesNotContain("lib/x86_64/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/arm64-v8a/libhello-jni.so")
-        assertThatZip(apk).doesNotContain("lib/mips64/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/x86_64/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/arm64-v8a/libhello-jni.so")
+        assertThat(apk).doesNotContain("lib/mips64/libhello-jni.so")
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();

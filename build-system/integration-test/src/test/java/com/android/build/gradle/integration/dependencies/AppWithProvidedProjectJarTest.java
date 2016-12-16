@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
@@ -69,7 +68,7 @@ public class AppWithProvidedProjectJarTest {
 
     @Test
     public void checkProvidedJarIsNotPackaged() throws IOException, ProcessException {
-        assertThatApk(project.getSubproject("app").getApk("debug"))
+        assertThat(project.getSubproject("app").getApk("debug"))
                 .doesNotContainClass("Lcom/example/android/multiproject/person/People;");
     }
 

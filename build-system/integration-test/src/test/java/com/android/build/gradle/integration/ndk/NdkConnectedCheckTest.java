@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.File;
+import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -101,8 +101,8 @@ public class NdkConnectedCheckTest {
 
     @Test
     public void checkTestLibIsPackaged() throws IOException {
-        File apk = project.getTestApk("debug");
-        assertThatZip(apk).contains("lib/x86/libhello-jni_test.so");
+        Apk apk = project.getTestApk("debug");
+        assertThat(apk).contains("lib/x86/libhello-jni_test.so");
     }
 
     @Test

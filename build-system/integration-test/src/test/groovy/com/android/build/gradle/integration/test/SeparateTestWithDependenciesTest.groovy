@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.test
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -42,7 +43,7 @@ public class SeparateTestWithDependenciesTest {
     @Test
     void "check app contains all dependent classes"() {
         project.execute("clean", "assemble")
-        File apk = project.getSubproject('app').getApk("debug")
+        Apk apk = project.getSubproject('app').getApk("debug")
         assertThatApk(apk).containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
     }
 
@@ -50,7 +51,7 @@ public class SeparateTestWithDependenciesTest {
     @Test
     void "check test app does not contain any minified application's dependent classes"() {
         project.execute("clean", "assemble")
-        File apk = project.getSubproject('test').getApk("debug")
+        Apk apk = project.getSubproject('test').getApk("debug")
         assertThatApk(apk).doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
     }
 }

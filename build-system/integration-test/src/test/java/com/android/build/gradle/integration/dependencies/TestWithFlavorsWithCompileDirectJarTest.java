@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.ModelHelper.getAndroidArtifact;
@@ -80,7 +79,7 @@ public class TestWithFlavorsWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsPackaged() throws IOException, ProcessException {
-        assertThatApk(project.getSubproject("app").getTestApk("free", "debug"))
+        assertThat(project.getSubproject("app").getTestApk("free", "debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 

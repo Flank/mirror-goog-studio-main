@@ -20,27 +20,21 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
-import com.android.testutils.truth.DexBackedDexFileSubject;
-import com.android.testutils.truth.DexUtils;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,136 +57,93 @@ public class ColdSwapTest {
         createActivityClass("", "");
     }
 
-    //@Test
+    @Test
     public void withDalvik() throws Exception {
-        new ColdSwapTester(project).testDalvik(new ColdSwapTester.Steps() {
-            @Override
-            public void checkApk(@NonNull File apk) throws Exception {
-                checkDalvikApk(apk);
-            }
+        new ColdSwapTester(project)
+                .testDalvik(
+                        new ColdSwapTester.Steps() {
+                            @Override
+                            public void checkApks(@NonNull SplitApks splitApks) throws Exception {
+                                assertThat(splitApks.size()).isEqualTo(1);
+                                checkDalvikApk(splitApks.get(0));
+                            }
 
-            @Override
-            public void makeChange() throws Exception {
-                makeColdSwapChange();
-            }
+                            @Override
+                            public void makeChange() throws Exception {
+                                makeColdSwapChange();
+                            }
 
-            @Override
-            public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
-                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
-            }
+                            @Override
+                            public void checkVerifierStatus(
+                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
+                            }
 
-            @Override
-            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                    throws Exception {
-                // for api 19 (pre-lollipop) a full build is triggered
-                assertEquals(InstantRunBuildMode.FULL, buildMode);
-            }
+                            @Override
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                                    throws Exception {
+                                // for api 19 (pre-lollipop) a full build is triggered
+                                assertEquals(InstantRunBuildMode.FULL, buildMode);
+                            }
 
-            @Override
-            public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts)
-                    throws Exception {
-                assertThat(artifacts).hasSize(1);
-                checkDalvikApk(artifacts.get(0).getLocation());
-            }
-        });
+                            @Override
+                            public void checkArtifacts(
+                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    throws Exception {
+                                assertThat(artifacts).hasSize(1);
+                                checkDalvikApk(new Apk(artifacts.get(0).getLocation()));
+                            }
+                        });
     }
 
-    private void checkDalvikApk(@NonNull File apk) throws IOException, ProcessException {
-        ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
-
-        apkSubject
-                .hasClass(
-                        "Lcom/example/helloworld/HelloWorld;",
-                        AbstractAndroidSubject.ClassFileScope.MAIN)
+    private static void checkDalvikApk(@NonNull Apk apk) throws IOException, ProcessException {
+        assertThat(apk)
+                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        apkSubject.hasClass(
-                "Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
-        apkSubject.hasClass(
-                "Lcom/android/tools/fd/runtime/AppInfo;",
-                AbstractAndroidSubject.ClassFileScope.MAIN);
-    }
-
-    //@Test
-    public void withMultiDex() throws Exception {
-        new ColdSwapTester(project).testMultiDex(new ColdSwapTester.Steps() {
-            @Override
-            public void checkApk(@NonNull File apk) throws Exception {
-                ApkSubject apkSubject = expect.about(ApkSubject.FACTORY).that(apk);
-
-                apkSubject.hasClass("Lcom/example/helloworld/HelloWorld;",
-                        AbstractAndroidSubject.ClassFileScope.INSTANT_RUN)
-                        .that().hasMethod("onCreate");
-                apkSubject.hasClass("Lcom/android/tools/fd/runtime/BootstrapApplication;",
-                        AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
-                apkSubject.hasClass("Lcom/android/tools/fd/runtime/AppInfo;",
-                        AbstractAndroidSubject.ClassFileScope.MAIN_AND_SECONDARY);
-            }
-
-            @Override
-            public void makeChange() throws Exception {
-                makeColdSwapChange();
-            }
-
-            @Override
-            public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
-                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
-            }
-
-            @Override
-            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                    throws Exception {
-                // for multi dex cold build mode is triggered
-                assertEquals(InstantRunBuildMode.COLD, buildMode);
-            }
-
-            @Override
-            public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
-                assertThat(artifacts).hasSize(1);
-                InstantRunBuildContext.Artifact artifact = Iterables.getOnlyElement(artifacts);
-
-                expect.that(artifact.getType()).isEqualTo(FileType.DEX);
-
-                checkUpdatedClassPresence(DexUtils.loadDex(artifact.getLocation()));
-            }
-        });
+        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
     }
 
     @Test
     public void withMultiApk() throws Exception {
-        new ColdSwapTester(project).testMultiApk(new ColdSwapTester.Steps() {
-            @Override
-            public void checkApk(@NonNull File apk) throws Exception {
-            }
+        new ColdSwapTester(project)
+                .testMultiApk(
+                        new ColdSwapTester.Steps() {
+                            @Override
+                            public void checkApks(@NonNull SplitApks apk) throws Exception {}
 
-            @Override
-            public void makeChange() throws Exception {
-                makeColdSwapChange();
-            }
+                            @Override
+                            public void makeChange() throws Exception {
+                                makeColdSwapChange();
+                            }
 
-            @Override
-            public void checkVerifierStatus(@NonNull InstantRunVerifierStatus status) throws Exception {
-                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
-            }
+                            @Override
+                            public void checkVerifierStatus(
+                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
+                            }
 
-            @Override
-            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                    throws Exception {
-                // for api 24 a cold build mode is triggered
-                assertEquals(InstantRunBuildMode.COLD, buildMode);
-            }
+                            @Override
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
+                                    throws Exception {
+                                // for api 24 a cold build mode is triggered
+                                assertEquals(InstantRunBuildMode.COLD, buildMode);
+                            }
 
-            @Override
-            public void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts) throws Exception {
-                assertThat(artifacts).hasSize(1);
-                for (InstantRunBuildContext.Artifact artifact : artifacts) {
-                    expect.that(artifact.getType()).isEqualTo(FileType.SPLIT);
-                    checkUpdatedClassPresence(DexUtils.loadDex(
-                            ZipHelper.extractEntry(artifact.getLocation(), "classes.dex")));
-                }
-            }
-        });
+                            @Override
+                            public void checkArtifacts(
+                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    throws Exception {
+                                assertThat(artifacts).hasSize(1);
+                                for (InstantRunBuildContext.Artifact artifact : artifacts) {
+                                    expect.that(artifact.getType()).isEqualTo(FileType.SPLIT);
+                                    checkUpdatedClassPresence(
+                                            new SplitApks(
+                                                    ImmutableList.of(
+                                                            new Apk(artifact.getLocation()))));
+                                }
+                            }
+                        });
     }
 
     private void makeColdSwapChange() throws IOException {
@@ -206,10 +157,9 @@ public class ColdSwapTest {
                         + "");
     }
 
-    private void checkUpdatedClassPresence(@Nullable DexBackedDexFile dex) throws Exception {
-        expect.about(DexBackedDexFileSubject.FACTORY)
-                .that(dex)
-                .containsClass("Lcom/example/helloworld/HelloWorld;")
+    private static void checkUpdatedClassPresence(@NonNull SplitApks apks) throws Exception {
+        assertThat(apks)
+                .hasClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethods("onCreate", "newMethod");
     }

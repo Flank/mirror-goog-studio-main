@@ -17,25 +17,25 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
-import com.android.testutils.incremental.FileRecord;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -90,9 +90,8 @@ public class CmakeInstantRunTest {
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        File apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel).file;
-        assertThat(apk).exists();
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        assertThat(apks.getEntries("lib/x86/libhello-jni.so")).hasSize(1);
 
         TemporaryProjectModification.doTest(
                 sProject,
@@ -121,15 +120,8 @@ public class CmakeInstantRunTest {
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        File apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel).file;
-        assertThat(apk).exists();
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
-        File outputLib = temporaryFolder.newFile();
-        ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so", outputLib);
-
-        FileRecord lib = FileRecord.of(outputLib);
-
+        byte[] lib = getSo(instantRunModel);
         File src = sProject.file("src/main/jni/hello-jni.c");
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
@@ -142,7 +134,13 @@ public class CmakeInstantRunTest {
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED.toString());
         assertThat(context.getArtifacts()).hasSize(1);
 
-        ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so", outputLib);
-        assertThat(lib).hasChanged();
+        assertThat(getSo(instantRunModel)).isNotEqualTo(lib);
     }
+
+    private static byte[] getSo(InstantRun instantRunModel) throws Exception {
+        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        Path so = Iterables.getOnlyElement(apks.getEntries("lib/x86/libhello-jni.so"));
+        return java.nio.file.Files.readAllBytes(so);
+    }
+
 }

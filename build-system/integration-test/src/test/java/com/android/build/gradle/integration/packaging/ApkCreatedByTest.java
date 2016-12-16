@@ -23,15 +23,11 @@ import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import java.io.File;
+import com.android.testutils.apk.Apk;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Properties;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 public class ApkCreatedByTest {
 
@@ -44,10 +40,10 @@ public class ApkCreatedByTest {
     public void checkCreatedByInApk() throws Exception {
         project.executor().run("assembleDebug");
 
-        File apk = project.getApk("debug");
-        assertTrue(apk.isFile());
+        Apk apk = project.getApk("debug");
+        assertTrue(apk.exists());
 
-        try (ZFile zf = new ZFile(apk)) {
+        try (ZFile zf = new ZFile(apk.getFile().toFile())) {
             StoredEntry manifestEntry = zf.get("META-INF/MANIFEST.MF");
             assertNotNull(manifestEntry);
 

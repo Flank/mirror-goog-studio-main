@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -110,7 +111,7 @@ class NdkBuildAndroidMkLibraryTest {
     @Test
     void "check apk content"() {
         project.execute("clean", "assembleDebug")
-        File apk = project.getApk("debug");
+        Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1)
         assertThatApk(apk).contains("lib/armeabi-v7a/libfoo.so");
         assertThatApk(apk).contains("lib/armeabi/libfoo.so");

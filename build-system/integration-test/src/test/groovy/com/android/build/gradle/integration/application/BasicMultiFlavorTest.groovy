@@ -30,11 +30,9 @@ import groovy.transform.CompileStatic
 import org.junit.Rule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.builder.core.VariantType.ANDROID_TEST
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import static com.google.common.truth.Truth.assertThat
 /**
  * Assemble tests for basicMultiFlavors
  */
@@ -91,10 +89,10 @@ class BasicMultiFlavorTest {
         project.execute("assembleFreeBetaDebug")
 
         // Make sure "beta" overrides "free" and "defaultConfig".
-        assertThatApk(project.getApk("free", "beta", "debug")).hasMaxSdkVersion(18)
+        assertThat(project.getApk("free", "beta", "debug")).hasMaxSdkVersion(18)
 
         // Make sure the suffixes are applied in the right order.
-        assertThatApk(project.getApk("free", "beta", "debug"))
+        assertThat(project.getApk("free", "beta", "debug"))
                 .hasVersionName("com.example.default.free.beta.debug")
     }
 
@@ -115,8 +113,7 @@ class BasicMultiFlavorTest {
     @Test
     void "check resources resolution"() {
         project.execute("assembleFreeBetaDebug")
-        assertThatAar(project.getApk("free", "beta", "debug"))
-                .containsResource("drawable/free.png")
+        assertThat(project.getApk("free", "beta", "debug")).containsResource("drawable/free.png")
     }
 
     private void addResValuesAndPlaceholders() {

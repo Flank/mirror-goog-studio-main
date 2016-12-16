@@ -20,167 +20,173 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.AndroidArchive;
 import com.android.testutils.truth.AbstractZipSubject;
 import com.google.common.truth.FailureStrategy;
-import java.io.File;
 import java.io.IOException;
-import java.util.regex.Pattern;
-import java.util.zip.ZipFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
-/**
- * Base Truth support for android archives (aar and apk)
- */
-public abstract class AbstractAndroidSubject<T extends AbstractZipSubject<T>> extends AbstractZipSubject<T> {
+/** Base Truth support for android archives (aar and apk) */
+@SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+public abstract class AbstractAndroidSubject<
+                S extends AbstractAndroidSubject<S, T>, T extends AndroidArchive>
+        extends AbstractZipSubject<S, T> {
 
-    private static final Pattern CLASS_FORMAT = Pattern.compile("^L([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z0-9$._]+;$");
-
-    public AbstractAndroidSubject(@NonNull FailureStrategy failureStrategy, @NonNull File subject) {
+    public AbstractAndroidSubject(@NonNull FailureStrategy failureStrategy, @NonNull T subject) {
         super(failureStrategy, subject);
     }
 
-    /**
-     * Scope in which to search for classes.
-     */
-    public enum ClassFileScope {
-        /**
-         * The main class file. classes.dex for APK, and classes.jar for AAR
-         */
-        MAIN,
-        /**
-         * The secondary class files.
-         * For APK: classes2.dex, classes3.dex, etc...
-         * For AAR: local jars packaged under libs/
-         */
-        SECONDARY,
-        /**
-         * Main and secondary class files.
-         */
-        MAIN_AND_SECONDARY,
-
-        /**
-         * InstantRun type of packaging, where some classes can be in the main or secondary class
-         * files as well as in any dex file contained in an instant-run.zip file located in the
-         * APK root.
-         */
-        INSTANT_RUN
+    protected static boolean isClassName(@NonNull String className) {
+        return AndroidArchive.CLASS_FORMAT.matcher(className).matches();
     }
 
-    /**
-     * Returns true if the provided class is present in the file.
-     * @param expectedClassName the class name in the format Lpkg1/pk2/Name;
-     * @param scope the scope in which to search for the class.
-     */
-    protected abstract boolean checkForClass(
-            @NonNull String expectedClassName,
-            @NonNull ClassFileScope scope)
-            throws ProcessException, IOException;
-
-    protected abstract boolean checkForJavaResource(
-            @NonNull String resourcePath)
-            throws ProcessException, IOException;
-
-    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void containsClass(@NonNull String className) throws IOException, ProcessException {
-        containsClass(className, ClassFileScope.MAIN_AND_SECONDARY);
-    }
-
-    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void containsClass(@NonNull String className, @NonNull ClassFileScope scope)
+    public final void containsClass(@NonNull String className)
             throws IOException, ProcessException {
-        if (!checkForClass(className, scope)) {
-            failWithRawMessage("'%s' does not contain '%s'", getDisplaySubject(), className);
+        if (!getSubject().containsClass(className)) {
+            failWithRawMessage("'%s' does not contain class '%s'", getDisplaySubject(), className);
+        }
+    }
+
+    public final void containsMainClass(@NonNull String className)
+            throws IOException, ProcessException {
+        if (!getSubject().containsMainClass(className)) {
+            failWithRawMessage(
+                    "'%s' does not contain main class '%s'", getDisplaySubject(), className);
+        }
+    }
+
+    public final void containsSecondaryClass(@NonNull String className)
+            throws IOException, ProcessException {
+        if (!getSubject().containsSecondaryClass(className)) {
+            failWithRawMessage(
+                    "'%s' does not contain secondary class '%s'", getDisplaySubject(), className);
         }
     }
 
     @Override
-    public void contains(@NonNull String path) throws IOException {
+    public final void contains(@NonNull String path) throws IOException {
         checkArgument(!isClassName(path), "Use containsClass to check for classes.");
-        super.contains(path);
+        if (getSubject().getEntry(path) == null) {
+            failWithRawMessage("'%s' does not contain '%s'", getSubject(), path);
+        }
     }
 
     @Override
-    public void doesNotContain(@NonNull String path) throws IOException {
+    public final void doesNotContain(@NonNull String path) throws IOException {
         checkArgument(!isClassName(path), "Use doesNotContainClass to check for classes.");
-        super.doesNotContain(path);
+        if (getSubject().getEntry(path) != null) {
+            failWithRawMessage("'%s' unexpectedly contains '%s'", getSubject(), path);
+        }
     }
 
-    public void doesNotContainClass(@NonNull String className)
+    public final void doesNotContainClass(@NonNull String className)
             throws IOException, ProcessException {
-        doesNotContainClass(className, ClassFileScope.MAIN_AND_SECONDARY);
+        if (getSubject().containsClass(className)) {
+            failWithRawMessage(
+                    "'%s' unexpectedly contains class '%s'", getDisplaySubject(), className);
+        }
     }
 
-    public void doesNotContainClass(@NonNull String className, @NonNull ClassFileScope scope)
+    public final void doesNotContainMainClass(@NonNull String className)
             throws IOException, ProcessException {
-        if (checkForClass(className, scope)) {
-            failWithRawMessage("'%s' unexpectedly contains '%s'", getDisplaySubject(), className);
+        if (getSubject().containsMainClass(className)) {
+            failWithRawMessage(
+                    "'%s' unexpectedly contains main class '%s'", getDisplaySubject(), className);
+        }
+    }
+
+    public final void doesNotContainSecondaryClass(@NonNull String className)
+            throws IOException, ProcessException {
+        if (getSubject().containsSecondaryClass(className)) {
+            failWithRawMessage(
+                    "'%s' unexpectedly contains secondary class '%s'",
+                    getDisplaySubject(), className);
         }
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void containsResource(@NonNull String name) throws IOException, ProcessException {
-        if (!checkForResource(name)) {
+    public final void containsResource(@NonNull String name) throws IOException, ProcessException {
+        if (getSubject().getResource(name) == null) {
             failWithRawMessage("'%s' does not contain resource '%s'", getDisplaySubject(), name);
         }
     }
 
-    public void doesNotContainResource(@NonNull String name) throws IOException, ProcessException {
-        if (checkForResource(name)) {
-            failWithRawMessage("'%s' unexpectedly contains resource '%s'",
-                    getDisplaySubject(), name);
+    public final void doesNotContainResource(@NonNull String name)
+            throws IOException, ProcessException {
+        if (getSubject().getResource(name) != null) {
+            failWithRawMessage(
+                    "'%s' unexpectedly contains resource '%s'", getDisplaySubject(), name);
         }
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void containsJavaResource(@NonNull String name) throws IOException, ProcessException {
-        if (!checkForJavaResource(name)) {
-            failWithRawMessage("'%s' does not contain Java resource '%s'", getDisplaySubject(), name);
+    public final void containsJavaResource(@NonNull String name)
+            throws IOException, ProcessException {
+        if (!(getSubject().getJavaResource(name) != null)) {
+            failWithRawMessage(
+                    "'%s' does not contain Java resource '%s'", getDisplaySubject(), name);
         }
     }
 
-    public void doesNotContainJavaResource(@NonNull String name) throws IOException, ProcessException {
-        if (checkForJavaResource(name)) {
-            failWithRawMessage("'%s' unexpectedly contains Java resource '%s'",
-                    getDisplaySubject(), name);
+    public final void doesNotContainJavaResource(@NonNull String name)
+            throws IOException, ProcessException {
+        if (getSubject().getJavaResource(name) != null) {
+            failWithRawMessage(
+                    "'%s' unexpectedly contains Java resource '%s'", getDisplaySubject(), name);
         }
     }
 
     /**
-     * Asserts the subject contains a java resource at the given path with the specified String content.
+     * Asserts the subject contains a java resource at the given path with the specified String
+     * content.
      *
-     * Content is trimmed when compared.
+     * <p>Content is trimmed when compared.
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public abstract void containsJavaResourceWithContent(
-            @NonNull String path, @NonNull String content) throws IOException, ProcessException;
+    public final void containsJavaResourceWithContent(
+            @NonNull String path, @NonNull String expected) throws IOException, ProcessException {
+        Path resource = getSubject().getJavaResource(path);
+        if (resource == null) {
+            failWithRawMessage("Resource " + path + " does not exist in " + getSubject());
+            return;
+        }
+        String actual = Files.readAllLines(resource).stream().collect(Collectors.joining("\n"));
+        if (!expected.equals(actual)) {
+            failWithRawMessage(
+                    "Resource %s in %s does not have expected contents. Expected '%s' actual '%s'",
+                    path, getSubject(), expected, actual);
+        }
+    }
 
     /**
-     * Asserts the subject contains a java resource at the given path with the specified
-     * byte array content.
+     * Asserts the subject contains a java resource at the given path with the specified byte array
+     * content.
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public abstract void containsJavaResourceWithContent(
-            @NonNull String path, @NonNull byte[] content) throws IOException, ProcessException;
+    public final void containsJavaResourceWithContent(
+            @NonNull String path, @NonNull byte[] expected) throws IOException, ProcessException {
+        Path resource = getSubject().getJavaResource(path);
+        if (resource == null) {
+            failWithRawMessage("Resource " + path + " does not exist in " + getSubject());
+            return;
+        }
+
+        byte[] actual = Files.readAllBytes(resource);
+        if (!Arrays.equals(expected, actual)) {
+            failWithBadResults(
+                    "[" + path + "] has contents",
+                    Arrays.toString(expected),
+                    "contains",
+                    Arrays.toString(actual));
+        }
+    }
 
     @Override
     protected String getDisplaySubject() {
         String name = (internalCustomName() == null) ? "" : "\"" + internalCustomName() + "\" ";
-        return name + "<" + getSubject().getAbsolutePath() + ">";
-    }
-
-    private boolean checkForResource(String name) throws IOException {
-        try (ZipFile zipFile = new ZipFile(getSubject())) {
-            return zipFile.getEntry("res/" + name) != null;
-        }
-    }
-
-    protected static boolean isClassName(@NonNull String className) {
-        return CLASS_FORMAT.matcher(className).matches();
-    }
-
-    protected void checkClassName(@NonNull String className) {
-        if (!CLASS_FORMAT.matcher(className).matches()) {
-            failWithRawMessage(
-                    "class name '%s' must be in the format Lcom/foo/Main;", className);
-        }
+        return name + "<" + getSubject() + ">";
     }
 }

@@ -17,14 +17,13 @@
 package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAtomBundle;
 
 import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.AtomBundle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,13 +70,14 @@ public class DataBindingAtomTest {
         final GradleBuildResult buildResult = project.getBuildResult();
         assertThat(buildResult.getTask(":dataBindingProcessLayoutsDebugAtom")).wasExecuted();
 
-        AtomBundleSubject atombundle = assertThatAtomBundle(project.getAtomBundle("debug"));
-        atombundle.containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
-        atombundle.containsClass("Landroid/databinding/DataBindingComponent;");
+        AtomBundle atombundle = project.getAtomBundle("debug");
+        assertThat(atombundle)
+                .containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
+        assertThat(atombundle).containsClass("Landroid/databinding/DataBindingComponent;");
         if (mWithoutAdapters) {
-            atombundle.doesNotContainClass("Landroid/databinding/adapters/Converters;");
+            assertThat(atombundle).doesNotContainClass("Landroid/databinding/adapters/Converters;");
         } else {
-            atombundle.containsClass("Landroid/databinding/adapters/Converters;");
+            assertThat(atombundle).containsClass("Landroid/databinding/adapters/Converters;");
         }
     }
 }

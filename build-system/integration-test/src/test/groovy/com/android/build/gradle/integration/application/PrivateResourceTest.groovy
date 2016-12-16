@@ -23,8 +23,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
+import static com.android.testutils.truth.MoreTruth.assertThat
 /**
  * Assemble tests for privateResources.
  * <p>
@@ -60,11 +59,11 @@ string mylib_public_string
 string mylib_shared_name
 id mylib_shared_name
 """
-        assertThatZip(project.getSubproject('mylibrary').getAar("release")).containsFileWithContent('public.txt', expected);
-        assertThatZip(project.getSubproject('mylibrary').getAar("debug")).containsFileWithContent('public.txt', expected);
+        assertThat(project.getSubproject('mylibrary').getAar("release")).containsFileWithContent('public.txt', expected);
+        assertThat(project.getSubproject('mylibrary').getAar("debug")).containsFileWithContent('public.txt', expected);
 
         // No public resources: file should exist but be empty
-        assertThatZip(project.getSubproject('mylibrary2').getAar("debug")).containsFileWithContent('public.txt', "");
-        assertThatZip(project.getSubproject('mylibrary2').getAar("release")).containsFileWithContent('public.txt', "");
+        assertThat(project.getSubproject('mylibrary2').getAar("debug")).containsFileWithContent('public.txt', "");
+        assertThat(project.getSubproject('mylibrary2').getAar("release")).containsFileWithContent('public.txt', "");
     }
 }

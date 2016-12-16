@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instant;
 
-import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.ClassFileScope.INSTANT_RUN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
@@ -37,6 +36,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -57,7 +58,7 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DaggerTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIDEX;
+    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String ORIGINAL_MESSAGE = "from module";
     private static final String APP_MODULE_DESC = "Lcom/android/tests/AppModule;";
     private static final String GET_MESSAGE = "getMessage";
@@ -108,11 +109,11 @@ public class DaggerTest {
     @Test
     public void coldSwap() throws Exception {
         new ColdSwapTester(project)
-                .testMultiDex(
+                .testMultiApk(
                         new ColdSwapTester.Steps() {
                             @Override
-                            public void checkApk(@NonNull File apk) throws Exception {
-                                assertThatApk(apk).hasClass(APP_MODULE_DESC, INSTANT_RUN);
+                            public void checkApks(@NonNull SplitApks apks) throws Exception {
+                                assertThat(apks).hasClass(APP_MODULE_DESC);
                             }
 
                             @Override
@@ -143,8 +144,8 @@ public class DaggerTest {
                                     throws Exception {
                                 InstantRunBuildContext.Artifact artifact =
                                         Iterables.getOnlyElement(artifacts);
-                                assertThatDex(artifact.getLocation())
-                                        .containsClass(APP_MODULE_DESC)
+                                assertThatApk(new Apk(artifact.getLocation()))
+                                        .hasClass(APP_MODULE_DESC)
                                         .that()
                                         .hasMethod(GET_MESSAGE);
                             }

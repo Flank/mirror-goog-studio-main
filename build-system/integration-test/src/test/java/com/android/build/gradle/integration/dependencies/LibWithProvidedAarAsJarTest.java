@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.PROVIDED;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
@@ -87,7 +86,7 @@ public class LibWithProvidedAarAsJarTest {
 
     @Test
     public void checkProjectJarIsNotPackaged() throws IOException, ProcessException {
-        assertThatAar(project.getSubproject("library").getAar("debug"))
+        assertThat(project.getSubproject("library").getAar("debug"))
                 .doesNotContainClass("Lcom/example/android/multiproject/library2/PersionView2;");
     }
 

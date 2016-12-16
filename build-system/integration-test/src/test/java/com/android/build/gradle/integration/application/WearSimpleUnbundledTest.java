@@ -22,11 +22,11 @@ import static com.android.SdkConstants.FD_RES_RAW;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getFailureMessage;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -73,8 +73,8 @@ public class WearSimpleUnbundledTest {
         List<String> apkNames = Lists.newArrayList("release-unsigned", "debug");
 
         for (String apkName : apkNames) {
-            File fullApk = project.getSubproject("main").getApk(apkName);
-            assertThatZip(fullApk).doesNotContain(embeddedApkPath);
+            Apk fullApk = project.getSubproject("main").getApk(apkName);
+            assertThat(fullApk).doesNotContain(embeddedApkPath);
         }
     }
 

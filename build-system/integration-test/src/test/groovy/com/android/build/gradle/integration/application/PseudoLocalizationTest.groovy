@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import groovy.transform.CompileStatic
@@ -23,7 +24,7 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Test for pseudolocalized.
  */
@@ -47,6 +48,6 @@ class PseudoLocalizationTest {
 
     @Test
     public void testPseudolocalization() throws Exception {
-        assertThatApk(project.getApk("debug")).locales().containsAllOf("en-XA", "ar-XB")
+        assertThat(project.getApk("debug")).locales().containsAllOf("en-XA", "ar-XB")
     }
 }

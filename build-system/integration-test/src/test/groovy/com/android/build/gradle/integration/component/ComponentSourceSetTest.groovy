@@ -28,8 +28,7 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip
-
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Integration tests for different configuration of source sets.
  */
@@ -119,27 +118,27 @@ Un-compilable file to test exclude source works.
     void defaultBuildTypeSourceDirectory() {
         project.execute("assembleFlavor2Release");
         def apk = project.getApk("flavor2", "release", "unsigned")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 
     @Test
     void defaultProductFlavorSourceDirectory() {
         project.execute("assembleFlavor1Debug");
         def apk = project.getApk("flavor1", "debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 
     @Test
     void defaultVariantSourceDirectory() {
         project.execute("assembleFlavor2Debug");
         def apk = project.getApk("flavor2", "debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 
     @Test
     void nonDefaultSourceDirectory() {
         project.execute("assembleFlavor3Debug");
         def apk = project.getApk("flavor3", "debug")
-        assertThatZip(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 }
