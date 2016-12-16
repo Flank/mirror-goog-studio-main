@@ -251,11 +251,18 @@ public class IncrementalVisitor extends ClassVisitor {
 
         byte[] classBytes;
         String path = FileUtils.relativePath(inputFile, inputRootDirectory);
-        if (!inputFile.getPath().endsWith(SdkConstants.DOT_CLASS)) {
-            File outputFile = new File(outputDirectory, path);
-            Files.createParentDirs(outputFile);
-            Files.copy(inputFile, outputFile);
-            return outputFile;
+
+        // if the class is not eligible for IR, return the non instrumented version or null if
+        // the override class is requested.
+        if (!isClassEligibleForInstantRun(inputFile)) {
+            if (visitorBuilder.getOutputType() == OutputType.INSTRUMENT) {
+                File outputFile = new File(outputDirectory, path);
+                Files.createParentDirs(outputFile);
+                Files.copy(inputFile, outputFile);
+                return outputFile;
+            } else {
+                return null;
+            }
         }
         classBytes = Files.toByteArray(inputFile);
         ClassReader classReader = new ClassReader(classBytes);
@@ -428,5 +435,21 @@ public class IncrementalVisitor extends ClassVisitor {
             }
         }
         return false;
+    }
+
+    /**
+     * Return true of the class is eligible to be InstantRun enabled, false otherwise.
+     * @param inputFile the input file containing the byte codes.
+     * @return true if the class should be instrumented for InstantRun, false otherwise.
+     */
+    @VisibleForTesting
+    static boolean isClassEligibleForInstantRun(@NonNull File inputFile) {
+
+        if (inputFile.getPath().endsWith(SdkConstants.DOT_CLASS)) {
+            String fileName = inputFile.getName();
+            return !fileName.equals("R" + SdkConstants.DOT_CLASS) && !fileName.startsWith("R$");
+        } else {
+            return false;
+        }
     }
 }
