@@ -16,6 +16,7 @@
 #include "memory_cache.h"
 
 #include <algorithm>
+#include <cassert>
 
 #include "utils/file_reader.h"
 #include "utils/log.h"
@@ -24,11 +25,7 @@ using ::profiler::proto::TrackAllocationsResponse;
 using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
-
-namespace {
-  // Indicates that a heap dump is in progress.
-  static const int64_t kUnfinishedTimestamp = -1;
-}
+using ::profiler::proto::AllocationsInfo;
 
 namespace profiler {
 
@@ -37,15 +34,14 @@ MemoryCache::MemoryCache(const Clock& clock, int32_t samples_capacity)
       memory_samples_(new MemoryData::MemorySample[samples_capacity]),
       vm_stats_samples_(new MemoryData::VmStatsSample[samples_capacity]),
       heap_dump_infos_(new HeapDumpInfo[samples_capacity]),
-      allocations_info_(new MemoryData::AllocationsInfo[samples_capacity]),
+      allocations_info_(new AllocationsInfo[samples_capacity]),
       put_memory_sample_index_(0),
       put_vm_stats_sample_index_(0),
-      put_allocations_info_index_(0),
       next_heap_dump_sample_id_(0),
+      next_allocations_info_id_(0),
       samples_capacity_(samples_capacity),
       memory_samples_buffer_full_(false),
       vm_stats_samples_buffer_full_(false),
-      allocations_info_buffer_full_(false),
       has_unfinished_heap_dump_(false),
       is_allocation_tracking_enabled_(false) {}
 
@@ -80,7 +76,8 @@ bool MemoryCache::StartHeapDump(const std::string& dump_file_path,
     return false;
   }
 
-  HeapDumpInfo* info = &heap_dump_infos_[next_heap_dump_sample_id_];
+  HeapDumpInfo* info =
+      &heap_dump_infos_[GetSampleIndex(next_heap_dump_sample_id_)];
   info->set_start_time(request_time);
   info->set_end_time(kUnfinishedTimestamp);
   info->set_dump_id(next_heap_dump_sample_id_);
@@ -103,7 +100,9 @@ bool MemoryCache::EndHeapDump(int64_t end_time, bool success) {
   }
 
   // Gets the last HeapDumpInfo and sets its end time.
-  int last_heap_dump_sample_index = GetSampleIndex(next_heap_dump_sample_id_ - 1);
+  assert(next_heap_dump_sample_id_ > 0);
+  int last_heap_dump_sample_index =
+      GetSampleIndex(next_heap_dump_sample_id_ - 1);
   heap_dump_infos_[last_heap_dump_sample_index].set_end_time(end_time);
   heap_dump_infos_[last_heap_dump_sample_index].set_success(success);
   has_unfinished_heap_dump_ = false;
@@ -111,7 +110,7 @@ bool MemoryCache::EndHeapDump(int64_t end_time, bool success) {
   return true;
 }
 
-void MemoryCache::TrackAllocations(bool enabled,
+void MemoryCache::TrackAllocations(bool enabled, bool legacy,
                                    TrackAllocationsResponse* response) {
   std::lock_guard<std::mutex> lock(allocations_info_mutex_);
 
@@ -124,19 +123,29 @@ void MemoryCache::TrackAllocations(bool enabled,
   } else {
     int64_t timestamp = clock_.GetCurrentTime();
     if (enabled) {
-      MemoryData::AllocationsInfo& info =
-          allocations_info_[put_allocations_info_index_];
+      AllocationsInfo& info = allocations_info_[GetSampleIndex(next_allocations_info_id_)];
+      info.set_info_id(next_allocations_info_id_);
       info.set_start_time(timestamp);
       info.set_end_time(kUnfinishedTimestamp);
-      put_allocations_info_index_ = GetNextSampleIndex(
-          put_allocations_info_index_);
-      if (put_allocations_info_index_ == 0) {
-        allocations_info_buffer_full_ = true;  // Check if we have wrapped.
-      }
+      info.set_legacy_tracking(legacy);
+      info.set_status(AllocationsInfo::IN_PROGRESS);
+
+      response->mutable_info()->CopyFrom(info);
+      next_allocations_info_id_++;
     } else {
-      allocations_info_[put_allocations_info_index_ == 0 ?
-          samples_capacity_ - 1 : put_allocations_info_index_ - 1]
-          .set_end_time(timestamp);
+      assert(next_allocations_info_id_ > 0);
+      int last_info_index = GetSampleIndex(next_allocations_info_id_ - 1);
+      AllocationsInfo& info = allocations_info_[last_info_index];
+      info.set_end_time(timestamp);
+      if (info.legacy_tracking()) {
+        // Legacy tracking requires post-proccessing on
+        // perfd-host upon arrival of jdwp data.
+        info.set_status(AllocationsInfo::POST_PROCESS);
+      } else {
+        info.set_status(AllocationsInfo::COMPLETED);
+      }
+
+      response->mutable_info()->CopyFrom(info);
     }
     response->set_status(TrackAllocationsResponse::SUCCESS);
     response->set_timestamp(timestamp);
@@ -179,10 +188,12 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     } while (i != put_vm_stats_sample_index_);
   }
 
-  if (put_allocations_info_index_ > 0 || allocations_info_buffer_full_) {
-    int32_t i = allocations_info_buffer_full_ ?
-        put_allocations_info_index_ : 0;
-    do {
+  if (next_allocations_info_id_ > 0) {
+    int32_t search_id =
+        std::max(next_allocations_info_id_ - samples_capacity_, 0);
+
+    while (search_id < next_allocations_info_id_) {
+      int32_t i = GetSampleIndex(search_id);
       int64_t start_time = allocations_info_[i].start_time();
       int64_t end_time = allocations_info_[i].end_time();
       if ((start_time > start_time_exl && start_time <= end_time_inc) ||
@@ -190,8 +201,8 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
         response->add_allocations_info()->CopyFrom(allocations_info_[i]);
         end_timestamp = std::max({start_time, end_time, end_timestamp});
       }
-      i = GetNextSampleIndex(i);
-    } while (i != put_allocations_info_index_);
+      search_id++;
+    }
   }
 
   // TODO implement JVMTI allocation events AND MAKE SURE THE BUFFER IS LARGE
@@ -200,8 +211,8 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     // Since |next_heap_dump_sample_id_| is a contiguous value mapped to a
     // wrapping index, we'll start the search from 0 (if we have accumulated
     // less samples than |samples_capacity_|), or from |samples_capacity_| ago.
-    int32_t search_id = std::max(next_heap_dump_sample_id_ - samples_capacity_,
-                                 0);
+    int32_t search_id =
+        std::max(next_heap_dump_sample_id_ - samples_capacity_, 0);
     while (search_id < next_heap_dump_sample_id_) {
       int32_t i = GetSampleIndex(search_id);
       int64_t start_time = heap_dump_infos_[i].start_time();

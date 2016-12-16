@@ -67,6 +67,11 @@ class MemoryServiceImpl final
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
 
+  ::grpc::Status GetAllocationsInfoStatus(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::GetAllocationsInfoStatusRequest* request,
+      ::profiler::proto::GetAllocationsInfoStatusResponse* response) override;
+
   ::grpc::Status ListAllocationContexts(
       ::grpc::ServerContext* context,
       const ::profiler::proto::AllocationContextsRequest* request,
