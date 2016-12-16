@@ -15,6 +15,12 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/minimum",
+    srcs = [":build-tools/25.0.0"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "build-tools/25.0.1",
     srcs = glob(
         include = ["*/build-tools/25.0.1/**"],
@@ -197,9 +203,17 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-java_import(
-    name = "android_jar",
-    jars = [":_android_jar"],
-    neverlink = 1,
+filegroup(
+    name = "ndk-bundle",
+    srcs = glob(["*/ndk-bundle/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "cmake",
+    srcs = glob(
+        include = ["*/cmake/**"],
+        exclude = ["*/cmake/**/Help/**"],
+    ),
     visibility = ["//visibility:public"],
 )
