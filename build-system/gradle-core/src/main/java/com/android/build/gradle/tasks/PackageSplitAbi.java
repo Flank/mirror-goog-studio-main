@@ -16,17 +16,14 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
-import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
+import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -42,11 +39,8 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
-import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.packaging.SigningException;
 import com.android.ide.common.res2.FileStatus;
-import com.android.ide.common.signing.CertificateInfo;
-import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -56,18 +50,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Callables;
-
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFiles;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -76,6 +58,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Package a abi dimension specific split APK
@@ -152,55 +142,6 @@ public class PackageSplitAbi extends SplitRelatedTask {
         return false;
     }
 
-    /**
-     * Creates the {@link ApkCreatorFactory.CreationData} information needed to create the APK.
-     *
-     * @param outputApk the output file to create
-     * @return the creation data
-     */
-    @NonNull
-    private ApkCreatorFactory.CreationData makeCreationData(@NonNull File outputApk) {
-        PrivateKey key;
-        X509Certificate certificate;
-        boolean v1SigningEnabled;
-        boolean v2SigningEnabled;
-
-        try {
-            if (signingConfig != null && signingConfig.isSigningReady()) {
-                CertificateInfo certificateInfo =
-                        KeystoreHelper.getCertificateInfo(
-                                signingConfig.getStoreType(),
-                                checkNotNull(signingConfig.getStoreFile()),
-                                checkNotNull(signingConfig.getStorePassword()),
-                                checkNotNull(signingConfig.getKeyPassword()),
-                                checkNotNull(signingConfig.getKeyAlias()));
-                key = certificateInfo.getKey();
-                certificate = certificateInfo.getCertificate();
-                v1SigningEnabled = signingConfig.isV1SigningEnabled();
-                v2SigningEnabled = signingConfig.isV2SigningEnabled();
-            } else {
-                key = null;
-                certificate = null;
-                v1SigningEnabled = false;
-                v2SigningEnabled = false;
-            }
-        } catch (KeytoolException | IOException e) {
-            throw new RuntimeException("Failed to get signing information", e);
-        }
-
-        return new ApkCreatorFactory.CreationData(
-                outputApk,
-                key,
-                certificate,
-                v1SigningEnabled,
-                v2SigningEnabled,
-                null, // BuiltBy
-                getBuilder().getCreatedBy(),
-                getMinSdkVersion(),
-                PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest),
-                PackagingUtils.getNoCompressPredicate(aaptOptions, manifest));
-    }
-
     @TaskAction
     protected void doFullTaskAction() throws SigningException,
             KeytoolException, PackagerException, IOException {
@@ -217,16 +158,19 @@ public class PackageSplitAbi extends SplitRelatedTask {
 
                 File outFile = new File(getOutputDirectory(), apkName);
 
-                ApkCreatorFactory.CreationData creationData = makeCreationData(outFile);
-                try (IncrementalPackager pkg =
-                        new IncrementalPackager(
-                                creationData,
-                                incrementalDir,
-                                ApkCreatorFactories.fromProjectProperties(
-                                        getProject(),
-                                        isJniDebuggable()),
-                                ImmutableSet.of(matcher.group(1)),
-                                isJniDebuggable())) {
+                try (IncrementalPackager pkg = new IncrementalPackagerBuilder()
+                        .withOutputFile(outFile)
+                        .withSigning(signingConfig)
+                        .withCreatedBy(getBuilder().getCreatedBy())
+                        .withMinSdk(getMinSdkVersion())
+                        .withManifest(manifest)
+                        .withAaptOptions(aaptOptions)
+                        .withIntermediateDir(incrementalDir)
+                        .withProject(getProject())
+                        .withDebuggableBuild(isJniDebuggable())
+                        .withJniDebuggableBuild(isJniDebuggable())
+                        .withAcceptedAbis(ImmutableSet.of(matcher.group(1)))
+                        .build()) {
                     ImmutableMap<RelativeFile, FileStatus> nativeLibs =
                             IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
                     pkg.updateNativeLibraries(nativeLibs);

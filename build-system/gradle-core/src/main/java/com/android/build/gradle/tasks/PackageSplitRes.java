@@ -21,21 +21,27 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
+import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.files.IncrementalRelativeFileSets;
+import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
-import com.android.builder.packaging.SigningException;
-import com.android.builder.packaging.ZipAbortException;
-import com.android.ide.common.signing.KeytoolException;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Callables;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -43,14 +49,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Package each split resources into a specific signed apk file.
@@ -73,6 +71,8 @@ public class PackageSplitRes extends SplitRelatedTask {
     private File inputDirectory;
 
     private File outputDirectory;
+
+    private File incrementalDir;
 
     @InputFiles
     public List<File> getInputFiles() {
@@ -139,28 +139,26 @@ public class PackageSplitRes extends SplitRelatedTask {
 
     @TaskAction
     protected void doFullTaskAction() {
-        forEachInputFile(
-                new SplitFileHandler() {
-                    @Override
-                    public void execute(String split, File file) {
-                        File outFile = new File(outputDirectory, getOutputFileNameForSplit(split));
-                        try {
-                            AndroidBuilder.signApk(file, signingConfig, outFile);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        } catch (KeytoolException e) {
-                            throw new RuntimeException(e);
-                        } catch (SigningException e) {
-                            throw new RuntimeException(e);
-                        } catch (NoSuchAlgorithmException e) {
-                            throw new RuntimeException(e);
-                        } catch (ZipAbortException e) {
-                            throw new RuntimeException(e);
-                        } catch (com.android.builder.signing.SigningException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
+        forEachInputFile((String split, File file) -> {
+            File outFile = new File(outputDirectory, getOutputFileNameForSplit(split));
+            File intDir = new File(incrementalDir, "tmp");
+            try {
+                FileUtils.cleanOutputDir(intDir);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+
+            try (IncrementalPackager pkg = new IncrementalPackagerBuilder()
+                    .withSigning(signingConfig)
+                    .withOutputFile(outFile)
+                    .withProject(getProject())
+                    .withIntermediateDir(intDir)
+                    .build()) {
+                pkg.updateAndroidResources(IncrementalRelativeFileSets.fromZip(file));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
     private interface SplitFileHandler {
@@ -355,6 +353,8 @@ public class PackageSplitRes extends SplitRelatedTask {
             packageSplitResourcesTask.setVariantName(config.getFullName());
             packageSplitResourcesTask.dependsOn(
                     variantOutputScope.getProcessResourcesTask().getName());
+            packageSplitResourcesTask.incrementalDir =
+                    variantOutputScope.getVariantScope().getIncrementalDir(getName());
         }
     }
 }
