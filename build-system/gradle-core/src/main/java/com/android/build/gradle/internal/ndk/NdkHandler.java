@@ -225,7 +225,10 @@ public class NdkHandler {
         File sdkFolder = sdkLocation.getFirst();
         if (sdkFolder != null) {
             // Worth checking if the NDK came bundled with the SDK
-            return new File(sdkFolder, SdkConstants.FD_NDK);
+            File ndkBundle = new File(sdkFolder, SdkConstants.FD_NDK);
+            if (ndkBundle.isDirectory()) {
+                return ndkBundle;
+            }
         }
 
         return null;
