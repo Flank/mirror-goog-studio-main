@@ -198,7 +198,7 @@ public class AntennaPodPerformanceMatrixTest {
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
                     executor()
-                            .withInstantRun(24, ColdswapMode.MULTIDEX)
+                            .withInstantRun(24, ColdswapMode.MULTIAPK)
                             .withEnableInfoLogging(false)
                             .run(tasks);
                     isEdit = true;
@@ -254,7 +254,7 @@ public class AntennaPodPerformanceMatrixTest {
             if (instantRunModel != null) {
                 executor()
                         .recordBenchmark(benchmarkMode)
-                        .withInstantRun(24, ColdswapMode.MULTIDEX)
+                        .withInstantRun(24, ColdswapMode.MULTIAPK)
                         .run(tasks);
 
                 InstantRunTestUtils.loadContext(instantRunModel).getVerifierStatus();

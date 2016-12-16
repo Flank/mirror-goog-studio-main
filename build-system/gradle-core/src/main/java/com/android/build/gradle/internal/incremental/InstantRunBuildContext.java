@@ -405,11 +405,6 @@ public class InstantRunBuildContext {
             switch (patchingPolicy) {
                 case PRE_LOLLIPOP:
                     return;
-                case MULTI_DEX:
-                    if (fileType != FileType.DEX) {
-                        return;
-                    }
-                    break;
                 case MULTI_APK:
                     if (fileType != FileType.SPLIT) {
                         return;
@@ -428,12 +423,6 @@ public class InstantRunBuildContext {
             Artifact previousArtifact = currentBuild.getArtifactForType(fileType);
             if (previousArtifact != null) {
                 currentBuild.artifacts.remove(previousArtifact);
-            }
-
-            // also if we are in LOLLIPOP, the DEX files are packaged in the original main APK, so
-            // we can remove individual files.
-            if (patchingPolicy == InstantRunPatchingPolicy.MULTI_DEX) {
-                currentBuild.artifacts.clear();
             }
 
             // since the main APK is produced, no need to keep the RESOURCES record around.

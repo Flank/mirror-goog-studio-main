@@ -87,7 +87,6 @@ public class ResourcesSwapTest {
         Apk apk = mProject.getApk("debug");
         assertThat(apk).contains("assets/movie.mp4");
         assertThat(apk).contains("classes.dex");
-        assertThat(apk).contains("instant-run.zip");
 
         TestFileUtils.appendToFile(asset, " upgraded");
 
@@ -100,7 +99,6 @@ public class ResourcesSwapTest {
         assertThat(artifact.file.getName()).endsWith(".ir.ap_");
         assertThatZip(artifact.file).contains("assets/movie.mp4");
         assertThatZip(artifact.file).doesNotContain("classes.dex");
-        assertThatZip(artifact.file).doesNotContain("instant-run.zip");
     }
 
     @Test

@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.android.tools.fd.client.InstantRunArtifactType.DEX;
 import static com.android.tools.fd.client.InstantRunArtifactType.SPLIT;
 import static com.android.tools.fd.common.ProtocolConstants.*;
 import static com.android.tools.fd.runtime.Paths.getDeviceIdFolder;
@@ -182,15 +181,13 @@ public class InstantRunClient {
                     updateMode = updateMode.combine(UpdateMode.WARM_SWAP);
                     files.add(FileTransfer.createResourceFile(file));
                     break;
-                case DEX:
-                    throw new UnsupportedOperationException(DEX.toString());
                 case RELOAD_DEX:
                     if (appInForeground) {
                         files.add(FileTransfer.createHotswapPatch(file));
                     } else {
                         // Gradle created a reload dex, but the app is no longer running.
                         // If it created a cold swap artifact, we can use it; otherwise we're out of luck.
-                        if (!buildInfo.hasOneOf(DEX, SPLIT)) {
+                        if (!buildInfo.hasOneOf(SPLIT)) {
                             throw new InstantRunPushFailedException(
                                 "Can't apply hot swap patch: app is no longer running");
                         }

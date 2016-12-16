@@ -21,7 +21,7 @@ package com.android.build.gradle.internal.incremental;
  */
 public enum FileType {
     /**
-     * Main APK file for 19, and 21 platforms when using the {@link ColdswapMode#MULTIDEX} mode.
+     * Main APK file for 19, and below.
      */
     MAIN,
     /**
@@ -32,10 +32,6 @@ public enum FileType {
      * Reload dex file that can be used to patch application live.
      */
     RELOAD_DEX,
-    /**
-     * Shard dex file that can be used to replace originally installed multi-dex shard.
-     */
-    DEX,
     /**
      * Pure split (code only) that can be installed individually on M+ devices.
      */

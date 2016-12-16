@@ -25,9 +25,6 @@ public enum ColdswapMode {
      * Use multi APKs (pure splits) for Lollipop and above.
      */
     MULTIAPK,
-    /** Use native multi dex for Lollipop and above. */
-    @Deprecated
-    MULTIDEX,
     /**
      * Use native multi dex for Lollipop and multi apk for Marshmallow.
      */
