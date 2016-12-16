@@ -106,6 +106,12 @@ java_import(
     visibility = ["//tools/base/instant-run/instant-run-server:__pkg__"],
 )
 
+filegroup(
+    name = "typos",
+    srcs = glob(["*/tools/support/typos-*.txt"]),
+    visibility = ["//visibility:public"],
+)
+
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
