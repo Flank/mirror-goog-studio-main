@@ -165,7 +165,8 @@ public class JackPreDexTransform extends Transform {
                     QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
                     QualifiedContent.Scope.EXTERNAL_LIBRARIES);
         } else {
-            return Sets.immutableEnumSet(QualifiedContent.Scope.PROVIDED_ONLY);
+            return Sets.immutableEnumSet(
+                    QualifiedContent.Scope.PROVIDED_ONLY, QualifiedContent.Scope.TESTED_CODE);
         }
     }
 

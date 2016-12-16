@@ -26,15 +26,18 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
+import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.DefaultApiVersion;
+import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -51,7 +54,7 @@ import org.gradle.api.logging.LogLevel;
  * create {@link JackProcessOptions} that can be used to setup the Jack-related transforms.
  */
 public class JackOptionsUtils {
-    private static final ILogger LOG = LoggerWrapper.getLogger(JackOptionsUtils.class);
+    private static final ILogger logger = LoggerWrapper.getLogger(JackOptionsUtils.class);
 
     /**
      * This is the configuration data necessary when pre-dexing the libraries using Jack. It is
@@ -151,7 +154,7 @@ public class JackOptionsUtils {
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
-                                project, scope, compileOptions, annotationConfig, LOG)
+                                project, scope, compileOptions, annotationConfig, logger)
                         && !config.isTestCoverageEnabled()
                         && jarJarRuleFiles.isEmpty();
         if (incremental) {
@@ -220,36 +223,14 @@ public class JackOptionsUtils {
         return builder.build();
     }
 
-    /** Checks if we are able to run Jack in process. Optionally logs warning if we are unable. */
-    public static boolean isInProcess(boolean tryInProcess, boolean logWarning) {
-        if (!tryInProcess) {
-            // no need to check heap size, we don't want to run in process
-            return false;
+    /** Warns user if non-optimized dex is specified in the jackOptions, and checks heap size. */
+    public static void executeJackChecks(@NonNull CoreJackOptions jackOptions) {
+        if (ImmutableSet.of("false", "no", "off", "0")
+                .contains(jackOptions.getAdditionalParameters().get("jack.dex.optimize"))) {
+            logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
         }
-        final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
-        long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
 
-        if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
-            if (logWarning) {
-                LOG.warning(
-                        "\nA larger heap for the Gradle daemon is required for running "
-                                + "the Jack compiler in-process.\n\n"
-                                + "It currently has %1$d MB.\n"
-                                + "For faster builds, increase the maximum heap size for the "
-                                + "Gradle daemon to at least %2$s MB.\n"
-                                + "To do this set org.gradle.jvmargs=-Xmx%2$sM in the "
-                                + "project gradle.properties.\n"
-                                + "For more information see "
-                                + "https://docs.gradle.org"
-                                + "/current/userguide/build_environment.html\n",
-                        maxMemory / (1024 * 1024),
-                        // Add -1 and + 1 to round up the division
-                        ((DEFAULT_SUGGESTED_HEAP_SIZE - 1) / (1024 * 1024)) + 1);
-            }
-            return false;
-        } else {
-            return true;
-        }
+        isInProcess(Boolean.TRUE.equals(jackOptions.isJackInProcess()), true);
     }
 
     private static void configureJackPlugins(
@@ -270,6 +251,38 @@ public class JackOptionsUtils {
                 StringHelper.combineAsCamelCase(
                         ImmutableList.of("jackSources", scope.getFullVariantName()));
         return scope.getIncrementalDir(taskName);
+    }
+
+    /** Checks if we are able to run Jack in process. Optionally logs warning if we are unable. */
+    private static boolean isInProcess(boolean tryInProcess, boolean logWarning) {
+        if (!tryInProcess) {
+            // no need to check heap size, we don't want to run in process
+            return false;
+        }
+        final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
+        long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
+
+        if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
+            if (logWarning) {
+                logger.warning(
+                        "\nA larger heap for the Gradle daemon is required for running "
+                                + "the Jack compiler in-process.\n\n"
+                                + "It currently has %1$d MB.\n"
+                                + "For faster builds, increase the maximum heap size for the "
+                                + "Gradle daemon to at least %2$s MB.\n"
+                                + "To do this set org.gradle.jvmargs=-Xmx%2$sM in the "
+                                + "project gradle.properties.\n"
+                                + "For more information see "
+                                + "https://docs.gradle.org"
+                                + "/current/userguide/build_environment.html\n",
+                        maxMemory / (1024 * 1024),
+                        // Add -1 and + 1 to round up the division
+                        ((DEFAULT_SUGGESTED_HEAP_SIZE - 1) / (1024 * 1024)) + 1);
+            }
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private JackOptionsUtils() {
