@@ -435,7 +435,7 @@ public class TransformManager extends FilterableStreamCollection {
                             transform.getName()));
             return false;
         }
-        if (scopes.contains(Scope.TESTED_CODE)) {
+        if (scopes.contains(Scope.TESTED_CODE) && !isJackRuntimeLib(transform)) {
             errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
                     String.format("TESTED_CODE scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));

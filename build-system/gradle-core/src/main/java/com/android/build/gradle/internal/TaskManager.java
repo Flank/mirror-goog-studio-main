@@ -665,29 +665,6 @@ public abstract class TaskManager {
                                                         testedVariantScope.getJavaOutputDir()))
                                 .setDependency(testedVariantScope.getJavacTask().getName())
                                 .build());
-
-                transformManager.addStream(
-                        OriginalStream.builder(project)
-                                .addContentTypes(DefaultContentType.CLASSES)
-                                .addScope(Scope.TESTED_CODE)
-                                .setJars(
-                                        () ->
-                                                variantScope
-                                                        .getGlobalScope()
-                                                        .getAndroidBuilder()
-                                                        .getAllPackagedJars(
-                                                                testedVariantData
-                                                                        .getVariantConfiguration()))
-                                .setDependency(
-                                        ImmutableList.of(
-                                                testedVariantScope
-                                                        .getPrepareDependenciesTask()
-                                                        .getName(),
-                                                testedVariantData
-                                                        .getVariantDependency()
-                                                        .getPackageConfiguration()
-                                                        .getBuildDependencies()))
-                                .build());
             } else {
                 FileCollection testedAppJack = testedVariantData.getJackCompilationOutput();
                 checkNotNull(testedAppJack, "Tested variant has no jack output specified.");
@@ -698,6 +675,29 @@ public abstract class TaskManager {
                                 .setFileCollection(testedAppJack)
                                 .build());
             }
+
+            transformManager.addStream(
+                    OriginalStream.builder(project)
+                            .addContentTypes(DefaultContentType.CLASSES)
+                            .addScope(Scope.TESTED_CODE)
+                            .setJars(
+                                    () ->
+                                            variantScope
+                                                    .getGlobalScope()
+                                                    .getAndroidBuilder()
+                                                    .getAllPackagedJars(
+                                                            testedVariantData
+                                                                    .getVariantConfiguration()))
+                            .setDependency(
+                                    ImmutableList.of(
+                                            testedVariantScope
+                                                    .getPrepareDependenciesTask()
+                                                    .getName(),
+                                            testedVariantData
+                                                    .getVariantDependency()
+                                                    .getPackageConfiguration()
+                                                    .getBuildDependencies()))
+                            .build());
         }
 
         handleJacocoDependencies(tasks, variantScope);
@@ -2194,11 +2194,7 @@ public abstract class TaskManager {
 
     public void createJackTask(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope scope) {
-        JackOptionsUtils.isInProcess(
-                MoreObjects.firstNonNull(
-                        scope.getVariantConfiguration().getJackOptions().isJackInProcess(),
-                        true),
-                true);
+        JackOptionsUtils.executeJackChecks(scope.getVariantConfiguration().getJackOptions());
 
         processPackagedLibsWithJack(tasks, scope);
         processRuntimeLibsWithJack(tasks, scope);

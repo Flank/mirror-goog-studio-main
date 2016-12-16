@@ -140,10 +140,6 @@ public class JackToolchain {
             }
         }
 
-        if (options.getAdditionalParameters().keySet().contains("jack.dex.optimize")) {
-            logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
-        }
-
         ParsingProcessOutputHandler parser =
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(
