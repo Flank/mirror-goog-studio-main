@@ -53,9 +53,6 @@ import java.util.Map;
 @Immutable
 public class ManifestMerger2 {
 
-    static final String BOOTSTRAP_APPLICATION
-            = "com.android.tools.fd.runtime.BootstrapApplication";
-
     static final String BOOTSTRAP_INSTANT_RUN_SERVICE
             = "com.android.tools.fd.runtime.InstantRunService";
 
