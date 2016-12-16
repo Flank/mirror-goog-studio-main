@@ -21,6 +21,8 @@
 #include <mutex>
 #include <vector>
 
+#include "proto/profiler.pb.h"
+
 using profiler::proto::CpuProfilerData;
 using std::vector;
 
@@ -39,7 +41,7 @@ vector<CpuProfilerData> CpuCache::Retrieve(int32_t app_id, int64_t from,
   for (const auto& datum : cache_) {
     auto id = datum.basic_info().app_id();
     auto timestamp = datum.basic_info().end_timestamp();
-    if (id == app_id || app_id == kAnyApp) {
+    if (id == app_id || app_id == proto::AppId::ANY) {
       if (timestamp > from && timestamp <= to) {
         filtered.push_back(datum);
       }

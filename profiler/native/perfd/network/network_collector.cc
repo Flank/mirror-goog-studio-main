@@ -22,9 +22,10 @@
 #include "perfd/network/connectivity_sampler.h"
 #include "perfd/network/network_constants.h"
 #include "perfd/network/speed_sampler.h"
-#include "utils/trace.h"
+#include "proto/profiler.pb.h"
 #include "utils/clock.h"
 #include "utils/thread_name.h"
+#include "utils/trace.h"
 #include "utils/uid_fetcher.h"
 
 namespace profiler {
@@ -75,9 +76,8 @@ void NetworkCollector::Collect() {
 }
 
 void NetworkCollector::CreateSamplers() {
-  // TODO: Define a centralized ANY_APP id.
   // TODO: This class will be replaced by a follow up CL soon.
-  if (pid_ == -1) {
+  if (pid_ == proto::AppId::ANY) {
     samplers_.emplace_back(new ConnectivitySampler(
         NetworkConstants::GetRadioStatusCommand(),
         NetworkConstants::GetDefaultNetworkTypeCommand()));
