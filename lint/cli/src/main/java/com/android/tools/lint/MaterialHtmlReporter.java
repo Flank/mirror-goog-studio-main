@@ -972,8 +972,6 @@ public class MaterialHtmlReporter extends Reporter {
             append("</div>");
         }
 
-        append("<br/>");
-
         if (client.getRegistry() instanceof BuiltinIssueRegistry) {
             if (Reporter.hasAutoFix(issue)) {
                 append(
@@ -988,6 +986,7 @@ public class MaterialHtmlReporter extends Reporter {
                 issue.getId(),
                 "<a href=\"#SuppressInfo\">", "</a>"));
         append("<br/>\n");
+        append("<br/>");
         append("</div>"); //class=moreinfo
         append("\n</div>\n"); //class=explanation
     }
