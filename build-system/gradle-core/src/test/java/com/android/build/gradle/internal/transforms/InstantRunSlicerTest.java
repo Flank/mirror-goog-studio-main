@@ -55,7 +55,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -101,7 +100,7 @@ public class InstantRunSlicerTest {
         when(variantScope.getInstantRunSupportDir()).thenReturn(instantRunSupportDir.getRoot());
         when(variantScope.getRestartDexOutputFolder()).thenReturn(instantRunSupportDir.getRoot());
         when(instantRunBuildContext.getPatchingPolicy()).thenReturn(
-                InstantRunPatchingPolicy.MULTI_DEX);
+                InstantRunPatchingPolicy.MULTI_APK);
         when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
 
         jarOutput = new File(jarOutputDir.getRoot(), "output.jar");

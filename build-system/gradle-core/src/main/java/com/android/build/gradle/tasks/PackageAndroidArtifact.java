@@ -361,59 +361,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         javaResourcesForApk.putAll(changedJavaResources);
 
         Collection<File> instantRunDexBaseFiles;
-        switch(dexPackagingPolicy) {
-            case INSTANT_RUN_SHARDS_IN_SINGLE_APK:
-                /*
-                 * If we're doing instant run, then we don't want to treat all dex archives
-                 * as dex archives for packaging. We will package some of the dex files as
-                 * resources.
-                 *
-                 * All dex files in directories whose name contains INSTANT_RUN_PACKAGES_PREFIX
-                 * are kept in the apk as dex files. All other dex files are placed as
-                 * resources as defined by makeInstantRunResourcesFromDex.
-                 */
-                Set<File> dexFiles = getDexFolders().getFiles();
-                instantRunDexBaseFiles = dexFiles
-                        .stream()
-                        .filter(input -> input.getName().contains(INSTANT_RUN_PACKAGES_PREFIX))
-                        .collect(Collectors.toSet());
-                Iterable<File> nonInstantRunDexBaseFiles = dexFiles
-                        .stream()
-                        .filter(f -> !instantRunDexBaseFiles.contains(f))
-                        .collect(Collectors.toSet());
-
-                ImmutableMap<RelativeFile, FileStatus> newInstantRunResources =
-                        makeInstantRunResourcesFromDex(nonInstantRunDexBaseFiles);
-
-                @SuppressWarnings("unchecked")
-                ImmutableMap<RelativeFile, FileStatus> updatedChangedResources =
-                        IncrementalRelativeFileSets.union(
-                                Sets.newHashSet(changedJavaResources, newInstantRunResources));
-                changedJavaResources = updatedChangedResources;
-
-                changedDex = ImmutableMap.copyOf(
-                        Maps.filterKeys(
-                                changedDex,
-                                Predicates.compose(
-                                        Predicates.in(instantRunDexBaseFiles),
-                                        RelativeFile::getBase
-                                )));
-
-                break;
-            case INSTANT_RUN_MULTI_APK:
-                changedDex = ImmutableMap.copyOf(
-                        Maps.filterKeys(
-                                changedDex,
-                                Predicates.compose(
-                                        Predicates.in(getDexFolders().getFiles()),
-                                        RelativeFile::getBase
-                                )));
-
-            case STANDARD:
-                break;
-            default:
-                throw new RuntimeException(
-                        "Unhandled DexPackagingPolicy : " + getDexPackagingPolicy());
+        if (dexPackagingPolicy == DexPackagingPolicy.INSTANT_RUN_MULTI_APK) {
+            changedDex = ImmutableMap.copyOf(
+                    Maps.filterKeys(
+                            changedDex,
+                            Predicates.compose(
+                                    Predicates.in(getDexFolders().getFiles()),
+                                    RelativeFile::getBase
+                            )));
         }
 
         try (IncrementalPackager packager = new IncrementalPackagerBuilder()

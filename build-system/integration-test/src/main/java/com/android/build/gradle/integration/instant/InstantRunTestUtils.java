@@ -189,7 +189,9 @@ public final class InstantRunTestUtils {
         return Iterables.getOnlyElement(context.getArtifacts());
     }
 
-    /** Gets the RELOAD_DEX {@link InstantRunArtifact} produced by last build. */
+    /**
+     * Gets the RELOAD_DEX {@link InstantRunArtifact} produced by last build.
+     */
     @NonNull
     public static InstantRunArtifact getReloadDexArtifact(@NonNull InstantRun instantRunModel)
             throws Exception {

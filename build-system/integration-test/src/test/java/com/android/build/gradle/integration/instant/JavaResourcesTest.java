@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
@@ -89,7 +90,7 @@ public class JavaResourcesTest {
 
         List<InstantRunArtifact> mainArtifacts;
 
-        if (apiLevel < 24) {
+        if (apiLevel < 21) {
             mainArtifacts = context.getArtifacts();
         } else {
             mainArtifacts = context.getArtifacts().stream()

@@ -64,10 +64,6 @@ public class PreColdSwapTask extends DefaultAndroidTask {
                 disableTask(instantRunVariantScope.getPackageApplicationTask());
                 break;
             case COLD:
-                if (instantRunContext.getPatchingPolicy() == InstantRunPatchingPolicy.MULTI_DEX) {
-                    disableTask(instantRunVariantScope.getPackageApplicationTask());
-                }
-                break;
             case FULL:
                 // Leave everything enabled.
                 break;

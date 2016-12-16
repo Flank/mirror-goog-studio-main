@@ -69,8 +69,6 @@ public class InstantRunAnalyticsHelper {
         switch (policy) {
             case PRE_LOLLIPOP:
                 return InstantRunStatus.PatchingPolicy.PRE_LOLLIPOP;
-            case MULTI_DEX:
-                return InstantRunStatus.PatchingPolicy.MULTI_DEX;
             case MULTI_APK:
                 return InstantRunStatus.PatchingPolicy.MULTI_APK;
             default:
@@ -98,8 +96,6 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunArtifact.Type.SPLIT_MAIN;
             case RELOAD_DEX:
                 return InstantRunArtifact.Type.RELOAD_DEX;
-            case DEX:
-                return InstantRunArtifact.Type.DEX;
             case SPLIT:
                 return InstantRunArtifact.Type.SPLIT;
             case RESOURCES:

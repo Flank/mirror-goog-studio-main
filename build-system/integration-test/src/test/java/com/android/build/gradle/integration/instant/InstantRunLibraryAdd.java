@@ -93,8 +93,9 @@ public class InstantRunLibraryAdd {
         context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.MANIFEST_FILE_CHANGE.toString());
-        InstantRunArtifact apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel);
-        assertThat(apk.type).isEqualTo(InstantRunArtifactType.MAIN);
+        context.getArtifacts().forEach(artifact ->
+            assertThat(artifact.type).isAnyOf(InstantRunArtifactType.SPLIT,
+                    InstantRunArtifactType.SPLIT_MAIN));
     }
 
     @Test
@@ -131,9 +132,10 @@ public class InstantRunLibraryAdd {
         // check that the manifest change triggered a full apk build.
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
-                InstantRunVerifierStatus.MANIFEST_FILE_CHANGE.toString());
-        InstantRunArtifact apk = InstantRunTestUtils.getOnlyArtifact(instantRunModel);
-        assertThat(apk.type).isEqualTo(InstantRunArtifactType.MAIN);
+                InstantRunVerifierStatus.COLD_SWAP_REQUESTED.toString());
+        context.getArtifacts().forEach(artifact ->
+                assertThat(artifact.type).isAnyOf(InstantRunArtifactType.SPLIT,
+                        InstantRunArtifactType.SPLIT_MAIN));
     }
 
     private void updateClass() throws IOException {
