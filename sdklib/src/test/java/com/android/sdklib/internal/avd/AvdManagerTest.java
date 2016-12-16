@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.tool;
+package com.android.sdklib.internal.avd;
 
 import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
@@ -33,6 +33,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+
+import static com.google.common.truth.Truth.assertThat;
 
 public class AvdManagerTest extends TestCase {
 
@@ -208,6 +210,72 @@ public class AvdManagerTest extends TestCase {
         assertEquals("system-images/android-23/default/x86/", baseProperties.get("image.sysdir.1"));
         assertTrue("Expected userdata.img in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+    }
+
+    public void testDuplicateAvd() throws Exception {
+
+        MockLog log = new MockLog();
+        // Create an AVD
+        AvdInfo origAvd = mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImage,
+          null,
+          null,
+          null,
+          null,
+          null,
+          false,
+          false,
+          false,
+          log);
+
+        assertNotNull("Could not create AVD", origAvd);
+        // Put an extra file in the AVD directory
+        mFileOp.createNewFile(new File(mAvdFolder, "foo.bar"));
+
+        // Copy this AVD to an AVD with a different name
+        String newName = "Copy_of_" + this.getName();
+        AvdInfo duplicatedAvd = mAvdManager.createAvd(
+          mAvdFolder,
+          newName,
+          mSystemImage,
+          null,
+          null,
+          null,
+          null,
+          null,
+          false,
+          false,
+          false, // Do not remove the original
+          log);
+
+        // Verify that the duplicated AVD is correct
+        assertNotNull("Could not duplicate AVD", duplicatedAvd);
+        String parentFolder = mAvdFolder.getParent();
+        String newFolder = parentFolder + "/" + newName + ".avd";
+        String newNameIni = newName + ".ini";
+        assertTrue("Expected " + newNameIni + " in " + parentFolder,
+                   mFileOp.exists(new File(parentFolder, newNameIni)));
+        Properties iniProperties = new Properties();
+        iniProperties.load(mFileOp.newFileInputStream(new File(parentFolder, newNameIni)));
+        assertEquals(newFolder, iniProperties.get("path"));
+
+        assertTrue(mFileOp.exists(new File(newFolder, "foo.bar")));
+        assertFalse(mFileOp.exists(new File(newFolder, "boot.prop")));
+        Properties configProperties = new Properties();
+        configProperties.load(mFileOp.newFileInputStream(new File(newFolder, "config.ini")));
+        assertEquals("system-images/android-23/default/x86/", configProperties.get("image.sysdir.1"));
+        assertEquals(newName, configProperties.get("AvdId"));
+        assertEquals(newName, configProperties.get("avd.ini.displayname"));
+        assertTrue("Expected userdata.img in " + newFolder,
+                   mFileOp.exists(new File(newFolder, "userdata.img")));
+        // Quick check that the original AVD directory still exists
+        assertTrue(mFileOp.exists(new File(mAvdFolder, "foo.bar")));
+        assertTrue(mFileOp.exists(new File(mAvdFolder, "config.ini")));
+        Properties baseConfigProperties = new Properties();
+        baseConfigProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
     }
 
 
