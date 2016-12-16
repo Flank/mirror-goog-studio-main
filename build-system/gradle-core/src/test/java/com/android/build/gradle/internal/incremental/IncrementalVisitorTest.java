@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
@@ -25,10 +26,13 @@ import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.SingleLevelOuterClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.TestTargetApi;
 import com.android.utils.ILogger;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -41,6 +45,9 @@ public class IncrementalVisitorTest {
 
     @Mock
     ILogger logger;
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void testIsClassTargetingNewerPlatform() throws IOException {
@@ -192,5 +199,26 @@ public class IncrementalVisitorTest {
                             19, Type.getType(TestTargetApi.class), classReaderProvider,
                             outerClass, logger));
         }
+    }
+
+    @Test
+    public void testClassEligibility() throws IOException {
+        File fooDotBar = temporaryFolder.newFile("foo.bar");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(fooDotBar)).isFalse();
+
+        File RDotClass = temporaryFolder.newFile("R.class");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RDotClass)).isFalse();
+
+        File RdimenDotClass = temporaryFolder.newFile("R$dimen.class");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RdimenDotClass)).isFalse();
+
+        File someClass = temporaryFolder.newFile("Some.class");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(someClass)).isTrue();
+
+        File RSomethingClass = temporaryFolder.newFile("Rsomething.class");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RSomethingClass)).isTrue();
+
+        File RSomethingWithInner = temporaryFolder.newFile("Rsome$dimen.class");
+        assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RSomethingWithInner)).isTrue();
     }
 }
