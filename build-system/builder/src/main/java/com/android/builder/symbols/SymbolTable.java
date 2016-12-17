@@ -36,29 +36,22 @@ import javax.lang.model.SourceVersion;
  * libraries or atoms.
  *
  * <p>A symbol table keeps a list of instances of {@link Symbol}, each one with a unique pair
- * class / name. Tables have two main attributes: a name and package. These should be unique and
- * are used to generate the {@code R.java} file. Actually, the name of the table is the class name
- * and the package is the java package so, traditionally, all symbol tables are named {@code R}.
+ * class / name. Tables have one main attribute: a package name. This should be unique and
+ * are used to generate the {@code R.java} file.
  */
 @Immutable
 public class SymbolTable {
 
     /**
-     * Default name for the symbol table.
+     * Name of {@code R} class.
      */
-    private static final String DEFAULT_NAME = "R";
+    static final String R_CLASS_NAME = "R";
 
     /**
      * All symbols mapped by IDs (see {@link #key(Symbol)}.
      */
     @NonNull
     private final ImmutableMap<String, Symbol> symbols;
-
-    /**
-     * The table name.
-     */
-    @NonNull
-    private final String tableName;
 
     /**
      * The table package. An empty package means the default package.
@@ -70,26 +63,11 @@ public class SymbolTable {
      * Creates a new symbol table.
      *
      * @param tablePackage the table package
-     * @param tableName the table name
      * @param symbols the table symbol mapped by {@link #key(Symbol)}
      */
-    private SymbolTable(
-            @NonNull String tablePackage,
-            @NonNull String tableName,
-            @NonNull Map<String, Symbol> symbols) {
+    private SymbolTable(@NonNull String tablePackage, @NonNull Map<String, Symbol> symbols) {
         this.symbols = ImmutableMap.copyOf(symbols);
-        this.tableName = tableName;
         this.tablePackage = tablePackage;
-    }
-
-    /**
-     * Obtains the table name. See class description.
-     *
-     * @return the table name
-     */
-    @NonNull
-    public String getTableName() {
-        return tableName;
     }
 
     /**
@@ -158,13 +136,12 @@ public class SymbolTable {
 
         SymbolTable other = (SymbolTable) obj;
         return Objects.equals(symbols, other.symbols)
-                && Objects.equals(tableName, other.tableName)
                 && Objects.equals(tablePackage, other.tablePackage);
     }
 
     @Override
     public int hashCode() {
-        return HashCodeUtils.hashCode(symbols, tableName, tablePackage);
+        return HashCodeUtils.hashCode(symbols, tablePackage);
     }
 
     /**
@@ -179,7 +156,6 @@ public class SymbolTable {
     @NonNull
     public SymbolTable filter(@NonNull SymbolTable table) {
         SymbolTable.Builder stb = builder();
-        stb.tableName(tableName);
         stb.tablePackage(tablePackage);
 
         for (Map.Entry<String, Symbol> e : symbols.entrySet()) {
@@ -204,17 +180,15 @@ public class SymbolTable {
 
     /**
      * Builds a new symbol table that has the same symbols as this one, but was renamed with
-     * the given package and table name.
+     * the given package.
      *
      * @param tablePackage the table package
-     * @param tableName the table name
      * @return the new renamed symbol table
      */
     @NonNull
-    public SymbolTable rename(@NonNull String tablePackage, @NonNull String tableName) {
+    public SymbolTable rename(@NonNull String tablePackage) {
         return builder()
                 .tablePackage(tablePackage)
-                .tableName(tableName)
                 .addAll(allSymbols())
                 .build();
     }
@@ -224,7 +198,7 @@ public class SymbolTable {
      * symbols with the same class / name exist in multiple tables, the first one will be used.
      *
      * @param tables the tables to merge
-     * @return the table with the result of the merge; this table will have the package / name of
+     * @return the table with the result of the merge; this table will have the package of
      * the first table in {@code tables}, or the default one if there are no tables in
      * {@code tables}
      */
@@ -237,7 +211,6 @@ public class SymbolTable {
 
             if (first) {
                 builder.tablePackage(t.getTablePackage());
-                builder.tableName(t.getTableName());
                 first = false;
             }
 
@@ -267,12 +240,6 @@ public class SymbolTable {
     public static class Builder {
 
         /**
-         * Current table name.
-         */
-        @NonNull
-        private String tableName;
-
-        /**
          * Current table package.
          */
         @NonNull
@@ -290,7 +257,6 @@ public class SymbolTable {
         private Builder() {
             symbols = new HashMap<>();
             tablePackage = "";
-            tableName = DEFAULT_NAME;
         }
 
         /**
@@ -329,19 +295,6 @@ public class SymbolTable {
         }
 
         /**
-         * Sets the table name. See {@link SymbolTable} description.
-         *
-         * @param tableName the table name; must be a valid java identifier
-         * @return {@code this} for use with fluent-style notation
-         */
-        public Builder tableName(@NonNull String tableName) {
-            Preconditions.checkArgument(SourceVersion.isIdentifier(tableName));
-
-            this.tableName = tableName;
-            return this;
-        }
-
-        /**
          * Sets the table package. See {@link SymbolTable} description.
          *
          * @param tablePackage; must be a valid java package name
@@ -375,7 +328,7 @@ public class SymbolTable {
          */
         @NonNull
         public SymbolTable build() {
-            return new SymbolTable(tablePackage, tableName, symbols);
+            return new SymbolTable(tablePackage, symbols);
         }
     }
 }

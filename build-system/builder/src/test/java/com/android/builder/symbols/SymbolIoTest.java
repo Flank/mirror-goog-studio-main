@@ -157,7 +157,6 @@ public class SymbolIoTest {
     public void rGenerationTest2() throws Exception {
         SymbolTable table =
                 SymbolTable.builder()
-                        .tableName("Roar")
                         .tablePackage("test.pkg")
                         .add(new Symbol("string", "app_name", "int", "0x7f030000"))
                         .add(new Symbol("string", "lib1", "int", "0x7f030001"))
@@ -177,7 +176,7 @@ public class SymbolIoTest {
                         " " +
                         "package test.pkg;" +
                         " " +
-                        "public final class Roar {" +
+                        "public final class R {" +
                         "    public static final class drawable {" +
                         "        public static final int foobar = 0x7f020000;" +
                         "        public static final int ic_launcher = 0x7f020001;" +
@@ -192,7 +191,7 @@ public class SymbolIoTest {
                         "    }" +
                         " " +
                         "}",
-                Paths.get("test", "pkg", "Roar.java"),
+                Paths.get("test", "pkg", "R.java"),
                 table,
                 true);
     }

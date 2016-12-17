@@ -890,7 +890,7 @@ public class AndroidBuilder {
             File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
             SymbolTable mainSymbols =
                     mainRTxt.isFile()? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
-            mainSymbols = mainSymbols.rename(mainPackageName, mainSymbols.getTableName());
+            mainSymbols = mainSymbols.rename(mainPackageName);
 
             // For each dependency, load its symbol file.
             Set<SymbolTable> depSymbolTables = new HashSet<>();
@@ -914,7 +914,7 @@ public class AndroidBuilder {
                 File rFile = dependency.getSymbolFile();
                 SymbolTable depSymbols =
                         rFile.exists()? SymbolIo.read(rFile) : SymbolTable.builder().build();
-                depSymbols = depSymbols.rename(depPackageName, depSymbols.getTableName());
+                depSymbols = depSymbols.rename(depPackageName);
                 depSymbolTables.add(depSymbols);
             }
 
