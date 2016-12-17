@@ -26,7 +26,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
@@ -34,8 +33,6 @@ import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
-import java.io.File;
-import java.nio.CharBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -298,8 +295,17 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                         all = Lists.newArrayListWithExpectedSize(count);
                         for (AnnotationBinding annotation : annotations) {
                             if (annotation != null) {
-                                all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
-                                        annotation));
+                                if (annotation != null) {
+                                    PsiAnnotation a;
+                                    if (modifierList != null) {
+                                        a = new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                                annotation);
+                                    } else {
+                                        a = new EcjPsiBinaryAnnotation(mManager, method,
+                                                annotation);
+                                    }
+                                    all.add(a);
+                                }
                             }
                         }
                     }
@@ -314,6 +320,7 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                 }
 
                 method = EcjPsiManager.findSuperMethodBinding(method, false, false);
+                modifierList = null;
             }
 
             return EcjPsiManager.ensureUnique(all);
@@ -348,8 +355,14 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                         all = Lists.newArrayListWithExpectedSize(count);
                         for (AnnotationBinding annotation : annotations) {
                             if (annotation != null) {
-                                all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
-                                        annotation));
+                                PsiAnnotation a;
+                                if (modifierList != null) {
+                                    a = new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                            annotation);
+                                } else {
+                                    a = new EcjPsiBinaryAnnotation(mManager, cls, annotation);
+                                }
+                                all.add(a);
                             }
                         }
                     }
@@ -365,6 +378,7 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
 
                 try {
                     cls = cls.superclass();
+                    modifierList = null;
                 } catch (AbortCompilation ignore) {
                     // Encountered symbol that couldn't be resolved (e.g. compiled class references
                     // class not found on the classpath
@@ -430,8 +444,17 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                         if (count > 0) {
                             for (AnnotationBinding annotation : annotations) {
                                 if (annotation != null) {
-                                    all.add(new EcjPsiBinaryAnnotation(mManager, modifierList,
-                                            annotation));
+                                    if (annotation != null) {
+                                        PsiAnnotation a;
+                                        if (modifierList != null) {
+                                            a = new EcjPsiBinaryAnnotation(mManager, modifierList,
+                                                    annotation);
+                                        } else {
+                                            a = new EcjPsiBinaryAnnotation(mManager, method,
+                                                    annotation);
+                                        }
+                                        all.add(a);
+                                    }
                                 }
                             }
                         }
@@ -448,6 +471,7 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
                 }
 
                 method = EcjPsiManager.findSuperMethodBinding(method, false, false);
+                modifierList = null;
             }
 
             return EcjPsiManager.ensureUnique(all);

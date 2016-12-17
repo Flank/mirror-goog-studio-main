@@ -40,9 +40,6 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 + "src/main/java/test/pkg/AnimatorTest.java:40: Error: Could not find property setter method setAlpha2 on android.widget.Button [ObjectAnimatorBinding]\n"
                 + "        ObjectAnimator.ofArgb(button, \"alpha2\", 1, 5); // Missing\n"
                 + "                                      ~~~~~~~~\n"
-                + "src/main/java/test/pkg/AnimatorTest.java:39: Warning: The method referenced here (setAlpha) has not been annotated with @Keep which means it could be discarded or renamed in release builds [AnimatorKeep]\n"
-                + "        ObjectAnimator.ofFloat(button, \"alpha\", 1, 5); // TODO: Warn about better method?, e.g. button.animate().alpha(...)\n"
-                + "                                       ~~~~~~~\n"
                 + "src/main/java/test/pkg/AnimatorTest.java:55: Warning: This method is accessed from an ObjectAnimator so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]\n"
                 + "        public void setProp1(int x) {\n"
                 + "                    ~~~~~~~~~~~~~~\n"
@@ -51,7 +48,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 + "        private void setProp2(float x) {\n"
                 + "                     ~~~~~~~~~~~~~~~~\n"
                 + "    src/main/java/test/pkg/AnimatorTest.java:47: ObjectAnimator usage here\n"
-                + "4 errors, 3 warnings\n";
+                + "4 errors, 2 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
@@ -341,12 +338,46 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                         + "android {\n"
                         + "    buildTypes {\n"
                         + "        release {\n"
-                        + "            minifyEnabled false\n"
+                        + "            minifyEnabled true\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n"))
                 .issues(ObjectAnimatorDetector.MISSING_KEEP)
                 .allowCompilationErrors()
+                .run()
+                .expectClean();
+    }
+
+    public void test230387() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=230387
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.animation.ObjectAnimator;\n"
+                        + "import android.animation.PropertyValuesHolder;\n"
+                        + "import android.animation.ValueAnimator;\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "public class KeepTest {\n"
+                        + "    public void test(View view) {\n"
+                        + "        ValueAnimator animator = ObjectAnimator.ofPropertyValuesHolder(\n"
+                        + "                view,\n"
+                        + "                PropertyValuesHolder.ofFloat(\"translationX\", 0)\n"
+                        + "        );\n"
+                        + "    }\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        release {\n"
+                        + "            minifyEnabled true\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(ObjectAnimatorDetector.MISSING_KEEP)
                 .run()
                 .expectClean();
     }

@@ -2078,6 +2078,9 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         } else if (folderConfig != null && folderConfig.getDensityQualifier() != null
                 && !folderConfig.getDensityQualifier().hasFakeValue()) {
             Density density = folderConfig.getDensityQualifier().getValue();
+            if (density == null) {
+                return;
+            }
             width = mdpiWidth * density.getDpiValue() / Density.DEFAULT_DENSITY;
             height = mdpiHeight * density.getDpiValue() / Density.DEFAULT_DENSITY;
         } else {
