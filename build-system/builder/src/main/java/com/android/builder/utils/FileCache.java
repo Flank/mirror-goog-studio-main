@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -50,6 +51,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * not yet exist. Similarly, the {@link #createFileInCacheIfAbsent(Inputs, ExceptionConsumer)}
  * method returns the cached output file/directory, and creates it first if the cached
  * file/directory does not yet exist.
+ *
+ * <p>Note that if a cache entry exists but is found to be corrupted, the cache entry will be
+ * deleted first and will be treated as if it never existed.
  */
 @Immutable
 public final class FileCache {
@@ -238,13 +242,16 @@ public final class FileCache {
      * @param outputFile the output file/directory
      * @param inputs all the inputs that affect the creation of the output file/directory
      * @param fileCreator the callback function to create the output file/directory
+     * @return the result of this query (which does not include the path to the cached output
+     *     file/directory)
      * @throws ExecutionException if an exception occurred during the execution of the file creator
      * @throws IOException if an I/O exception occurred, but not during the execution of the file
      *     creator (or the file creator was not executed)
      * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
      *     file creator (or the file creator was not executed)
      */
-    public void createFile(
+    @NonNull
+    public QueryResult createFile(
             @NonNull File outputFile,
             @NonNull Inputs inputs,
             @NonNull Callable<Void> fileCreator)
@@ -309,15 +316,16 @@ public final class FileCache {
 
         // If the cache is hit, copy the cached file to the output file. The cached file should have
         // been guarded with a SHARED lock when this callable is invoked (see method
-        // checkHitOrMiss). Here, we guard the output file with an EXCLUSIVE lock so that other
+        // queryCacheEntry). Here, we guard the output file with an EXCLUSIVE lock so that other
         // threads/processes won't be able to write to the same output file at the same time.
         Callable<Void> actionIfCacheHit =
                 () -> doLocked(outputFile, LockingType.EXCLUSIVE, copyCachedFileToOutputFile);
 
-        // If the cache is missed, create the output file and copy it to the cached file. The cached
-        // file should have been guarded with an EXCLUSIVE lock when this callable is invoked (see
-        // method checkHitOrMiss). Here, we again guard the output file with an EXCLUSIVE lock.
-        Callable<Void> actionIfCacheMissed =
+        // If the cache is missed or corrupted, create the output file and copy it to the cached
+        // file. The cached file should have been guarded with an EXCLUSIVE lock when this callable
+        // is invoked (see method queryCacheEntry). Here, we again guard the output file with an
+        // EXCLUSIVE lock.
+        Callable<Void> actionIfCacheMissedOrCorrupted =
                 () -> doLocked(
                         outputFile,
                         LockingType.EXCLUSIVE, () -> {
@@ -326,12 +334,13 @@ public final class FileCache {
                                 return null;
                         });
 
-        checkHitOrMiss(inputs, cacheEntryDir, actionIfCacheHit, actionIfCacheMissed);
+        return queryCacheEntry(
+                inputs, cacheEntryDir, actionIfCacheHit, actionIfCacheMissedOrCorrupted);
     }
 
     /**
-     * Returns a cached output file/directory. If the cached file/directory does not yet exist,
-     * this method creates it first via the given file creator callback function.
+     * Creates the cached output file/directory via the given file creator callback function if it
+     * does not yet exist. The returned result also contains the path to the cached file/directory.
      *
      * <p>To determine whether a cached file/directory exists, the client needs to provide all the
      * inputs that affect the creation of the output file/directory to the {@link Inputs} object.
@@ -363,24 +372,25 @@ public final class FileCache {
      *
      * @param inputs all the inputs that affect the creation of the output file/directory
      * @param fileCreator the callback function to create the output file/directory
-     * @return the cached output file/directory
+     * @return the result of this query, which includes the path to the cached output file/directory
      * @throws ExecutionException if an exception occurred during the execution of the file creator
      * @throws IOException if an I/O exception occurred, but not during the execution of the file
      *     creator (or the file creator was not executed)
      * @throws RuntimeException if a runtime exception occurred, but not during the execution of the
      *     file creator (or the file creator was not executed)
      */
-    public File createFileInCacheIfAbsent(
+    @NonNull
+    public QueryResult createFileInCacheIfAbsent(
             @NonNull Inputs inputs,
             @NonNull ExceptionConsumer<File> fileCreator)
             throws ExecutionException, IOException {
         File cacheEntryDir = getCacheEntryDir(inputs);
         File cachedFile = getCachedFile(cacheEntryDir);
 
-        // If the cache is hit, do nothing. If the cache is missed, create the cached output file;
-        // the cached file should have been guarded with an EXCLUSIVE lock when this callable is
-        // invoked (see method checkHitOrMiss).
-        Callable<Void> actionIfCacheMissed = () -> {
+        // If the cache is hit, do nothing. If the cache is missed or corrupted, create the cached
+        // output file. The cached file should have been guarded with an EXCLUSIVE lock when this
+        // callable is invoked (see method queryCacheEntry).
+        Callable<Void> actionIfCacheMissedOrCorrupted = () -> {
             try {
                 fileCreator.accept(cachedFile);
             } catch (Exception exception) {
@@ -388,87 +398,103 @@ public final class FileCache {
             }
             return null;
         };
-        checkHitOrMiss(inputs, cacheEntryDir, () -> null, actionIfCacheMissed);
 
-        return cachedFile;
+        QueryResult queryResult =
+                queryCacheEntry(inputs, cacheEntryDir, () -> null, actionIfCacheMissedOrCorrupted);
+        return new QueryResult(
+                queryResult.getQueryEvent(),
+                queryResult.getCauseOfCorruption(),
+                Optional.of(cachedFile));
     }
 
     /**
-     * Checks whether the cache is hit (a cache entry directory for the given inputs exists) or
-     * missed, and invokes the respective provided actions.
+     * Queries the cache entry to see if it exists (and whether it is corrupted) and invokes the
+     * respective provided actions.
      *
      * @param inputs all the inputs that affect the creation of the output file/directory
      * @param cacheEntryDir the cache entry directory
-     * @param actionIfCacheHit action to invoke if the cache is hit
-     * @param actionIfCacheMissed action to invoke if the cache is missed
+     * @param actionIfCacheHit the action to invoke if the cache entry exists and is not corrupted
+     * @param actionIfCacheMissedOrCorrupted the action to invoke if the cache entry either does not
+     *      exist or exists but is corrupted
+     * @return the result of this query (which does not include the path to the cached output
+     *     file/directory)
      * @throws ExecutionException if a {@link FileCreatorException} occurred
      * @throws IOException if an I/O exception occurred, and the exception was not wrapped by
      *     {@link FileCreatorException}
      * @throws RuntimeException if a runtime exception occurred, and the exception was not wrapped
      *     by {@link FileCreatorException}
      */
-    private void checkHitOrMiss(
+    @NonNull
+    private QueryResult queryCacheEntry(
             @NonNull Inputs inputs,
             @NonNull File cacheEntryDir,
             @NonNull Callable<Void> actionIfCacheHit,
-            @NonNull Callable<Void> actionIfCacheMissed)
+            @NonNull Callable<Void> actionIfCacheMissedOrCorrupted)
             throws ExecutionException, IOException {
+        // In this method, we use two levels of locking: A SHARED lock on the cache directory and a
+        // SHARED or EXCLUSIVE lock on the cache entry directory.
         try {
             // Guard the cache directory with a SHARED lock so that other threads/processes can read
             // or write to the cache at the same time but cannot delete the cache while it is being
             // read/written to. (Further locking within the cache will make sure multiple
             // threads/processes can read but cannot write to the same cache entry at the same
             // time.)
-            doLocked(mCacheDirectory, LockingType.SHARED, () -> {
+            return doLocked(mCacheDirectory, LockingType.SHARED, () -> {
                 // Create (or recreate) the cache directory since it may not exist or might have
                 // been deleted. The following method is thread-safe so it's okay to call it from
                 // multiple threads (and processes).
                 FileUtils.mkdirs(mCacheDirectory);
 
-                // Guard the cache entry directory with a SHARED LOCK so that multiple
+                // Guard the cache entry directory with a SHARED lock so that multiple
                 // threads/processes can read it at the same time
-                boolean isHit = doLocked(cacheEntryDir, LockingType.SHARED, () -> {
-                    if (cacheEntryDir.exists()) {
+                QueryResult queryResult = doLocked(cacheEntryDir, LockingType.SHARED, () -> {
+                    QueryResult result = checkCacheEntry(inputs, cacheEntryDir);
+                    // If the cache entry is HIT, run the given action
+                    if (result.getQueryEvent().equals(QueryEvent.HIT)) {
                         mHits.incrementAndGet();
                         actionIfCacheHit.call();
-                        return true;
-                    } else {
-                        return false;
                     }
+                    return result;
                 });
-                // If the cache is hit, return immediately
-                if (isHit) {
-                    return null;
+                // If the cache entry is HIT, return immediately
+                if (queryResult.getQueryEvent().equals(QueryEvent.HIT)) {
+                    return queryResult;
                 }
 
                 // Guard the cache entry directory with an EXCLUSIVE lock so that only one
                 // thread/process can write to it
-                doLocked(cacheEntryDir, LockingType.EXCLUSIVE, () -> {
-                    // Check again if the cache entry directory exists as it might have been created
-                    // by another thread/process since the last time we checked for its existence
-                    if (cacheEntryDir.exists()) {
+                return doLocked(cacheEntryDir, LockingType.EXCLUSIVE, () -> {
+                    // Check the cache entry again as it might have been changed by another
+                    // thread/process since the last time we checked it.
+                    QueryResult result = checkCacheEntry(inputs, cacheEntryDir);
+
+                    // If the cache entry is HIT, run the given action and return immediately
+                    if (result.getQueryEvent().equals(QueryEvent.HIT)) {
                         mHits.incrementAndGet();
                         actionIfCacheHit.call();
-                    } else {
-                        // If the cache is missed, create the cache entry
-                        mMisses.incrementAndGet();
-                        try {
-                            FileUtils.mkdirs(cacheEntryDir);
-                            actionIfCacheMissed.call();
-                            // Write the inputs to the inputs file for diagnostic purposes
-                            Files.write(
-                                    inputs.toString(),
-                                    getInputsFile(cacheEntryDir),
-                                    StandardCharsets.UTF_8);
-                        } catch (Exception exception) {
-                            // If an exception occurs, delete the cache entry directory
-                            FileUtils.deletePath(cacheEntryDir);
-                            throw exception;
-                        }
+                        return result;
                     }
-                    return null;
+
+                    // If the cache entry is CORRUPTED, delete the cache entry
+                    if (result.getQueryEvent().equals(QueryEvent.CORRUPTED)) {
+                        FileUtils.deletePath(cacheEntryDir);
+                    }
+
+                    // If the cache entry is MISSED or CORRUPTED, create or recreate the cache entry
+                    mMisses.incrementAndGet();
+                    FileUtils.mkdirs(cacheEntryDir);
+
+                    actionIfCacheMissedOrCorrupted.call();
+
+                    // Write the inputs to the inputs file for diagnostic purposes. We also use it
+                    // to check whether a cache entry is corrupted or not.
+                    Files.write(
+                            inputs.toString(),
+                            getInputsFile(cacheEntryDir),
+                            StandardCharsets.UTF_8);
+
+                    return result;
                 });
-                return null;
             });
         } catch (ExecutionException exception) {
             // If FileCreatorException was thrown, it will be wrapped by a chain of execution
@@ -495,6 +521,60 @@ public final class FileCache {
             throw new RuntimeException(
                     "Unable to find root cause of ExecutionException, " + exception);
         }
+    }
+
+    /**
+     * Checks the cache entry to see if it exists (and whether it is corrupted). If it is corrupted,
+     * the returned result also contains its cause.
+     *
+     * <p>This method should usually return a {@link QueryEvent#HIT} result or a {@link
+     * QueryEvent#MISSED} result. In some rare cases, it may return a {@link QueryEvent#CORRUPTED}
+     * result if the cache entry is corrupted (e.g., if an error occurred while the cache entry was
+     * being created, or the previous build was canceled abruptly by the user or by a power outage).
+     *
+     * @return the result of this query (which does not include the path to the cached output
+     *     file/directory)
+     */
+    @NonNull
+    private QueryResult checkCacheEntry(@NonNull Inputs inputs, @NonNull File cacheEntryDir) {
+        if (!cacheEntryDir.exists()) {
+            return new QueryResult(QueryEvent.MISSED);
+        }
+
+        // The absence of the inputs file indicates a corrupted cache entry
+        File inputsFile = getInputsFile(cacheEntryDir);
+        if (!inputsFile.exists()) {
+            return new QueryResult(
+                    QueryEvent.CORRUPTED,
+                    new IllegalStateException(
+                            String.format(
+                                    "Inputs file '%s' does not exist",
+                                    inputsFile.getAbsolutePath())));
+        }
+
+        // It is extremely unlikely that the contents of the inputs file are different from the
+        // current inputs. If it happens, it may be because (1) some I/O error occurred when writing
+        // to the inputs file, or (2) there is a hash collision (two lists of inputs are hashed into
+        // the same key). In either case, we also report it as a corrupted cache entry.
+        String inputsInCacheEntry;
+        try {
+            inputsInCacheEntry = Files.toString(inputsFile, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return new QueryResult(QueryEvent.CORRUPTED, e);
+        }
+        if (!inputs.toString().equals(inputsInCacheEntry)) {
+            return new QueryResult(
+                    QueryEvent.CORRUPTED,
+                    new IllegalStateException(
+                            String.format(
+                                    "Expected contents '%s' but found '%s' in inputs file '%s'",
+                                    inputs.toString(),
+                                    inputsInCacheEntry,
+                                    inputsFile.getAbsolutePath())));
+        }
+
+        // If the inputs file is valid, report a HIT
+        return new QueryResult(QueryEvent.HIT);
     }
 
     /**
@@ -897,5 +977,91 @@ public final class FileCache {
 
         /** The prepare-library command. */
         PREPARE_LIBRARY
+    }
+
+    /**
+     * The result of a cache query, which includes a {@link QueryEvent} indicating whether the cache
+     * is hit, missed, or corrupted, a cause if the cache is corrupted, and an (optional) path to
+     * the cached output file/directory.
+     */
+    @Immutable
+    public static final class QueryResult {
+
+        @NonNull private final QueryEvent queryEvent;
+
+        @NonNull private final Optional<Throwable> causeOfCorruption;
+
+        @NonNull private final Optional<File> cachedFile;
+
+        /**
+         * Creates a {@code QueryResult} instance.
+         *
+         * @param queryEvent the query event
+         * @param causeOfCorruption a cause if the cache is corrupted, and empty otherwise
+         * @param cachedFile the path to cached output file/directory, can be empty if the cache
+         *     does not want to expose this information
+         */
+        QueryResult(
+                @NonNull QueryEvent queryEvent,
+                @NonNull Optional<Throwable> causeOfCorruption,
+                @NonNull Optional<File> cachedFile) {
+            Preconditions.checkState(
+                    (queryEvent.equals(QueryEvent.CORRUPTED) && causeOfCorruption.isPresent())
+                            || (!queryEvent.equals(QueryEvent.CORRUPTED)
+                                    && !causeOfCorruption.isPresent()));
+
+            this.queryEvent = queryEvent;
+            this.causeOfCorruption = causeOfCorruption;
+            this.cachedFile = cachedFile;
+        }
+
+        QueryResult(@NonNull QueryEvent queryEvent, @NonNull Throwable causeOfCorruption) {
+            this(queryEvent, Optional.of(causeOfCorruption), Optional.empty());
+        }
+
+        QueryResult(@NonNull QueryEvent queryEvent) {
+            this(queryEvent, Optional.empty(), Optional.empty());
+        }
+
+        /**
+         * Returns the {@link QueryEvent} indicating whether the cache is hit, missed, or corrupted.
+         */
+        @NonNull
+        public QueryEvent getQueryEvent() {
+            return queryEvent;
+        }
+
+        /**
+         * Returns a cause if the cache is corrupted, and empty otherwise.
+         */
+        @NonNull
+        public Optional<Throwable> getCauseOfCorruption() {
+            return causeOfCorruption;
+        }
+
+        /**
+         * Returns the path to the cached output file/directory, can be empty if the cache does not
+         * want to expose this information.
+         */
+        @NonNull
+        public Optional<File> getCachedFile() {
+            return cachedFile;
+        }
+    }
+
+    /**
+     * The event that happens when the client queries a cache entry: the cache entry may be hit,
+     * missed, or corrupted.
+     */
+    public enum QueryEvent {
+
+        /** The cache entry exists and is not corrupted. */
+        HIT,
+
+        /** The cache entry does not exist. */
+        MISSED,
+
+        /** The cache entry exists and is corrupted. */
+        CORRUPTED;
     }
 }

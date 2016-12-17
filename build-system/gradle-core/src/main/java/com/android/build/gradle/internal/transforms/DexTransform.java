@@ -33,8 +33,6 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
@@ -53,8 +51,8 @@ import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -512,8 +510,10 @@ public class DexTransform extends Transform {
                                 androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                                 dexOptions,
                                 multiDex);
+                FileCache.QueryResult result = null;
                 try {
-                    buildCache.get().createFile(to, buildCacheInputs, preDexLibraryAction);
+                     result =
+                             buildCache.get().createFile(to, buildCacheInputs, preDexLibraryAction);
                 } catch (ExecutionException exception) {
                     throw new RuntimeException(
                             String.format(
@@ -523,18 +523,30 @@ public class DexTransform extends Transform {
                             exception);
                 } catch (Exception exception) {
                     logger.warning(
-                            "Unable to pre-dex '%1$s' to '%2$s' using the build cache at '%3$s'\n"
+                            "Unable to pre-dex '%1$s' to '%2$s' using the build cache at '%3$s'.\n"
                                     + "Cause: %4$s\n"
-                                    + "Build cache is therefore temporarily disabled.\n"
-                                    + "Please fix the underlying cause if possible or file a bug.\n"
-                                    + "To suppress this warning, disable the build cache by setting"
+                                    + "We have temporarily disabled the build cache for the current"
+                                    + " pre-dex task.\n"
+                                    + "If you are unable to fix the underlying cause, please file a"
+                                    + " bug or disable the build cache by setting"
                                     + " android.enableBuildCache=false in the gradle.properties"
                                     + " file.",
                             from.getAbsolutePath(),
                             to.getAbsolutePath(),
                             buildCache.get().getCacheDirectory().getAbsolutePath(),
-                            exception.getMessage());
+                            Throwables.getStackTraceAsString(exception));
                     preDexLibraryAction.call();
+                }
+                if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                    logger.verbose(
+                            "The build cache at '%1$s' contained an invalid cache entry.\n"
+                                    + "Cause: %2$s\n"
+                                    + "We have recreated the cache entry.\n"
+                                    + "If this issue persists, please file a bug or disable the"
+                                    + " build cache by setting android.enableBuildCache=false in"
+                                    + " the gradle.properties file.",
+                            buildCache.get().getCacheDirectory().getAbsolutePath(),
+                            Throwables.getStackTraceAsString(result.getCauseOfCorruption().get()));
                 }
             } else {
                 preDexLibraryAction.call();

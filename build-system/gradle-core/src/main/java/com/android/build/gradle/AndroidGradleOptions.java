@@ -25,6 +25,7 @@ import com.android.builder.utils.FileCache;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -458,14 +459,16 @@ public class AndroidGradleOptions {
                 return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
             } catch (Exception exception) {
                 project.getLogger().warn(
-                        "Unable to create the build cache at '{}'\n"
-                                + "Cause: {}\n"
-                                + "Build cache is therefore temporarily disabled.\n"
-                                + "Please fix the underlying cause if possible or file a bug.\n"
-                                + "To suppress this warning, disable the build cache by setting"
-                                + " android.enableBuildCache=false in the gradle.properties file.",
-                        buildCacheDir.getAbsolutePath(),
-                        exception.getMessage());
+                        String.format(
+                                "Unable to create the build cache at '%1$s'.\n"
+                                        + "Cause: %2$s\n"
+                                        + "We have temporarily disabled the build cache.\n"
+                                        + "If you are unable to fix the underlying cause, please"
+                                        + " file a bug or disable the build cache by setting"
+                                        + " android.enableBuildCache=false in the gradle.properties"
+                                        + " file.",
+                                buildCacheDir.getAbsolutePath(),
+                                Throwables.getStackTraceAsString(exception)));
                 return Optional.empty();
             }
         } else {
