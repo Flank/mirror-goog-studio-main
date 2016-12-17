@@ -176,7 +176,7 @@ public class LintCliClient extends LintClient {
             System.out.println();
         }
 
-        if (baselineFile != null && !baselineFile.exists()) {
+        if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
             File dir = baselineFile.getParentFile();
             boolean ok = true;
             if (dir != null && !dir.isDirectory()) {

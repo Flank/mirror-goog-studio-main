@@ -28,6 +28,7 @@ import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.client.api.JavaParser.ResolvedAnnotation;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.detector.api.Detector;
+import java.io.IOException;
 
 @SuppressWarnings("all") // Lots of test sample projects with faulty code
 public class SupportAnnotationDetectorTest extends AbstractCheckTest {
@@ -2909,6 +2910,70 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         mSupportClasspath,
                         mSupportJar
                 ));
+    }
+
+    public void testRestrictedInheritedAnnotation() {
+        // Regression test for http://b.android.com/230387
+        // Ensure that when we perform the @RestrictTo check, we don't incorrectly
+        // inherit annotations from the base classes of AppCompatActivity and treat
+        // those as @RestrictTo on the whole AppCompatActivity class itself.
+        lint().files(
+                /*
+                Compiled version of these two classes:
+                    package test.pkg;
+                    import android.support.annotation.RestrictTo;
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                    public class RestrictedParent {
+                    }
+                and
+                    package test.pkg;
+                    public class Parent extends RestrictedParent {
+                        public void myMethod() {
+                        }
+                    }
+                 */
+                base64gzip("libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar", ""
+                        + "H4sIAAAAAAAAAAvwZmYRYeDg4GB4VzvRkwEJcDKwMPi6hjjqevq56f87xcDA"
+                        + "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ"
+                        + "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9JSUi/Flj5boia2XCujYuk0C1HV"
+                        + "tGei2iKvRV8+zf5U9LGIEeyWNZtvhngBbfJCcYspmlvkgbgktbhEvyA7XT8I"
+                        + "yCjKTC5JTQlILErNK9FLzkksLp4aGOvN5Chi+/j6tMxZqal2rK7xV+y+RLio"
+                        + "iRyatGmWgO2RHdY3blgp7978b/28JrlfjH9XvMh66Cxwg6fY/tze73Mknz3+"
+                        + "/Fb2gOaqSJXAbRvyEpsVi/WmmojznPzbrOe8al3twYCCJULbP25QP8T3nrVl"
+                        + "iszbjwtOO1uerD8wpXKSoPNVQyWjby925u8WablkfCj/Y4BG8bEJua8tvhzZ"
+                        + "OsdnSr35HJ4fM4RbpbWV2xctPGY0ySUu2Es6b0mYyobnBU/bo36VifS7WZmY"
+                        + "zZ+aPknWN+mlIX9S4kKnxNuXlSedMZ0ilGj7IFCl43WF3bq5L00Mn809NjW6"
+                        + "+L18/p1nsdrtIpd4ptrLnwmYs+cE345Xt8/ec6g4dkjs8EX7EMmy56+OmQl9"
+                        + "mT75aMblsyfSNDYvt5xgV8NavVCBsTsnjSttg4PZ97sNrikn1TeavD2l6L/P"
+                        + "Y2uqVSu7QWPomoUuGdMmKJltLIr8yQSKpPpfEa8iGBkYfJjwRZIociQhR01q"
+                        + "n7//IQeBo/cv1AesjsiX2cmp9u1B4OOjLcGmbpzfl949oFRytszwY3Kl0cMD"
+                        + "7B+cJZetzex5l3hvj/nn0+euf8/jf8BVyMGuzviL0Y/zX6/WlL2qFs8XSx7c"
+                        + "e3mnypfg0BPtb9P0zoacuT5nzlIr4dczDVZ9sl+YPX2VypGVU5f6xsWLnVxs"
+                        + "sGnD9ZZ3z/7G3Vp6jvPh5nuzfPxCWmVMpadrf1RT2vHhx2Z7k8QLav53JKZG"
+                        + "zjQ35rn48PPq64yhNuHzYw95rbn3Q/hLYD/zujpZqxdFvbNYvwhs+qSpWxNY"
+                        + "/Yd9b7zC1oSQfFl5cErewhTw/BEwCIIYQYHEyCTCgJqvYDkOlClRAUoWRdeK"
+                        + "nEFEULTZ4sigyCaA4gg59uRRTDhJOFuhG4bsS1EUw/KYcER/gDcrG0gBCxDy"
+                        + "ArVNZgbxABAMMsu2BAAA"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Cls extends Parent {\n"
+                        + "    @Override\n"
+                        + "    public void myMethod() {\n"
+                        + "        super.myMethod();\n"
+                        + "    }\n"
+                        + "}\n"),
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n"
+                        + "}"),
+                classpath(SUPPORT_JAR_PATH,
+                        "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"),
+                mSupportJar)
+                .run()
+                .expectClean();
     }
 
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
