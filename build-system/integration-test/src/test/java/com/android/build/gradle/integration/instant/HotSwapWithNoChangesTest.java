@@ -71,7 +71,6 @@ public class HotSwapWithNoChangesTest {
     }
 
     @Test
-    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testRestartOnly() throws Exception {
         doTestArtifacts(() -> {
             // Force cold swap.
@@ -82,7 +81,6 @@ public class HotSwapWithNoChangesTest {
     }
 
     @Test
-    @Ignore // cold swap mode is now only MULTI APK, this test needs to be updated appropriately
     public void testIncompatibleChange() throws Exception {
         doTestArtifacts(() -> {
             String newPath = ACTIVITY_PATH.replace("HelloWorld", "HelloWorldCopy");
@@ -119,7 +117,9 @@ public class HotSwapWithNoChangesTest {
         runColdSwapBuild.run();
 
         SplitApks splitApks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
-        assertThat(splitApks).hasSize(1);
+        // one split and main APK since we are < N.
+        assertThat(splitApks).hasSize(2);
+
 
         // now run again the incremental build.
         project.executor()
