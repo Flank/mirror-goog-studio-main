@@ -27,9 +27,6 @@ namespace profiler {
 
 class CpuCache {
  public:
-  // Special value of argument |app_id| in method |Retrieve| indicating any app.
-  static const int32_t kAnyApp = -1;
-
   // Adds |datum| to the cache.
   void Add(const profiler::proto::CpuProfilerData& datum);
 

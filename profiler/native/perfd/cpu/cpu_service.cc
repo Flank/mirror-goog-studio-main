@@ -18,6 +18,7 @@
 #include <stdio.h>
 
 #include "perfd/cpu/simpleperf_manager.h"
+#include "proto/profiler.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/file_reader.h"
 #include "utils/process_manager.h"
@@ -45,7 +46,7 @@ Status CpuServiceImpl::GetData(ServerContext* context,
                                const CpuDataRequest* request,
                                CpuDataResponse* response) {
   int64_t id_in_request = request->app_id();
-  int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? CpuCache::kAnyApp
+  int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? proto::AppId::ANY
                                                          : id_in_request);
   Trace trace("CPU:GetData");
   const vector<CpuProfilerData>& data =
@@ -141,7 +142,7 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     int trace_id = rand() % INT_MAX;
     response->set_trace_id(trace_id);
     remove(trace_path_.c_str());  // No more use of this file. Delete it.
-    trace_path_.clear();  // Make it clear no trace file is alive.
+    trace_path_.clear();          // Make it clear no trace file is alive.
   } else {
     response->set_status(CpuProfilingAppStopResponse::FAILURE);
     response->set_error_message(error);
