@@ -152,7 +152,7 @@ public final class SymbolIo {
         }
 
         FileUtils.mkdirs(file);
-        file = new File(file, table.getTableName() + SdkConstants.DOT_JAVA);
+        file = new File(file, SymbolTable.R_CLASS_NAME + SdkConstants.DOT_JAVA);
 
         /*
          * Identify all resource types. We use a sorted set because we want to have resource types
@@ -183,7 +183,7 @@ public final class SymbolIo {
             }
 
             pw.println();
-            pw.println("public final class " + table.getTableName() + " {");
+            pw.println("public final class " + SymbolTable.R_CLASS_NAME + " {");
 
             for (String rt : resourceTypes) {
                 pw.println("    public static final class " + rt + " {");
