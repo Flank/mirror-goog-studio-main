@@ -46,6 +46,7 @@ import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.profile.Recorder;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -139,7 +140,9 @@ public class InstantRunTaskManager {
                         tasks, transformVariantScope, javaResourcesVerifierTransform);
         javaResourcesVerifierTask.ifPresent(t -> t.optionalDependsOn(tasks, verifierTask));
 
-        InstantRunTransform instantRunTransform = new InstantRunTransform(variantScope);
+        InstantRunTransform instantRunTransform = new InstantRunTransform(
+                WaitableExecutor.useGlobalSharedThreadPool(),
+                variantScope);
         Optional<AndroidTask<TransformTask>> instantRunTask =
                 transformManager.addTransform(tasks, transformVariantScope, instantRunTransform);
 

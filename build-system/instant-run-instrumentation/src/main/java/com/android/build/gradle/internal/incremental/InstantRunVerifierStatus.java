@@ -74,6 +74,7 @@ public enum InstantRunVerifierStatus {
 
     JAVA_RESOURCES_CHANGED,
 
+    BUILD_NOT_INCREMENTAL, // some of the transforms were not incremental.
     DEPENDENCY_CHANGED,
 
     /**

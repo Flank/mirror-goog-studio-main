@@ -21,6 +21,7 @@ import static com.android.build.api.transform.QualifiedContent.Scope;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -44,6 +45,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Throwables;
@@ -79,9 +81,13 @@ public class InstantRunTransform extends Transform {
     private final ImmutableList.Builder<String> generatedClasses3Names = ImmutableList.builder();
     private final InstantRunVariantScope transformScope;
     private final Integer targetPlatformApi;
+    private final WaitableExecutor<Void> executor;
 
-    public InstantRunTransform(InstantRunVariantScope transformScope) {
+    public InstantRunTransform(
+            WaitableExecutor<Void> executor,
+            InstantRunVariantScope transformScope) {
         this.transformScope = transformScope;
+        this.executor = executor;
         this.targetPlatformApi = AndroidGradleOptions.getTargetFeatureLevel(
                 transformScope.getGlobalScope().getProject());
     }
@@ -131,9 +137,11 @@ public class InstantRunTransform extends Transform {
     public Map<String, Object> getParameterInputs() {
         // Force the instant run transform to re-run when the dex patching policy changes,
         // as the slicer will re-run.
-        return ImmutableMap.of("dex patching policy",
-                transformScope.getInstantRunBuildContext().getPatchingPolicy()
-                        .getDexPatchingPolicy().toString());
+        return transformScope.getInstantRunBuildContext().getPatchingPolicy() != null
+                ? ImmutableMap.of("dex patching policy", transformScope.getInstantRunBuildContext()
+                        .getPatchingPolicy().getDexPatchingPolicy().toString())
+                : ImmutableMap.of();
+
     }
 
     @NonNull
@@ -143,19 +151,113 @@ public class InstantRunTransform extends Transform {
                 transformScope.getInstantRunBootClasspath(), SecondaryFile::nonIncremental);
     }
 
+    private interface WorkItem {
+
+         Void doWork() throws IOException;
+    }
+
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
         InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
+        instantRunBuildContext.startRecording(
+                InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        try {
+            doTransform(invocation);
+        } finally {
+            instantRunBuildContext.stopRecording(
+                    InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        }
+
+    }
+
+    public void doTransform(@NonNull TransformInvocation invocation)
+            throws IOException, TransformException, InterruptedException {
+        InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
+
+        // if we do not run in incremental mode, we should automatically switch to COLD swap.
+        if (!invocation.isIncremental()) {
+            instantRunBuildContext.setVerifierStatus(
+                    InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL);
+        }
 
         // If this is not a HOT_WARM build, clean up the enhanced classes and don't generate new
         // ones during this build.
-        boolean cleanUpClassesThree =
-                instantRunBuildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM;
+        boolean inHotSwapMode =
+                instantRunBuildContext.getBuildMode() == InstantRunBuildMode.HOT_WARM;
 
         TransformOutputProvider outputProvider = invocation.getOutputProvider();
         if (outputProvider == null) {
             throw new IllegalStateException("InstantRunTransform called with null output");
+        }
+
+        File classesTwoOutput = outputProvider.getContentLocation("main",
+                TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
+
+        File classesThreeOutput = outputProvider.getContentLocation("enhanced",
+                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                getScopes(), Format.DIRECTORY);
+
+        List<WorkItem> workItems = new ArrayList<>();
+        for (TransformInput input : invocation.getInputs()) {
+            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+                File inputDir = directoryInput.getFile();
+                if (invocation.isIncremental()) {
+                    for (Map.Entry<File, Status> fileEntry : directoryInput
+                            .getChangedFiles()
+                            .entrySet()) {
+
+                        File inputFile = fileEntry.getKey();
+                        if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                            continue;
+                        }
+                        switch (fileEntry.getValue()) {
+                            case REMOVED:
+                                // remove the classes.2 and classes.3 files.
+                                deleteOutputFile(
+                                        IncrementalSupportVisitor.VISITOR_BUILDER,
+                                        inputDir, inputFile, classesTwoOutput);
+                                deleteOutputFile(IncrementalChangeVisitor.VISITOR_BUILDER,
+                                        inputDir, inputFile, classesThreeOutput);
+                                break;
+                            case CHANGED:
+                                if (inHotSwapMode) {
+                                    workItems.add(() -> transformToClasses3Format(
+                                            inputDir,
+                                            inputFile,
+                                            classesThreeOutput));
+                                }
+                                // fall through the ADDED case to generate classes.2
+                            case ADDED:
+                                workItems.add(() -> transformToClasses2Format(
+                                        inputDir,
+                                        inputFile,
+                                        classesTwoOutput,
+                                        fileEntry.getValue()));
+                                break;
+                            case NOTCHANGED:
+                                break;
+                            default:
+                                throw new IllegalStateException("Unhandled file status "
+                                        + fileEntry.getValue());
+                        }
+                    }
+                } else {
+                    // non incremental mode, we need to traverse the TransformInput#getFiles()
+                    // folder
+                    FileUtils.cleanOutputDir(classesTwoOutput);
+                    for (File file : Files.fileTreeTraverser().breadthFirstTraversal(inputDir)) {
+                        if (file.isDirectory()) {
+                            continue;
+                        }
+                        workItems.add(() -> transformToClasses2Format(
+                                inputDir,
+                                file,
+                                classesTwoOutput,
+                                Status.ADDED));
+                    }
+                }
+            }
         }
 
         // first get all referenced input to construct a class loader capable of loading those
@@ -163,116 +265,34 @@ public class InstantRunTransform extends Transform {
         List<URL> referencedInputUrls = getAllClassesLocations(
                 invocation.getInputs(), invocation.getReferencedInputs());
 
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         // This class loader could be optimized a bit, first we could create a parent class loader
         // with the android.jar only that could be stored in the GlobalScope for reuse. This
         // class loader could also be store in the VariantScope for potential reuse if some
         // other transform need to load project's classes.
-        try (URLClassLoader urlClassLoader = new NonDelegatingUrlClassloader(referencedInputUrls)) {
-            instantRunBuildContext.startRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        URLClassLoader urlClassLoader = new NonDelegatingUrlClassloader(referencedInputUrls);
+        Thread.currentThread().setContextClassLoader(urlClassLoader);
+
+        workItems.forEach(workItem -> executor.execute(() -> {
+            ClassLoader currentThreadClassLoader = Thread.currentThread()
+                    .getContextClassLoader();
             Thread.currentThread().setContextClassLoader(urlClassLoader);
-
-            File classesTwoOutput = outputProvider.getContentLocation("main",
-                    TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
-
-            File classesThreeOutput = outputProvider.getContentLocation("enhanced",
-                    ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                    getScopes(), Format.DIRECTORY);
-
-            if (cleanUpClassesThree) {
-                FileUtils.cleanOutputDir(classesThreeOutput);
+            try {
+                return workItem.doWork();
+            } finally {
+                Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
             }
+        }));
 
-            final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-            for (TransformInput input : invocation.getInputs()) {
-              input.getDirectoryInputs().parallelStream().forEach(directoryInput -> {
-                  ClassLoader currentThreadClassLoader = Thread.currentThread().getContextClassLoader();
-                  try {
-                      Thread.currentThread().setContextClassLoader(contextClassLoader);
-                      File inputDir = directoryInput.getFile();
-                      if (invocation.isIncremental()) {
-                          for (Map.Entry<File, Status> fileEntry : directoryInput
-                                  .getChangedFiles()
-                                  .entrySet()) {
+        // wait for all work items completion.
+        executor.waitForAllTasks();
 
-                              File inputFile = fileEntry.getKey();
-                              if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS))
-                                  continue;
-                              switch (fileEntry.getValue()) {
-                                  case ADDED:
-                                      // a new file was added, we only generate the classes.2 format
-                                      transformToClasses2Format(
-                                              inputDir,
-                                              inputFile,
-                                              classesTwoOutput,
-                                              Status.ADDED);
-                                      break;
-                                  case REMOVED:
-                                      // remove the classes.2 and classes.3 files.
-                                      deleteOutputFile(
-                                              IncrementalSupportVisitor.VISITOR_BUILDER,
-                                              inputDir, inputFile, classesTwoOutput);
-                                      deleteOutputFile(IncrementalChangeVisitor.VISITOR_BUILDER,
-                                              inputDir, inputFile, classesThreeOutput);
-                                      break;
-                                  case CHANGED:
-                                      transformToClasses2Format(
-                                              inputDir,
-                                              inputFile,
-                                              classesTwoOutput,
-                                              Status.CHANGED);
-
-                                      if (!cleanUpClassesThree) {
-                                          transformToClasses3Format(
-                                                  inputDir,
-                                                  inputFile,
-                                                  classesThreeOutput);
-                                      }
-                                      break;
-                                  case NOTCHANGED:
-                                      break;
-                                  default:
-                                      throw new IllegalStateException("Unhandled file status "
-                                              + fileEntry.getValue());
-                              }
-                          }
-                      } else {
-                          // non incremental mode, we need to traverse the TransformInput#getFiles()
-                          // folder
-                          for (File file : Files.fileTreeTraverser()
-                                  .breadthFirstTraversal(inputDir)) {
-                              if (file.isDirectory()) {
-                                  continue;
-                              }
-
-                              try {
-                                  transformToClasses2Format(
-                                          inputDir,
-                                          file,
-                                          classesTwoOutput,
-                                          Status.ADDED);
-                              } catch (IOException e) {
-                                  throw new RuntimeException("Exception while preparing "
-                                          + file.getAbsolutePath());
-                              }
-                          }
-                      }
-                  } catch (IOException x) {
-                      throw new RuntimeException(x);  // Lambdas don't like checked exceptions.
-                  } finally {
-                      Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
-                  }
-              });
-
-            }
-
-            wrapUpOutputs(classesTwoOutput, classesThreeOutput);
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-            instantRunBuildContext.stopRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        // If our classes.2 transformations indicated that a cold swap was necessary,
+        // clean up the classes.3 output folder as some new files may have been generated.
+        if (instantRunBuildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM) {
+            FileUtils.cleanOutputDir(classesThreeOutput);
         }
+
+        wrapUpOutputs(classesTwoOutput, classesThreeOutput);
     }
 
     protected void wrapUpOutputs(File classes2Folder, File classes3Folder)
@@ -346,7 +366,8 @@ public class InstantRunTransform extends Transform {
      * @param change the nature of the change that triggered the transformation.
      * @throws IOException if the transformation failed.
      */
-    protected void transformToClasses2Format(
+    @Nullable
+    protected Void transformToClasses2Format(
             @NonNull final File inputDir,
             @NonNull final File inputFile,
             @NonNull final File outputDir,
@@ -357,6 +378,7 @@ public class InstantRunTransform extends Transform {
                     targetPlatformApi, inputDir, inputFile, outputDir,
                     IncrementalSupportVisitor.VISITOR_BUILDER, LOGGER);
         }
+        return null;
     }
 
     private static void deleteOutputFile(
@@ -386,7 +408,8 @@ public class InstantRunTransform extends Transform {
      * @param outputDir the output directory where to place the transformed file.
      * @throws IOException if the transformation failed.
      */
-    protected void transformToClasses3Format(File inputDir, File inputFile, File outputDir)
+    @Nullable
+    protected Void transformToClasses3Format(File inputDir, File inputFile, File outputDir)
             throws IOException {
 
         File outputFile = IncrementalVisitor.instrumentClass(targetPlatformApi,
@@ -399,13 +422,14 @@ public class InstantRunTransform extends Transform {
             transformScope.getInstantRunBuildContext().setVerifierStatus(
                     InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
             LOGGER.info("Class %s cannot be hot swapped.", inputFile);
-            return;
+            return null;
         }
         generatedClasses3Names.add(
                 inputFile.getAbsolutePath().substring(
                     inputDir.getAbsolutePath().length() + 1,
                     inputFile.getAbsolutePath().length() - ".class".length())
                         .replace(File.separatorChar, '.'));
+        return null;
     }
 
     /**
