@@ -35,7 +35,7 @@ _instrument = rule(
 )
 
 def _compile_and_instrument(is_base, patch_name, path, instrumenter):
-  classpath = ["//prebuilts/studio/sdk:android_jar"]
+  classpath = ["//prebuilts/studio/sdk:platforms/latest_jar"]
   if not is_base:
     classpath += [":base-test-classes"]
   classes = []

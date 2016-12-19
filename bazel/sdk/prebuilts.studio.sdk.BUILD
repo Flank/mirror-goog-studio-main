@@ -109,7 +109,10 @@ java_import(
     name = "platforms/latest_jar",
     jars = glob(["*/platforms/android-25/android.jar"]),
     neverlink = 1,
-    visibility = ["//tools/base/instant-run/instant-run-server:__pkg__"],
+    visibility = [
+        "//tools/base/build-system/instant-run-instrumentation:__pkg__",
+        "//tools/base/instant-run/instant-run-server:__pkg__",
+    ],
 )
 
 filegroup(
@@ -157,11 +160,6 @@ filegroup(
 filegroup(
     name = "add-ons/addon-google_apis-google-24",
     srcs = glob(["*/add-ons/addon-google_apis-google-24/**"]),
-)
-
-filegroup(
-    name = "_android_jar",
-    srcs = glob(["*/platforms/android-25/android.jar"]),
 )
 
 filegroup(
