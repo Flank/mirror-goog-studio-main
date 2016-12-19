@@ -41,6 +41,8 @@ public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_BUILD_CACHE = true;
 
+    private static final boolean DEFAULT_USE_MAIN_DEX_LIST_2 = false;
+
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
@@ -79,6 +81,8 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
 
+    public static final String PROPERTY_USE_MAIN_DEX_LIST_2 = "android.useMainDexList2";
+
     /**
      * Build cache is used for dependency resolution, and when pre-dexing. Setting this property
      * to {@code false} will disable it when pre-dexing external dependencies. This is useful for
@@ -110,10 +114,13 @@ public class AndroidGradleOptions {
 
     @Nullable private final String buildCacheDir;
 
+    private final boolean useMainDexList2;
+
     public AndroidGradleOptions(@NonNull Project project) {
         buildCacheEnabled =
                 getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
         buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
+        useMainDexList2 = getBoolean(project, PROPERTY_USE_MAIN_DEX_LIST_2);
     }
 
     /**
@@ -201,6 +208,10 @@ public class AndroidGradleOptions {
 
     public static boolean getTestOnly(@NonNull Project project) {
         return getBoolean(project, AndroidProject.PROPERTY_TEST_ONLY);
+    }
+
+    public boolean useMainDexList2() {
+        return useMainDexList2;
     }
 
     /**
