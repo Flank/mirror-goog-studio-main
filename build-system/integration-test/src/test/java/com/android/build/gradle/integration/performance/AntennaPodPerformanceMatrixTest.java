@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.performance;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -35,6 +36,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
@@ -99,6 +101,11 @@ public class AntennaPodPerformanceMatrixTest {
     @Before
     public void initializeProject() throws IOException {
         project = mainProject.getSubproject("AntennaPod");
+
+        Files.move(
+                mainProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
+                project.file(SdkConstants.FN_LOCAL_PROPERTIES));
+
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "classpath \"com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+\"",
