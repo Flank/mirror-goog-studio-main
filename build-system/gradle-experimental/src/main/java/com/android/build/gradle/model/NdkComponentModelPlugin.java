@@ -61,7 +61,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.BuildableComponentSpec;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
@@ -107,16 +114,6 @@ import org.gradle.platform.base.ComponentType;
 import org.gradle.platform.base.PlatformContainer;
 import org.gradle.platform.base.TypeBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
 
 /**
  * Plugin for Android NDK applications.
@@ -229,11 +226,12 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
                 projectId = projectId.getParentIdentifier();
             }
 
-            NdkHandler ndkHandler = new NdkHandler(
-                    projectId.getProjectDir(),
-                    ndkConfig.getPlatformVersion(),
-                    ndkConfig.getToolchain(),
-                    ndkConfig.getToolchainVersion());
+            NdkHandler ndkHandler =
+                    new NdkHandler(
+                            projectId.getProjectDir(),
+                            ndkConfig.getPlatformVersion(),
+                            ndkConfig.getToolchain(),
+                            ndkConfig.getToolchainVersion());
             ndkHandler.setCompileSdkVersion(compileSdkVersion);
             return ndkHandler;
         }

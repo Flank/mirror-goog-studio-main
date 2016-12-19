@@ -110,6 +110,7 @@ public final class GradleTestProject implements TestRule {
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
     @NonNull public static final File ANDROID_HOME;
+    @NonNull public static final File ANDROID_NDK_HOME;
 
     public static final boolean USE_JACK;
     public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
@@ -158,7 +159,8 @@ public final class GradleTestProject implements TestRule {
         USE_JACK = !Strings.isNullOrEmpty(envJack);
 
         IMPROVED_DEPENDENCY_RESOLUTION =
-                !Strings.isNullOrEmpty(System.getenv().get("IMPROVED_DEPENDENCY_RESOLUTION"));
+                !Strings.isNullOrEmpty(
+                        System.getenv().get("CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION"));
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
@@ -170,6 +172,16 @@ public final class GradleTestProject implements TestRule {
         } else {
             ANDROID_HOME = TestUtils.getSdk();
         }
+        assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
+
+        String envCustomAndroidNdkHome =
+                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
+        if (envCustomAndroidNdkHome != null) {
+            ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
+        } else {
+            ANDROID_NDK_HOME = new File(ANDROID_HOME, SdkConstants.FD_NDK);
+        }
+        assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
     }
 
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
@@ -188,7 +200,7 @@ public final class GradleTestProject implements TestRule {
     private File sourceDir;
     private File buildFile;
     private File localProp;
-    private final File ndkDir;
+    private final boolean withoutNdk;
 
     private final Collection<String> gradleProperties;
 
@@ -217,8 +229,8 @@ public final class GradleTestProject implements TestRule {
             boolean minifyEnabled,
             boolean useJack,
             boolean improvedDependencyEnabled,
-            String targetGradleVersion,
-            @Nullable File ndkDir,
+            @Nullable String targetGradleVersion,
+            boolean withoutNdk,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
@@ -232,7 +244,7 @@ public final class GradleTestProject implements TestRule {
         this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
-        this.ndkDir = ndkDir;
+        this.withoutNdk = withoutNdk;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
@@ -256,7 +268,7 @@ public final class GradleTestProject implements TestRule {
 
         buildFile = new File(getTestDir(), "build.gradle");
         sourceDir = new File(getTestDir(), "src");
-        ndkDir = rootProject.ndkDir;
+        withoutNdk = rootProject.withoutNdk;
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
@@ -420,7 +432,7 @@ public final class GradleTestProject implements TestRule {
             Files.write(getGradleBuildscript(), buildFile, Charsets.UTF_8);
         }
 
-        localProp = createLocalProp(testDir, ANDROID_HOME, ndkDir);
+        localProp = createLocalProp();
         createGradleProp();
     }
 
@@ -640,17 +652,6 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-    /** Returns the SDK dir */
-    @NonNull
-    public File getSdkDir() {
-        return ANDROID_HOME;
-    }
-
-    /** Returns the NDK dir */
-    public File getNdkDir() {
-        return ndkDir;
-    }
-
     /** Returns a string that contains the gradle buildscript content */
     public static String getGradleBuildscript() {
         return "apply from: \"../commonHeader.gradle\"\n"
@@ -814,21 +815,20 @@ public final class GradleTestProject implements TestRule {
         return projectConnection;
     }
 
-    private static File createLocalProp(
-            @NonNull File project, @NonNull File sdkDir, @Nullable File ndkDir)
-            throws IOException, StreamException {
-        checkNotNull(project, "project");
-        checkNotNull(sdkDir, "sdkDir");
+    private File createLocalProp() throws IOException, StreamException {
+        checkNotNull(testDir, "project");
 
         ProjectPropertiesWorkingCopy localProp =
                 ProjectProperties.create(
-                        project.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
-        localProp.setProperty(ProjectProperties.PROPERTY_SDK, sdkDir.getAbsolutePath());
-        if (ndkDir != null) {
-            localProp.setProperty(ProjectProperties.PROPERTY_NDK, ndkDir.getAbsolutePath());
-        }
-        localProp.save();
+                        testDir.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
 
+        localProp.setProperty(ProjectProperties.PROPERTY_SDK, ANDROID_HOME.getAbsolutePath());
+        if (!withoutNdk) {
+            localProp.setProperty(
+                    ProjectProperties.PROPERTY_NDK, ANDROID_NDK_HOME.getAbsolutePath());
+        }
+
+        localProp.save();
         return (File) localProp.getFile();
     }
 

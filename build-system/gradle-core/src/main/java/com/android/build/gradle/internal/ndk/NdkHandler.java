@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ndk;
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -56,7 +57,6 @@ public class NdkHandler {
     private final Revision revision;
 
     private static final int LATEST_SUPPORTED_VERSION = 13;
-    public static final String NDK_BUNDLE_SUBPATH = "ndk-bundle";
 
     public NdkHandler(
             @NonNull File projectDir,
@@ -225,7 +225,7 @@ public class NdkHandler {
         File sdkFolder = sdkLocation.getFirst();
         if (sdkFolder != null) {
             // Worth checking if the NDK came bundled with the SDK
-            return new File(sdkFolder, NDK_BUNDLE_SUBPATH);
+            return new File(sdkFolder, SdkConstants.FD_NDK);
         }
 
         return null;

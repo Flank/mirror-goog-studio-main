@@ -20,11 +20,9 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.google.common.collect.Lists;
@@ -39,12 +37,12 @@ public final class GradleTestProjectBuilder {
 
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
-    @Nullable private File ndkDir = findNdkDir();
     @Nullable private String targetGradleVersion;
     private boolean useJack = GradleTestProject.USE_JACK;
     private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
     private boolean useMinify = false;
+    private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
@@ -62,7 +60,7 @@ public final class GradleTestProjectBuilder {
                 useJack,
                 improvedDependencyEnabled,
                 targetGradleVersion,
-                ndkDir,
+                withoutNdk,
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
@@ -90,7 +88,7 @@ public final class GradleTestProjectBuilder {
 
     /** Create a project without setting ndk.dir in local.properties. */
     public GradleTestProjectBuilder withoutNdk() {
-        this.ndkDir = null;
+        this.withoutNdk = true;
         return this;
     }
 
@@ -179,11 +177,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withBuildToolsVersion(String buildToolsVersion) {
         this.buildToolsVersion = buildToolsVersion;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withMinify(boolean useMinify) {
-        this.useMinify = useMinify;
         return this;
     }
 

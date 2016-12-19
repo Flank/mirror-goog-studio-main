@@ -91,7 +91,7 @@ model {
     @Test
     public void buildAppWithStl() {
         // ndk r11 does noes support gabi++
-        Revision ndkRevision = NdkHandler.findRevision(project.getNdkDir())
+        Revision ndkRevision = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME)
         boolean notGabiSupported =
                 stl.startsWith("gabi++") && ndkRevision != null && ndkRevision.major >= 11
 

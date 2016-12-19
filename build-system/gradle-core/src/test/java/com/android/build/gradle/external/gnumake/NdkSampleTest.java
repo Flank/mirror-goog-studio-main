@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -215,14 +216,6 @@ public class NdkSampleTest {
         }
     }
 
-    private static File getNdkPath() {
-        String path = System.getenv().get("ANDROID_NDK_HOME");
-        if (isWindows) {
-            path = path.replace("/", "\\\\");
-        }
-        return new File(path).getAbsoluteFile();
-    }
-
     private static Map<String, String> getVariantConfigs() {
         return ImmutableMap.<String, String>builder()
                 .put("debug", "NDK_DEBUG=1")
@@ -267,9 +260,11 @@ public class NdkSampleTest {
     private static String getNdkResult(
             @NonNull File projectPath, String flags) throws IOException, InterruptedException {
 
-        String command = String.format(getNdkPath() + "/ndk-build -B -n NDK_PROJECT_PATH=%s %s",
-                projectPath.getAbsolutePath(),
-                flags);
+        String command =
+                String.format(
+                        TestUtils.getNdk() + "/ndk-build -B -n NDK_PROJECT_PATH=%s %s",
+                        projectPath.getAbsolutePath(),
+                        flags);
         return Spawner.spawn(command);
     }
 
@@ -285,7 +280,7 @@ public class NdkSampleTest {
         if (isWindows) {
             path = path.replace("/", "\\");
         }
-        File ndkPath = getNdkPath();
+        File ndkPath = TestUtils.getNdk();
         File androidMkPath = new File(ndkPath, path);
         File executePath = new File("/tmp/executeFromHere");
         Map<String, String> variantConfigs = getVariantConfigs();

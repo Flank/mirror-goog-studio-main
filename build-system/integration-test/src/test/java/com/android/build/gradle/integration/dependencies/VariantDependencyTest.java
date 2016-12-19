@@ -117,8 +117,9 @@ public class VariantDependencyTest {
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo =
-                AndroidSdkHandler.getInstance(project.getSdkDir()).getBuildToolInfo(
-                        Revision.parseRevision(DEFAULT_BUILD_TOOL_VERSION), progress);
+                AndroidSdkHandler.getInstance(GradleTestProject.ANDROID_HOME)
+                        .getBuildToolInfo(
+                                Revision.parseRevision(DEFAULT_BUILD_TOOL_VERSION), progress);
 
         File aapt = null;
         if (buildToolInfo != null) {

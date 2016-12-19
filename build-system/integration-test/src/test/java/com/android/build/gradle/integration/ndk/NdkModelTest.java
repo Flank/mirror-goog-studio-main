@@ -184,7 +184,7 @@ public class NdkModelTest {
             if (flag.contains("sysroot")) {
                 int expected =
                         NdkHelper.getPlatformSupported(
-                                project.getNdkDir(),
+                                GradleTestProject.ANDROID_NDK_HOME,
                                 Integer.toString(GradleTestProject.LATEST_GOOGLE_APIS_VERSION));
                 assertThat(flag).contains("android-" + expected);
             }
