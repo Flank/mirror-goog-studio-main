@@ -52,6 +52,7 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
+import com.intellij.psi.PsiPolyadicExpression;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiReference;
@@ -644,9 +645,10 @@ public class ConstantEvaluator {
                 return evaluate(expression);
             }
         } else if (node instanceof PsiBinaryExpression) {
-            IElementType operator = ((PsiBinaryExpression) node).getOperationTokenType();
-            Object operandLeft = evaluate(((PsiBinaryExpression) node).getLOperand());
-            Object operandRight = evaluate(((PsiBinaryExpression) node).getROperand());
+            PsiBinaryExpression expression = (PsiBinaryExpression) node;
+            IElementType operator = expression.getOperationTokenType();
+            Object operandLeft = evaluate(expression.getLOperand());
+            Object operandRight = evaluate(expression.getROperand());
             if (operandLeft == null || operandRight == null) {
                 if (allowUnknown) {
                     if (operandLeft == null) {
@@ -830,6 +832,835 @@ public class ConstantEvaluator {
                             return left.doubleValue() % right.doubleValue();
                         } else {
                             return left.floatValue() % right.floatValue();
+                        }
+                    }
+                } else {
+                    return null;
+                }
+            }
+        } else if (node instanceof PsiPolyadicExpression) {
+            PsiPolyadicExpression expression = (PsiPolyadicExpression) node;
+            IElementType operator = expression.getOperationTokenType();
+            PsiExpression[] operands = expression.getOperands();
+            List<Object> values = Lists.newArrayListWithCapacity(operands.length);
+
+            boolean hasString = false;
+            boolean hasBoolean = false;
+            boolean hasNumber = false;
+
+            boolean isFloat = false;
+            boolean isWide = false;
+
+            for (PsiExpression operand : operands) {
+                Object value = evaluate(operand);
+                if (value != null) {
+                    values.add(value);
+
+                    if (value instanceof String) {
+                        hasString = true;
+                    } else if (value instanceof Boolean) {
+                        hasBoolean = true;
+                    } else if (value instanceof Number) {
+                        if (value instanceof Float) {
+                            isFloat = true;
+                        } else if (value instanceof Double) {
+                            isFloat = true;
+                            isWide = true;
+                        } else if (value instanceof Long) {
+                            isWide = true;
+                        }
+                        hasNumber = true;
+                    }
+                }
+            }
+
+            if (values.isEmpty()) {
+                return null;
+            }
+
+            if (hasString) {
+                if (operator == JavaTokenType.PLUS) {
+                    // String concatenation
+                    StringBuilder sb = new StringBuilder();
+                    for (Object value : values) {
+                        sb.append(value.toString());
+                    }
+                    return sb.toString();
+                }
+                return null;
+            }
+
+            if (!allowUnknown && operands.length != values.size()) {
+                return null;
+            }
+
+            if (hasBoolean) {
+                if (operator == JavaTokenType.OROR) {
+                    boolean result = false;
+                    for (Object value : values) {
+                        if (value instanceof Boolean) {
+                            result = result || (Boolean) value;
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.ANDAND) {
+                    boolean result = true;
+                    for (Object value : values) {
+                        if (value instanceof Boolean) {
+                            result = result && (Boolean) value;
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.OR) {
+                    boolean result = false;
+                    for (Object value : values) {
+                        if (value instanceof Boolean) {
+                            result = result | (Boolean) value;
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.XOR) {
+                    boolean result = false;
+                    for (Object value : values) {
+                        if (value instanceof Boolean) {
+                            result = result ^ (Boolean) value;
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.AND) {
+                    boolean result = true;
+                    for (Object value : values) {
+                        if (value instanceof Boolean) {
+                            result = result & (Boolean) value;
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.EQEQ) {
+                    boolean result = false;
+                    for (int i = 0; i < values.size(); i++) {
+                        Object value = values.get(i);
+                        if (value instanceof Boolean) {
+                            boolean b = (boolean) value;
+                            if (i == 0) {
+                                result = b;
+                            } else {
+                                result = result == b;
+                            }
+                        }
+                    }
+                    return result;
+                } else if (operator == JavaTokenType.NE) {
+                    boolean result = false;
+                    for (int i = 0; i < values.size(); i++) {
+                        Object value = values.get(i);
+                        if (value instanceof Boolean) {
+                            boolean b = (boolean) value;
+                            if (i == 0) {
+                                result = b;
+                            } else {
+                                result = result != b;
+                            }
+                        }
+                    }
+                    return result;
+                }
+                return null;
+            }
+
+            if (hasNumber) {
+                // TODO: This is super redundant. Switch to lambdas!
+                if (operator == JavaTokenType.OR) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result | l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result | l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.XOR) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result ^ l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result ^ l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.AND) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result & l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result & l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.EQEQ) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev == l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev == l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.NE) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev != l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev != l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.GT) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev > l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev > l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.GE) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev >= l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev >= l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.LT) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev < l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev < l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.LE) {
+                    if (isWide) {
+                        boolean result = false;
+                        long prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev <= l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        boolean result = false;
+                        int prev = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    prev = l;
+                                } else {
+                                    result = prev <= l;
+                                    prev = l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.LTLT) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result << l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result << l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.GTGT) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result >> l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result >> l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.GTGTGT) {
+                    if (isWide) {
+                        long result = 0L;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                long l = ((Number) value).longValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result >>> l;
+                                }
+                            }
+                        }
+                        return result;
+                    } else {
+                        int result = 0;
+                        for (int i = 0; i < values.size(); i++) {
+                            Object value = values.get(i);
+                            if (value instanceof Number) {
+                                int l = ((Number) value).intValue();
+                                if (i == 0) {
+                                    result = l;
+                                } else {
+                                    result = result >>> l;
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                } else if (operator == JavaTokenType.PLUS) {
+                    if (isFloat) {
+                        if (isWide) {
+                            double result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    double l = ((Number) value).doubleValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result + l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            float result = 0f;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    float l = ((Number) value).floatValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result + l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    } else {
+                        if (isWide) {
+                            long result = 0L;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    long l = ((Number) value).longValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result + l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            int result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    int l = ((Number) value).intValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result + l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    }
+                } else if (operator == JavaTokenType.MINUS) {
+                    if (isFloat) {
+                        if (isWide) {
+                            double result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    double l = ((Number) value).doubleValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result - l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            float result = 0f;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    float l = ((Number) value).floatValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result - l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    } else {
+                        if (isWide) {
+                            long result = 0L;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    long l = ((Number) value).longValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result - l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            int result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    int l = ((Number) value).intValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result - l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    }
+                } else if (operator == JavaTokenType.ASTERISK) {
+                    if (isFloat) {
+                        if (isWide) {
+                            double result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    double l = ((Number) value).doubleValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result * l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            float result = 0f;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    float l = ((Number) value).floatValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result * l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    } else {
+                        if (isWide) {
+                            long result = 0L;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    long l = ((Number) value).longValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result * l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            int result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    int l = ((Number) value).intValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result * l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    }
+                } else if (operator == JavaTokenType.DIV) {
+                    if (isFloat) {
+                        if (isWide) {
+                            double result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    double l = ((Number) value).doubleValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result / l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            float result = 0f;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    float l = ((Number) value).floatValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result / l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    } else {
+                        if (isWide) {
+                            long result = 0L;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    long l = ((Number) value).longValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result / l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            int result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    int l = ((Number) value).intValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result / l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    }
+                } else if (operator == JavaTokenType.PERC) {
+                    if (isFloat) {
+                        if (isWide) {
+                            double result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    double l = ((Number) value).doubleValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result % l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            float result = 0f;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    float l = ((Number) value).floatValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result % l;
+                                    }
+                                }
+                            }
+                            return result;
+                        }
+                    } else {
+                        if (isWide) {
+                            long result = 0L;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    long l = ((Number) value).longValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result % l;
+                                    }
+                                }
+                            }
+                            return result;
+                        } else {
+                            int result = 0;
+                            for (int i = 0; i < values.size(); i++) {
+                                Object value = values.get(i);
+                                if (value instanceof Number) {
+                                    int l = ((Number) value).intValue();
+                                    if (i == 0) {
+                                        result = l;
+                                    } else {
+                                        result = result % l;
+                                    }
+                                }
+                            }
+                            return result;
                         }
                     }
                 } else {
@@ -1208,7 +2039,40 @@ public class ConstantEvaluator {
      */
     @Nullable
     public static Object evaluate(@Nullable JavaContext context, @NonNull PsiElement node) {
-        return new ConstantEvaluator(context).evaluate(node);
+        Object evaluate = new ConstantEvaluator(context).evaluate(node);
+        /* TODO: Switch to JavaConstantExpressionEvaluator (or actually, more accurately
+          psiFacade.getConstantEvaluationHelper().computeConstantExpression(expressionToEvaluate);
+          However, there are a few gaps; in particular, lint's evaluator will do more with arrays
+          and array sizes. Transfer that or keep *just* that portion and get rid of the number
+          and boolean evaluation logic. (There's also the "allowUnknown" behavior, which is
+          particularly important for Strings.
+        if (node instanceof PsiExpression) {
+            Object o = JavaConstantExpressionEvaluator
+                    .computeConstantExpression((PsiExpression) node, false);
+            // For comparison purposes switch from int to long and float to double
+            if (o instanceof Float) {
+                o = ((Float)o).doubleValue();
+            }
+            if (o instanceof Integer) {
+                o = ((Integer)o).longValue();
+            }
+            if (evaluate instanceof Float) {
+                evaluate = ((Float)evaluate).doubleValue();
+            }
+            if (evaluate instanceof Integer) {
+                evaluate = ((Integer)evaluate).longValue();
+            }
+
+            if (!Objects.equals(o, evaluate)) {
+                // Allow Integer vs Long etc
+
+
+                System.out.println("Different:\nLint produced " + evaluate + "\nIdea produced " + o);
+                System.out.println();
+            }
+        }
+        */
+        return evaluate;
     }
 
     /**

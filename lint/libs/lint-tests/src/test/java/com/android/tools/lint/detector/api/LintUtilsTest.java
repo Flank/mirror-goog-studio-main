@@ -66,11 +66,14 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import com.intellij.psi.PsiJavaFile;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.Collections;
@@ -479,8 +482,15 @@ public class LintUtilsTest extends TestCase {
 
     public static JavaContext parse(@Language("JAVA") final String javaSource,
             final File relativePath, boolean lombok, boolean psi) {
-        File dir = new File("projectDir");
+        // TODO: Clean up -- but where?
+        File dir = Files.createTempDir();
         final File fullPath = new File(dir, relativePath.getPath());
+        fullPath.getParentFile().mkdirs();
+        try {
+            Files.write(javaSource, fullPath, Charsets.UTF_8);
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
         LintCliClient client = new LintCliClient() {
             @NonNull
             @Override
@@ -512,13 +522,13 @@ public class LintUtilsTest extends TestCase {
             }
         };
         Project project = client.getProject(dir, dir);
-
+        client.initializeProjects(Collections.singletonList(project));
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(),
                 new LintCliClient());
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         TestContext context = new TestContext(driver, client, project, javaSource, fullPath);
         JavaParser parser = context.getParser();
-        parser.prepareJavaParse(Collections.<JavaContext>singletonList(context));
+        parser.prepareJavaParse(Collections.singletonList(context));
         if (lombok) {
             Node compilationUnit = parser.parseJava(context);
             assertNotNull(javaSource, compilationUnit);
@@ -529,6 +539,7 @@ public class LintUtilsTest extends TestCase {
             assertNotNull("Couldn't parse source", javaFile);
             context.setJavaFile(javaFile);
         }
+        client.disposeProjects(Collections.singletonList(project));
         return context;
     }
 

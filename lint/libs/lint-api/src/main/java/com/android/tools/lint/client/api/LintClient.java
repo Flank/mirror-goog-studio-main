@@ -827,6 +827,25 @@ public abstract class LintClient {
     }
 
     /**
+     * Perform any startup initialization of the full set of projects that lint will be
+     * run on, if necessary.
+     *
+     * @param knownProjects the list of projects
+     */
+    protected void initializeProjects(@NonNull Collection<Project> knownProjects) {
+
+    }
+
+    /**
+     * Perform any post-analysis cleaninup of the full set of projects that lint was
+     * run on, if necessary.
+     *
+     * @param knownProjects the list of projects
+     */
+    protected void disposeProjects(@NonNull Collection<Project> knownProjects) {
+    }
+
+    /**
      * Returns the name of the given project
      *
      * @param project the project to look up

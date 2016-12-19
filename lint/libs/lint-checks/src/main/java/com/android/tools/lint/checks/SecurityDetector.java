@@ -388,16 +388,15 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
 
     @Override
     public List<String> getApplicableMethodNames() {
-        // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
-        // argument.
-        List<String> values = new ArrayList<>(3);
-        values.add("openFileOutput");
-        values.add("getSharedPreferences");
-        values.add("getDir");
-        // These API calls can be used to set files world-readable or world-writable
-        values.add("setReadable");
-        values.add("setWritable");
-        return values;
+        return Arrays.asList(
+                // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
+                // argument.
+                "openFileOutput",
+                "getSharedPreferences",
+                "getDir",
+                // These API calls can be used to set files world-readable or world-writable
+                "setReadable",
+                "setWritable");
     }
 
     @Override

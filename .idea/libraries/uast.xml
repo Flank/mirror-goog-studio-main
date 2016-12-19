@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="uast">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/uast-162.2228.14.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/uast-171.2455.10.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

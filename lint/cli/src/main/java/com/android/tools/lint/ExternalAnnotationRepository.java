@@ -24,7 +24,6 @@ import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.CHECK_RESULT_ANNOTATION;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
-import static com.android.tools.lint.psi.EcjPsiManager.getTypeName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -911,16 +910,12 @@ public class ExternalAnnotationRepository {
 
         @Nullable
         private ClassInfo findClass(@Nullable ReferenceBinding cls) {
-            if (cls == null || cls.compoundName == null) {
-                return null;
-            }
-            return mClassMap.get(getTypeName(cls.compoundName));
+            return null;
         }
 
         @Nullable
         private ClassInfo findPackage(@NonNull PackageBinding pkg) {
-            return pkg.compoundName != null
-                    ? mClassMap.get(getTypeName(pkg.compoundName) + ".package-info") : null;
+            return null;
         }
 
         @Nullable

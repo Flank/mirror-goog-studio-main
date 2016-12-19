@@ -134,6 +134,7 @@ import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
+import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiParenthesizedExpression;
@@ -2572,12 +2573,15 @@ public class ApiDetector extends ResourceXmlDetector
 
             PsiElement nameIdentifier = LintUtils.getCallName(expression);
             Location location;
-            if (nameIdentifier != null) {
-                if (method.isConstructor()) {
-                    location = mContext.getRangeLocation(expression, 0, nameIdentifier, 0);
-                } else {
+            if (expression instanceof PsiNewExpression) {
+                location = mContext.getRangeLocation(expression, 0, ((PsiNewExpression)expression).getClassReference(), 0);
+            } else if (nameIdentifier != null) {
+                // ECJ had different bounds here
+                //if (method.isConstructor()) {
+                //    location = mContext.getRangeLocation(expression, 0, nameIdentifier, 0);
+                //} else {
                     location = mContext.getLocation(nameIdentifier);
-                }
+                //}
             } else {
                 location = mContext.getLocation(expression);
             }

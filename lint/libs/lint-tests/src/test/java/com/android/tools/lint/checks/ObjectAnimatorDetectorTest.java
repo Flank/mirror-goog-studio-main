@@ -42,11 +42,11 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 + "                                      ~~~~~~~~\n"
                 + "src/main/java/test/pkg/AnimatorTest.java:55: Warning: This method is accessed from an ObjectAnimator so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]\n"
                 + "        public void setProp1(int x) {\n"
-                + "                    ~~~~~~~~~~~~~~\n"
+                + "                    ~~~~~~~~~~~~~~~\n"
                 + "    src/main/java/test/pkg/AnimatorTest.java:15: ObjectAnimator usage here\n"
                 + "src/main/java/test/pkg/AnimatorTest.java:58: Warning: This method is accessed from an ObjectAnimator so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]\n"
                 + "        private void setProp2(float x) {\n"
-                + "                     ~~~~~~~~~~~~~~~~\n"
+                + "                     ~~~~~~~~~~~~~~~~~\n"
                 + "    src/main/java/test/pkg/AnimatorTest.java:47: ObjectAnimator usage here\n"
                 + "4 errors, 2 warnings\n";
 

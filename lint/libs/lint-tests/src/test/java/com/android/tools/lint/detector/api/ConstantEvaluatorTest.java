@@ -56,7 +56,8 @@ public class ConstantEvaluatorTest extends TestCase {
         if (expected == null) {
             assertNull(actual);
         } else {
-            assertNotNull("Couldn't compute value for " + source + ", expected " + expected,
+            assertNotNull("Couldn't compute value for " + source + ", expected "
+                            + expected + " but was " + actual,
                     actual);
             assertEquals(expected.getClass(), actual.getClass());
             if (expected instanceof Object[] && actual instanceof Object[]) {
@@ -178,6 +179,12 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(true, "!false");
     }
 
+    public void testPolyadicBooleans() throws Exception {
+        checkExpression(false, "false && true && true");
+        checkExpression(true, "false || false || true");
+        checkExpression(true, "false ^ false ^ true");
+    }
+
     public void testChars() throws Exception {
         checkExpression('a', "'a'");
         checkExpression('\007', "'\007'");
@@ -231,6 +238,18 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(true, "5 <= 11");
 
         checkExpression(3.5f, "1.0f + 2.5f");
+    }
+
+    public void testPolyadicArithmetic() throws Exception {
+        checkExpression(9, "1 + 3 + 5");
+        checkExpression(94, "100 - 3 - 3");
+        checkExpression(100, "2 * 5 * 10");
+        checkExpression(1, "10 / 5 / 2");
+        checkExpression(16, "1 << 3 << 1");
+        checkExpression(8, "32 >> 1 >> 1");
+        checkExpression(8, "32 >>> 1 >>> 1");
+        checkExpression(5, "5 | 1 | 1");
+        checkExpression(1, "5 & 1 & 1");
     }
 
     public void testFieldReferences() throws Exception {

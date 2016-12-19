@@ -16,9 +16,7 @@
 
 package com.android.tools.lint.psi;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiLiteral;
 
 public class ExternalPsiAnnotationLiteralMemberValue extends ExternalPsiAnnotationMemberValue implements PsiLiteral {
@@ -26,11 +24,6 @@ public class ExternalPsiAnnotationLiteralMemberValue extends ExternalPsiAnnotati
 
     public ExternalPsiAnnotationLiteralMemberValue(Object value) {
         mValue = value;
-    }
-
-    @Override
-    public void accept(@NonNull PsiElementVisitor visitor) {
-        throw new UnimplementedLintPsiApiException();
     }
 
     @Nullable

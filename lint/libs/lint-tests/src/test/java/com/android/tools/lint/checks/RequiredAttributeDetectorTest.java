@@ -265,6 +265,18 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                             + "            inflate(getContext(), R.layout.size6, null);\n"
                             + "        }\n"
                             + "    }\n"
+                            + "\n"
+                            + "    public static final class R {\n"
+                            + "        public static final class layout {\n"
+                            + "            public static final int size1 = 0x7f0a0000;\n"
+                            + "            public static final int size2 = 0x7f0a0001;\n"
+                            + "            public static final int size3 = 0x7f0a0002;\n"
+                            + "            public static final int size4 = 0x7f0a0003;\n"
+                            + "            public static final int size5 = 0x7f0a0004;\n"
+                            + "            public static final int size6 = 0x7f0a0005;\n"
+                            + "            public static final int size7 = 0x7f0a0006;\n"
+                            + "        }\n"
+                            + "    }\n"
                             + "}\n"),
                     mSizeincluded2,
                     mSizeincluded3,

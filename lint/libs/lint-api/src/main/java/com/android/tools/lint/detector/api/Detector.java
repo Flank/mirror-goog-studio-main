@@ -420,6 +420,13 @@ public abstract class Detector {
      </pre>
      Finally, note that many deprecated methods in lint itself point to the replacement
      methods, see for example {@link JavaContext#findSurroundingMethod(Node)}.
+
+     <p>
+     Misc notes:
+     If you have a constructor call to an implicit constructor, with the new PSI
+     backend it will resolve to null. It doesn't return synthetic methods the way we
+     did with the ECJ backend.
+     </p>
      */
     public interface JavaPsiScanner  {
         /**

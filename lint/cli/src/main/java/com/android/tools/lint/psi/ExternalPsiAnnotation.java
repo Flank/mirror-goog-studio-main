@@ -23,7 +23,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationOwner;
 import com.intellij.psi.PsiAnnotationParameterList;
-import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.meta.PsiMetaData;
@@ -46,8 +45,6 @@ public class ExternalPsiAnnotation extends EcjPsiElement implements PsiAnnotatio
     private final String mSignature;
 
     public ExternalPsiAnnotation(@NonNull String signature) {
-        //noinspection ConstantConditions
-        super(null);
         mSignature = signature;
     }
 
@@ -86,20 +83,17 @@ public class ExternalPsiAnnotation extends EcjPsiElement implements PsiAnnotatio
         return findAttributeValue(s);
     }
 
+    @Override
+    public <T extends PsiAnnotationMemberValue> T setDeclaredAttributeValue(
+            @Nullable String s,
+            @Nullable T t) {
+        return null;
+    }
+
     @Nullable
     @Override
     public PsiAnnotationOwner getOwner() {
         return null;
-    }
-
-    @Override
-    public void accept(@NonNull PsiElementVisitor visitor) {
-        throw new UnimplementedLintPsiApiException();
-    }
-
-    @Override
-    public void acceptChildren(@NonNull PsiElementVisitor visitor) {
-        throw new UnimplementedLintPsiApiException();
     }
 
     @Nullable

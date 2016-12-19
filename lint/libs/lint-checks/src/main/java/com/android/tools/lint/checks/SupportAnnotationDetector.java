@@ -598,7 +598,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
         if (operation == null) {
             return;
         }
-        Result result = PermissionFinder.findRequiredPermissions(operation, argument);
+        Result result = PermissionFinder.findRequiredPermissions(context.getEvaluator(),
+                operation, argument);
         if (result != null) {
             checkPermission(context, call, method, result, result.requirement);
         }

@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -203,7 +204,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
             + "}\n");
 
     // Dummy file
-    private final TestFile mAppCompatJar = base64gzip("libs/appcompat-v7-18.0.0.jar", "");
+    private final JarTestFile mAppCompatJar = jar("libs/appcompat-v7-18.0.0.jar");
 
     @SuppressWarnings("all") // Sample code
     private TestFile mIntermediateActivity = java(""

@@ -80,7 +80,7 @@ public class JavaContext extends Context {
     @Deprecated
     private Node compilationUnit;
 
-    /** The parse tree */
+    /** The parse tree, when using PSI */
     private PsiJavaFile javaFile;
 
     /** The parser which produced the parse tree */
@@ -489,6 +489,7 @@ public class JavaContext extends Context {
         }
     }
 
+    // Not necessary in UAST
     @Nullable
     public static String getMethodName(@NonNull PsiElement call) {
         if (call instanceof PsiMethodCallExpression) {

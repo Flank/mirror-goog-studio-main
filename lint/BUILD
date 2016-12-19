@@ -45,7 +45,7 @@ maven_java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
@@ -56,6 +56,7 @@ maven_java_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
@@ -89,7 +90,7 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -100,6 +101,7 @@ maven_java_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
     ],
 )

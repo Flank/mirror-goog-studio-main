@@ -25,37 +25,38 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
         return new MergeRootFrameLayoutDetector();
     }
 
-    @Override
-    protected boolean allowCompilationErrors() {
-        // Some of these unit tests are still relying on source code that references
-        // unresolved symbols etc.
-        return true;
-    }
-
     public void testMergeRefFromJava() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
                 + "<FrameLayout\n"
                 + "^\n"
-                + "0 errors, 1 warnings\n",
-            lintProject(
-                    mSimple,
-                    java(""
-                            + "package test.pkg;\n"
-                            + "\n"
-                            + "import foo.bar.R;\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "public class ImportFrameActivity extends Activity {\n"
-                            + "    @Override\n"
-                            + "    public void onCreate(Bundle savedInstanceState) {\n"
-                            + "        super.onCreate(savedInstanceState);\n"
-                            + "        setContentView(R.layout.simple);\n"
-                            + "    }\n"
-                            + "}\n")
-                    ));
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                mSimple,
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class ImportFrameActivity extends Activity {\n"
+                        + "    @Override\n"
+                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        setContentView(R.layout.simple);\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public final class R {\n"
+                        + "    public static final class layout {\n"
+                        + "        public static final int simple = 0x7f0a0000;\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testMergeRefFromInclude() throws Exception {

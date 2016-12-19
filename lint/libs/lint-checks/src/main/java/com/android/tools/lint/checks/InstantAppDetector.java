@@ -53,8 +53,10 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.intellij.psi.JavaElementVisitor;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -390,18 +392,29 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
 
     @Override
     public void visitReference(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiJavaCodeReferenceElement reference, @NonNull PsiElement resolved) {
-        String qualifiedName = reference.getQualifiedName();
+            @NonNull PsiJavaCodeReferenceElement reference, @NonNull PsiElement referenced) {
+        if (!(referenced instanceof PsiField)) {
+            return;
+        }
+        PsiClass containingClass = ((PsiField) referenced).getContainingClass();
+        if (containingClass == null) {
+            return;
+        }
+        String qualifiedName = containingClass.getQualifiedName();
         if (qualifiedName == null) {
             return;
         }
         switch (qualifiedName) {
-            case "android.os.Build.SERIAL":
-                report(ISSUE, context, reference, getPlaceHolderError("Build Serial"));
+            case "android.os.Build":
+                if ("SERIAL".equals(reference.getReferenceName())) {
+                    report(ISSUE, context, reference, getPlaceHolderError("Build Serial"));
+                }
                 break;
-            case "android.provider.Settings.Secure.ANDROID_ID":
-                report(ISSUE, context, reference,
-                        getPlaceHolderError("Settings.Secure Android Id"));
+            case "android.provider.Settings.Secure":
+                if ("ANDROID_ID".equals(reference.getReferenceName())) {
+                    report(ISSUE, context, reference, getPlaceHolderError(
+                            "Settings.Secure Android Id"));
+                }
                 break;
         }
     }

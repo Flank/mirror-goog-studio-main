@@ -16,19 +16,10 @@
 
 package com.android.tools.lint.psi;
 
-import com.android.annotations.NonNull;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiElementVisitor;
 
-public abstract class ExternalPsiAnnotationMemberValue extends EcjPsiExpression
+public abstract class ExternalPsiAnnotationMemberValue extends EcjPsiElement
         implements PsiAnnotationMemberValue {
     public ExternalPsiAnnotationMemberValue() {
-        //noinspection ConstantConditions
-        super(null, null);
-    }
-
-    @Override
-    public void accept(@NonNull PsiElementVisitor visitor) {
-        throw new UnimplementedLintPsiApiException();
     }
 }

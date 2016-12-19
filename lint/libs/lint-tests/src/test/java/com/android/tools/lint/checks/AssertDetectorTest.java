@@ -27,19 +27,20 @@ public class AssertDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
     public void test() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "src/test/pkg/Assert.java:7: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
                 + "        assert false;                              // ERROR\n"
-                + "        ~~~~~~~~~~~~\n"
+                + "        ~~~~~~\n"
                 + "src/test/pkg/Assert.java:8: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
                 + "        assert param > 5 : \"My description\";       // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "        ~~~~~~\n"
                 + "src/test/pkg/Assert.java:9: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
                 + "        assert param2 == param3;                   // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "        ~~~~~~\n"
                 + "src/test/pkg/Assert.java:10: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
                 + "        assert param2 != null && param3 == param2; // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "        ~~~~~~\n"
                 + "0 errors, 4 warnings\n",
 
             lintProject(java("src/test/pkg/Assert.java", ""

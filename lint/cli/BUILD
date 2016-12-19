@@ -11,7 +11,7 @@ maven_java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
@@ -22,6 +22,7 @@ maven_java_library(
         "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
     ],
 )
 

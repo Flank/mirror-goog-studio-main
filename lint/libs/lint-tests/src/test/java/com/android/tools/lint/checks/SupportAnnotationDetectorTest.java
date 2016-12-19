@@ -1550,7 +1550,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "5 errors, 0 warnings\n",
 
                 lintProject(
-                        java("src/test/pkg/ThreadTest.java", ""
+                        java("src/test/pkg/BigClass.java", ""
                                 + "package test.pkg;\n"
                                 + "\n"
                                 + "import android.support.annotation.UiThread;\n"
@@ -1564,6 +1564,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "    void f100() { }\n"
                                 + "    @WorkerThread // this single method is not UI, it's something else\n"
                                 + "    void g() { }\n"
+                                + "    BigClass() { }\n"
                                 + "}\n"),
                         java("src/test/pkg/BigClassClient.java", ""
                                 + "package test.pkg;\n"
@@ -2677,7 +2678,6 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         + "dependencies {\n"
                         + "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n"
                         + "}")
-
         );
         lint().projects(project).run().expect(""
                 + "src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n"

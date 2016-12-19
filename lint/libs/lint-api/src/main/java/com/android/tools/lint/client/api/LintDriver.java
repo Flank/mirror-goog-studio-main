@@ -523,6 +523,7 @@ public class LintDriver {
             if (projects == null) {
                 projects = computeProjects(request.getFiles());
             }
+            client.initializeProjects(projects);
         } catch (CircularDependencyException e) {
             currentProject = e.getProject();
             if (currentProject != null) {
@@ -539,6 +540,7 @@ public class LintDriver {
             return;
         }
         if (canceled) {
+            client.disposeProjects(projects);
             return;
         }
 
@@ -588,6 +590,7 @@ public class LintDriver {
         }
 
         fireEvent(canceled ? EventType.CANCELED : EventType.COMPLETED, null);
+        client.disposeProjects(projects);
     }
 
     private void registerCustomDetectors(Collection<Project> projects) {
@@ -790,7 +793,6 @@ public class LintDriver {
             if (javaCodeDetectors != null) {
                 for (Detector detector : javaCodeDetectors) {
                     assert detector instanceof Detector.JavaScanner ||
-                            // TODO: Migrate all
                             detector instanceof Detector.JavaPsiScanner : detector;
                 }
             }
@@ -798,7 +800,6 @@ public class LintDriver {
             if (javaFileDetectors != null) {
                 for (Detector detector : javaFileDetectors) {
                     assert detector instanceof Detector.JavaScanner ||
-                            // TODO: Migrate all
                             detector instanceof Detector.JavaPsiScanner : detector;
                 }
             }
@@ -2343,6 +2344,16 @@ public class LintDriver {
         public void log(@Nullable Throwable exception, @Nullable String format,
                 @Nullable Object... args) {
             mDelegate.log(exception, format, args);
+        }
+
+        @Override
+        protected void initializeProjects(@NonNull Collection<Project> knownProjects) {
+            mDelegate.initializeProjects(knownProjects);
+        }
+
+        @Override
+        protected void disposeProjects(@NonNull Collection<Project> knownProjects) {
+            mDelegate.disposeProjects(knownProjects);
         }
 
         @Override

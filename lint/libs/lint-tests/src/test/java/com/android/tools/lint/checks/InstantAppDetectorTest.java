@@ -280,9 +280,6 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                 createGradleTestFile())
                 .run()
                 .expect(""
-                        + "src/main/java/test/pkg/SerialTest.java:5: Warning: Instant Apps accessing \"Build Serial\" will get a XXX value [InstantApps]\n"
-                        + "import static android.os.Build.SERIAL;\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/main/java/test/pkg/SerialTest.java:9: Warning: Instant Apps accessing \"Build Serial\" will get a XXX value [InstantApps]\n"
                         + "        String serial1 = android.os.Build.SERIAL;\n"
                         + "                         ~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -292,7 +289,7 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                         + "src/main/java/test/pkg/SerialTest.java:11: Warning: Instant Apps accessing \"Build Serial\" will get a XXX value [InstantApps]\n"
                         + "        String serial3 = SERIAL;\n"
                         + "                         ~~~~~~\n"
-                        + "0 errors, 4 warnings\n");
+                        + "0 errors, 3 warnings\n");
     }
 
     public void testAndroidIdFromGservices() {

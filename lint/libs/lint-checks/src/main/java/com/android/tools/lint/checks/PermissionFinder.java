@@ -22,6 +22,7 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
@@ -33,7 +34,6 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
-import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
@@ -44,6 +44,9 @@ import com.intellij.psi.PsiTypeCastExpression;
  * Utility for locating permissions required by an intent or content resolver
  */
 public class PermissionFinder {
+
+    private final JavaEvaluator mEvaluator;
+
     /**
      * Operation that has a permission requirement -- such as a method call,
      * a content resolver read or write operation, an intent, etc.
@@ -86,12 +89,15 @@ public class PermissionFinder {
     /**
      * Searches for a permission requirement for the given parameter in the given call
      *
+     *
+     * @param evaluator evaluator which can look up annotations etc
      * @param operation the operation to look up
      * @param parameter the parameter which contains the value which implies the permission
      * @return the result with the permission requirement, or null if nothing is found
      */
     @Nullable
     public static Result findRequiredPermissions(
+            @NonNull JavaEvaluator evaluator,
             @NonNull Operation operation,
             @NonNull PsiElement parameter) {
 
@@ -105,10 +111,11 @@ public class PermissionFinder {
         // (3) Find the place where the action is defined, and look for permission
         //     annotations on that action declaration!
 
-        return new PermissionFinder(operation).search(parameter);
+        return new PermissionFinder(evaluator, operation).search(parameter);
     }
 
-    private PermissionFinder(@NonNull Operation operation) {
+    private PermissionFinder(@NonNull JavaEvaluator evaluator, @NonNull Operation operation) {
+        mEvaluator = evaluator;
         mOperation = operation;
     }
 
@@ -168,18 +175,15 @@ public class PermissionFinder {
             if (resolved instanceof PsiField) {
                 PsiField field = (PsiField) resolved;
                 if (mOperation == Operation.ACTION) {
-                    PsiModifierList modifierList = field.getModifierList();
-                    PsiAnnotation annotation = modifierList != null
-                            ? modifierList.findAnnotation(PERMISSION_ANNOTATION) : null;
+                    PsiAnnotation annotation = mEvaluator.findAnnotation(field,
+                            PERMISSION_ANNOTATION);
                     if (annotation != null) {
                         return getPermissionRequirement(field, annotation);
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
                     String fqn = mOperation == Operation.READ
                             ? PERMISSION_ANNOTATION_READ : PERMISSION_ANNOTATION_WRITE;
-                    PsiModifierList modifierList = field.getModifierList();
-                    PsiAnnotation annotation = modifierList != null
-                            ? modifierList.findAnnotation(fqn) : null;
+                    PsiAnnotation annotation = mEvaluator.findAnnotation(field, fqn);
                     if (annotation != null) {
                         PsiNameValuePair[] attributes = annotation.getParameterList().getAttributes();
                         PsiNameValuePair o = attributes.length == 1 ? attributes[0] : null;

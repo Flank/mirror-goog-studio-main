@@ -70,7 +70,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
@@ -122,7 +121,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         super.setUp();
         BuiltinIssueRegistry.reset();
         LintDriver.clearCrashCount();
-        EcjParser.skipComputingEcjErrors = false;
+        //EcjParser.skipComputingEcjErrors = false;
     }
 
     @Override
@@ -275,10 +274,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             String secondResult;
             try {
-                EcjPsiBuilder.setDebugOptions(true, true);
+                //EcjPsiBuilder.setDebugOptions(true, true);
                 secondResult = lintClient.analyze(files);
             } finally {
-                EcjPsiBuilder.setDebugOptions(false, false);
+                //EcjPsiBuilder.setDebugOptions(false, false);
             }
 
             assertEquals("The lint check produced different results when run on the "
@@ -771,9 +770,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Override
         public JavaParser getJavaParser(@Nullable Project project) {
-            return new EcjParser(this, project) {
+            return new EcjParser(this, project, getIdeaProject()) {
                 @Override
                 public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
+                    if (!allowCompilationErrors()) {
+                        EcjParser.skipComputingEcjErrors = false;
+                    }
+
                     boolean success = super.prepareJavaParse(contexts);
                     if (forceErrors()) {
                         success = false;

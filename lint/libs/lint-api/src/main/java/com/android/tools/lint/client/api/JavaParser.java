@@ -27,13 +27,13 @@ import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiType;
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -349,6 +349,7 @@ public abstract class JavaParser {
 
         return getLocation(context, element);
     }
+
     /**
      * Creates a light-weight handle to a location for the given node. It can be
      * turned into a full fledged location by

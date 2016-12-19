@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -70,7 +71,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     }
 
     // Dummy file
-    private final TestFile mAppCompatJar = base64gzip("libs/appcompat-v7-18.0.0.jar", "");
+    private final JarTestFile mAppCompatJar = jar("libs/appcompat-v7-18.0.0.jar");
 
     @SuppressWarnings("all") // Sample code
     private TestFile mLibrary = source("build.gradle", "");

@@ -24,11 +24,11 @@
     <orderEntry type="module" module-name="builder-model" />
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
-    <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="module" module-name="repository" scope="TEST" />
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="lombok-ast" level="project" />
     <orderEntry type="module" module-name="manifest-merger-base" scope="TEST" />
+    <orderEntry type="library" name="intellij-core" level="project" />
   </component>
 </module>

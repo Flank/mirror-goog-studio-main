@@ -35,6 +35,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiParenthesizedExpression;
 import java.util.Collections;
 import java.util.List;
 
@@ -130,6 +131,9 @@ public class AssertDetector extends Detector implements JavaPsiScanner {
      * "b == null || c != null".
      */
     private static boolean isNullCheck(PsiExpression expression) {
+        while (expression instanceof PsiParenthesizedExpression) {
+            expression = ((PsiParenthesizedExpression) expression).getExpression();
+        }
         if (expression instanceof PsiBinaryExpression) {
             PsiBinaryExpression binExp = (PsiBinaryExpression) expression;
             PsiExpression lOperand = binExp.getLOperand();
