@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -27,12 +28,14 @@ import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Tests expected build output
  */
 @CompileStatic
+@Category(FailsUnderBazel) // Ninja path limit
 class NativeBuildOutputTest {
 
     private static String zeroLibraryCmakeLists = """cmake_minimum_required(VERSION 3.4.1)

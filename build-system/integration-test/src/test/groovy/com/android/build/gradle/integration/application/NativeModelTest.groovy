@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.external.gson.NativeBuildConfigValue
 import com.android.build.gradle.external.gson.NativeLibraryValue
 import com.android.build.gradle.external.gson.NativeSourceFileValue
+import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
@@ -41,6 +42,7 @@ import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
@@ -58,6 +60,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  */
 @CompileStatic
 @RunWith(Parameterized.class)
+@Category(FailsUnderBazel) // Ninja path limit.
 class NativeModelTest {
     private static enum Compiler {
         GCC,

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application
 
 import com.android.annotations.NonNull
 import com.android.build.OutputFile
-import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
 import com.android.build.gradle.integration.common.utils.AssumeUtil
@@ -34,7 +33,6 @@ import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
-import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.builder.core.BuilderConstants.DEBUG
@@ -43,11 +41,9 @@ import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
-
 /**
  * Test drive for the abiPureSplits samples test.
  */
-@Category(FailsUnderBazel.class) // Needs NDK.
 @CompileStatic
 class AbiPureSplits {
     @Rule
