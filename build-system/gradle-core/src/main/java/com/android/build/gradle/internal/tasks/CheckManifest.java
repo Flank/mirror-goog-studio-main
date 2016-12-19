@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import java.io.File;
@@ -53,9 +52,7 @@ public class CheckManifest extends DefaultAndroidTask {
 
     @TaskAction
     void check() {
-        // use getter to resolve convention mapping
-        File f = getManifest();
-        if (!isOptional && f != null && !f.isFile()) {
+        if (!isOptional && manifest != null && !manifest.isFile()) {
             throw new IllegalArgumentException(
                     String.format(
                             "Main Manifest missing for variant %1$s. Expected path: %2$s",
@@ -91,10 +88,8 @@ public class CheckManifest extends DefaultAndroidTask {
             checkManifestTask.setVariantName(
                     scope.getVariantData().getVariantConfiguration().getFullName());
             checkManifestTask.setOptional(isManifestOptional);
-            ConventionMappingHelper.map(
-                    checkManifestTask,
-                    "manifest",
-                    () -> scope.getVariantData().getVariantConfiguration().getMainManifest());
+            checkManifestTask.manifest =
+                    scope.getVariantData().getVariantConfiguration().getMainManifest();
         }
     }
 }

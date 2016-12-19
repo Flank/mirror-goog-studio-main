@@ -18,14 +18,13 @@ package com.android.build.gradle.internal.tasks;
 import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.sdk.SdkInfo;
@@ -43,21 +42,15 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
 import org.gradle.api.GradleException;
-import org.gradle.api.Task;
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
@@ -66,9 +59,8 @@ import java.util.concurrent.Callable;
 @ParallelizableTask
 public class InstallVariantTask extends BaseTask {
 
-    private File adbExe;
-
-    private File splitSelectExe;
+    private InputSupplier<File> adbExe;
+    private InputSupplier<File> splitSelectExe;
 
     private ProcessExecutor processExecutor;
 
@@ -81,19 +73,16 @@ public class InstallVariantTask extends BaseTask {
     private BaseVariantData<? extends BaseVariantOutputData> variantData;
 
     public InstallVariantTask() {
-        this.getOutputs().upToDateWhen(new Spec<Task>() {
-            @Override
-            public boolean isSatisfiedBy(Task task) {
-                getLogger().debug("Install task is always run.");
-                return false;
-            }
+        this.getOutputs().upToDateWhen(task -> {
+            getLogger().debug("Install task is always run.");
+            return false;
         });
     }
 
     @TaskAction
     public void install() throws DeviceException, ProcessException, InterruptedException {
         final ILogger iLogger = getILogger();
-        DeviceProvider deviceProvider = new ConnectedDeviceProvider(getAdbExe(),
+        DeviceProvider deviceProvider = new ConnectedDeviceProvider(adbExe.getLastValue(),
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
@@ -108,7 +97,7 @@ public class InstallVariantTask extends BaseTask {
                     device, variantConfig.getMinSdkVersion(), iLogger, projectName, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
                 final List<File> apkFiles = SplitOutputMatcher.computeBestOutput(processExecutor,
-                        getSplitSelectExe(),
+                        splitSelectExe.getLastValue(),
                         new DeviceConfigProviderImpl(device),
                         variantData.getOutputs(),
                         variantData.getVariantConfiguration().getSupportedAbis());
@@ -153,23 +142,17 @@ public class InstallVariantTask extends BaseTask {
         }
     }
 
+    @SuppressWarnings("unused")
     @InputFile
     public File getAdbExe() {
-        return adbExe;
+        return adbExe.get();
     }
 
-    public void setAdbExe(File adbExe) {
-        this.adbExe = adbExe;
-    }
-
+    @SuppressWarnings("unused")
     @InputFile
     @Optional
     public File getSplitSelectExe() {
-        return splitSelectExe;
-    }
-
-    public void setSplitSelectExe(File splitSelectExe) {
-        this.splitSelectExe = splitSelectExe;
+        return splitSelectExe.get();
     }
 
     public ProcessExecutor getProcessExecutor() {
@@ -197,6 +180,7 @@ public class InstallVariantTask extends BaseTask {
         this.timeOutInMs = timeOutInMs;
     }
 
+    @SuppressWarnings("unused")
     @Input
     @Optional
     public Collection<String> getInstallOptions() {
@@ -250,25 +234,21 @@ public class InstallVariantTask extends BaseTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             installTask.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
-            ConventionMappingHelper.map(installTask, "adbExe", new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
-                    return (info == null ? null : info.getAdb());
-                }
+            installTask.adbExe = InputSupplier.from(() -> {
+                final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
+                return (info == null ? null : info.getAdb());
             });
-            ConventionMappingHelper.map(installTask, "splitSelectExe", new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    final TargetInfo info =
-                            scope.getGlobalScope().getAndroidBuilder().getTargetInfo();
-                    String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
-                    if (path != null) {
-                        File splitSelectExe = new File(path);
-                        return splitSelectExe.exists() ? splitSelectExe : null;
-                    } else {
-                        return null;
-                    }
+            installTask.splitSelectExe = InputSupplier.from(() -> {
+                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
+                // if the task is not going to run, so use a supplier.
+                final TargetInfo info =
+                        scope.getGlobalScope().getAndroidBuilder().getTargetInfo();
+                String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
+                if (path != null) {
+                    File splitSelectExe = new File(path);
+                    return splitSelectExe.exists() ? splitSelectExe : null;
+                } else {
+                    return null;
                 }
             });
             ((ApkVariantData) scope.getVariantData()).installTask = installTask;
