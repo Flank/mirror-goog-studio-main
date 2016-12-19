@@ -181,7 +181,6 @@ public class JackCompileTransformTest {
     }
 
     @Test
-    @Ignore
     public void testIncrementalModifiedFile()
             throws IOException, TransformException, InterruptedException {
         when(sourceFiles.getFiles())
@@ -192,10 +191,13 @@ public class JackCompileTransformTest {
                                 fileForClass(temporaryFolder.getRoot(), SourceFile.PAYMENT)));
         compileCurrentSourceTree();
 
+        // Jack uses timestamps, so we need to make sure this one is updated
+        TestUtils.waitForFileSystemTick();
         Files.append(
                 "\n",
                 fileForClass(temporaryFolder.getRoot(), SourceFile.USER_MODEL),
                 Charsets.UTF_8);
+        TestUtils.waitForFileSystemTick();
         compileCurrentSourceTree();
 
         checkIncrementalLog(
