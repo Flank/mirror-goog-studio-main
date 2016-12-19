@@ -1,0 +1,3 @@
+# Options applied to all Bazel invocations in the workspace.
+# This file is copied to //tools/bazel.rc from
+# //tools/base/bazel/toplevel.bazel.rc by repo init.
