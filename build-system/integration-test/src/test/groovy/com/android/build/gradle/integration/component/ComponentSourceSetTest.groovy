@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.component
 
-import com.android.build.gradle.integration.common.category.FailsUnderBazel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -26,14 +25,12 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
-import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Integration tests for different configuration of source sets.
  */
 @CompileStatic
-@Category(FailsUnderBazel) // Requires NDK.
 class ComponentSourceSetTest {
 
     public static AndroidTestApp app = new HelloWorldJniApp()
