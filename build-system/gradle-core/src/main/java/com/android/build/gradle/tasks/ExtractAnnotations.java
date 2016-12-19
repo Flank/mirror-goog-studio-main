@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
@@ -37,14 +36,18 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.EcjSourceFile;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.EmptyFileVisitor;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.logging.LogLevel;
@@ -57,12 +60,6 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Task which extracts annotations from the source files, and writes them to one of
@@ -417,15 +414,9 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setEncoding(extension.getCompileOptions().getEncoding());
             task.setSourceCompatibility(
                     extension.getCompileOptions().getSourceCompatibility().toString());
-            ConventionMappingHelper.map(
-                    task,
-                    "classpath",
-                    new Callable<ConfigurableFileCollection>() {
-                        @Override
-                        public ConfigurableFileCollection call() throws Exception {
-                            return project.files(androidBuilder.getCompileClasspath(variantConfig));
-                        }
-                    });
+
+            task.setClasspath(project.files((Callable<Set<File>>) () ->
+                    androidBuilder.getCompileClasspath(variantConfig)));
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

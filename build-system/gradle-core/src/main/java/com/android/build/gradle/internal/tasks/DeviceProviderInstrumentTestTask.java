@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.internal.testing.SimpleTestCallable;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
@@ -52,6 +53,7 @@ import org.gradle.api.Nullable;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
@@ -78,9 +80,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     private DeviceProvider deviceProvider;
     private TestData testData;
 
-    private File adbExec;
     @Nullable
-    private File splitSelectExec;
+    private InputSupplier<File> splitSelectExec;
     private ProcessExecutor processExecutor;
 
     private boolean ignoreFailures;
@@ -115,7 +116,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
 
             final TestRunner testRunner;
             testRunner = new SimpleTestRunner(
-                    getSplitSelectExec(),
+                    splitSelectExec.getLastValue(),
                     getProcessExecutor(),
                     enableSharding,
                     numShards);
@@ -242,20 +243,10 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         this.testData = testData;
     }
 
-    public File getAdbExec() {
-        return adbExec;
-    }
-
-    public void setAdbExec(File adbExec) {
-        this.adbExec = adbExec;
-    }
-
+    @SuppressWarnings("unused")
+    @InputFile
     public File getSplitSelectExec() {
-        return splitSelectExec;
-    }
-
-    public void setSplitSelectExec(File splitSelectExec) {
-        this.splitSelectExec = splitSelectExec;
+        return splitSelectExec.get();
     }
 
     public ProcessExecutor getProcessExecutor() {
@@ -280,7 +271,6 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     public boolean getTestFailed() {
         return testFailed;
     }
-
 
     public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
 
@@ -349,56 +339,36 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            ConventionMappingHelper.map(task, "adbExec", new Callable<File>() {
-                @Override
-                public File call() {
-                    final SdkInfo info = scope.getGlobalScope().getSdkHandler()
-                            .getSdkInfo();
-                    return (info == null ? null : info.getAdb());
-                }
-            });
-            ConventionMappingHelper.map(task, "splitSelectExec", new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    final TargetInfo info = scope.getGlobalScope().getAndroidBuilder()
-                            .getTargetInfo();
-                    String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
-                    if (path != null) {
-                        File splitSelectExe = new File(path);
-                        return splitSelectExe.exists() ? splitSelectExe : null;
-                    } else {
-                        return null;
-                    }
+            task.splitSelectExec = InputSupplier.from(() -> {
+                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
+                // if the task is not going to run, so use a supplier.
+                final TargetInfo info = scope.getGlobalScope().getAndroidBuilder()
+                        .getTargetInfo();
+                String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
+                if (path != null) {
+                    File splitSelectExe = new File(path);
+                    return splitSelectExe.exists() ? splitSelectExe : null;
+                } else {
+                    return null;
                 }
             });
 
-            ConventionMappingHelper.map(task, "resultsDir", new Callable<File>() {
-                @Override
-                public File call() {
-                    String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
-                            .getResultsDir();
-                    if (rootLocation == null) {
-                        rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
-                                FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
-                    }
-                    return scope.getGlobalScope().getProject().file(rootLocation + subFolder);
-                }
-            });
+            String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
+                    .getResultsDir();
+            if (rootLocation == null) {
+                rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
+                        FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
+            }
+            task.resultsDir = scope.getGlobalScope().getProject().file(rootLocation + subFolder);
 
-            ConventionMappingHelper.map(task, "reportsDir", new Callable<File>() {
-                @Override
-                public File call() {
-                    String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
-                            .getReportDir();
-                    if (rootLocation == null) {
-                        rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
-                                FD_REPORTS + "/" + FD_ANDROID_TESTS;
-                    }
-                    return scope.getGlobalScope().getProject().file(rootLocation + subFolder);
-                }
-            });
+            rootLocation = scope.getGlobalScope().getExtension().getTestOptions().getReportDir();
+            if (rootLocation == null) {
+                rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
+                        FD_REPORTS + "/" + FD_ANDROID_TESTS;
+            }
+            task.reportsDir = scope.getGlobalScope().getProject().file(rootLocation + subFolder);
 
-            String rootLocation = scope.getGlobalScope().getBuildDir() + "/" + FD_OUTPUTS
+            rootLocation = scope.getGlobalScope().getBuildDir() + "/" + FD_OUTPUTS
                     + "/code-coverage";
             task.setCoverageDir(scope.getGlobalScope().getProject().file(rootLocation + subFolder));
 
@@ -414,12 +384,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             task.setEnabled(deviceProvider.isConfigured());
 
             // outputs are never up-to-date
-            task.getOutputs().upToDateWhen(new Spec<Task>() {
-                @Override
-                public boolean isSatisfiedBy(Task task) {
-                    return false;
-                }
-            });
+            task.getOutputs().upToDateWhen(t -> false);
         }
     }
 }

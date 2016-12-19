@@ -23,9 +23,12 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.Iterables;
 
+import java.util.Collection;
+import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileTree;
@@ -63,6 +66,9 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     private File dataBindingClassOutput;
 
+    private Supplier<FileCollection> compilerClasspath;
+    private Supplier<Collection<ConfigurableFileTree>> compilerSources;
+
     @TaskAction
     public void exportInfo(IncrementalTaskInputs inputs) {
         xmlProcessor.writeEmptyInfoClass();
@@ -79,12 +85,12 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     @InputFiles
     public FileCollection getCompilerClasspath() {
-        return null;
+        return compilerClasspath.get();
     }
 
     @InputFiles
     public Iterable<ConfigurableFileTree> getCompilerSources() {
-        return null;
+        return compilerSources.get();
     }
 
     @Input
@@ -152,13 +158,13 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
 
-            ConventionMappingHelper.map(task, "compilerClasspath", variantScope::getJavaClasspath);
-            ConventionMappingHelper.map(task, "compilerSources",
+            task.compilerClasspath = variantScope::getJavaClasspath;
+            task.compilerSources =
                     () -> variantData.getJavaSources().stream()
                                     .filter(
                                             input -> !variantScope.getClassOutputForDataBinding()
                                                     .equals(input.getDir()))
-                                    .collect(Collectors.toList()));
+                                    .collect(Collectors.toList());
 
             task.setExportClassListTo(variantData.getType().isExportDataBindingClassList() ?
                     variantScope.getGeneratedClassListOutputFileForDataBinding() : null);

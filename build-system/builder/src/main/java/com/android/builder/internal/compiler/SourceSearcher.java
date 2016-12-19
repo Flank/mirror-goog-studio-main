@@ -22,11 +22,9 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Collection;
 
 /**
  * Class to search for source files (by extension) in a set of source folders.
@@ -34,7 +32,7 @@ import java.util.concurrent.Callable;
 public class SourceSearcher {
 
     @NonNull
-    private final List<File> mSourceFolders;
+    private final Collection<File> mSourceFolders;
     private final String[] mExtensions;
     @Nullable
     private WaitableExecutor<Void> mExecutor;
@@ -46,7 +44,7 @@ public class SourceSearcher {
         void initOnFirstFile();
     }
 
-    public SourceSearcher(@NonNull List<File> sourceFolders, String... extensions) {
+    public SourceSearcher(@NonNull Collection<File> sourceFolders, String... extensions) {
         mSourceFolders = sourceFolders;
         mExtensions = extensions;
     }
@@ -90,12 +88,9 @@ public class SourceSearcher {
                     initialized = true;
                 }
                 if (mExecutor != null) {
-                    mExecutor.execute(new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            processor.processFile(rootFolder, file);
-                            return null;
-                        }
+                    mExecutor.execute(() -> {
+                        processor.processFile(rootFolder, file);
+                        return null;
                     });
                 } else {
                     processor.processFile(rootFolder, file);

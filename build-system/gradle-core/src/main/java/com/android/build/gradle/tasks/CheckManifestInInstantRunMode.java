@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -29,16 +28,13 @@ import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 
 /**
  * Checks that the manifest file has not changed since the last instant run build.
@@ -49,26 +45,8 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     private InstantRunBuildContext instantRunBuildContext;
     private File instantRunSupportDir;
-    private File packageOutputFile;
-    private File instantRunManifestFile;
-
-    public File getInstantRunManifestFile() {
-        return instantRunManifestFile;
-    }
-
-    @SuppressWarnings("unused")
-    public void setInstantRunManifestFile(File instantRunManifestFile) {
-        this.instantRunManifestFile = instantRunManifestFile;
-    }
-
-    public File getPackageOutputFile() {
-        return packageOutputFile;
-    }
-
-    @SuppressWarnings("unused")
-    public void setPackageOutputFile(File packageOutputFile) {
-        this.packageOutputFile = packageOutputFile;
-    }
+    private InputSupplier<File> packageOutputFile;
+    private InputSupplier<File> instantRunManifestFile;
 
     @TaskAction
     public void checkManifestChanges() throws IOException {
@@ -82,19 +60,22 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
         // always do both, we should make sure that we are not keeping stale data for the previous
         // instance.
-        File instantRunManifestFile = getInstantRunManifestFile();
-        LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", instantRunManifestFile);
+        // Cannot call .getLastValue() since it is not declared as an Input which
+        // would call .get() before the task run.
+        File manifestFile = instantRunManifestFile.get();
+        LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", manifestFile);
         runManifestChangeVerifier(instantRunBuildContext, instantRunSupportDir,
-                instantRunManifestFile);
+                manifestFile);
 
-        File resourcesApk = getPackageOutputFile();
+        // Cannot call .getLastValue() since it is not declared as an Input which
+        // would call .get() before the task run.
+        File resourcesApk = packageOutputFile.get();
         LOG.info("CheckManifestInInstantRunMode : Resource APK %1$s", resourcesApk);
         if (resourcesApk != null && resourcesApk.exists()) {
             runManifestBinaryChangeVerifier(instantRunBuildContext, instantRunSupportDir,
-                    getPackageOutputFile());
+                    resourcesApk);
         }
     }
-
 
     @VisibleForTesting
     static void runManifestChangeVerifier(InstantRunBuildContext instantRunBuildContext,
@@ -195,12 +176,8 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         @Override
         public void execute(@NonNull CheckManifestInInstantRunMode task) {
 
-            ConventionMappingHelper.map(task, "packageOutputFile",
-                    processedResourcesOutputFile::get);
-
-            ConventionMappingHelper.map(task, "instantRunManifestFile",
-                    instantRunMergedManifest::get);
-
+            task.packageOutputFile = InputSupplier.from(processedResourcesOutputFile);
+            task.instantRunManifestFile = InputSupplier.from(instantRunMergedManifest);
             task.instantRunBuildContext = instantRunVariantScope.getInstantRunBuildContext();
             task.instantRunSupportDir = instantRunVariantScope.getInstantRunSupportDir();
             task.setVariantName(transformVariantScope.getFullVariantName());
