@@ -42,6 +42,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
@@ -408,6 +409,12 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
             @Nullable PsiMethod method,
             @NonNull String message) {
         boolean reportOnMethod = issue == MISSING_KEEP && method != null;
+
+        // No need to report @Keep issues in third party libraries
+        if (reportOnMethod && method instanceof PsiCompiledElement) {
+            return;
+        }
+
         PsiElement locationNode = reportOnMethod ? method : propertyNameExpression;
 
         if (mAlreadyWarned != null && mAlreadyWarned.contains(locationNode)) {

@@ -61,6 +61,7 @@ public class LintCliFlags {
     private File defaultConfiguration;
     private boolean showAll;
     private boolean removedFixedBaselineIssues;
+    private boolean writeBaselineIfMissing = true;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -446,5 +447,15 @@ public class LintCliFlags {
      */
     public void setRemovedFixedBaselineIssues(boolean removeFixed) {
         removedFixedBaselineIssues = removeFixed;
+    }
+
+    /** If true, write the baseline file if missing. (This is the default.) */
+    public boolean isWriteBaselineIfMissing() {
+        return writeBaselineIfMissing;
+    }
+
+    /** If true, write the baseline file if missing. (This is the default.) */
+    public void setWriteBaselineIfMissing(boolean writeBaselineIfMissing) {
+        this.writeBaselineIfMissing = writeBaselineIfMissing;
     }
 }
