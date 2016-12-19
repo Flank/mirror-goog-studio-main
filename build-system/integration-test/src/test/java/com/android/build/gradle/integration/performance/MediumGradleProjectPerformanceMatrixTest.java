@@ -57,13 +57,20 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     public MediumGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
         this.projectScenarios = projectScenarios;
+        String heapSize;
+        if (projectScenarios.contains(ProjectScenario.JACK_ON)) {
+            // Jack takes too long with 1.5GB heap. With 6GB, the duration is reasonable.
+            heapSize = "6G";
+        } else {
+            heapSize = "1536M";
+        }
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("gradle-perf-android-medium")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenarios))
-                        .withHeap("1536M")
+                        .withHeap(heapSize)
                         .create();
     }
 
@@ -72,9 +79,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
         return Arrays.asList(
                 new Object[][] {
                     {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    //{EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)},
                     {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    //{EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
+                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
                 });
     }
 
@@ -92,6 +98,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                     break;
                 case JACK_ON:
                     JackHelper.enableJack(project.file("WordPress/build.gradle"));
+                    disableCrashlyticsForJack();
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -236,5 +243,17 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .disableBuildCache()
                 .disableAaptV2()
                 .withoutOfflineFlag();
+    }
+
+    /** Removes the crashlytics plugin, and any dependencies on it. */
+    private void disableCrashlyticsForJack() throws IOException {
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("WordPress").getBuildFile(),
+                "apply plugin: 'io\\.fabric'",
+                "");
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("WordPress").getBuildFile(),
+                "variant\\.generateBuildConfig\\.dependsOn\\(generateCrashlyticsConfig\\)",
+                "");
     }
 }
