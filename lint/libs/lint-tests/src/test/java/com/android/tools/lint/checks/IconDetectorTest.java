@@ -486,6 +486,17 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testCheckNullDensity() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=230324
+        // Make sure we gracefully handle a null density qualifier
+        lint().files(
+                manifest().minSdk(14),
+                image("res/drawable/ic_launcher.png", 24, 24))
+                .issues(IconDetector.ICON_EXPECTED_SIZE)
+                .run()
+                .expectClean();
+    }
+
     public void testAbbreviate() throws Exception {
         mEnabled = Collections.singleton(IconDetector.ICON_DENSITIES);
         //noinspection all // Sample code

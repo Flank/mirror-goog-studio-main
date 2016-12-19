@@ -608,7 +608,7 @@ public class MaterialHtmlReporter extends Reporter {
                             if (count == 50) {
                                 append("<br/><b>NOTE: "
                                         + Integer.toString(warnings.size() - count)
-                                        + " results omittted.</b><br/><br/>");
+                                        + " results omitted.</b><br/><br/>");
                             }
                             count++;
                             continue;
