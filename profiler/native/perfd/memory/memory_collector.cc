@@ -27,6 +27,7 @@
 
 using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::TrackAllocationsResponse;
+using ::profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
 
@@ -71,7 +72,7 @@ void MemoryCollector::CollectorMain() {
   is_running_.exchange(false);
 }
 
-bool MemoryCollector::TriggerHeapDump() {
+bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
   if (is_heap_dump_running_) {
     Log::V("A heap dump operation is already in progress.");
     return false;
@@ -83,7 +84,7 @@ bool MemoryCollector::TriggerHeapDump() {
     ss << "/data/local/tmp/" << pid_ << "_" << request_time << ".hprof";
     std::string dump_file_path = ss.str();
 
-    if (!memory_cache_.StartHeapDump(dump_file_path, request_time)) {
+    if (!memory_cache_.StartHeapDump(dump_file_path, request_time, response)) {
       Log::V("StartHeapDumpSample failed.");
       return false;
     }
