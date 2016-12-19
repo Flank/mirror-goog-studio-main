@@ -37,7 +37,8 @@ class MemoryCache {
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
   bool StartHeapDump(const std::string& dump_file_path,
-                     int64_t request_time);
+                     int64_t request_time,
+                     proto::TriggerHeapDumpResponse* response);
   bool EndHeapDump(int64_t end_time, bool success);
   void TrackAllocations(bool enabled, bool legacy,
                         proto::TrackAllocationsResponse* response);
