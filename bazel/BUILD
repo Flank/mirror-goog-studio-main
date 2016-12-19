@@ -9,17 +9,6 @@ java_library(
     ],
 )
 
-# Part of the standalone-jps-builder artifact from IDEA
-java_import(
-    name = "formc-deps",
-    jars = [
-        "prebuilts/asm-all.jar",
-        "prebuilts/jdom.jar",
-        "prebuilts/jgoodies-forms.jar",
-        "prebuilts/jps-builders.jar",
-    ],
-)
-
 java_binary(
     name = "jasmin-compiler",
     srcs = glob(["src/com/android/tools/jasmin/JasminCompiler.java"]),
@@ -107,8 +96,8 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [":kotlin-runtime"],
     deps = [
-        ":formc-deps",
         ":utils",
+        "//prebuilts/tools/common/bazel/formc-deps",
     ],
 )
 
