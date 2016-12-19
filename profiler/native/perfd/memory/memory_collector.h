@@ -41,9 +41,8 @@ class MemoryCollector {
 
   void Start();
   void Stop();
-  bool TriggerHeapDump();
-  void GetHeapDumpData(int32_t dump_id,
-                       proto::DumpDataResponse* response);
+  bool TriggerHeapDump(proto::TriggerHeapDumpResponse* response);
+  void GetHeapDumpData(int32_t dump_id, proto::DumpDataResponse* response);
   void TrackAllocations(bool enabled, bool legacy,
                         proto::TrackAllocationsResponse* response);
   MemoryCache* memory_cache() { return &memory_cache_; }

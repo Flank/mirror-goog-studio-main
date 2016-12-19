@@ -26,6 +26,7 @@ using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
 using ::profiler::proto::AllocationsInfo;
+using ::profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
 
@@ -68,20 +69,25 @@ void MemoryCache::SaveVmStatsSample(const MemoryData::VmStatsSample& sample) {
 }
 
 bool MemoryCache::StartHeapDump(const std::string& dump_file_path,
-                                int64_t request_time) {
+                                int64_t request_time,
+                                TriggerHeapDumpResponse* response) {
   std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
 
   if (has_unfinished_heap_dump_) {
     Log::D("StartHeapDumpSample called with existing unfinished heap dump.");
+    assert(next_heap_dump_sample_id_ > 0);
+    int last_info_index = GetSampleIndex(next_heap_dump_sample_id_ - 1);
+    response->mutable_info()->CopyFrom(heap_dump_infos_[last_info_index]);
     return false;
   }
 
-  HeapDumpInfo* info =
-      &heap_dump_infos_[GetSampleIndex(next_heap_dump_sample_id_)];
-  info->set_start_time(request_time);
-  info->set_end_time(kUnfinishedTimestamp);
-  info->set_dump_id(next_heap_dump_sample_id_);
-  info->set_file_path(dump_file_path);
+  HeapDumpInfo& info =
+      heap_dump_infos_[GetSampleIndex(next_heap_dump_sample_id_)];
+  info.set_start_time(request_time);
+  info.set_end_time(kUnfinishedTimestamp);
+  info.set_dump_id(next_heap_dump_sample_id_);
+  info.set_file_path(dump_file_path);
+  response->mutable_info()->CopyFrom(info);
 
   next_heap_dump_sample_id_++;
   has_unfinished_heap_dump_ = true;

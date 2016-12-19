@@ -158,6 +158,9 @@ message TriggerHeapDumpResponse {
     FAILURE_UNKNOWN = 3;
   }
   Status status = 1;
+  // Returns the HeapDumpInfo immediately so the caller can
+  // optionally track its completion
+  HeapDumpInfo info = 2;
 }
 
 message HeapDumpDataRequest {

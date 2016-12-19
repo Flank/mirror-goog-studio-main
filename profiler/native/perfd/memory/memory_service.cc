@@ -97,7 +97,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, TriggerHeapDumpResponse::FAILURE_UNKNOWN)
 
-  if ((result->second).TriggerHeapDump()) {
+  if ((result->second).TriggerHeapDump(response)) {
     response->set_status(TriggerHeapDumpResponse::SUCCESS);
   } else {
     response->set_status(TriggerHeapDumpResponse::IN_PROGRESS);
