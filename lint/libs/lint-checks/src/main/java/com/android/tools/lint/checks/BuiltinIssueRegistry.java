@@ -318,6 +318,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ViewTagDetector.ISSUE);
         issues.add(ViewTypeDetector.ISSUE);
         issues.add(WakelockDetector.ISSUE);
+        issues.add(WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE);
+        issues.add(WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE);
         issues.add(WebViewDetector.ISSUE);
         issues.add(WrongCallDetector.ISSUE);
         issues.add(WrongCaseDetector.WRONG_CASE);
