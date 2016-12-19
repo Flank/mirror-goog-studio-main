@@ -35,7 +35,9 @@ Status ProfilerServiceImpl::GetTimes(
   // TODO: Move this to utils.
   timeval time;
   gettimeofday(&time, NULL);
-  int64_t t = time.tv_sec * 1000000 + time.tv_usec;
+  // Not specifying LL may cause overflow depending on the underlying type of
+  // time.tv_sec.
+  int64_t t = time.tv_sec * 1000000LL + time.tv_usec;
   response->set_epoch_timestamp_us(t);
   return Status::OK;
 }
