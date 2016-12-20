@@ -17,11 +17,10 @@
 package com.android.build.gradle.integration;
 
 import com.android.testutils.JarTestSuiteRunner;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.experimental.categories.Categories;
-import org.junit.experimental.categories.Categories.ExcludeCategory;
-import org.junit.experimental.categories.Categories.IncludeCategory;
 import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -34,18 +33,14 @@ public class BazelIntegrationTestSuiteRunner extends JarTestSuiteRunner {
                     NoTestsRemainException {
         super(suiteClass, builder);
 
-        ExcludeCategory excludeCategory = suiteClass.getAnnotation(ExcludeCategory.class);
-        ImmutableSet<Class<?>> exclude =
-                excludeCategory == null
-                        ? ImmutableSet.of()
-                        : ImmutableSet.copyOf(excludeCategory.value());
+        Set<Class<?>> exclude = new HashSet<>();
+        String excludeCategories = System.getProperty("test.excludeCategories");
+        if (excludeCategories != null) {
+            for (String className : excludeCategories.split(",")) {
+                exclude.add(Class.forName(className));
+            }
+        }
 
-        IncludeCategory includeCategory = suiteClass.getAnnotation(IncludeCategory.class);
-        ImmutableSet<Class<?>> include =
-                includeCategory == null
-                        ? ImmutableSet.of()
-                        : ImmutableSet.copyOf(includeCategory.value());
-
-        filter(Categories.CategoryFilter.categoryFilter(true, include, true, exclude));
+        filter(Categories.CategoryFilter.categoryFilter(true, null, true, exclude));
     }
 }

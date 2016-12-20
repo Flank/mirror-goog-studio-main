@@ -72,6 +72,29 @@ TEST_DEPS = [
     "//tools/base/third_party:org.smali_dexlib2",
 ]
 
+TEST_DATA = [
+    ":prebuilts_repo_repo.zip",
+    ":test-projects",
+    "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/24.0.3",
+    "//prebuilts/studio/sdk:build-tools/minimum",
+    "//prebuilts/studio/sdk:cmake",
+    "//prebuilts/studio/sdk:espresso_latest",
+    "//prebuilts/studio/sdk:gms_latest",
+    "//prebuilts/studio/sdk:multidex",
+    "//prebuilts/studio/sdk:ndk-bundle",
+    "//prebuilts/studio/sdk:platform-tools",
+    "//prebuilts/studio/sdk:platforms/android-19",
+    "//prebuilts/studio/sdk:platforms/android-21",
+    "//prebuilts/studio/sdk:platforms/android-23",
+    "//prebuilts/studio/sdk:platforms/android-24",
+    "//prebuilts/studio/sdk:platforms/latest",
+    "//prebuilts/studio/sdk:support_latest",
+    "//prebuilts/studio/sdk:test-runner_latest",
+    "//tools/base/bazel:offline_repo_repo.zip",
+    "//tools/base/build-system:gradle-distrib",
+]
+
 # TODO: Compile Groovy test as well (or just move all of them to Java).
 java_library(
     name = "java_tests",
@@ -97,33 +120,13 @@ groovy_jar(
 java_test(
     name = "tests",
     size = "enormous",
-    data = [
-        ":prebuilts_repo_repo.zip",
-        ":test-projects",
-        "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
-        "//prebuilts/studio/sdk:build-tools/24.0.3",
-        "//prebuilts/studio/sdk:build-tools/minimum",
-        "//prebuilts/studio/sdk:cmake",
-        "//prebuilts/studio/sdk:espresso_latest",
-        "//prebuilts/studio/sdk:gms_latest",
-        "//prebuilts/studio/sdk:multidex",
-        "//prebuilts/studio/sdk:ndk-bundle",
-        "//prebuilts/studio/sdk:platform-tools",
-        "//prebuilts/studio/sdk:platforms/android-19",
-        "//prebuilts/studio/sdk:platforms/android-21",
-        "//prebuilts/studio/sdk:platforms/android-23",
-        "//prebuilts/studio/sdk:platforms/android-24",
-        "//prebuilts/studio/sdk:platforms/latest",
-        "//prebuilts/studio/sdk:support_latest",
-        "//prebuilts/studio/sdk:test-runner_latest",
-        "//tools/base/bazel:offline_repo_repo.zip",
-        "//tools/base/build-system:gradle-distrib",
-    ],
+    data = TEST_DATA,
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
+        "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.OnlineTests,com.android.build.gradle.integration.common.category.FailsUnderBazel",
     ],
     shard_count = 16,
     tags = ["manual"],
@@ -135,6 +138,25 @@ java_test(
         ":java_tests",
         ":libgroovy_tests.jar",
     ],
+)
+
+# Test that builds and lints all test projects, without any additional assertions.
+java_test(
+    name = "automatic-tests",
+    srcs = glob(["src/test/java/**/CheckAll.java"]),
+    data = TEST_DATA,
+    jvm_flags = [
+        "-Dtest.suite.jar=automatic-tests.jar",
+        "-Djunit.parallel.threads=8",
+    ],
+    tags = ["manual"],
+    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
+    runtime_deps = [
+        # Need to put this on the classpath before TestRunner_deploy.jar which contains
+        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
+        "//tools/base/third_party:junit_junit",
+    ],
+    deps = TEST_DEPS,
 )
 
 filegroup(

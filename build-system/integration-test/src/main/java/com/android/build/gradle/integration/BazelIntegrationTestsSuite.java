@@ -17,9 +17,6 @@
 package com.android.build.gradle.integration;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
-import com.android.build.gradle.integration.common.category.OnlineTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
@@ -31,11 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.BeforeClass;
-import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;
 
 @RunWith(BazelIntegrationTestSuiteRunner.class)
-@Categories.ExcludeCategory({DeviceTests.class, OnlineTests.class, FailsUnderBazel.class})
 public class BazelIntegrationTestsSuite {
 
     public static final Path OFFLINE_REPO = Paths.get("offlineRepo").toAbsolutePath();
