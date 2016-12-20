@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.build.gradle.internal.DependencyManager.EXPLODED_AAR;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.TestAndroidConfig;
@@ -28,6 +31,8 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +52,12 @@ public class ResolveDependenciesTask extends BaseTask {
     private DependencyManager dependencyManager;
     private String testedProjectPath;
     @Nullable private FileCache buildCache;
+
+    @NonNull
+    public static FileCache getProjectLocalCache(Project project) throws IOException {
+        return FileCache.getInstanceWithSingleProcessLocking(
+                FileUtils.join(project.getBuildDir(), FD_INTERMEDIATES, EXPLODED_AAR, "snapshots"));
+    }
 
     @TaskAction
     public void resolveDependencies() throws InterruptedException, IOException {
@@ -81,14 +92,17 @@ public class ResolveDependenciesTask extends BaseTask {
             }
             File input = androidDependency.getArtifactFile();
             File output = androidDependency.getExtractedFolder();
-            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache != null, androidDependency.getCoordinates());
+            // For snapshots, we use a project local file cache.
+            boolean useBuildCache =
+                    PrepareLibraryTask.shouldUseBuildCache(
+                            buildCache != null, androidDependency.getCoordinates());
             PrepareLibraryTask.prepareLibrary(
                     input,
                     output,
-                    buildCache,
+                    useBuildCache ? buildCache : getProjectLocalCache(project),
                     createAction(project, executor, input),
                     project.getLogger(),
-                    useBuildCache);
+                    false /* includeTroubleshootingMessage */);
         }
         executor.waitForTasksWithQuickFail(false);
     }
@@ -105,8 +119,6 @@ public class ResolveDependenciesTask extends BaseTask {
             return null;
         });
     }
-
-
 
     public static class ConfigAction implements TaskConfigAction<ResolveDependenciesTask> {
         @NonNull
@@ -143,6 +155,12 @@ public class ResolveDependenciesTask extends BaseTask {
                     scope.getGlobalScope().getExtension() instanceof TestAndroidConfig
                             ? ((TestAndroidConfig) scope.getGlobalScope().getExtension()).getTargetProjectPath()
                             : null;
+
+            Preconditions.checkNotNull(
+                    scope.getGlobalScope().getBuildCache(),
+                    "Build cache must have been enabled to use improved dependency resolution.");
+
+            //noinspection OptionalGetWithoutIsPresent - checked above.
             task.buildCache = scope.getGlobalScope().getBuildCache();
         }
     }

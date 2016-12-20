@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
+import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.MavenCoordinatesImpl;
@@ -59,6 +60,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -816,26 +818,30 @@ public class DependencyManager {
                                 File explodedDir;
                                 if (PrepareLibraryTask.shouldUseBuildCache(
                                         buildCache != null, mavenCoordinates)) {
-                                    explodedDir = buildCache.getFileInCache(
-                                            PrepareLibraryTask.getBuildCacheInputs(
-                                                    artifact.getFile()));
+                                    explodedDir =
+                                            buildCache.getFileInCache(
+                                                    PrepareLibraryTask.getCacheInputs(
+                                                            artifact.getFile()));
                                 } else {
                                     if (AndroidGradleOptions
                                                 .isImprovedDependencyResolutionEnabled(project)) {
                                         // When using the improved dependency resolution, the output
                                         // directory has to be different from the the normal
                                         // exploded-aar path in order to not interfere with the
-                                        // up-to-date-check
-
-                                        // TODO: ResolveDependencyTask does not perform up-to-date
-                                        // check.  Need to figure out a way to avoid repeatedly
-                                        // exploding snapshots.
-                                        explodedDir = FileUtils.join(
-                                                project.getBuildDir(),
-                                                FD_INTERMEDIATES,
-                                                EXPLODED_AAR,
-                                                "snapshots",
-                                                path);
+                                        // up-to-date-check.
+                                        // We use a project local FileCache to handle up-to-date
+                                        // check and concurrency.
+                                        try {
+                                            FileCache cache =
+                                                    ResolveDependenciesTask.getProjectLocalCache(
+                                                            project);
+                                            explodedDir =
+                                                    cache.getFileInCache(
+                                                            PrepareLibraryTask.getCacheInputs(
+                                                                    artifact.getFile()));
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
                                     } else {
                                         explodedDir = FileUtils.join(
                                                 project.getBuildDir(),

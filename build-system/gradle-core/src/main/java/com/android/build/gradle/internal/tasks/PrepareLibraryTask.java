@@ -97,10 +97,9 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
         prepareLibrary(
                 bundle,
                 explodedDir,
-                buildCache,
+                shouldUseBuildCache ? buildCache : null,
                 unzipAarAction,
-                getLogger(),
-                shouldUseBuildCache);
+                getLogger());
     }
 
     public static void extract(File bundle, File outputDir, Project project) {
@@ -123,19 +122,50 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     public static void prepareLibrary(
             @NonNull File inputAar,
             @NonNull File outputDir,
-            @Nullable FileCache buildCache,
+            @Nullable FileCache fileCache,
+            @NonNull Consumer<File> action,
+            @NonNull Logger logger)
+            throws IOException {
+        prepareLibrary(
+                inputAar,
+                outputDir,
+                fileCache,
+                action,
+                logger,
+                true /* includeTroubleshootingMessage */);
+    }
+
+    /**
+     * Prepare an AAR library for consumption.
+     *
+     * @param inputAar library to prepare
+     * @param outputDir output directory
+     * @param fileCache cache for preparing the library. If null, no cache is used.
+     * @param action the action to perform to prepare a library. Usually means exploding the
+     *     library.
+     * @param logger logger to output message
+     * @param includeTroubleshootingMessage boolean to indicate whether to include build cache
+     *     troubleshooting message if an error occurs due to the build cache.
+     * @throws IOException when an error occurs creating the output directory with the cache.
+     */
+    public static void prepareLibrary(
+            @NonNull File inputAar,
+            @NonNull File outputDir,
+            @Nullable FileCache fileCache,
             @NonNull Consumer<File> action,
             @NonNull Logger logger,
-            boolean useBuildCache) throws IOException {
+            boolean includeTroubleshootingMessage)
+            throws IOException {
 
-        // If the build cache is used, we create and cache the exploded aar using the cache's API;
+        // If the cache is used, we create and cache the exploded aar using the cache's API;
         // otherwise, we explode the aar without using the cache.
-        if (useBuildCache) {
-            Preconditions.checkNotNull(buildCache);
-            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(inputAar);
+        if (fileCache == null) {
+            action.accept(outputDir);
+        } else {
+            FileCache.Inputs cacheInputs = getCacheInputs(inputAar);
             FileCache.QueryResult result;
             try {
-                result = buildCache.createFileInCacheIfAbsent(buildCacheInputs, action::accept);
+                result = fileCache.createFileInCacheIfAbsent(cacheInputs, action::accept);
             } catch (ExecutionException exception) {
                 throw new RuntimeException(
                         String.format(
@@ -147,12 +177,14 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                 throw new RuntimeException(
                         String.format(
                                 "Unable to unzip '%1$s' to '%2$s' or find the cached output '%2$s'"
-                                        + " using the build cache at '%3$s'.\n"
+                                        + " using the cache at '%3$s'."
                                         + "%4$s",
                                 inputAar.getAbsolutePath(),
                                 outputDir.getAbsolutePath(),
-                                buildCache.getCacheDirectory().getAbsolutePath(),
-                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
+                                fileCache.getCacheDirectory().getAbsolutePath(),
+                                includeTroubleshootingMessage
+                                        ? "\n" + BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE
+                                        : ""),
                         exception);
             }
             if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
@@ -161,14 +193,14 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                         String.format(
                                 "The build cache at '%1$s' contained an invalid cache entry.\n"
                                         + "Cause: %2$s\n"
-                                        + "We have recreated the cache entry.\n"
+                                        + "We have recreated the cache entry."
                                         + "%3$s",
-                                buildCache.getCacheDirectory().getAbsolutePath(),
+                                fileCache.getCacheDirectory().getAbsolutePath(),
                                 Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
-                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE));
+                                includeTroubleshootingMessage
+                                        ? "\n" + BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE
+                                        : ""));
             }
-        } else {
-            action.accept(outputDir);
         }
     }
 
@@ -188,7 +220,7 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
      * prepare-library task to use the build cache.
      */
     @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile) {
+    public static FileCache.Inputs getCacheInputs(@NonNull File artifactFile) {
         return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
                 .putFilePath(FileCacheInputParams.FILE_PATH.name(), artifactFile)
                 .putLong(FileCacheInputParams.FILE_SIZE.name(), artifactFile.length())
