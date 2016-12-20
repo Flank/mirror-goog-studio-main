@@ -72,4 +72,22 @@ public class AndroidVersionMatcher {
             }
         };
     }
+
+    public static Matcher<AndroidVersion> exactly(int value) {
+        return new BaseMatcher<AndroidVersion>() {
+            @Override
+            public boolean matches(Object item) {
+                return item instanceof AndroidVersion &&
+                        ((AndroidVersion) item).getApiLevel() == value;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description
+                        .appendText("Android version ")
+                        .appendValue(value)
+                        .appendText(".");
+            }
+        };
+    }
 }
