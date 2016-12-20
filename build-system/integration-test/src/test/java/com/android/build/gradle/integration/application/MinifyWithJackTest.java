@@ -33,13 +33,13 @@ public class MinifyWithJackTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("minify")
+            .withJack(true)
             .create();
 
     @Before
     public void setUp() throws Exception {
         project
                 .executor()
-                .withProperty("com.android.build.gradle.integratonTest.useJack", "true")
                 .run("clean", "assembleMinified", "assembleDebugAndroidTest");
     }
 
