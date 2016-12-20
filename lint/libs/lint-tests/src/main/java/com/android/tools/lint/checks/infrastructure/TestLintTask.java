@@ -316,18 +316,18 @@ public class TestLintTask {
     public TestLintTask incremental() {
         ensurePreRun();
         if (projects != null && projects.length == 1 &&
-                projects[0].files != null &&
-                projects[0].files.length == 1) {
-            this.incrementalFileName = projects[0].files[0].getTargetPath();
+                projects[0].getFiles() != null &&
+                projects[0].getFiles().length == 1) {
+            this.incrementalFileName = projects[0].getFiles()[0].getTargetPath();
         } else if (projects == null || projects.length == 0) {
             assert false : "Can't use incremental mode without any projects!";
         } else {
             StringBuilder sb = new StringBuilder();
             for (ProjectDescription project : projects) {
-                for (TestFile file : project.files) {
+                for (TestFile file : project.getFiles()) {
                     sb.append("\n");
-                    if (project.name != null) {
-                        sb.append(project.name).append("/");
+                    if (!project.getName().isEmpty()) {
+                        sb.append(project.getName()).append("/");
                     }
                     sb.append(file.getTargetPath());
                 }
@@ -544,7 +544,7 @@ public class TestLintTask {
                 target.add(project);
             }
 
-            for (ProjectDescription dependency : project.dependsOn) {
+            for (ProjectDescription dependency : project.getDependsOn()) {
                 addProjects(target, dependency);
             }
         }
@@ -559,18 +559,18 @@ public class TestLintTask {
         // Assign names if necessary
         for (int i = 0; i < allProjects.size(); i++) {
             ProjectDescription project = allProjects.get(i);
-            if (project.name == null) {
-                project.name = "project" + Integer.toString(i);
+            if (project.getName().isEmpty()) {
+                project.setName("project" + Integer.toString(i));
             }
         }
 
         List<File> projectDirs = Lists.newArrayList();
         for (ProjectDescription project : allProjects) {
             try {
-                TestFile[] files = project.files;
+                TestFile[] files = project.getFiles();
 
                 // Also create dependency files
-                if (!project.dependsOn.isEmpty()) {
+                if (!project.getDependsOn().isEmpty()) {
                     TestFile.PropertyTestFile propertyFile = null;
                     for (TestFile file : files) {
                         if (file instanceof TestFile.PropertyTestFile) {
@@ -584,13 +584,13 @@ public class TestLintTask {
                     }
 
                     int index = 1;
-                    for (ProjectDescription dependency : project.dependsOn) {
+                    for (ProjectDescription dependency : project.getDependsOn()) {
                         propertyFile.property("android.library.reference." + (index++),
-                                "../" + dependency.name);
+                                "../" + dependency.getName());
                     }
                 }
 
-                File projectDir = new File(rootDir, project.name);
+                File projectDir = new File(rootDir, project.getName());
                 dirToProjectDescription.put(projectDir, project);
                 populateProjectDirectory(project, projectDir, files);
                 projectDirs.add(projectDir);
@@ -742,8 +742,8 @@ public class TestLintTask {
                 if (ignoreUnknownGradleConstructs) {
                     mocker = mocker.withLogger(new NullLogger());
                 }
-                if (project.dependencyGraph != null) {
-                    mocker = mocker.withDependencyGraph(project.dependencyGraph);
+                if (project.getDependencyGraph() != null) {
+                    mocker = mocker.withDependencyGraph(project.getDependencyGraph());
                 }
                 projectMocks.put(projectDir, mocker);
 
@@ -761,7 +761,7 @@ public class TestLintTask {
             manifest = new File(projectDir, ANDROID_MANIFEST_XML);
         }
 
-        if (project.type != ProjectDescription.Type.JAVA) {
+        if (project.getType() != ProjectDescription.Type.JAVA) {
             addManifestFileIfNecessary(manifest);
         }
     }

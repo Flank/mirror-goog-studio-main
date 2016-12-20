@@ -582,7 +582,7 @@ public class ExternalAnnotationRepository {
      * The SDK has an annotations database, and AAR libraries can also supply individual databases.
      * The {@linkplain ExternalAnnotationRepository} class manages all of these and performs lookup
      * into the various databases through a single entrypoint.
-     * */
+     */
     static class AnnotationsDatabase {
         AnnotationsDatabase(@NonNull File file) throws IOException {
             String path = file.getPath();

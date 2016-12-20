@@ -55,8 +55,9 @@ public class ResourceContext extends Context {
             @NonNull Project project,
             @Nullable Project main,
             @NonNull File file,
-            @Nullable ResourceFolderType folderType) {
-        super(driver, project, main, file);
+            @Nullable ResourceFolderType folderType,
+            @Nullable String contents) {
+        super(driver, project, main, file, contents);
         this.folderType = folderType;
     }
 

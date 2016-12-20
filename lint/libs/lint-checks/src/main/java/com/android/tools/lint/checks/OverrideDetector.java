@@ -163,6 +163,7 @@ public class OverrideDetector extends Detector implements ClassScanner {
                 }
             }
 
+            //noinspection VariableNotUsedInsideIf
             if (mErrors != null) {
                 context.requestRepeat(this, ISSUE.getImplementation().getScope());
             }

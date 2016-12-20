@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Makes sure that detectors are called from lint testing infrastructure */
 @SuppressWarnings("MethodMayBeStatic")
-public class CompatibilityCheckTest extends LintDetectorTest { // Not abstract check test
+public class CompatibilityCheckTest extends LintDetectorTest { // NOTE: Not AbstractCheckTest
     /** Mismatched style and class names */
     public static final Issue TEST_ISSUE = Issue.create(
             "CompatibilityCheckTest",

@@ -22,8 +22,8 @@ import junit.framework.TestCase;
 
 public class SeverityTest extends TestCase {
     public void testGetName() {
-        assertThat(Severity.ERROR.getName()).isEqualTo("ERROR");
-        assertThat(Severity.WARNING.getName()).isEqualTo("WARNING");
+        assertThat(Severity.ERROR.name()).isEqualTo("ERROR");
+        assertThat(Severity.WARNING.name()).isEqualTo("WARNING");
     }
 
     public void testGetDescription() {

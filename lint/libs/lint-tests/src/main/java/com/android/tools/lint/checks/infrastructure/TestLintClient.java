@@ -331,11 +331,11 @@ public class TestLintClient extends LintCliClient {
     @NonNull
     @Override
     protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-        if (projectDirs.contains(dir)) {
+        if (getProjectDirs().contains(dir)) {
             throw new CircularDependencyException(
                     "Circular library dependencies; check your project.properties files carefully");
         }
-        projectDirs.add(dir);
+        getProjectDirs().add(dir);
 
         ProjectDescription description;
         try {
@@ -443,7 +443,22 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        driver = createDriver(new TestIssueRegistry(issues));
+        LintRequest request = createLintRequest(files);
+        if (task.customScope != null) {
+            request = request.setScope(task.customScope);
+        }
+
+        if (incrementalCheck != null) {
+            File projectDir = findIncrementalProject(files, task.incrementalFileName);
+            assert projectDir != null;
+            assertTrue(isProjectDirectory(projectDir));
+            Project project = createProject(projectDir, projectDir);
+            project.addFile(incrementalCheck);
+            List<Project> projects = Collections.singletonList(project);
+            request.setProjects(projects);
+        }
+
+        driver = createDriver(new TestIssueRegistry(issues), request);
 
         if (task.driverConfigurator != null) {
             task.driverConfigurator.configure(driver);
@@ -468,22 +483,7 @@ public class TestLintClient extends LintCliClient {
 
         validateIssueIds();
 
-        LintRequest request = new LintRequest(this, files);
-        if (incrementalCheck != null) {
-            File projectDir = findIncrementalProject(files, task.incrementalFileName);
-            assert projectDir != null;
-            assertTrue(isProjectDirectory(projectDir));
-            Project project = createProject(projectDir, projectDir);
-            project.addFile(incrementalCheck);
-            List<Project> projects = Collections.singletonList(project);
-            request.setProjects(projects);
-        }
-
-        if (task.customScope != null) {
-            request = request.setScope(task.customScope);
-        }
-
-        driver.analyze(request);
+        driver.analyze();
 
         // Check compare contract
         Warning prev = null;
@@ -535,13 +535,18 @@ public class TestLintClient extends LintCliClient {
 
         result = cleanup(result);
 
+        if (task.listener != null) {
+            driver.removeLintListener(task.listener);
+        }
+
         return result;
     }
 
     @NonNull
     @Override
-    protected LintDriver createDriver(@NonNull IssueRegistry registry) {
-        LintDriver driver = super.createDriver(registry);
+    protected LintDriver createDriver(@NonNull IssueRegistry registry,
+            @NonNull LintRequest request) {
+        LintDriver driver = super.createDriver(registry, request);
         // 3rd party lint unit tests may need this for a while
         driver.setRunCompatChecks(task.runCompatChecks, task.runCompatChecks);
         driver.setFatalOnlyMode(task.vital);
@@ -597,7 +602,7 @@ public class TestLintClient extends LintCliClient {
     public UastParser getUastParser(@Nullable Project project) {
         return new LintCliUastParser(project) {
             @Override
-            public boolean prepare(@NonNull List<JavaContext> contexts) {
+            public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
                 boolean ok = super.prepare(contexts);
                 if (task.forceSymbolResolutionErrors) {
                     ok = false;
@@ -1089,7 +1094,7 @@ public class TestLintClient extends LintCliClient {
             }
 
             return super.isLibrary()  || projectDescription != null
-                    && projectDescription.type == ProjectDescription.Type.LIBRARY;
+                    && projectDescription.getType() == ProjectDescription.Type.LIBRARY;
         }
 
         @Override
@@ -1099,7 +1104,7 @@ public class TestLintClient extends LintCliClient {
             }
 
             return projectDescription == null ||
-                    projectDescription.type != ProjectDescription.Type.JAVA;
+                    projectDescription.getType() != ProjectDescription.Type.JAVA;
         }
 
         @Override
@@ -1134,7 +1139,7 @@ public class TestLintClient extends LintCliClient {
 
         @Override
         public boolean getReportIssues() {
-            if (projectDescription != null && !projectDescription.report) {
+            if (projectDescription != null && !projectDescription.getReport()) {
                 return false;
             }
             return super.getReportIssues();

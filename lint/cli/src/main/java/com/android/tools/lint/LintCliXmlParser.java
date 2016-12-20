@@ -66,12 +66,22 @@ public class LintCliXmlParser extends XmlParser {
     }
 
     @Override
+    public Document parseXml(@NonNull CharSequence xml, @Nullable File file) {
+        try {
+            return PositionXmlParser.parse(xml.toString());
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    @Override
     public Document parseXml(@NonNull XmlContext context) {
         String xml = null;
         try {
             // Do we need to provide an input stream for encoding?
-            if (context.getContents() != null) {
-                xml = context.getContents().toString();
+            CharSequence contents = context.getContents();
+            if (contents != null) {
+                xml = contents.toString();
                 return PositionXmlParser.parse(xml);
             }
         } catch (UnsupportedEncodingException e) {
@@ -122,7 +132,7 @@ public class LintCliXmlParser extends XmlParser {
             node = mergedSource.getSecond();
         }
 
-        return Location.create(file, PositionXmlParser.getPosition(node)).setSource(node);
+        return Location.create(file, PositionXmlParser.getPosition(node)).withSource(node);
     }
 
     @NonNull
@@ -137,7 +147,7 @@ public class LintCliXmlParser extends XmlParser {
         }
 
         return Location.create(file, PositionXmlParser.getPosition(node, start, end))
-                .setSource(node);
+                .withSource(node);
     }
 
     @Nullable
@@ -164,7 +174,7 @@ public class LintCliXmlParser extends XmlParser {
         return Location.create(location.getFile(),
                 new DefaultPosition(start.getLine(), startColumn, startOffset),
                 new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
-                .setSource(node);
+                .withSource(node);
     }
 
     @Override
@@ -184,7 +194,7 @@ public class LintCliXmlParser extends XmlParser {
         return Location.create(location.getFile(),
                 new DefaultPosition(start.getLine(), startColumn, startOffset),
                 new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
-                .setSource(node);
+                .withSource(node);
     }
 
     @NonNull
@@ -240,7 +250,7 @@ public class LintCliXmlParser extends XmlParser {
                 file = source.getFirst();
                 node = source.getSecond();
             }
-            return Location.create(file, PositionXmlParser.getPosition(node)).setSource(node);
+            return Location.create(file, PositionXmlParser.getPosition(node)).withSource(node);
         }
 
         @Override

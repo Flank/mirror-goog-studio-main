@@ -129,7 +129,7 @@ public class LintFixVerifier {
     private TestFile findTestFile(@NonNull String path) {
         path = path.replace(File.separatorChar, '/');
         for (ProjectDescription project : task.projects) {
-            for (TestFile file : project.files) {
+            for (TestFile file : project.getFiles()) {
                 if (file.getTargetPath().equals(path)) {
                     return file;
                 }

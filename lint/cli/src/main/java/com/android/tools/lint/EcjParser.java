@@ -795,7 +795,7 @@ public class EcjParser extends JavaParser {
             position = node.getPosition();
         }
         return Location.create(context.file, context.getContents(),
-                position.getStart(), position.getEnd()).setSource(node);
+                position.getStart(), position.getEnd()).withSource(node);
     }
 
     @NonNull
@@ -810,7 +810,7 @@ public class EcjParser extends JavaParser {
         int start = Math.max(0, from.getPosition().getStart() + fromDelta);
         int end = Math.min(contents == null ? Integer.MAX_VALUE : contents.length(),
                 to.getPosition().getEnd() + toDelta);
-        return Location.create(context.file, contents, start, end).setSource(from);
+        return Location.create(context.file, contents, start, end).withSource(from);
     }
 
     @Override
@@ -829,7 +829,7 @@ public class EcjParser extends JavaParser {
                     end.getOffset() - start.getOffset() > methodNameLength) {
                 end = new DefaultPosition(start.getLine(), start.getColumn() + methodNameLength,
                         start.getOffset() + methodNameLength);
-                return Location.create(location.getFile(), start, end).setSource(node);
+                return Location.create(location.getFile(), start, end).withSource(node);
             }
             return location;
         }
@@ -1360,7 +1360,7 @@ public class EcjParser extends JavaParser {
         public Location resolve() {
             lombok.ast.Position pos = mNode.getPosition();
             return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd())
-                    .setSource(mNode);
+                    .withSource(mNode);
         }
 
         @Override

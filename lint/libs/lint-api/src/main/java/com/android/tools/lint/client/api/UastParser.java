@@ -52,7 +52,7 @@ public abstract class UastParser {
      * @param contexts a list of contexts to be parsed
      * @return true if the preparation succeeded; false if there were errors
      */
-    public boolean prepare(@NonNull List<JavaContext> contexts) {
+    public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
         return true;
     }
 

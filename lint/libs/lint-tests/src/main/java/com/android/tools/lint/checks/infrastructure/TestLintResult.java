@@ -92,7 +92,7 @@ public class TestLintResult {
      */
     public TestLintResult expect(@NonNull String expectedText) {
         String actual = describeOutput();
-        if (!actual.equals(expectedText)) {
+        if (!actual.trim().equals((expectedText.trim()))) {
             // See if it's a Windows path issue
             if (actual.equals(expectedText.replace(File.separatorChar, '/'))) {
                 assertEquals("The expected lint output does not match, but it *does* "
@@ -162,7 +162,7 @@ public class TestLintResult {
      */
     public TestLintResult expectInlinedMessages() {
         for (ProjectDescription project : task.projects) {
-            for (TestFile file : project.files) {
+            for (TestFile file : project.getFiles()) {
                 String plainContents;
                 String contents;
                 try {

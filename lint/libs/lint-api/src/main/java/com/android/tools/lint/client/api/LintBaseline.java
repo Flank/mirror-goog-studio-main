@@ -137,7 +137,7 @@ public class LintBaseline {
                             + "they were listed in the baseline file, %2$s",
                     LintUtils.describeCounts(foundErrorCount, foundWarningCount, false, true),
                     getDisplayPath(project, baselineFile));
-            client.report(new Context(driver, project, project, baselineFile),
+            client.report(new Context(driver, project, project, baselineFile, null),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
                     Location.create(baselineFile), message, TextFormat.RAW, null);
@@ -176,7 +176,7 @@ public class LintBaseline {
                     + "baseline file (%2$s) but not found in the project; perhaps they have "
                     + "been fixed? Unmatched issue types: %3$s", fixedCount,
                     getDisplayPath(project, baselineFile), issueTypes);
-            client.report(new Context(driver, project, project, baselineFile),
+            client.report(new Context(driver, project, project, baselineFile, null),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
                     Location.create(baselineFile), message, TextFormat.RAW, null);

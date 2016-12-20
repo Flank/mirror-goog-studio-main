@@ -298,12 +298,13 @@ public class DefaultConfiguration extends Configuration {
             message = String.format(message, args);
         }
         message = "Failed to parse `lint.xml` configuration file: " + message;
-        LintDriver driver = new LintDriver(new IssueRegistry() {
+        LintDriver driver = new LintDriver(
+                new IssueRegistry() {
             @Override @NonNull public List<Issue> getIssues() {
                 return Collections.emptyList();
             }
-        }, client);
-        client.report(new Context(driver, project, project, configFile),
+        }, client, new LintRequest(client, Collections.emptyList()));
+        client.report(new Context(driver, project, project, configFile, null),
                 IssueRegistry.LINT_ERROR,
                 project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
                 Location.create(configFile), message, TextFormat.RAW, null);

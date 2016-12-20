@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.lint.detector.api.Location.SearchDirection;
 import com.android.tools.lint.detector.api.Location.SearchHints;
+import com.android.utils.Pair;
+import com.intellij.openapi.Disposable;
 import java.io.File;
 import java.io.IOException;
 import junit.framework.TestCase;
@@ -150,5 +152,31 @@ public class LocationTest extends TestCase {
         assertThat(location.getSource(Integer.class)).isEqualTo(source);
         assertThat(location.getSource(Number.class)).isEqualTo(source);
         assertThat(location.getSource(String.class)).isNull();
+    }
+
+    public void testSelfExplanatory() {
+        Location location = Location.create(new File("foo"));
+        location.setSelfExplanatory(true);
+        assertTrue(location.isSelfExplanatory());
+        location.setSelfExplanatory(false);
+        assertFalse(location.isSelfExplanatory());
+    }
+
+    public void testVisible() {
+        Location location = Location.create(new File("foo"));
+        location.setVisible(true);
+        assertTrue(location.getVisible());
+        location.setVisible(false);
+        assertFalse(location.getVisible());
+    }
+
+    public void testDefaultLocationHandle() {
+        //noinspection all // sample code
+        Pair<JavaContext, Disposable> pair = LintUtilsTest
+                .parsePsi("package test.pkg;\nclass Foo{}\n");
+        Location.DefaultLocationHandle handle = new Location.DefaultLocationHandle(
+                pair.getFirst(), 0, 10);
+        Location location = handle.resolve();
+        assertEquals(10, location.getEnd().getOffset());
     }
 }
