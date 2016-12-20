@@ -42,6 +42,12 @@ public class DependencyTest extends BaseDslTest {
     }
 
     public void testProvidedDependency() throws IOException {
+        // Ignore if improved dependency resolution enabled (Note that Assume does not work in
+        // JUnit 3 test.
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+            return;
+        };
+
         File providedJar = File.createTempFile("provided", ".jar");
         providedJar.createNewFile();
         providedJar.deleteOnExit();
@@ -49,8 +55,6 @@ public class DependencyTest extends BaseDslTest {
         File debugJar = File.createTempFile("providedDebug", ".jar");
         debugJar.createNewFile();
         debugJar.deleteOnExit();
-
-        Assume.assumeFalse(AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project));
 
         project.getDependencies().add("provided", project.files(providedJar));
         project.getDependencies().add("debugProvided", project.files(debugJar));

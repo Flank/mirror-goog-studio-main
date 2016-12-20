@@ -360,7 +360,7 @@ public class AndroidGradleOptions {
     }
 
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION);
+        return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
     }
 
     @Nullable
