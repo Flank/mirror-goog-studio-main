@@ -162,6 +162,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         List<String> arguments = new ArrayList<>();
 
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
+        arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
 
         if (offline) {
             arguments.add("--offline");
