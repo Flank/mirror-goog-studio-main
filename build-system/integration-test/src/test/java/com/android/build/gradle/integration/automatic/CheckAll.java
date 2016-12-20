@@ -85,7 +85,10 @@ public class CheckAll {
     @Test
     public void assembleAndLint() throws Exception {
         Assume.assumeTrue(canAssemble(project));
-        project.execute("assembleDebug", "assembleAndroidTest", "lint");
+        project
+                .executor()
+                .withEnableInfoLogging(false)
+                .run("assembleDebug", "assembleAndroidTest", "lint");
     }
 
     private static boolean canAssemble(@NonNull GradleTestProject project) {
