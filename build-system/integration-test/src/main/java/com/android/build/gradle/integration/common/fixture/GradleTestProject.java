@@ -160,8 +160,7 @@ public final class GradleTestProject implements TestRule {
         USE_JACK = !Strings.isNullOrEmpty(envJack);
 
         IMPROVED_DEPENDENCY_RESOLUTION =
-                !Strings.isNullOrEmpty(
-                        System.getenv().get("CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION"));
+                Strings.isNullOrEmpty(System.getenv().get("CUSTOM_DISABLE_IMPROVED_DEPENDENCY_RESOLUTION"));
 
         String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
         DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
