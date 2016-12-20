@@ -63,13 +63,21 @@ configurations {
 }
 
 def testEnvironment =
+        /*
+         * We keep the following properties:
+         * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_HOME
+         * - DEBUG_INNER_TEST: to allow us to debug tests
+         * - starting with LC_ or LANG_, so the locale is set up correctly
+         * - BUILDBOT_: to get BuildBot specific information e.g. buildId used for performance tests
+         */
         System.getenv().findAll { entry ->
             String key = entry.key
             key.startsWith("CUSTOM_") ||
                     key == "DEBUG_INNER_TEST" ||
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
-                    key.startsWith("LANG")
+                    key.startsWith("LANG") ||
+                    key.startsWith("BUILDBOT_")
         }
 
 testEnvironment << [
