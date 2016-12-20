@@ -49,6 +49,7 @@ public final class ProcessProfileWriterFactory {
     private static final DateTimeFormatter PROFILE_FILE_NAME =
             DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
 
+
     public static void shutdown() throws InterruptedException {
         synchronized (LOCK) {
 
@@ -73,7 +74,8 @@ public final class ProcessProfileWriterFactory {
             @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            @NonNull File profileOutputDirectory) {
+            @NonNull File profileOutputDirectory,
+            boolean enableChromeTracingOutput) {
 
         synchronized (LOCK) {
             if (sINSTANCE.isInitialized()) {
@@ -85,6 +87,8 @@ public final class ProcessProfileWriterFactory {
                     profileOutputDirectory
                             .toPath()
                             .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
+
+            sINSTANCE.setEnableChromeTracingOutput(enableChromeTracingOutput);
 
             ProcessProfileWriter recorder =
                     sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
@@ -163,6 +167,7 @@ public final class ProcessProfileWriterFactory {
     }
 
     private Path profileOutputFile = null;
+    private boolean enableChromeTracingOutput;
 
     private void setProfileOutputFile(Path outputFile) {
         this.profileOutputFile = outputFile;
@@ -176,9 +181,14 @@ public final class ProcessProfileWriterFactory {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
             initializeAnalytics(mLogger, mScheduledExecutorService);
-            processProfileWriter = new ProcessProfileWriter(profileOutputFile);
+            processProfileWriter =
+                    new ProcessProfileWriter(profileOutputFile, enableChromeTracingOutput);
         }
 
         return processProfileWriter;
+    }
+
+    public void setEnableChromeTracingOutput(boolean enableChromeTracingOutput) {
+        this.enableChromeTracingOutput = enableChromeTracingOutput;
     }
 }
