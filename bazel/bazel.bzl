@@ -468,3 +468,16 @@ def platform_filegroup(name, visibility = ["//visibility:public"]):
       ),
       visibility = visibility
    )
+
+def merged_properties(name, srcs, mappings, visibility=None):
+  native.genrule(
+      name = name,
+      srcs = srcs,
+      outs = [name + ".properties"],
+      tools = ["//tools/base/bazel:properties_merger"],
+      visibility = visibility,
+      cmd = ("$(location //tools/base/bazel:properties_merger) " +
+             " ".join(["--mapping " + m for m in mappings]) +
+             " ".join(["--input $(location " + src + ") " for src in srcs]) +
+             "--output '$@'")
+  )

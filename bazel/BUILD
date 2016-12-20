@@ -114,6 +114,13 @@ java_binary(
     runtime_deps = [":utils"],
 )
 
+java_binary(
+    name = "properties_merger",
+    main_class = "com.android.tools.utils.PropertiesMerger",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":utils"],
+)
+
 java_library(
     name = "maven",
     srcs = glob(["src/**/maven/*.java"]),

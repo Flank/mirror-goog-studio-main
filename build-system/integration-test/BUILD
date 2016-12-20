@@ -128,7 +128,7 @@ java_test(
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
         "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.OnlineTests,com.android.build.gradle.integration.common.category.FailsUnderBazel",
     ],
-    shard_count = 16,
+    #    shard_count = 16,
     tags = ["manual"],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [

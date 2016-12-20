@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** Checks what we distribute in our jars. */
@@ -51,7 +52,7 @@ public class JarContentsTest {
                     "traceview");
 
     private static final Set<String> GLOBAL_WHITELIST =
-            ImmutableSet.of("NOTICE", "META-INF/MANIFEST.MF");
+            ImmutableSet.of("NOTICE", "NOTICE.txt", "META-INF/MANIFEST.MF");
 
     private static final Multimap<String, String> EXPECTED;
 
@@ -168,16 +169,41 @@ public class JarContentsTest {
                 "com/android/repository/impl/meta/common-custom.xjb",
                 "com/android/repository/impl/meta/generic-custom.xjb",
                 "com/android/repository/impl/sources/repo-sites-common-custom.xjb");
+        expected.putAll(
+                "com/android/databinding/compilerCommon/",
+                "data_binding_version_info.properties");
+        expected.putAll(
+                "com/android/databinding/compiler/",
+                "api-versions.xml",
+                "META-INF/compiler_main.kotlin_module");
 
         EXPECTED = expected.build();
     }
 
+    @BeforeClass
+    public static void checkExpectedMap() {
+        for (String key : EXPECTED.keySet()) {
+            if (!key.endsWith("/")) {
+                throw new AssertionError(key + "needs to end with a '/' in the EXPECTED map.");
+            }
+        }
+    }
+
     @Test
-    public void checkAllJars() throws Exception {
+    public void checkTools() throws Exception {
+        checkGroup("com/android/tools");
+    }
+
+    @Test
+    public void checkDataBinding() throws Exception {
+        checkGroup("com/android/databinding");
+    }
+
+    private static void checkGroup(String groupPrefix) throws IOException {
         boolean foundAndroidRepo = false;
 
         for (Path repo : GradleTestProject.getRepos()) {
-            Path androidTools = repo.resolve("com/android/tools");
+            Path androidTools = repo.resolve(groupPrefix);
             if (!Files.isDirectory(androidTools)) {
                 continue;
             } else {
