@@ -3,11 +3,14 @@ load(":utils.bzl", "explicit_target")
 def _maven_pom_impl(ctx):
   # Contains both *.jar and *.aar files.
   jars = set()
+  # Source jars
+  srcjars = set()
 
   if ctx.attr.library:
     if (ctx.attr.file):
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
+    srcjars = srcjars | ctx.attr.library.java.source_jars
 
   if ctx.attr.file:
     if (ctx.attr.library):
@@ -16,9 +19,11 @@ def _maven_pom_impl(ctx):
 
   parent_poms = set([], order="compile")
   parent_jars = {}
+  parent_srcjars = {}
 
   deps_poms = set([], order="compile")
   deps_jars = {}
+  deps_srcjars = {}
 
   # Transitive deps through the parent attribute
   if ctx.attr.parent:
@@ -28,10 +33,14 @@ def _maven_pom_impl(ctx):
     parent_jars += ctx.attr.parent.maven.parent.jars
     parent_jars += ctx.attr.parent.maven.deps.jars
     parent_jars += {ctx.file.parent: ctx.attr.parent.maven.jars}
+    parent_srcjars += ctx.attr.parent.maven.parent.srcjars
+    parent_srcjars += ctx.attr.parent.maven.deps.srcjars
+    parent_srcjars += {ctx.file.parent: ctx.attr.parent.maven.srcjars}
   else:
     if hasattr(ctx.attr.source, "maven"):
       parent_poms = ctx.attr.source.maven.parent.poms
       parent_jars = ctx.attr.source.maven.parent.jars
+      parent_srcjars = ctx.attr.source.maven.parent.srcjars
 
   # Transitive deps through deps
   if ctx.attr.deps:
@@ -42,10 +51,14 @@ def _maven_pom_impl(ctx):
       deps_jars += label.maven.parent.jars
       deps_jars += label.maven.deps.jars
       deps_jars += {label.maven.pom: label.maven.jars}
+      deps_srcjars += label.maven.parent.srcjars
+      deps_srcjars += label.maven.deps.srcjars
+      deps_srcjars += {label.maven.pom: label.maven.srcjars}
   else:
     if hasattr(ctx.attr.source, "maven"):
       deps_poms = ctx.attr.source.maven.deps.poms
       deps_jars = ctx.attr.source.maven.deps.jars
+      deps_srcjars = ctx.attr.source.maven.deps.srcjars
 
   inputs = [];
   args = []
@@ -85,13 +98,16 @@ def _maven_pom_impl(ctx):
     parent = struct(
       poms = parent_poms,
       jars = parent_jars,
+      srcjars = parent_srcjars,
     ),
     deps = struct(
       poms = deps_poms,
       jars = deps_jars,
+      srcjars = deps_srcjars,
     ),
     pom = ctx.outputs.pom,
     jars = jars,
+    srcjars = srcjars,
   ))
 
 
@@ -206,6 +222,8 @@ def maven_aar(name, aar, pom, visibility=None):
   )
 
 def _maven_repo_impl(ctx):
+  include_sources = ctx.attr.include_sources
+
   seen = {}
   inputs = []
   for artifact in ctx.attr.artifacts:
@@ -214,13 +232,22 @@ def _maven_repo_impl(ctx):
         jars = artifact.maven.parent.jars[pom]
         if not seen.get(pom):
           inputs += [pom] + list(jars)
+          if include_sources:
+            srcjars = artifact.maven.parent.srcjars[pom]
+            inputs += list(srcjars)
           seen += {pom: True}
       inputs += [artifact.maven.pom] + list(artifact.maven.jars)
+      if include_sources:
+        inputs += list(artifact.maven.srcjars)
+
       seen += {artifact.maven.pom: True}
       for pom in artifact.maven.deps.poms:
         jars = artifact.maven.deps.jars[pom]
         if not seen.get(pom):
           inputs += [pom] + list(jars)
+          if include_sources:
+            srcjars = artifact.maven.deps.srcjars[pom]
+            inputs += list(srcjars)
           seen += {pom: True}
 
   # Execute the command
@@ -236,6 +263,7 @@ _maven_repo = rule(
    implementation = _maven_repo_impl,
    attrs = {
        "artifacts" : attr.label_list(),
+       "include_sources" : attr.bool(),
         "_repo": attr.label(
             executable = True,
             cfg = "host",
@@ -254,9 +282,11 @@ _maven_repo = rule(
 # maven_repo(
 #     name = The name of the rule. The output of the rule will be ${name}.zip.
 #     artifacts = A list of all maven_java_libraries to add to the repo.
+#     include_sources = Add source jars to the repo as well (useful for tests).
 # )
-def maven_repo(artifacts=[], **kwargs):
+def maven_repo(artifacts=[], include_sources=False, **kwargs):
     _maven_repo(
       artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
+      include_sources = include_sources,
       **kwargs
     )

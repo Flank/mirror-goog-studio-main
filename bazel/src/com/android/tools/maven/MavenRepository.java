@@ -123,6 +123,15 @@ public class MavenRepository {
                 model.getVersion());
     }
 
+    public Path getSourceArtifactPath(Model model) {
+        return getPath(new DefaultArtifact(
+                model.getGroupId(),
+                model.getArtifactId(),
+                "sources",
+                getArtifactExtension(model),
+                model.getVersion()));
+    }
+
     public Map<String, Path> getExecutables(Model model) {
         Map<String, Path> exes = Maps.newHashMap();
         String[] classifiers = {"linux-x86_64", "osx-x86_64", "windows-x86_64"};
