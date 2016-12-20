@@ -78,10 +78,7 @@ java_library(
     srcs = glob(
         ["src/test/java/**/*.java"],
         exclude = [
-            "src/test/java/**/CMake*",
             "src/test/java/**/CheckAll*",
-            "src/test/java/**/Cmake*",
-            "src/test/java/**/ExternalNative*",
             "src/test/java/**/performance/**",
         ],
     ),
@@ -93,11 +90,6 @@ groovy_jar(
     name = "groovy_tests",
     srcs = glob(
         ["src/test/groovy/**/*.groovy"],
-        exclude = [
-            "src/test/groovy/**/*CMake*",
-            "src/test/groovy/**/*Cmake*",
-            "src/test/groovy/**/*ExternalNative*",
-        ],
     ),
     deps = TEST_DEPS,
 )
