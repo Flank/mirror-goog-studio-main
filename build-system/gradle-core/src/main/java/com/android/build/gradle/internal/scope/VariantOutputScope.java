@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
-import static com.android.SdkConstants.DOT_INSTANTAPP_PACKAGE;
+import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 
 import com.android.annotations.NonNull;
@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.ProcessInstantAppResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AtomDependency;
@@ -59,8 +58,6 @@ public class VariantOutputScope implements TransformVariantScope {
     private AndroidTask<?> shrinkResourcesTask;
 
     private AndroidTask<SplitZipAlign> splitZipAlignTask;
-
-    private AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask;
 
     public VariantOutputScope(
             @NonNull VariantScope variantScope,
@@ -127,7 +124,7 @@ public class VariantOutputScope implements TransformVariantScope {
     @NonNull
     public File getFinalPackage() {
         if (getVariantScope().getVariantData().getType() == VariantType.INSTANTAPP) {
-            return buildPackagePath(DOT_INSTANTAPP_PACKAGE);
+            return buildPackagePath(DOT_ZIP);
         } else {
             return buildPackagePath(isSignedApk() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
         }
@@ -212,11 +209,6 @@ public class VariantOutputScope implements TransformVariantScope {
                 : getProcessResourcePackageOutputFile();
     }
 
-    @Nullable
-    public File getAtomMetadataBaseFolder() {
-        return variantOutputData.getAtomMetadataBaseFolder();
-    }
-
     // Tasks
     public AndroidTask<DefaultTask> getAssembleTask() {
         return assembleTask;
@@ -270,15 +262,6 @@ public class VariantOutputScope implements TransformVariantScope {
     public void setSplitZipAlignTask(
             AndroidTask<SplitZipAlign> splitZipAlignTask) {
         this.splitZipAlignTask = splitZipAlignTask;
-    }
-
-    public AndroidTask<ProcessInstantAppResources> getProcessInstantAppResourcesTask() {
-        return processInstantAppResourcesTask;
-    }
-
-    public void setProcessInstantAppResourcesTask(
-            AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask) {
-        this.processInstantAppResourcesTask = processInstantAppResourcesTask;
     }
 
     @NonNull

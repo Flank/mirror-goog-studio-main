@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.integration.instantapp;
 
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
+
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.truth.ZipFileSubject;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -51,9 +54,14 @@ public class SingleAtomTest {
         // Tests that the BuildConfig and R class are generated in the proper package.
         AtomBundleSubject atomBundle =
                 TruthHelper.assertThat(sProject.getSubproject("atom").getAtomBundle("release"));
-        atomBundle.containsClass("Lcom/android/tests/singleatom/atom/BuildConfig;");
-        atomBundle.containsClass("Lcom/android/tests/singleatom/atom/R;");
-        atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/BuildConfig;");
-        atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/R;");
+        atomBundle.containsClass("Lcom/android/tests/singleatom/BuildConfig;");
+        atomBundle.containsClass("Lcom/android/tests/singleatom/R;");
+        atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/atom/BuildConfig;");
+        atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/atom/R;");
+
+        // Check that the output bundle file contains the one atom.
+        ZipFileSubject outputPackage =
+                assertThatZip(sProject.getSubproject("instantApp").getInstantAppBundle("release"));
+        outputPackage.contains("atom.apk");
     }
 }

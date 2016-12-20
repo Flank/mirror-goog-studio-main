@@ -31,9 +31,7 @@ import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * {@code android} extension for {@code com.android.iapk} projects.
- */
+/** {@code android} extension for {@code com.android.instantapp} projects. */
 class InstantAppExtension extends TestedExtension {
 
     private final DefaultDomainObjectSet<InstantAppVariant> instantAppVariantList

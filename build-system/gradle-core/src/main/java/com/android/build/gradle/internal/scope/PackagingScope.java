@@ -136,9 +136,6 @@ public interface PackagingScope {
     @NonNull
     File getInstantRunSplitApkOutputFolder();
 
-    @Nullable
-    File getAtomMetadataBaseFolder();
-
     @NonNull
     String getApplicationId();
 

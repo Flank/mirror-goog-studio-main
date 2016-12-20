@@ -26,7 +26,6 @@ import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -57,8 +56,6 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
     private final String atomName;
     @NonNull
     private final File dexFolder;
-    @NonNull
-    private final File atomMetadataFile;
     @NonNull
     private final File libFolder;
     @NonNull
@@ -91,7 +88,6 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
         assetsFolder = clonedAtom.getAssetsFolder();
         atomName = clonedAtom.getAtomName();
         dexFolder = clonedAtom.getDexFolder();
-        atomMetadataFile = clonedAtom.getAtomMetadataFile();
         libFolder = clonedAtom.getLibFolder();
         javaResFolder = clonedAtom.getJavaResFolder();
         resourcePackage = clonedAtom.getResourcePackage();
@@ -171,12 +167,6 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
 
     @NonNull
     @Override
-    public File getAtomMetadataFile() {
-        return atomMetadataFile;
-    }
-
-    @NonNull
-    @Override
     public File getLibFolder() {
         return libFolder;
     }
@@ -214,7 +204,6 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
                 Objects.equal(assetsFolder, that.assetsFolder) &&
                 Objects.equal(atomName, that.atomName) &&
                 Objects.equal(dexFolder, that.dexFolder) &&
-                Objects.equal(atomMetadataFile, that.atomMetadataFile) &&
                 Objects.equal(libFolder, that.libFolder) &&
                 Objects.equal(javaResFolder, that.javaResFolder) &&
                 Objects.equal(resourcePackage, that.resourcePackage) &&
@@ -225,11 +214,23 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
 
     @Override
     public int hashCode() {
-        return Objects
-                .hashCode(super.hashCode(), variant, bundle, folder, manifest, jarFile, resFolder,
-                        assetsFolder, atomName, dexFolder, atomMetadataFile, libFolder,
-                        javaResFolder, resourcePackage, androidAtoms, androidLibraries,
-                        javaLibraries);
+        return Objects.hashCode(
+                super.hashCode(),
+                variant,
+                bundle,
+                folder,
+                manifest,
+                jarFile,
+                resFolder,
+                assetsFolder,
+                atomName,
+                dexFolder,
+                libFolder,
+                javaResFolder,
+                resourcePackage,
+                androidAtoms,
+                androidLibraries,
+                javaLibraries);
     }
 
     @Override
@@ -248,7 +249,6 @@ public class AndroidAtomImpl extends LibraryImpl implements AndroidAtom, Seriali
                 .add("assetsFolder", assetsFolder)
                 .add("atomName", atomName)
                 .add("dexFolder", dexFolder)
-                .add("atomMetadataFile", atomMetadataFile)
                 .add("libFolder", libFolder)
                 .add("javaResFolder", javaResFolder)
                 .add("resourcePackage", resourcePackage)

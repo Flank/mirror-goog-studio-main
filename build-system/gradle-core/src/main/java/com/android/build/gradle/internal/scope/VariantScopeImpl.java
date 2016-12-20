@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
-import static com.android.SdkConstants.DOT_ATOM;
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_CLASSES_OUTPUT;
 import static com.android.SdkConstants.FD_DEX;
@@ -897,8 +897,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getPackageAtom(@NonNull AtomDependency androidAtom) {
-        return new File(getMergeAssetsOutputDir(),
-                androidAtom.getAtomName() + DOT_ATOM);
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "atoms",
+                getVariantConfiguration().getDirName(),
+                androidAtom.getAtomName() + DOT_ANDROID_PACKAGE);
     }
 
     @NonNull

@@ -39,6 +39,7 @@ import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.AtomBundle;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -635,18 +636,40 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Return the output atom File from the instantApp plugin for the given atom name and dimension.
+     * Return the output atom file from the instantApp plugin for the given atom name and dimension.
      *
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
     public Apk getAtom(String atomName, String... dimensions) {
         try {
-            return new Apk(getIntermediateFile(
-                    FileUtils.join(
-                            "assets",
-                            Joiner.on("-").join(dimensions),
-                            atomName + SdkConstants.DOT_ATOM)));
+            return new Apk(
+                    getIntermediateFile(
+                            FileUtils.join(
+                                    "atoms",
+                                    Joiner.on("-").join(dimensions),
+                                    atomName + SdkConstants.DOT_ANDROID_PACKAGE)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Returns the output instantApp bundle file from the instantApp plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    public Zip getInstantAppBundle(String... dimensions) {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
+        dimensionList.add(getName());
+        dimensionList.addAll(Arrays.asList(dimensions));
+        File zipFile =
+                getOutputFile(
+                        FileUtils.join(
+                                "apk", Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
+        try {
+            return new Zip(zipFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
