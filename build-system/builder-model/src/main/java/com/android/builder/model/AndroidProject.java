@@ -18,7 +18,6 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -166,7 +165,7 @@ public interface AndroidProject {
     boolean isLibrary();
 
     /**
-     * Returns the type of project: Android application, library, Atom or IAPK.
+     * Returns the type of project: Android application, library, atom or instantApp.
      *
      * @return the type of project.
      * @since 2.3

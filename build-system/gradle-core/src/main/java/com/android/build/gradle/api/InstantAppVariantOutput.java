@@ -17,17 +17,15 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * A variant output for instant app-generating variants.
  */
 public interface InstantAppVariantOutput {
 
-    /**
-     * Returns the InstantApp packaging task
-     */
+    /** Returns the InstantApp packaging task */
     @Nullable
-    PackageAndroidArtifact getPackageInstantApp();
+    Zip getPackageInstantApp();
 
 }

@@ -246,10 +246,8 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
         public void execute(@NonNull BundleAtom bundleAtom) {
             bundleAtom.setVariantName(scope.getFullVariantName());
 
-            // TODO: Move the individual outputs out of the bundle directory.
             // TODO: Change this task to be incremental and re-use the IncrementalPackager.
             bundleAtom.setBundleFolder(scope.getBaseBundleDir());
-
             bundleAtom.setBundleFile(scope.getOutputBundleFile());
 
             ConventionMappingHelper.map(

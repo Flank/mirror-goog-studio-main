@@ -18,10 +18,8 @@ package com.android.builder.dependency.level2;
 
 import static com.android.SdkConstants.DOT_RES;
 import static com.android.SdkConstants.FD_DEX;
-import static com.android.SdkConstants.FD_INSTANTAPP_METADATA;
 import static com.android.SdkConstants.FD_JAVA_RES;
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
-import static com.android.SdkConstants.FN_ATOM_METADATA;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_RES_BASE;
 
@@ -30,7 +28,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.dependency.HashCodeUtils;
 import com.android.builder.model.MavenCoordinates;
-import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -79,14 +76,6 @@ public final class AtomDependency extends ExtractedDependency {
     @NonNull
     public File getDexFolder() {
         return new File(getExtractedFolder(), FD_DEX);
-    }
-
-    @NonNull
-    public File getAtomMetadataFile() {
-        return FileUtils.join(
-                getExtractedFolder(),
-                FD_INSTANTAPP_METADATA,
-                FN_ATOM_METADATA);
     }
 
     @NonNull

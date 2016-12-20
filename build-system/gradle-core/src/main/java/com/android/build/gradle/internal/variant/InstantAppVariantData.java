@@ -26,9 +26,7 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 import java.util.Collection;
 
-/**
- * Data about a variant that produces an IAPK.
- */
+/** Data about a variant that produces an instantApp bundle. */
 public class InstantAppVariantData extends InstallableVariantData<InstantAppVariantOutputData> {
 
     public InstantAppVariantData(

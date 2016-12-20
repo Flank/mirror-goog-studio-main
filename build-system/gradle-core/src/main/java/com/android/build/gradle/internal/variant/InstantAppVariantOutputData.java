@@ -17,21 +17,15 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.tasks.GenerateInstantAppMetadata;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 
-/**
- * Base output data for a variant that generates an IAPK file.
- */
+/** Base output data for a variant that generates an instantApp bundle file. */
 public class InstantAppVariantOutputData extends BaseVariantOutputData {
-
-    public GenerateInstantAppMetadata generateInstantAppMetadataTask;
 
     public InstantAppVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
@@ -42,30 +36,23 @@ public class InstantAppVariantOutputData extends BaseVariantOutputData {
 
     @Override
     public void setOutputFile(@NonNull File file) {
-        packageAndroidArtifactTask.setOutputFile(file);
+        packageInstantAppTask.setDestinationDir(file.getParentFile());
+        packageInstantAppTask.setArchiveName(file.getName());
     }
 
     @NonNull
     @Override
     public File getOutputFile() {
-        return packageAndroidArtifactTask == null
+        return packageInstantAppTask == null
                 ? getScope().getFinalPackage()
-                : packageAndroidArtifactTask.getOutputFile();
-    }
-
-    @Nullable
-    @Override
-    public File getAtomMetadataBaseFolder() {
-        if (generateInstantAppMetadataTask == null)
-            return null;
-        return generateInstantAppMetadataTask.getInstantAppMetadataFolder();
+                : packageInstantAppTask.getArchivePath();
     }
 
     @NonNull
     @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
         ImmutableList.Builder<ApkOutputFile> outputs = ImmutableList.builder();
-        // InstantApp only outputs one IAPK.
+        // InstantApp only outputs one bundle.
         outputs.add(getMainOutputFile());
         return outputs.build();
     }

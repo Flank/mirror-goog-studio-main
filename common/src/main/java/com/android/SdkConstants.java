@@ -84,10 +84,6 @@ public final class SdkConstants {
     public static final String FN_APK_CLASSES_DEX = "classes.dex";                    //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex";                //$NON-NLS-1$
-    /** Atom metadata filename inside the atom. i.e. "atom-metadata" */
-    public static final String FN_ATOM_METADATA = "atom-metadata";                    //$NON-NLS-1$
-    /** Atom metadata filename inside the iapk. i.e. "instantapp-metadata" */
-    public static final String FN_INSTANTAPP_METADATA = "instantapp-metadata";        //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml";                            //$NON-NLS-1$
@@ -330,7 +326,9 @@ public final class SdkConstants {
     /** aidl output folder for copied aidl files */
     public static final String FD_AIDL = "aidl";                        //$NON-NLS-1$
     /** aar libs folder */
-    public static final String FD_AAR_LIBS = "libs";
+    public static final String FD_AAR_LIBS = "libs";                    //$NON-NLS-1$
+    /** atoms output folder for atom files */
+    public static final String FD_ATOMS = "atoms";                      //$NON-NLS-1$
 
     /** rs Libs output folder for support mode */
     public static final String FD_RS_LIBS = "rsLibs";                   //$NON-NLS-1$
@@ -441,9 +439,6 @@ public final class SdkConstants {
 
     /** Name of the cache folder in the $HOME/.android. */
     public static final String FD_CACHE = "cache";                      //$NON-NLS-1$
-
-    /** Name of the atom and instant-app metadata folder. */
-    public static final String FD_INSTANTAPP_METADATA = "metadata";     //$NON-NLS-1$
 
     /** API codename of a release (non preview) system image or platform. **/
     public static final String CODENAME_RELEASE = "REL";                //$NON-NLS-1$
@@ -1437,14 +1432,12 @@ public final class SdkConstants {
 
     /** Dot-Extension of the Application package Files, i.e. ".apk". */
     public static final String DOT_ANDROID_PACKAGE = DOT + EXT_ANDROID_PACKAGE;
-    /** Dot-Extension of the InstantApp package Files, i.e. ".iapk". */
-    public static final String DOT_INSTANTAPP_PACKAGE = DOT + EXT_INSTANTAPP_PACKAGE;
     /** Dot-Extension for Android archive files */
     public static final String DOT_AAR = DOT + EXT_AAR; //$NON-NLS-1$
-    /** Dot-Extension for Android atom files. */
-    public static final String DOT_ATOM = DOT + EXT_ATOM; //$NON-NLS-1$
     /** Dot-Extension for Android atombundle files. */
     public static final String DOT_ATOMBUNDLE = DOT + EXT_ATOMBUNDLE; //$NON-NLS-1$
+    /** Dot-Extension of zip files, i.e. ".zip" */
+    public static final String DOT_ZIP = DOT + EXT_ZIP;
     /** Dot-Extension of aidl files, i.e. ".aidl" */
     public static final String DOT_AIDL = DOT + EXT_AIDL;
     /** Dot-Extension of renderscript files, i.e. ".rs" */
