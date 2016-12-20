@@ -24,14 +24,18 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -40,12 +44,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * Task doing test report aggregation.
@@ -61,28 +59,35 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private boolean testFailed;
 
-    private File reportsDir;
+    private InputSupplier<File> reportsDir;
+    private InputSupplier<File> resultsDir;
 
-    private File resultsDir;
-
-
+    @SuppressWarnings("unused")
     @OutputDirectory
     public File getReportsDir() {
-        return reportsDir;
+        return reportsDir.get();
     }
 
-    public void setReportsDir(@NonNull File reportsDir) {
-        this.reportsDir = reportsDir;
+    public void setReportsDir(@NonNull Supplier<File> reportsDir) {
+        if (reportsDir instanceof InputSupplier) {
+            this.reportsDir = (InputSupplier<File>) reportsDir;
+        } else {
+            this.reportsDir = InputSupplier.from(reportsDir);
+        }
     }
 
     @Override
     @OutputDirectory
     public File getResultsDir() {
-        return resultsDir;
+        return resultsDir.get();
     }
 
-    public void setResultsDir(@NonNull File resultsDir) {
-        this.resultsDir = resultsDir;
+    public void setResultsDir(@NonNull Supplier<File> resultsDir) {
+        if (resultsDir instanceof InputSupplier) {
+            this.resultsDir = (InputSupplier<File>) resultsDir;
+        } else {
+            this.resultsDir = InputSupplier.from(resultsDir);
+        }
     }
 
     @Override
@@ -130,8 +135,8 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     @TaskAction
     public void createReport() throws IOException {
-        File resultsOutDir = getResultsDir();
-        File reportOutDir = getReportsDir();
+        File resultsOutDir = resultsDir.getLastValue();
+        File reportOutDir = reportsDir.getLastValue();
 
         // empty the folders
         FileUtils.cleanOutputDir(resultsOutDir);
@@ -216,15 +221,19 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
             final String subfolderName =
                     taskKind == TaskKind.CONNECTED ? "/connected/" : "/devices/";
 
-            ConventionMappingHelper.map(task, "resultsDir", (Callable<File>) () -> {
-                final String dir = scope.getExtension().getTestOptions().getResultsDir();
-                String rootLocation = dir != null && !dir.isEmpty() ? dir : defaultResultsDir;
-                return scope.getProject().file(rootLocation + subfolderName + FD_FLAVORS_ALL);
-            });
-            ConventionMappingHelper.map(task, "reportsDir", (Callable<File>) () -> {
-                final String dir = scope.getExtension().getTestOptions().getReportDir();
+            task.resultsDir = InputSupplier.from(() -> {
+                        String dir = scope.getExtension().getTestOptions().getResultsDir();
+                        String rootLocation = dir != null && !dir.isEmpty() ?
+                                dir : defaultResultsDir;
+                        return scope.getProject().file(
+                                rootLocation + subfolderName + FD_FLAVORS_ALL);
+                    });
+
+            task.reportsDir = InputSupplier.from(() -> {
+                String dir = scope.getExtension().getTestOptions().getReportDir();
                 String rootLocation = dir != null && !dir.isEmpty() ? dir : defaultReportsDir;
-                return scope.getProject().file(rootLocation + subfolderName + FD_FLAVORS_ALL);
+                return scope.getProject()
+                        .file(rootLocation + subfolderName + FD_FLAVORS_ALL);
             });
         }
     }

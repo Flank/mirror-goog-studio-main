@@ -15,26 +15,19 @@
  */
 
 package com.android.build.gradle;
+
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 
 import com.android.build.gradle.internal.dsl.TestOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.report.ReportType;
-
-import org.gradle.api.Action;
+import java.io.File;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.TaskCollection;
-import org.gradle.execution.TaskGraphExecuter;
-
-import java.io.File;
-import java.util.concurrent.Callable;
-
-import groovy.lang.Closure;
 
 /**
  * Gradle plugin class for 'reporting' projects.
@@ -61,46 +54,37 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                 + "projects.");
         mergeReportsTask.setReportType(ReportType.MULTI_PROJECT);
 
-        ConventionMappingHelper.map(mergeReportsTask, "resultsDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                String resultsDir = extension.getResultsDir();
-                if (resultsDir == null) {
-                    return new File(project.getBuildDir(), FD_ANDROID_RESULTS);
-                } else {
-                    return project.file(resultsDir);
-                }
+        mergeReportsTask.setResultsDir(() -> {
+            String resultsDir = extension.getResultsDir();
+            if (resultsDir == null) {
+                return new File(project.getBuildDir(), FD_ANDROID_RESULTS);
+            } else {
+                return project.file(resultsDir);
             }
         });
 
-        ConventionMappingHelper.map(mergeReportsTask, "reportsDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                String reportsDir = extension.getReportDir();
-                if (reportsDir == null) {
-                    return new File(new File(project.getBuildDir(),  FD_REPORTS), FD_ANDROID_TESTS);
-                } else {
-                    return project.file(reportsDir);
-                }
+        mergeReportsTask.setReportsDir(() -> {
+            String reportsDir = extension.getReportDir();
+            if (reportsDir == null) {
+                return new File(new File(project.getBuildDir(),  FD_REPORTS), FD_ANDROID_TESTS);
+            } else {
+                return project.file(reportsDir);
             }
         });
 
         // gather the subprojects
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project prj) {
-                for (Project p : prj.getSubprojects()) {
-                    TaskCollection<AndroidReportTask> tasks = p.getTasks().withType(
-                            AndroidReportTask.class);
-                    for (AndroidReportTask task : tasks) {
-                        mergeReportsTask.addTask(task);
-                    }
+        project.afterEvaluate(prj -> {
+            for (Project p : prj.getSubprojects()) {
+                TaskCollection<AndroidReportTask> tasks = p.getTasks().withType(
+                        AndroidReportTask.class);
+                for (AndroidReportTask task : tasks) {
+                    mergeReportsTask.addTask(task);
+                }
 
-                    TaskCollection<DeviceProviderInstrumentTestTask> tasks2 =
-                            p.getTasks().withType(DeviceProviderInstrumentTestTask.class);
-                    for (DeviceProviderInstrumentTestTask task : tasks2) {
-                        mergeReportsTask.addTask(task);
-                    }
+                TaskCollection<DeviceProviderInstrumentTestTask> tasks2 =
+                        p.getTasks().withType(DeviceProviderInstrumentTestTask.class);
+                for (DeviceProviderInstrumentTestTask task : tasks2) {
+                    mergeReportsTask.addTask(task);
                 }
             }
         });
@@ -112,13 +96,10 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         // them ignore their error.
         // We cannot do that always: in case the test task is not going to run, we do want the
         // individual testFlavor tasks to fail.
-        if (mergeReportsTask != null
-                && project.getGradle().getStartParameter().isContinueOnFailure()) {
-            project.getGradle().getTaskGraph().whenReady(new Closure(this) {
-                void doCall(TaskGraphExecuter taskGraph) {
-                    if (taskGraph.hasTask(mergeReportsTask)) {
-                        mergeReportsTask.setWillRun();
-                    }
+        if (project.getGradle().getStartParameter().isContinueOnFailure()) {
+            project.getGradle().getTaskGraph().whenReady(taskExecutionGraph -> {
+                if (taskExecutionGraph.hasTask(mergeReportsTask)) {
+                    mergeReportsTask.setWillRun();
                 }
             });
         }
