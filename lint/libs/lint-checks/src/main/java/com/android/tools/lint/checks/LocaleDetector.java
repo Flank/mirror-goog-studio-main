@@ -20,31 +20,29 @@ import static com.android.SdkConstants.FORMAT_METHOD;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UastUtils;
 
 /**
  * Checks for errors related to locale handling
  */
-public class LocaleDetector extends Detector implements JavaPsiScanner {
+public class LocaleDetector extends Detector implements UastScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
             LocaleDetector.class,
             Scope.JAVA_FILE_SCOPE);
@@ -76,7 +74,7 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
     public LocaleDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -96,8 +94,8 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         if (context.getEvaluator().isMemberInClass(method, TYPE_STRING)) {
             String name = method.getName();
             if (name.equals(FORMAT_METHOD)) {
@@ -116,13 +114,13 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
     /** Returns true if the given node is a parameter to a Logging call */
     private static boolean isLoggingParameter(
             @NonNull JavaContext context,
-            @NonNull PsiMethodCallExpression node) {
-        PsiMethodCallExpression parentCall =
-                PsiTreeUtil.getParentOfType(node, PsiMethodCallExpression.class, true);
+            @NonNull UCallExpression node) {
+        UCallExpression parentCall =
+                UastUtils.getParentOfType(node, UCallExpression.class, true);
         if (parentCall != null) {
-            String name = parentCall.getMethodExpression().getReferenceName();
+            String name = parentCall.getMethodName();
             if (name != null && name.length() == 1) { // "d", "i", "e" etc in Log
-                PsiMethod method = parentCall.resolveMethod();
+                PsiMethod method = parentCall.resolve();
                 return context.getEvaluator().isMemberInClass(method, LogDetector.LOG_CLS);
             }
         }
@@ -133,20 +131,20 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
     private static void checkFormat(
             @NonNull JavaContext context,
             @NonNull PsiMethod method,
-            @NonNull PsiMethodCallExpression call) {
+            @NonNull UCallExpression call) {
         // Only check the non-locale version of String.format
         if (method.getParameterList().getParametersCount() == 0
                 || !context.getEvaluator().parameterHasType(method, 0, TYPE_STRING)) {
             return;
         }
 
-        PsiExpression[] expressions = call.getArgumentList().getExpressions();
-        if (expressions.length == 0) {
+        List<UExpression> expressions = call.getValueArguments();
+        if (expressions.isEmpty()) {
             return;
         }
 
         // Find the formatting string
-        PsiExpression first = expressions[0];
+        UExpression first = expressions.get(0);
         Object value = ConstantEvaluator.evaluate(context, first);
         if (!(value instanceof String)) {
             return;
@@ -157,7 +155,14 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
             if (isLoggingParameter(context, call)) {
                 return;
             }
-            Location location = context.getLocation(call);
+            Location location;
+            if (FORMAT_METHOD.equals(call.getMethodName())) {
+                // For String#format, include receiver (String), but not for .toUppercase etc
+                // since the receiver can often be a complex expression
+                location = context.getCallLocation(call, true, true);
+            } else {
+                location = context.getCallLocation(call, false, true);
+            }
             String message =
                     "Implicitly using the default locale is a common source of bugs: " +
                             "Use `String.format(Locale, ...)` instead";

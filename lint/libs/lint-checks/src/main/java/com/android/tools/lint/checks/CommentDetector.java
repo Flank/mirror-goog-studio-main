@@ -21,9 +21,10 @@ import static com.android.tools.lint.detector.api.CharSequences.regionMatches;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -32,8 +33,11 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.intellij.psi.PsiElement;
+import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UComment;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -41,7 +45,7 @@ import org.w3c.dom.NodeList;
 /**
  * Looks for issues in Java comments
  */
-public class CommentDetector extends ResourceXmlDetector implements JavaPsiScanner {
+public class CommentDetector extends ResourceXmlDetector implements UastScanner {
     private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -77,6 +81,10 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
             IMPLEMENTATION)
             .setEnabledByDefault(false);
 
+    /** The current AST only passes comment nodes for Javadoc so I need to do manual token scanning
+     instead */
+    private static final boolean USE_AST = true;
+
     private static final String ESCAPE_STRING = "\\u002a\\u002f";
 
 
@@ -84,13 +92,28 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
     public CommentDetector() {
     }
 
+    @Nullable
     @Override
-    public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return null;
+    public List<Class<? extends UElement>> getApplicableUastTypes() {
+        if (USE_AST) {
+            return Collections.singletonList(UFile.class);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    @Override
+    public UElementHandler createUastHandler(@NonNull JavaContext context) {
+        //noinspection ConstantConditions
+        return USE_AST ? new CommentChecker(context) : null;
     }
 
     @Override
     public void afterCheckFile(@NonNull Context context) {
+        if (USE_AST) {
+            return;
+        }
         if (context instanceof JavaContext) {
             checkJava((JavaContext) context);
         }
@@ -118,7 +141,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                     if (end == -1) {
                         end = n;
                     }
-                    checkComment(context, null, null, source, 0, start, end);
+                    checkComment(context, null, null, null, source, 0, start, end);
                 } else if (next == '*') {
                     // Block comment
                     int start = i + 2;
@@ -126,7 +149,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                     if (end == -1) {
                         end = n;
                     }
-                    checkComment(context, null, null, source, 0, start, end);
+                    checkComment(context, null, null, null, source, 0, start, end);
                 }
             }
         }
@@ -140,7 +163,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
     private static void checkXml(@NonNull XmlContext context, Node node) {
         if (node.getNodeType() == Node.COMMENT_NODE) {
             String source = node.getNodeValue();
-            checkComment(null, context, node, source, 0, 0, source.length());
+            checkComment(null, context, node, null, source, 0, 0, source.length());
         }
 
         NodeList children = node.getChildNodes();
@@ -153,6 +176,7 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
             @Nullable JavaContext javaContext,
             @Nullable XmlContext xmlContext,
             @Nullable Node xmlNode,
+            @Nullable UComment javaNode,
             @NonNull CharSequence source,
             int offset,
             int start,
@@ -171,9 +195,17 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                                 "Code might be hidden here; found unicode escape sequence " +
                                 "which is interpreted as comment end, compiled code follows";
                         if (javaContext != null) {
-                            Location location = Location.create(context.file, source,
-                                    offset + i - 1, offset + i - 1 + ESCAPE_STRING.length());
-                            javaContext.report(EASTER_EGG, (PsiElement) null, location, message);
+                            Location location;
+                            if (javaNode != null) {
+                                // Use node when possible, since that allows @SuppressLint,
+                                // noinspection etc to work to suppress it
+                                location = javaContext.getRangeLocation(javaNode, offset + i - 1,
+                                        ESCAPE_STRING.length());
+                            } else {
+                                location = Location.create(context.file, source,
+                                        offset + i - 1, offset + i - 1 + ESCAPE_STRING.length());
+                            }
+                            javaContext.report(EASTER_EGG, javaNode, location, message);
                         } else {
                             assert xmlNode != null;
                             Location location = xmlContext.getLocation(xmlNode, i,
@@ -191,15 +223,40 @@ public class CommentDetector extends ResourceXmlDetector implements JavaPsiScann
                         "`STOPSHIP` comment found; points to code which must be fixed prior " +
                         "to release";
                 if (javaContext != null) {
-                    Location location = Location.create(context.file, source,
-                            offset + i - 1, offset + i - 1 + STOPSHIP_COMMENT.length());
-                    javaContext.report(STOP_SHIP, (PsiElement) null, location, message);
+                    Location location;
+                    if (javaNode != null) {
+                        // Use node when possible, since that allows @SuppressLint, //noinspection etc
+                        // to work to suppress it
+                        location = javaContext.getRangeLocation(javaNode, offset + i - 1,
+                                STOPSHIP_COMMENT.length());
+                    } else {
+                        location = Location.create(context.file, source,
+                                offset + i - 1, offset + i - 1 + STOPSHIP_COMMENT.length());
+                    }
+                    javaContext.report(STOP_SHIP, javaNode, location, message);
                 } else {
                     assert xmlNode != null;
                     Location location = xmlContext.getLocation(xmlNode, i,
                             i + STOPSHIP_COMMENT.length());
                     xmlContext.report(STOP_SHIP, xmlNode, location, message);
                 }
+            }
+        }
+    }
+
+    private static class CommentChecker extends UElementHandler {
+        private final JavaContext mContext;
+
+        public CommentChecker(JavaContext context) {
+            mContext = context;
+        }
+
+        @Override
+        public void visitFile(@NonNull UFile node) {
+            for (UComment comment : node.getAllCommentsInFile()) {
+                String contents = comment.getText();
+                checkComment(mContext, null, null, comment, contents,
+                        0, 0, contents.length());
             }
         }
     }

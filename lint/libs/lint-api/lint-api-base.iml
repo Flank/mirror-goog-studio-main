@@ -20,5 +20,6 @@
     <orderEntry type="module" module-name="manifest-merger-base" />
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="intellij-core" level="project" />
+    <orderEntry type="library" name="uast" level="project" />
   </component>
 </module>

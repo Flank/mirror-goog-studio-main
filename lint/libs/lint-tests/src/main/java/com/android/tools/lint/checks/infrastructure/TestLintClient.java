@@ -62,6 +62,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -83,6 +84,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.psi.JavaRecursiveElementVisitor;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -96,6 +100,7 @@ import java.util.stream.Collectors;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -412,9 +417,46 @@ public class TestLintClient extends LintCliClient {
         return writer.toString();
     }
 
+    @Nullable
+    @Override
+    public UastParser getUastParser(@Nullable Project project) {
+        return new LintCliUastParser(project) {
+            @Override
+            public boolean prepare(@NonNull List<JavaContext> contexts) {
+                boolean ok = super.prepare(contexts);
+                if (task.forceSymbolResolutionErrors) {
+                    ok = false;
+                }
+                return ok;
+            }
+
+            @Nullable
+            @Override
+            public UFile parse(@NonNull JavaContext context) {
+                UFile file = super.parse(context);
+
+                if (!task.allowCompilationErrors) {
+                    if (file != null) {
+                        PsiErrorElement error = PsiTreeUtil
+                                .findChildOfType(file.getPsi(), PsiErrorElement.class);
+                        if (error != null) {
+                            fail("Found error element " + error);
+                            // TODO: Use ECJ parser to produce build errors with better
+                            // error messages, source offsets, etc?
+                        }
+                    } else {
+                        fail("Failure processing source " + context.file);
+                    }
+                }
+
+                return file;
+            }
+        };
+    }
+
     @Override
     public JavaParser getJavaParser(@Nullable Project project) {
-        return new EcjParser(this, project, getIdeaProject()) {
+        return new EcjParser(this, project) {
             @Override
             public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
                 boolean success = super.prepareJavaParse(contexts);

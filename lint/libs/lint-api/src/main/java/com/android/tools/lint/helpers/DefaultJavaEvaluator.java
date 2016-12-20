@@ -53,6 +53,9 @@ import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.psi.util.MethodSignatureUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.TypeConversionUtil;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UastUtils;
 
 public class DefaultJavaEvaluator extends JavaEvaluator {
     private final com.intellij.openapi.project.Project myProject;
@@ -134,6 +137,17 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
     @Override
     public String findJarPath(@NonNull PsiElement element) {
         PsiFile containingFile = element.getContainingFile();
+        return findJarPath(containingFile);
+    }
+
+    @Nullable
+    @Override
+    public String findJarPath(@NonNull UElement element) {
+        UFile uFile = UastUtils.getContainingFile(element);
+        return uFile != null ? findJarPath(uFile.getPsi()) : null;
+    }
+
+    private static String findJarPath(@Nullable PsiFile containingFile) {
         if (containingFile instanceof PsiCompiledFile) {
             ///This code is roughly similar to the following:
             //      VirtualFile jarVirtualFile = PsiUtil.getJarFile(containingFile);
@@ -161,6 +175,20 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
     public PsiPackage getPackage(@NonNull PsiElement node) {
         PsiFile containingFile = node.getContainingFile();
         if (containingFile != null) {
+            PsiDirectory dir = containingFile.getParent();
+            if (dir != null) {
+                return JavaDirectoryService.getInstance().getPackage(dir);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public PsiPackage getPackage(@NonNull UElement node) {
+        UFile uFile = UastUtils.getContainingFile(node);
+        if (uFile != null) {
+            PsiFile containingFile = uFile.getPsi();
             PsiDirectory dir = containingFile.getParent();
             if (dir != null) {
                 return JavaDirectoryService.getInstance().getPackage(dir);

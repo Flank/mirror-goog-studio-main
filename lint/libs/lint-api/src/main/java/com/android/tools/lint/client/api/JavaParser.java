@@ -33,7 +33,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiType;
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -51,6 +50,7 @@ import lombok.ast.Throw;
 import lombok.ast.TypeReference;
 import lombok.ast.TypeReferencePart;
 import lombok.ast.While;
+import org.jetbrains.uast.UFile;
 
 /**
  * A wrapper for a Java parser. This allows tools integrating lint to map directly
@@ -163,7 +163,7 @@ public abstract class JavaParser {
         PsiFile containingFile = element.getContainingFile();
         File file = context.file;
         CharSequence contents = context.getContents();
-        if (containingFile != context.getJavaFile()) {
+        if (!containingFile.equals(context.getJavaFile())) {
             // Reporting an error in a different file.
             if (context.getDriver().getScope().size() == 1) {
                 // Don't bother with this error if it's in a different file during single-file analysis
@@ -382,6 +382,14 @@ public abstract class JavaParser {
      * @param compilationUnit the compilation unit being disposed
      */
     public void dispose(@NonNull JavaContext context, @NonNull PsiJavaFile compilationUnit) {
+    }
+
+    /**
+     * Dispose any data structures held for the given context.
+     * @param context information about the file previously parsed
+     * @param compilationUnit the compilation unit being disposed
+     */
+    public void dispose(@NonNull JavaContext context, @NonNull UFile compilationUnit) {
     }
 
     /**

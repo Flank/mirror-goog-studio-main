@@ -49,6 +49,8 @@ import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.meta.MetaDataContributor;
 import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.util.JavaClassSupers;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastLanguagePlugin;
 
 public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironment {
     private static LintCoreApplicationEnvironment environment;
@@ -89,6 +91,10 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClsCustomNavigationPolicy.EP_NAME, ClsCustomNavigationPolicy.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClassFileDecompilers.EP_NAME, ClassFileDecompilers.Decompiler.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, TypeAnnotationModifier.EP_NAME, TypeAnnotationModifier.class);
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
+
+        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
+                new org.jetbrains.uast.java.JavaUastLanguagePlugin());
     }
 
     private static void registerApplicationServicesForCLI(JavaCoreApplicationEnvironment applicationEnvironment) {
@@ -105,10 +111,12 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
     static void registerProjectExtensionPoints(ExtensionsArea area) {
         CoreApplicationEnvironment.registerExtensionPoint(area, PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
         CoreApplicationEnvironment.registerExtensionPoint(area, PsiElementFinder.EP_NAME, PsiElementFinder.class);
+        CoreApplicationEnvironment.registerExtensionPoint(area, "org.jetbrains.uast.uastLanguagePlugin", UastLanguagePlugin.class);
     }
 
     public static void registerProjectServices(JavaCoreProjectEnvironment projectEnvironment) {
         MockProject project = projectEnvironment.getProject();
+        project.registerService(UastContext.class, new UastContext(project));
         project.registerService(ExternalAnnotationsManager.class, LintExternalAnnotationsManager.class);
         project.registerService(InferredAnnotationsManager.class, LintInferredAnnotationsManager.class);
     }

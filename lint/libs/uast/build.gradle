@@ -14,6 +14,10 @@ jar {
     from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/picocontainer.jar")
     from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/annotations.jar")
     from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/asm-all.jar")
+
+    // UAST
+    from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-common-1.0.jar")
+    from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-java-1.0.jar")
 }
 
 project.ext.pomName = 'IntelliJ IDEA Core and AST APIs'

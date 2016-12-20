@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -33,19 +33,19 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiSuperExpression;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.USuperExpression;
+import org.jetbrains.uast.UastUtils;
 
 /**
  * Checks for cases where the wrong call is being made
  */
-public class WrongCallDetector extends Detector implements JavaPsiScanner {
+public class WrongCallDetector extends Detector implements UastScanner {
     /** Calling the wrong method */
     public static final Issue ISSUE = Issue.create(
             "WrongCall",
@@ -65,7 +65,7 @@ public class WrongCallDetector extends Detector implements JavaPsiScanner {
     public WrongCallDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     @Nullable
@@ -78,20 +78,20 @@ public class WrongCallDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression node, @NonNull PsiMethod calledMethod) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+            @NonNull PsiMethod calledMethod) {
         // Call is only allowed if it is both only called on the super class (invoke special)
         // as well as within the same overriding method (e.g. you can't call super.onLayout
         // from the onMeasure method)
-        PsiElement operand = node.getMethodExpression().getQualifier();
-        if (!(operand instanceof PsiSuperExpression)) {
+        UExpression operand = node.getReceiver();
+        if (!(operand instanceof USuperExpression)) {
             report(context, node, calledMethod);
             return;
         }
 
-        PsiMethod method = PsiTreeUtil.getParentOfType(node, PsiMethod.class, true);
+        PsiMethod method = UastUtils.getParentOfType(node, UMethod.class, true);
         if (method != null) {
-            String callName = node.getMethodExpression().getReferenceName();
+            String callName = node.getMethodName();
             if (callName != null && !callName.equals(method.getName())) {
                 report(context, node, calledMethod);
             }
@@ -100,7 +100,7 @@ public class WrongCallDetector extends Detector implements JavaPsiScanner {
 
     private static void report(
             @NonNull JavaContext context,
-            @NonNull PsiMethodCallExpression node,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         // Make sure the call is on a view
         if (!context.getEvaluator().isMemberInSubClassOf(method, CLASS_VIEW, false)) {

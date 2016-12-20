@@ -2150,6 +2150,101 @@ public class VersionChecksTest extends AbstractCheckTest {
         );
     }
 
+    public void testPrecededBy() throws Exception {
+        //noinspection all // Sample code
+        checkApiCheck(
+                ""
+                        + "src/test/pkg/TestPrecededByVersionCheck.java:24: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]\n"
+                        + "        requiresLollipop(); // ERROR: API level could be 18-21\n"
+                        + "        ~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/TestPrecededByVersionCheck.java:28: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]\n"
+                        + "        requiresLollipop(); // ERROR: Version check is after\n"
+                        + "        ~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/TestPrecededByVersionCheck.java:39: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]\n"
+                        + "        requiresLollipop(); // ERROR: Version check is going in the wrong direction: API can be 1\n"
+                        + "        ~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/TestPrecededByVersionCheck.java:57: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]\n"
+                        + "        requiresLollipop(); // ERROR: API level can be less than 22\n"
+                        + "        ~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/TestPrecededByVersionCheck.java:66: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]\n"
+                        + "        requiresLollipop(); // ERROR: API level can be less than 22\n"
+                        + "        ~~~~~~~~~~~~~~~~\n"
+                        + "5 errors, 0 warnings\n",
+                null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.os.Build;\n"
+                        + "import android.support.annotation.RequiresApi;\n"
+                        + "\n"
+                        + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                        + "public class TestPrecededByVersionCheck {\n"
+                        + "    @RequiresApi(22)\n"
+                        + "    public boolean requiresLollipop() {\n"
+                        + "        return true;\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test1() {\n"
+                        + "        if (Build.VERSION.SDK_INT < 22) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // OK\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test2() {\n"
+                        + "        if (Build.VERSION.SDK_INT < 18) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // ERROR: API level could be 18-21\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test3() {\n"
+                        + "        requiresLollipop(); // ERROR: Version check is after\n"
+                        + "        if (Build.VERSION.SDK_INT < 22) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // OK\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test4() {\n"
+                        + "        if (Build.VERSION.SDK_INT > 22) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // ERROR: Version check is going in the wrong direction: API can be 1\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test5() {\n"
+                        + "        if (Build.VERSION.SDK_INT > 22) {\n"
+                        + "            // Something\n"
+                        + "        } else {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // OK\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test6() {\n"
+                        + "        if (Build.VERSION.SDK_INT > 18) {\n"
+                        + "            // Something\n"
+                        + "        } else {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // ERROR: API level can be less than 22\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test7() {\n"
+                        + "        if (Build.VERSION.SDK_INT <= 22) {\n"
+                        + "            // Something\n"
+                        + "        } else {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        requiresLollipop(); // ERROR: API level can be less than 22\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportJar
+        );
+    }
+
     public void testNestedChecks() throws Exception {
         //noinspection all // Sample code
         checkApiCheck(""
@@ -2261,6 +2356,8 @@ public class VersionChecksTest extends AbstractCheckTest {
         if (expectedBytecode == null) {
             expectedBytecode = expected;
         }
+
+// What do we do about this?
 System.out.println("Temporarily disabled check for resolution errors");
         //try {
         //    forceSymbolErrors = true;

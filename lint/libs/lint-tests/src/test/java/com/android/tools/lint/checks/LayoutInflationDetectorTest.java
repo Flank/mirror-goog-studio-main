@@ -80,40 +80,40 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/LayoutInflationTest.java:13: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
                 + "        convertView = mInflater.inflate(R.layout.your_layout, null);\n"
                 + "                                                              ~~~~\n"
                 + "src/test/pkg/LayoutInflationTest.java:14: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
                 + "        convertView = mInflater.inflate(R.layout.your_layout, null, true);\n"
                 + "                                                              ~~~~\n"
-                + "0 errors, 2 warnings\n",
-
-            lintProject(
-                    mLayoutInflationTest,
-                    xml("res/layout/your_layout.xml", "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:id=\"@+id/LinearLayout1\"\n"
-                            + "    android:layout_width=\"match_parent\"\n"
-                            + "    android:layout_height=\"match_parent\"\n"
-                            + "    android:orientation=\"vertical\" />\n"),
-                    xml("res/layout-port/your_layout.xml", ""
-                            + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:id=\"@id/text1\"\n"
-                            + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n")
-            ));
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                mLayoutInflationTest,
+                xml("res/layout/your_layout.xml",
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                + "    android:id=\"@+id/LinearLayout1\"\n"
+                                + "    android:layout_width=\"match_parent\"\n"
+                                + "    android:layout_height=\"match_parent\"\n"
+                                + "    android:orientation=\"vertical\" />\n"),
+                xml("res/layout-port/your_layout.xml", ""
+                        + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:id=\"@id/text1\"\n"
+                        + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNoLayoutParams() throws Exception {
-        assertEquals("No warnings.",
-
-                lintProject(
-                        mLayoutInflationTest,
-                        xml("res/layout/your_layout.xml", ""
-                                + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    android:id=\"@id/text1\"\n"
-                                + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n")
-            ));
+        lint().files(
+                mLayoutInflationTest,
+                xml("res/layout/your_layout.xml", ""
+                        + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:id=\"@id/text1\"\n"
+                        + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n"))
+                .run()
+                .expectClean();
     }
 
     public void testHasLayoutParams() throws IOException, XmlPullParserException {

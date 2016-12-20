@@ -60,39 +60,33 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
     }
 
     public void testMergeRefFromInclude() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
                 + "<FrameLayout\n"
                 + "^\n"
-                + "0 errors, 1 warnings\n",
-            lintProject(
-                    mSimple,
-                    mSimpleinclude
-                    ));
+                + "0 errors, 1 warnings\n";
+        lint().files(mSimple, mSimpleinclude).run().expect(expected);
     }
 
     public void testMergeRefFromIncludeSuppressed() throws Exception {
         //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        xml("res/layout/simple.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "\n"
-                            + "<FrameLayout\n"
-                            + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:layout_width=\"match_parent\"\n"
-                            + "    android:layout_height=\"match_parent\"\n"
-                            + "    tools:ignore=\"MergeRootFrame\" />\n"),
-                        mSimpleinclude
-                        ));
+        lint().files(
+                xml("res/layout/simple.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "\n"
+                        + "<FrameLayout\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    tools:ignore=\"MergeRootFrame\" />\n"),
+                mSimpleinclude)
+                .run()
+                .expectClean();
     }
 
     public void testNotIncluded() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(mSimple));
+        lint().files(mSimple).run().expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

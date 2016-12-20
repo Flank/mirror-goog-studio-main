@@ -19,13 +19,10 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 public class AndroidAutoDetectorTest extends AbstractCheckTest {
 
+    //noinspection all // Sample code
     private final TestFile mValidAutomotiveDescriptor =
             xml("res/xml/automotive_app_desc.xml", ""
                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -33,6 +30,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                     + "    <uses name=\"media\"/>\n"
                     + "</automotiveApp>\n");
 
+    //noinspection all // Sample code
     private final TestFile mValidAutoAndroidXml = xml(FN_ANDROID_MANIFEST_XML, ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -65,26 +63,19 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</manifest>\n");
 
-    private Set<Issue> mEnabled = new HashSet<>();
-
     @Override
     protected Detector getDetector() {
         return new AndroidAutoDetector();
     }
 
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && mEnabled.contains(issue);
-    }
     public void testMissingIntentFilter() throws Exception {
-
-        mEnabled = Collections.singleton(
-                AndroidAutoDetector.MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE);
         String expected = "AndroidManifest.xml:6: Error: Missing intent-filter for action android.media.browse.MediaBrowserService that is required for android auto support [MissingMediaBrowserServiceIntentFilter]\n"
                 + "    <application\n"
                 + "    ^\n"
                 + "1 errors, 0 warnings\n";
-        String result = lintProject(
+
+        //noinspection all // Sample code
+        lint().files(
                 xml(FN_ANDROID_MANIFEST_XML, ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -109,37 +100,40 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                         + "    </application>\n"
                         + "\n"
                         + "</manifest>\n"),
-                mValidAutomotiveDescriptor);
-
-        assertEquals(expected, result);
+                mValidAutomotiveDescriptor)
+                .issues(AndroidAutoDetector.MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE)
+                .run()
+                .expect(expected);
     }
 
     public void testInvalidUsesTagInMetadataFile() throws Exception {
-        mEnabled = Collections.singleton(AndroidAutoDetector.INVALID_USES_TAG_ISSUE);
         String expected = "" +
                 "res/xml/automotive_app_desc.xml:3: Error: Expecting one of media or notification for the name attribute in uses tag. [InvalidUsesTagAttribute]\n"
                 + "    <uses name=\"medias\"/>\n"
                 + "          ~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
-        String result = lintProject(
+
+        //noinspection all // Sample code
+        lint().files(
                 mValidAutoAndroidXml,
                 xml("res/xml/automotive_app_desc.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<automotiveApp>\n"
                         + "    <uses name=\"medias\"/>\n"
-                        + "</automotiveApp>\n"));
-        assertEquals(expected, result);
+                        + "</automotiveApp>\n"))
+                .issues(AndroidAutoDetector.INVALID_USES_TAG_ISSUE)
+                .run()
+                .expect(expected);
     }
 
     public void testMissingMediaSearchIntent() throws Exception {
-        mEnabled = Collections.singleton(
-                AndroidAutoDetector.MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH);
         String expected = "AndroidManifest.xml:6: Error: Missing intent-filter for action android.media.action.MEDIA_PLAY_FROM_SEARCH. [MissingIntentFilterForMediaSearch]\n"
                 + "    <application\n"
                 + "    ^\n"
                 + "1 errors, 0 warnings\n";
 
-        String result = lintProject(
+        //noinspection all // Sample code
+        lint().files(
                 xml(FN_ANDROID_MANIFEST_XML, ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -168,20 +162,20 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                         + "    </application>\n"
                         + "\n"
                         + "</manifest>\n"),
-                mValidAutomotiveDescriptor);
-        assertEquals(expected, result);
+                mValidAutomotiveDescriptor)
+                .issues(AndroidAutoDetector.MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH)
+                .run()
+                .expect(expected);
     }
 
     public void testMissingOnPlayFromSearch() throws Exception {
-        mEnabled = Collections.singleton(
-                AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH);
-
         String expected = "src/com/example/android/uamp/MSessionCallback.java:5: Error: This class does not override onPlayFromSearch from MediaSession.Callback The method should be overridden and implemented to support Voice search on Android Auto. [MissingOnPlayFromSearch]\n"
                 + "public class MSessionCallback extends Callback {\n"
                 + "             ~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
 
-        String result = lintProject(
+        //noinspection all // Sample code
+        lint().files(
                 mValidAutoAndroidXml,
                 mValidAutomotiveDescriptor,
                 java("src/com/example/android/uamp/MSessionCallback.java", ""
@@ -194,16 +188,15 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                         + "    public void onPlay() {\n"
                         + "        // custom impl\n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"))
+                .issues(AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH)
+                .run()
+                .expect(expected);
     }
 
     public void testValidOnPlayFromSearch() throws Exception {
-        mEnabled = Collections.singleton(AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH);
-
-        String expected = "No warnings.";
-
-        String result = lintProject(
+        //noinspection all // Sample code
+        lint().files(
                 mValidAutoAndroidXml,
                 mValidAutomotiveDescriptor,
                 java("src/com/example/android/uamp/MSessionCallback.java", ""
@@ -218,7 +211,9 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                         + "    public void onPlayFromSearch(String query, Bundle bundle) {\n"
                         + "        // custom impl\n"
                         + "    }\n"
-                        + "}\n"));
-        assertEquals(expected, result);
+                        + "}\n"))
+                .issues(AndroidAutoDetector.MISSING_ON_PLAY_FROM_SEARCH)
+                .run()
+                .expectClean();
     }
 }

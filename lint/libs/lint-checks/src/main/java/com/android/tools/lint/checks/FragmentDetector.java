@@ -24,19 +24,18 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.PsiAnonymousClass;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UClass;
 
 /**
  * Checks that Fragment subclasses can be instantiated via
@@ -47,7 +46,7 @@ import java.util.List;
  *   http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate
  * (and countless duplicates)
  */
-public class FragmentDetector extends Detector implements JavaPsiScanner {
+public class FragmentDetector extends Detector implements UastScanner {
     /** Are fragment subclasses instantiatable? */
     public static final Issue ISSUE = Issue.create(
         "ValidFragment",
@@ -75,7 +74,7 @@ public class FragmentDetector extends Detector implements JavaPsiScanner {
     public FragmentDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -84,15 +83,11 @@ public class FragmentDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass node) {
-        if (node instanceof PsiAnonymousClass) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass node) {
+        if (node instanceof UAnonymousClass) {
             String message = "Fragments should be static such that they can be re-instantiated by " +
                     "the system, and anonymous classes are not static";
-            PsiElement locationNode = JavaContext.findNameElement(node);
-            if (locationNode == null) {
-                locationNode = node;
-            }
-            context.report(ISSUE, locationNode, context.getLocation(locationNode), message);
+            context.report(ISSUE, node, context.getNameLocation(node), message);
             return;
         }
 

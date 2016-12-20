@@ -17,6 +17,7 @@ iml_module(
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools/idea/java/java-psi-api",
         "//tools/base/build-system:studio.manifest-merger",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
     ],
     # do not sort: must match IML order
     deps = [
@@ -31,6 +32,7 @@ iml_module(
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
         "//tools/idea/java/java-psi-api[module]",
         "//tools/base/build-system:studio.manifest-merger[module]",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
     ],
 )
 
@@ -46,6 +48,7 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
@@ -91,6 +94,7 @@ maven_java_library(
     deps = [
         ":tools.lint-api",
         "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",

@@ -26,22 +26,20 @@ public class JavaScriptInterfaceDetectorTest extends AbstractCheckTest {
     }
 
     public void testOlderSdk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals("No warnings.",
-                lintProject(
-                        classpath(),
-                        projectProperties().compileSdk(19),
-                        manifest().minSdk(10),
-                        mAnnotatedObject,
-                        mInheritsFromAnnotated,
-                        mNonAnnotatedObject,
-                        mJavaScriptTest
-                ));
+        lint().files(
+                classpath(),
+                projectProperties().compileSdk(19),
+                manifest().minSdk(10),
+                mAnnotatedObject,
+                mInheritsFromAnnotated,
+                mNonAnnotatedObject,
+                mJavaScriptTest)
+                .run()
+                .expectClean();
     }
 
     public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/JavaScriptTest.java:10: Error: None of the methods in the added interface (NonAnnotatedObject) have been annotated with @android.webkit.JavascriptInterface; they will not be visible in API 17 [JavascriptInterface]\n"
                 + "  webview.addJavascriptInterface(new NonAnnotatedObject(), \"myobj\");\n"
                 + "          ~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -54,40 +52,41 @@ public class JavaScriptInterfaceDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/JavaScriptTest.java:31: Error: None of the methods in the added interface (NonAnnotatedObject) have been annotated with @android.webkit.JavascriptInterface; they will not be visible in API 17 [JavascriptInterface]\n"
                 + "  webview.addJavascriptInterface(t, \"myobj\");\n"
                 + "          ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "4 errors, 0 warnings\n",
-
-            lintProject(
-                    classpath(),
-                    projectProperties().compileSdk(19),
-                    xml("AndroidManifest.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"test.bytecode\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"17\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\" >\n"
-                            + "        <activity\n"
-                            + "            android:name=\".BytecodeTestsActivity\"\n"
-                            + "            android:label=\"@string/app_name\" >\n"
-                            + "            <intent-filter>\n"
-                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                            + "\n"
-                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                            + "            </intent-filter>\n"
-                            + "        </activity>\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
-                    mAnnotatedObject,
-                    mInheritsFromAnnotated,
-                    mNonAnnotatedObject,
-                    mJavaScriptTest
-                    ));
+                + "4 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                classpath(),
+                projectProperties().compileSdk(19),
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.bytecode\"\n"
+                        + "    android:versionCode=\"1\"\n"
+                        + "    android:versionName=\"1.0\" >\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"17\" />\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\" >\n"
+                        + "        <activity\n"
+                        + "            android:name=\".BytecodeTestsActivity\"\n"
+                        + "            android:label=\"@string/app_name\" >\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"),
+                mAnnotatedObject,
+                mInheritsFromAnnotated,
+                mNonAnnotatedObject,
+                mJavaScriptTest)
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code

@@ -76,7 +76,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
             boolean allowSystemErrors,
             @Nullable com.android.tools.lint.checks.infrastructure.TestLintClient lintClient,
             @NonNull TestFile... files) throws Exception {
-        // First check with PSI
+        // First check with PSI/UAST
         lint().projects(project(files).name(getName()))
                 .allowCompilationErrors(allowCompilationErrors)
                 .allowSystemErrors(allowSystemErrors)
@@ -89,16 +89,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
         if (expectedBytecode == null) {
             expectedBytecode = expected;
         }
-
-        System.out.println("Disabled bytecode check for now");
-        //lint().projects(project(files).name(getName()))
-        //        // This is how we check with bytecode: simulate symbol resolution errors
-        //        .forceSymbolResolutionErrors()
-        //        .allowCompilationErrors(allowCompilationErrors)
-        //        .allowSystemErrors(allowSystemErrors)
-        //        .client(lintClient)
-        //        .run()
-        //        .expect(expectedBytecode);
+        lint().projects(project(files).name(getName()))
+                // This is how we check with bytecode: simulate symbol resolution errors
+                .forceSymbolResolutionErrors()
+                .allowCompilationErrors(allowCompilationErrors)
+                .allowSystemErrors(allowSystemErrors)
+                .client(lintClient)
+                .run()
+                .expect(expectedBytecode);
     }
 
     public void testXmlApi1() throws Exception {
@@ -2639,9 +2637,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ApiSourceCheck.java:55: Warning: Field requires API level 11 (current min is 1): android.view.View#MEASURED_STATE_MASK [InlinedApi]\n"
                 + "                | ((child.getMeasuredHeight() >> View.MEASURED_HEIGHT_STATE_SHIFT) & (View.MEASURED_STATE_MASK >> View.MEASURED_HEIGHT_STATE_SHIFT));\n"
                 + "                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ApiSourceCheck.java:67: Warning: Field requires API level 12 (current min is 1): android.app.ActivityManager#MOVE_TASK_NO_USER_ACTION [InlinedApi]\n"
-                + "        int w, z = ActivityManager.MOVE_TASK_NO_USER_ACTION;\n"
-                + "                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ApiSourceCheck.java:90: Warning: Field requires API level 8 (current min is 1): android.R.id#custom [InlinedApi]\n"
                 + "        int custom = android.R.id.custom; // API 8\n"
                 + "                     ~~~~~~~~~~~~~~~~~~~\n"
@@ -2660,7 +2655,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ApiSourceCheck.java:51: Error: Field requires API level 14 (current min is 1): android.widget.ZoomButton#ROTATION_X [NewApi]\n"
                 + "        Object rotationX = ZoomButton.ROTATION_X; // Requires API 14\n"
                 + "                                      ~~~~~~~~~~\n"
-                + "1 errors, 19 warnings\n",
+                + "1 errors, 18 warnings\n",
                 classpath(),
                 manifest().minSdk(1),
                 projectProperties().compileSdk(19),
@@ -3155,7 +3150,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         assertEquals(""
                 + "src/test/pkg/TryWithResources.java:13: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
                 + "        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/TryWithResources.java:21: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
                 + "        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {\n"
                 + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -3533,7 +3528,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testReflectiveOperationException() throws Exception {
         //noinspection all // Sample code
         checkApiCheck(""
-                + "src/test/pkg/Java7API.java:8: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
+                + "src/test/pkg/Java7API.java:8: Error: Class requires API level 19 (current min is 1): java.lang.ReflectiveOperationException [NewApi]\n"
                 + "        } catch (ReflectiveOperationException e) {\n"
                 + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n",
@@ -3970,11 +3965,15 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // 97006: Gradle lint does not recognize Context.getDrawable() as API 21+
         //noinspection all // Sample code
         checkApiCheck(""
-                + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.app.Activity#getDrawable [NewApi]\n"
-                + "        getActivity().getDrawable(R.color.my_color);\n"
-                + "                      ~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                null,
+                        + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
+                        + "        getActivity().getDrawable(R.color.my_color);\n"
+                        + "                      ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                ""
+                        + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.app.Activity#getDrawable [NewApi]\n"
+                        + "        getActivity().getDrawable(R.color.my_color);\n"
+                        + "                      ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 true,
                 false,
                 null,
@@ -3991,6 +3990,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "    }\n"
                         + "}\n"),
                 java(""
+                        + "package foo.main;\n"
+                        + "public class R {\n"
+                        + "    public static class color {\n"
+                        + "        public static final int my_color = 0x7f070031;\n"
+                        + "    }\n"
+                        + "    public static class string {\n"
+                        + "        public static final int string2 = 0x7f070032;\n"
+                        + "    }\n"
+                        + "}\n"
+                        + ""),
+                java(""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import android.support.v4.app.Fragment;\n"
@@ -4001,12 +4011,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "    public void test() {\n"
                         + "        getActivity().getDrawable(R.color.my_color);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private static class R {\n"
-                        + "        private static class color {\n"
-                        + "            public static final int my_color =0x7f070031;\n"
-                        + "        }\n"
                         + "    }\n"
                         + "}\n"),
                 base64gzip("bin/classes/test/pkg/MyFragment$R$color.class", ""
@@ -4059,6 +4063,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        System.out.println(R.string.string1);\n"
                         + "    }\n"
                         + "}\n"),
+                java(""
+                        + "package foo.library;\n"
+                        + "public class R {\n"
+                        + "    public static class string {\n"
+                        + "        public static final int string1 = 0x7f070033;\n"
+                        + "    }\n"
+                        + "}\n"
+                        + ""),
                 xml("../LibraryProject/res/values/strings.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
@@ -4568,7 +4580,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/TestRequiresApi.java:9: Error: Call requires API level 21 (current min is 15): LollipopClass [NewApi]\n"
                 + "        LollipopClass lollipopClass = new LollipopClass();\n"
-                + "                                          ~~~~~~~~~~~~~\n"
+                + "                                      ~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/TestRequiresApi.java:10: Error: Call requires API level 21 (current min is 15): requiresLollipop [NewApi]\n"
                 + "        lollipopClass.requiresLollipop(); // ERROR - requires 21\n"
                 + "                      ~~~~~~~~~~~~~~~~\n"
@@ -4663,7 +4675,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(""
                         + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 16 (current min is 1): ParentClass [NewApi]\n"
                         + "        new ParentClass().foo1(); // ERROR\n"
-                        + "            ~~~~~~~~~~~\n"
+                        + "        ~~~~~~~~~~~~~~~\n"
                         + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 18 (current min is 1): foo1 [NewApi]\n"
                         + "        new ParentClass().foo1(); // ERROR\n"
                         + "                          ~~~~\n"

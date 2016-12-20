@@ -96,9 +96,7 @@ import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiImportStatement;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiNewExpression;
@@ -122,6 +120,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import lombok.ast.ImportDeclaration;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UParenthesizedExpression;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -1499,6 +1499,15 @@ public class LintUtils {
     public static PsiElement skipParentheses(@Nullable PsiElement element) {
         while (element instanceof PsiParenthesizedExpression) {
             element = element.getParent();
+        }
+
+        return element;
+    }
+
+    @Nullable
+    public static UElement skipParentheses(@Nullable UElement element) {
+        while (element instanceof UParenthesizedExpression) {
+            element = element.getUastParent();
         }
 
         return element;

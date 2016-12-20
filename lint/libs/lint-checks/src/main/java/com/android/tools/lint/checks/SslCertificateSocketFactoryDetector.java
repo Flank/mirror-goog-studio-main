@@ -17,26 +17,23 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClassType;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiType;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
 
-public class SslCertificateSocketFactoryDetector extends Detector
-        implements JavaPsiScanner {
+public class SslCertificateSocketFactoryDetector extends Detector implements UastScanner {
 
     private static final Implementation IMPLEMENTATION_JAVA = new Implementation(
             SslCertificateSocketFactoryDetector.class,
@@ -79,7 +76,7 @@ public class SslCertificateSocketFactoryDetector extends Detector
     private static final String SSL_CERTIFICATE_SOCKET_FACTORY_CLASS =
             "android.net.SSLCertificateSocketFactory";
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -88,15 +85,15 @@ public class SslCertificateSocketFactoryDetector extends Detector
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         if (context.getEvaluator().isMemberInSubClassOf(method,
                 SSL_CERTIFICATE_SOCKET_FACTORY_CLASS, false)) {
             String methodName = method.getName();
             if ("createSocket".equals(methodName)) {
-                PsiExpression[] args = call.getArgumentList().getExpressions();
-                if (args.length > 0) {
-                    PsiType type = args[0].getType();
+                List<UExpression> args = call.getValueArguments();
+                if (!args.isEmpty()) {
+                    PsiType type = args.get(0).getExpressionType();
                     if (type != null
                             && (INET_ADDRESS_CLASS.equals(type.getCanonicalText())
                             || context.getEvaluator().extendsClass(((PsiClassType)type).resolve(),

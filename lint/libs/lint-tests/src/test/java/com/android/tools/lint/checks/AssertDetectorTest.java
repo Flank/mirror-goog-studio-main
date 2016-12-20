@@ -64,6 +64,8 @@ public class AssertDetectorTest extends AbstractCheckTest {
                     + "        assert param2 != null : \"My description\";  // OK\n"
                     + "        assert checkSuppressed(5) != null;         // OK\n"
                     + "        assert (param2 != null);                   // OK\n"
+                    // Polyadic expression:
+                    + "        assert param != null && param2 != null && param3 != null;   // OK\n"
                     + "    }\n"
                     + "\n"
                     + "    @SuppressLint(\"Assert\")\n"

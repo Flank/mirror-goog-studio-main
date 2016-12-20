@@ -37,14 +37,13 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
-import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.checks.ResourceUsageModel.Resource;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector.BinaryResourceScanner;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -53,7 +52,6 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
-import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -63,12 +61,6 @@ import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiImportStaticStatement;
-import com.intellij.psi.PsiReferenceExpression;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -78,6 +70,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.uast.UElement;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -86,7 +79,7 @@ import org.w3c.dom.Node;
 /**
  * Finds unused resources.
  */
-public class UnusedResourceDetector extends ResourceXmlDetector implements JavaPsiScanner,
+public class UnusedResourceDetector extends ResourceXmlDetector implements UastScanner,
         BinaryResourceScanner, XmlScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -506,23 +499,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
         }
     }
 
-    // ---- Implements JavaScanner ----
-
-    @Override
-    public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        return Collections.singletonList(PsiImportStaticStatement.class);
-    }
-
-    @Nullable
-    @Override
-    public JavaElementVisitor createPsiVisitor(@NonNull JavaContext context) {
-        if (context.getDriver().getPhase() == 1) {
-            return new UnusedResourceVisitor();
-        } else {
-            // Second pass, computing resource declaration locations: No need to look at Java
-            return null;
-        }
-    }
+    // ---- Implements UastScanner ----
 
     @Override
     public boolean appliesToResourceRefs() {
@@ -530,57 +507,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements JavaP
     }
 
     @Override
-    public void visitResourceReference(@NonNull JavaContext context,
-            @Nullable JavaElementVisitor visitor, @NonNull PsiElement node,
+    public void visitResourceReference(@NonNull JavaContext context, @NonNull UElement node,
             @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
         if (!isFramework) {
             ResourceUsageModel.markReachable(mModel.addResource(type, name, null));
         }
-    }
-
-    // Look for references and declarations
-    private class UnusedResourceVisitor extends JavaElementVisitor {
-        public UnusedResourceVisitor() {
-        }
-
-        @Override
-        public void visitImportStaticStatement(PsiImportStaticStatement statement) {
-            if (mScannedForStaticImports) {
-                return;
-            }
-            if (statement.isOnDemand()) {
-                // Wildcard import of whole type:
-                // import static pkg.R.type.*;
-                // We have to do a more expensive analysis here to
-                // for example recognize "x" as a reference to R.string.x
-                mScannedForStaticImports = true;
-                statement.getContainingFile().accept(new JavaRecursiveElementVisitor() {
-                    @Override
-                    public void visitReferenceExpression(PsiReferenceExpression expression) {
-                        PsiElement resolved = expression.resolve();
-                        if (resolved instanceof PsiField) {
-                            ResourceUrl url = ResourceEvaluator.getResourceConstant(resolved);
-                            if (url != null && !url.framework) {
-                                Resource resource = mModel.addResource(url.type, url.name, null);
-                                ResourceUsageModel.markReachable(resource);
-                            }
-                        }
-                        super.visitReferenceExpression(expression);
-                    }
-                });
-            } else {
-                PsiElement resolved = statement.resolve();
-                if (resolved instanceof PsiField) {
-                    ResourceUrl url = ResourceEvaluator.getResourceConstant(resolved);
-                    if (url != null && !url.framework) {
-                        Resource resource = mModel.addResource(url.type, url.name, null);
-                        ResourceUsageModel.markReachable(resource);
-                    }
-                }
-            }
-        }
-
-        private boolean mScannedForStaticImports;
     }
 
     private static class UnusedResourceDetectorUsageModel extends ResourceUsageModel {

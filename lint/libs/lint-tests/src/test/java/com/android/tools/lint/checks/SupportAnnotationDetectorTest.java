@@ -2751,13 +2751,13 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "            ~~~~~~~~~~~\n"
                 + "src/test/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]\n"
                 + "        new ProductionCode().testHelper3(); // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "                             ~~~~~~~~~~~\n"
                 + "src/test/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]\n"
                 + "        new ProductionCode().testHelper4(); // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "                             ~~~~~~~~~~~\n"
                 + "src/test/otherpkg/OtherPkg.java:10: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]\n"
                 + "        new ProductionCode().testHelper5(); // ERROR\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "                             ~~~~~~~~~~~\n"
                 + "2 errors, 3 warnings\n",
                 lintProject(
                         java(""
@@ -3049,6 +3049,68 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         + "        return v;\n"
                         + "    }\n"
                         + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
+    public void testWrongConstant() throws Exception {
+        // Regression test for scenario found to be inconsistent between PSI and UAST
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.NonNull;\n"
+                        + "\n"
+                        + "public class ViewableDayInterval {\n"
+                        + "    @CalendarDay\n"
+                        + "    private int mDayCreatedFor;\n"
+                        + "\n"
+                        + "    public ViewableDayInterval(long startOffset, long duration, @NonNull @CalendarDay int... startDays) {\n"
+                        + "        this(startDays[0], startOffset, duration, startDays);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public ViewableDayInterval(long start, @NonNull @WeekDay int... weekdays) {\n"
+                        + "        this(weekdays[0], start, start, weekdays);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public ViewableDayInterval(long start, @NonNull @WeekDay int weekday) {\n"
+                        + "        this(weekday, start, start, weekday);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public ViewableDayInterval(@CalendarDay int dayCreatedFor, long startOffset, long duration, @NonNull @CalendarDay int... startDays) {\n"
+                        + "        mDayCreatedFor = dayCreatedFor;\n"
+                        + "    }\n"
+                        + "}"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.IntDef;\n"
+                        + "\n"
+                        + "import java.lang.annotation.Retention;\n"
+                        + "import java.lang.annotation.RetentionPolicy;\n"
+                        + "import java.util.Calendar;\n"
+                        + "\n"
+                        + "@Retention(RetentionPolicy.SOURCE)\n"
+                        + "@IntDef({Calendar.SUNDAY, Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,\n"
+                        + "        Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY})\n"
+                        + "public @interface CalendarDay {\n"
+                        + "}"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.IntDef;\n"
+                        + "\n"
+                        + "import java.lang.annotation.Retention;\n"
+                        + "import java.lang.annotation.RetentionPolicy;\n"
+                        + "import java.util.Calendar;\n"
+                        + "\n"
+                        + "@Retention(RetentionPolicy.SOURCE)\n"
+                        + "@IntDef({Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,\n"
+                        + "        Calendar.THURSDAY, Calendar.FRIDAY})\n"
+                        + "public @interface WeekDay {\n"
+                        + "}"),
                 mSupportClasspath,
                 mSupportJar)
                 .run()

@@ -944,7 +944,7 @@ public class GradleModelMocker {
         } else {
             // Look for the library in the dependency graph provided
             Dep dep = graphs.get(declaration);
-            if(dep != null) {
+            if (dep != null) {
                 addLibrary(dep);
             } else if (isJavaLibrary(declaration)) {
                 // Not found in dependency graphs: create a single Java library

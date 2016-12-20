@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -29,10 +30,10 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiFile;
 import java.util.EnumSet;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -40,7 +41,7 @@ import org.w3c.dom.Node;
  * Checks that byte order marks do not appear in resource names
  */
 public class ByteOrderMarkDetector extends ResourceXmlDetector
-        implements Detector.JavaPsiScanner, Detector.GradleScanner {
+        implements Detector.UastScanner, Detector.GradleScanner {
 
     /** Detects BOM characters in the middle of files */
     public static final Issue BOM = Issue.create(
@@ -95,11 +96,12 @@ public class ByteOrderMarkDetector extends ResourceXmlDetector
                     }
                 } else if (context instanceof JavaContext) {
                     JavaContext javaContext = (JavaContext)context;
-                    PsiJavaFile file = javaContext.getJavaFile();
+                    UFile file = javaContext.getUastFile();
                     if (file != null) {
-                        PsiElement closest = javaContext.getParser().findElementAt(javaContext, i);
-                        if (closest == null && file.getClasses().length > 0) {
-                            closest = file.getClasses()[0];
+                        PsiFile psi = file.getPsi();
+                        PsiElement closest = psi.findElementAt(i);
+                        if (closest == null && !file.getClasses().isEmpty()) {
+                            closest = file.getClasses().get(0);
                         }
                         if (closest != null) {
                             javaContext.report(BOM, closest, location, message);
@@ -121,9 +123,9 @@ public class ByteOrderMarkDetector extends ResourceXmlDetector
 
     @Nullable
     @Override
-    public JavaElementVisitor createPsiVisitor(@NonNull JavaContext context) {
+    public UElementHandler createUastHandler(@NonNull JavaContext context) {
         // Java files: work is done in beforeCheckFile()
-        return new JavaElementVisitor() { };
+        return null;
     }
 
     @Override

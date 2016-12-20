@@ -18,7 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
+@SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ToastDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {

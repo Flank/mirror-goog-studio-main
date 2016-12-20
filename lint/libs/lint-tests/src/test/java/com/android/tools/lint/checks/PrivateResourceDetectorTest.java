@@ -109,13 +109,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-    @Override
-    protected boolean allowCompilationErrors() {
-        // Some of these unit tests are still relying on source code that references
-        // unresolved symbols etc.
-        return false;
-    }
-
     public void testPrivateInXml() throws Exception {
         String expected = ""
                 + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
@@ -147,30 +140,25 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    @SuppressWarnings("ClassNameDiffersFromFileName")
     public void testPrivateInJava() throws Exception {
         String expected = ""
-                + "src/main/java/Private.java:3: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
+                + "src/main/java/test/pkg/Private.java:4: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
                 + "        int x = R.string.my_private_string; // ERROR\n"
-                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "                         ~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
-                java("src/main/java/Private.java", ""
+                java("src/main/java/test/pkg/Private.java", ""
+                        + "package test.pkg;\n"
                         + "public class Private {\n"
                         + "    void test() {\n"
                         + "        int x = R.string.my_private_string; // ERROR\n"
                         + "        int y = R.string.my_public_string; // OK\n"
                         + "        int z = android.R.string.my_private_string; // OK (not in project namespace)\n"
                         + "    }\n"
-                        + "    public static final class R {\n"
-                        + "        public static final class string {\n"
-                        + "            public static final int my_private_string = 0x7f0a0000;\n"
-                        + "            public static final int my_public_string = 0x7f0a0001;\n"
-                        + "        }\n"
-                        + "    }\n"
                         + "}\n"),
+                rClass,
                 gradle)
                 .modifyGradleMocks(mockModifier)
                 .allowCompilationErrors()

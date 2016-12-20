@@ -22,5 +22,7 @@
     <orderEntry type="library" name="lombok-ast" level="project" />
     <orderEntry type="module" module-name="manifest-merger-base" />
     <orderEntry type="library" name="intellij-core" level="project" />
+    <orderEntry type="library" name="uast" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

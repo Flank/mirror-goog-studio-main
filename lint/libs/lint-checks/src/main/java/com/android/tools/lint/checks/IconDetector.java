@@ -46,7 +46,6 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ProductFlavor;
@@ -58,9 +57,11 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.UElementHandler;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -77,19 +78,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionList;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiNewExpression;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -117,13 +107,24 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Element;
 
 /**
  * Checks for common icon problems, such as wrong icon sizes, placing icons in the
  * density independent drawable folder, etc.
  */
-public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner {
+public class IconDetector extends ResourceXmlDetector implements UastScanner {
 
     // TODO: Use the new merged manifest model
 
@@ -1735,12 +1736,12 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                                     Location location = Location.create(file);
 
                                     String name = getBaseName(file.getName());
-                                    PsiElement usage = notificationIcons != null ?
+                                    UElement usage = notificationIcons != null ?
                                             notificationIcons.get(name) : null;
                                     if (usage != null) {
                                         LintClient client = context.getClient();
                                         Project project = context.getProject();
-                                        JavaParser parser = client.getJavaParser(project);
+                                        UastParser parser = client.getUastParser(project);
                                         if (parser != null) {
                                             Location secondary = parser.createLocation(usage);
                                             secondary.setMessage("Icon used in notification here");
@@ -2300,7 +2301,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         }
     }
 
-    private Map<String,PsiElement> notificationIcons;
+    private Map<String,UElement> notificationIcons;
     /**
      * Set of names of @drawable resources that represent action bar icons, <b>or</b>,
      * if the icons is a @mipmap icon, the resource url (@mipmap/name).
@@ -2473,7 +2474,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         return icon;
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     private static final String NOTIFICATION_CLASS = "android.app.Notification";
     private static final String NOTIFICATION_BUILDER_CLASS = "android.app.Notification.Builder";
@@ -2482,23 +2483,28 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
     private static final String ON_CREATE_OPTIONS_MENU = "onCreateOptionsMenu";
 
     @Override
-    public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        List<Class<? extends PsiElement>> types = new ArrayList<>(2);
-        types.add(PsiNewExpression.class);
-        types.add(PsiMethod.class);
+    public List<Class<? extends UElement>> getApplicableUastTypes() {
+        List<Class<? extends UElement>> types = new ArrayList<>(2);
+        types.add(UCallExpression.class);
+        types.add(UMethod.class);
         return types;
     }
 
     @Nullable
     @Override
-    public JavaElementVisitor createPsiVisitor(@NonNull JavaContext context) {
-        return new NotificationFinder();
+    public UElementHandler createUastHandler(@NonNull JavaContext context) {
+        return new NotificationFinder(context);
     }
 
-    private final class NotificationFinder extends JavaElementVisitor {
+    private final class NotificationFinder extends UElementHandler {
+        private final JavaContext context;
+
+        private NotificationFinder(JavaContext context) {
+            this.context = context;
+        }
 
         @Override
-        public void visitMethod(PsiMethod method) {
+        public void visitMethod(@NonNull UMethod method) {
             if (ON_CREATE_OPTIONS_MENU.equals(method.getName())) {
                 // Gather any R.menu references found in this method
                 method.accept(new MenuFinder());
@@ -2506,8 +2512,14 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         }
 
         @Override
-        public void visitNewExpression(PsiNewExpression node) {
-            PsiJavaCodeReferenceElement classReference = node.getClassReference();
+        public void visitCallExpression(@NonNull UCallExpression node) {
+            if (UastExpressionUtils.isConstructorCall(node)) {
+                visitConstructorCall(node);
+            }
+        }
+
+        private void visitConstructorCall(@NonNull UCallExpression node) {
+            UReferenceExpression classReference = node.getClassReference();
             if (classReference == null) {
                 return;
             }
@@ -2515,17 +2527,16 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             if (!(resolved instanceof PsiClass)) {
                 return;
             }
-            String typeName = ((PsiClass)resolved).getQualifiedName();
+            String typeName = ((PsiClass) resolved).getQualifiedName();
             if (NOTIFICATION_CLASS.equals(typeName)) {
-                PsiExpressionList argumentList = node.getArgumentList();
-                PsiExpression[] args = argumentList != null
-                        ? argumentList.getExpressions() : PsiExpression.EMPTY_ARRAY;
-                if (args.length == 3) {
-                    if (args[0] instanceof PsiReferenceExpression && handleSelect(args[0])) {
+                List<UExpression> args = node.getValueArguments();
+                if (args.size() == 3) {
+                    if (args.get(0) instanceof UReferenceExpression && handleSelect(args.get(0))) {
                         return;
                     }
 
-                    ResourceUrl url = ResourceEvaluator.getResource(null, args[0]);
+                    ResourceUrl url = ResourceEvaluator.getResource(context.getEvaluator(),
+                            args.get(0));
                     if (url != null
                             && (url.type == ResourceType.DRAWABLE
                             || url.type == ResourceType.COLOR
@@ -2538,7 +2549,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                 }
             } else if (NOTIFICATION_BUILDER_CLASS.equals(typeName)
                     || NOTIFICATION_COMPAT_BUILDER_CLASS.equals(typeName)) {
-                PsiMethod method = PsiTreeUtil.getParentOfType(node, PsiMethod.class, true);
+                UMethod method = UastUtils.getParentOfType(node, UMethod.class, true);
                 if (method != null) {
                     SetIconFinder finder = new SetIconFinder();
                     method.accept(finder);
@@ -2547,7 +2558,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         }
     }
 
-    private boolean handleSelect(PsiElement select) {
+    private boolean handleSelect(UElement select) {
         ResourceUrl url = ResourceEvaluator.getResourceConstant(select);
         if (url != null && url.type == ResourceType.DRAWABLE && !url.framework) {
             if (notificationIcons == null) {
@@ -2561,28 +2572,30 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         return false;
     }
 
-    private final class SetIconFinder extends JavaRecursiveElementVisitor {
+    private final class SetIconFinder extends AbstractUastVisitor {
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-            super.visitMethodCallExpression(expression);
-            if (SET_SMALL_ICON.equals(expression.getMethodExpression().getReferenceName())) {
-                PsiExpression[] arguments = expression.getArgumentList().getExpressions();
-                if (arguments.length == 1 && arguments[0] instanceof PsiReferenceExpression) {
-                    handleSelect(arguments[0]);
+        public boolean visitCallExpression(@NonNull UCallExpression expression) {
+            if (UastExpressionUtils.isMethodCall(expression)) {
+                if (SET_SMALL_ICON.equals(expression.getMethodName())) {
+                    List<UExpression> arguments = expression.getValueArguments();
+                    if (arguments.size() == 1 && arguments.get(0) instanceof UReferenceExpression) {
+                        handleSelect(arguments.get(0));
+                    }
                 }
             }
+            return super.visitCallExpression(expression);
         }
 
         @Override
-        public void visitAnonymousClass(PsiAnonymousClass aClass) {
+        public boolean visitClass(UClass node) {
+            // Skip anonymous inner classes
+            return node instanceof UAnonymousClass || super.visitClass(node);
         }
     }
 
-    private final class MenuFinder extends JavaRecursiveElementVisitor {
+    private final class MenuFinder extends AbstractUastVisitor {
         @Override
-        public void visitReferenceExpression(PsiReferenceExpression node) {
-            super.visitReferenceExpression(node);
-
+        public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
             ResourceUrl url = ResourceEvaluator.getResourceConstant(node);
             if (url != null && url.type == ResourceType.MENU && !url.framework) {
                 // Reclassify icons in the given menu as action bar icons
@@ -2596,10 +2609,14 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
                     }
                 }
             }
+
+            return super.visitSimpleNameReferenceExpression(node);
         }
 
         @Override
-        public void visitAnonymousClass(PsiAnonymousClass aClass) {
+        public boolean visitClass(UClass node) {
+            // Skip anonymous inner classes
+            return node instanceof UAnonymousClass || super.visitClass(node);
         }
     }
 }

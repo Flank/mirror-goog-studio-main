@@ -81,76 +81,52 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.SearchHints;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Lists;
 import com.intellij.psi.CommonClassNames;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationParameterList;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
-import com.intellij.psi.PsiAssignmentExpression;
-import com.intellij.psi.PsiBinaryExpression;
-import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiClassObjectAccessExpression;
 import com.intellij.psi.PsiClassType;
-import com.intellij.psi.PsiConditionalExpression;
-import com.intellij.psi.PsiDisjunctionType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiForeachStatement;
-import com.intellij.psi.PsiIfStatement;
-import com.intellij.psi.PsiImportStatementBase;
-import com.intellij.psi.PsiImportStaticStatement;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
-import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiMethodReferenceExpression;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
-import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
-import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiPrimitiveType;
-import com.intellij.psi.PsiQualifiedExpression;
 import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiReferenceList;
-import com.intellij.psi.PsiResourceList;
 import com.intellij.psi.PsiSuperExpression;
-import com.intellij.psi.PsiSwitchLabelStatement;
-import com.intellij.psi.PsiSwitchStatement;
-import com.intellij.psi.PsiThisExpression;
-import com.intellij.psi.PsiTryStatement;
 import com.intellij.psi.PsiType;
-import com.intellij.psi.PsiTypeCastExpression;
-import com.intellij.psi.PsiTypeElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.util.ArrayList;
@@ -159,6 +135,36 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UBinaryExpression;
+import org.jetbrains.uast.UBinaryExpressionWithType;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UCallableReferenceExpression;
+import org.jetbrains.uast.UCatchClause;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UClassLiteralExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UForEachExpression;
+import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.UImportStatement;
+import org.jetbrains.uast.UInstanceExpression;
+import org.jetbrains.uast.ULocalVariable;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UQualifiedReferenceExpression;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.USuperExpression;
+import org.jetbrains.uast.USwitchClauseExpression;
+import org.jetbrains.uast.USwitchExpression;
+import org.jetbrains.uast.UThisExpression;
+import org.jetbrains.uast.UTryExpression;
+import org.jetbrains.uast.UTypeReferenceExpression;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastBinaryOperator;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.java.JavaUAnnotation;
+import org.jetbrains.uast.util.UastExpressionUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -185,7 +191,7 @@ import org.w3c.dom.NodeList;
  * by this application (according to its minimum API requirement in the manifest).
  */
 public class ApiDetector extends ResourceXmlDetector
-        implements ClassScanner, JavaPsiScanner {
+        implements ClassScanner, UastScanner {
 
     /**
      * Whether we flag variable, field, parameter and return type declarations of a type
@@ -1320,22 +1326,18 @@ public class ApiDetector extends ResourceXmlDetector
         }
     }
 
-    private static void checkSimpleDateFormat(JavaContext context, PsiCallExpression call,
+    private static void checkSimpleDateFormat(JavaContext context, UCallExpression call,
             int minSdk) {
         if (minSdk >= 9) {
             // Already OK
             return;
         }
 
-        PsiExpressionList argumentList = call.getArgumentList();
-        if (argumentList == null) {
+        List<UExpression> expressions = call.getValueArguments();
+        if (expressions.isEmpty()) {
             return;
         }
-        PsiExpression[] expressions = argumentList.getExpressions();
-        if (expressions.length == 0) {
-            return;
-        }
-        PsiExpression argument = expressions[0];
+        UExpression argument = expressions.get(0);
         Object constant = ConstantEvaluator.evaluate(context, argument);
         if (constant instanceof String) {
             String pattern = (String) constant;
@@ -1745,32 +1747,33 @@ public class ApiDetector extends ResourceXmlDetector
         context.report(UNSUPPORTED, method, node, location, message);
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
-    public JavaElementVisitor createPsiVisitor(@NonNull JavaContext context) {
+    public UElementHandler createUastHandler(@NonNull JavaContext context) {
         if (mApiDatabase == null || context.isTestSource()) {
-            return new JavaElementVisitor() {};
+            return null;
         }
         return new ApiVisitor(context);
     }
 
     @Override
-    public List<Class<? extends PsiElement>> getApplicablePsiTypes() {
-        List<Class<? extends PsiElement>> types = new ArrayList<>(12);
-        types.add(PsiImportStaticStatement.class);
-        types.add(PsiReferenceExpression.class);
-        types.add(PsiLocalVariable.class);
-        types.add(PsiTryStatement.class);
-        types.add(PsiTypeCastExpression.class);
-        types.add(PsiAssignmentExpression.class);
-        types.add(PsiCallExpression.class);
-        types.add(PsiClass.class);
-        types.add(PsiMethod.class);
-        types.add(PsiForeachStatement.class);
-        types.add(PsiClassObjectAccessExpression.class);
-        types.add(PsiSwitchStatement.class);
+    public List<Class<? extends UElement>> getApplicableUastTypes() {
+        List<Class<? extends UElement>> types = new ArrayList<>(14);
+        types.add(UImportStatement.class);
+        types.add(USimpleNameReferenceExpression.class);
+        types.add(ULocalVariable.class);
+        types.add(UTryExpression.class);
+        types.add(UBinaryExpressionWithType.class);
+        types.add(UBinaryExpression.class);
+        types.add(UCallExpression.class);
+        types.add(UClass.class);
+        types.add(UMethod.class);
+        types.add(UForEachExpression.class);
+        types.add(UClassLiteralExpression.class);
+        types.add(USwitchExpression.class);
+        types.add(UCallableReferenceExpression.class);
         return types;
     }
 
@@ -1785,7 +1788,7 @@ public class ApiDetector extends ResourceXmlDetector
      *              level of the constant
      */
     public static boolean isBenignConstantUsage(
-            @Nullable PsiElement node,
+            @Nullable UElement node,
             @NonNull String name,
             @NonNull String owner) {
         if (owner.equals("android/os/Build$VERSION_CODES")) {
@@ -1823,46 +1826,43 @@ public class ApiDetector extends ResourceXmlDetector
 
         // It's okay to reference the constant as a case constant (since that
         // code path won't be taken) or in a condition of an if statement
-        PsiElement curr = node.getParent();
+        UElement curr = node.getUastParent();
         while (curr != null) {
-            if (curr instanceof PsiSwitchLabelStatement) {
-                PsiExpression condition = ((PsiSwitchLabelStatement) curr).getCaseValue();
-                return condition != null && PsiTreeUtil.isAncestor(condition, node, false);
-            } else if (curr instanceof PsiIfStatement) {
-                PsiExpression condition = ((PsiIfStatement) curr).getCondition();
-                return condition != null && PsiTreeUtil.isAncestor(condition, node, false);
-            } else if (curr instanceof PsiConditionalExpression) {
-                PsiExpression condition = ((PsiConditionalExpression) curr).getCondition();
-                return PsiTreeUtil.isAncestor(condition, node, false);
-            } else if (curr instanceof PsiMethod || curr instanceof PsiClass) {
+            if (curr instanceof USwitchClauseExpression) {
+                List<UExpression> caseValues = ((USwitchClauseExpression) curr).getCaseValues();
+                for (UExpression condition : caseValues) {
+                    if (condition != null && UastUtils.isChildOf(node, condition, false)) {
+                        return true;
+                    }
+                }
+                return false;
+            } else if (curr instanceof UIfExpression) {
+                UExpression condition = ((UIfExpression) curr).getCondition();
+                return UastUtils.isChildOf(node, condition, false);
+            } else if (curr instanceof UMethod || curr instanceof UClass) {
                 break;
             }
-            curr = curr.getParent();
+            curr = curr.getUastParent();
         }
 
         return false;
     }
 
-    private final class ApiVisitor extends JavaElementVisitor {
+    private final class ApiVisitor extends UElementHandler {
         private final JavaContext mContext;
         private final boolean willScanBytecode;
-        private final boolean checkRequiresApi;
 
         private ApiVisitor(JavaContext context) {
             mContext = context;
             LintDriver driver = context.getDriver();
-            boolean isInIde = !driver.getScope().contains(Scope.CLASS_FILE);
-
-            // @RequiresApi is already enforced by the ResourceTypeInspection when running in the IDE
-            checkRequiresApi = !isInIde;
 
             // If there are resolution errors and we have bytecode,
             // let the class scanner handle itself.
-            willScanBytecode = driver.hasParserErrors() && !isInIde;
+            willScanBytecode = driver.hasParserErrors();
         }
 
         @Override
-        public void visitImportStaticStatement(PsiImportStaticStatement statement) {
+        public void visitImportStatement(@NonNull UImportStatement statement) {
             if (!statement.isOnDemand()) {
                 PsiElement resolved = statement.resolve();
                 if (resolved instanceof PsiField) {
@@ -1872,29 +1872,25 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitReferenceExpression(PsiReferenceExpression expression) {
-            PsiElement parent = skipParentheses(expression.getParent());
-            if (parent instanceof PsiReferenceExpression) {
-                // We only want to look at the leaf expressions; e.g. if you have
-                // "foo.bar.baz" we only care about the select foo.bar.baz, not foo.bar
-
-                // However, if it's something like field.methodCall() we still want
-                // to check the field
-                if (!(skipParentheses(parent.getParent()) instanceof PsiCallExpression)) {
-                    return;
-                }
-            }
-
-            PsiElement resolved = expression.resolve();
+        public void visitSimpleNameReferenceExpression(@NonNull USimpleNameReferenceExpression node) {
+            PsiElement resolved = node.resolve();
             if (resolved instanceof PsiField) {
-                checkField(expression, (PsiField)resolved);
+                checkField(node, (PsiField)resolved);
             } else if (resolved instanceof PsiMethod &&
-                    expression instanceof PsiMethodReferenceExpression) {
-                checkMethodReference(expression, (PsiMethod) resolved);
+                    node instanceof UCallExpression) {
+                checkMethodReference(node, (PsiMethod) resolved);
             }
         }
 
-        private void checkMethodReference(PsiReferenceExpression expression, PsiMethod method) {
+        @Override
+        public void visitCallableReferenceExpression(@NonNull UCallableReferenceExpression node) {
+            PsiElement resolved = node.resolve();
+            if (resolved instanceof PsiMethod) {
+                checkMethodReference(node, (PsiMethod) resolved);
+            }
+        }
+
+        private void checkMethodReference(UReferenceExpression expression, PsiMethod method) {
             PsiClass containingClass = method.getContainingClass();
             if (containingClass == null) {
                 return;
@@ -1925,7 +1921,7 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            String signature = expression.getText();
+            String signature = expression.asSourceString();
             Location location = mContext.getLocation(expression);
             String message = String.format(
                 "Method reference requires API level %1$d (current min is %2$d): %3$s", api,
@@ -1934,14 +1930,16 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitTypeCastExpression(PsiTypeCastExpression expression) {
-            PsiTypeElement castTypeElement = expression.getCastType();
-            PsiExpression operand = expression.getOperand();
-            if (operand == null || castTypeElement == null) {
-                return;
+        public void visitBinaryExpressionWithType(@NonNull UBinaryExpressionWithType node) {
+            if (UastExpressionUtils.isTypeCast(node)) {
+                visitTypeCastExpression(node);
             }
-            PsiType operandType = operand.getType();
-            PsiType castType = castTypeElement.getType();
+        }
+
+        private void visitTypeCastExpression(UBinaryExpressionWithType expression) {
+            UExpression operand = expression.getOperand();
+            PsiType operandType = operand.getExpressionType();
+            PsiType castType = expression.getType();
             if (castType.equals(operandType)) {
                 return;
             }
@@ -1957,7 +1955,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         private void checkCast(
-                @NonNull PsiElement node,
+                @NonNull UElement node,
                 @NonNull PsiClassType classType,
                 @NonNull PsiClassType interfaceType) {
             if (classType.equals(interfaceType)) {
@@ -1996,7 +1994,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitMethod(PsiMethod method) {
+        public void visitMethod(@NonNull UMethod method) {
             // API check for default methods
             if (method.getModifierList().hasExplicitModifier(PsiModifier.DEFAULT)) {
                 int api = 24; // minSdk for default methods
@@ -2040,7 +2038,8 @@ public class ApiDetector extends ResourceXmlDetector
                         }
                         int api = mApiDatabase.getCallVersion(owner, name, desc);
                         if (api > buildSdk && buildSdk != -1) {
-                            if (mContext.getDriver().isSuppressed(mContext, OVERRIDE, method)) {
+                            if (mContext.getDriver().isSuppressed(mContext, OVERRIDE,
+                                    (UElement)method)) {
                                 return;
                             }
 
@@ -2083,7 +2082,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitClass(PsiClass aClass) {
+        public void visitClass(@NonNull UClass aClass) {
             // Check for repeatable annotations
             if (aClass.isAnnotationType()) {
                 PsiModifierList modifierList = aClass.getModifierList();
@@ -2125,44 +2124,35 @@ public class ApiDetector extends ResourceXmlDetector
             }
 
             // Check super types
-            PsiReferenceList extendsList = aClass.getExtendsList();
-            if (extendsList != null) {
-                for (PsiJavaCodeReferenceElement element : extendsList.getReferenceElements()) {
-                    PsiElement resolved = element.resolve();
-                    if (resolved instanceof PsiClass) {
-                        PsiClass cls = (PsiClass) resolved;
-                        checkClass(element, cls, null);
-                    }
-                }
-            }
-
-            PsiReferenceList implementsList = aClass.getImplementsList();
-            if (implementsList != null) {
-                for (PsiJavaCodeReferenceElement element : implementsList.getReferenceElements()) {
-                    PsiElement resolved = element.resolve();
-                    if (resolved instanceof PsiClass) {
-                        PsiClass cls = (PsiClass) resolved;
-                        checkClass(element, cls, null);
+            for (UTypeReferenceExpression typeReferenceExpression : aClass.getUastSuperTypes()) {
+                PsiType type = typeReferenceExpression.getType();
+                if (type instanceof PsiClassType) {
+                    PsiClassType classType = (PsiClassType)type;
+                    PsiClass cls = classType.resolve();
+                    if (cls != null) {
+                        checkClass(typeReferenceExpression, cls, null);
                     }
                 }
             }
         }
 
         @Override
-        public void visitClassObjectAccessExpression(PsiClassObjectAccessExpression expression) {
+        public void visitClassLiteralExpression(@NonNull UClassLiteralExpression expression) {
             if (willScanBytecode) {
                 return;
             }
 
-            PsiTypeElement element = expression.getOperand();
-            PsiType type = element.getType();
-            if (type instanceof PsiClassType) {
-                checkClassType(element, (PsiClassType) type, null);
+            UExpression element = expression.getExpression();
+            if (element instanceof UTypeReferenceExpression) {
+                PsiType type = ((UTypeReferenceExpression)element).getType();
+                if (type instanceof PsiClassType) {
+                    checkClassType(element, (PsiClassType) type, null);
+                }
             }
         }
 
         private void checkClassType(
-                @NonNull PsiElement element,
+                @NonNull UElement element,
                 @NonNull PsiClassType classType,
                 @Nullable String descriptor) {
             String owner = mContext.getEvaluator().getInternalName(classType);
@@ -2173,7 +2163,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         private void checkClass(
-                @NonNull PsiElement element,
+                @NonNull UElement element,
                 @NonNull PsiClass cls,
                 @Nullable String descriptor) {
             String owner = mContext.getEvaluator().getInternalName(cls);
@@ -2186,7 +2176,7 @@ public class ApiDetector extends ResourceXmlDetector
             }
         }
 
-        private void checkClass(@NonNull PsiElement element, @Nullable String descriptor,
+        private void checkClass(@NonNull UElement element, @Nullable String descriptor,
                 @NonNull String owner, @NonNull String fqcn) {
             int api = mApiDatabase.getClassVersion(owner);
             if (api == -1) {
@@ -2198,7 +2188,7 @@ public class ApiDetector extends ResourceXmlDetector
             }
 
             // It's okay to reference classes from annotations
-            if (PsiTreeUtil.getParentOfType(element, PsiAnnotation.class) != null) {
+            if (UastUtils.getParentOfType(element, UAnnotation.class) != null) {
                 return;
             }
 
@@ -2213,17 +2203,18 @@ public class ApiDetector extends ResourceXmlDetector
 
         private void checkAnnotationTarget(@NonNull PsiAnnotationMemberValue element,
                 PsiModifierList modifierList) {
-            if (element instanceof PsiReferenceExpression) {
-                PsiReferenceExpression ref = (PsiReferenceExpression) element;
-                if ("TYPE_PARAMETER".equals(ref.getReferenceName())
-                        || "TYPE_USE".equals(ref.getReferenceName())) {
+            if (element instanceof UReferenceExpression) {
+                UReferenceExpression ref = (UReferenceExpression) element;
+                String referenceName = UastLintUtils.getReferenceName(ref);
+                if ("TYPE_PARAMETER".equals(referenceName)
+                        || "TYPE_USE".equals(referenceName)) {
                     PsiAnnotation retention = modifierList
                             .findAnnotation("java.lang.annotation.Retention");
                     if (retention == null ||
                             retention.getText().contains("RUNTIME")) {
                         Location location = mContext.getLocation(element);
                         String message = String.format("Type annotations are not "
-                                + "supported in Android: %1$s", ref.getReferenceName());
+                                + "supported in Android: %1$s", referenceName);
                         mContext.report(UNSUPPORTED, element, location, message);
                     }
                 }
@@ -2231,7 +2222,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitForeachStatement(PsiForeachStatement statement) {
+        public void visitForEachExpression(@NonNull UForEachExpression statement) {
             if (willScanBytecode) {
                 return;
             }
@@ -2240,13 +2231,10 @@ public class ApiDetector extends ResourceXmlDetector
             // Iterable that is used in the for each loop; make sure that
             // the API level for that
 
-            PsiExpression value = statement.getIteratedValue();
-            if (value == null) {
-                return;
-            }
+            UExpression value = statement.getIteratedValue();
 
             JavaEvaluator evaluator = mContext.getEvaluator();
-            PsiType type = value.getType();
+            PsiType type = value.getExpressionType();
             if (type instanceof PsiClassType) {
                 String expressionOwner = evaluator.getInternalName((PsiClassType)type);
                 if (expressionOwner == null) {
@@ -2271,13 +2259,14 @@ public class ApiDetector extends ResourceXmlDetector
                 // This was an unfortunate incompatible API change in Open JDK 8, which is
                 // not an issue for the Android SDK but is relevant if you're using a
                 // Java library.
-                if (value instanceof PsiMethodCallExpression) {
-                    PsiMethodCallExpression valueCall = (PsiMethodCallExpression)value;
-                    if ("keySet".equals(valueCall.getMethodExpression().getReferenceName())) {
-                        PsiMethod keySet = valueCall.resolveMethod();
-                        if (keySet != null && keySet.getContainingClass() != null &&
+                if (value instanceof UQualifiedReferenceExpression) {
+                    UQualifiedReferenceExpression keySetRef = (UQualifiedReferenceExpression)value;
+                    if ("keySet".equals(keySetRef.getResolvedName())) {
+                        PsiElement keySet = keySetRef.resolve();
+                        if (keySet instanceof PsiMethod
+                                && ((PsiMethod)keySet).getContainingClass() != null &&
                                 "java.util.concurrent.ConcurrentHashMap".equals(
-                                        keySet.getContainingClass().getQualifiedName())) {
+                                    ((PsiMethod)keySet).getContainingClass().getQualifiedName())) {
                             message += "; to work around this, add an explicit cast to (Map) "
                                     + "before the `keySet` call.";
                         }
@@ -2288,8 +2277,8 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitCallExpression(@NonNull PsiCallExpression expression) {
-            PsiMethod method = expression.resolveMethod();
+        public void visitCallExpression(@NonNull UCallExpression expression) {
+            PsiMethod method = expression.resolve();
             if (method == null) {
                 return;
             }
@@ -2299,15 +2288,12 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            // In the IDE this is handled by
-            //   ResourceTypeInspection#checkApiLevel
-            if (checkRequiresApi) {
-                PsiModifierList modifierList = method.getModifierList();
-                if (!checkRequiresApi(expression, method, modifierList)) {
-                    modifierList = containingClass.getModifierList();
-                    if (modifierList != null) {
-                        checkRequiresApi(expression, method, modifierList);
-                    }
+            // Enforce @RequiresApi
+            PsiModifierList modifierList = method.getModifierList();
+            if (!checkRequiresApi(expression, method, modifierList)) {
+                modifierList = containingClass.getModifierList();
+                if (modifierList != null) {
+                    checkRequiresApi(expression, method, modifierList);
                 }
             }
 
@@ -2318,26 +2304,23 @@ public class ApiDetector extends ResourceXmlDetector
             PsiParameterList parameterList = method.getParameterList();
             if (parameterList.getParametersCount() > 0) {
                 PsiParameter[] parameters = parameterList.getParameters();
-                PsiExpressionList argumentList = expression.getArgumentList();
-                if (argumentList != null) {
-                    PsiExpression[] arguments = argumentList.getExpressions();
-                    for (int i = 0; i < parameters.length; i++) {
-                        PsiType parameterType = parameters[i].getType();
-                        if (parameterType instanceof PsiClassType) {
-                            if (i >= arguments.length) {
-                                // We can end up with more arguments than parameters when
-                                // there is a varargs call.
-                                break;
-                            }
-                            PsiExpression argument = arguments[i];
-                            PsiType argumentType = argument.getType();
-                            if (argumentType == null || parameterType.equals(argumentType)
-                                    || !(argumentType instanceof PsiClassType)) {
-                                continue;
-                            }
-                            checkCast(argument, (PsiClassType)argumentType,
-                                    (PsiClassType)parameterType);
+                List<UExpression> arguments = expression.getValueArguments();
+                for (int i = 0; i < parameters.length; i++) {
+                    PsiType parameterType = parameters[i].getType();
+                    if (parameterType instanceof PsiClassType) {
+                        if (i >= arguments.size()) {
+                            // We can end up with more arguments than parameters when
+                            // there is a varargs call.
+                            break;
                         }
+                        UExpression argument = arguments.get(i);
+                        PsiType argumentType = argument.getExpressionType();
+                        if (argumentType == null || parameterType.equals(argumentType)
+                                || !(argumentType instanceof PsiClassType)) {
+                            continue;
+                        }
+                        checkCast(argument, (PsiClassType)argumentType,
+                                (PsiClassType)parameterType);
                     }
                 }
             }
@@ -2403,12 +2386,11 @@ public class ApiDetector extends ResourceXmlDetector
             // "-1" and we can't tell if that means "doesn't exist" or "present in API 1", we
             // then check the package prefix to see whether we know it's an API method whose
             // members should all have been inlined.
-            if (expression instanceof PsiMethodCallExpression) {
-                PsiExpression qualifier = ((PsiMethodCallExpression) expression)
-                        .getMethodExpression().getQualifierExpression();
-                if (qualifier != null && !(qualifier instanceof PsiThisExpression)
+            if (UastExpressionUtils.isMethodCall(expression)) {
+                UExpression qualifier = expression.getReceiver();
+                if (qualifier != null && !(qualifier instanceof UThisExpression)
                         && !(qualifier instanceof PsiSuperExpression)) {
-                    PsiType type = qualifier.getType();
+                    PsiType type = qualifier.getExpressionType();
                     if (type instanceof PsiClassType) {
                         String expressionOwner = evaluator.getInternalName((PsiClassType) type);
                         if (expressionOwner != null && !expressionOwner.equals(owner)) {
@@ -2436,18 +2418,15 @@ public class ApiDetector extends ResourceXmlDetector
                     }
                 } else {
                     // Unqualified call; need to search in our super hierarchy
-                    PsiClass cls = PsiTreeUtil.getParentOfType(expression, PsiClass.class);
+                    PsiClass cls = UastUtils.getContainingClass(expression);
 
                     //noinspection ConstantConditions
-                    if (qualifier instanceof PsiThisExpression
-                            || qualifier instanceof PsiSuperExpression) {
-                        PsiQualifiedExpression pte = (PsiQualifiedExpression) qualifier;
-                        PsiJavaCodeReferenceElement operand = pte.getQualifier();
-                        if (operand != null) {
-                            PsiElement resolved = operand.resolve();
-                            if (resolved instanceof PsiClass) {
-                                cls = (PsiClass)resolved;
-                            }
+                    if (qualifier instanceof UThisExpression
+                            || qualifier instanceof USuperExpression) {
+                        UInstanceExpression pte = (UInstanceExpression) qualifier;
+                        PsiElement resolved = pte.resolve();
+                        if (resolved instanceof PsiClass) {
+                            cls = (PsiClass)resolved;
                         }
                     }
 
@@ -2465,8 +2444,8 @@ public class ApiDetector extends ResourceXmlDetector
                                 cls = anonymousBase;
                                 found = true;
                             } else {
-                                PsiClass surroundingBaseType = PsiTreeUtil
-                                        .getParentOfType(cls, PsiClass.class, true);
+                                PsiClass surroundingBaseType = PsiTreeUtil.getParentOfType(cls,
+                                        PsiClass.class, true);
                                 if (surroundingBaseType != null && surroundingBaseType
                                         .isInheritor(containingClass, true)) {
                                     cls = surroundingBaseType;
@@ -2505,21 +2484,19 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            if (expression instanceof PsiMethodCallExpression) {
-                PsiMethodCallExpression call = (PsiMethodCallExpression) expression;
-                PsiReferenceExpression methodExpression = call.getMethodExpression();
-                PsiExpression qualifierExpression = methodExpression.getQualifierExpression();
+            if (UastExpressionUtils.isMethodCall(expression)) {
+                UExpression receiver = expression.getReceiver();
 
                 PsiClass target = null;
                 if (!method.isConstructor()) {
-                    if (qualifierExpression != null) {
-                        PsiType type = qualifierExpression.getType();
+                    if (receiver != null) {
+                        PsiType type = receiver.getExpressionType();
                         if (type instanceof PsiClassType) {
                             target = ((PsiClassType)type).resolve();
                         }
                     }
                     else {
-                        target = PsiTreeUtil.getParentOfType(expression, PsiClass.class, true);
+                        target = UastUtils.getContainingClass(expression);
                     }
                 }
 
@@ -2549,9 +2526,8 @@ public class ApiDetector extends ResourceXmlDetector
                 // API level than the minSdk, we're generally safe; that method should only be
                 // called by the framework on the right API levels. (There is a danger of somebody
                 // calling that method locally in other contexts, but this is hopefully unlikely.)
-                if (qualifierExpression instanceof PsiSuperExpression) {
-                    PsiMethod containingMethod = PsiTreeUtil
-                            .getParentOfType(expression, PsiMethod.class, true);
+                if (receiver instanceof USuperExpression) {
+                    PsiMethod containingMethod = UastUtils.getContainingMethod(expression);
                     if (containingMethod != null && name.equals(containingMethod.getName())
                             && evaluator.areSignaturesEqual(method, containingMethod)
                             // We specifically exclude constructors from this check, because we
@@ -2571,17 +2547,14 @@ public class ApiDetector extends ResourceXmlDetector
                 signature = fqcn + '#' + name;
             }
 
-            PsiElement nameIdentifier = LintUtils.getCallName(expression);
+            UElement nameIdentifier = expression.getMethodIdentifier();
+
             Location location;
-            if (expression instanceof PsiNewExpression) {
-                location = mContext.getRangeLocation(expression, 0, ((PsiNewExpression)expression).getClassReference(), 0);
+            if (UastExpressionUtils.isConstructorCall(expression)
+                    && expression.getClassReference() != null) {
+                location = mContext.getRangeLocation(expression, 0, expression.getClassReference(), 0);
             } else if (nameIdentifier != null) {
-                // ECJ had different bounds here
-                //if (method.isConstructor()) {
-                //    location = mContext.getRangeLocation(expression, 0, nameIdentifier, 0);
-                //} else {
-                    location = mContext.getLocation(nameIdentifier);
-                //}
+                location = mContext.getLocation(nameIdentifier);
             } else {
                 location = mContext.getLocation(expression);
             }
@@ -2593,30 +2566,40 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         // Look for @RequiresApi in modifier lists
-        private boolean checkRequiresApi(PsiCallExpression expression, PsiMethod method,
+        private boolean checkRequiresApi(UCallExpression expression, PsiMethod method,
                     PsiModifierList modifierList) {
             for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                 if (REQUIRES_API_ANNOTATION.equals(annotation.getQualifiedName())) {
-                    int api = (int) SupportAnnotationDetector.getLongAttribute(annotation,
-                        ATTR_VALUE, -1);
+                    UAnnotation wrapped = JavaUAnnotation.wrap(annotation);
+                    int api = (int) SupportAnnotationDetector.getLongAttribute(mContext,
+                            wrapped, ATTR_VALUE, -1);
                     if (api <= 1) {
                         // @RequiresApi has two aliasing attributes: api and value
-                        api = (int) SupportAnnotationDetector.getLongAttribute(annotation,
-                                "api", -1);
+                        api = (int) SupportAnnotationDetector.getLongAttribute(mContext,
+                                wrapped, "api", -1);
                     }
                     int minSdk = getMinSdk(mContext);
                     if (api > minSdk) {
                         int target = getTargetApi(expression);
                         if (target == -1 || api > target) {
-                            if (isWithinVersionCheckConditional(expression, api)) {
+                            if (isWithinVersionCheckConditional(
+                                    expression, api)) {
                                 return true;
                             }
-                            if (isPrecededByVersionCheckExit(expression, api)) {
+                            if (isPrecededByVersionCheckExit(
+                                    expression, api)) {
                                 return true;
                             }
 
                             Location location;
-                            location = mContext.getNameLocation(expression);
+                            if (UastExpressionUtils.isConstructorCall(expression)
+                                    && expression.getClassReference() != null) {
+                                location = mContext.getRangeLocation(expression, 0,
+                                        expression.getClassReference(), 0);
+                            } else {
+                                location = mContext.getNameLocation(expression);
+                            }
+
                             String fqcn = method.getName();
                             String message = String.format(
                                 "Call requires API level %1$d (current min is %2$d): `%3$s`",
@@ -2633,13 +2616,13 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitLocalVariable(PsiLocalVariable variable) {
-            PsiExpression initializer = variable.getInitializer();
+        public void visitLocalVariable(@NonNull ULocalVariable variable) {
+            UExpression initializer = variable.getUastInitializer();
             if (initializer == null) {
                 return;
             }
 
-            PsiType initializerType = initializer.getType();
+            PsiType initializerType = initializer.getExpressionType();
             if (!(initializerType instanceof PsiClassType)) {
                 return;
             }
@@ -2657,39 +2640,45 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitAssignmentExpression(PsiAssignmentExpression expression) {
-            PsiExpression rExpression = expression.getRExpression();
-            if (rExpression == null) {
-                return;
-            }
+        public void visitBinaryExpression(@NonNull UBinaryExpression expression) {
+            if (expression.getOperator() instanceof UastBinaryOperator.AssignOperator) {
+                UExpression rExpression = expression.getRightOperand();
+                PsiType rhsType = rExpression.getExpressionType();
+                if (!(rhsType instanceof PsiClassType)) {
+                    return;
+                }
 
-            PsiType rhsType = rExpression.getType();
-            if (!(rhsType instanceof PsiClassType)) {
-                return;
-            }
+                PsiType interfaceType = expression.getLeftOperand().getExpressionType();
+                if (rhsType.equals(interfaceType)) {
+                    return;
+                }
 
-            PsiType interfaceType = expression.getLExpression().getType();
-            if (rhsType.equals(interfaceType)) {
-                return;
-            }
+                if (!(interfaceType instanceof PsiClassType)) {
+                    return;
+                }
 
-            if (!(interfaceType instanceof PsiClassType)) {
-                return;
+                checkCast(rExpression, (PsiClassType)rhsType, (PsiClassType)interfaceType);
             }
-
-            checkCast(rExpression, (PsiClassType)rhsType, (PsiClassType)interfaceType);
         }
 
         @Override
-        public void visitTryStatement(PsiTryStatement statement) {
-            PsiResourceList resourceList = statement.getResourceList();
+        public void visitTryExpression(@NonNull UTryExpression statement) {
+            List<UVariable> resourceList = statement.getResourceVariables();
             //noinspection VariableNotUsedInsideIf
-            if (resourceList != null) {
+            if (!resourceList.isEmpty()) {
                 int api = 19; // minSdk for try with resources
                 int minSdk = getMinSdk(mContext);
 
                 if (api > minSdk && api > getTargetApi(statement)) {
-                    Location location = mContext.getLocation(resourceList);
+                    if (isSuppressed(mContext, api, statement, minSdk)) {
+                        return;
+                    }
+
+                    // Create location range for the resource list
+                    UVariable first = resourceList.get(0);
+                    UVariable last = resourceList.get(resourceList.size() - 1);
+                    Location location = mContext.getRangeLocation(first, 0, last, 0);
+
                     String message = String.format("Try-with-resources requires "
                             + "API level %1$d (current min is %2$d)", api,
                             Math.max(minSdk, getTargetApi(statement)));
@@ -2701,83 +2690,76 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            for (PsiParameter parameter : statement.getCatchBlockParameters()) {
-                PsiTypeElement typeElement = parameter.getTypeElement();
-                if (typeElement != null) {
-                    checkCatchTypeElement(statement, typeElement, typeElement.getType());
+            for (UCatchClause catchClause : statement.getCatchClauses()) {
+                // Special case reflective operation exception which can be implicitly used
+                // with multi-catches: see issue 153406
+                int minSdk = getMinSdk(mContext);
+                if (minSdk < 19 && isMultiCatchReflectiveOperationException(catchClause)) {
+                    if (isSuppressed(mContext, 19, statement, minSdk)) {
+                        return;
+                    }
+
+                    String message = String.format("Multi-catch with these reflection exceptions requires API level 19 (current min is %d) " +
+                                    "because they get compiled to the common but new super type `ReflectiveOperationException`. " +
+                                    "As a workaround either create individual catch statements, or catch `Exception`.",
+                            minSdk);
+
+                    mContext.report(UNSUPPORTED, statement, getCatchParametersLocation(mContext, catchClause), message);
+                    continue;
+                }
+
+                for (UTypeReferenceExpression typeReference : catchClause.getTypeReferences()) {
+                    checkCatchTypeElement(statement, typeReference, typeReference.getType());
                 }
             }
         }
 
-        @Override public void visitSwitchStatement(PsiSwitchStatement statement) {
-            if (willScanBytecode) {
-                return;
-            }
-
-            PsiExpression expression = statement.getExpression();
-            if (expression != null) {
-                PsiType type = expression.getType();
-                if (type instanceof PsiClassType) {
-                    checkClassType(expression, (PsiClassType) type, "Enum for switch");
-                }
-            }
-        }
-
-        private void checkCatchTypeElement(@NonNull PsiTryStatement statement,
-                @NonNull PsiTypeElement typeElement,
+        private void checkCatchTypeElement(@NonNull UTryExpression statement,
+                @NonNull UTypeReferenceExpression typeReference,
                 @Nullable PsiType type) {
             PsiClass resolved = null;
-            if (type instanceof PsiDisjunctionType) {
-                PsiDisjunctionType disjunctionType = (PsiDisjunctionType)type;
-                type = disjunctionType.getLeastUpperBound();
-                if (type instanceof PsiClassType) {
-                    resolved = ((PsiClassType)type).resolve();
-                }
-                for (PsiElement child : typeElement.getChildren()) {
-                    if (child instanceof PsiParenthesizedExpression) {
-                        child = ((PsiParenthesizedExpression)child).getExpression();
-                    }
-                    if (child instanceof PsiTypeElement) {
-                        PsiTypeElement childTypeElement = (PsiTypeElement)child;
-                        PsiType childType = childTypeElement.getType();
-                        if (!type.equals(childType)) {
-                            checkCatchTypeElement(statement, childTypeElement, childType);
-                        }
-                    }
-                }
-            } else if (type instanceof PsiClassType) {
-                resolved = ((PsiClassType)type).resolve();
+            if (type instanceof PsiClassType) {
+                resolved = ((PsiClassType) type).resolve();
             }
             if (resolved != null) {
                 String signature = mContext.getEvaluator().getInternalName(resolved);
-                if (signature == null) {
-                    return;
-                }
                 int api = mApiDatabase.getClassVersion(signature);
                 if (api == -1) {
                     return;
                 }
                 int minSdk = getMinSdk(mContext);
+                if (api <= minSdk) {
+                    return;
+                }
+                int target = getTargetApi(statement);
+                if (target != -1 && api <= target) {
+                    return;
+                }
+
                 if (isSuppressed(mContext, api, statement, minSdk)) {
                     return;
                 }
 
-                Location location;
-                location = mContext.getLocation(typeElement);
+                Location location = mContext.getLocation(typeReference);
                 String fqcn = resolved.getQualifiedName();
-                String message = String.format(
-                        "Class requires API level %1$d (current min is %2$d): %3$s", api,
-                        Math.max(minSdk, getTargetApi(statement)), fqcn);
+                String message = String.format("Class requires API level %1$d (current min is %2$d): %3$s",
+                        api, minSdk, fqcn);
+                mContext.report(UNSUPPORTED, location, message);
+            }
+        }
 
-                // Special case reflective operation exception which can be implicitly used
-                // with multi-catches: see issue 153406
-                if (api == 19 && "java.lang.ReflectiveOperationException".equals(fqcn)) {
-                    message = String.format("Multi-catch with these reflection exceptions requires API level 19 (current min is %2$d) " +
-                                    "because they get compiled to the common but new super type `ReflectiveOperationException`. " +
-                                    "As a workaround either create individual catch statements, or catch `Exception`.",
-                            api, minSdk);
+        @Override
+        public void visitSwitchExpression(@NonNull USwitchExpression statement) {
+            if (willScanBytecode) {
+                return;
+            }
+
+            UExpression expression = statement.getExpression();
+            if (expression != null) {
+                PsiType type = expression.getExpressionType();
+                if (type instanceof PsiClassType) {
+                    checkClassType(expression, (PsiClassType) type, "Enum for switch");
                 }
-                mContext.report(UNSUPPORTED, statement, location, message);
             }
         }
 
@@ -2785,7 +2767,7 @@ public class ApiDetector extends ResourceXmlDetector
          * Checks a Java source field reference. Returns true if the field is known
          * regardless of whether it's an invalid field or not
          */
-        private boolean checkField(@NonNull PsiElement node, @NonNull PsiField field) {
+        private void checkField(@NonNull UElement node, @NonNull PsiField field) {
             PsiType type = field.getType();
             String name = field.getName();
 
@@ -2795,11 +2777,11 @@ public class ApiDetector extends ResourceXmlDetector
 
             PsiClass containingClass = field.getContainingClass();
             if (containingClass == null || name == null) {
-                return false;
+                return;
             }
             String owner = mContext.getEvaluator().getInternalName(containingClass);
             if (owner == null) {
-                return false;
+                return;
             }
             int api = mApiDatabase.getFieldVersion(owner, name);
             if (api != -1) {
@@ -2811,58 +2793,66 @@ public class ApiDetector extends ResourceXmlDetector
                     if (!(type instanceof PsiPrimitiveType) && !LintUtils.isString(type)) {
                         issue = UNSUPPORTED;
                         if (willScanBytecode) {
-                            return true;
+                            return;
                         }
 
                         // Declaring enum constants are safe; they won't be called on older
                         // platforms.
-                        PsiElement parent = skipParentheses(node.getParent());
-                        if (parent instanceof PsiSwitchLabelStatement) {
-                            PsiExpression condition = ((PsiSwitchLabelStatement) parent)
-                                    .getCaseValue();
-                            if (node == condition) {
-                                return true;
+                        UElement parent = skipParentheses(node.getUastParent());
+                        if (parent instanceof USwitchClauseExpression) {
+                            List<UExpression> conditions = ((USwitchClauseExpression) parent)
+                                    .getCaseValues();
+                            if (conditions.contains(node)) {
+                                return;
                             }
                         }
                     } else if (isBenignConstantUsage(node, name, owner)) {
-                        return true;
+                        return;
                     }
 
                     String fqcn = getFqcn(owner) + '#' + name;
 
                     // For import statements, place the underlines only under the
                     // reference, not the import and static keywords
-                    if (node instanceof PsiImportStatementBase) {
-                        PsiJavaCodeReferenceElement reference
-                                = ((PsiImportStatementBase) node).getImportReference();
+                    if (node instanceof UImportStatement) {
+                        UElement reference = ((UImportStatement) node).getImportReference();
                         if (reference != null) {
                             node = reference;
                         }
                     }
 
                     if (isSuppressed(mContext, api, node, minSdk)) {
-                        return true;
+                        return;
                     }
 
                     String message = String.format(
                             "Field requires API level %1$d (current min is %2$d): `%3$s`",
                             api, Math.max(minSdk, getTargetApi(node)), fqcn);
 
-                    Location location = mContext.getLocation(node);
+                    // If the reference is a qualified expression, don't just highlight the
+                    // field name itself; include the qualifiers too
+                    UElement locationNode = node;
+                    //noinspection ConstantConditions
+                    while (locationNode.getUastParent() instanceof UQualifiedReferenceExpression
+                            // But only include expressions to the left; for example, if we're
+                            // trying to highlight the field "OVERLAY" in
+                            //     PorterDuff.Mode.OVERLAY.hashCode()
+                            // we should *not* include the .hashCode() suffix
+                            && ((UQualifiedReferenceExpression)locationNode.getUastParent()).getSelector() == locationNode) {
+                        locationNode = locationNode.getUastParent();
+                    }
+
+                    Location location = mContext.getLocation(locationNode);
                     mContext.report(issue, node, location, message);
                 }
-
-                return true;
             }
-
-            return false;
         }
     }
 
     private static boolean isSuppressed(
             @NonNull JavaContext context,
             int api,
-            @NonNull PsiElement element,
+            @NonNull UElement element,
             int minSdk) {
         if (api <= minSdk) {
             return true;
@@ -2882,7 +2872,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     }
 
-    public static int getTargetApi(@Nullable PsiElement scope) {
+    public static int getTargetApi(@Nullable UElement scope) {
         while (scope != null) {
             if (scope instanceof PsiModifierListOwner) {
                 PsiModifierList modifierList = ((PsiModifierListOwner) scope).getModifierList();
@@ -2891,7 +2881,7 @@ public class ApiDetector extends ResourceXmlDetector
                     return targetApi;
                 }
             }
-            scope = scope.getParent();
+            scope = scope.getUastParent();
             if (scope instanceof PsiFile) {
                 break;
             }
@@ -2944,6 +2934,8 @@ public class ApiDetector extends ResourceXmlDetector
                             }
                         }
                     } else if (v instanceof PsiExpression) {
+                        // PsiExpression nodes are not present in light classes, so
+                        // we can use Java PSI api to get the qualified name
                         if (v instanceof PsiReferenceExpression) {
                             String name = ((PsiReferenceExpression)v).getQualifiedName();
                             return codeNameToApi(name);
@@ -2975,9 +2967,9 @@ public class ApiDetector extends ResourceXmlDetector
 
 
     protected void checkObsoleteSdkVersion(@NonNull JavaContext context,
-            @NonNull PsiElement node) {
-        PsiBinaryExpression binary = PsiTreeUtil.getParentOfType(node,
-                PsiBinaryExpression.class, true);
+            @NonNull UElement node) {
+        UBinaryExpression binary = UastUtils.getParentOfType(node,
+                UBinaryExpression.class, true);
         if (binary != null) {
             int minSdk = getMinSdk(context);
             Boolean isConditional = isVersionCheckConditional(minSdk, binary);
@@ -3011,5 +3003,56 @@ public class ApiDetector extends ResourceXmlDetector
         } else {
             return null;
         }
+    }
+
+    public static Location getCatchParametersLocation(JavaContext context,
+            UCatchClause catchClause) {
+        List<UTypeReferenceExpression> types = catchClause.getTypeReferences();
+        if (types.isEmpty()) {
+            return Location.NONE;
+        }
+
+        Location first = context.getLocation(types.get(0));
+        if (types.size() < 2) {
+            return first;
+        }
+
+        Location last = context.getLocation(types.get(types.size() - 1));
+        File file = first.getFile();
+        Position start = first.getStart();
+        Position end = last.getEnd();
+
+        if (start == null) {
+            return Location.create(file);
+        }
+
+        return Location.create(file, start, end);
+    }
+
+    public static boolean isMultiCatchReflectiveOperationException(UCatchClause catchClause) {
+        List<PsiType> types = catchClause.getTypes();
+        if (types.size() < 2) {
+            return false;
+        }
+
+        for (PsiType t : types) {
+            if(!isSubclassOfReflectiveOperationException(t)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static final String REFLECTIVE_OPERATION_EXCEPTION
+            = "java.lang.ReflectiveOperationException";
+
+    private static boolean isSubclassOfReflectiveOperationException(PsiType type) {
+        for (PsiType t : type.getSuperTypes()) {
+            if (REFLECTIVE_OPERATION_EXCEPTION.equals(t.getCanonicalText())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

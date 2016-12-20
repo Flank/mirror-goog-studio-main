@@ -368,30 +368,101 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     }
 
     public void testSparseLongArray1() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseLongArray(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
                 + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-
-                lintProject(
-                        manifest().minSdk(19),
-                        mSparseLongArray));
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                manifest().minSdk(19),
+                mSparseLongArray)
+                .run()
+                .expect(expected);
     }
 
     public void testSparseLongArray2() throws Exception {
         // Note -- it's offering a SparseArray, not a SparseLongArray!
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
                 + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                manifest().minSdk(1),
+                mSparseLongArray)
+                .run()
+                .expect(expected);
+    }
 
-                lintProject(
-                        manifest().minSdk(1),
-                        mSparseLongArray));
+    public void testUseValueOfOnArrays() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import junit.framework.Assert;\n"
+                        + "\n"
+                        + "import java.util.Arrays;\n"
+                        + "import java.util.Calendar;\n"
+                        + "import java.util.List;\n"
+                        + "\n"
+                        + "public class TestValueOf {\n"
+                        + "    public Integer[] getAffectedDays(List<Integer> mAffectedDays) {\n"
+                        + "        return mAffectedDays.toArray(new Integer[mAffectedDays.size()]);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test2(Integer[] x) {\n"
+                        + "        Assert.assertTrue(Arrays.equals(x, new Integer[]{Calendar.MONDAY}));\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testAllocationForArrays() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "import android.content.res.TypedArray;\n"
+                        + "import android.graphics.Canvas;\n"
+                        + "import android.util.AttributeSet;\n"
+                        + "import android.widget.Button;\n"
+                        + "\n"
+                        + "public class MyButton extends Button {\n"
+                        + "\n"
+                        + "    public MyButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {\n"
+                        + "        super(context, attrs, defStyleAttr, defStyleRes);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    protected void onDraw(Canvas canvas) {\n"
+                        + "        super.onDraw(canvas);\n"
+                        + "\n"
+                        + "        char[] text;\n"
+                        + "\n"
+                        + "        if (isInEditMode()) {\n"
+                        + "            text = new char[0];\n"
+                        + "        } else {\n"
+                        + "            text = getText().toString().toCharArray();\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        TypedArray array = getContext().obtainStyledAttributes(new int[] { android.R.attr.listPreferredItemHeight });\n"
+                        + "        array.recycle();\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/MyButton.java:22: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "            text = new char[0];\n"
+                        + "                   ~~~~~~~~~~~\n"
+                        + "src/test/pkg/MyButton.java:27: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "        TypedArray array = getContext().obtainStyledAttributes(new int[] { android.R.attr.listPreferredItemHeight });\n"
+                        + "                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings\n");
     }
 
     public void testWildcards() throws Exception {

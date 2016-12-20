@@ -120,6 +120,7 @@ import lombok.ast.StringLiteral;
 import lombok.ast.TypeDeclaration;
 import lombok.ast.TypeReference;
 import lombok.ast.VariableDefinition;
+import org.jetbrains.uast.UElement;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -168,7 +169,9 @@ public class LintDriver {
     private boolean parserErrors;
     private Map<Object,Object> properties;
     /** Whether we need to look for legacy (old Lombok-based Java API) detectors */
-    private boolean runCompatChecks = true;
+    private boolean runLombokCompatChecks = false;
+    /** Whether we need to look for legacy (old PSI) detectors */
+    private boolean runPsiCompatChecks = false;
     /** Whether we should run all normal checks on test sources */
     private boolean checkTestSources;
     private LintBaseline baseline;
@@ -614,8 +617,11 @@ public class LintDriver {
             for (File jarFile : jarFiles) {
                 try {
                     JarFileIssueRegistry registry = JarFileIssueRegistry.get(client, jarFile);
-                    if (registry.hasLegacyDetectors()) {
-                        runCompatChecks = true;
+                    if (registry.hasLombokLegacyDetectors()) {
+                        runLombokCompatChecks = true;
+                        runPsiCompatChecks = true;
+                    } else if (registry.hasPsiLegacyDetectors()) {
+                        runPsiCompatChecks = true;
                     }
                     registries.add(registry);
                 } catch (Throwable e) {
@@ -793,6 +799,7 @@ public class LintDriver {
             if (javaCodeDetectors != null) {
                 for (Detector detector : javaCodeDetectors) {
                     assert detector instanceof Detector.JavaScanner ||
+                            detector instanceof Detector.UastScanner ||
                             detector instanceof Detector.JavaPsiScanner : detector;
                 }
             }
@@ -800,6 +807,7 @@ public class LintDriver {
             if (javaFileDetectors != null) {
                 for (Detector detector : javaFileDetectors) {
                     assert detector instanceof Detector.JavaScanner ||
+                            detector instanceof Detector.UastScanner ||
                             detector instanceof Detector.JavaPsiScanner : detector;
                 }
             }
@@ -1623,12 +1631,6 @@ public class LintDriver {
             @NonNull List<File> sourceFolders,
             @NonNull List<File> testSourceFolders,
             @NonNull List<Detector> checks) {
-        JavaParser javaParser = client.getJavaParser(project);
-        if (javaParser == null) {
-            client.log(null, "No java parser provided to lint: not running Java checks");
-            return;
-        }
-
         assert !checks.isEmpty();
 
         // Gather all Java source files in a single pass; more efficient.
@@ -1639,7 +1641,7 @@ public class LintDriver {
 
         List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(2 * sources.size());
         for (File file : sources) {
-            JavaContext context = new JavaContext(this, project, main, file, javaParser);
+            JavaContext context = new JavaContext(this, project, main, file);
             contexts.add(context);
         }
 
@@ -1650,32 +1652,30 @@ public class LintDriver {
         }
         List<JavaContext> testContexts = Lists.newArrayListWithExpectedSize(sources.size());
         for (File file : sources) {
-            JavaContext context = new JavaContext(this, project, main, file, javaParser);
+            JavaContext context = new JavaContext(this, project, main, file);
             context.setTestSource(true);
             testContexts.add(context);
         }
 
         // Visit all contexts
         if (!contexts.isEmpty() || !testContexts.isEmpty()) {
-            visitJavaFiles(checks, javaParser, contexts, testContexts);
+            visitJavaFiles(checks, project, contexts, testContexts);
         }
     }
 
-    private void visitJavaFiles(@NonNull List<Detector> checks, @NonNull JavaParser javaParser,
+    private void visitJavaFiles(@NonNull List<Detector> checks, @NonNull Project project,
             @NonNull List<JavaContext> contexts, @NonNull List<JavaContext> testContexts) {
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
         //List<Detector> scanners = checks;
         List<Detector> scanners = Lists.newArrayListWithCapacity(checks.size());
+        List<Detector> uastScanners = Lists.newArrayListWithCapacity(checks.size());
         for (Detector detector : checks) {
             if (detector instanceof Detector.JavaPsiScanner) {
                 scanners.add(detector);
+            } else if (detector instanceof Detector.UastScanner) {
+                uastScanners.add(detector);
             }
-        }
-
-        JavaPsiVisitor visitor = new JavaPsiVisitor(javaParser, scanners);
-        if (runCompatChecks) {
-            visitor.setDisposeUnitsAfterUse(false);
         }
 
         List<JavaContext> allContexts;
@@ -1694,111 +1694,178 @@ public class LintDriver {
             testContexts = Collections.emptyList();
         }
 
-        parserErrors = !visitor.prepare(allContexts);
-
-        for (JavaContext context : contexts) {
-            fireEvent(EventType.SCANNING_FILE, context);
-            visitor.visitFile(context);
-            if (canceled) {
+        if (!uastScanners.isEmpty()) {
+            UastParser parser = client.getUastParser(project);
+            if (parser == null) {
+                client.log(null, "No java parser provided to lint: not running Java checks");
                 return;
             }
-        }
 
-        // Run tests separately: most checks aren't going to apply for tests
-        JavaPsiVisitor testVisitor = null;
-        if (!testContexts.isEmpty()) {
-            List<Detector> testScanners = filterTestScanners(scanners);
-            if (!testScanners.isEmpty()) {
-                testVisitor = new JavaPsiVisitor(javaParser, testScanners);
-                if (runCompatChecks) {
-                    testVisitor.setDisposeUnitsAfterUse(false);
-                }
-
-                for (JavaContext context : testContexts) {
-                    fireEvent(EventType.SCANNING_FILE, context);
-                    testVisitor.visitFile(context);
-                    if (canceled) {
-                        return;
-                    }
-                }
+            UastParser uastParser = client.getUastParser(currentProject);
+            for (JavaContext context : allContexts) {
+                context.setUastParser(uastParser);
             }
-        }
+            final UElementVisitor uElementVisitor = new UElementVisitor(parser, uastScanners);
 
-        // Only if the user is using some custom lint rules that haven't been updated
-        // yet
-        //noinspection ConstantConditions
-        if (runCompatChecks) {
-            try {
-                // Call EcjParser#disposePsi (if running from Gradle) to clear up PSI
-                // caches that are full from the above JavaPsiVisitor call. We do this
-                // instead of calling visitor.dispose because we want to *keep* the
-                // ECJ parse around for use by the Lombok bridge.
-                javaParser.getClass().getMethod("disposePsi").invoke(javaParser);
-            } catch (Throwable ignore) {
-            }
+            parserErrors = !uElementVisitor.prepare(contexts);
 
-            // Filter the checks to only those that implement JavaScanner
-            List<Detector> filtered = Lists.newArrayListWithCapacity(checks.size());
-            for (Detector detector : checks) {
-                if (detector instanceof Detector.JavaScanner) {
-                    assert !(detector instanceof Detector.JavaPsiScanner); // Shouldn't be both
-                    filtered.add(detector);
+            for (final JavaContext context : contexts) {
+                fireEvent(EventType.SCANNING_FILE, context);
+                // TODO: Don't hold read lock around the entire process?
+                client.runReadAction(() -> uElementVisitor.visitFile(context));
+                if (canceled) {
+                    return;
                 }
             }
 
-            if (!filtered.isEmpty()) {
-                List<String> detectorNames = Lists.newArrayListWithCapacity(filtered.size());
-                for (Detector detector : filtered) {
-                    detectorNames.add(detector.getClass().getName());
-                }
-                Collections.sort(detectorNames);
+            uElementVisitor.dispose();
 
-                /* Let's not complain quite yet
-                String message = String.format("Lint found one or more custom checks using its "
-                        + "older Java API; these checks are still run in compatibility mode, "
-                        + "but this causes duplicated parsing, and in the next version lint "
-                        + "will no longer include this legacy mode. Make sure the following "
-                        + "lint detectors are upgraded to the new API: %1$s",
-                        Joiner.on(", ").join(detectorNames));
-                JavaContext first = contexts.get(0);
-                Project project = first.getProject();
-                Location location = Location.create(project.getDir());
-                client.report(first,
-                        IssueRegistry.LINT_ERROR,
-                        project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
-                        location, message, TextFormat.RAW);
-                */
+            if (!testContexts.isEmpty()) {
+                List<Detector> testScanners = filterTestScanners(uastScanners);
+                if (!testScanners.isEmpty()) {
+                    UElementVisitor uTestVisitor = new UElementVisitor(parser, uastScanners);
 
-                JavaVisitor oldVisitor = new JavaVisitor(javaParser, filtered);
-
-                // NOTE: We do NOT call oldVisitor.prepare and dispose here since this
-                // visitor is wrapping the same java parser as the one we used for PSI,
-                // so calling prepare again would wipe out the results we're trying to reuse.
-                for (JavaContext context : contexts) {
-                    fireEvent(EventType.SCANNING_FILE, context);
-                    oldVisitor.visitFile(context);
-                    if (canceled) {
-                        return;
-                    }
-                }
-
-                if (!testContexts.isEmpty()) {
-                    List<Detector> testScanners = filterTestScanners(filtered);
-                    JavaVisitor oldTestVisitor = new JavaVisitor(javaParser, testScanners);
                     for (JavaContext context : testContexts) {
                         fireEvent(EventType.SCANNING_FILE, context);
-                        oldTestVisitor.visitFile(context);
+                        // TODO: Don't hold read lock around the entire process?
+                        client.runReadAction(() -> uTestVisitor.visitFile(context));
+                        if (canceled) {
+                            return;
+                        }
+                    }
+
+                    uTestVisitor.dispose();
+                }
+            }
+        }
+
+        if (runPsiCompatChecks) {
+            JavaParser parser = client.getJavaParser(project);
+            if (parser == null) {
+                client.log(null, "No java parser provided to lint: not running Java checks");
+                return;
+            }
+
+            for (JavaContext context : allContexts) {
+                context.setParser(parser);
+            }
+
+            JavaPsiVisitor visitor = new JavaPsiVisitor(parser, scanners);
+            if (runLombokCompatChecks) {
+                visitor.setDisposeUnitsAfterUse(false);
+            }
+
+            parserErrors = !visitor.prepare(allContexts);
+
+            for (JavaContext context : contexts) {
+                fireEvent(EventType.SCANNING_FILE, context);
+                visitor.visitFile(context);
+                if (canceled) {
+                    return;
+                }
+            }
+
+            // Run tests separately: most checks aren't going to apply for tests
+            JavaPsiVisitor testVisitor = null;
+            if (!testContexts.isEmpty()) {
+                List<Detector> testScanners = filterTestScanners(scanners);
+                if (!testScanners.isEmpty()) {
+                    testVisitor = new JavaPsiVisitor(parser, testScanners);
+                    if (runLombokCompatChecks) {
+                        testVisitor.setDisposeUnitsAfterUse(false);
+                    }
+
+                    for (JavaContext context : testContexts) {
+                        fireEvent(EventType.SCANNING_FILE, context);
+                        testVisitor.visitFile(context);
                         if (canceled) {
                             return;
                         }
                     }
                 }
             }
-        }
 
-        visitor.dispose();
-        if (testVisitor != null) {
-            testVisitor.dispose();
+            // Only if the user is using some custom lint rules that haven't been updated
+            // yet
+            //noinspection ConstantConditions
+            if (runLombokCompatChecks) {
+                try {
+                    // Call EcjParser#disposePsi (if running from Gradle) to clear up PSI
+                    // caches that are full from the above JavaPsiVisitor call. We do this
+                    // instead of calling visitor.dispose because we want to *keep* the
+                    // ECJ parse around for use by the Lombok bridge.
+                    parser.getClass().getMethod("disposePsi").invoke(parser);
+                } catch (Throwable ignore) {
+                }
+
+                // Filter the checks to only those that implement JavaScanner
+                List<Detector> filtered = Lists.newArrayListWithCapacity(checks.size());
+                for (Detector detector : checks) {
+                    if (detector instanceof Detector.JavaScanner) {
+                        assert !(detector instanceof Detector.JavaPsiScanner); // Shouldn't be both
+                        filtered.add(detector);
+                    }
+                }
+
+                if (!filtered.isEmpty()) {
+                    List<String> detectorNames = Lists.newArrayListWithCapacity(filtered.size());
+                    for (Detector detector : filtered) {
+                        detectorNames.add(detector.getClass().getName());
+                    }
+                    Collections.sort(detectorNames);
+
+                    /* Let's not complain quite yet
+                    String message = String.format("Lint found one or more custom checks using its "
+                            + "older Java API; these checks are still run in compatibility mode, "
+                            + "but this causes duplicated parsing, and in the next version lint "
+                            + "will no longer include this legacy mode. Make sure the following "
+                            + "lint detectors are upgraded to the new API: %1$s",
+                            Joiner.on(", ").join(detectorNames));
+                    JavaContext first = contexts.get(0);
+                    Project project = first.getProject();
+                    Location location = Location.create(project.getDir());
+                    client.report(first,
+                            IssueRegistry.LINT_ERROR,
+                            project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
+                            location, message, TextFormat.RAW);
+                    */
+
+                    JavaVisitor oldVisitor = new JavaVisitor(parser, filtered);
+
+                    // NOTE: We do NOT call oldVisitor.prepare and dispose here since this
+                    // visitor is wrapping the same java parser as the one we used for PSI,
+                    // so calling prepare again would wipe out the results we're trying to reuse.
+                    for (JavaContext context : contexts) {
+                        fireEvent(EventType.SCANNING_FILE, context);
+                        oldVisitor.visitFile(context);
+                        if (canceled) {
+                            return;
+                        }
+                    }
+
+                    if (!testContexts.isEmpty()) {
+                        List<Detector> testScanners = filterTestScanners(filtered);
+                        JavaVisitor oldTestVisitor = new JavaVisitor(parser, testScanners);
+                        for (JavaContext context : testContexts) {
+                            fireEvent(EventType.SCANNING_FILE, context);
+                            oldTestVisitor.visitFile(context);
+                            if (canceled) {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            visitor.dispose();
+            if (testVisitor != null) {
+                testVisitor.dispose();
+            }
+            for (JavaContext context : allContexts) {
+                context.setParser(null);
+            }
+        } else {
+            assert !runLombokCompatChecks; // the lombok compat support requires the psi compat checks too
         }
     }
 
@@ -1827,16 +1894,10 @@ public class LintDriver {
             @NonNull List<Detector> checks,
             @NonNull List<File> files) {
 
-        JavaParser javaParser = client.getJavaParser(project);
-        if (javaParser == null) {
-            client.log(null, "No java parser provided to lint: not running Java checks");
-            return;
-        }
-
         List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(files.size());
         for (File file : files) {
             if (file.isFile() && file.getPath().endsWith(DOT_JAVA)) {
-                contexts.add(new JavaContext(this, project, main, file, javaParser));
+                contexts.add(new JavaContext(this, project, main, file));
             }
         }
 
@@ -1848,7 +1909,7 @@ public class LintDriver {
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        visitJavaFiles(checks, javaParser, contexts, Collections.emptyList());
+        visitJavaFiles(checks, project, contexts, Collections.emptyList());
     }
 
     private static void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
@@ -2321,6 +2382,12 @@ public class LintDriver {
         @Override
         public JavaParser getJavaParser(@Nullable Project project) {
             return mDelegate.getJavaParser(project);
+        }
+
+        @Nullable
+        @Override
+        public UastParser getUastParser(@Nullable Project project) {
+            return mDelegate.getUastParser(project);
         }
 
         @Override
@@ -2856,6 +2923,31 @@ public class LintDriver {
             }
 
             scope = scope.getParent();
+        }
+
+        return false;
+    }
+
+    public boolean isSuppressed(@Nullable JavaContext context, @NonNull Issue issue,
+            @Nullable UElement scope) {
+        boolean checkComments = client.checkForSuppressComments() &&
+                context != null && context.containsCommentSuppress();
+        while (scope != null) {
+            if (scope instanceof PsiModifierListOwner) {
+                PsiModifierListOwner owner = (PsiModifierListOwner) scope;
+                if (isSuppressed(issue, owner.getModifierList())) {
+                    return true;
+                }
+            }
+
+            if (checkComments && context.isSuppressedWithComment(scope, issue)) {
+                return true;
+            }
+
+            scope = scope.getUastParent();
+            if (scope instanceof PsiFile) {
+                return false;
+            }
         }
 
         return false;

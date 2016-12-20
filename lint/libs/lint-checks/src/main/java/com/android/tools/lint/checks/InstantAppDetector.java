@@ -40,7 +40,7 @@ import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -52,19 +52,19 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UReferenceExpression;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -73,7 +73,7 @@ import org.w3c.dom.Node;
 /**
  * Checks related to instant apps
  */
-public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiScanner {
+public class InstantAppDetector extends ResourceXmlDetector implements UastScanner {
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPLEMENTATION = new Implementation(
@@ -334,8 +334,8 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         switch (method.getName()) {
             case "notify":
@@ -365,9 +365,9 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
                 break;
             case "getLong":
                 if (evaluator.isMemberInClass(method, "com.google.android.gsf.Gservices")) {
-                    PsiExpression[] arguments = call.getArgumentList().getExpressions();
-                    if (arguments.length == 3) {
-                        Object key = ConstantEvaluator.evaluate(context, arguments[1]);
+                    List<UExpression> arguments = call.getValueArguments();
+                    if (arguments.size() == 3) {
+                        Object key = ConstantEvaluator.evaluate(context, arguments.get(1));
                         if ("android_id".equals(key)) {
                             report(ISSUE, context, call,
                                     getPlaceHolderError("Android Id"));
@@ -391,8 +391,8 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
     }
 
     @Override
-    public void visitReference(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiJavaCodeReferenceElement reference, @NonNull PsiElement referenced) {
+    public void visitReference(@NonNull JavaContext context,
+            @NonNull UReferenceExpression reference, @NonNull PsiElement referenced) {
         if (!(referenced instanceof PsiField)) {
             return;
         }
@@ -406,12 +406,12 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
         }
         switch (qualifiedName) {
             case "android.os.Build":
-                if ("SERIAL".equals(reference.getReferenceName())) {
+                if ("SERIAL".equals(reference.getResolvedName())) {
                     report(ISSUE, context, reference, getPlaceHolderError("Build Serial"));
                 }
                 break;
             case "android.provider.Settings.Secure":
-                if ("ANDROID_ID".equals(reference.getReferenceName())) {
+                if ("ANDROID_ID".equals(reference.getResolvedName())) {
                     report(ISSUE, context, reference, getPlaceHolderError(
                             "Settings.Secure Android Id"));
                 }
@@ -427,10 +427,9 @@ public class InstantAppDetector extends ResourceXmlDetector implements JavaPsiSc
     }
 
     private static void report(@NonNull Issue issue, @NonNull JavaContext context,
-            @NonNull PsiElement element, @NonNull String message) {
+            @NonNull UElement element, @NonNull String message) {
         if (isInstantApp(context)) {
             context.report(issue, element, context.getLocation(element), message);
         }
     }
-
 }

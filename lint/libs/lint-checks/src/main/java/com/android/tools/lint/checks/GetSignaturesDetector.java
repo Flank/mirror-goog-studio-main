@@ -23,20 +23,19 @@ import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
 
-public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
+public class GetSignaturesDetector extends Detector implements UastScanner  {
     public static final Issue ISSUE = Issue.create(
             "PackageManagerGetSignatures",
             "Potential Multiple Certificate Exploit",
@@ -58,7 +57,7 @@ public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
     private static final String GET_PACKAGE_INFO = "getPackageInfo";
     private static final int GET_SIGNATURES_FLAG = 0x00000040;
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     @Nullable
@@ -67,8 +66,8 @@ public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression node, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (!evaluator.methodMatches(method, PACKAGE_MANAGER_CLASS, true,
                 JavaParser.TYPE_STRING,
@@ -76,9 +75,9 @@ public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
             return;
         }
 
-        PsiExpression[] arguments = node.getArgumentList().getExpressions();
-        if (arguments.length == 2) {
-            PsiExpression second = arguments[1];
+        List<UExpression> arguments = node.getValueArguments();
+        if (arguments.size() == 2) {
+            UExpression second = arguments.get(1);
             Object number = ConstantEvaluator.evaluate(context, second);
             if (number instanceof Number) {
                 int flagValue = ((Number)number).intValue();
@@ -88,8 +87,8 @@ public class GetSignaturesDetector extends Detector implements JavaPsiScanner  {
     }
 
     private static void maybeReportIssue(
-            int flagValue, JavaContext context, PsiMethodCallExpression node,
-            PsiExpression last) {
+            int flagValue, JavaContext context, UCallExpression node,
+            UExpression last) {
         if ((flagValue & GET_SIGNATURES_FLAG) != 0) {
             context.report(ISSUE, node, context.getLocation(last),
                 "Reading app signatures from getPackageInfo: The app signatures "

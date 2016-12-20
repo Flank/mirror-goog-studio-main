@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationBooleanValue;
+import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationDoubleValue;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM_INCLUSIVE;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO;
@@ -26,8 +28,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiLiteral;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULiteralExpression;
 
 class FloatRangeConstraint extends RangeConstraint {
 
@@ -50,6 +53,16 @@ class FloatRangeConstraint extends RangeConstraint {
         double to = getDoubleValue(toValue, Double.POSITIVE_INFINITY);
         boolean fromInclusive = getBooleanValue(fromInclusiveValue, true);
         boolean toInclusive = getBooleanValue(toInclusiveValue, true);
+        return new FloatRangeConstraint(from, to, fromInclusive, toInclusive);
+    }
+
+    @NonNull
+    public static FloatRangeConstraint create(@NonNull UAnnotation annotation) {
+        assert FLOAT_RANGE_ANNOTATION.equals(annotation.getQualifiedName());
+        double from = getAnnotationDoubleValue(annotation, ATTR_FROM, Double.NEGATIVE_INFINITY);
+        double to = getAnnotationDoubleValue(annotation, ATTR_TO, Double.POSITIVE_INFINITY);
+        boolean fromInclusive = getAnnotationBooleanValue(annotation, ATTR_FROM_INCLUSIVE, true);
+        boolean toInclusive = getAnnotationBooleanValue(annotation, ATTR_TO_INCLUSIVE, true);
         return new FloatRangeConstraint(from, to, fromInclusive, toInclusive);
     }
 
@@ -93,7 +106,7 @@ class FloatRangeConstraint extends RangeConstraint {
 
     @Nullable
     @Override
-    public Boolean isValid(@NonNull PsiExpression argument) {
+    public Boolean isValid(@NonNull UExpression argument) {
         Number number = guessSize(argument);
         if (number != null) {
             double value = number.doubleValue();
@@ -109,7 +122,7 @@ class FloatRangeConstraint extends RangeConstraint {
 
     @NonNull
     @Override
-    public String describe(@Nullable PsiExpression argument) {
+    public String describe(@Nullable UExpression argument) {
         return describe(argument, null);
     }
 
@@ -119,7 +132,7 @@ class FloatRangeConstraint extends RangeConstraint {
     }
 
     @NonNull
-    public String describe(@Nullable PsiExpression argument, @Nullable Double actualValue) {
+    public String describe(@Nullable UExpression argument, @Nullable Double actualValue) {
         StringBuilder sb = new StringBuilder(20);
 
         String valueString = null;
@@ -129,12 +142,12 @@ class FloatRangeConstraint extends RangeConstraint {
                 actualValue = number.doubleValue();
             }
         }
-        if (argument instanceof PsiLiteral) {
+        if (argument instanceof ULiteralExpression) {
             // Use source text instead to avoid rounding errors involved in conversion, e.g
             //    Error: Value must be > 2.5 (was 2.490000009536743) [Range]
             //    printAtLeastExclusive(2.49f); // ERROR
             //                          ~~~~~
-            String str = argument.getText();
+            String str = argument.asSourceString();
             if (str.endsWith("f") || str.endsWith("F")) {
                 str = str.substring(0, str.length() - 1);
             }

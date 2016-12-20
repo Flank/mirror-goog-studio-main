@@ -26,19 +26,18 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
 
 /**
  * Checks for errors related to Date Formats
  */
-public class DateFormatDetector extends Detector implements Detector.JavaPsiScanner {
+public class DateFormatDetector extends Detector implements Detector.UastScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             DateFormatDetector.class,
@@ -74,7 +73,7 @@ public class DateFormatDetector extends Detector implements Detector.JavaPsiScan
     public DateFormatDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -83,8 +82,8 @@ public class DateFormatDetector extends Detector implements Detector.JavaPsiScan
     }
 
     @Override
-    public void visitConstructor(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiNewExpression node, @NonNull PsiMethod constructor) {
+    public void visitConstructor(@NonNull JavaContext context, @NonNull UCallExpression node,
+            @NonNull PsiMethod constructor) {
         if (!specifiesLocale(constructor)) {
             Location location = context.getLocation(node);
             String message =

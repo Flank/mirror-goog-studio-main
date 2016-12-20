@@ -26,6 +26,7 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_OBJECT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
 import static com.android.tools.lint.detector.api.JavaContext.getParentOfType;
+import static org.jetbrains.uast.UastBinaryExpressionWithTypeKind.TYPE_CAST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -38,6 +39,7 @@ import com.intellij.psi.PsiArrayInitializerExpression;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiBinaryExpression;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiDeclarationStatement;
@@ -65,6 +67,7 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -93,6 +96,29 @@ import lombok.ast.VariableDeclaration;
 import lombok.ast.VariableDefinition;
 import lombok.ast.VariableDefinitionEntry;
 import lombok.ast.VariableReference;
+import org.jetbrains.uast.UBinaryExpression;
+import org.jetbrains.uast.UBinaryExpressionWithType;
+import org.jetbrains.uast.UBlockExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UDeclarationsExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.ULiteralExpression;
+import org.jetbrains.uast.UParenthesizedExpression;
+import org.jetbrains.uast.UPolyadicExpression;
+import org.jetbrains.uast.UPrefixExpression;
+import org.jetbrains.uast.UQualifiedReferenceExpression;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UResolvable;
+import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastBinaryOperator;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastPrefixOperator;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /** Evaluates constant expressions */
 public class ConstantEvaluator {
@@ -574,6 +600,686 @@ public class ConstantEvaluator {
         // Math.* methods, String utility methods like notNullize, etc
 
         return null;
+    }
+
+    /**
+     * Evaluates the given node and returns the constant value it resolves to, if any
+     *
+     * @param node the node to compute the constant value for
+     * @return the corresponding constant value - a String, an Integer, a Float, and so on
+     */
+    @Nullable
+    public Object evaluate(@Nullable UElement node) {
+        if (node == null) {
+            return null;
+        }
+
+        if (node instanceof ULiteralExpression) {
+            return ((ULiteralExpression) node).getValue();
+        } else if (node instanceof UPrefixExpression) {
+            UastPrefixOperator operator = ((UPrefixExpression) node).getOperator();
+            Object operand = evaluate(((UPrefixExpression) node).getOperand());
+            if (operand == null) {
+                return null;
+            }
+            if (operator == UastPrefixOperator.LOGICAL_NOT) {
+                if (operand instanceof Boolean) {
+                    return !(Boolean) operand;
+                }
+            } else if (operator == UastPrefixOperator.UNARY_PLUS) {
+                return operand;
+            } else if (operator == UastPrefixOperator.BITWISE_NOT) {
+                if (operand instanceof Integer) {
+                    return ~(Integer) operand;
+                } else if (operand instanceof Long) {
+                    return ~(Long) operand;
+                } else if (operand instanceof Short) {
+                    return ~(Short) operand;
+                } else if (operand instanceof Character) {
+                    return ~(Character) operand;
+                } else if (operand instanceof Byte) {
+                    return ~(Byte) operand;
+                }
+            } else if (operator == UastPrefixOperator.UNARY_MINUS) {
+                if (operand instanceof Integer) {
+                    return -(Integer) operand;
+                } else if (operand instanceof Long) {
+                    return -(Long) operand;
+                } else if (operand instanceof Double) {
+                    return -(Double) operand;
+                } else if (operand instanceof Float) {
+                    return -(Float) operand;
+                } else if (operand instanceof Short) {
+                    return -(Short) operand;
+                } else if (operand instanceof Character) {
+                    return -(Character) operand;
+                } else if (operand instanceof Byte) {
+                    return -(Byte) operand;
+                }
+            }
+        } else if (node instanceof UIfExpression
+                && ((UIfExpression) node).getExpressionType() != null) {
+            UIfExpression expression = (UIfExpression) node;
+            Object known = evaluate(expression.getCondition());
+            if (known == Boolean.TRUE && expression.getThenExpression() != null) {
+                return evaluate(expression.getThenExpression());
+            } else if (known == Boolean.FALSE && expression.getElseExpression() != null) {
+                return evaluate(expression.getElseExpression());
+            }
+        } else if (node instanceof UParenthesizedExpression) {
+            UParenthesizedExpression parenthesizedExpression = (UParenthesizedExpression) node;
+            UExpression expression = parenthesizedExpression.getExpression();
+            return evaluate(expression);
+        } else if (node instanceof UBinaryExpression) {
+            UBinaryExpression binaryExpression = (UBinaryExpression) node;
+            UastBinaryOperator operator = binaryExpression.getOperator();
+            Object operandLeft = evaluate(binaryExpression.getLeftOperand());
+            Object operandRight = evaluate(binaryExpression.getRightOperand());
+            Object value = evaluateBinary(operator, operandLeft, operandRight);
+            if (value != null) {
+                return value;
+            }
+        } else if (node instanceof UPolyadicExpression) {
+            UPolyadicExpression polyadicExpression = (UPolyadicExpression) node;
+            UastBinaryOperator operator = polyadicExpression.getOperator();
+            List<UExpression> operands = polyadicExpression.getOperands();
+            assert !operands.isEmpty();
+            Object result = evaluate(operands.get(0));
+            for (int i = 1, n = operands.size(); i < n; i++) {
+                Object rhs = evaluate(operands.get(i));
+                result = evaluateBinary(operator, result, rhs);
+            }
+            if (result != null) {
+                return result;
+            }
+        } else if (node instanceof UBinaryExpressionWithType &&
+                ((UBinaryExpressionWithType) node).getOperationKind() == TYPE_CAST) {
+            UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
+            Object operandValue = evaluate(cast.getOperand());
+            if (operandValue instanceof Number) {
+                Number number = (Number) operandValue;
+                PsiType type = cast.getType();
+                if (PsiType.FLOAT.equals(type)) {
+                    return number.floatValue();
+                } else if (PsiType.DOUBLE.equals(type)) {
+                    return number.doubleValue();
+                } else if (PsiType.INT.equals(type)) {
+                    return number.intValue();
+                } else if (PsiType.LONG.equals(type)) {
+                    return number.longValue();
+                } else if (PsiType.SHORT.equals(type)) {
+                    return number.shortValue();
+                } else if (PsiType.BYTE.equals(type)) {
+                    return number.byteValue();
+                }
+            }
+            return operandValue;
+        } else if (node instanceof UReferenceExpression) {
+            PsiElement resolved = ((UReferenceExpression) node).resolve();
+            if (resolved instanceof PsiVariable) {
+
+                // Handle fields specially: we can't look for last assignment
+                // on fields since the modifications are often in different methods
+                // Only take the field constant or initializer value if it's final,
+                // or if allowFieldInitializers is true
+                if (resolved instanceof PsiField) {
+                    PsiField field = (PsiField) resolved;
+                    Object value = field.computeConstantValue();
+                    if (value != null) {
+                        return value;
+                    }
+                    if (field.getInitializer() != null && (allowFieldInitializers
+                            || (field.hasModifierProperty(PsiModifier.STATIC)
+                            && field.hasModifierProperty(PsiModifier.FINAL)))) {
+                        value = evaluate(field.getInitializer());
+                        if (value != null) {
+                            if (surroundedByVariableCheck(node, field)) {
+                                return null;
+                            }
+
+                            return value;
+                        }
+                    }
+                    return null;
+                }
+
+                PsiVariable variable = (PsiVariable) resolved;
+                UastContext uastContext = UastUtils.getUastContext(node);
+                Object value = UastLintUtils.findLastValue(variable, node, uastContext, this);
+
+                if (value != null) {
+                    if (surroundedByVariableCheck(node, variable)) {
+                        return null;
+                    }
+
+                    return value;
+                }
+                if (variable.getInitializer() != null) {
+                    Object initializedValue = evaluate(variable.getInitializer());
+                    if (surroundedByVariableCheck(node, variable)) {
+                        return null;
+                    }
+
+                    return initializedValue;
+
+                }
+                return null;
+            }
+        } else if (UastExpressionUtils.isNewArrayWithDimensions((UExpression) node)) {
+            UCallExpression call = (UCallExpression) node;
+            PsiType arrayType = call.getExpressionType();
+            if (arrayType instanceof PsiArrayType) {
+                PsiType componentType = ((PsiArrayType) arrayType).getComponentType();
+                // Single-dimension array
+                if (!(componentType instanceof PsiArrayType)
+                        && call.getValueArgumentCount() == 1) {
+                    Object lengthObj = evaluate(call.getValueArguments().get(0));
+                    if (lengthObj instanceof Number) {
+                        int length = ((Number) lengthObj).intValue();
+                        if (length > 30) {
+                            length = 30;
+                        }
+                        if (componentType == PsiType.BOOLEAN) {
+                            return new boolean[length];
+                        } else if (isObjectType(componentType)) {
+                            return new Object[length];
+                        } else if (componentType == PsiType.CHAR) {
+                            return new char[length];
+                        } else if (componentType == PsiType.BYTE) {
+                            return new byte[length];
+                        } else if (componentType == PsiType.DOUBLE) {
+                            return new double[length];
+                        } else if (componentType == PsiType.FLOAT) {
+                            return new float[length];
+                        } else if (componentType == PsiType.INT) {
+                            return new int[length];
+                        } else if (componentType == PsiType.SHORT) {
+                            return new short[length];
+                        } else if (componentType == PsiType.LONG) {
+                            return new long[length];
+                        } else if (isStringType(componentType)) {
+                            return new String[length];
+                        }
+                    }
+                }
+            }
+        } else if (UastExpressionUtils.isNewArrayWithInitializer(node)) {
+            UCallExpression call = (UCallExpression) node;
+            PsiType arrayType = call.getExpressionType();
+            if (arrayType instanceof PsiArrayType) {
+                PsiType componentType = ((PsiArrayType) arrayType).getComponentType();
+                // Single-dimension array
+                if (!(componentType instanceof PsiArrayType)) {
+                    int length = call.getValueArgumentCount();
+                    List<Object> evaluatedArgs = new ArrayList<Object>(length);
+                    for (UExpression arg : call.getValueArguments()) {
+                        Object evaluatedArg = evaluate(arg);
+                        if (!allowUnknown && evaluatedArg == null) {
+                            // Inconclusive
+                            return null;
+                        }
+                        evaluatedArgs.add(evaluatedArg);
+                    }
+
+                    if (componentType == PsiType.BOOLEAN) {
+                        boolean[] arr = new boolean[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Boolean) {
+                                arr[i] = (Boolean) o;
+                            }
+                        }
+                        return arr;
+                    } else if (isObjectType(componentType)) {
+                        Object[] arr = new Object[length];
+                        for (int i = 0; i < length; ++i) {
+                            arr[i] = evaluatedArgs.get(i);
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.CHAR)) {
+                        char[] arr = new char[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Character) {
+                                arr[i] = (Character) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.BYTE)) {
+                        byte[] arr = new byte[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Byte) {
+                                arr[i] = (Byte) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.DOUBLE)) {
+                        double[] arr = new double[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Double) {
+                                arr[i] = (Double) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.FLOAT)) {
+                        float[] arr = new float[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Float) {
+                                arr[i] = (Float) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.INT)) {
+                        int[] arr = new int[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Integer) {
+                                arr[i] = (Integer) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.SHORT)) {
+                        short[] arr = new short[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Short) {
+                                arr[i] = (Short) o;
+                            }
+                        }
+                        return arr;
+                    } else if (componentType.equals(PsiType.LONG)) {
+                        long[] arr = new long[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof Long) {
+                                arr[i] = (Long) o;
+                            }
+                        }
+                        return arr;
+                    } else if (isStringType(componentType)) {
+                        String[] arr = new String[length];
+                        for (int i = 0; i < length; ++i) {
+                            Object o = evaluatedArgs.get(i);
+                            if (o instanceof String) {
+                                arr[i] = (String) o;
+                            }
+                        }
+                        return arr;
+                    }
+                }
+            }
+        }
+
+        if (node instanceof UExpression) {
+            Object evaluated = ((UExpression) node).evaluate();
+            if (evaluated != null) {
+                return evaluated;
+            }
+        }
+
+        // TODO: Check for MethodInvocation and perform some common operations -
+        // Math.* methods, String utility methods like notNullize, etc
+
+        return null;
+    }
+
+    @Nullable
+    private Object evaluateBinary(
+            @NonNull UastBinaryOperator operator,
+            @Nullable Object operandLeft,
+            @Nullable Object operandRight) {
+        if (operandLeft == null || operandRight == null) {
+            if (allowUnknown) {
+                if (operandLeft == null) {
+                    return operandRight;
+                } else {
+                    return operandLeft;
+                }
+            }
+            return null;
+        }
+        if (operandLeft instanceof String && operandRight instanceof String) {
+            if (operator == UastBinaryOperator.PLUS) {
+                return operandLeft.toString() + operandRight.toString();
+            }
+            return null;
+        } else if (operandLeft instanceof Boolean && operandRight instanceof Boolean) {
+            boolean left = (Boolean) operandLeft;
+            boolean right = (Boolean) operandRight;
+            if (operator == UastBinaryOperator.LOGICAL_OR) {
+                return left || right;
+            } else if (operator == UastBinaryOperator.LOGICAL_AND) {
+                return left && right;
+            } else if (operator == UastBinaryOperator.BITWISE_OR) {
+                return left | right;
+            } else if (operator == UastBinaryOperator.BITWISE_XOR) {
+                return left ^ right;
+            } else if (operator == UastBinaryOperator.BITWISE_AND) {
+                return left & right;
+            } else if (operator == UastBinaryOperator.IDENTITY_EQUALS
+                    || operator == UastBinaryOperator.EQUALS) {
+                return left == right;
+            } else if (operator == UastBinaryOperator.IDENTITY_NOT_EQUALS
+                    || operator == UastBinaryOperator.NOT_EQUALS) {
+                return left != right;
+            }
+        } else if (operandLeft instanceof Number && operandRight instanceof Number) {
+            Number left = (Number) operandLeft;
+            Number right = (Number) operandRight;
+            boolean isInteger =
+                    !(left instanceof Float || left instanceof Double
+                            || right instanceof Float || right instanceof Double);
+            boolean isWide =
+                    isInteger ? (left instanceof Long || right instanceof Long)
+                            : (left instanceof Double || right instanceof Double);
+
+            if (operator == UastBinaryOperator.BITWISE_OR) {
+                if (isWide) {
+                    return left.longValue() | right.longValue();
+                } else {
+                    return left.intValue() | right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.BITWISE_XOR) {
+                if (isWide) {
+                    return left.longValue() ^ right.longValue();
+                } else {
+                    return left.intValue() ^ right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.BITWISE_AND) {
+                if (isWide) {
+                    return left.longValue() & right.longValue();
+                } else {
+                    return left.intValue() & right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.EQUALS
+                    || operator == UastBinaryOperator.IDENTITY_EQUALS) {
+                if (isInteger) {
+                    return left.longValue() == right.longValue();
+                } else {
+                    return left.doubleValue() == right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.NOT_EQUALS
+                    || operator == UastBinaryOperator.IDENTITY_NOT_EQUALS) {
+                if (isInteger) {
+                    return left.longValue() != right.longValue();
+                } else {
+                    return left.doubleValue() != right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.GREATER) {
+                if (isInteger) {
+                    return left.longValue() > right.longValue();
+                } else {
+                    return left.doubleValue() > right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.GREATER_OR_EQUALS) {
+                if (isInteger) {
+                    return left.longValue() >= right.longValue();
+                } else {
+                    return left.doubleValue() >= right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.LESS) {
+                if (isInteger) {
+                    return left.longValue() < right.longValue();
+                } else {
+                    return left.doubleValue() < right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.LESS_OR_EQUALS) {
+                if (isInteger) {
+                    return left.longValue() <= right.longValue();
+                } else {
+                    return left.doubleValue() <= right.doubleValue();
+                }
+            } else if (operator == UastBinaryOperator.SHIFT_LEFT) {
+                if (isWide) {
+                    return left.longValue() << right.intValue();
+                } else {
+                    return left.intValue() << right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.SHIFT_RIGHT) {
+                if (isWide) {
+                    return left.longValue() >> right.intValue();
+                } else {
+                    return left.intValue() >> right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.UNSIGNED_SHIFT_RIGHT) {
+                if (isWide) {
+                    return left.longValue() >>> right.intValue();
+                } else {
+                    return left.intValue() >>> right.intValue();
+                }
+            } else if (operator == UastBinaryOperator.PLUS) {
+                if (isInteger) {
+                    if (isWide) {
+                        return left.longValue() + right.longValue();
+                    } else {
+                        return left.intValue() + right.intValue();
+                    }
+                } else {
+                    if (isWide) {
+                        return left.doubleValue() + right.doubleValue();
+                    } else {
+                        return left.floatValue() + right.floatValue();
+                    }
+                }
+            } else if (operator == UastBinaryOperator.MINUS) {
+                if (isInteger) {
+                    if (isWide) {
+                        return left.longValue() - right.longValue();
+                    } else {
+                        return left.intValue() - right.intValue();
+                    }
+                } else {
+                    if (isWide) {
+                        return left.doubleValue() - right.doubleValue();
+                    } else {
+                        return left.floatValue() - right.floatValue();
+                    }
+                }
+            } else if (operator == UastBinaryOperator.MULTIPLY) {
+                if (isInteger) {
+                    if (isWide) {
+                        return left.longValue() * right.longValue();
+                    } else {
+                        return left.intValue() * right.intValue();
+                    }
+                } else {
+                    if (isWide) {
+                        return left.doubleValue() * right.doubleValue();
+                    } else {
+                        return left.floatValue() * right.floatValue();
+                    }
+                }
+            } else if (operator == UastBinaryOperator.DIV) {
+                if (isInteger) {
+                    if (isWide) {
+                        return left.longValue() / right.longValue();
+                    } else {
+                        return left.intValue() / right.intValue();
+                    }
+                } else {
+                    if (isWide) {
+                        return left.doubleValue() / right.doubleValue();
+                    } else {
+                        return left.floatValue() / right.floatValue();
+                    }
+                }
+            } else if (operator == UastBinaryOperator.MOD) {
+                if (isInteger) {
+                    if (isWide) {
+                        return left.longValue() % right.longValue();
+                    } else {
+                        return left.intValue() % right.intValue();
+                    }
+                } else {
+                    if (isWide) {
+                        return left.doubleValue() % right.doubleValue();
+                    } else {
+                        return left.floatValue() % right.floatValue();
+                    }
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean surroundedByVariableCheck(
+            @Nullable UElement node,
+            @NonNull PsiVariable variable) {
+        if (node == null) {
+            return false;
+        }
+
+        // See if it looks like the value has been clamped locally, e.g.
+        UIfExpression curr = UastUtils.getParentOfType(node, UIfExpression.class);
+        while (curr != null) {
+            if (references(curr.getCondition(), variable)) {
+                // variable is referenced surrounding this reference; don't
+                // take the variable initializer since the value may have been
+                // value checked for some other later assigned value
+                // ...but only if it's not the condition!
+                UExpression condition = curr.getCondition();
+                if (!UastUtils.isChildOf(node, condition, true)) {
+                    return true;
+                }
+            }
+            curr = UastUtils.getParentOfType(curr, UIfExpression.class);
+        }
+        return false;
+    }
+
+    private static boolean isStringType(PsiType type) {
+        if (!(type instanceof PsiClassType)) {
+            return false;
+        }
+
+        PsiClass resolvedClass = ((PsiClassType) type).resolve();
+        return resolvedClass != null && TYPE_STRING.equals(resolvedClass.getQualifiedName());
+    }
+
+    private static boolean isObjectType(PsiType type) {
+        if (!(type instanceof PsiClassType)) {
+            return false;
+        }
+
+        PsiClass resolvedClass = ((PsiClassType) type).resolve();
+        return resolvedClass != null && TYPE_OBJECT.equals(resolvedClass.getQualifiedName());
+    }
+
+    public static class LastAssignmentFinder extends AbstractUastVisitor {
+        private final PsiVariable mVariable;
+        private final UElement mEndAt;
+
+        private final ConstantEvaluator mConstantEvaluator;
+
+        private boolean mDone = false;
+        private int mCurrentLevel = 0;
+        private int mVariableLevel = -1;
+        private Object mCurrentValue;
+        private UElement mLastAssignment;
+
+        public LastAssignmentFinder(
+                @NonNull PsiVariable variable,
+                @NonNull UElement endAt,
+                @NonNull UastContext context,
+                @Nullable ConstantEvaluator constantEvaluator,
+                int variableLevel) {
+            mVariable = variable;
+            mEndAt = endAt;
+            UExpression initializer = context.getInitializerBody(variable);
+            mLastAssignment = initializer;
+            mConstantEvaluator = constantEvaluator;
+            if (initializer != null && constantEvaluator != null) {
+                mCurrentValue = constantEvaluator.evaluate(initializer);
+            }
+            mVariableLevel = variableLevel;
+        }
+
+        @Nullable
+        public Object getCurrentValue() {
+            return mCurrentValue;
+        }
+
+        @Nullable
+        public UElement getLastAssignment() {
+            return mLastAssignment;
+        }
+
+        @Override
+        public boolean visitElement(UElement node) {
+            if (elementHasLevel(node)) {
+                mCurrentLevel++;
+            }
+            if (node.equals(mEndAt)) {
+                mDone = true;
+            }
+            return mDone || super.visitElement(node);
+        }
+
+        @Override
+        public boolean visitVariable(UVariable node) {
+            if (mVariableLevel < 0 && node.getPsi().isEquivalentTo(mVariable)) {
+                mVariableLevel = mCurrentLevel;
+            }
+
+            return super.visitVariable(node);
+        }
+
+        @Override
+        public void afterVisitBinaryExpression(UBinaryExpression node) {
+            if (!mDone
+                    && node.getOperator() instanceof UastBinaryOperator.AssignOperator
+                    && mVariableLevel >= 0) {
+                UExpression leftOperand = node.getLeftOperand();
+                UastBinaryOperator operator = node.getOperator();
+
+                if (!(operator instanceof UastBinaryOperator.AssignOperator)
+                        || !(leftOperand instanceof UResolvable)) {
+                    return;
+                }
+
+                PsiElement resolved = ((UResolvable) leftOperand).resolve();
+                if (!mVariable.equals(resolved)) {
+                    return;
+                }
+
+                // Last assignment is unknown if we see an assignment inside
+                // some conditional or loop statement.
+                if (mCurrentLevel > mVariableLevel + 1) {
+                    mLastAssignment = null;
+                    mCurrentValue = null;
+                    return;
+                }
+
+                UExpression rightOperand = node.getRightOperand();
+                ConstantEvaluator constantEvaluator = mConstantEvaluator;
+
+                mCurrentValue = (constantEvaluator != null)
+                        ? constantEvaluator.evaluate(rightOperand)
+                        : null;
+                mLastAssignment = rightOperand;
+            }
+
+            super.afterVisitBinaryExpression(node);
+        }
+
+        @Override
+        public void afterVisitElement(UElement node) {
+            if (elementHasLevel(node)) {
+                mCurrentLevel--;
+            }
+            super.afterVisitElement(node);
+        }
+
+        private static boolean elementHasLevel(UElement node) {
+            return !(node instanceof UBlockExpression
+                    || node instanceof UDeclarationsExpression);
+        }
     }
 
     /**
@@ -1704,7 +2410,7 @@ public class ConstantEvaluator {
                         && field.hasModifierProperty(PsiModifier.FINAL)))) {
                     value = evaluate(field.getInitializer());
                     if (value != null) {
-                        // See if it looks like the value has been clamped locally, e.g.
+                        // See if it looks like the value has been clamped locally
                         PsiIfStatement curr = PsiTreeUtil.getParentOfType(node, PsiIfStatement.class);
                         while (curr != null) {
                             if (curr.getCondition() != null
@@ -1712,7 +2418,11 @@ public class ConstantEvaluator {
                                 // Field is referenced surrounding this reference; don't
                                 // take the field initializer since the value may have been
                                 // value checked for some other later assigned value
-                                return null;
+                                // ...but only if it's not the condition!
+                                PsiExpression condition = curr.getCondition();
+                                if (!PsiTreeUtil.isAncestor(condition, node, true)) {
+                                    return value;
+                                }
                             }
                             curr = PsiTreeUtil.getParentOfType(curr, PsiIfStatement.class, true);
                         }
@@ -1725,6 +2435,7 @@ public class ConstantEvaluator {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
                 PsiExpression last = findLastAssignment(node, variable);
                 if (last != null) {
+// TODO: Clamp value as is done for UAST?
                     return evaluate(last);
                 }
             }
@@ -1944,6 +2655,31 @@ public class ConstantEvaluator {
         return found.get();
     }
 
+    /** Returns true if the given variable is referenced from within the given element */
+    private static boolean references(
+            @NonNull UExpression element,
+            @NonNull PsiVariable variable) {
+        AtomicBoolean found = new AtomicBoolean();
+        element.accept(new AbstractUastVisitor() {
+            @Override
+            public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
+                PsiElement refersTo = node.resolve();
+                if (variable.equals(refersTo)) {
+                    found.set(true);
+                }
+
+                return super.visitSimpleNameReferenceExpression(node);
+            }
+
+            @Override
+            public boolean visitQualifiedReferenceExpression(UQualifiedReferenceExpression node) {
+                return super.visitQualifiedReferenceExpression(node);
+            }
+        });
+
+        return found.get();
+    }
+
     /**
      * Returns true if the node is pointing to a an array literal
      */
@@ -1983,6 +2719,39 @@ public class ConstantEvaluator {
             if (operand != null) {
                 return isArrayLiteral(operand);
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if the node is pointing to a an array literal
+     */
+    public static boolean isArrayLiteral(@Nullable UElement node) {
+        if (node instanceof UReferenceExpression) {
+            PsiElement resolved = ((UReferenceExpression) node).resolve();
+            if (resolved instanceof PsiVariable) {
+                PsiVariable variable = (PsiVariable) resolved;
+                UExpression lastAssignment =
+                        UastLintUtils.findLastAssignment(variable, node);
+
+                if (lastAssignment != null) {
+                    return isArrayLiteral(lastAssignment);
+                }
+            }
+        } else if (UastExpressionUtils.isNewArrayWithDimensions(node)) {
+            return true;
+        } else if (UastExpressionUtils.isNewArrayWithInitializer(node)) {
+            return true;
+        } else if (node instanceof UParenthesizedExpression) {
+            UParenthesizedExpression parenthesizedExpression = (UParenthesizedExpression) node;
+            UExpression expression = parenthesizedExpression.getExpression();
+            return isArrayLiteral(expression);
+        } else if (UastExpressionUtils.isTypeCast(node)) {
+            UBinaryExpressionWithType castExpression = (UBinaryExpressionWithType) node;
+            assert castExpression != null;
+            UExpression operand = castExpression.getOperand();
+            return isArrayLiteral(operand);
         }
 
         return false;
@@ -2076,6 +2845,23 @@ public class ConstantEvaluator {
     }
 
     /**
+     * Evaluates the given node and returns the constant value it resolves to, if any. Convenience
+     * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
+     * the result.
+     *
+     * @param context     the context to use to resolve field references, if any
+     * @param element     the node to compute the constant value for
+     * @return the corresponding constant value - a String, an Integer, a Float, and so on
+     */
+    @Nullable
+    public static Object evaluate(@Nullable JavaContext context, @NonNull UElement element) {
+        if (element instanceof ULiteralExpression) {
+            return ((ULiteralExpression) element).getValue();
+        }
+        return new ConstantEvaluator(context).evaluate(element);
+    }
+
+    /**
      * Evaluates the given node and returns the constant string it resolves to, if any. Convenience
      * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
      * the result if the result is a string.
@@ -2149,5 +2935,27 @@ public class ConstantEvaluator {
         }
 
         return null;
+    }
+
+    /**
+     * Evaluates the given node and returns the constant string it resolves to, if any. Convenience
+     * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
+     * the result if the result is a string.
+     *
+     * @param context      the context to use to resolve field references, if any
+     * @param element      the node to compute the constant value for
+     * @param allowUnknown whether we should construct the string even if some parts of it are
+     *                     unknown
+     * @return the corresponding string, if any
+     */
+    @Nullable
+    public static String evaluateString(@Nullable JavaContext context, @NonNull UElement element,
+            boolean allowUnknown) {
+        ConstantEvaluator evaluator = new ConstantEvaluator(context);
+        if (allowUnknown) {
+            evaluator.allowUnknowns();
+        }
+        Object value = evaluator.evaluate(element);
+        return value instanceof String ? (String) value : null;
     }
 }

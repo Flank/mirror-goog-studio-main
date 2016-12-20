@@ -202,6 +202,19 @@ public abstract class LintClient {
     public abstract JavaParser getJavaParser(@Nullable Project project);
 
     /**
+     * Returns a {@link JavaParser} to use to parse Java
+     *
+     * @param project the project to parse, if known (this can be used to look up
+     *                the class path for type attribution etc, and it can also be used
+     *                to more efficiently process a set of files, for example to
+     *                perform type attribution for multiple units in a single pass)
+     * @return a new {@link JavaParser}, or null if this client does not
+     *         support Java analysis
+     */
+    @Nullable
+    public abstract UastParser getUastParser(@Nullable Project project);
+
+    /**
      * Returns an optimal detector, if applicable. By default, just returns the
      * original detector, but tools can replace detectors using this hook with a version
      * that takes advantage of native capabilities of the tool.

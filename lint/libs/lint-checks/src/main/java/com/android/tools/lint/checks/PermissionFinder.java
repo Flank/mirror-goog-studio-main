@@ -22,30 +22,32 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.detector.api.ConstantEvaluator;
+import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.UastLintUtils;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
-import com.intellij.psi.PsiLiteral;
-import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiNameValuePair;
-import com.intellij.psi.PsiNewExpression;
-import com.intellij.psi.PsiParenthesizedExpression;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiTypeCastExpression;
+import com.intellij.psi.PsiVariable;
+import java.util.List;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UBinaryExpressionWithType;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.UParenthesizedExpression;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastLiteralUtils;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.java.JavaUAnnotation;
+import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
  * Utility for locating permissions required by an intent or content resolver
  */
 public class PermissionFinder {
-
-    private final JavaEvaluator mEvaluator;
 
     /**
      * Operation that has a permission requirement -- such as a method call,
@@ -90,16 +92,16 @@ public class PermissionFinder {
      * Searches for a permission requirement for the given parameter in the given call
      *
      *
-     * @param evaluator evaluator which can look up annotations etc
+     * @param context context which can look up annotations etc
      * @param operation the operation to look up
      * @param parameter the parameter which contains the value which implies the permission
      * @return the result with the permission requirement, or null if nothing is found
      */
     @Nullable
     public static Result findRequiredPermissions(
-            @NonNull JavaEvaluator evaluator,
+            @NonNull JavaContext context,
             @NonNull Operation operation,
-            @NonNull PsiElement parameter) {
+            @NonNull UElement parameter) {
 
         // To find the permission required by an intent, we proceed in 3 steps:
         // (1) Locate the parameter in the start call that corresponds to
@@ -111,22 +113,23 @@ public class PermissionFinder {
         // (3) Find the place where the action is defined, and look for permission
         //     annotations on that action declaration!
 
-        return new PermissionFinder(evaluator, operation).search(parameter);
+        return new PermissionFinder(context, operation).search(parameter);
     }
 
-    private PermissionFinder(@NonNull JavaEvaluator evaluator, @NonNull Operation operation) {
-        mEvaluator = evaluator;
+    private PermissionFinder(@NonNull JavaContext context, @NonNull Operation operation) {
+        mContext = context;
         mOperation = operation;
     }
 
+    @NonNull private final JavaContext mContext;
     @NonNull private final Operation mOperation;
 
     @Nullable
-    public Result search(@NonNull PsiElement node) {
-        if (node instanceof PsiLiteral && "null".equals(node.getText())) {
+    public Result search(@NonNull UElement node) {
+        if (UastLiteralUtils.isNullLiteral(node)) {
             return null;
-        } else if (node instanceof PsiConditionalExpression) {
-            PsiConditionalExpression expression = (PsiConditionalExpression) node;
+        } else if (node instanceof UIfExpression) {
+            UIfExpression expression = (UIfExpression) node;
             if (expression.getThenExpression() != null) {
                 Result result = search(expression.getThenExpression());
                 if (result != null) {
@@ -139,58 +142,65 @@ public class PermissionFinder {
                     return result;
                 }
             }
-        } else if (node instanceof PsiTypeCastExpression) {
-            PsiTypeCastExpression cast = (PsiTypeCastExpression) node;
-            PsiExpression operand = cast.getOperand();
-            if (operand != null) {
-                return search(operand);
-            }
-        } else if (node instanceof PsiParenthesizedExpression) {
-            PsiParenthesizedExpression parens = (PsiParenthesizedExpression) node;
-            PsiExpression expression = parens.getExpression();
+        } else if (UastExpressionUtils.isTypeCast(node)) {
+            UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
+            UExpression operand = cast.getOperand();
+            return search(operand);
+        } else if (node instanceof UParenthesizedExpression) {
+            UParenthesizedExpression parens = (UParenthesizedExpression) node;
+            UExpression expression = parens.getExpression();
             if (expression != null) {
                 return search(expression);
             }
-        } else if (node instanceof PsiNewExpression && mOperation == Operation.ACTION) {
+        } else if (UastExpressionUtils.isConstructorCall(node) && mOperation == Operation.ACTION) {
             // Identifies "new Intent(argument)" calls and, if found, continues
             // resolving the argument instead looking for the action definition
-            PsiNewExpression call = (PsiNewExpression) node;
-            PsiJavaCodeReferenceElement classReference = call.getClassReference();
-            String type = classReference != null ? classReference.getQualifiedName() : null;
+            UCallExpression call = (UCallExpression) node;
+            UReferenceExpression classReference = call.getClassReference();
+            String type = classReference != null ? UastUtils.getQualifiedName(classReference) : null;
             if (CLASS_INTENT.equals(type)) {
-                PsiExpressionList argumentList = call.getArgumentList();
-                if (argumentList != null) {
-                    PsiExpression[] expressions = argumentList.getExpressions();
-                    if (expressions.length > 0) {
-                        PsiExpression action = expressions[0];
-                        if (action != null) {
-                            return search(action);
-                        }
+                List<UExpression> expressions = call.getValueArguments();
+                if (!expressions.isEmpty()) {
+                    UExpression action = expressions.get(0);
+                    if (action != null) {
+                        return search(action);
                     }
                 }
             }
             return null;
-        } else if (node instanceof PsiReferenceExpression) {
-            PsiElement resolved = ((PsiReferenceExpression) node).resolve();
+        } else if (node instanceof UReferenceExpression) {
+            PsiElement resolved = ((UReferenceExpression) node).resolve();
             if (resolved instanceof PsiField) {
-                PsiField field = (PsiField) resolved;
+                // This returns null for unknown reasons:
+                //UField field = (UField) mContext.getUastContext().convertElementWithParent(resolved, UField.class);
+                //if (field == null) {
+                //    return null;
+                //}
+                PsiField field = (PsiField)resolved;
                 if (mOperation == Operation.ACTION) {
-                    PsiAnnotation annotation = mEvaluator.findAnnotation(field,
+                    PsiAnnotation annotation = mContext.getEvaluator().findAnnotation(field,
                             PERMISSION_ANNOTATION);
                     if (annotation != null) {
-                        return getPermissionRequirement(field, annotation);
+                        //return getPermissionRequirement(field, annotation);
+                        return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
                     String fqn = mOperation == Operation.READ
                             ? PERMISSION_ANNOTATION_READ : PERMISSION_ANNOTATION_WRITE;
-                    PsiAnnotation annotation = mEvaluator.findAnnotation(field, fqn);
+                    PsiAnnotation annotation = mContext.getEvaluator().findAnnotation(field, fqn);
                     if (annotation != null) {
                         PsiNameValuePair[] attributes = annotation.getParameterList().getAttributes();
                         PsiNameValuePair o = attributes.length == 1 ? attributes[0] : null;
                         if (o != null && o.getValue() instanceof PsiAnnotation) {
                             annotation = (PsiAnnotation) o.getValue();
+
+                            //List<UNamedExpression> attributes = annotation.getAttributeValues();
+                        //UNamedExpression o = attributes.size() == 1 ? attributes.get(0) : null;
+                        //if (o != null && o.getExpression() instanceof UAnnotation) {
+                        //    annotation = (UAnnotation) o.getExpression();
                             if (PERMISSION_ANNOTATION.equals(annotation.getQualifiedName())) {
-                                return getPermissionRequirement(field, annotation);
+                                //return getPermissionRequirement(field, annotation);
+                                return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                             }
                         } else {
                             // The complex annotations used for read/write cannot be
@@ -199,17 +209,22 @@ public class PermissionFinder {
                             //
                             // Instead we've inlined the fields of the annotation on the
                             // outer one:
-                            return getPermissionRequirement(field, annotation);
+                            //return getPermissionRequirement(field, annotation);
+                            return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                         }
                     }
                 } else {
                     assert false : mOperation;
                 }
-            } else if (resolved instanceof PsiLocalVariable) {
-                PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiExpression last = ConstantEvaluator.findLastAssignment(node, variable);
-                if (last != null) {
-                    return search(last);
+            }
+
+            if (resolved instanceof PsiVariable) {
+                PsiVariable variable = (PsiVariable) resolved;
+                UExpression lastAssignment =
+                        UastLintUtils.findLastAssignment(variable, node);
+
+                if (lastAssignment != null) {
+                    return search(lastAssignment);
                 }
             }
         }
@@ -220,7 +235,7 @@ public class PermissionFinder {
     @NonNull
     private Result getPermissionRequirement(
             @NonNull PsiField field,
-            @NonNull PsiAnnotation annotation) {
+            @NonNull UAnnotation annotation) {
         PermissionRequirement requirement = PermissionRequirement.create(annotation);
         PsiClass containingClass = field.getContainingClass();
         String name = containingClass != null

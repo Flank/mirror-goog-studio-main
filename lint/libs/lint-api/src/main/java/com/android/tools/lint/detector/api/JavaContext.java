@@ -26,6 +26,7 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
@@ -62,6 +63,16 @@ import lombok.ast.Node;
 import lombok.ast.Position;
 import lombok.ast.TypeDeclaration;
 import lombok.ast.VariableReference;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UDeclaration;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UEnumConstant;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.USwitchExpression;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastUtils;
 
 /**
  * A {@link Context} used when checking Java files.
@@ -83,8 +94,14 @@ public class JavaContext extends Context {
     /** The parse tree, when using PSI */
     private PsiJavaFile javaFile;
 
+    /** The parse tree, when using UAST */
+    private UFile uastFile;
+
+    /** The UAST parser which produced the parse tree */
+    private UastParser uastParser;
+
     /** The parser which produced the parse tree */
-    private final JavaParser parser;
+    private JavaParser parser;
 
     /** Whether this context is in a test source folder */
     private boolean testSource;
@@ -101,16 +118,13 @@ public class JavaContext extends Context {
      *            the root project of all library projects, not necessarily the
      *            directly including project.
      * @param file the file to be analyzed
-     * @param parser the parser to use
      */
     public JavaContext(
             @NonNull LintDriver driver,
             @NonNull Project project,
             @Nullable Project main,
-            @NonNull File file,
-            @NonNull JavaParser parser) {
+            @NonNull File file) {
         super(driver, project, main, file);
-        this.parser = parser;
     }
 
     /**
@@ -159,7 +173,30 @@ public class JavaContext extends Context {
             int fromDelta,
             @NonNull PsiElement to,
             int toDelta) {
-        return parser.getRangeLocation(this, from, fromDelta, to, toDelta);
+        if (uastParser != null) {
+            return uastParser.getRangeLocation(this, from, fromDelta, to, toDelta);
+        } else {
+            return parser.getRangeLocation(this, from, fromDelta, to, toDelta);
+        }
+    }
+
+    @NonNull
+    public Location getRangeLocation(
+            @NonNull UElement from,
+            int fromDelta,
+            @NonNull UElement to,
+            int toDelta) {
+        return uastParser.getRangeLocation(this, from, fromDelta, to, toDelta);
+    }
+
+    // Disambiguate since UDeclarations implement both PsiElement and UElement
+    @NonNull
+    public Location getRangeLocation(
+            @NonNull UDeclaration from,
+            int fromDelta,
+            @NonNull UDeclaration to,
+            int toDelta) {
+        return uastParser.getRangeLocation(this, (PsiElement)from, fromDelta, to, toDelta);
     }
 
     /**
@@ -176,7 +213,19 @@ public class JavaContext extends Context {
             @NonNull PsiElement from,
             int fromDelta,
             int length) {
-        return parser.getRangeLocation(this, from, fromDelta, fromDelta + length);
+        if (uastParser != null) {
+            return uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length);
+        } else {
+            return parser.getRangeLocation(this, from, fromDelta, fromDelta + length);
+        }
+    }
+
+    @NonNull
+    public Location getRangeLocation(
+            @NonNull UElement from,
+            int fromDelta,
+            int length) {
+        return uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length);
     }
 
     /**
@@ -194,36 +243,149 @@ public class JavaContext extends Context {
     }
 
     /**
-     * Returns a {@link Location} for the given node. This attempts to pick a shorter
-     * location range than the entire node; for a class or method for example, it picks
-     * the name node (if found). For statement constructs such as a {@code switch} statement
+     * Returns a {@link Location} for the given element. This attempts to pick a shorter
+     * location range than the entire element; for a class or method for example, it picks
+     * the name element (if found). For statement constructs such as a {@code switch} statement
      * it will highlight the keyword, etc.
      *
-     * @param element the AST node to create a location for
-     * @return a location for the given node
+     * @param element the AST element to create a location for
+     * @return a location for the given element
      */
     @NonNull
     public Location getNameLocation(@NonNull PsiElement element) {
-        if (element instanceof PsiSwitchStatement) {
-            // Just use keyword
-            return parser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
+        if (uastParser != null) {
+            if (element instanceof PsiSwitchStatement) {
+                // Just use keyword
+                return uastParser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
+            }
+            return uastParser.getNameLocation(this, element);
+        } else {
+            if (element instanceof PsiSwitchStatement) {
+                // Just use keyword
+                return parser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
+            }
+            return parser.getNameLocation(this, element);
         }
-        return parser.getNameLocation(this, element);
+    }
+
+    /**
+     * Returns a {@link Location} for the given element. This attempts to pick a shorter
+     * location range than the entire element; for a class or method for example, it picks
+     * the name element (if found). For statement constructs such as a {@code switch} statement
+     * it will highlight the keyword, etc.
+     *
+     * @param element the AST element to create a location for
+     * @return a location for the given element
+     */
+    @NonNull
+    public Location getNameLocation(@NonNull UElement element) {
+        if (element instanceof USwitchExpression) {
+            // Just use keyword
+            return uastParser.getRangeLocation(this, element, 0, 6); // 6: "switch".length()
+        }
+        return uastParser.getNameLocation(this, element);
+    }
+
+    /**
+     * Returns a {@link Location} for the given element. This attempts to pick a shorter
+     * location range than the entire element; for a class or method for example, it picks
+     * the name element (if found). For statement constructs such as a {@code switch} statement
+     * it will highlight the keyword, etc.
+     *
+     * <p>
+     * {@link UClass} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling getNameLocation(UClass) easier without having to make an
+     * explicit cast.
+     *
+     * @param cls the AST class element to create a location for
+     * @return a location for the given element
+     */
+    @NonNull
+    public Location getNameLocation(@NonNull UClass cls) {
+        return getNameLocation((UElement)cls);
+    }
+
+    /**
+     * Returns a {@link Location} for the given element. This attempts to pick a shorter
+     * location range than the entire element; for a class or method for example, it picks
+     * the name element (if found). For statement constructs such as a {@code switch} statement
+     * it will highlight the keyword, etc.
+     *
+     * <p>
+     * {@link UMethod} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling getNameLocation(UMethod) easier without having to make an
+     * explicit cast.
+     *
+     * @param cls the AST class element to create a location for
+     * @return a location for the given element
+     */
+    @NonNull
+    public Location getNameLocation(@NonNull UMethod cls) {
+        return getNameLocation((UElement)cls);
     }
 
     @NonNull
     public Location getLocation(@NonNull PsiElement node) {
-        return parser.getLocation(this, node);
+        if (uastParser != null) {
+            return uastParser.getLocation(this, node);
+        } else {
+            return parser.getLocation(this, node);
+        }
     }
 
+    @NonNull
+    public Location getLocation(@NonNull UElement element) {
+        if (element instanceof UCallExpression) {
+            return uastParser.getCallLocation(this, (UCallExpression) element, true, true);
+        }
+        return uastParser.getLocation(this, element);
+    }
+
+    @NonNull
+    public Location getLocation(@NonNull UMethod element) {
+        return uastParser.getLocation(this, (PsiMethod)element);
+    }
+
+    /**
+     * Creates a location for the given call.
+     *
+     * @param call             the call to create a location range for
+     * @param includeReceiver  whether we should include the receiver of the method call if
+     *                         applicable
+     * @param includeArguments whether we should include the arguments to the call
+     * @return a location
+     */
+    @NonNull
+    public Location getCallLocation(
+            @NonNull UCallExpression call,
+            boolean includeReceiver,
+            boolean includeArguments) {
+        return uastParser.getCallLocation(this, call, includeReceiver, includeArguments);
+    }
+
+    /**
+     * Returns the parser which created the {@link #getJavaFile()}
+     *
+     * @return the parser
+     */
     @NonNull
     public JavaParser getParser() {
         return parser;
     }
 
+    /**
+     * Returns the parser which created the {@link #getUastFile()}
+     *
+     * @return the parser
+     */
+    @NonNull
+    public UastParser getUastParser() {
+        return uastParser;
+    }
+
     @NonNull
     public JavaEvaluator getEvaluator() {
-        return parser.getEvaluator();
+        return uastParser != null ? uastParser.getEvaluator() : parser.getEvaluator();
     }
 
     @Nullable
@@ -259,6 +421,36 @@ public class JavaContext extends Context {
      */
     public void setJavaFile(@Nullable PsiJavaFile javaFile) {
         this.javaFile = javaFile;
+    }
+
+    /** Sets the UAST parser to use */
+    public void setUastParser(@Nullable UastParser uastParser) {
+        this.uastParser = uastParser;
+    }
+
+    /** Sets the Lombok/PSI parser to use */
+    public void setParser(@Nullable JavaParser parser) {
+        this.parser = parser;
+    }
+
+    /**
+     * Returns the {@link UFile}.
+     *
+     * @return the parsed UFile
+     */
+    @Nullable
+    public UFile getUastFile() {
+        return uastFile;
+    }
+
+    /**
+     * Sets the compilation result. Not intended for client usage; the lint infrastructure
+     * will set this when a context has been processed
+     *
+     * @param uastFile the parse tree
+     */
+    public void setUastFile(@Nullable UFile uastFile) {
+        this.uastFile = uastFile;
     }
 
     @Override
@@ -336,6 +528,43 @@ public class JavaContext extends Context {
             return;
         }
         super.doReport(issue, location, message, quickfixData);
+    }
+
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UElement scope,
+            @NonNull Location location,
+            @NonNull String message) {
+        if (scope != null && driver.isSuppressed(this, issue, scope)) {
+            return;
+        }
+        super.report(issue, location, message);
+    }
+
+    /**
+     * {@link UClass} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling getNameLocation(UClass) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UClass scopeClass,
+            @NonNull Location location,
+            @NonNull String message) {
+        report(issue, (UElement)scopeClass, location, message);
+    }
+
+    /**
+     * {@link UMethod} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling getNameLocation(uMethod) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UMethod scopeClass,
+            @NonNull Location location,
+            @NonNull String message) {
+        report(issue, (UElement)scopeClass, location, message);
     }
 
     /**
@@ -434,6 +663,11 @@ public class JavaContext extends Context {
         return isSuppressedWithComment(start, issue);
     }
 
+    public boolean isSuppressedWithComment(@NonNull UElement scope, @NonNull Issue issue) {
+        PsiElement psi = scope.getPsi();
+        return psi != null && isSuppressedWithComment(psi, issue);
+    }
+
     /**
      * @deprecated Location handles aren't needed for AST nodes anymore; just use the
      * {@link PsiElement} from the AST
@@ -508,6 +742,23 @@ public class JavaContext extends Context {
         }
     }
 
+    // TODO: Move to LintUtils etc
+    @Nullable
+    public static String getMethodName(@NonNull UElement call) {
+        if (call instanceof UEnumConstant) {
+            return ((UEnumConstant)call).getName();
+        } else if (call instanceof UCallExpression) {
+            String methodName = ((UCallExpression) call).getMethodName();
+            if (methodName != null) {
+                return methodName;
+            } else {
+                return UastUtils.getQualifiedName(((UCallExpression) call).getClassReference());
+            }
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Searches for a name node corresponding to the given node
      * @return the name node to use, if applicable
@@ -568,6 +819,19 @@ public class JavaContext extends Context {
             return ((PsiReferenceExpression) element).getReferenceNameElement();
         } else if (element instanceof PsiLabeledStatement) {
             return ((PsiLabeledStatement)element).getLabelIdentifier();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static UElement findNameElement(@NonNull UElement element) {
+        if (element instanceof UDeclaration) {
+            return ((UDeclaration) element).getUastAnchor();
+        //} else if (element instanceof PsiNameIdentifierOwner) {
+        //    return ((PsiNameIdentifierOwner) element).getNameIdentifier();
+        } else if (element instanceof UCallExpression) {
+            return ((UCallExpression) element).getMethodIdentifier();
         }
 
         return null;
@@ -784,5 +1048,13 @@ public class JavaContext extends Context {
     /** Sets whether this compilation unit is in a test folder */
     public void setTestSource(boolean testSource) {
         this.testSource = testSource;
+    }
+
+    /** This method is marked as {@link NonNull} but that will only be the case from
+     * UastScanners. It should never be called from old PSI or Lombok scanners. */
+    @NonNull
+    public UastContext getUastContext() {
+        //noinspection ConstantConditions
+        return uastParser.getUastContext();
     }
 }

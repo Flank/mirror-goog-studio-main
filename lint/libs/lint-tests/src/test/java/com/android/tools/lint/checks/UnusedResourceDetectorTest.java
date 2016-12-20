@@ -950,8 +950,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
             + "        public static final int linearLayout2=0x7f050002;\n"
             + "    }\n"
             + "    public static final class layout {\n"
-            + "        public static final int main=0x7f030000;\n"
-            + "        public static final int other=0x7f030001;\n"
+            // Not final: happens in libraries. Make sure we handle it correctly.
+            + "        public static int main=0x7f030000;\n"
+            + "        public static int other=0x7f030001;\n"
             + "    }\n"
             + "    public static final class string {\n"
             + "        public static final int app_name=0x7f040001;\n"

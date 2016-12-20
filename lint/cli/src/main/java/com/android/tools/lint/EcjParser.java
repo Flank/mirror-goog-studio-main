@@ -197,12 +197,11 @@ public class EcjParser extends JavaParser {
     private Parser parser;
     protected EcjResult ecjResult;
 
-    public EcjParser(@NonNull LintCliClient client, @Nullable Project project,
-            @NonNull com.intellij.openapi.project.Project p) {
+    public EcjParser(@NonNull LintCliClient client, @Nullable Project project) {
         this.client = client;
         this.project = project;
         parser = getParser();
-        javaEvaluator = new DefaultJavaEvaluator(p, project);
+        javaEvaluator = new DefaultJavaEvaluator(null, project);
     }
 
     private static void checkEcjVersion() {

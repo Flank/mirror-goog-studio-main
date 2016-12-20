@@ -16,37 +16,39 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
 public class RegistrationDetectorTest extends AbstractCheckTest {
 
     public void testRegistered() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        xml("AndroidManifest.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"test.pkg\">\n"
-                                + "    <application\n"
-                                + "        android:name=\".MyApplication\">\n"
-                                + "        <activity android:name=\".TestActivity\" />\n"
-                                + "        <service android:name=\".TestService\" />\n"
-                                + "        <provider android:name=\".TestProvider\" />\n"
-                                + "        <provider android:name=\".TestProvider2\" />\n"
-                                + "        <receiver android:name=\".TestReceiver\" />\n"
-                                + "    </application>\n"
-                                + "</manifest>\n"),
-                        mApplication,
-                        mTestActivity,
-                        mTestService,
-                        mTestProvider,
-                        mTestProvider2,
-                        mTestReceiver));
+        lint().files(
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg\">\n"
+                        + "    <application\n"
+                        + "        android:name=\".MyApplication\">\n"
+                        + "        <activity android:name=\".TestActivity\" />\n"
+                        + "        <service android:name=\".TestService\" />\n"
+                        + "        <provider android:name=\".TestProvider\" />\n"
+                        + "        <provider android:name=\".TestProvider2\" />\n"
+                        + "        <receiver android:name=\".TestReceiver\" />\n"
+                        + "    </application>\n"
+                        + "</manifest>\n"),
+                mApplication,
+                mTestActivity,
+                mTestService,
+                mTestProvider,
+                mTestProvider2,
+                mTestReceiver)
+                .run()
+                .expectClean();
     }
 
     public void testNotRegistered() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/MyApplication.java:5: Warning: The <application> test.pkg.MyApplication is not registered in the manifest [Registered]\n"
                 + "public class MyApplication extends Application {\n"
                 + "             ~~~~~~~~~~~~~\n"
@@ -62,35 +64,37 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/TestService.java:7: Warning: The <service> test.pkg.TestService is not registered in the manifest [Registered]\n"
                 + "public class TestService extends Service {\n"
                 + "             ~~~~~~~~~~~\n"
-                + "0 errors, 5 warnings\n",
-
-                lintProject(
-                        // no manifest
-                        mApplication,
-                        mTestActivity,
-                        mTestService,
-                        mTestProvider,
-                        mTestProvider2,
-                        mTestReceiver,
-                        mSuppressedApplication));
+                + "0 errors, 5 warnings\n";
+        lint().files(
+                // no manifest
+                mApplication,
+                mTestActivity,
+                mTestService,
+                mTestProvider,
+                mTestProvider2,
+                mTestReceiver,
+                mSuppressedApplication)
+                .run()
+                .expect(expected);
     }
 
     public void testNoDot() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        xml("AndroidManifest.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"test.pkg\">\n"
-                                + "    <application>\n"
-                                + "        <activity android:name=\"TestActivity\" />\n"
-                                + "    </application>\n"
-                                + "</manifest>\n"),
-                        mTestActivity));
+        lint().files(
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg\">\n"
+                        + "    <application>\n"
+                        + "        <activity android:name=\"TestActivity\" />\n"
+                        + "    </application>\n"
+                        + "</manifest>\n"),
+                mTestActivity)
+                .run()
+                .expectClean();
     }
 
     public void testWrongRegistrations() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/MyApplication.java:5: Warning: test.pkg.MyApplication is an <application> but is registered in the manifest as a <service> [Registered]\n"
                 + "public class MyApplication extends Application {\n"
                 + "             ~~~~~~~~~~~~~\n"
@@ -109,54 +113,66 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/TestService.java:7: Warning: test.pkg.TestService is a <service> but is registered in the manifest as a <provider> [Registered]\n"
                 + "public class TestService extends Service {\n"
                 + "             ~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-
-                lintProject(
-                        xml("AndroidManifest.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"test.pkg\">\n"
-                                + "    <application\n"
-                                + "        android:name=\".TestActivity\">\n"
-                                + "        <!-- These registrations are bogus (wrong type) -->\n"
-                                + "        <activity android:name=\".TestProvider\" />\n"
-                                + "        <service android:name=\"test.pkg.TestProvider2\" />\n"
-                                + "        <provider android:name=\".TestService\" />\n"
-                                + "        <receiver android:name=\".TestActivity\" />\n"
-                                + "        <service android:name=\".TestReceiver\" />\n"
-                                + "        <service android:name=\".MyApplication\" />\n"
-                                + "    </application>\n"
-                                + "</manifest>\n"),
-                        mApplication,
-                        mTestActivity,
-                        mTestService,
-                        mTestProvider,
-                        mTestProvider2,
-                        mTestReceiver));
+                + "0 errors, 6 warnings\n";
+        lint().files(
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg\">\n"
+                        + "    <application\n"
+                        + "        android:name=\".TestActivity\">\n"
+                        + "        <!-- These registrations are bogus (wrong type) -->\n"
+                        + "        <activity android:name=\".TestProvider\" />\n"
+                        + "        <service android:name=\"test.pkg.TestProvider2\" />\n"
+                        + "        <provider android:name=\".TestService\" />\n"
+                        + "        <receiver android:name=\".TestActivity\" />\n"
+                        + "        <service android:name=\".TestReceiver\" />\n"
+                        + "        <service android:name=\".MyApplication\" />\n"
+                        + "    </application>\n"
+                        + "</manifest>\n"),
+                mApplication,
+                mTestActivity,
+                mTestService,
+                mTestProvider,
+                mTestProvider2,
+                mTestReceiver)
+                .run()
+                .expect(expected);
     }
 
     public void testLibraryProjects() throws Exception {
         // If a library project provides additional activities, it is not an error to
         // not register all of those here
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        // Master project
-                        source("project.properties", "android.library.reference.1=../LibraryProject2"),
-                        // Library project
-                        source("../LibraryProject2/project.properties", "android.library=true"),
+        ProjectDescription library = project(
+                // Library project
+                manifest().pkg("foo.library").minSdk(14),
+                projectProperties().library(true).compileSdk(14),
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.app.Activity;\n"
+                        + "public class TestActivity extends Activity {\n"
+                        + "}\n")
+        ).name("LibraryProject");
 
-                        java("../LibraryProject2/src/test/pkg/TestActivity.java", ""
-                                + "package test.pkg;\n"
-                                + "import android.app.Activity;\n"
-                                + "public class TestActivity extends Activity {\n"
-                                + "}\n")
-                ));
+        //noinspection all // Sample code
+        ProjectDescription main = project(
+                // Master project
+                manifest().pkg("foo.master").minSdk(14),
+                java(""
+                        + "package foo.main;\n"
+                        + "\n"
+                        + "public class MainCode {\n"
+                        + "}\n")
+        );
+
+        main.dependsOn(library);
+
+        lint().projects(main, library).run().expectClean();
     }
 
     public void testSkipReceivers() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(java("src/test/pkg/MyReceiver.java", ""
+        lint().files(
+                java("src/test/pkg/MyReceiver.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import android.app.Activity;\n"
@@ -171,7 +187,9 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "    private static class MyActivity extends Activity {\n"
                         + "    }\n"
-                        + "}\n")));
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
     @Override

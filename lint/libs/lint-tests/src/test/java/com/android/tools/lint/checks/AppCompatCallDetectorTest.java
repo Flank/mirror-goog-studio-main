@@ -19,17 +19,19 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
-import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
-import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.checks.infrastructure.TestLintTask.ErrorMessageChecker;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Severity;
 
 public class AppCompatCallDetectorTest extends AbstractCheckTest {
+    private static final ErrorMessageChecker ERROR_MESSAGE_CHECKER =
+            (context, issue, severity, location, message) -> {
+        assertNotNull(message, AppCompatCallDetector.getOldCall(message, TEXT));
+        assertNotNull(message, AppCompatCallDetector.getNewCall(message, TEXT));
+    };
+
     public void testArguments() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/AppCompatTest.java:5: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
                 + "        getActionBar();                                     // ERROR\n"
                 + "        ~~~~~~~~~~~~~~\n"
@@ -48,54 +50,58 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n"
                 + "        setProgressBarIndeterminateVisibility(true);        // ERROR\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-        lintProject(
+                + "0 errors, 6 warnings\n";
+        lint().files(
                 mAppCompatJar,
                 mAppCompatTest,
                 mIntermediateActivity,
                 // Stubs just to be able to do type resolution without needing the full appcompat jar
                 mActionBarActivity,
-                mActionMode
-        ));
+                mActionMode)
+                .checkMessage(ERROR_MESSAGE_CHECKER)
+                .run()
+                .expect(expected);
     }
 
     public void testNoWarningsWithoutAppCompat() throws Exception {
-        assertEquals("No warnings.",
-            lintProject(
-                    mAppCompatTest,
-                    mIntermediateActivity,
-                    mActionBarActivity,
-                    mActionMode
-            ));
+        lint().files(
+                mAppCompatTest,
+                mIntermediateActivity,
+                mActionBarActivity,
+                mActionMode)
+                .checkMessage(ERROR_MESSAGE_CHECKER)
+                .run()
+                .expectClean();
     }
 
     public void testNoCallWarningsInPreferenceActivitySubclass() throws Exception {
         // https://code.google.com/p/android/issues/detail?id=75700
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-            lintProject(
-                    java(""
-                            + "package test.pkg;\n"
-                            + "\n"
-                            + "import android.annotation.TargetApi;\n"
-                            + "import android.os.Build;\n"
-                            + "import android.os.Bundle;\n"
-                            + "import android.preference.PreferenceActivity;\n"
-                            + "\n"
-                            + "public class AppCompatPrefTest extends PreferenceActivity {\n"
-                            + "    @TargetApi(Build.VERSION_CODES.HONEYCOMB)\n"
-                            + "    @Override\n"
-                            + "    protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "        super.onCreate(savedInstanceState);\n"
-                            + "        getActionBar(); // Should not generate a warning\n"
-                            + "    }\n"
-                            + "}\n"),
-                    mAppCompatJar,
-                    mIntermediateActivity,
-                    // Stubs just to be able to do type resolution without needing the full appcompat jar
-                    mActionBarActivity,
-                    mActionMode
-            ));
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.annotation.TargetApi;\n"
+                        + "import android.os.Build;\n"
+                        + "import android.os.Bundle;\n"
+                        + "import android.preference.PreferenceActivity;\n"
+                        + "\n"
+                        + "public class AppCompatPrefTest extends PreferenceActivity {\n"
+                        + "    @TargetApi(Build.VERSION_CODES.HONEYCOMB)\n"
+                        + "    @Override\n"
+                        + "    protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        getActionBar(); // Should not generate a warning\n"
+                        + "    }\n"
+                        + "}\n"),
+                mAppCompatJar,
+                mIntermediateActivity,
+                // Stubs just to be able to do type resolution without needing the full appcompat jar
+                mActionBarActivity,
+                mActionMode)
+                .checkMessage(ERROR_MESSAGE_CHECKER)
+                .run()
+                .expectClean();
     }
 
     public void testGetOldCall() throws Exception {
@@ -119,13 +125,6 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
         assertEquals("getSupportActionBar", AppCompatCallDetector.getNewCall(
                 "Should use `getSupportActionBar` instead of `getActionBar` name", RAW));
         assertNull(AppCompatCallDetector.getNewCall("No match", TEXT));
-    }
-
-    @Override
-    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        assertNotNull(message, AppCompatCallDetector.getOldCall(message, TEXT));
-        assertNotNull(message, AppCompatCallDetector.getNewCall(message, TEXT));
     }
 
     @Override

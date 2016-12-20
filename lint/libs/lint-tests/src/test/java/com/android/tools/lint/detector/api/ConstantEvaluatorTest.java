@@ -29,9 +29,68 @@ import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.VariableDefinitionEntry;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ConstantEvaluatorTest extends TestCase {
+    private static void checkUast(Object expected, @Language("JAVA") String source,
+            final String targetVariable) {
+        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        assertNotNull(context);
+        UFile uFile = context.getUastFile();
+        assertNotNull(uFile);
+
+        // Find the expression
+        final AtomicReference<UExpression> reference = new AtomicReference<>();
+        uFile.accept(new AbstractUastVisitor() {
+            @Override
+            public boolean visitVariable(UVariable variable) {
+                String name = variable.getName();
+                if (name != null && name.equals(targetVariable)) {
+                    reference.set(variable.getUastInitializer());
+                }
+
+                return super.visitVariable(variable);
+            }
+        });
+
+        UExpression expression = reference.get();
+        Object actual = ConstantEvaluator.evaluate(context, expression);
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertNotNull("Couldn't compute value for " + source + ", expected "
+                            + expected + " but was " + actual,
+                    actual);
+            assertEquals(expected.getClass(), actual.getClass());
+            if (expected instanceof Object[] && actual instanceof Object[]) {
+                assertEquals(Arrays.toString((Object[]) expected),
+                        Arrays.toString((Object[]) actual));
+                assertTrue(Arrays.equals((Object[]) expected, (Object[]) actual));
+            } else if (expected instanceof int[] && actual instanceof int[]) {
+                assertEquals(Arrays.toString((int[]) expected),
+                        Arrays.toString((int[]) actual));
+            } else if (expected instanceof boolean[] && actual instanceof boolean[]) {
+                assertEquals(Arrays.toString((boolean[]) expected),
+                        Arrays.toString((boolean[]) actual));
+            } else if (expected instanceof byte[] && actual instanceof byte[]) {
+                assertEquals(Arrays.toString((byte[]) expected),
+                        Arrays.toString((byte[]) actual));
+            } else {
+                assertEquals(expected.toString(), actual.toString());
+                assertEquals(expected, actual);
+            }
+        }
+        if (expected instanceof String) {
+            assertEquals(expected, ConstantEvaluator.evaluateString(context, expression,
+                    false));
+        }
+    }
+
+
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
@@ -86,6 +145,7 @@ public class ConstantEvaluatorTest extends TestCase {
 
     private void check(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
+        checkUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
 
         if (getName().equals("testArrays")) {
@@ -250,6 +310,7 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(8, "32 >>> 1 >>> 1");
         checkExpression(5, "5 | 1 | 1");
         checkExpression(1, "5 & 1 & 1");
+        checkExpression(true, "true && true && true");
     }
 
     public void testFieldReferences() throws Exception {
