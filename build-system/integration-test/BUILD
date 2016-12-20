@@ -122,6 +122,7 @@ java_test(
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
         "-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
     ],
     shard_count = 16,
