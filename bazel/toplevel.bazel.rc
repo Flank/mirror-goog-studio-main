@@ -1,3 +1,8 @@
 # Options applied to all Bazel invocations in the workspace.
 # This file is copied to //tools/bazel.rc from
 # //tools/base/bazel/toplevel.bazel.rc by repo init.
+
+# Enforces UTF-8 encoding in bazel tests.
+test --test_env='LC_ALL=en_US.UTF-8'
+test --jvmopt='-Dsun.jnu.encoding=UTF-8'
+test --jvmopt='-Dfile.encoding=UTF-8'
