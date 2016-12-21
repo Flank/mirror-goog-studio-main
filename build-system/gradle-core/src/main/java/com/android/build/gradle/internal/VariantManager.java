@@ -474,7 +474,7 @@ public class VariantManager implements VariantModel {
         // default configure attribute resolution
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
-        project.configurationAttributesSchema(schema -> {
+        project.getDependencies().attributesSchema(schema -> {
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_CONTENT, String.class));
         });
@@ -486,7 +486,7 @@ public class VariantManager implements VariantModel {
 
             // configure resolution strategy.
             if (flavorDimensionList != null) {
-                project.configurationAttributesSchema(schema -> {
+                project.getDependencies().attributesSchema(schema -> {
                     for (String dimension : flavorDimensionList) {
                         schema.attribute(
                                 Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + dimension, String.class),
@@ -494,7 +494,7 @@ public class VariantManager implements VariantModel {
                     }
                 });
             } else {
-                project.configurationAttributesSchema(schema -> {
+                project.getDependencies().attributesSchema(schema -> {
                     schema.attribute(Attribute.of(CONFIG_ATTR_FLAVOR_SINGLE, String.class),
                             strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
                 });
