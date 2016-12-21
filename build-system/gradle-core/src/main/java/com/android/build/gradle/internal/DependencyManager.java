@@ -155,7 +155,8 @@ public class DependencyManager {
 
     public Set<AndroidDependency> resolveDependencies(
             @NonNull VariantDependencies variantDeps,
-            @Nullable String testedProjectPath) {
+            @Nullable String testedProjectPath,
+            @NonNull Optional<FileCache> buildCache) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
         // are now used through their staging folders rather than their bundled AARs.
         // Therefore there is no dependency on these exploded tasks since remote AARs are
@@ -167,13 +168,16 @@ public class DependencyManager {
         resolveDependencies(
                 variantDeps,
                 testedProjectPath,
-                libsToExplode);
+                libsToExplode,
+                buildCache);
         return libsToExplode;
     }
 
-    public void processLibraries(@NonNull Set<AndroidDependency> libsToExplode) {
+    public void processLibraries(
+            @NonNull Set<AndroidDependency> libsToExplode,
+            @NonNull Optional<FileCache> buildCache) {
         for (AndroidDependency lib: libsToExplode) {
-            maybeCreatePrepareLibraryTask(lib, project);
+            maybeCreatePrepareLibraryTask(lib, project, buildCache);
         }
     }
 
@@ -183,11 +187,13 @@ public class DependencyManager {
      *
      * @param library the library.
      * @param project the project
+     * @param buildCache the (optional) build cache
      * @return the prepare task.
      */
     private PrepareLibraryTask maybeCreatePrepareLibraryTask(
             @NonNull AndroidDependency library,
-            @NonNull Project project) {
+            @NonNull Project project,
+            @NonNull Optional<FileCache> buildCache) {
         if (library.isSubModule()) {
             throw new RuntimeException("Creating PrepareLib task for submodule: " + library.getCoordinates());
         }
@@ -215,7 +221,7 @@ public class DependencyManager {
             prepareLibraryTask.init(
                     library.getArtifactFile(),
                     library.getExtractedFolder(),
-                    AndroidGradleOptions.getBuildCache(project),
+                    buildCache,
                     library.getCoordinates());
 
             prepareLibTaskMap.put(key, prepareLibraryTask);
@@ -227,7 +233,8 @@ public class DependencyManager {
     private void resolveDependencies(
             @NonNull final VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Set<AndroidDependency> libsToExplodeOut) {
+            @NonNull Set<AndroidDependency> libsToExplodeOut,
+            @NonNull Optional<FileCache> buildCache) {
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
             // if we're only syncing (building the model), then we only need the package
@@ -268,7 +275,8 @@ public class DependencyManager {
                     currentUnresolvedDependencies,
                     testedProjectPath,
                     artifactSet,
-                    ScopeType.PACKAGE);
+                    ScopeType.PACKAGE,
+                    buildCache);
         } else {
             packagedGraph = DependencyGraph.getEmpty();
         }
@@ -286,7 +294,8 @@ public class DependencyManager {
                 currentUnresolvedDependencies,
                 testedProjectPath,
                 artifactSet,
-                scopeType);
+                scopeType,
+                buildCache);
 
         if (extraModelInfo.getMode() != STANDARD &&
                 compileClasspath.getResolvedConfiguration().hasError()) {
@@ -379,7 +388,8 @@ public class DependencyManager {
             @NonNull Set<String> currentUnresolvedDependencies,
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
-            @NonNull ScopeType scopeType) {
+            @NonNull ScopeType scopeType,
+            @NonNull Optional<FileCache> buildCache) {
 
         // collect the artifacts first.
         Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = Maps.newHashMap();
@@ -421,6 +431,7 @@ public class DependencyManager {
                         Collections.emptyList(),
                         artifactSet,
                         scopeType,
+                        buildCache,
                         false, /*forceProvided*/
                         0);
             } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -615,6 +626,7 @@ public class DependencyManager {
             @NonNull List<String> projectChain,
             @NonNull Set<String> artifactSet,
             @NonNull ScopeType scopeType,
+            @NonNull Optional<FileCache> buildCache,
             boolean forceProvided,
             int indent) {
 
@@ -701,6 +713,7 @@ public class DependencyManager {
                             newProjectChain,
                             artifactSet,
                             scopeType,
+                            buildCache,
                             childForceProvided,
                             indent + 1);
                 } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -805,8 +818,6 @@ public class DependencyManager {
                                 // If the build cache is used, we create and cache the exploded aar
                                 // inside the build cache directory; otherwise, we explode the aar
                                 // to a location inside the project's build directory.
-                                Optional<FileCache> buildCache =
-                                        AndroidGradleOptions.getBuildCache(project);
                                 File explodedDir;
                                 if (PrepareLibraryTask.shouldUseBuildCache(
                                         buildCache.isPresent(), mavenCoordinates)) {

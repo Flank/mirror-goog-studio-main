@@ -377,8 +377,9 @@ public abstract class TaskManager {
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
         Set<AndroidDependency> libsToExplode =
-                dependencyManager.resolveDependencies(variantDeps, testedProjectPath);
-        dependencyManager.processLibraries(libsToExplode);
+                dependencyManager.resolveDependencies(
+                        variantDeps, testedProjectPath, getGlobalScope().getBuildCache());
+        dependencyManager.processLibraries(libsToExplode, getGlobalScope().getBuildCache());
     }
 
     /**
@@ -428,7 +429,7 @@ public abstract class TaskManager {
 
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
 
-        if (AndroidGradleOptions.isBuildCacheEnabled(project)) {
+        if (getGlobalScope().getBuildCache().isPresent()) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
     }
@@ -1961,7 +1962,7 @@ public abstract class TaskManager {
                 variantScope.getGlobalScope().getAndroidBuilder(),
                 getLogger(),
                 variantScope.getInstantRunBuildContext(),
-                AndroidGradleOptions.getBuildCache(variantScope.getGlobalScope().getProject()));
+                getGlobalScope().getBuildCache());
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream

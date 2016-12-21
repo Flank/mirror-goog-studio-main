@@ -102,14 +102,41 @@ public class AndroidGradleOptions {
 
     public static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
 
+    private final boolean buildCacheEnabled;
+
+    @Nullable private final String buildCacheDir;
+
+    public AndroidGradleOptions(@NonNull Project project) {
+        buildCacheEnabled =
+                getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
+        buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
+    }
+
     /**
-     * Validate flag options.
+     * Returns {@code true} if {@link #PROPERTY_ENABLE_BUILD_CACHE} is set to {@code true}, and
+     * {@code false} otherwise.
+     *
+     * <p>Note: This method is not meant to be called directly, it is made public only for use by
+     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, even if
+     * this property is set to {@code true}, the build cache may still get disabled if the build
+     * cache directory is invalid. For a reliable check, use {@code
+     * TransformGlobalScope.getBuildCache().isPresent()} instead.
      */
-    public static void validate(@NonNull Project project) {
-        if (isImprovedDependencyResolutionEnabled(project) && !isBuildCacheEnabled(project)) {
-            throw new InvalidUserDataException("Build cache must be enable to use improved "
-                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.");
-        }
+    public boolean isBuildCacheEnabled() {
+        return buildCacheEnabled;
+    }
+
+    /**
+     * Returns the value of {@link #PROPERTY_BUILD_CACHE_DIR}.
+     *
+     * <p>Note: This method is not meant to be called directly, it is made public only for use by
+     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, if this
+     * property is not set, we will use a default build cache location. For the resolved location,
+     * use {@code TransformGlobalScope.getBuildCache().getCacheDirectory()} instead.
+     */
+    @Nullable
+    public String getBuildCacheDir() {
+        return buildCacheDir;
     }
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
@@ -431,46 +458,6 @@ public class AndroidGradleOptions {
     @Nullable
     public static String getRestrictVariantName(@NonNull Project project) {
         return getString(project, AndroidProject.PROPERTY_RESTRICT_VARIANT_NAME);
-    }
-
-    public static boolean isBuildCacheEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
-    }
-
-    @NonNull
-    public static File getBuildCacheDir(@NonNull Project project) {
-        String buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
-        if (buildCacheDir != null) {
-            return new File(buildCacheDir);
-        } else {
-            // Use a directory under the user home directory if the build cache directory is not set
-            return new File(
-                    FileUtils.join(
-                            System.getProperty("user.home"), ".android", "build-cache"));
-        }
-    }
-
-    @NonNull
-    public static Optional<FileCache> getBuildCache(@NonNull Project project) {
-        if (isBuildCacheEnabled(project)) {
-            File buildCacheDir = getBuildCacheDir(project);
-            try {
-                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
-            } catch (Exception exception) {
-                project.getLogger().warn(
-                        "Unable to create the build cache at '{}'\n"
-                                + "Cause: {}\n"
-                                + "Build cache is therefore temporarily disabled.\n"
-                                + "Please fix the underlying cause if possible or file a bug.\n"
-                                + "To suppress this warning, disable the build cache by setting"
-                                + " android.enableBuildCache=false in the gradle.properties file.",
-                        buildCacheDir.getAbsolutePath(),
-                        exception.getMessage());
-                return Optional.empty();
-            }
-        } else {
-            return Optional.empty();
-        }
     }
 
     public static Channel getSdkChannel(@NonNull Project project) {

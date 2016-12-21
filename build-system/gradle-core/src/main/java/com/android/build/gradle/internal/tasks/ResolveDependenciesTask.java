@@ -56,7 +56,8 @@ public class ResolveDependenciesTask extends BaseTask {
         // Resolve variant dependencies.
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
-                testedProjectPath);
+                testedProjectPath,
+                variantData.getScope().getGlobalScope().getBuildCache());
 
         variantData.getVariantConfiguration().setResolvedDependencies(
                 variantData.getVariantDependency().getCompileDependencies(),
@@ -145,8 +146,7 @@ public class ResolveDependenciesTask extends BaseTask {
                     scope.getGlobalScope().getExtension() instanceof TestAndroidConfig
                             ? ((TestAndroidConfig) scope.getGlobalScope().getExtension()).getTargetProjectPath()
                             : null;
-            task.buildCache =
-                    AndroidGradleOptions.getBuildCache(scope.getGlobalScope().getProject());
+            task.buildCache = scope.getGlobalScope().getBuildCache();
         }
     }
 }
