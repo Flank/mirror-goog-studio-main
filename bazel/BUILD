@@ -210,5 +210,6 @@ maven_repo(
         "//tools/base/build-system/gradle",
         "//tools/base/build-system/gradle-experimental",
     ],
+    include_sources = True,
     visibility = ["//visibility:public"],
 )
