@@ -94,6 +94,12 @@ filegroup(
 )
 
 filegroup(
+    name = "databinding_latest",
+    srcs = glob(["*/extras/android/m2repository/com/android/databinding/*/1.3.1/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "multidex",
     srcs = glob(["*/extras/android/m2repository/com/android/support/multidex*/1.0.1/**"]),
     visibility = ["//visibility:public"],
