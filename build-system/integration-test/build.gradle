@@ -74,6 +74,11 @@ def testEnvironment =
             String key = entry.key
             key.startsWith("CUSTOM_") ||
                     key == "DEBUG_INNER_TEST" ||
+                    // For NDK tests on Windows. See init.mk.
+                    key == "OS" ||
+                    key == "PROCESSOR_ARCHITECTURE" ||
+                    key == "ProgramW6432" ||
+                    key == "ProgramFiles(x86)" ||
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
