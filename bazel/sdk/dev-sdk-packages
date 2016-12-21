@@ -22,8 +22,7 @@ platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 tools:{package.xml,mksdcard*,support/*.txt}
 
 # Subset of docs happened to be used by tests
-docs:reference/android/{*,content/*}
-docs:reference/android/widget/Button.html
+docs:{package.xml,reference/android/*,reference/android/content/*,reference/android/widget/*}
 
 # Extra components picked to pass various AndroidGradleTestCase tests
 # TemplateTest uses a lot of them

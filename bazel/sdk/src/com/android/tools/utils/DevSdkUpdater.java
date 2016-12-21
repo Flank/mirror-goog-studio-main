@@ -32,9 +32,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -231,7 +233,7 @@ public final class DevSdkUpdater {
      */
     private static void downloadSdkPackages(
             File sdkDest, List<String> packageLines, String platform) throws IOException {
-        List<String> packages = new ArrayList<>(); // Just the packages, with filters stripped
+        Set<String> packages = new LinkedHashSet<>(); // Just the packages, with filters stripped
         // The following is a package -> filter mapping (if a filter present)
         // If no filter is found, then all downloaded files will be kept
         Map<String, Filters> filterMap = new HashMap<>();
@@ -239,6 +241,9 @@ public final class DevSdkUpdater {
         for (String packageLine : packageLines) {
             String[] packageFilters = packageLine.split(":", 3);
             String pkg = packageFilters[0];
+            if (packages.contains(pkg)) {
+                usage(String.format("Package %s specified twice in the package file.", pkg));
+            }
             packages.add(pkg);
             if (packageFilters.length > 1) {
                 if (packageFilters.length == 2) {
