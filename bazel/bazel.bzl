@@ -477,7 +477,7 @@ def merged_properties(name, srcs, mappings, visibility=None):
       tools = ["//tools/base/bazel:properties_merger"],
       visibility = visibility,
       cmd = ("$(location //tools/base/bazel:properties_merger) " +
-             " ".join(["--mapping " + m for m in mappings]) +
-             " ".join(["--input $(location " + src + ") " for src in srcs]) +
+             " ".join(["--mapping " + m for m in mappings]) + " " +
+             " ".join(["--input $(location " + src + ") " for src in srcs]) + " " +
              "--output '$@'")
   )
