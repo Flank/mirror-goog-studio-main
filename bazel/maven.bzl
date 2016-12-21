@@ -1,4 +1,4 @@
-load(":utils.bzl", "explicit_target")
+load(":functions.bzl", "explicit_target")
 
 def _maven_pom_impl(ctx):
   # Contains both *.jar and *.aar files.

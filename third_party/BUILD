@@ -731,6 +731,20 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.jetbrains.kotlin_kotlin-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-runtime/1.0.5:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "org.jetbrains.kotlin_kotlin-stdlib",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.0.5:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.jetbrains.kotlin_kotlin-runtime"],
+)
+
+maven_java_library(
     name = "org.jsoup_jsoup",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.6.3:jar",
     visibility = ["//visibility:public"],
