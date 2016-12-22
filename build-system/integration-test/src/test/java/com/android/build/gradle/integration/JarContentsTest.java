@@ -203,7 +203,7 @@ public class JarContentsTest {
     private static void checkGroup(String groupPrefix) throws IOException {
         boolean foundAndroidRepo = false;
 
-        for (Path repo : GradleTestProject.getRepos()) {
+        for (Path repo : GradleTestProject.getLocalRepositories()) {
             Path androidTools = repo.resolve(groupPrefix);
             if (!Files.isDirectory(androidTools)) {
                 continue;
