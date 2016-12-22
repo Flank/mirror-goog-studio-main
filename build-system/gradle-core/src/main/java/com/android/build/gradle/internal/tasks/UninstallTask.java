@@ -16,33 +16,25 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
-
-import org.gradle.api.Task;
-import org.gradle.api.logging.LogLevel;
+import java.io.File;
+import java.util.List;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 @ParallelizableTask
 public class UninstallTask extends BaseTask {
@@ -51,13 +43,19 @@ public class UninstallTask extends BaseTask {
 
     private int mTimeOutInMs = 0;
 
-    public UninstallTask() {
-        this.getOutputs().upToDateWhen(new Spec<Task>() {
-            @Override
-            public boolean isSatisfiedBy(Task task) {
-                getLogger().debug("Uninstall task is always run.");
-                return false;
+    private InputSupplier<File> adbSupplier = InputSupplier.from(() -> {
+                SdkInfo sdkInfo = getBuilder().getSdkInfo();
+                if (sdkInfo == null) {
+                    return null;
+                }
+                return sdkInfo.getAdb();
             }
+    );
+
+    public UninstallTask() {
+        this.getOutputs().upToDateWhen(task -> {
+            getLogger().debug("Uninstall task is always run.");
+            return false;
         });
     }
 
@@ -68,8 +66,10 @@ public class UninstallTask extends BaseTask {
 
         logger.info("Uninstalling app: {}", applicationId);
 
-        final DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(getAdbExe(), getTimeOutInMs(), getILogger());
+        final DeviceProvider deviceProvider = new ConnectedDeviceProvider(
+                adbSupplier.getLastValue(),
+                getTimeOutInMs(),
+                getILogger());
 
         deviceProvider.init();
         final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
@@ -89,14 +89,10 @@ public class UninstallTask extends BaseTask {
 
     }
 
-
+    @SuppressWarnings("unused")
     @InputFile
     public File getAdbExe() {
-        SdkInfo sdkInfo = getBuilder().getSdkInfo();
-        if (sdkInfo == null) {
-            return null;
-        }
-        return sdkInfo.getAdb();
+        return adbSupplier.get();
     }
 
     public BaseVariantData getVariant() {
@@ -150,12 +146,11 @@ public class UninstallTask extends BaseTask {
             uninstallTask.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
 
-            ConventionMappingHelper.map(uninstallTask, "adbExe", new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
-                    return (info == null ? null : info.getAdb());
-                }
+            uninstallTask.adbSupplier = InputSupplier.from(() -> {
+                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
+                // if the task is not going to run, so use a supplier.
+                final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
+                return (info == null ? null : info.getAdb());
             });
 
             ((ApkVariantData) scope.getVariantData()).uninstallTask = uninstallTask;
