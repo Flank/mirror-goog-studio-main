@@ -23,12 +23,14 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.tasks.InputFilesSupplier;
 import com.android.builder.internal.testing.SimpleTestCallable;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import java.util.Collection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
@@ -51,7 +53,7 @@ public class JackJacocoReportTask extends BaseTask {
 
     private File reportDir;
 
-    private List<File> sourceDir;
+    private InputFilesSupplier sourceDir;
 
     private String reportName;
 
@@ -76,12 +78,8 @@ public class JackJacocoReportTask extends BaseTask {
     }
 
     @InputFiles
-    public List<File> getSourceDir() {
-        return sourceDir;
-    }
-
-    public void setSourceDir(List<File> sourceDir) {
-        this.sourceDir = sourceDir;
+    public Collection<File> getSourceDir() {
+        return sourceDir.get();
     }
 
     @Input
@@ -122,7 +120,7 @@ public class JackJacocoReportTask extends BaseTask {
         getBuilder().createJacocoReportWithJackReporter(
                 Iterables.getOnlyElement(coverageFiles),
                 getReportDir(),
-                getSourceDir(),
+                sourceDir.getLastValue(),
                 getReportName(),
                 getMetadataFile());
     }
@@ -163,14 +161,10 @@ public class JackJacocoReportTask extends BaseTask {
             task.setReportName(scope.getVariantConfiguration().getFullName());
 
 
-            ConventionMappingHelper.map(
-                    task, "coverageDirectory",
-                    (Callable<File>) () ->
-                            ((TestVariantData) scope.getVariantData()).connectedTestTask
-                                    .getCoverageDir());
-            ConventionMappingHelper.map(
-                    task, "sourceDir",
-                    (Callable<List<File>>) () ->
+            task.coverageDirectory =
+                    ((TestVariantData) scope.getVariantData()).connectedTestTask.getCoverageDir();
+
+            task.sourceDir = InputFilesSupplier.from(() ->
                             testedScope.getVariantData().getJavaSourceFoldersForCoverage());
 
             task.setReportDir(testedScope.getCoverageReportDir());

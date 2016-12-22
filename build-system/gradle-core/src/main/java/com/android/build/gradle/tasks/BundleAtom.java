@@ -19,10 +19,12 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.FD_DEX;
 import static com.android.SdkConstants.FD_JAVA_RES;
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
+import static com.android.build.gradle.internal.pipeline.StreamFilter.DEX;
+import static com.android.build.gradle.internal.pipeline.StreamFilter.NATIVE_LIBS;
+import static com.android.build.gradle.internal.pipeline.StreamFilter.RESOURCES;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
@@ -250,12 +252,11 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             bundleAtom.setBundleFolder(scope.getBaseBundleDir());
             bundleAtom.setBundleFile(scope.getOutputBundleFile());
 
-            bundleAtom.jniFolders = scope.getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
-            bundleAtom.dexFolders = scope.getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.DEX);
-            bundleAtom.javaResources = scope.getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
+            final TransformManager transformManager = scope.getTransformManager();
+
+            bundleAtom.jniFolders = transformManager.getPipelineOutputAsFileCollection(NATIVE_LIBS);
+            bundleAtom.dexFolders = transformManager.getPipelineOutputAsFileCollection(DEX);
+            bundleAtom.javaResources = transformManager.getPipelineOutputAsFileCollection(RESOURCES);
         }
 
         @NonNull

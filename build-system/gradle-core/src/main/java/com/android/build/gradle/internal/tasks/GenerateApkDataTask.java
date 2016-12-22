@@ -22,16 +22,19 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
+import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 
+import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -51,7 +54,7 @@ import java.util.concurrent.Callable;
 @ParallelizableTask
 public class GenerateApkDataTask extends BaseTask {
 
-    private File apkFile;
+    private Supplier<File> apkFile;
 
     private File resOutputDir;
 
@@ -77,7 +80,7 @@ public class GenerateApkDataTask extends BaseTask {
         File outDir = getResOutputDir();
         FileUtils.cleanOutputDir(outDir);
 
-        File apk = getApkFile();
+        File apk = apkFile.get();
         if (apk != null) {
             // copy the file into the destination, by sanitizing the name first.
             File rawDir = new File(outDir, FD_RES_RAW);
@@ -86,14 +89,15 @@ public class GenerateApkDataTask extends BaseTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            builder.generateApkData(apk, outDir, getMainPkgName(), ANDROID_WEAR_MICRO_APK);
+            builder.generateApkData(apk, outDir, mainPkgName, ANDROID_WEAR_MICRO_APK);
         } else {
-            builder.generateUnbundledWearApkData(outDir, getMainPkgName());
+            builder.generateUnbundledWearApkData(outDir, mainPkgName);
         }
 
-        AndroidBuilder.generateApkDataEntryInManifest(getMinSdkVersion(),
-                getTargetSdkVersion(),
-                getManifestFile());
+        AndroidBuilder.generateApkDataEntryInManifest(
+                minSdkVersion,
+                targetSdkVersion,
+                manifestFile);
     }
 
     @OutputDirectory
@@ -105,23 +109,17 @@ public class GenerateApkDataTask extends BaseTask {
         this.resOutputDir = resOutputDir;
     }
 
+    @SuppressWarnings("unused")
     @InputFile
     @Optional
     public File getApkFile() {
-        return apkFile;
+        return apkFile.get();
     }
 
-    public void setApkFile(File apkFile) {
-        this.apkFile = apkFile;
-    }
-
+    @SuppressWarnings("unused")
     @Input
     public String getMainPkgName() {
         return mainPkgName;
-    }
-
-    public void setMainPkgName(String mainPkgName) {
-        this.mainPkgName = mainPkgName;
     }
 
     @Input
@@ -145,10 +143,6 @@ public class GenerateApkDataTask extends BaseTask {
     @OutputFile
     public File getManifestFile() {
         return manifestFile;
-    }
-
-    public void setManifestFile(File manifestFile) {
-        this.manifestFile = manifestFile;
     }
 
     public static class ConfigAction implements TaskConfigAction<GenerateApkDataTask> {
@@ -179,44 +173,29 @@ public class GenerateApkDataTask extends BaseTask {
         @Override
         public void execute(@NonNull GenerateApkDataTask task) {
             final ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
+            final GradleVariantConfiguration variantConfiguration =
+                    variantData.getVariantConfiguration();
+
             variantData.generateApkDataTask = task;
 
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(scope.getVariantConfiguration().getFullName());
+            task.setVariantName(variantConfiguration.getFullName());
 
             task.setResOutputDir(scope.getMicroApkResDirectory());
 
             if (config != null) {
-                ConventionMappingHelper.map(task, "apkFile", new Callable<File>() {
-                    @Override
-                    public File call() throws Exception {
-                        // only care about the first one. There shouldn't be more anyway.
-                        return config.getFiles().iterator().next();
-                    }
+                task.apkFile = InputSupplier.from(() -> {
+                    // only care about the first one. There shouldn't be more anyway.
+                    return config.getFiles().iterator().next();
                 });
+            } else {
+                task.apkFile = () -> null;
             }
 
-            task.setManifestFile(scope.getMicroApkManifestFile());
-            ConventionMappingHelper.map(task, "mainPkgName", new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return variantData.getVariantConfiguration().getApplicationId();
-                }
-            });
-
-            ConventionMappingHelper.map(task, "minSdkVersion", new Callable<Integer>() {
-                @Override
-                public Integer call() throws Exception {
-                    return variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel();
-                }
-            });
-
-            ConventionMappingHelper.map(task, "targetSdkVersion", new Callable<Integer>() {
-                @Override
-                public Integer call() throws Exception {
-                    return variantData.getVariantConfiguration().getTargetSdkVersion().getApiLevel();
-                }
-            });
+            task.manifestFile = scope.getMicroApkManifestFile();
+            task.mainPkgName = variantConfiguration.getApplicationId();
+            task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
+            task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
         }
     }
 }
