@@ -9,6 +9,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
+import java.util.Map;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
@@ -23,8 +24,6 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
             = new DefaultDomainObjectSet<ApplicationVariant>(ApplicationVariant.class);
 
     private String targetProjectPath = null;
-
-    private String targetVariant = "debug";
 
     public TestExtension(
             @NonNull Project project,
@@ -83,13 +82,15 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
      * Default is 'debug'
      */
     @Override
+    @Deprecated
     public String getTargetVariant() {
-        return targetVariant;
+        return "";
     }
 
+    @Deprecated
     public void setTargetVariant(String targetVariant) {
         checkWritability();
-        this.targetVariant = targetVariant;
+        System.err.println("android.targetVariant is deprecated, all variants are now tested.");
     }
 
     public void targetVariant(String targetVariant) {

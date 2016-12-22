@@ -62,5 +62,11 @@ public class ConfigurationProviderImpl implements ConfigurationProvider {
     public Configuration getJackPluginConfiguration() {
         return project.getConfigurations().getByName(sourceSet.getJackPluginConfigurationName());
     }
+
+    @NonNull
+    @Override
+    public Configuration getWearAppConfiguration() {
+        return project.getConfigurations().getByName(sourceSet.getWearAppConfigurationName());
+    }
 }
 

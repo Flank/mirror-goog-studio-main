@@ -16,10 +16,11 @@
 package com.android.build.gradle;
 
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_BUILD_TYPE;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_CONTENT;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -31,7 +32,6 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dependency.VariantDependencies.ArtifactContent;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
@@ -55,12 +55,15 @@ import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
@@ -149,6 +152,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
+    private Map<String, String> flavorMatchingStrategy;
 
     private Action<VariantFilter> variantFilter;
 
@@ -248,12 +252,7 @@ public abstract class BaseExtension implements AndroidConfig {
                                 "Link to a wear app to embed for object '"
                                         + sourceSet.getName()
                                         + "'.",
-                                true /*canBeResolved*/);
-                        // wear config is directly resolved and therefore must have
-                        // some attributes. we only want to package the release one.
-                        wearConfig.attribute(CONFIG_ATTR_BUILD_TYPE, "release");
-                        // and we need the apk, not any of the other artifacts (mapping, ...)
-                        wearConfig.attribute(CONFIG_ATTR_CONTENT, ArtifactContent.MAIN.name());
+                                false /*canBeResolved*/);
 
                         createConfiguration(
                                 configurations,
@@ -438,7 +437,6 @@ public abstract class BaseExtension implements AndroidConfig {
     public void flavorDimensions(String... dimensions) {
         checkWritability();
         flavorDimensionList = Arrays.asList(dimensions);
-
     }
 
     /**
@@ -640,6 +638,29 @@ public abstract class BaseExtension implements AndroidConfig {
 
     public void setPublishNonDefault(boolean publishNonDefault) {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
+    }
+
+    public void flavorMatchingStrategy(String name, String value) {
+        if (flavorMatchingStrategy == null) {
+            flavorMatchingStrategy = new HashMap<>();
+        }
+
+        if (!name.startsWith(VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX)) {
+            name = CONFIG_ATTR_FLAVOR_PREFIX + name;
+        }
+
+        flavorMatchingStrategy.put(name, value);
+    }
+
+
+    @Override
+    @NonNull
+    public Map<String, String> getFlavorMatchingStrategy() {
+        if (flavorMatchingStrategy == null) {
+            return ImmutableMap.of();
+        }
+
+        return flavorMatchingStrategy;
     }
 
     public void variantFilter(Action<VariantFilter> filter) {

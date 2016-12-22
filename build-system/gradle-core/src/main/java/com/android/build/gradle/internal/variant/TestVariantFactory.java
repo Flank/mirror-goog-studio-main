@@ -40,6 +40,8 @@ import java.util.Map;
  */
 public class TestVariantFactory extends ApplicationVariantFactory {
 
+    private TestAndroidConfig testExtension;
+
     public TestVariantFactory(
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
@@ -54,7 +56,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @Override
     public void preVariantWork(final Project project) {
-        final TestAndroidConfig testExtension = (TestAndroidConfig) extension;
+        testExtension = (TestAndroidConfig) extension;
 
         String path = testExtension.getTargetProjectPath();
         if (path == null) {
@@ -62,24 +64,10 @@ public class TestVariantFactory extends ApplicationVariantFactory {
                     "targetProjectPath cannot be null in test project " + project.getName());
         }
 
-        if (testExtension.getTargetVariant() == null) {
-            throw new GradleException(
-                    "targetVariant cannot be null in test project " + project.getName());
-        }
-
-        // While we want this to be provided only, we're still going to set this as compile
-        // (and therefore show up on the apk scope). This is because this can bring in
-        // aar dependencies and this would trigger errors as aars are not supported as
-        // provided dependencies.
-        // Instead we'll automatically detect that these dependencies are coming from the tested
-        // app module and we'll skip them automatically (in the apk scope)
+        // Adding this to provided so that it's part of the compile but not part of the packaging.
         DependencyHandler handler = project.getDependencies();
-        Map<String, String> projectNotation =
-                ImmutableMap.of(
-                        "path", path, "configuration",
-                        testExtension.getTargetVariant()
-                                + VariantDependencies.CONFIGURATION_CLASSES);
-        handler.add("compile", handler.project(projectNotation));
+        Map<String, String> projectNotation = ImmutableMap.of("path", path);
+        handler.add("provided", handler.project(projectNotation));
     }
 
     @Override

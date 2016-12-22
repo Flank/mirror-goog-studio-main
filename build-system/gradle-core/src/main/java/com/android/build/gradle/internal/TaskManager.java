@@ -752,7 +752,7 @@ public abstract class TaskManager {
     private void addManifestArtifact(
             @NonNull TaskFactory tasks,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        if (variantData.getVariantDependency().getManifestConfiguration() != null) {
+        if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
             ManifestProcessorTask mergeManifestsTask =
                     variantData
                             .getOutputs()
@@ -760,21 +760,14 @@ public abstract class TaskManager {
                             .getScope()
                             .getManifestProcessorTask()
                             .get(tasks);
-            project.getArtifacts().add(
-                    variantData.getVariantDependency().getManifestConfiguration().getName(),
-                    AndroidArtifacts.buildManifestArtifact(globalScope.getProjectBaseName(),
-                            new FileSupplier() {
-                                @NonNull
-                                @Override
-                                public Task getTask() {
-                                    return mergeManifestsTask;
-                                }
 
-                                @Override
-                                public File get() {
-                                    return mergeManifestsTask.getManifestOutputFile();
-                                }
-                            }));
+            AndroidArtifacts.publishIntermediateArtifact(
+                    project,
+                    variantData.getVariantDependency().getPublishConfiguration().getName(),
+                    mergeManifestsTask.getManifestOutputFile(),
+                    mergeManifestsTask.getName(),
+                    AndroidArtifacts.TYPE_TESTED_MANIFEST
+            );
         }
     }
 
@@ -1273,10 +1266,19 @@ public abstract class TaskManager {
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
         // Create jar task for uses by external modules.
-        if (variantData.getVariantDependency().getClassesConfiguration() != null) {
+        if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
+            final PackageJarArtifactConfigAction configAction = new PackageJarArtifactConfigAction(
+                    scope);
             AndroidTask<Jar> packageJarArtifact =
-                    androidTasks.create(tasks, new PackageJarArtifactConfigAction(scope));
+                    androidTasks.create(tasks, configAction);
             packageJarArtifact.dependsOn(tasks, javacTask);
+
+            AndroidArtifacts.publishIntermediateArtifact(
+                    project,
+                    variantData.getVariantDependency().getPublishConfiguration().getName(),
+                    configAction.getOutputFile(),
+                    packageJarArtifact.getName(),
+                    AndroidArtifacts.TYPE_JAR);
         }
 
         return javacTask;
@@ -1356,7 +1358,6 @@ public abstract class TaskManager {
         AndroidTask<GenerateApkDataTask> generateMicroApkTask = androidTasks.create(tasks,
                 new GenerateApkDataTask.ConfigAction(scope, config));
         scope.setMicroApkTask(generateMicroApkTask);
-        generateMicroApkTask.optionalDependsOn(tasks, config);
 
         // the merge res task will need to run after this one.
         scope.getResourceGenTask().dependsOn(tasks, generateMicroApkTask);
@@ -2346,7 +2347,9 @@ public abstract class TaskManager {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
-        VariantType type = variantScope.getVariantData().getType();
+        final BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope
+                .getVariantData();
+        VariantType type = variantData.getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
         if (isTest && !extension.getDataBinding().isEnabledForTests()) {
             BaseVariantData testedVariantData = variantScope.getTestedVariantData();
@@ -2365,7 +2368,20 @@ public abstract class TaskManager {
                 .getTransformManager()
                 .addTransform(tasks, variantScope,
                         new DataBindingMergeArtifactsTransform(getLogger(), variantScope));
-        variantScope.setDataBindingMergeArtifactsTask(dataBindingMergeTask.get());
+        if (dataBindingMergeTask.isPresent()) {
+            final AndroidTask<TransformTask> task = dataBindingMergeTask.get();
+            variantScope.setDataBindingMergeArtifactsTask(task);
+
+            if (type == VariantType.LIBRARY) {
+                // need to publish
+                AndroidArtifacts.publishIntermediateArtifact(
+                        variantScope.getGlobalScope().getProject(),
+                        variantData.getVariantDependency().getPublishConfiguration().getName(),
+                        variantScope.getBundleFolderForDataBinding(),
+                        task.getName(),
+                        AndroidArtifacts.TYPE_DATA_BINDING);
+            }
+        }
     }
 
     protected void createDataBindingTasksIfNecessary(@NonNull TaskFactory tasks,
@@ -2661,47 +2677,48 @@ public abstract class TaskManager {
                 final String projectBaseName = globalScope.getProjectBaseName();
                 final VariantDependencies variantDeps = variantData.getVariantDependency();
                 final String publishConfigName = variantDeps.getPublishConfiguration().getName();
-                final String archivesConfigName = variantDeps.getArchivesConfiguration().getName();
 
                 appTask.configure(tasks, packageTask -> {
-                    final PublishArtifact apkArtifact = AndroidArtifacts.buildApkArtifact(
-                            projectBaseName, null, (FileSupplier) packageTask);
-                    project.getArtifacts().add(publishConfigName, apkArtifact);
-                    project.getArtifacts().add(archivesConfigName, apkArtifact);
+                    FileSupplier apkSupplier = (FileSupplier) packageTask;
+                    AndroidArtifacts.publishIntermediateArtifact(
+                            project,
+                            publishConfigName,
+                            apkSupplier.get(),
+                            apkSupplier.getTask().getName(),
+                            AndroidArtifacts.TYPE_APK);
                 });
 
-                for (FileSupplier outputFileProvider :
-                        variantOutputData.getSplitOutputFileSuppliers()) {
-                    final PublishArtifact splitApkArtifact = AndroidArtifacts.buildApkArtifact(
-                            projectBaseName, null, outputFileProvider);
-                    project.getArtifacts().add(publishConfigName, splitApkArtifact);
-                    project.getArtifacts().add(archivesConfigName, splitApkArtifact);
+                for (FileSupplier supplier : variantOutputData.getSplitOutputFileSuppliers()) {
+                    AndroidArtifacts.publishIntermediateArtifact(
+                            project,
+                            publishConfigName,
+                            supplier.get(),
+                            supplier.getTask().getName(),
+                            AndroidArtifacts.TYPE_APK);
                 }
 
                 try {
-                    if (variantOutputData.getMetadataFile() != null) {
-                        project.getArtifacts().add(
-                                variantDeps.getMetadataConfiguration().getName(),
-                                AndroidArtifacts.buildMetadataArtifact(
-                                        projectBaseName,
-                                        variantOutputData.getMetadataFile()));
+                    final FileSupplier metadataFile = variantOutputData.getMetadataFile();
+                    if (metadataFile != null) {
+                        AndroidArtifacts.publishIntermediateArtifact(
+                                project,
+                                publishConfigName,
+                                metadataFile.get(),
+                                metadataFile.getTask().getName(),
+                                AndroidArtifacts.TYPE_METADATA);
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
 
-                if (variantData.getMappingFileProvider() != null) {
-                    project.getArtifacts().add(
-                            variantDeps.getMappingConfiguration().getName(),
-                            AndroidArtifacts.buildMappingArtifact(
-                                    projectBaseName,
-                                    variantData.getMappingFileProvider()));
-                }
-
-                if (variantData.classesJarTask != null) {
-                    project.getArtifacts().add(
-                            variantDeps.getClassesConfiguration().getName(),
-                            variantData.classesJarTask);
+                final FileSupplier mappingFileProvider = variantData.getMappingFileProvider();
+                if (mappingFileProvider != null) {
+                    AndroidArtifacts.publishIntermediateArtifact(
+                            project,
+                            publishConfigName,
+                            mappingFileProvider.get(),
+                            mappingFileProvider.getTask().getName(),
+                            AndroidArtifacts.TYPE_MAPPING);
                 }
             }
         }
@@ -2835,14 +2852,14 @@ public abstract class TaskManager {
     protected final void doCreateMinifyTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope,
-            @Nullable Configuration mappingConfiguration,
+            @Nullable FileCollection mappingFileCollection,
             boolean createJarFile) {
         if (variantScope
                 .getVariantData()
                 .getVariantConfiguration()
                 .getBuildType()
                 .isUseProguard()) {
-            createProguardTransform(taskFactory, variantScope, mappingConfiguration, createJarFile);
+            createProguardTransform(taskFactory, variantScope, mappingFileCollection, createJarFile);
             createShrinkResourcesTransform(taskFactory, variantScope);
         } else {
             // Since the built-in class shrinker does not obfuscate, there's no point running
@@ -2872,7 +2889,7 @@ public abstract class TaskManager {
     private void createProguardTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull VariantScope variantScope,
-            @Nullable Configuration mappingConfiguration,
+            @Nullable FileCollection mappingFileCollection,
             boolean createJarFile) {
         if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
             logger.warn(
@@ -2903,12 +2920,12 @@ public abstract class TaskManager {
             applyProguardDefaultsForTest(transform);
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(variantConfig::getTestProguardFiles);
-            transform.applyTestedMapping(mappingConfiguration);
+            transform.applyTestedMapping(mappingFileCollection);
         } else {
             applyProguardConfig(transform, variantData);
 
-            if (mappingConfiguration != null) {
-                transform.applyTestedMapping(mappingConfiguration);
+            if (mappingFileCollection != null) {
+                transform.applyTestedMapping(mappingFileCollection);
             }
         }
 
@@ -2936,7 +2953,8 @@ public abstract class TaskManager {
                                 transform,
                                 proGuardTransformCallback);
 
-        task.ifPresent(t -> t.optionalDependsOn(taskFactory, mappingConfiguration));
+        // FIXME remove once the transform support secondary file as a FileCollection.
+        task.ifPresent(t -> t.optionalDependsOn(taskFactory, mappingFileCollection));
     }
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {

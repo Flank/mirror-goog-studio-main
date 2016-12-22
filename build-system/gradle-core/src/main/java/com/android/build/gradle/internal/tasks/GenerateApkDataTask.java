@@ -18,7 +18,11 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
+import static java.util.Collections.singletonMap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,12 +36,17 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
@@ -54,7 +63,10 @@ import java.util.concurrent.Callable;
 @ParallelizableTask
 public class GenerateApkDataTask extends BaseTask {
 
-    private Supplier<File> apkFile;
+    public static final Map<String, String> ARTIFACTS_APK = singletonMap(ARTIFACT_TYPE, TYPE_APK);
+
+    @Nullable
+    private FileCollection apkFile;
 
     private File resOutputDir;
 
@@ -74,13 +86,27 @@ public class GenerateApkDataTask extends BaseTask {
     @TaskAction
     void generate() throws IOException, ProcessException, LoggedErrorException,
             InterruptedException {
+        // if the FileCollection contains no file, then there's nothing to do just abort.
+        File apk = null;
+        if (apkFile != null) {
+            Set<File> files = apkFile.getFiles();
+            if (files.isEmpty()) {
+                return;
+            }
+
+            if (files.size() > 1) {
+                throw new IllegalStateException("Wear App dependency resolve to more than one APK: " + files);
+            }
+
+            apk = Iterables.getOnlyElement(files);
+        }
+
         AndroidBuilder builder = getBuilder();
 
         // always empty output dir.
         File outDir = getResOutputDir();
         FileUtils.cleanOutputDir(outDir);
 
-        File apk = apkFile.get();
         if (apk != null) {
             // copy the file into the destination, by sanitizing the name first.
             File rawDir = new File(outDir, FD_RES_RAW);
@@ -110,10 +136,10 @@ public class GenerateApkDataTask extends BaseTask {
     }
 
     @SuppressWarnings("unused")
-    @InputFile
+    @InputFiles
     @Optional
-    public File getApkFile() {
-        return apkFile.get();
+    public FileCollection getApkFileCollection() {
+        return apkFile;
     }
 
     @SuppressWarnings("unused")
@@ -184,12 +210,7 @@ public class GenerateApkDataTask extends BaseTask {
             task.setResOutputDir(scope.getMicroApkResDirectory());
 
             if (config != null) {
-                task.apkFile = InputSupplier.from(() -> {
-                    // only care about the first one. There shouldn't be more anyway.
-                    return config.getFiles().iterator().next();
-                });
-            } else {
-                task.apkFile = () -> null;
+                task.apkFile = config.getIncoming().getFiles(ARTIFACTS_APK);
             }
 
             task.manifestFile = scope.getMicroApkManifestFile();

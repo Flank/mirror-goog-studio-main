@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Set;
 
 import java.util.concurrent.ExecutionException;
+import org.gradle.api.file.FileCollection;
 import proguard.ClassPath;
 
 /**
@@ -77,7 +78,7 @@ public class ProGuardTransform extends BaseProguardAction {
     private final ImmutableList<File> secondaryFileOutputs;
 
     private File testedMappingFile = null;
-    private org.gradle.api.artifacts.Configuration testMappingConfiguration = null;
+    private FileCollection testMappingConfiguration = null;
 
     public ProGuardTransform(
             @NonNull VariantScope variantScope,
@@ -116,8 +117,7 @@ public class ProGuardTransform extends BaseProguardAction {
         this.testedMappingFile = testedMappingFile;
     }
 
-    public void applyTestedMapping(
-            @Nullable org.gradle.api.artifacts.Configuration testMappingConfiguration) {
+    public void applyTestedMapping(@Nullable FileCollection testMappingConfiguration) {
         this.testMappingConfiguration = testMappingConfiguration;
     }
 
@@ -139,6 +139,7 @@ public class ProGuardTransform extends BaseProguardAction {
         final List<File> files = Lists.newArrayList();
 
         // the mapping file.
+        // FIXME: if the mapping file is a FileCollection it can used as-is
         File testedMappingFile = computeMappingFile();
         if (testedMappingFile != null) {
             files.add(testedMappingFile);

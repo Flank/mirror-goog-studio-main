@@ -43,9 +43,11 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.file.SourceDirectorySet;
@@ -237,6 +239,12 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     @Override
     public DataBindingOptions getDataBinding() {
         return new DataBindingOptionsAdapter(model.getDataBinding());
+    }
+
+    @NonNull
+    @Override
+    public Map<String, String> getFlavorMatchingStrategy() {
+        return ImmutableMap.of();
     }
 
     @Override

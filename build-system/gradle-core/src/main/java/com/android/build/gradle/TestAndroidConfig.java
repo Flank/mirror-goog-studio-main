@@ -30,6 +30,9 @@ public interface TestAndroidConfig extends AndroidConfig {
      * Returns the variant of the tested project.
      *
      * Default is 'debug'
+     *
+     * @deprecated This is deprecated, test module can now test all flavors.
      */
+    @Deprecated
     String getTargetVariant();
 }

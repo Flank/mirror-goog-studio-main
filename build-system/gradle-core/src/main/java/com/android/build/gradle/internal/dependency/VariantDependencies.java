@@ -50,22 +50,7 @@ import org.gradle.api.artifacts.Configuration;
 public class VariantDependencies {
 
     public static final String CONFIG_ATTR_BUILD_TYPE = "android.buildType";
-    public static final String CONFIG_ATTR_FLAVOR_SINGLE = "android.flavor.dimension.single";
-    public static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.dimension.";
-    // TODO this is temporary until we have attributes on artifacts.
-    public static final String CONFIG_ATTR_CONTENT = "android.content";
-    public enum ArtifactContent {
-        MAIN, CLASSES, MANIFEST, MAPPING, METADATA, ARCHIVES
-    }
-
-    /** Name of the metadata configuration */
-    public static final String CONFIGURATION_METADATA = "-metadata";
-    /** Name of the mapping configuration */
-    public static final String CONFIGURATION_MAPPING = "-mapping";
-    /** Name of the classes configuration */
-    public static final String CONFIGURATION_CLASSES = "-classes";
-    /** Name of the manifest configuration */
-    public static final String CONFIGURATION_MANIFEST = "-manifest";
+    public static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.";
 
     @NonNull
     private final String variantName;
@@ -76,26 +61,16 @@ public class VariantDependencies {
     private final Configuration packageConfiguration;
     @Nullable
     private final Configuration publishConfiguration;
-    @Nullable
-    private final Configuration archivesConfiguration;
     @NonNull
     private final Configuration annotationProcessorConfiguration;
     @NonNull
     private final Configuration jackPluginConfiguration;
+    @NonNull
+    private final Configuration wearAppConfiguration;
 
-    @Nullable
-    private final Configuration mappingConfiguration;
-    @Nullable
-    private final Configuration classesConfiguration;
-    @Nullable
-    private final Configuration metadataConfiguration;
-    @Nullable
     private final VariantDependencies testedVariantDependencies;
     @Nullable
     private final AndroidDependency testedVariantOutput;
-
-    @Nullable
-    private Configuration manifestConfiguration;
 
     private DependencyGraph compileGraph;
     private DependencyGraph packageGraph;
@@ -124,6 +99,7 @@ public class VariantDependencies {
         private VariantType testedVariantType = null;
         private VariantDependencies testedVariantDependencies = null;
         private AndroidDependency testedVariantOutput = null;
+        private Map<String, String> flavorMatching;
 
         // default size should be enough. It's going to be rare for a variant to include
         // more than a few configurations (main, build-type, flavors...)
@@ -134,6 +110,7 @@ public class VariantDependencies {
         private final Set<Configuration> apkConfigs = Sets.newHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newHashSet();
         private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
+        private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
 
         protected Builder(
                 @NonNull Project project,
@@ -182,10 +159,17 @@ public class VariantDependencies {
                 apkConfigs.add(provider.getPackageConfiguration());
                 annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
                 jackPluginConfigs.add(provider.getJackPluginConfiguration());
+                wearAppConfigs.add(provider.getWearAppConfiguration());
             }
 
             return this;
         }
+
+        public Builder setFlavorMatching(Map<String,String> flavorMatching) {
+            this.flavorMatching = flavorMatching;
+            return this;
+        }
+
 
         /**
          * Add a tested provider.
@@ -228,27 +212,27 @@ public class VariantDependencies {
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
             String buildType = variantConfiguration.getBuildType().getName();
-            Map<String, String> flavorMap = getFlavorAttributes();
+            Map<String, String> flavorMap = getFlavorAttributes(flavorMatching);
 
             Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
             compile.setVisible(false);
-            compile.setDescription("## Internal use, do not manually configure ##");
+            compile.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compile.setExtendsFrom(compileConfigs);
             compile.setCanBeConsumed(false);
-            applyAttributes(compile, buildType, ArtifactContent.MAIN, flavorMap);
+            applyAttributes(compile, buildType, flavorMap);
             applyTransforms(project, compile);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
             annotationProcessor.setVisible(false);
-            annotationProcessor.setDescription("## Internal use, do not manually configure ##");
+            annotationProcessor.setDescription("Resolved configuration for annotation-processor for variant: " + variantName);
             annotationProcessor.setExtendsFrom(annotationConfigs);
             annotationProcessor.setCanBeConsumed(false);
 
             Configuration jackPlugin =
                     project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");
             jackPlugin.setVisible(false);
-            jackPlugin.setDescription("## Internal use, do not manually configure ##");
+            jackPlugin.setDescription("Resolved configuration for jack plugins for variant: " + variantName);
             jackPlugin.setExtendsFrom(jackPluginConfigs);
             jackPlugin.setCanBeConsumed(false);
 
@@ -260,77 +244,34 @@ public class VariantDependencies {
                                             : "_" + variantName + "Apk");
 
             apk.setVisible(false);
-            apk.setDescription("## Internal use, do not manually configure ##");
+            apk.setDescription("Resolved configuration for runtime for variant: " + variantName);
             apk.setExtendsFrom(apkConfigs);
-            applyAttributes(apk, buildType, ArtifactContent.MAIN, flavorMap);
+            applyAttributes(apk, buildType, flavorMap);
             applyTransforms(project, apk);
             apk.setCanBeConsumed(false);
 
+            Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
+            wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
+            wearApp.setExtendsFrom(wearAppConfigs);
+            applyAttributes(wearApp, buildType, flavorMap);
+            wearApp.setCanBeConsumed(false);
+
             Configuration publish = null;
-            Configuration archives = null;
-            Configuration mapping = null;
-            Configuration classes = null;
-            Configuration metadata = null;
-            Configuration manifest = null;
 
             if (publishVariant) {
                 // this is the configuration that contains the artifacts for inter-module
                 // dependencies and building.
                 publish = project.getConfigurations().maybeCreate(variantName);
                 publish.setDescription("Published Configuration for Variant " + variantName);
-                applyAttributes(publish, buildType, ArtifactContent.MAIN, flavorMap);
-                publish.setCanBeResolved(false);
+                Map<String, String> flavorMap2 = getFlavorAttributes(null);
 
-                // this is the configuration that contains the artifacts for publishing
-                // TODO find better names between publish and archives?
-                archives = project.getConfigurations().maybeCreate(variantName + "Archives");
-                archives.setDescription("Published archives Configuration for Variant " + variantName);
-                applyAttributes(archives, buildType, ArtifactContent.ARCHIVES, flavorMap);
-                archives.setCanBeResolved(false);
+                applyAttributes(publish, buildType, flavorMap2);
+                publish.setCanBeResolved(false);
 
                 // if the variant is not a library, then the publishing configuration should
                 // not extend from the apkConfigs. It's mostly there to access the artifact from
                 // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
-                    publish.setExtendsFrom(apkConfigs);
-                    archives.setExtendsFrom(apkConfigs);
-                } else if (variantType == VariantType.DEFAULT) {
-                    // for apps we need a bunch of other configs for separate test projects.
-
-                    // create configuration for -metadata.
-                    metadata = project.getConfigurations()
-                            .create(variantName + CONFIGURATION_METADATA);
-                    metadata.setDescription("Published APKs metadata for Variant " + variantName);
-                    applyAttributes(metadata, buildType, ArtifactContent.METADATA, flavorMap);
-                    metadata.setCanBeResolved(false);
-
-                    // create configuration for -mapping and -classes.
-                    mapping = project.getConfigurations()
-                            .maybeCreate(variantName + CONFIGURATION_MAPPING);
-                    mapping.setDescription(
-                            "Published mapping configuration for Variant " + variantName);
-                    applyAttributes(mapping, buildType, ArtifactContent.MAPPING, flavorMap);
-                    mapping.setCanBeResolved(false);
-
-                    classes = project.getConfigurations()
-                            .maybeCreate(variantName + CONFIGURATION_CLASSES);
-                    classes.setDescription(
-                            "Published classes configuration for Variant " + variantName);
-                    applyAttributes(classes, buildType, ArtifactContent.CLASSES, flavorMap);
-                    classes.setCanBeResolved(false);
-
-                    // create configuration for -manifest
-                    manifest =
-                            project.getConfigurations()
-                                    .maybeCreate(variantName + CONFIGURATION_MANIFEST);
-                    manifest.setDescription(
-                            "Published manifest configuration for Variant " + variantName);
-                    applyAttributes(manifest, buildType, ArtifactContent.MANIFEST, flavorMap);
-                    manifest.setCanBeResolved(false);
-
-                    // because we need the transitive dependencies for the classes, extend the compile config.
-                    classes.setExtendsFrom(compileConfigs);
-                }
+                publish.setExtendsFrom(apkConfigs);
             }
 
             DependencyChecker checker = new DependencyChecker(
@@ -346,32 +287,30 @@ public class VariantDependencies {
                     compile,
                     apk,
                     publish,
-                    archives,
                     annotationProcessor,
                     jackPlugin,
-                    mapping,
-                    classes,
-                    metadata,
-                    manifest,
+                    wearApp,
                     testedVariantDependencies,
                     testedVariantOutput);
         }
 
         /**
          * Returns a map of Configuration attributes containing all the flavor values.
+         * @param flavorMatching a list of override for flavor matching or for new attributes.
          */
-        private Map<String, String> getFlavorAttributes() {
+        private Map<String, String> getFlavorAttributes(
+                @Nullable Map<String, String> flavorMatching) {
             List<CoreProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
             Map<String, String> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
+
+            // first go through the product flavors and add matching attributes
             for (CoreProductFlavor f : productFlavors) {
-                String dimension = f.getDimension();
-                if (dimension == null) {
-                    // happen when there's only 1 dimension
-                    dimension = CONFIG_ATTR_FLAVOR_SINGLE;
-                } else {
-                    dimension = CONFIG_ATTR_FLAVOR_PREFIX + dimension;
-                }
-                map.put(dimension, f.getName());
+                map.put(CONFIG_ATTR_FLAVOR_PREFIX + f.getDimension(), f.getName());
+            }
+
+            // then go through the override or new attributes.
+            if (flavorMatching != null) {
+                map.putAll(flavorMatching);
             }
 
             return map;
@@ -380,15 +319,14 @@ public class VariantDependencies {
         private static void applyAttributes(
                 @NonNull Configuration configuration,
                 @NonNull String buildType,
-                @NonNull ArtifactContent content,
                 @NonNull Map<String, String> flavorMap) {
             configuration.attribute(CONFIG_ATTR_BUILD_TYPE, buildType);
             configuration.attributes(flavorMap);
-
-            configuration.attribute(CONFIG_ATTR_CONTENT, content.name());
         }
 
-        private void applyTransforms(Project project, Configuration configuration) {
+        private void applyTransforms(
+                @NonNull Project project,
+                @NonNull Configuration configuration) {
             configuration.getResolutionStrategy().registerTransform(AarTransform.class,
                     transform -> {
                         final AarTransform aarTransform = (AarTransform) transform;
@@ -416,13 +354,9 @@ public class VariantDependencies {
             @NonNull Configuration compileConfiguration,
             @NonNull Configuration packageConfiguration,
             @Nullable Configuration publishConfiguration,
-            @Nullable Configuration archiveConfiguration,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
-            @Nullable Configuration mappingConfiguration,
-            @Nullable Configuration classesConfiguration,
-            @Nullable Configuration metadataConfiguration,
-            @Nullable Configuration manifestConfiguration,
+            @NonNull Configuration wearAppConfiguration,
             @Nullable VariantDependencies testedVariantDependencies,
             @Nullable AndroidDependency testedVariantOutput) {
         this.variantName = variantName;
@@ -430,13 +364,9 @@ public class VariantDependencies {
         this.compileConfiguration = compileConfiguration;
         this.packageConfiguration = packageConfiguration;
         this.publishConfiguration = publishConfiguration;
-        this.archivesConfiguration = archiveConfiguration;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
-        this.mappingConfiguration = mappingConfiguration;
-        this.classesConfiguration = classesConfiguration;
-        this.metadataConfiguration = metadataConfiguration;
-        this.manifestConfiguration = manifestConfiguration;
+        this.wearAppConfiguration = wearAppConfiguration;
         this.testedVariantDependencies = testedVariantDependencies;
         this.testedVariantOutput = testedVariantOutput;
     }
@@ -460,11 +390,6 @@ public class VariantDependencies {
         return publishConfiguration;
     }
 
-    @Nullable
-    public Configuration getArchivesConfiguration() {
-        return archivesConfiguration;
-    }
-
     @NonNull
     public Configuration getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
@@ -475,24 +400,9 @@ public class VariantDependencies {
         return jackPluginConfiguration;
     }
 
-    @Nullable
-    public Configuration getMappingConfiguration() {
-        return mappingConfiguration;
-    }
-
-    @Nullable
-    public Configuration getClassesConfiguration() {
-        return classesConfiguration;
-    }
-
-    @Nullable
-    public Configuration getMetadataConfiguration() {
-        return metadataConfiguration;
-    }
-
-    @Nullable
-    public Configuration getManifestConfiguration() {
-        return manifestConfiguration;
+    @NonNull
+    public Configuration getWearAppConfiguration() {
+        return wearAppConfiguration;
     }
 
     public void setDependencies(

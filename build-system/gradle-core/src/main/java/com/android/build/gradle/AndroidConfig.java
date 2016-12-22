@@ -39,6 +39,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 
@@ -149,4 +150,7 @@ public interface AndroidConfig {
 
     /** Data Binding options. */
     DataBindingOptions getDataBinding();
+
+    @NonNull
+    Map<String, String> getFlavorMatchingStrategy();
 }

@@ -43,7 +43,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -384,68 +383,13 @@ public class ApplicationTaskManager extends TaskManager {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
-        if (Boolean.TRUE.equals(unbundledWearApp)) {
-            if (hasWearAppDependency(variantData)) {
-                androidBuilder.getErrorReporter().handleSyncError(
-                        scope.getFullVariantName(),
-                        SyncIssue.TYPE_DEPENDENCY_WEAR_APK_WITH_UNBUNDLED,
-                        String.format(
-                                "Wear app unbundling is turned on but a dependency "
-                                        + "on a wear App has been found for variant %s",
-                                scope.getFullVariantName()));
-            } else {
-                createGenerateMicroApkDataTask(tasks, scope, null);
-            }
-        } else if (variantConfiguration.getBuildType().isEmbedMicroApp()) {
-            // get all possible configurations for the variant. We'll take the highest priority
-            // of them that have a file.
-            List<String> wearConfigNames = variantData.getWearConfigNames();
 
-            for (String configName : wearConfigNames) {
-                Configuration config = project.getConfigurations().findByName(configName);
-                // this shouldn't happen, but better safe.
-                if (config == null) {
-                    continue;
-                }
-
-                Set<File> file = config.resolve();
-
-                int count = file.size();
-                if (count == 1) {
-                    createGenerateMicroApkDataTask(tasks, scope, config);
-                    // found one, bail out.
-                    return;
-                } else if (count > 1) {
-                    androidBuilder.getErrorReporter().handleSyncError(
-                            configName,
-                            SyncIssue.TYPE_DEPENDENCY_WEAR_APK_TOO_MANY,
-                            String.format(
-                                    "Configuration '%1$s' resolves to more than one apk.",
-                                    configName));
-
-                }
-            }
-        }
-    }
-
-    private boolean hasWearAppDependency(
-            BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        // get all possible configurations for the variant. We'll take the highest priority
-        // of them that have a file.
-        List<String> wearConfigNames = variantData.getWearConfigNames();
-
-        for (String configName : wearConfigNames) {
-            Configuration config = project.getConfigurations().findByName(configName);
-            // this shouldn't happen, but better safe.
-            if (config == null) {
-                continue;
-            }
-
-            if (!config.resolve().isEmpty()) {
-                return true;
-            }
+        Configuration wearApp = null;
+        if (!Boolean.TRUE.equals(unbundledWearApp)
+                && variantConfiguration.getBuildType().isEmbedMicroApp()) {
+            wearApp = variantData.getVariantDependency().getWearAppConfiguration();
         }
 
-        return false;
+        createGenerateMicroApkDataTask(tasks, scope, wearApp);
     }
 }

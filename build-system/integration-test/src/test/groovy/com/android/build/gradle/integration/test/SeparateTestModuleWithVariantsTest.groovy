@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * Checking the manifest merging for the test modules.
  */
 @CompileStatic
-class SeparateTestModuleTest {
+class SeparateTestModuleWithVariantsTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModule")
@@ -96,8 +96,7 @@ android {
 
         assertThat(toInstall).hasSize(1)
         assertThat(toInstall.first().getTargetProjectPath()).isEqualTo(":app")
-        // FIXME we can't know the variant yet because it's not passed through the new dependency scheme.
-        //assertThat(toInstall.first().getTargetVariant()).isEqualTo("debug")
+        assertThat(toInstall.first().getTargetVariant()).isEqualTo("debug")
     }
 
     private void addInstrumentationToManifest(){

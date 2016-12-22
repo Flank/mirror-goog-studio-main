@@ -54,8 +54,6 @@ public abstract class ExtractTransform extends ArtifactTransform {
 
     protected File extractAar(@NonNull File aarFile) throws IOException {
         Consumer<File> unzipAarAction = (File explodedDir) -> {
-            System.out.println("\tinto: " + explodedDir);
-
             LibraryCache.unzipAar(aarFile, explodedDir, project);
             // verify that we have a classes.jar, if we don't just create an empty one.
             File classesJar = new File(new File(explodedDir, FD_JARS), FN_CLASSES_JAR);

@@ -31,6 +31,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ConfigurablePublishArtifact;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.tasks.TaskDependency;
@@ -76,6 +77,7 @@ public class AndroidArtifacts {
     // types for additional artifacts to go with APK
     public static final String TYPE_MAPPING = "android-mapping";
     public static final String TYPE_METADATA = "android-metadata";
+    public static final String TYPE_TESTED_MANIFEST = "android-tested-manifest";
 
     public static PublishArtifact getAarArtifact(
             @NonNull AbstractArchiveTask task,
@@ -120,34 +122,16 @@ public class AndroidArtifacts {
                 name, TYPE_ATOM_BUNDLE, TYPE_ATOM_BUNDLE, classifier, outputFileSupplier);
     }
 
-    public static PublishArtifact buildManifestArtifact(
-            @NonNull String name,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(
-                name, "xml", TYPE_MANIFEST, null /*classifier*/, outputFileSupplier);
+    public static void publishArtifact() {
+
     }
 
-    public static PublishArtifact buildMappingArtifact(
-            @NonNull String name,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(
-                name, "map", TYPE_MAPPING, null /*classifier*/, outputFileSupplier);
-    }
-
-    public static PublishArtifact buildMetadataArtifact(
-            @NonNull String name,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(
-                name, "mtd", TYPE_METADATA, null /*classifier*/, outputFileSupplier);
-    }
-
-    public static void publish(
+    public static void publishIntermediateArtifact(
             Project project,
             String publishConfigName,
             File file,
             String builtBy,
             String type) {
-        //System.out.println("Publishing " + file + " to " + project + ":" + publishConfigName + "@" + type);
         project.getConfigurations().getByName(publishConfigName).getOutgoing().variants(
                 (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
                     variants.create(type, (variant) ->
@@ -158,6 +142,23 @@ public class AndroidArtifacts {
 
                 });
     }
+    //
+    //public static void publishIntermediateArtifact(
+    //        Configuration configuration,
+    //        File file,
+    //        String builtBy,
+    //        String type) {
+    //    configuration.getOutgoing().variants(
+    //            (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
+    //                variants.create(type, (variant) ->
+    //                        variant.artifact(file, (artifact) -> {
+    //                            artifact.setType(type);
+    //                            artifact.builtBy(project.getTasks().getByName(builtBy));
+    //                        }));
+    //
+    //            });
+    //}
+    //
 
     private static class AndroidArtifact implements PublishArtifact {
 

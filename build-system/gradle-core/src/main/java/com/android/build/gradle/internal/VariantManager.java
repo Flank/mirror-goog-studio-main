@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_SINGLE;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
@@ -46,6 +45,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -60,8 +60,10 @@ import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -425,6 +427,7 @@ public class VariantManager implements VariantModel {
                     .setPublishVariant(false)
                     .setTestedVariantType(testedVariantType)
                     .addProviders(testVariantProviders)
+                    .setFlavorMatching(extension.getFlavorMatchingStrategy())
                     .addTestedVariant(testedVariantData.getVariantConfiguration(),
                             testedVariantData.getVariantDependency());
 
@@ -476,29 +479,66 @@ public class VariantManager implements VariantModel {
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
         project.getDependencies().attributesSchema(schema -> {
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
-            schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_CONTENT, String.class));
         });
 
         if (productFlavors.isEmpty()) {
+            // also create a strategy for the flavor matching one.
+            project.getDependencies().attributesSchema(schema -> {
+                for (String flavorDimension : extension.getFlavorMatchingStrategy().keySet()) {
+                    schema.attribute(
+                            Attribute.of(flavorDimension, String.class),
+                            strategy -> strategy.getCompatibilityRules()
+                                    .assumeCompatibleWhenMissing());
+                }
+            });
+
             createVariantDataForProductFlavors(Collections.emptyList());
         } else {
             List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
+            if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
+                androidBuilder.getErrorReporter().handleSyncError(
+                        "", SyncIssue.TYPE_GENERIC, "Flavor dimension name is now required even with only one dimension."
+                );
+            } else if (flavorDimensionList.size() == 1) {
+                String dimensionName = flavorDimensionList.get(0);
+                // if there's only one dimension, auto-assign the dimension to all the flavors.
+                for (ProductFlavorData<CoreProductFlavor> flavorData : productFlavors.values()) {
+                    CoreProductFlavor flavor = flavorData.getProductFlavor();
+                    if (flavor.getDimension() == null && flavor instanceof DefaultProductFlavor) {
+                        ((DefaultProductFlavor) flavor).setDimension(dimensionName);
+                    }
+                }
+            }
+
             // configure resolution strategy.
+            // could be null during sync.
+            Set<String> processedDimensions = new HashSet<>();
             if (flavorDimensionList != null) {
                 project.getDependencies().attributesSchema(schema -> {
                     for (String dimension : flavorDimensionList) {
+                        String dimensionName = CONFIG_ATTR_FLAVOR_PREFIX + dimension;
+                        processedDimensions.add(dimensionName);
                         schema.attribute(
-                                Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + dimension, String.class),
-                                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
+                                Attribute.of(dimensionName, String.class),
+                                strategy -> strategy.getCompatibilityRules()
+                                        .assumeCompatibleWhenMissing());
                     }
                 });
-            } else {
-                project.getDependencies().attributesSchema(schema -> {
-                    schema.attribute(Attribute.of(CONFIG_ATTR_FLAVOR_SINGLE, String.class),
-                            strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
-                });
             }
+
+            // also create a strategy for the flavor matching one.
+            project.getDependencies().attributesSchema(schema -> {
+                for (String flavorDimension : extension.getFlavorMatchingStrategy().keySet()) {
+                    if (!processedDimensions.contains(flavorDimension)) {
+                        schema.attribute(
+                                Attribute.of(flavorDimension, String.class),
+                                strategy -> strategy.getCompatibilityRules()
+                                        .assumeCompatibleWhenMissing());
+
+                    }
+                }
+            });
 
             // Create iterable to get GradleProductFlavor from ProductFlavorData.
             Iterable<CoreProductFlavor> flavorDsl =
@@ -527,7 +567,6 @@ public class VariantManager implements VariantModel {
             @NonNull com.android.builder.model.BuildType buildType,
             @NonNull List<? extends ProductFlavor> productFlavorList) {
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
-
 
         GradleVariantConfiguration variantConfig =
                 GradleVariantConfiguration.getBuilderForExtension(extension)
@@ -616,6 +655,7 @@ public class VariantManager implements VariantModel {
                         androidBuilder.getErrorReporter(),
                         variantConfig)
                 .setPublishVariant(true)
+                .setFlavorMatching(extension.getFlavorMatchingStrategy())
                 .addProviders(variantProviders);
 
         final VariantDependencies variantDep = builder.build();

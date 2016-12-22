@@ -694,26 +694,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return sourceFolders;
     }
 
-    /**
-     * Returns a list of configuration name for wear connection, from highest to lowest priority.
-     * @return list of config.
-     */
-    @NonNull
-    public List<String> getWearConfigNames() {
-        List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
-
-        // this is the wrong order, so let's reverse it as we gather the names.
-        final int count = providers.size();
-        List<String> names = Lists.newArrayListWithCapacity(count);
-        for (int i = count - 1 ; i >= 0; i--) {
-            DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) providers.get(i);
-
-            names.add(sourceSet.getWearAppConfigurationName());
-        }
-
-        return names;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

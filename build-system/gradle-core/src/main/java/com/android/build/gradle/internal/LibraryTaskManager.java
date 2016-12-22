@@ -164,7 +164,7 @@ public class LibraryTaskManager extends TaskManager {
                             = createMergeLibManifestsTask(tasks, variantScope);
 
                     // publish intermediate manifest file
-                    AndroidArtifacts.publish(
+                    AndroidArtifacts.publishIntermediateArtifact(
                             project,
                             publishConfigName,
                             new File(variantBundleDir, FN_ANDROID_MANIFEST_XML),
@@ -201,7 +201,7 @@ public class LibraryTaskManager extends TaskManager {
                             = createMergeAssetsTask(tasks, variantScope);
 
                     // publish intermediate assets folder
-                    AndroidArtifacts.publish(
+                    AndroidArtifacts.publishIntermediateArtifact(
                             project,
                             publishConfigName,
                             new File(variantBundleDir, FD_ASSETS),
@@ -235,7 +235,7 @@ public class LibraryTaskManager extends TaskManager {
                     final VariantOutputScope variantOutputScope = vod.getScope();
 
                     // publish the intermediates symbol file
-                    AndroidArtifacts.publish(
+                    AndroidArtifacts.publishIntermediateArtifact(
                             project,
                             publishConfigName,
                             new File(variantBundleDir, FN_RESOURCE_TEXT),
@@ -254,7 +254,7 @@ public class LibraryTaskManager extends TaskManager {
                     AndroidTask<AidlCompile> task = createAidlTask(tasks, variantScope);
 
                     // publish intermediate aidl folder
-                    AndroidArtifacts.publish(
+                    AndroidArtifacts.publishIntermediateArtifact(
                             project,
                             publishConfigName,
                             new File(variantBundleDir, FD_AIDL),
@@ -324,7 +324,7 @@ public class LibraryTaskManager extends TaskManager {
                                                 new PackageRenderscriptConfigAction(variantScope)));
 
         // publish the renderscript intermediate files
-        AndroidArtifacts.publish(
+        AndroidArtifacts.publishIntermediateArtifact(
                 project,
                 publishConfigName,
                 new File(variantBundleDir, FN_RENDERSCRIPT),
@@ -340,7 +340,7 @@ public class LibraryTaskManager extends TaskManager {
                         () -> createMergeFileTask(tasks, variantScope));
 
         // publish the proguard intermediate file
-        AndroidArtifacts.publish(
+        AndroidArtifacts.publishIntermediateArtifact(
                 project,
                 publishConfigName,
                 new File(variantBundleDir, FN_PROGUARD_TXT),
@@ -353,7 +353,7 @@ public class LibraryTaskManager extends TaskManager {
         copyLintTask.dependsOn(tasks, LINT_COMPILE);
 
         // publish the lint intermediate file
-        AndroidArtifacts.publish(
+        AndroidArtifacts.publishIntermediateArtifact(
                 project,
                 publishConfigName,
                 FileUtils.join(variantBundleDir, FD_RES),
@@ -370,7 +370,7 @@ public class LibraryTaskManager extends TaskManager {
             extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
 
             // publish intermediate annotation data
-            AndroidArtifacts.publish(
+            AndroidArtifacts.publishIntermediateArtifact(
                     project,
                     publishConfigName,
                     new File(variantBundleDir, FN_ANNOTATIONS_ZIP),
@@ -487,7 +487,7 @@ public class LibraryTaskManager extends TaskManager {
                             bundle.dependsOn(t.getName());
 
                             // publish the jni folder as intermediate
-                            AndroidArtifacts.publish(
+                            AndroidArtifacts.publishIntermediateArtifact(
                                     project,
                                     publishConfigName,
                                     jniLibsFolder,
@@ -515,14 +515,13 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(t -> {
                             // publish the intermediate classes.jar.
-                            AndroidArtifacts.publish(
+                            AndroidArtifacts.publishIntermediateArtifact(
                                     project,
                                     publishConfigName,
                                     mainClassJar,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JAR);
-                            // and again as a scoped jars
-                            AndroidArtifacts.publish(
+                            AndroidArtifacts.publishIntermediateArtifact(
                                     project,
                                     publishConfigName,
                                     mainClassJar,
@@ -530,7 +529,7 @@ public class LibraryTaskManager extends TaskManager {
                                     AndroidArtifacts.TYPE_JAR_SUB_PROJECTS);
 
                             // publish intermediate local jars as a folder
-                            AndroidArtifacts.publish(
+                            AndroidArtifacts.publishIntermediateArtifact(
                                     project,
                                     publishConfigName,
                                     localClassJarFolder,
@@ -538,7 +537,7 @@ public class LibraryTaskManager extends TaskManager {
                                     AndroidArtifacts.TYPE_LOCAL_JARS);
 
                             // publish the res jar
-                            AndroidArtifacts.publish(
+                            AndroidArtifacts.publishIntermediateArtifact(
                                     project,
                                     publishConfigName,
                                     mainResJar,
@@ -584,7 +583,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // add the artifact to the matching published-archives configuration
         project.getArtifacts().add(
-                variantData.getVariantDependency().getArchivesConfiguration().getName(),
+                publishConfigName,
                 AndroidArtifacts.getAarArtifact(bundle, publishConfigName));
 
         // if the variant is the default published, also add a default artifact to the
@@ -640,7 +639,7 @@ public class LibraryTaskManager extends TaskManager {
                         false /*processResources*/);
 
         // publish the intermediate res folder
-        AndroidArtifacts.publish(
+        AndroidArtifacts.publishIntermediateArtifact(
                 project,
                 publishConfigName,
                 resFolder,
@@ -661,7 +660,7 @@ public class LibraryTaskManager extends TaskManager {
                 tasks, task -> task.setPublicFile(publicTxt));
 
         // publish the intermediate public res file
-        AndroidArtifacts.publish(
+        AndroidArtifacts.publishIntermediateArtifact(
                 project,
                 publishConfigName,
                 publicTxt,

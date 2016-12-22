@@ -150,9 +150,15 @@ public class MergeManifests extends ManifestProcessorTask {
 
 
         if (microApkManifest != null) {
-            providers.add(new ConfigAction.ManifestProviderImpl(
-                    microApkManifest.getSingleFile(),
-                    "Wear App sub-manifest"));
+            // this is now always present if embedding is enabled, but it doesn't mean
+            // anything got embedded so the file may not run (the file path exists and is
+            // returned by the FC but the file doesn't exist.
+            File microManifest = microApkManifest.getSingleFile();
+            if (microManifest.isFile()) {
+                providers.add(new ConfigAction.ManifestProviderImpl(
+                        microManifest,
+                        "Wear App sub-manifest"));
+            }
         }
 
         if (compatibleScreensManifest != null) {

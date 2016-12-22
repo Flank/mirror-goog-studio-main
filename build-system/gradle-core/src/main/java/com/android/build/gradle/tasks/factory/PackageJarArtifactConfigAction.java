@@ -51,10 +51,25 @@ public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
         // add the class files (whether they are instrumented or not.
         jar.from(scope.getJavaOutputDir());
 
-        jar.setDestinationDir(new File(
+        jar.setDestinationDir(getDirectory());
+        jar.setArchiveName(getFileName());
+    }
+
+    @NonNull
+    private static String getFileName() {
+        return "classes.jar";
+    }
+
+    @NonNull
+    private File getDirectory() {
+        return new File(
                 scope.getGlobalScope().getIntermediatesDir(),
                 "classes-jar/" +
-                        scope.getVariantData().getVariantConfiguration().getDirName()));
-        jar.setArchiveName("classes.jar");
+                        scope.getVariantData().getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    public File getOutputFile() {
+        return new File(getDirectory(), getFileName());
     }
 }

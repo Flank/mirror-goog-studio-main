@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -50,7 +51,7 @@ import org.gradle.api.tasks.ParallelizableTask;
  *
  * <p>Tests in androidTest get that info form the
  * {@link VariantConfiguration#getTestedApplicationId()}, while the test modules get the info from
- * the {@link com.android.build.gradle.internal.publishing.AndroidArtifacts#buildManifestArtifact(String, FileSupplier)}
+ * the published intermediate manifest with type {@link AndroidArtifacts#TYPE_TESTED_MANIFEST}
  * of the tested app.</p>
  */
 @ParallelizableTask
@@ -224,16 +225,16 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         private final VariantScope scope;
 
         @Nullable
-        private final Configuration targetManifestConfiguration;
+        private final FileCollection targetManifest;
 
         public ConfigAction(@NonNull VariantScope scope) {
             this(scope, null);
         }
 
         public ConfigAction(
-                @NonNull VariantScope scope, @Nullable Configuration targetManifestConfiguration){
+                @NonNull VariantScope scope, @Nullable FileCollection targetManifest){
             this.scope = scope;
-            this.targetManifestConfiguration = targetManifestConfiguration;
+            this.targetManifest = targetManifest;
         }
 
         @NonNull
@@ -286,15 +287,13 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                         return config.getTargetSdkVersion().getApiString();
                     });
 
-            if (targetManifestConfiguration != null){
+            if (targetManifest != null){
                 // it is a task for the test module, get the tested application id from its manifest
+                // TODO: move the FileCollection as an input of the Task instead.
                 ConventionMappingHelper.map(processTestManifestTask, "testedApplicationId", () ->
                         AndroidManifest.getPackage(
-                                new FileWrapper(
-                                        targetManifestConfiguration
-                                                .getSingleFile().getAbsolutePath())));
-            }
-            else {
+                                new FileWrapper(targetManifest.getSingleFile().getAbsolutePath())));
+            } else {
                 ConventionMappingHelper.map(
                         processTestManifestTask, "testedApplicationId", () ->{
                             String testedApp = config.getTestedApplicationId();

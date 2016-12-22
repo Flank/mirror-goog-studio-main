@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
