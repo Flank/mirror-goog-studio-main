@@ -1,4 +1,4 @@
-load("//tools/base/bazel:bazel.bzl", "platform_filegroup")
+load("//tools/base/bazel:utils.bzl", "platform_filegroup")
 
 filegroup(
     name = "licenses",

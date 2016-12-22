@@ -214,6 +214,7 @@ config_setting(
 maven_repo(
     name = "offline_repo",
     artifacts = [
+        "//tools/data-binding:tools.compiler",
         "//tools/base/build-system/gradle",
         "//tools/base/build-system/gradle-experimental",
     ],

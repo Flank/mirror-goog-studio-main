@@ -1,6 +1,6 @@
 # Rules for generating parsers using ANTLR3.
 
-load(":utils.bzl", "create_option_file")
+load(":functions.bzl", "create_option_file")
 
 def _antlr_srcjar_impl(ctx):
   src_jar = ctx.outputs.src_jar

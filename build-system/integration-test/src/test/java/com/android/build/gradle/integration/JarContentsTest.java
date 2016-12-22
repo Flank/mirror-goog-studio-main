@@ -51,6 +51,7 @@ public class JarContentsTest {
                     "hierarchyviewer2lib",
                     "traceview");
 
+    // TODO: Handle NOTICE files in Bazel.
     private static final Set<String> GLOBAL_WHITELIST =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "META-INF/MANIFEST.MF");
 
@@ -175,7 +176,7 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/databinding/compiler/",
                 "api-versions.xml",
-                "META-INF/compiler_main.kotlin_module");
+                "META-INF/services/javax.annotation.processing.Processor");
 
         EXPECTED = expected.build();
     }
@@ -260,7 +261,8 @@ public class JarContentsTest {
                     continue;
                 }
 
-                if (actualName.startsWith("META-INF/services/")) {
+                if (actualName.endsWith(".kotlin_module")) {
+                    // TODO: Handle kotlin modules in Bazel.
                     continue;
                 }
 
