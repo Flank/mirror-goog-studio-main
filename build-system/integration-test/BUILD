@@ -150,7 +150,10 @@ java_test(
         "-Dtest.suite.jar=automatic-tests.jar",
         "-Djunit.parallel.threads=8",
     ],
-    tags = ["exclusive"],
+    tags = [
+        "exclusive",
+        "manual",
+    ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains
