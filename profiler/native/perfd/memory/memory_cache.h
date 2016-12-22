@@ -36,6 +36,12 @@ class MemoryCache {
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
+  // Saves a new HeapDumpInfo sample based on the dump_file_path and
+  // request_time parameters. This method returns false if a heap dump
+  // is still in progress (e.g. a matching EndHeapDump has not been
+  // called from a previous StartHeapDump). Otherwise this method returns
+  // true indicating a HeapDumpInfo has been added. On return, the response
+  // parameter is populated with the most recent HeapDumpInfo.
   bool StartHeapDump(const std::string& dump_file_path,
                      int64_t request_time,
                      proto::TriggerHeapDumpResponse* response);
