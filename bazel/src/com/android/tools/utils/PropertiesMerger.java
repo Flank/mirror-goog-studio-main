@@ -17,10 +17,9 @@
 package com.android.tools.utils;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility for merging Java properties files.
@@ -98,8 +99,13 @@ public class PropertiesMerger {
             }
         }
 
-        try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(output))) {
-            result.store(outputStream, mappings.toString());
-        }
+        ByteArrayOutputStream outputContent = new ByteArrayOutputStream();
+        result.store(outputContent, null);
+        List<String> lines =
+                Stream.of(outputContent.toString().split(System.lineSeparator()))
+                        .filter(s -> !s.startsWith("#"))
+                        .collect(Collectors.toList());
+
+        Files.write(output, lines);
     }
 }
