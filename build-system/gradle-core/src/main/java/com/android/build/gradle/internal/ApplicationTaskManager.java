@@ -328,8 +328,13 @@ public class ApplicationTaskManager extends TaskManager {
                             packagingScope.getVersionName(),
                             packagingScope.getVersionCode());
 
-            variantScope.getTransformManager().addTransform(
-                    tasks, variantScope, dependenciesApkBuilder);
+            Optional<AndroidTask<TransformTask>> dependenciesApkBuilderTask =
+                    variantScope
+                            .getTransformManager()
+                            .addTransform(tasks, variantScope, dependenciesApkBuilder);
+
+            dependenciesApkBuilderTask.ifPresent(
+                    task -> task.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope)));
 
             // and now the transform that will create a split APK for each slice.
             InstantRunSliceSplitApkBuilder slicesApkBuilder =

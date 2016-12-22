@@ -489,18 +489,21 @@ public final class GradleTestProject implements TestRule {
     private static String generateLocalRepoScript() {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
-        for (Path repo : getRepos()) {
-            script.append(
-                    String.format(
-                            "maven { url '%s' }\n",
-                            repo.toAbsolutePath().toString().replace("\\", "\\\\")));
+        for (Path repo : getLocalRepositories()) {
+            script.append(mavenSnippet(repo));
         }
         script.append("}\n");
         return script.toString();
     }
 
     @NonNull
-    public static List<Path> getRepos() {
+    public static String mavenSnippet(@NonNull Path repo) {
+        return String.format(
+                "maven { url '%s' }\n", repo.toAbsolutePath().toString().replace("\\", "\\\\"));
+    }
+
+    @NonNull
+    public static List<Path> getLocalRepositories() {
         List<Path> repos = new ArrayList<>();
 
         String customRepo = System.getenv(ENV_CUSTOM_REPO);

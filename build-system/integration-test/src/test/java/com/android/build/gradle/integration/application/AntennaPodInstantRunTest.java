@@ -20,7 +20,6 @@ import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.FailsUnderBazel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -29,19 +28,17 @@ import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-@Category(FailsUnderBazel.class) // AntennaPod sources are not in test data.
 public class AntennaPodInstantRunTest {
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
@@ -66,13 +63,15 @@ public class AntennaPodInstantRunTest {
                 "classpath \"com.android.tools.build:gradle:"
                         + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
                         + '"');
+
+        StringBuilder localRepositoriesSnippet = new StringBuilder();
+        for (Path repo : GradleTestProject.getLocalRepositories()) {
+            localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
+        }
+
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "jcenter\\(\\)",
-                "maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'} \n"
-                        + "        jcenter()");
+                project.getBuildFile(), "jcenter\\(\\)", localRepositoriesSnippet.toString());
+
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "buildToolsVersion = \".*\"",
@@ -120,7 +119,7 @@ public class AntennaPodInstantRunTest {
         getExecutor().run("clean");
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(
-                        project.model().withoutOfflineFlag().getMulti().getModelMap().get(":app"));
+                        project.model().getMulti().getModelMap().get(":app"));
 
         getExecutor()
                 .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
@@ -153,7 +152,7 @@ public class AntennaPodInstantRunTest {
 
     @NonNull
     private RunGradleTasks getExecutor() {
-        return project.executor().withoutOfflineFlag();
+        return project.executor();
     }
 
     private void makeHotSwapChange(int i) throws IOException {
