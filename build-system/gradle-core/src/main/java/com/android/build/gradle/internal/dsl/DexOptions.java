@@ -43,7 +43,6 @@ public class DexOptions extends DefaultDexOptions {
     }
 
     /** @deprecated ignored */
-    @SuppressWarnings("MethodMayBeStatic")
     @Deprecated
     public boolean getIncremental() {
         mErrorReporter.handleSyncWarning(
@@ -53,7 +52,6 @@ public class DexOptions extends DefaultDexOptions {
         return false;
     }
 
-    @SuppressWarnings({"UnusedParameters", "MethodMayBeStatic"})
     public void setIncremental(boolean ignored) {
         mErrorReporter.handleSyncWarning(
                 null,

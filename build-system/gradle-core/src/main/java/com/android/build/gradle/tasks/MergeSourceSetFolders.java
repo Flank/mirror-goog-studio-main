@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -185,14 +184,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getLibraries() {
         return libraries;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getShadersOutputDir() {
@@ -204,7 +201,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         this.shadersOutputDir = shadersOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getCopyApk() {
@@ -216,7 +212,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         this.copyApk = copyApk;
     }
 
-    @SuppressWarnings("unused")
     @Input
     @Optional
     public String getIgnoreAssets() {
@@ -239,7 +234,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
     // input list for the source folder based asset folders.
-    @SuppressWarnings("unused")
     @InputFiles
     public Set<File> getSourceFolderInputs() {
         List<AssetSet> sets = assetSetSupplier.get();
@@ -252,7 +246,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         return assetSetFolders;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public Set<File> getDependencyInputs() {

@@ -659,7 +659,6 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @Input
     public File getMakefile() {
         return makefile;
@@ -671,27 +670,23 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @OutputDirectory
     public File getJsonFolder() {
         return jsonFolder;
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @Input
     public File getNdkFolder() {
         return ndkFolder;
     }
 
-    @SuppressWarnings("unused")
     @Input
     public boolean isDebuggable() {
         return debuggable;
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @Optional
     @Input
     public List<String> getBuildArguments() {
@@ -699,7 +694,6 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @Optional
     @Input
     public List<String> getcFlags() {
@@ -707,7 +701,6 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @Optional
     @Input
     public List<String> getCppFlags() {
@@ -726,7 +719,6 @@ public abstract class ExternalNativeJsonGenerator {
         return soFolder;
     }
 
-    @SuppressWarnings("unused")
     @NonNull
     @Input
     public File getSdkFolder() {

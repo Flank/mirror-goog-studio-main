@@ -511,7 +511,6 @@ public class Extractor {
         return false;
     }
 
-    @SuppressWarnings("unused")
     static boolean hasSourceRetention(@NonNull AnnotationBinding a) {
         if (new String(a.getAnnotationType().readableName()).equals("java.lang.annotation.Retention")) {
             ElementValuePair[] pairs = a.getElementValuePairs();
@@ -532,7 +531,6 @@ public class Extractor {
         return false;
     }
 
-    @SuppressWarnings("unused")
     static boolean hasSourceRetention(@NonNull Annotation[] annotations) {
         for (Annotation annotation : annotations) {
             String typeName = Extractor.getFqn(annotation);
@@ -1524,7 +1522,6 @@ public class Extractor {
         return fqn.substring(0, last);
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public void setListIgnored(boolean listIgnored) {
         this.listIgnored = listIgnored;
     }

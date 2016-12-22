@@ -107,7 +107,6 @@ public class MergeDexAtomResClass extends BaseTask {
         }
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @NonNull
     public Collection<File> getResClassDirsCollection() {
@@ -125,7 +124,6 @@ public class MergeDexAtomResClass extends BaseTask {
     }
 
     @InputFiles
-    @SuppressWarnings("unused")
     @NonNull
     public Collection<File> getAtomDexDirCollection() {
         return getAtomDexDirs().values();
@@ -141,7 +139,6 @@ public class MergeDexAtomResClass extends BaseTask {
         this.atomDexDirs = atomDexDirs;
     }
 
-    @SuppressWarnings("unused")
     @OutputDirectories
     @NonNull
     public Collection<File> getTempDirCollection() {
@@ -158,7 +155,6 @@ public class MergeDexAtomResClass extends BaseTask {
         this.tempDirs = tempDirs;
     }
 
-    @SuppressWarnings("unused")
     @OutputDirectories
     @NonNull
     public Collection<File> getOutputDirCollection() {

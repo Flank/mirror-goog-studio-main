@@ -341,7 +341,6 @@ public class PackageAtom extends IncrementalTask {
         return PackagingUtils.getNoCompressPredicate(aaptOptions, getManifestFiles().get(atomName));
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @NonNull
     public Collection<File> getResourceFileCollections() {
@@ -358,7 +357,6 @@ public class PackageAtom extends IncrementalTask {
         this.resourceFiles = resourceFiles;
     }
 
-    @SuppressWarnings("unused")
     @OutputFiles
     @NonNull
     public Collection<File> getOutputFileCollections() {
@@ -375,7 +373,6 @@ public class PackageAtom extends IncrementalTask {
         this.outputFiles = outputFiles;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     @NonNull
@@ -394,7 +391,6 @@ public class PackageAtom extends IncrementalTask {
         this.javaResourceFiles = javaResourceFiles;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     @NonNull
@@ -413,7 +409,6 @@ public class PackageAtom extends IncrementalTask {
         this.jniFolders = jniFolders;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     @NonNull
@@ -432,7 +427,6 @@ public class PackageAtom extends IncrementalTask {
         this.dexFolders = dexFolders;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     @NonNull
@@ -514,7 +508,6 @@ public class PackageAtom extends IncrementalTask {
     /*
      * We don't really use this. But this forces a full build if the native packaging mode changes.
      */
-    @SuppressWarnings("unused")
     @Input
     public List<String> getNativeLibrariesPackagingModeName() {
         return getManifestFiles()
@@ -527,7 +520,6 @@ public class PackageAtom extends IncrementalTask {
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unused")
     @Input
     public Collection<String> getNoCompressExtensions() {
         return MoreObjects.firstNonNull(

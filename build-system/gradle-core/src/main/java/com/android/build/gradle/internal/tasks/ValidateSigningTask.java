@@ -63,7 +63,6 @@ public class ValidateSigningTask extends BaseTask {
      */
     @Input
     @Optional
-    @SuppressWarnings("unused")
     public String getStoreLocation() {
         File f = signingConfig.getStoreFile();
         if (f != null) {

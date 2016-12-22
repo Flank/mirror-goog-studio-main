@@ -39,7 +39,6 @@ public class ExternalNativeBuildJsonTask extends BaseTask {
         generator.build();
     }
 
-    @SuppressWarnings("unused")
     @Nested
     public ExternalNativeJsonGenerator getExternalNativeJsonGenerator() {
         return generator;

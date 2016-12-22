@@ -5,19 +5,27 @@
     <groovy codeStyle="LEGACY" />
   </component>
   <component name="EntryPointsManager">
-    <entry_points version="2.0" />
-    <list size="11">
-      <item index="0" class="java.lang.String" itemvalue="org.gradle.api.tasks.TaskAction" />
-      <item index="1" class="java.lang.String" itemvalue="org.gradle.model.Defaults" />
-      <item index="2" class="java.lang.String" itemvalue="org.gradle.model.Finalize" />
-      <item index="3" class="java.lang.String" itemvalue="org.gradle.model.Model" />
-      <item index="4" class="java.lang.String" itemvalue="org.gradle.model.Mutate" />
-      <item index="5" class="java.lang.String" itemvalue="org.gradle.model.Validate" />
-      <item index="6" class="java.lang.String" itemvalue="org.gradle.platform.base.BinaryTasks" />
-      <item index="7" class="java.lang.String" itemvalue="org.gradle.platform.base.BinaryType" />
-      <item index="8" class="java.lang.String" itemvalue="org.gradle.platform.base.ComponentBinaries" />
-      <item index="9" class="java.lang.String" itemvalue="org.gradle.platform.base.ComponentType" />
-      <item index="10" class="java.lang.String" itemvalue="org.gradle.platform.base.LanguageType" />
+    <list size="20">
+      <item index="0" class="java.lang.String" itemvalue="org.gradle.api.tasks.Input" />
+      <item index="1" class="java.lang.String" itemvalue="org.gradle.api.tasks.InputDirectory" />
+      <item index="2" class="java.lang.String" itemvalue="org.gradle.api.tasks.InputFile" />
+      <item index="3" class="java.lang.String" itemvalue="org.gradle.api.tasks.InputFiles" />
+      <item index="4" class="java.lang.String" itemvalue="org.gradle.api.tasks.Nested" />
+      <item index="5" class="java.lang.String" itemvalue="org.gradle.api.tasks.OutputDirectories" />
+      <item index="6" class="java.lang.String" itemvalue="org.gradle.api.tasks.OutputDirectory" />
+      <item index="7" class="java.lang.String" itemvalue="org.gradle.api.tasks.OutputFile" />
+      <item index="8" class="java.lang.String" itemvalue="org.gradle.api.tasks.OutputFiles" />
+      <item index="9" class="java.lang.String" itemvalue="org.gradle.api.tasks.TaskAction" />
+      <item index="10" class="java.lang.String" itemvalue="org.gradle.model.Defaults" />
+      <item index="11" class="java.lang.String" itemvalue="org.gradle.model.Finalize" />
+      <item index="12" class="java.lang.String" itemvalue="org.gradle.model.Model" />
+      <item index="13" class="java.lang.String" itemvalue="org.gradle.model.Mutate" />
+      <item index="14" class="java.lang.String" itemvalue="org.gradle.model.Validate" />
+      <item index="15" class="java.lang.String" itemvalue="org.gradle.platform.base.BinaryTasks" />
+      <item index="16" class="java.lang.String" itemvalue="org.gradle.platform.base.BinaryType" />
+      <item index="17" class="java.lang.String" itemvalue="org.gradle.platform.base.ComponentBinaries" />
+      <item index="18" class="java.lang.String" itemvalue="org.gradle.platform.base.ComponentType" />
+      <item index="19" class="java.lang.String" itemvalue="org.gradle.platform.base.LanguageType" />
     </list>
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
@@ -48,7 +56,7 @@
       </value>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="ProjectType">
