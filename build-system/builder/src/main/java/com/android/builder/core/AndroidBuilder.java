@@ -1034,11 +1034,11 @@ public class AndroidBuilder {
      * @throws InterruptedException failed
      * @throws LoggedErrorException failed
      */
-    public void compileAllAidlFiles(@NonNull List<File> sourceFolders,
+    public void compileAllAidlFiles(@NonNull Collection<File> sourceFolders,
                                     @NonNull File sourceOutputDir,
                                     @Nullable File packagedOutputDir,
                                     @Nullable Collection<String> packageWhiteList,
-                                    @NonNull List<File> importFolders,
+                                    @NonNull Collection<File> importFolders,
                                     @Nullable DependencyFileProcessor dependencyFileProcessor,
                                     @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, LoggedErrorException, ProcessException {
@@ -1526,7 +1526,7 @@ public class AndroidBuilder {
     public void createJacocoReportWithJackReporter(
             @NonNull File coverageFile,
             @NonNull File reportDir,
-            @NonNull List<File> sourceDirs,
+            @NonNull Collection<File> sourceDirs,
             @NonNull String reportName,
             @NonNull File metadataFile) throws ProcessException {
 
