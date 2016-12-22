@@ -10,6 +10,12 @@ new_local_repository(
     path = 'external/googletest/googletest'
 )
 
+new_local_repository(
+    name = 'AntennaPod',
+    build_file = 'tools/base/build-system/integration-test/AntennaPod.BUILD',
+    path = 'external/AntennaPod'
+)
+
 local_repository(
     name = "protobuf_repo",
     path = "external/protobuf",
