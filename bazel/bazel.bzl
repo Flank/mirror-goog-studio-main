@@ -1,169 +1,7 @@
-load(":utils.bzl", "create_java_compiler_args", "explicit_target")
-
-def _kotlin_jar_impl(ctx):
-
-  class_jar = ctx.outputs.class_jar
-
-  all_deps = set(ctx.files.deps)
-  all_deps += set(ctx.files._kotlin)
-  for this_dep in ctx.attr.deps:
-    if hasattr(this_dep, "java"):
-      all_deps += this_dep.java.transitive_runtime_deps
-
-  args, option_files = create_java_compiler_args(ctx, class_jar.path,
-                                                 all_deps)
-
-  cmd = ctx.executable._kotlinc.path + " " + " ".join(args)
-  ctx.action(
-    inputs = [ctx.executable._kotlinc] + ctx.files.srcs + list(all_deps) + option_files,
-    outputs = [class_jar],
-    mnemonic = "kotlinc",
-    command = cmd,
-  )
-
-_kotlin_jar = rule(
-    attrs = {
-        "srcs": attr.label_list(
-            non_empty = True,
-            allow_files = True,
-        ),
-        "deps": attr.label_list(
-            mandatory = False,
-            allow_files = FileType([".jar"]),
-        ),
-        "_kotlinc": attr.label(
-            executable = True,
-            cfg = "host",
-            default = Label("//tools/base/bazel:kotlinc"),
-            allow_files = True),
-        "_kotlin": attr.label(
-            default = Label("//tools/base/bazel:kotlin-runtime"),
-            allow_files = True),
-    },
-    outputs = {
-        "class_jar": "lib%{name}.jar",
-    },
-    implementation = _kotlin_jar_impl,
-)
-
-def _groovy_jar_impl(ctx):
-  all_deps = set(ctx.files.deps)
-  for this_dep in ctx.attr.deps:
-    if hasattr(this_dep, "java"):
-      # Groovy needs the class to be loadable so it cannot work with ijars and needs the full jars.
-      all_deps += this_dep.java.transitive_runtime_deps
-
-  class_jar = ctx.outputs.class_jar
-
-  args, option_files = create_java_compiler_args(ctx, class_jar.path,
-                                                 all_deps)
-
-  cmd = ctx.executable._groovy.path + " " + " ".join(args)
-  ctx.action(
-      inputs = [ctx.executable._groovy] + ctx.files.srcs + list(all_deps) + option_files,
-      outputs = [class_jar],
-      mnemonic = "groovyc",
-      command = cmd
-  )
-
-groovy_jar = rule(
-    attrs = {
-        "srcs": attr.label_list(
-            non_empty = True,
-            allow_files = True,
-        ),
-        "deps": attr.label_list(
-            mandatory = False,
-            allow_files = FileType([".jar"]),
-        ),
-        "_groovy": attr.label(
-            executable = True,
-            cfg = "host",
-            default = Label("//tools/base/bazel:groovyc"),
-            allow_files = True),
-    },
-    outputs = {
-        "class_jar": "lib%{name}.jar",
-    },
-    implementation = _groovy_jar_impl,
-)
-
-def _fileset_impl(ctx):
-  srcs = set(order="compile")
-  for src in ctx.attr.srcs:
-    srcs += src.files
-
-  remap = {}
-  for a, b in ctx.attr.maps.items():
-    if a.startswith("//"):
-      key = a[2:].replace(':', '/')
-    else:
-      key = ctx.label.package + "/" + a
-    remap[key] = b
-
-  cmd = ""
-  for f in ctx.files.srcs:
-    # Use short_path, which for outputs of other rules doesn't include "bazel-out" etc.
-    if f.short_path in remap:
-      dest = remap[f.short_path]
-      fd = ctx.new_file(dest)
-      cmd += "mkdir -p " + fd.dirname + "\n"
-      cmd += "cp -f " + f.path + " " + fd.path + "\n"
-
-  script = ctx.new_file(ctx.label.name + ".cmd.sh")
-  ctx.file_action(output = script, content = cmd)
-
-  # Execute the command
-  ctx.action(
-    inputs = (
-      ctx.files.srcs +
-      [script]
-    ),
-    outputs = ctx.outputs.outs,
-    mnemonic = "fileset",
-    command = "set -e; sh " + script.path,
-    use_default_shell_env = True,
-  )
-
-
-_fileset = rule(
-    executable=False,
-    attrs = {
-      "srcs": attr.label_list(allow_files=True),
-      "maps": attr.string_dict(mandatory=True, non_empty=True),
-      "outs": attr.output_list(mandatory=True, non_empty=True),
-    },
-    implementation = _fileset_impl,
-)
-
-def fileset(name, srcs=[], mappings={}, **kwargs):
-  outs = []
-  maps = {}
-  rem = []
-  for src in srcs:
-    done = False
-    for prefix, destination in mappings.items():
-      if src.startswith(prefix):
-        f = destination + src[len(prefix):];
-        maps[src] = f
-        outs += [f]
-        done = True
-    if not done:
-      rem += [src]
-
-  if outs:
-    _fileset(
-      name = name + ".map",
-      srcs = srcs,
-      maps = maps,
-      outs = outs
-    )
-
-  native.filegroup(
-    name = name,
-    srcs = outs + rem,
-    **kwargs
-  )
+load(":functions.bzl", "create_java_compiler_args", "explicit_target")
+load(":groovy.bzl", "groovy_jar", "groovy_stubs")
+load(":kotlin.bzl", "kotlin_jar")
+load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
 
 def _form_jar_impl(ctx):
   all_deps = set(ctx.files.deps)
@@ -231,14 +69,6 @@ def _iml_resources(name, resources, srcs):
   else:
     return []
 
-def _groovy_stubs(name, srcs=[]):
-  native.genrule(
-    name = name,
-    srcs = srcs,
-    outs = [name + ".jar"],
-    cmd = "./$(location //tools/base/bazel:groovy_stub_gen) -o $(@D)/" + name + ".jar $(SRCS);",
-    tools = ["//tools/base/bazel:groovy_stub_gen"],
-  )
 
 def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], javacopts=[], **kwargs):
 
@@ -250,7 +80,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
   jars = []
 
   if kotlins:
-    _kotlin_jar(
+    kotlin_jar(
         name = name + ".kotlins",
         srcs = srcs,
         deps = ["@local_jdk//:langtools-neverlink"] + deps,
@@ -260,7 +90,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
 
   if groovies:
     stub = name + ".groovies.stubs"
-    _groovy_stubs(
+    groovy_stubs(
         name = stub,
         srcs = groovies
     )
@@ -277,7 +107,6 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     name = name + ".javas" if not forms else name + ".pjavas",
     srcs = javas,
     javacopts = javacopts,
-    visibility = visibility,
     deps = None if not javas else deps + ["@local_jdk//:langtools-neverlink"],
     **kwargs
   )
@@ -289,18 +118,16 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     )
   jars += ["lib" + name + ".javas.jar"]
 
-  native.genrule(
-    name = name + ".deploy",
-    srcs = jars,
-    outs = [name + ".jar"],
-    tools = ["//tools/base/bazel:singlejar"],
-    cmd = "$(location //tools/base/bazel:singlejar) --jvm_flag=-Xmx1g $@ $(SRCS)",
+  singlejar_name = name + ".single"
+  singlejar(
+      name = singlejar_name,
+      srcs = jars,
   )
 
   native.java_library(
     name = name,
-    runtime_deps = deps + [":" + name + ".deploy"],
-    exports = exports + [":" + name + ".deploy"],
+    runtime_deps = deps + [":" + singlejar_name],
+    exports = exports + [":" + singlejar_name],
     visibility = visibility,
   )
 
@@ -429,55 +256,3 @@ def iml_module(name,
       visibility = ["//visibility:public"],
     )
 
-# Usage:
-# java_jarjar(
-#     name = <the name of the rule. The output of the rule will be ${name}.jar.
-#     srcs = <a list of all the jars to jarjar and include into the output jar>
-#     rules = <the rule file to apply>
-# )
-#
-# TODO: This rule is using anarres jarjar which doesn't produce stable zips (timestamps)
-# jarjar is available in bazel but the current version is old and uses ASM4, so no Java8
-# will migrate to it when it's fixed.
-def java_jarjar(name, rules, srcs=[], visibility=None):
-  native.genrule(
-      name = name,
-      srcs = srcs + [rules],
-      outs = [name + ".jar"],
-      tools = ["//tools/base/bazel:jarjar"],
-      cmd = ("$(location //tools/base/bazel:jarjar) --rules " +
-             "$(location " + rules + ") " +
-             " ".join(["$(location " + src + ")" for src in srcs]) + " " +
-             "--output '$@'"),
-      visibility = visibility,
-  )
-
-# Creates a filegroup for a given platform directory in the SDK.
-#
-# It excludes files that are not necessary for testing and take up space in the sandbox.
-def platform_filegroup(name, visibility = ["//visibility:public"]):
-  pattern = "*/" + name
-
-  native.filegroup(
-      name = name,
-      srcs = native.glob(
-          include = [pattern + "/**"],
-          exclude = [
-              pattern + "/skins/**",
-          ]
-      ),
-      visibility = visibility
-   )
-
-def merged_properties(name, srcs, mappings, visibility=None):
-  native.genrule(
-      name = name,
-      srcs = srcs,
-      outs = [name + ".properties"],
-      tools = ["//tools/base/bazel:properties_merger"],
-      visibility = visibility,
-      cmd = ("$(location //tools/base/bazel:properties_merger) " +
-             " ".join(["--mapping " + m for m in mappings]) + " " +
-             " ".join(["--input $(location " + src + ") " for src in srcs]) + " " +
-             "--output '$@'")
-  )

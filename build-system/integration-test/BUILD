@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:bazel.bzl", "groovy_jar")
+load("//tools/base/bazel:groovy.bzl", "groovy_jar")
 
 java_library(
     name = "integration-test",
@@ -129,7 +129,7 @@ java_test(
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
         "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.OnlineTests,com.android.build.gradle.integration.common.category.FailsUnderBazel",
     ],
-    #    shard_count = 16,
+    shard_count = 16,
     tags = ["manual"],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
@@ -150,7 +150,7 @@ java_test(
         "-Dtest.suite.jar=automatic-tests.jar",
         "-Djunit.parallel.threads=8",
     ],
-    tags = ["manual"],
+    tags = ["exclusive"],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains
