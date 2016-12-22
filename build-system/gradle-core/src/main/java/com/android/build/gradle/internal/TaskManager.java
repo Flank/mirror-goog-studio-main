@@ -2572,7 +2572,7 @@ public abstract class TaskManager {
         tasks.named(UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
     }
 
-    private AndroidTask<?> getValidateSigningTask(
+    protected AndroidTask<?> getValidateSigningTask(
             @NonNull TaskFactory tasks, @NonNull PackagingScope packagingScope) {
         ValidateSigningTask.ConfigAction configAction =
                 new ValidateSigningTask.ConfigAction(packagingScope);
