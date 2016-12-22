@@ -47,6 +47,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -89,8 +90,7 @@ import org.junit.runners.model.Statement;
 public final class GradleTestProject implements TestRule {
     public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
 
-    public static final File TEST_PROJECT_DIR =
-            TestUtils.getWorkspaceFile("tools/base/build-system/integration-test/test-projects");
+    public static final File TEST_PROJECT_DIR;
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
@@ -106,7 +106,6 @@ public final class GradleTestProject implements TestRule {
 
     public static final String GRADLE_TEST_VERSION;
     public static final String GRADLE_EXP_TEST_VERSION;
-    public static final String GRADLE_NIGHTLY_VERSION = SdkConstants.GRADLE_LATEST_VERSION;
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
@@ -126,62 +125,79 @@ public final class GradleTestProject implements TestRule {
     public static final File ANDROID_SDK_HOME;
 
     static {
-        assertThat(TEST_PROJECT_DIR).isDirectory();
+        try {
+            TEST_PROJECT_DIR =
+                    TestUtils.getWorkspaceFile(
+                            "tools/base/build-system/integration-test/test-projects");
+            assertThat(TEST_PROJECT_DIR).isDirectory();
 
-        String buildDirPath = System.getenv("TEST_TMPDIR");
-        assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
-        BUILD_DIR = new File(buildDirPath);
-        OUT_DIR = new File(BUILD_DIR, "tests");
-        GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
-        ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
+            String buildDirPath = System.getenv("TEST_TMPDIR");
+            assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
+            BUILD_DIR = new File(buildDirPath);
+            OUT_DIR = new File(BUILD_DIR, "tests");
+            GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
+            ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
-        boolean useNightly =
-                Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
-        GRADLE_TEST_VERSION =
-                useNightly ? GRADLE_NIGHTLY_VERSION : BasePlugin.GRADLE_MIN_VERSION.toString();
+            boolean useNightly =
+                    Boolean.parseBoolean(
+                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
 
-        // For now, the two are in sync.
-        GRADLE_EXP_TEST_VERSION = GRADLE_TEST_VERSION;
+            String nightlyVersion = getLatestGradleCheckedIn();
+            if (useNightly) {
+                assertNotNull("Failed to find latest nightly version.", nightlyVersion);
+            }
 
-        // These are some properties that we use in the integration test projects, when generating
-        // build.gradle files. In case you would like to change any of the parameters, for instance
-        // when testing cross product of versions of buildtools, compile sdks, plugin versions,
-        // there are corresponding system environment variable that you are able to set.
-        String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
-        DEFAULT_BUILD_TOOL_VERSION =
-                MoreObjects.firstNonNull(
-                        envBuildToolVersion, AndroidBuilder.MIN_BUILD_TOOLS_REV.toString());
+            GRADLE_TEST_VERSION =
+                    useNightly ? nightlyVersion : BasePlugin.GRADLE_MIN_VERSION.toString();
 
-        String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
-        ANDROID_GRADLE_PLUGIN_VERSION =
-                MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+            // For now, the two are in sync.
+            GRADLE_EXP_TEST_VERSION = GRADLE_TEST_VERSION;
 
-        String envJack = System.getenv().get("CUSTOM_JACK");
-        USE_JACK = !Strings.isNullOrEmpty(envJack);
+            // These are some properties that we use in the integration test projects, when generating
+            // build.gradle files. In case you would like to change any of the parameters, for instance
+            // when testing cross product of versions of buildtools, compile sdks, plugin versions,
+            // there are corresponding system environment variable that you are able to set.
+            String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
+            DEFAULT_BUILD_TOOL_VERSION =
+                    MoreObjects.firstNonNull(
+                            envBuildToolVersion, AndroidBuilder.MIN_BUILD_TOOLS_REV.toString());
 
-        IMPROVED_DEPENDENCY_RESOLUTION =
-                Strings.isNullOrEmpty(System.getenv().get("CUSTOM_DISABLE_IMPROVED_DEPENDENCY_RESOLUTION"));
+            String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
+            ANDROID_GRADLE_PLUGIN_VERSION =
+                    MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
-        String envCustomCompileSdk = Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
-        DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
+            String envJack = System.getenv().get("CUSTOM_JACK");
+            USE_JACK = !Strings.isNullOrEmpty(envJack);
 
-        String envCustomAndroidHome =
-                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
-        if (envCustomAndroidHome != null) {
-            ANDROID_HOME = new File(envCustomAndroidHome);
-        } else {
-            ANDROID_HOME = TestUtils.getSdk();
+            IMPROVED_DEPENDENCY_RESOLUTION =
+                    Strings.isNullOrEmpty(
+                            System.getenv().get("CUSTOM_DISABLE_IMPROVED_DEPENDENCY_RESOLUTION"));
+
+            String envCustomCompileSdk =
+                    Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
+            DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
+
+            String envCustomAndroidHome =
+                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
+            if (envCustomAndroidHome != null) {
+                ANDROID_HOME = new File(envCustomAndroidHome);
+            } else {
+                ANDROID_HOME = TestUtils.getSdk();
+            }
+            assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
+
+            String envCustomAndroidNdkHome =
+                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
+            if (envCustomAndroidNdkHome != null) {
+                ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
+            } else {
+                ANDROID_NDK_HOME = new File(ANDROID_HOME, SdkConstants.FD_NDK);
+            }
+        } catch (Throwable t) {
+            // Print something to stdout, to give us a chance to debug initialization problems.
+            System.out.println(Throwables.getStackTraceAsString(t));
+            throw t;
         }
-        assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
-
-        String envCustomAndroidNdkHome =
-                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
-        if (envCustomAndroidNdkHome != null) {
-            ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
-        } else {
-            ANDROID_NDK_HOME = new File(ANDROID_HOME, SdkConstants.FD_NDK);
-        }
-        assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
     }
 
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
@@ -287,6 +303,7 @@ public final class GradleTestProject implements TestRule {
     }
 
     /** Crawls the tools/external/gradle dir, and gets the latest gradle binary. */
+    @Nullable
     public static String getLatestGradleCheckedIn() {
         File gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle");
 
@@ -314,8 +331,11 @@ public final class GradleTestProject implements TestRule {
             }
         }
 
-        assertNotNull("No gradle binary found.", highestRevision);
-        return highestRevision.getFirst() + highestRevision.getSecond();
+        if (highestRevision == null) {
+            return null;
+        } else {
+            return highestRevision.getFirst() + highestRevision.getSecond();
+        }
     }
 
     /**
