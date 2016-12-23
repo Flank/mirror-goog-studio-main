@@ -42,6 +42,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,11 +85,12 @@ public class JackOptionsUtils {
                 .setMultiDex(config.isMultiDexEnabled())
                 .setMinSdkVersion(config.getMinSdkVersion());
 
-        /* Dex generation only for non-minified, native multidex, variants. */
+        /* Dex generation only for non-minified, native multidex, w/o JarJar. */
         builder.setGenerateDex(
                 !config.isMinifyEnabled()
                         && config.isMultiDexEnabled()
-                        && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion()));
+                        && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion())
+                        && config.getJarJarRuleFiles().isEmpty());
 
         //noinspection ConstantConditions - there is a default value for jackInProcess
         builder.setRunInProcess(
@@ -141,22 +143,14 @@ public class JackOptionsUtils {
         builder.setSourceCompatibility(compileOptions.getSourceCompatibility().toString())
                 .setEncoding(compileOptions.getEncoding());
 
-        /* Set JarJar rules */
+        /* Incremental setup - disabled for: test coverage. */
         Project project = scope.getGlobalScope().getProject();
-        List<File> jarJarRuleFiles = Lists.newArrayList();
-        for (File file : config.getJarJarRuleFiles()) {
-            jarJarRuleFiles.add(project.file(file));
-        }
-        builder.setJarJarRuleFiles(jarJarRuleFiles);
-
-        /* Incremental setup - disabled for: test coverage, jarjar. */
         Configuration annotationConfig =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
                                 project, scope, compileOptions, annotationConfig, logger)
-                        && !config.isTestCoverageEnabled()
-                        && jarJarRuleFiles.isEmpty();
+                        && !config.isTestCoverageEnabled();
         if (incremental) {
             builder.setIncrementalDir(getJackIncrementalDir(scope));
         }
@@ -212,6 +206,13 @@ public class JackOptionsUtils {
             builder.setProguardFiles(Lists.newArrayList(proguardFiles))
                     .setMappingFile(new File(scope.getProguardOutputFolder(), "mapping.txt"));
         }
+
+        /* Set JarJar rules */
+        List<File> jarJarRuleFiles = new ArrayList<>(config.getJarJarRuleFiles().size());
+        for (File file : config.getJarJarRuleFiles()) {
+            jarJarRuleFiles.add(project.file(file));
+        }
+        builder.setJarJarRuleFiles(jarJarRuleFiles);
 
         Map<String, String> additionalParameters = Maps.newHashMap();
         additionalParameters.put("jack.android.api-level.check", "false");
