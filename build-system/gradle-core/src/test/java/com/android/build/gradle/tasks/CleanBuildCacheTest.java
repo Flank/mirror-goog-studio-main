@@ -20,6 +20,7 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -47,10 +48,10 @@ public class CleanBuildCacheTest {
             task.clean();
             fail("expected NullPointerException");
         } catch (NullPointerException exception) {
-            assertEquals("buildCacheDirectory must not be null", exception.getMessage());
+            assertEquals("buildCache must not be null", exception.getMessage());
         }
 
-        task.setBuildCacheDirectory(buildCacheDir);
+        task.setBuildCache(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
         task.clean();
         assertThat(buildCacheDir).doesNotExist();
 

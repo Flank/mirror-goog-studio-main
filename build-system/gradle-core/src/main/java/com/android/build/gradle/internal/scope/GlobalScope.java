@@ -30,10 +30,13 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 
+import java.util.Optional;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -81,6 +84,12 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     private final EnumSet<OptionalCompilationStep> optionalCompilationSteps;
 
+    @NonNull
+    private final AndroidGradleOptions androidGradleOptions;
+
+    @NonNull
+    private final Optional<FileCache> buildCache;
+
     public GlobalScope(
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
@@ -99,6 +108,9 @@ public class GlobalScope implements TransformGlobalScope {
         reportsDir = new File(getBuildDir(), FD_REPORTS);
         outputsDir = new File(getBuildDir(), FD_OUTPUTS);
         optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
+        androidGradleOptions = new AndroidGradleOptions(project);
+        buildCache = getBuildCache(project, androidGradleOptions);
+        validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
     }
 
     @NonNull
@@ -244,5 +256,61 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public File getJacocoAgent() {
         return new File(getJacocoAgentOutputDirectory(), "jacocoagent.jar");
+    }
+
+    @NonNull
+    @Override
+    public AndroidGradleOptions getAndroidGradleOptions() {
+        return androidGradleOptions;
+    }
+
+    @NonNull
+    @Override
+    public Optional<FileCache> getBuildCache() {
+        return buildCache;
+    }
+
+    @NonNull
+    public static Optional<FileCache> getBuildCache(
+            @NonNull Project project, @NonNull AndroidGradleOptions androidGradleOptions) {
+        if (androidGradleOptions.isBuildCacheEnabled()) {
+            String buildCacheDirString = androidGradleOptions.getBuildCacheDir();
+            File buildCacheDir =
+                    androidGradleOptions.getBuildCacheDir() != null
+                            ? new File(buildCacheDirString)
+                            // Use a default directory if the build cache directory is not set
+                            : new File(FileUtils.join(
+                                    System.getProperty("user.home"), ".android", "build-cache"));
+            try {
+                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
+            } catch (Exception exception) {
+                project.getLogger().warn(
+                        "Unable to create the build cache at '{}'\n"
+                                + "Cause: {}\n"
+                                + "Build cache is therefore temporarily disabled.\n"
+                                + "Please fix the underlying cause if possible or file a bug.\n"
+                                + "To suppress this warning, disable the build cache by setting"
+                                + " android.enableBuildCache=false in the gradle.properties file.",
+                        buildCacheDir.getAbsolutePath(),
+                        exception.getMessage());
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Validate flag options.
+     */
+    public static void validateAndroidGradleOptions(
+            @NonNull Project project,
+            @NonNull AndroidGradleOptions andoiAndroidGradleOptions,
+            @NonNull Optional<FileCache> buildCache) {
+        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                && !buildCache.isPresent()) {
+            throw new InvalidUserDataException("Build cache must be enable to use improved "
+                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.");
+        }
     }
 }

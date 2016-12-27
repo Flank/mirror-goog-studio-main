@@ -17,8 +17,11 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.model.OptionalCompilationStep;
 
+import com.android.builder.utils.FileCache;
+import java.util.Optional;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -48,4 +51,16 @@ public interface TransformGlobalScope {
      * @return true if the step was specified in the command line arguments, false otherwise,
      */
     boolean isActive(OptionalCompilationStep step);
+
+    /**
+     * Returns an {@link AndroidGradleOptions} instance.
+     */
+    @NonNull
+    AndroidGradleOptions getAndroidGradleOptions();
+
+    /**
+     * Returns the (optional) build cache.
+     */
+    @NonNull
+    Optional<FileCache> getBuildCache();
 }

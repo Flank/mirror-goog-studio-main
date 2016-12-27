@@ -19,13 +19,11 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
-import java.io.File;
 import java.io.IOException;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -35,16 +33,16 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class CleanBuildCache extends BaseTask {
 
-    @Nullable private File buildCacheDirectory;
+    @Nullable private FileCache buildCache;
 
-    public void setBuildCacheDirectory(@NonNull File buildCacheDirectory) {
-        this.buildCacheDirectory = buildCacheDirectory;
+    public void setBuildCache(@NonNull FileCache buildCache) {
+        this.buildCache = buildCache;
     }
 
     @TaskAction
     public void clean() throws IOException {
-        Preconditions.checkNotNull(buildCacheDirectory, "buildCacheDirectory must not be null");
-        FileCache.getInstanceWithInterProcessLocking(buildCacheDirectory).delete();
+        Preconditions.checkNotNull(buildCache, "buildCache must not be null");
+        buildCache.delete();
     }
 
     @Immutable
@@ -70,11 +68,12 @@ public class CleanBuildCache extends BaseTask {
 
         @Override
         public void execute(@NonNull CleanBuildCache task) {
+            Preconditions.checkState(globalScope.getBuildCache().isPresent());
+
             task.setDescription("Deletes the build cache directory.");
             task.setGroup(BasePlugin.BUILD_GROUP);
             task.setVariantName("");
-            task.setBuildCacheDirectory(
-                    AndroidGradleOptions.getBuildCacheDir(globalScope.getProject()));
+            task.setBuildCache(globalScope.getBuildCache().get());
         }
     }
 }

@@ -158,12 +158,13 @@ public class ModelBuilder implements ToolingModelBuilder {
                     : null;
             taskManager.getDependencyManager().resolveDependencies(
                     variantData.getVariantDependency(),
-                    testedProjectPath);
+                    testedProjectPath,
+                    taskManager.getGlobalScope().getBuildCache());
             try {
                 //ResolveDependenciesTask.extractAarInParallel(
                 //        project,
                 //        variantData.getVariantConfiguration(),
-                //        AndroidGradleOptions.getBuildCache(project));
+                //        taskManager.getGlobalScope().getBuildCache());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
