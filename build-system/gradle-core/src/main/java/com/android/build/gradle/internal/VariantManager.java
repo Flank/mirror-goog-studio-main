@@ -417,7 +417,11 @@ public class VariantManager implements VariantModel {
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
             VariantDependencies.Builder builder = VariantDependencies
-                    .builder(project, androidBuilder.getErrorReporter(), testVariantConfig)
+                    .builder(
+                            project,
+                            variantData.getScope().getGlobalScope(),
+                            androidBuilder.getErrorReporter(),
+                            testVariantConfig)
                     .setPublishVariant(false)
                     .setTestedVariantType(testedVariantType)
                     .addProviders(testVariantProviders)
@@ -606,7 +610,11 @@ public class VariantManager implements VariantModel {
                 variantFactory.createVariantData(variantConfig, taskManager, recorder);
 
         VariantDependencies.Builder builder = VariantDependencies
-                .builder(project, androidBuilder.getErrorReporter(), variantConfig)
+                .builder(
+                        project,
+                        variantData.getScope().getGlobalScope(),
+                        androidBuilder.getErrorReporter(),
+                        variantConfig)
                 .setPublishVariant(true)
                 .addProviders(variantProviders);
 

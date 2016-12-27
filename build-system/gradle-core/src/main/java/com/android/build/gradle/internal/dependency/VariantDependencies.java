@@ -16,35 +16,27 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static org.gradle.api.artifacts.Configuration.State.RESOLVED;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ConfigurationProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
-import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.attributes.Attribute;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -123,6 +115,8 @@ public class VariantDependencies {
         @NonNull
         private final Project project;
         @NonNull
+        private final GlobalScope scope;
+        @NonNull
         private final ErrorReporter errorReporter;
         @NonNull
         private final GradleVariantConfiguration variantConfiguration;
@@ -142,11 +136,13 @@ public class VariantDependencies {
         private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
 
         protected Builder(
-            @NonNull Project project,
-            @NonNull ErrorReporter errorReporter,
-            @NonNull GradleVariantConfiguration variantConfiguration) {
+                @NonNull Project project,
+                @NonNull GlobalScope scope,
+                @NonNull ErrorReporter errorReporter,
+                @NonNull GradleVariantConfiguration variantConfiguration) {
 
             this.project = project;
+            this.scope = scope;
             this.errorReporter = errorReporter;
             this.variantConfiguration = variantConfiguration;
         }
@@ -397,7 +393,7 @@ public class VariantDependencies {
                     transform -> {
                         final AarTransform aarTransform = (AarTransform) transform;
                         aarTransform.setProject(project);
-                        aarTransform.setFileCache(AndroidGradleOptions.getBuildCache(project)
+                        aarTransform.setFileCache(scope.getBuildCache()
                                 .orElseThrow(() -> new RuntimeException(
                                         "aar transform can only work with the build cache")));
                     });
@@ -408,9 +404,10 @@ public class VariantDependencies {
 
     public static Builder builder(
             @NonNull Project project,
+            @NonNull GlobalScope scope,
             @NonNull ErrorReporter errorReporter,
             @NonNull GradleVariantConfiguration variantConfiguration) {
-        return new Builder(project, errorReporter, variantConfiguration);
+        return new Builder(project, scope, errorReporter, variantConfiguration);
     }
 
     private VariantDependencies(
