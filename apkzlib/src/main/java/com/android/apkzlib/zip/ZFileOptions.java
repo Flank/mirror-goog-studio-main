@@ -66,6 +66,11 @@ public class ZFileOptions {
     private boolean mSkipDataDescriptionValidation;
 
     /**
+     * Should validation of minimum zip version to extract be performed?
+     */
+    private boolean mSkipZipVersionToExtractValidation;
+
+    /**
      * Creates a new options object. All options are set to their defaults.
      */
     public ZFileOptions() {
@@ -204,5 +209,25 @@ public class ZFileOptions {
      */
     public void setSkipDataDescriptionValidation(boolean skip) {
         mSkipDataDescriptionValidation = skip;
+    }
+
+    /**
+     * Should the "minimum zip version to extract" field of the local and central headers be
+     * validated or not? By default they are, but some zip tools put weird values in there.
+     *
+     * @return should the "zip version to extract" field be ignored?
+     */
+    public boolean getSkipZipVersionToExtractValidation() {
+        return mSkipZipVersionToExtractValidation;
+    }
+
+    /**
+     * Sets whether the "zip version to extract" field validation should be skipped. See
+     * {@link #getSkipZipVersionToExtractValidation()}.
+     *
+     * @param skip should the "zip version to extract" field be ignored?
+     */
+    public void setSkipZipVersionToExtractValidation(boolean skip) {
+        mSkipZipVersionToExtractValidation = skip;
     }
 }

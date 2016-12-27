@@ -18,6 +18,7 @@ package com.android.apkzlib.zip;
 
 import com.android.apkzlib.utils.CachedSupplier;
 import com.android.apkzlib.zip.utils.MsDosDateTimeUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -28,7 +29,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +53,8 @@ class CentralDirectory {
     /**
      * Field in the central directory with the minimum version required to extract the entry.
      */
-    private static final ZipField.F2 F_VERSION_EXTRACT = new ZipField.F2(F_MADE_BY.endOffset(),
+    @VisibleForTesting
+    static final ZipField.F2 F_VERSION_EXTRACT = new ZipField.F2(F_MADE_BY.endOffset(),
             "Version to extract", new ZipFieldInvariantNonNegative());
 
     /**
@@ -275,7 +276,8 @@ class CentralDirectory {
         long madeBy = F_MADE_BY.read(bytes);
 
         long versionNeededToExtract = F_VERSION_EXTRACT.read(bytes);
-        if (versionNeededToExtract > MAX_VERSION_TO_EXTRACT) {
+        if (versionNeededToExtract > MAX_VERSION_TO_EXTRACT
+                && !file.getSkipVersionToExtractValidation()) {
             throw new IOException("Unknown version needed to extract in zip directory entry: "
                     + versionNeededToExtract + ".");
         }
@@ -403,7 +405,7 @@ class CentralDirectory {
     private byte[] computeByteRepresentation() {
 
         List<StoredEntry> sorted = Lists.newArrayList(mEntries.values());
-        Collections.sort(sorted, StoredEntry.COMPARE_BY_NAME);
+        sorted.sort(StoredEntry.COMPARE_BY_NAME);
 
         CentralDirectoryHeader[] cdhs = new CentralDirectoryHeader[mEntries.size()];
         CentralDirectoryHeaderCompressInfo[] compressInfos =
