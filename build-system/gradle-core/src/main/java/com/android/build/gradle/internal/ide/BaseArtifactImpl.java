@@ -116,6 +116,12 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
     @NonNull
     @Override
+    public Dependencies getCompileDependencies() {
+        return getDependencies();
+    }
+
+    @NonNull
+    @Override
     public DependencyGraphs getDependencyGraphs() {
         return dependencyGraphs;
     }

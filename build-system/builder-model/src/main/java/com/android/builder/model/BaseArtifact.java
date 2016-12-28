@@ -71,6 +71,14 @@ public interface BaseArtifact {
     Dependencies getDependencies();
 
     /**
+     * Return the level 0-1 type dependencies.
+     * @deprecated use {@link #getDependencies()}
+     */
+    @Deprecated
+    @NonNull
+    Dependencies getCompileDependencies();
+
+    /**
      * Returns the resolved dependencies for this artifact.
      *
      * This is a composite of all the
