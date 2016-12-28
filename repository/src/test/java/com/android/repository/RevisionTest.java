@@ -230,6 +230,7 @@ public class RevisionTest extends TestCase {
     }
 
     public final void testCompareTo() {
+        // TODO: What's the deal with these variable names?
         Revision s4 = new Revision(4);
         Revision i4 = new Revision(4);
         Revision g5 = new Revision(5, 1, 0, 6);
@@ -237,6 +238,7 @@ public class RevisionTest extends TestCase {
         Revision c5 = new Revision(5, 1, 0, 6);
         Revision o5 = new Revision(5, 0, 0, 7);
         Revision p5 = new Revision(5, 1, 0, 0);
+        Revision q5 = new Revision(5, 1, 0, 7);
 
         assertThat(i4).isEqualTo(s4);  // 4.0.0-0 == 4.0.0-0
         assertThat(c5).isEqualTo(g5);  // 5.1.0-6 == 5.1.0-6
@@ -253,6 +255,26 @@ public class RevisionTest extends TestCase {
         assertThat(p5).isGreaterThan(c5);  // 5.1.0-0  > 5.1.0-6
         assertThat(p5).isGreaterThan(o5);  // 5.1.0-0  > 5.0.0-7
         assertThat(c5).isGreaterThan(o5);  // 5.1.0-6  > 5.0.0-7
-        assertThat(o5).isEquivalentAccordingToCompareTo(o5);  // 5.0.0-7  > 5.0.0-7
+        assertThat(o5).isEquivalentAccordingToCompareTo(o5);  // 5.0.0-7 == 5.0.0-7
+
+        assertEquals(0, s4.compareTo(i4, Revision.PreviewComparison.ASCENDING));
+        assertEquals(0, s4.compareTo(i4, Revision.PreviewComparison.IGNORE));
+        assertEquals(0, s4.compareTo(i4, Revision.PreviewComparison.COMPARE_NUMBER));
+        assertEquals(0, s4.compareTo(i4, Revision.PreviewComparison.COMPARE_TYPE));
+
+        assertTrue(y5.compareTo(o5, Revision.PreviewComparison.ASCENDING) < 0);
+        assertTrue(y5.compareTo(o5, Revision.PreviewComparison.IGNORE) == 0);
+        assertTrue(y5.compareTo(o5, Revision.PreviewComparison.COMPARE_NUMBER) > 0);
+        assertTrue(y5.compareTo(o5, Revision.PreviewComparison.COMPARE_TYPE) > 0);
+
+        assertTrue(c5.compareTo(q5, Revision.PreviewComparison.ASCENDING) < 0);
+        assertTrue(c5.compareTo(q5, Revision.PreviewComparison.IGNORE) == 0);
+        assertTrue(c5.compareTo(q5, Revision.PreviewComparison.COMPARE_NUMBER) < 0);
+        assertTrue(c5.compareTo(q5, Revision.PreviewComparison.COMPARE_TYPE) == 0);
+
+        assertTrue(s4.compareTo(y5, Revision.PreviewComparison.ASCENDING) < 0);
+        assertTrue(s4.compareTo(y5, Revision.PreviewComparison.IGNORE) < 0);
+        assertTrue(s4.compareTo(y5, Revision.PreviewComparison.COMPARE_NUMBER) < 0);
+        assertTrue(s4.compareTo(y5, Revision.PreviewComparison.COMPARE_TYPE) < 0);
     }
 }
