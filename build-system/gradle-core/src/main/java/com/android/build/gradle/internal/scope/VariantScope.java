@@ -142,7 +142,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getExternalAarJniLibFolders();
 
     @NonNull
-    FileCollection getSubProjectPackagedJars();
+    FileCollection getSubProjectPackagedClassJars();
+
+    @NonNull
+    FileCollection getSubProjectPackagedResourceJars();
 
     @NonNull
     FileCollection getSubProjectLocalPackagedJars();
@@ -164,6 +167,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     FileCollection getBaseAtomResourcePkg();
+
+    @NonNull
+    File getIntermediateJarOutputFolder();
 
     @NonNull
     File getJavaDependencyCache();

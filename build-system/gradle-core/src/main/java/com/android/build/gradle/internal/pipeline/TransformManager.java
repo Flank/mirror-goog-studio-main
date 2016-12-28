@@ -93,6 +93,8 @@ public class TransformManager extends FilterableStreamCollection {
                     .build();
     public static final Set<Scope> SCOPE_FULL_LIBRARY =
             Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
+    public static final Set<Scope> SCOPE_LIBRARY_LOCAL_JARS =
+            Sets.immutableEnumSet(Scope.PROJECT_LOCAL_DEPS);
 
     @NonNull
     private final Project project;

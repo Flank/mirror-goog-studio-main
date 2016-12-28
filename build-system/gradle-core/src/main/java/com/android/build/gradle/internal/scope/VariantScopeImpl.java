@@ -33,7 +33,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RESOURCES;
@@ -108,9 +110,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -548,10 +553,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getSubProjectPackagedJars() {
+    public FileCollection getSubProjectPackagedClassJars() {
         // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR));
+        return getPackageCollection(singletonMap(
+                ARTIFACT_TYPE, TYPE_JAR_SUB_PROJECTS));
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getSubProjectPackagedResourceJars() {
+        // TODO cache?
+        return getPackageCollection(singletonMap(
+                ARTIFACT_TYPE, TYPE_JAVA_RES));
     }
 
     @Override
@@ -590,8 +603,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public FileCollection getLocalPackagedJars() {
-        // TODO fixme
-        return globalScope.getProject().files();
+        // the Spec is not applied to file dependencies, so rejecting anything that shows
+        // up is the same as filtering out both the inter-project dependencies and the
+        // remote dependencies, which is what we want.
+        return getVariantData().getVariantDependency()
+                .getPackageConfiguration().getIncoming().getFiles(
+                ARTIFACTS_JARS, id -> false);
     }
 
     @NonNull
@@ -613,6 +630,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public FileCollection getBaseAtomResourcePkg() {
         return getPackageCollection(singletonMap(
                 ARTIFACT_TYPE, AndroidArtifacts.TYPE_RESOURCES_PKG));
+    }
+
+    @Override
+    @NonNull
+    public File getIntermediateJarOutputFolder() {
+        return new File(globalScope.getIntermediatesDir(), "/intermediate-jars/" +
+                variantData.getVariantConfiguration().getDirName());
     }
 
     @Override

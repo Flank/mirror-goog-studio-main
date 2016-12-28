@@ -582,11 +582,18 @@ public abstract class TaskManager {
                 .setFileCollection(variantScope.getExternalAarJniLibFolders())
                 .build());
 
-        // for the sub modules, only the main jar has resources.
+        // for the sub modules, the new intermediary classes.jar does not have resources.
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_JARS)
+                .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJars())
+                .setFileCollection(variantScope.getSubProjectPackagedClassJars())
+                .build());
+
+        // for the sub modules, thew new intermediary res.jar only has resources
+        transformManager.addStream(OriginalStream.builder(project)
+                .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                .addScope(Scope.SUB_PROJECTS)
+                .setFileCollection(variantScope.getSubProjectPackagedResourceJars())
                 .build());
 
         // the local deps don't have resources (been merged into the main jar)
@@ -1195,6 +1202,7 @@ public abstract class TaskManager {
         AndroidTask<Sync> processJavaResourcesTask =
                 androidTasks.create(tasks, new ProcessJavaResConfigAction(variantScope));
         variantScope.setProcessJavaResourcesTask(processJavaResourcesTask);
+        processJavaResourcesTask.dependsOn(tasks, variantScope.getPreBuildTask());
 
         // create the stream generated from this task
         variantScope.getTransformManager().addStream(OriginalStream.builder(project)

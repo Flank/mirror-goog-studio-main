@@ -50,6 +50,7 @@ public class AndroidArtifacts {
 
     // types for AAR/ATOM content
     public static final String TYPE_JAR = "jar";
+    public static final String TYPE_JAVA_RES = "java-res";
     public static final String TYPE_MANIFEST = "android-manifest";
     public static final String TYPE_RESOURCES = "android-res";
     public static final String TYPE_ASSETS = "android-assets";

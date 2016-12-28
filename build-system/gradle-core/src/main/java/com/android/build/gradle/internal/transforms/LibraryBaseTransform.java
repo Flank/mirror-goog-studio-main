@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.transforms;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.QualifiedContent.ContentType;
-import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.transforms.JarMerger;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -55,32 +48,34 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-/**
- * A Transforms that takes the project/project local streams for CLASSES and RESOURCES,
- * and processes and combines them, and put them in the bundle folder.
- *
- * Regarding Streams, this is a no-op transform as it does not write any output to any stream. It
- * uses secondary outputs to write directly into the bundle folder.
- */
-public class LibraryJarTransform extends Transform {
+public abstract class LibraryBaseTransform extends Transform {
+
+    /**
+     * Convenient way to attach exclude list providers that can provide their list at the end of
+     * the build.
+     */
+    public interface ExcludeListProvider {
+        @Nullable List<String> getExcludeList();
+    }
+
 
     @NonNull
-    private final File mainClassLocation;
+    protected final File mainClassLocation;
     @NonNull
-    private final File localJarsLocation;
+    protected final File localJarsLocation;
     @NonNull
-    private final String packagePath;
-    private final boolean packageBuildConfig;
-    @NonNull
-    private final File typedefRecipe;
+    protected final String packagePath;
+    protected final boolean packageBuildConfig;
+    @Nullable
+    protected final File typedefRecipe;
 
     @Nullable
-    private List<ExcludeListProvider> excludeListProviders;
+    protected List<ExcludeListProvider> excludeListProviders;
 
-    public LibraryJarTransform(
+    public LibraryBaseTransform(
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
-            @NonNull File typedefRecipe,
+            @Nullable File typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;
@@ -93,14 +88,14 @@ public class LibraryJarTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        if (typedefRecipe.isFile()) {
+        if (typedefRecipe != null && typedefRecipe.isFile()) {
             return ImmutableList.of(SecondaryFile.nonIncremental(typedefRecipe));
         } else {
             return ImmutableList.of();
         }
     }
 
-    public void addExcludeListProvider(ExcludeListProvider provider) {
+    public void addExcludeListProvider(@NonNull ExcludeListProvider provider) {
         if (excludeListProviders == null) {
             excludeListProviders = Lists.newArrayList();
         }
@@ -109,38 +104,20 @@ public class LibraryJarTransform extends Transform {
 
     @NonNull
     @Override
-    public String getName() {
-        return "syncLibJars";
-    }
-
-    @NonNull
-    @Override
-    public Set<ContentType> getInputTypes() {
+    public Set<QualifiedContent.ContentType> getInputTypes() {
         return TransformManager.CONTENT_JARS;
     }
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<QualifiedContent.Scope> getScopes() {
         return TransformManager.EMPTY_SCOPES;
     }
 
     @NonNull
     @Override
-    public Set<Scope> getReferencedScopes() {
+    public Set<QualifiedContent.Scope> getReferencedScopes() {
         return TransformManager.SCOPE_FULL_LIBRARY;
-    }
-
-    @Override
-    public boolean isIncremental() {
-        // TODO make incremental
-        return false;
-    }
-
-    @NonNull
-    @Override
-    public Collection<File> getSecondaryFileOutputs() {
-        return ImmutableList.of(mainClassLocation);
     }
 
     @NonNull
@@ -149,9 +126,8 @@ public class LibraryJarTransform extends Transform {
         return ImmutableList.of(localJarsLocation);
     }
 
-    @Override
-    public void transform(@NonNull TransformInvocation invocation)
-            throws IOException, TransformException, InterruptedException {
+    @NonNull
+    protected List<Pattern> computeExcludeList() {
         List<String> excludes = Lists.newArrayListWithExpectedSize(5);
 
         // these must be regexp to match the zip entries
@@ -172,70 +148,15 @@ public class LibraryJarTransform extends Transform {
         }
 
         // create Pattern Objects.
-        List<Pattern> patterns =
-                excludes.stream().map(Pattern::compile).collect(Collectors.toList());
-
-        // first look for what inputs we have. There shouldn't be that many inputs so it should
-        // be quick and it'll allow us to minimize jar merging if we don't have to.
-        List<QualifiedContent> mainScope = Lists.newArrayList();
-        List<QualifiedContent> locaJlJarScope = Lists.newArrayList();
-
-        for (TransformInput input : invocation.getReferencedInputs()) {
-            for (QualifiedContent qualifiedContent : Iterables.concat(
-                    input.getJarInputs(), input.getDirectoryInputs())) {
-                if (qualifiedContent.getScopes().contains(Scope.PROJECT)) {
-                    // even if the scope contains both project + local jar, we treat this as main
-                    // scope.
-                    mainScope.add(qualifiedContent);
-                } else {
-                    locaJlJarScope.add(qualifiedContent);
-                }
-            }
-        }
-
-        // process main scope.
-        if (mainScope.isEmpty()) {
-            throw new RuntimeException("Empty Main scope for " + getName());
-        }
-
-        if (mainScope.size() == 1) {
-            QualifiedContent content = mainScope.get(0);
-            if (content instanceof JarInput) {
-                copyJarWithContentFilter(content.getFile(), mainClassLocation, patterns);
-            } else {
-                jarFolderToRootLocation(content.getFile(), patterns);
-            }
-        } else {
-            mergeToRootLocation(mainScope, patterns);
-        }
-
-        // process local scope
-        processLocalJars(locaJlJarScope);
+        return excludes.stream().map(Pattern::compile).collect(Collectors.toList());
     }
 
-    private void mergeToRootLocation(
-            @NonNull List<QualifiedContent> qualifiedContentList,
-            @NonNull final List<Pattern> excludes)
-            throws IOException {
-        JarMerger jarMerger = new JarMerger(mainClassLocation);
-        jarMerger.setFilter(archivePath -> checkEntry(excludes, archivePath));
-
-        for (QualifiedContent content : qualifiedContentList) {
-            if (content instanceof JarInput) {
-                jarMerger.addJar(content.getFile());
-            } else {
-                jarMerger.addFolder(content.getFile());
-            }
-        }
-
-        jarMerger.close();
-    }
-
-    private void processLocalJars(@NonNull List<QualifiedContent> qualifiedContentList)
+    protected void processLocalJars(@NonNull List<QualifiedContent> qualifiedContentList)
             throws IOException {
 
         // first copy the jars (almost) as is, and remove them from the list.
-        // then we'll make a single jars that contains all the folders.
+        // then we'll make a single jars that contains all the folders (though it's unlikely to
+        // happen)
         // Note that we do need to remove the resources from the jars since they have been merged
         // somewhere else.
         // TODO: maybe do the folders separately to handle incremental?
@@ -268,27 +189,15 @@ public class LibraryJarTransform extends Transform {
         }
     }
 
-    private void jarFolderToRootLocation(@NonNull File file, @NonNull final List<Pattern> excludes)
-            throws IOException {
-        JarMerger jarMerger = new JarMerger(mainClassLocation);
-        jarMerger.setFilter(archivePath -> checkEntry(excludes, archivePath));
-        if (typedefRecipe.isFile()) {
-            jarMerger.setTypedefRemover(new TypedefRemover().setTypedefFile(typedefRecipe));
-        }
-        jarMerger.addFolder(file);
-        jarMerger.close();
-    }
 
-    private static void copyJarWithContentFilter(
+    protected static void copyJarWithContentFilter(
             @NonNull File from,
             @NonNull File to,
             @NonNull final List<Pattern> excludes) throws IOException {
-        copyJarWithContentFilter(from, to, archivePath -> {
-            return checkEntry(excludes, archivePath);
-        });
+        copyJarWithContentFilter(from, to, archivePath -> checkEntry(excludes, archivePath));
     }
 
-    private static void copyJarWithContentFilter(
+    protected static void copyJarWithContentFilter(
             @NonNull File from,
             @NonNull File to,
             @Nullable ZipEntryFilter filter) throws IOException {
@@ -308,7 +217,7 @@ public class LibraryJarTransform extends Transform {
             while ((entry = zis.getNextEntry()) != null) {
                 String name = entry.getName();
 
-                if (filter != null && !filter.checkEntry(name)) {
+                if (entry.isDirectory() || (filter != null && !filter.checkEntry(name))) {
                     continue;
                 }
 
@@ -343,7 +252,7 @@ public class LibraryJarTransform extends Transform {
         }
     }
 
-    private static boolean checkEntry(
+    protected static boolean checkEntry(
             @NonNull List<Pattern> patterns,
             @NonNull String name) {
         for (Pattern pattern : patterns) {
@@ -354,11 +263,37 @@ public class LibraryJarTransform extends Transform {
         return true;
     }
 
-    /**
-     * Convenient way to attach exclude list providers that can provide their list at the end of
-     * the build.
-     */
-    public interface ExcludeListProvider {
-        @Nullable List<String> getExcludeList();
+    protected static void jarFolderToLocation(
+            @NonNull File fromFolder,
+            @NonNull File toFile,
+            @Nullable ZipEntryFilter filter,
+            @Nullable TypedefRemover typedefRemover)
+            throws IOException {
+        JarMerger jarMerger = new JarMerger(toFile);
+        jarMerger.setFilter(filter);
+        jarMerger.setTypedefRemover(typedefRemover);
+        jarMerger.addFolder(fromFolder);
+        jarMerger.close();
+    }
+
+    protected static void mergeInputsToLocation(
+            @NonNull List<QualifiedContent> qualifiedContentList,
+            @NonNull File toFile,
+            @Nullable ZipEntryFilter filter,
+            @Nullable TypedefRemover typedefRemover)
+            throws IOException {
+        JarMerger jarMerger = new JarMerger(toFile);
+        jarMerger.setFilter(filter);
+        jarMerger.setTypedefRemover(typedefRemover);
+
+        for (QualifiedContent content : qualifiedContentList) {
+            if (content instanceof JarInput) {
+                jarMerger.addJar(content.getFile());
+            } else {
+                jarMerger.addFolder(content.getFile());
+            }
+        }
+
+        jarMerger.close();
     }
 }
