@@ -35,6 +35,7 @@ import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Objects;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -612,5 +613,34 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
 
         super.appendToXml(setNode, document, consumer, includeTimestamps);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        ResourceSet that = (ResourceSet) o;
+        return mIsFromDependency == that.mIsFromDependency &&
+                mShouldParseResourceIds == that.mShouldParseResourceIds &&
+                mDontNormalizeQualifiers == that.mDontNormalizeQualifiers &&
+                mTrackSourcePositions == that.mTrackSourcePositions &&
+                Objects.equals(mLibraryName, that.mLibraryName) &&
+                Objects.equals(mGeneratedSet, that.mGeneratedSet) &&
+                Objects.equals(mPreprocessor, that.mPreprocessor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(super.hashCode(), mLibraryName, mGeneratedSet, mPreprocessor,
+                        mIsFromDependency,
+                        mShouldParseResourceIds, mDontNormalizeQualifiers, mTrackSourcePositions);
     }
 }

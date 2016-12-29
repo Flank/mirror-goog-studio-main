@@ -35,6 +35,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -47,10 +48,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -88,8 +96,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String preferredDensity;
 
-    private FileCollection manifests;
-    private FileCollection symbolFiles;
+    private ArtifactCollection manifests;
+    private ArtifactCollection symbolFiles;
 
     private String packageForR;
 
@@ -152,7 +160,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     .setManifestFile(manifestFileToPackage)
                     .setOptions(getAaptOptions())
                     .setResourceDir(getResDir())
-                    .setLibraries(getManifests().getFiles(), getSymbolFiles().getFiles())
+                    .setLibraries(getLibraryInfoList())
                     .setCustomPackageForR(getPackageForR())
                     .setSymbolOutputDir(getTextSymbolOutputDir())
                     .setSourceOutputDir(srcOut)
@@ -177,6 +185,26 @@ public class ProcessAndroidResources extends IncrementalTask {
         } catch (IOException | InterruptedException | ProcessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @NonNull
+    public List<LibraryInfo> getLibraryInfoList() {
+        // first build a map for the optional symbols.
+        Map<ComponentArtifactIdentifier, File> symbolMap = new HashMap<>();
+        for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
+            symbolMap.put(artifactResult.getId(), artifactResult.getFile());
+        }
+
+        // now loop through all the manifests and associate to a symbol file, if applicable.
+        Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
+        List<LibraryInfo> libraryInfoList = new ArrayList<>(manifestArtifacts.size());
+        for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
+            libraryInfoList.add(new LibraryInfo(
+                    artifactResult.getFile(),
+                    symbolMap.get(artifactResult.getId())));
+        }
+
+        return libraryInfoList;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
@@ -468,12 +496,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     public FileCollection getManifests() {
-        return manifests;
+        return manifests.getArtifactFiles();
     }
 
     @InputFiles
     public FileCollection getSymbolFiles() {
-        return symbolFiles;
+        return symbolFiles.getArtifactFiles();
     }
 
     @Input

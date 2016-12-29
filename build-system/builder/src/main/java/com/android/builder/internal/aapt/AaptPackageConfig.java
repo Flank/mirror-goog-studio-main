@@ -552,40 +552,6 @@ public class AaptPackageConfig implements Cloneable {
         }
 
         /**
-         * Sets the libraries in the package configuration. See
-         * {@link AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field rules.
-         *
-         * @param manifests the manifest files
-         * @param symbolFiles the symbol files.
-         *
-         * @return {@code this}
-         */
-        @NonNull
-        public Builder setLibraries(@NonNull Set<File> manifests, @NonNull Set<File> symbolFiles) {
-            // TODO fix the R.txt optional support.
-            if (true) {
-                mConfig.mLibraries = ImmutableList.copyOf(manifests.stream()
-                        .map(file -> new LibraryInfo(file, null))
-                        .collect(Collectors.toList()));
-                return this;
-            }
-            Preconditions.checkState(manifests.size() == symbolFiles.size());
-            if (manifests.isEmpty()) {
-                mConfig.mLibraries = ImmutableList.of();
-            } else {
-                Iterator<File> i = manifests.iterator();
-                Iterator<File> i2 = symbolFiles.iterator();
-                List<LibraryInfo> infos = Lists.newArrayListWithCapacity(manifests.size());
-                while (i.hasNext()) {
-                    infos.add(new LibraryInfo(i.next(), i2.next()));
-                }
-                mConfig.mLibraries = ImmutableList.copyOf(infos);
-            }
-
-            return this;
-        }
-
-        /**
          * Sets the resource output APK. See
          * {@link AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field
          * rules.

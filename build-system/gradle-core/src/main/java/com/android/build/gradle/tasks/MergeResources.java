@@ -52,6 +52,8 @@ import com.google.common.collect.Sets;
 
 import com.google.common.collect.Sets;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -107,7 +109,7 @@ public class MergeResources extends IncrementalTask {
 
     // actual inputs
     private InputSupplier<List<ResourceSet>> sourceFolderInputs;
-    private FileCollection libraries;
+    private ArtifactCollection libraries;
     private FileCollection renderscriptResOutputDir;
     private FileCollection generatedResOutputDir;
     private FileCollection microApkResDirectory;
@@ -348,10 +350,15 @@ public class MergeResources extends IncrementalTask {
     @InputFiles
     @Optional
     public FileCollection getLibraries() {
-        return libraries;
+        if (libraries != null) {
+            return libraries.getArtifactFiles();
+        }
+
+        return null;
     }
 
-    public void setLibraries(@NonNull FileCollection libraries) {
+    @VisibleForTesting
+    void setLibraries(ArtifactCollection libraries) {
         this.libraries = libraries;
     }
 
@@ -473,10 +480,12 @@ public class MergeResources extends IncrementalTask {
 
         // get the dependencies first
         if (libraries != null) {
-            for (File file : libraries) {
-                // TODO add metadata from the dependencies, and fix order?
-                ResourceSet resourceSet = new ResourceSet("TODO", validateEnabled);
-                resourceSet.addSource(file);
+            Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
+            for (ResolvedArtifactResult artifact : libArtifacts) {
+                ResourceSet resourceSet = new ResourceSet(
+                        MergeManifests.getArtifactName(artifact),
+                        validateEnabled);
+                resourceSet.addSource(artifact.getFile());
 
                 // add at the beginning since the libraries are less important than the folder based
                 // resource sets.
@@ -484,7 +493,7 @@ public class MergeResources extends IncrementalTask {
             }
         }
 
-        // TODO add tested library here!
+        // FIXME add tested library here!
 
         // add the folder based next
         List<ResourceSet> sourceFolderSets = sourceFolderInputs.getLastValue();

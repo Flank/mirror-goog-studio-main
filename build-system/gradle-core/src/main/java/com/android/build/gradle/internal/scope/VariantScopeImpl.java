@@ -103,19 +103,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -524,16 +521,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public FileCollection getManifests() {
+    public ArtifactCollection getManifests() {
         // TODO cache?
-        return getPackageCollection(ARTIFACTS_MANIFEST);
+        return getPackageArtifactCollection(ARTIFACTS_MANIFEST);
     }
 
     @NonNull
     @Override
-    public FileCollection getSymbolsFile() {
+    public ArtifactCollection getSymbolsFile() {
         // TODO cache?
-        return getPackageCollection(ARTIFACTS_SYMBOLS);
+        return getPackageArtifactCollection(ARTIFACTS_SYMBOLS);
     }
 
     @NonNull
@@ -613,16 +610,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public FileCollection getDependenciesResourceFolders() {
+    public ArtifactCollection getDependenciesResourceFolders() {
         // TODO cache?
-        return getPackageCollection(ARTIFACTS_RESOURCES);
+        return getPackageArtifactCollection(ARTIFACTS_RESOURCES);
     }
 
     @NonNull
     @Override
-    public FileCollection getDependenciesAssetFolders() {
+    public ArtifactCollection getDependenciesAssetFolders() {
         // TODO cache?
-        return getPackageCollection(ARTIFACTS_ASSETS);
+        return getPackageArtifactCollection(ARTIFACTS_ASSETS);
     }
 
     @Override
@@ -1610,6 +1607,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getPackageConfiguration().getIncoming().getFiles(
                         map,
                         (id) -> id instanceof ModuleComponentIdentifier);
+    }
+
+    @NonNull
+    private ArtifactCollection getPackageArtifactCollection(Map<String, String> map) {
+        return getVariantData().getVariantDependency()
+                .getPackageConfiguration().getIncoming().getArtifacts(map);
     }
 
     @NonNull

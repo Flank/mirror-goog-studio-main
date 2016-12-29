@@ -37,6 +37,11 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -44,6 +49,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /**
  * A task that processes the manifest
@@ -58,7 +64,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ApkVariantOutputData variantOutputData;
-    private FileCollection manifests;
+    private ArtifactCollection manifests;
     private FileCollection microApkManifest;
     private FileCollection compatibleScreensManifest;
     private List<Feature> optionalFeatures;
@@ -138,16 +144,14 @@ public class MergeManifests extends ManifestProcessorTask {
      * @return the list of providers.
      */
     private List<ManifestProvider> computeFullProviderList() {
-        List<ManifestProvider> providers = Lists.newArrayList();
+        final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
+        List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size() + 2);
 
-        // TODO get metadata on a per file basis.
-        Set<File> manifests = getManifests().getFiles();
-
-        for (File manifest : manifests) {
-            // TODO fix order?
-            providers.add(new ConfigAction.ManifestProviderImpl(manifest, "TODO"));
+        for (ResolvedArtifactResult artifact : artifacts) {
+            providers.add(new ConfigAction.ManifestProviderImpl(
+                    artifact.getFile(),
+                    getArtifactName(artifact)));
         }
-
 
         if (microApkManifest != null) {
             // this is now always present if embedding is enabled, but it doesn't mean
@@ -169,6 +173,24 @@ public class MergeManifests extends ManifestProcessorTask {
         }
 
         return providers;
+    }
+
+    // TODO put somewhere else?
+    @NonNull
+    public static String getArtifactName(@NonNull ResolvedArtifactResult artifact) {
+        ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+        if (id instanceof ProjectComponentIdentifier) {
+            return ((ProjectComponentIdentifier) id).getProjectPath();
+
+        } else if (id instanceof ModuleComponentIdentifier) {
+            ModuleComponentIdentifier mID = (ModuleComponentIdentifier) id;
+            return mID.getGroup() + ":" + mID.getModule() + ":" + mID.getVersion();
+
+        } else if (id instanceof OpaqueComponentArtifactIdentifier) {
+            // FIXME: use a non internal class.
+        }
+
+        return id.getDisplayName();
     }
 
     @Input
@@ -243,7 +265,7 @@ public class MergeManifests extends ManifestProcessorTask {
     @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getManifests() {
-        return manifests;
+        return manifests.getArtifactFiles();
     }
 
     @SuppressWarnings("unused")

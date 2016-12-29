@@ -35,7 +35,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -69,7 +71,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private Boolean handleProfiling;
     private Boolean functionalTest;
     private Map<String, Object> placeholdersValues;
-    private FileCollection manifests;
+    private ArtifactCollection manifests;
 
     @Nullable
     private String testLabel;
@@ -198,25 +200,21 @@ public class ProcessTestManifest extends ManifestProcessorTask {
      * @return the list of providers.
      */
     public List<ManifestProvider> computeProviders() {
-        // TODO get metadata on a per file basis.
-        Set<File> manifests = getManifests().getFiles();
+        final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
+        List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
 
-        List<ManifestProvider> list = Lists.newArrayListWithCapacity(manifests.size());
-
-        for (File manifest : manifests) {
-            list.add (new MergeManifests.ConfigAction.ManifestProviderImpl(manifest, "TODO"));
+        for (ResolvedArtifactResult artifact : artifacts) {
+            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
+                    artifact.getFile(),
+                    MergeManifests.getArtifactName(artifact)));
         }
 
-        return list;
+        return providers;
     }
 
     @InputFiles
     public FileCollection getManifests() {
-        return manifests;
-    }
-
-    public void setManifests(FileCollection manifests) {
-        this.manifests = manifests;
+        return manifests.getArtifactFiles();
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessTestManifest> {

@@ -44,6 +44,8 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -85,7 +87,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     private InputSupplier<List<AssetSet>> assetSetSupplier;
     // for the dependencies
-    private FileCollection libraries = null;
+    private ArtifactCollection libraries = null;
     private FileCollection shadersOutputDir = null;
     private FileCollection copyApk = null;
     private String ignoreAssets = null;
@@ -201,11 +203,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
     @InputFiles
     @Optional
     public FileCollection getLibraries() {
-        return libraries;
+        if (libraries != null) {
+            return libraries.getArtifactFiles();
+        }
+
+        return null;
     }
 
     @VisibleForTesting
-    public void setLibraries(@NonNull FileCollection libraries) {
+    public void setLibraries(@NonNull ArtifactCollection libraries) {
         this.libraries = libraries;
     }
 
@@ -281,11 +287,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
             sets = Lists.newArrayList();
 
             // get the dependency base assets sets.
-            // TODO add metadata from the dependencies, and fix order?
+
             if (libraries != null) {
-                for (File file : libraries) {
-                    AssetSet assetSet = new AssetSet("TODO");
-                    assetSet.addSource(file);
+                Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
+                for (ResolvedArtifactResult artifact : libArtifacts) {
+                    AssetSet assetSet = new AssetSet(MergeManifests.getArtifactName(artifact));
+                    assetSet.addSource(artifact.getFile());
 
                     // add at the beginning since the libraries are less important than the folder based
                     // resource sets.

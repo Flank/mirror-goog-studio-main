@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -130,10 +131,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getRenderscriptImports();
 
     @NonNull
-    FileCollection getManifests();
+    ArtifactCollection getManifests();
 
     @NonNull
-    FileCollection getSymbolsFile();
+    ArtifactCollection getSymbolsFile();
 
     @NonNull
     FileCollection getSubProjectDataBindingArtifactFolders();
@@ -160,10 +161,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getLocalPackagedJars();
 
     @NonNull
-    FileCollection getDependenciesResourceFolders();
+    ArtifactCollection getDependenciesResourceFolders();
 
     @NonNull
-    FileCollection getDependenciesAssetFolders();
+    ArtifactCollection getDependenciesAssetFolders();
 
     @NonNull
     FileCollection getBaseAtomResourcePkg();
