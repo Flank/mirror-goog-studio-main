@@ -200,8 +200,8 @@ final class HttpTracker {
         }
 
         @Override
-        public void error(String status) {
-            onError(myId, status);
+        public void error(String message) {
+            onError(myId, message);
         }
 
         @Override
