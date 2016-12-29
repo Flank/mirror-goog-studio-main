@@ -16,25 +16,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../out/gradle-dist-link/lib/gradle-core-3.2.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../out/gradle-dist-link/lib/gradle-model-core-3.2.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../out/gradle-dist-link/lib/gradle-logging-3.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../external/gradle/gradle-api-3.4-20161207091511+0000.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

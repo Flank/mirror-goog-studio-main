@@ -36,6 +36,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_EXT_ANNOTATIONS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LINT_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LOCAL_JARS;
@@ -112,23 +113,18 @@ public class AarTransform extends ExtractTransform {
                 break;
             case TYPE_RESOURCES:
                 file = new File(explodedAar, FD_RES);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             case TYPE_ASSETS:
                 file = new File(explodedAar, FD_ASSETS);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             case TYPE_JNI:
                 file = new File(explodedAar, FD_JNI);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             case TYPE_AIDL:
                 file = new File(explodedAar, FD_AIDL);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             case TYPE_RENDERSCRIPT:
                 file = new File(explodedAar, FD_RENDERSCRIPT);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             case TYPE_PROGUARD_RULES:
                 file = new File(explodedAar, FN_PROGUARD_TXT);
@@ -144,7 +140,6 @@ public class AarTransform extends ExtractTransform {
                 break;
             case TYPE_DATA_BINDING:
                 file = new File(explodedAar, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
-                if (!file.isDirectory()) FileUtils.mkdirs(file); // TODO HACK! Remove!
                 break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: "
