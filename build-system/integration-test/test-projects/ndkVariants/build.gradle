@@ -18,6 +18,7 @@ model {
             stl "stlport_static"
         }
 
+        getFlavorDimensionList().add('foo')
         productFlavors {
             create("free")
             create("premium")

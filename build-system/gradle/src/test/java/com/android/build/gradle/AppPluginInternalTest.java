@@ -155,6 +155,7 @@ public class AppPluginInternalTest extends BaseDslTest {
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "\n"
@@ -305,6 +306,7 @@ public class AppPluginInternalTest extends BaseDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "        }\n"

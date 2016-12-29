@@ -187,10 +187,12 @@ public class MergeManifests extends ManifestProcessorTask {
             return mID.getGroup() + ":" + mID.getModule() + ":" + mID.getVersion();
 
         } else if (id instanceof OpaqueComponentArtifactIdentifier) {
+            // this is the case for local jars.
             // FIXME: use a non internal class.
+            return id.getDisplayName();
+        } else {
+            throw new RuntimeException("Unsupported type of CompoenentIdentifier");
         }
-
-        return id.getDisplayName();
     }
 
     @Input

@@ -145,6 +145,7 @@ public class AppPluginDslTest
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"
@@ -194,7 +195,7 @@ public class AppPluginDslTest
                 "\n"
                         + "project.android {\n"
                         + "\n"
-                        + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"

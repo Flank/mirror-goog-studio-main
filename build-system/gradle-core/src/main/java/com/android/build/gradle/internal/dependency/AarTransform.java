@@ -36,7 +36,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_EXT_ANNOTATIONS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LINT_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LOCAL_JARS;

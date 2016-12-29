@@ -24,6 +24,7 @@ model {
             toolchain "clang"
         }
 
+        getFlavorDimensionList().add('abi')
         productFlavors {
             create("x86") {
                 ndk.abiFilters.add("x86")

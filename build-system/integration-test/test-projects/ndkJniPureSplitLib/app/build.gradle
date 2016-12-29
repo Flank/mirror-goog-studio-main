@@ -12,6 +12,7 @@ android {
     // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
     defaultConfig.versionCode = 123
 
+    flavorDimensions 'foo'
     productFlavors {
         free {
             minSdkVersion 21

@@ -72,10 +72,6 @@ public class LibraryIntermediateJarsTransformTest {
         FileUtils.deleteIfExists(resJarLocation);
         FileUtils.deleteDirectoryContents(localJarsLocation);
         FileUtils.deleteIfExists(localJarsLocation);
-
-        mainClassLocation = resJarLocation = localJarsLocation = null;
-        packageName = null;
-        transform = null;
     }
 
     @Test

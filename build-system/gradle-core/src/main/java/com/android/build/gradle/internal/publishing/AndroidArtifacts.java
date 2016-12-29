@@ -122,10 +122,6 @@ public class AndroidArtifacts {
                 name, TYPE_ATOM_BUNDLE, TYPE_ATOM_BUNDLE, classifier, outputFileSupplier);
     }
 
-    public static void publishArtifact() {
-
-    }
-
     public static void publishIntermediateArtifact(
             Project project,
             String publishConfigName,
@@ -139,26 +135,8 @@ public class AndroidArtifacts {
                                 artifact.setType(type);
                                 artifact.builtBy(project.getTasks().getByName(builtBy));
                             }));
-
                 });
     }
-    //
-    //public static void publishIntermediateArtifact(
-    //        Configuration configuration,
-    //        File file,
-    //        String builtBy,
-    //        String type) {
-    //    configuration.getOutgoing().variants(
-    //            (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
-    //                variants.create(type, (variant) ->
-    //                        variant.artifact(file, (artifact) -> {
-    //                            artifact.setType(type);
-    //                            artifact.builtBy(project.getTasks().getByName(builtBy));
-    //                        }));
-    //
-    //            });
-    //}
-    //
 
     private static class AndroidArtifact implements PublishArtifact {
 

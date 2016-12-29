@@ -17,6 +17,7 @@ android {
         renderscriptSupportModeBlasEnabled false
     }
 
+    flavorDimensions 'abi'
     productFlavors {
         x86 {
             ndk {

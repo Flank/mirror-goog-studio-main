@@ -227,6 +227,7 @@ public abstract class AbstractAppPluginDslTest<
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "\n"
@@ -401,6 +402,7 @@ public abstract class AbstractAppPluginDslTest<
                         + "        }\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "            proguardFile 'file2.1'\n"
@@ -500,6 +502,7 @@ public abstract class AbstractAppPluginDslTest<
                         + "        testInstrumentationRunnerArguments(value: 'default', size: 'small')\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"

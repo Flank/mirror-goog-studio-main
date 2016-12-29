@@ -2688,14 +2688,15 @@ public abstract class TaskManager {
                             AndroidArtifacts.TYPE_APK);
                 });
 
-                for (FileSupplier supplier : variantOutputData.getSplitOutputFileSuppliers()) {
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
-                            supplier.get(),
-                            supplier.getTask().getName(),
-                            AndroidArtifacts.TYPE_APK);
-                }
+                // FIXME need to support split, by publishing the splits folder instead of the files like the local jars from an AAR.
+                //for (FileSupplier supplier : variantOutputData.getSplitOutputFileSuppliers()) {
+                //    AndroidArtifacts.publishIntermediateArtifact(
+                //            project,
+                //            publishConfigName,
+                //            supplier.get(),
+                //            supplier.getTask().getName(),
+                //            AndroidArtifacts.TYPE_APK);
+                //}
 
                 try {
                     final FileSupplier metadataFile = variantOutputData.getMetadataFile();
@@ -2713,12 +2714,15 @@ public abstract class TaskManager {
 
                 final FileSupplier mappingFileProvider = variantData.getMappingFileProvider();
                 if (mappingFileProvider != null) {
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
-                            mappingFileProvider.get(),
-                            mappingFileProvider.getTask().getName(),
-                            AndroidArtifacts.TYPE_MAPPING);
+                    final File mappingFile = mappingFileProvider.get();
+                    if (mappingFile != null) {
+                        AndroidArtifacts.publishIntermediateArtifact(
+                                project,
+                                publishConfigName,
+                                mappingFile,
+                                mappingFileProvider.getTask().getName(),
+                                AndroidArtifacts.TYPE_MAPPING);
+                    }
                 }
             }
         }

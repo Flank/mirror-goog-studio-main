@@ -474,35 +474,53 @@ public class VariantManager implements VariantModel {
      * Create all variants.
      */
     public void populateVariantDataList() {
-        // default configure attribute resolution
+        // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
+
+        // default configure attribute resolution by just registering the attribute
         project.getDependencies().attributesSchema(schema -> {
             schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
         });
 
-        if (productFlavors.isEmpty()) {
-            // also create a strategy for the flavor matching one.
-            project.getDependencies().attributesSchema(schema -> {
-                for (String flavorDimension : extension.getFlavorMatchingStrategy().keySet()) {
-                    schema.attribute(
-                            Attribute.of(flavorDimension, String.class),
-                            strategy -> strategy.getCompatibilityRules()
-                                    .assumeCompatibleWhenMissing());
-                }
-            });
+        // same for flavors, both for user-declared flavors and for attributes created from
+        // absent flavor matching
+        // First gather the list of attributes
+        final Set<String> dimensionAttributes = new HashSet<>();
 
+        List<String> flavorDimensionList = extension.getFlavorDimensionList();
+        if (flavorDimensionList != null) {
+            for (String dimension : flavorDimensionList) {
+                dimensionAttributes.add(CONFIG_ATTR_FLAVOR_PREFIX + dimension);
+            }
+        }
+
+        // this already contains the attribute name rather than just the dimension name.
+        dimensionAttributes.addAll(extension.getFlavorMatchingStrategy().keySet());
+
+        // then set a default resolution strategy. It's fine if an attribute in the consumer is
+        // missing from the producer
+        project.getDependencies().attributesSchema(schema -> {
+            for (String dimensionAttribute : dimensionAttributes) {
+                schema.attribute(
+                        Attribute.of(dimensionAttribute, String.class),
+                        strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
+            }
+        });
+
+        if (productFlavors.isEmpty()) {
             createVariantDataForProductFlavors(Collections.emptyList());
         } else {
-            List<String> flavorDimensionList = extension.getFlavorDimensionList();
-
+            // ensure that there is always a dimension
             if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
                 androidBuilder.getErrorReporter().handleSyncError(
-                        "", SyncIssue.TYPE_GENERIC, "Flavor dimension name is now required even with only one dimension."
+                        "",
+                        SyncIssue.TYPE_GENERIC,
+                        "Flavor dimension name is now required even with only one dimension."
                 );
             } else if (flavorDimensionList.size() == 1) {
-                String dimensionName = flavorDimensionList.get(0);
                 // if there's only one dimension, auto-assign the dimension to all the flavors.
+                String dimensionName = flavorDimensionList.get(0);
                 for (ProductFlavorData<CoreProductFlavor> flavorData : productFlavors.values()) {
                     CoreProductFlavor flavor = flavorData.getProductFlavor();
                     if (flavor.getDimension() == null && flavor instanceof DefaultProductFlavor) {
@@ -510,35 +528,6 @@ public class VariantManager implements VariantModel {
                     }
                 }
             }
-
-            // configure resolution strategy.
-            // could be null during sync.
-            Set<String> processedDimensions = new HashSet<>();
-            if (flavorDimensionList != null) {
-                project.getDependencies().attributesSchema(schema -> {
-                    for (String dimension : flavorDimensionList) {
-                        String dimensionName = CONFIG_ATTR_FLAVOR_PREFIX + dimension;
-                        processedDimensions.add(dimensionName);
-                        schema.attribute(
-                                Attribute.of(dimensionName, String.class),
-                                strategy -> strategy.getCompatibilityRules()
-                                        .assumeCompatibleWhenMissing());
-                    }
-                });
-            }
-
-            // also create a strategy for the flavor matching one.
-            project.getDependencies().attributesSchema(schema -> {
-                for (String flavorDimension : extension.getFlavorMatchingStrategy().keySet()) {
-                    if (!processedDimensions.contains(flavorDimension)) {
-                        schema.attribute(
-                                Attribute.of(flavorDimension, String.class),
-                                strategy -> strategy.getCompatibilityRules()
-                                        .assumeCompatibleWhenMissing());
-
-                    }
-                }
-            });
 
             // Create iterable to get GradleProductFlavor from ProductFlavorData.
             Iterable<CoreProductFlavor> flavorDsl =

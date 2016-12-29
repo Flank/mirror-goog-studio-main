@@ -44,6 +44,7 @@ import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import java.io.File;
@@ -121,6 +122,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Collection<File> previousFeatures;
 
+    private List<LibraryInfo> computedLibraryInfo;
+
     @Override
     protected void doFullTaskAction() throws IOException {
         // we have to clean the source folder output in case the package name changed.
@@ -189,22 +192,26 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @NonNull
     public List<LibraryInfo> getLibraryInfoList() {
-        // first build a map for the optional symbols.
-        Map<ComponentArtifactIdentifier, File> symbolMap = new HashMap<>();
-        for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
-            symbolMap.put(artifactResult.getId(), artifactResult.getFile());
+        if (computedLibraryInfo == null) {
+            // first build a map for the optional symbols.
+            Map<ComponentArtifactIdentifier, File> symbolMap = new HashMap<>();
+            for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
+                symbolMap.put(artifactResult.getId(), artifactResult.getFile());
+            }
+
+            // now loop through all the manifests and associate to a symbol file, if applicable.
+            Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
+            computedLibraryInfo = new ArrayList<>(manifestArtifacts.size());
+            for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
+                computedLibraryInfo.add(new LibraryInfo(
+                        artifactResult.getFile(),
+                        symbolMap.get(artifactResult.getId())));
+            }
+
+            computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
         }
 
-        // now loop through all the manifests and associate to a symbol file, if applicable.
-        Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
-        List<LibraryInfo> libraryInfoList = new ArrayList<>(manifestArtifacts.size());
-        for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
-            libraryInfoList.add(new LibraryInfo(
-                    artifactResult.getFile(),
-                    symbolMap.get(artifactResult.getId())));
-        }
-
-        return libraryInfoList;
+        return computedLibraryInfo;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {

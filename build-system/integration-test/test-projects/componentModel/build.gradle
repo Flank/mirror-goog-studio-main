@@ -25,6 +25,8 @@ model {
         compileSdkVersion = rootProject.latestCompileSdk
         buildToolsVersion = rootProject.buildToolsVersion
     }
+
+    getFlavorDimensionList().add('foo')
     android.productFlavors {
         create("f1")
         create("f2")

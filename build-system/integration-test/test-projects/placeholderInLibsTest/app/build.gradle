@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 android {
@@ -12,6 +13,8 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    flavorDimensions 'foo'
     productFlavors {
         flavor {
             applicationId "com.example.manifest_merger_example.flavor"

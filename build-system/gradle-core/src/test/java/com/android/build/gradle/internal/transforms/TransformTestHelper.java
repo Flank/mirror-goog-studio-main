@@ -43,6 +43,17 @@ import java.util.Map;
 import java.util.Set;
 import org.mockito.Mockito;
 
+/**
+ * Builders to help quickly build different classes needed to call transforms.
+ *
+ * {@link #invocationBuilder()} creates a builder to build {@link TransformInvocation}
+ * {@link #inputBuilder()} creates a builder to build {@link TransformInput}
+ * {@link #jarBuilder(File)} creates a builder to build {@link JarInput}
+ *
+ * {@link #singleJarBuilder(File)} creates a shortcut builder that creates a {@link TransformInput}
+ * containing a single {@link JarInput}
+ *
+ */
 class TransformTestHelper {
 
     static InvocationBuilder invocationBuilder() {
@@ -198,7 +209,7 @@ class TransformTestHelper {
             return this;
         }
 
-        FakeTransformInput build() {
+        TransformInput build() {
             return new FakeTransformInput(
                     ImmutableList.copyOf(jarInputs),
                     ImmutableList.copyOf(dirInputs));
