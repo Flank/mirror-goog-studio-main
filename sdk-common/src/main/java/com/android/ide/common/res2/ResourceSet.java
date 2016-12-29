@@ -72,7 +72,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
     public ResourceSet(String name, String libraryName, boolean validateEnabled) {
         super(name, validateEnabled);
-        mPreprocessor = new NoOpResourcePreprocessor();
+        mPreprocessor = NoOpResourcePreprocessor.INSTANCE;
         mLibraryName = libraryName;
     }
 
