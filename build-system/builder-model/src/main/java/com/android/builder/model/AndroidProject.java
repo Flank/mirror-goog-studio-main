@@ -63,6 +63,10 @@ public interface AndroidProject {
     String PROPERTY_BUILD_DENSITY = "android.injected.build.density";
 
     String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
+
+    // deprecated. Kept here so that newew Studio can still inject it for older plugin
+    // but newer plugin don't do anything different based on this property.
+    @SuppressWarnings("unused")
     String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
 
     String PROPERTY_RESTRICT_VARIANT_PROJECT = "android.injected.restrict.variant.project";

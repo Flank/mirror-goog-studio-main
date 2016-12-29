@@ -122,7 +122,6 @@ public class LibraryTaskManager extends TaskManager {
     public void createTasksForVariantData(
             @NonNull final TaskFactory tasks,
             @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        final boolean generateSourcesOnly = AndroidGradleOptions.generateSourcesOnly(project);
         final LibraryVariantData libVariantData = (LibraryVariantData) variantData;
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         final CoreBuildType buildType = variantConfig.getBuildType();
@@ -388,9 +387,7 @@ public class LibraryTaskManager extends TaskManager {
                     extractAnnotationsTask.getName(),
                     AndroidArtifacts.TYPE_EXT_ANNOTATIONS);
 
-            if (!generateSourcesOnly) {
-                bundle.dependsOn(extractAnnotationsTask.getName());
-            }
+            bundle.dependsOn(extractAnnotationsTask.getName());
         }
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
@@ -486,44 +483,40 @@ public class LibraryTaskManager extends TaskManager {
 
                         Optional<AndroidTask<TransformTask>> libraryJarTransformTask =
                                 transformManager.addTransform(tasks, variantScope, transform);
-                        if (!generateSourcesOnly) {
-                            libraryJarTransformTask.ifPresent(t -> {
-                                bundle.dependsOn(t.getName());
+                        libraryJarTransformTask.ifPresent(t -> {
+                            bundle.dependsOn(t.getName());
 
-                                // publish the intermediate classes.jar.
-                                AndroidArtifacts.publish(
-                                        project,
-                                        publishConfigName,
-                                        classesJar,
-                                        t.getName(),
-                                        AndroidArtifacts.TYPE_JAR);
-                                // and again as a scoped jars
-                                AndroidArtifacts.publish(
-                                        project,
-                                        publishConfigName,
-                                        classesJar,
-                                        t.getName(),
-                                        AndroidArtifacts.TYPE_JAR_SUB_PROJECTS);
+                            // publish the intermediate classes.jar.
+                            AndroidArtifacts.publish(
+                                    project,
+                                    publishConfigName,
+                                    classesJar,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JAR);
+                            // and again as a scoped jars
+                            AndroidArtifacts.publish(
+                                    project,
+                                    publishConfigName,
+                                    classesJar,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JAR_SUB_PROJECTS);
 
-                                // publish intermediate local jars as a folder
-                                AndroidArtifacts.publish(
-                                        project,
-                                        publishConfigName,
-                                        localJarFolder,
-                                        t.getName(),
-                                        AndroidArtifacts.TYPE_LOCAL_JARS);
+                            // publish intermediate local jars as a folder
+                            AndroidArtifacts.publish(
+                                    project,
+                                    publishConfigName,
+                                    localJarFolder,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_LOCAL_JARS);
 
-                            });
-                        }
+                        });
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle.
                         LibraryJniLibsTransform jniTransform =
                                 new LibraryJniLibsTransform(new File(variantBundleDir, FD_JNI));
                         Optional<AndroidTask<TransformTask>> jniPackagingTask =
                                 transformManager.addTransform(tasks, variantScope, jniTransform);
-                        if (!generateSourcesOnly) {
-                            jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
-                        }
+                        jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
                         return null;
                     }
                 });
@@ -539,9 +532,7 @@ public class LibraryTaskManager extends TaskManager {
                 variantScope.getAidlCompileTask().getName(),
                 variantScope.getMergeAssetsTask().getName(),
                 variantData.getOutputs().get(0).getScope().getManifestProcessorTask().getName());
-        if (!generateSourcesOnly) {
-            bundle.dependsOn(variantScope.getNdkBuildable());
-        }
+        bundle.dependsOn(variantScope.getNdkBuildable());
 
         bundle.setDescription("Assembles a bundle containing the library in " +
                 variantConfig.getFullName() + ".");

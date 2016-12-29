@@ -183,10 +183,6 @@ public class AndroidGradleOptions {
         return getBoolean(project, AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED);
     }
 
-    public static boolean generateSourcesOnly(@NonNull Project project) {
-        return getBoolean(project, AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY);
-    }
-
     public static boolean keepTimestampsInApk(@NonNull Project project) {
         return getBoolean(project, PROPERTY_KEEP_TIMESTAMPS_IN_APK);
     }
