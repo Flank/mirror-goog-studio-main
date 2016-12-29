@@ -269,7 +269,7 @@ public class MergeResources extends IncrementalTask {
 
         if (isDisableVectorDrawables()) {
             // If the user doesn't want any PNGs, leave the XML file alone as well.
-            return new NoOpResourcePreprocessor();
+            return NoOpResourcePreprocessor.INSTANCE;
         }
 
         Collection<Density> densities =

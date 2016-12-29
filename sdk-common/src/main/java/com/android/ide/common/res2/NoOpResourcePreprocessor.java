@@ -25,6 +25,11 @@ import java.util.Collection;
  */
 public class NoOpResourcePreprocessor implements ResourcePreprocessor {
 
+    public static final NoOpResourcePreprocessor INSTANCE = new NoOpResourcePreprocessor();
+
+    // private constructor to avoid new instances.
+    private NoOpResourcePreprocessor() { }
+
     @Override
     public boolean needsPreprocessing(File file) {
         return false;
