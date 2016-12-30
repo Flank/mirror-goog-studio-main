@@ -212,12 +212,12 @@ public class TestTransform extends Transform {
             return this;
         }
 
-        Builder setSecondaryFile(@NonNull File file) {
+        Builder addSecondaryFile(@NonNull File file) {
             secondaryFileInputs.add(file);
             return this;
         }
 
-        Builder setSecondaryInput(@NonNull SecondaryFile secondaryFile) {
+        Builder addSecondaryInput(@NonNull SecondaryFile secondaryFile) {
             mSecondaryFiles.add(secondaryFile);
             return this;
         }

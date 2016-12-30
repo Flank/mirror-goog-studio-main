@@ -26,19 +26,16 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
-import org.junit.rules.TemporaryFolder;
 
 public class TransformManagerTest extends TaskTestUtils {
 
@@ -47,8 +44,6 @@ public class TransformManagerTest extends TaskTestUtils {
     private Project project;
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
     public void setUp() throws IOException {
@@ -787,4 +782,5 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(TransformManager.getTaskNamePrefix(transform))
                 .isEqualTo("transformClassesEnhancedAndNativeLibsWithFooBarFor");
     }
+
 }
