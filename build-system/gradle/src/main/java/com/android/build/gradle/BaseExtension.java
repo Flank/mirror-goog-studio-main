@@ -57,6 +57,7 @@ import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
@@ -642,7 +643,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     public void flavorMatchingStrategy(String name, String value) {
         if (flavorMatchingStrategy == null) {
-            flavorMatchingStrategy = new HashMap<>();
+            flavorMatchingStrategy = Maps.newHashMap();
         }
 
         if (!name.startsWith(VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX)) {
@@ -652,7 +653,9 @@ public abstract class BaseExtension implements AndroidConfig {
         flavorMatchingStrategy.put(name, value);
     }
 
-
+    /**
+     * Map of (flavor dimension, flavor value) for flavor matching strategy.
+     */
     @Override
     @NonNull
     public Map<String, String> getFlavorMatchingStrategy() {
