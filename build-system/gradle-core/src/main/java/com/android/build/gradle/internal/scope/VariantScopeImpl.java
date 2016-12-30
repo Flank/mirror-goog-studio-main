@@ -112,6 +112,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -222,6 +223,82 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantData = variantData;
+    }
+
+    private final Map<OutputType, FileCollection> outputMap = Maps.newHashMap();
+
+    @NonNull
+    @Override
+    public FileCollection getOutputs(@NonNull OutputType outputType) {
+        FileCollection fileCollection = outputMap.get(outputType);
+        if (fileCollection == null) {
+            throw new IllegalStateException("No output of type: " + outputType.toString());
+        }
+        return fileCollection;
+    }
+
+    @Override
+    public void addTaskOutput(
+            @NonNull TaskOutputType outputType,
+            @NonNull File file,
+            @NonNull String taskName) {
+        addTaskOutput(outputType, createCollection(file, taskName));
+    }
+
+    @Override
+    public void addTaskOutput(@NonNull TaskOutputType outputType,
+            @NonNull FileCollection fileCollection) {
+        if (outputMap.containsKey(outputType)) {
+            throw new IllegalStateException("Output already registered for type: " + outputType);
+        }
+
+        outputMap.put(outputType, fileCollection);
+    }
+
+    @NonNull
+    @Override
+    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
+        if (outputMap.containsKey(outputType)) {
+            throw new IllegalStateException("Anchor Output already created for type: " + outputType);
+        }
+
+        FileCollection fileCollection = getGlobalScope().getProject().files();
+        outputMap.put(outputType, fileCollection);
+
+        return fileCollection;
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType,
+            @NonNull File file,
+            @NonNull String taskName) {
+        addToAnchorOutput(outputType, createCollection(file, taskName));
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType,
+            @NonNull FileCollection fileCollection) {
+
+        FileCollection anchorCollection = outputMap.get(outputType);
+        if (anchorCollection == null) {
+            throw new IllegalStateException("No Anchor output created for type: " + outputType);
+        }
+
+        if (!(anchorCollection instanceof ConfigurableFileCollection)) {
+            throw new IllegalStateException(
+                    "Anchor File collection for type '"
+                            + outputType
+                            + "' is not a ConfigurableFileCollection.");
+        }
+
+        ((ConfigurableFileCollection) anchorCollection).from(fileCollection);
+    }
+
+    @NonNull
+    private FileCollection createCollection(@NonNull File file, @NonNull String taskName) {
+        return getGlobalScope().getProject().files(file).builtBy(taskName);
     }
 
     @Override
