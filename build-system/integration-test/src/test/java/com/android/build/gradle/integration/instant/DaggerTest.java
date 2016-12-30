@@ -82,7 +82,10 @@ public class DaggerTest {
         this.testProject = testProject;
         this.useAndroidApt = useAndroidApt;
 
-        project = GradleTestProject.builder().fromTestProject(testProject).create();
+        project = GradleTestProject.builder()
+                .fromTestProject(testProject)
+                .withDependencyChecker(!useAndroidApt)
+                .create();
     }
 
     @Before
@@ -90,8 +93,8 @@ public class DaggerTest {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         mAppModule = project.file("src/main/java/com/android/tests/AppModule.java");
 
-        if (testProject.equals("daggerTwo") && !useAndroidApt) {
-            project.setBuildFile("build.no-apt.gradle");
+        if (testProject.equals("daggerTwo") && useAndroidApt) {
+            project.setBuildFile("build.apt.gradle");
         }
     }
 

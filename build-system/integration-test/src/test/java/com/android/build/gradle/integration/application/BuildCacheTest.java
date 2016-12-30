@@ -117,6 +117,11 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
+        // Remove dependencyResolutionChecker.
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n");
+
         RunGradleTasks executor =
                 project.executor()
                         .withProperty("android.enableBuildCache", "false")

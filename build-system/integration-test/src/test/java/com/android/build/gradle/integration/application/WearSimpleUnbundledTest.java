@@ -75,22 +75,4 @@ public class WearSimpleUnbundledTest {
             assertThat(fullApk).doesNotContain(embeddedApkPath);
         }
     }
-
-    @Test
-    public void checErrorOnUnbundledFlagPlusDependency() throws IOException {
-        File mainAppBuildGradle = project.file("main/build.gradle");
-
-        TestFileUtils.appendToFile(mainAppBuildGradle,
-                "dependencies {\n"
-                + "  wearApp project(':wear')\n"
-                + "}\n");
-
-        GradleBuildResult result = project.executor().expectFailure().run(
-                "clean", ":main:assembleDebug");
-
-        //noinspection ThrowableResultOfMethodCallIgnored
-        assertThat(result.getFailureMessage())
-                .contains(
-                        "Wear app unbundling is turned on but a dependency on a wear App has been found for variant debug");
-    }
 }

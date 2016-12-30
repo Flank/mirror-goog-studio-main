@@ -218,6 +218,7 @@ public final class GradleTestProject implements TestRule {
     private File buildFile;
     private File localProp;
     private final boolean withoutNdk;
+    private final boolean withDependencyChecker;
 
     private final Collection<String> gradleProperties;
 
@@ -246,6 +247,7 @@ public final class GradleTestProject implements TestRule {
             boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
             boolean withoutNdk,
+            boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
@@ -259,6 +261,7 @@ public final class GradleTestProject implements TestRule {
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
         this.withoutNdk = withoutNdk;
+        this.withDependencyChecker = withDependencyChecker;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
@@ -283,6 +286,7 @@ public final class GradleTestProject implements TestRule {
         buildFile = new File(getTestDir(), "build.gradle");
         sourceDir = new File(getTestDir(), "src");
         withoutNdk = rootProject.withoutNdk;
+        withDependencyChecker = rootProject.withDependencyChecker;
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
@@ -456,7 +460,7 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     private String generateCommonHeader() {
-        return String.format(
+        String result = String.format(
                 "ext {\n"
                 + "    buildToolsVersion = '%1$s'\n"
                 + "    latestCompileSdk = %2$s\n"
@@ -480,10 +484,46 @@ public final class GradleTestProject implements TestRule {
                 + "    if (ext.useJack != null) {\n"
                 + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
                 + "    }\n"
-                + "}",
+                + "}\n"
+                + "\n"
+                + "",
                 DEFAULT_BUILD_TOOL_VERSION,
                 DEFAULT_COMPILE_SDK_VERSION,
                 useJack);
+        if (withDependencyChecker) {
+            result = result
+                    + "// Check to ensure dependencies are not resolved during configuration.\n"
+                    + "//\n"
+                    + "// If it is intentional, create GradleTestProject without dependency checker"
+                    + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the"
+                    + "// checker with:\n"
+                    + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
+                    + "//\n"
+                    + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
+                    + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
+                    + "// interest to get a stacktrace.\n"
+                    + "Boolean isTaskGraphReady = false\n"
+                    + "gradle.taskGraph.whenReady { isTaskGraphReady = true }\n"
+                    + "\n"
+                    + "ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
+                    + "    @Override\n"
+                    + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
+                    + "        if (!isTaskGraphReady\n"
+                    + "                && !resolvableDependencies.getName().equals('classpath')\n"  // classpath is resolved to find the plugin.
+                    + "                && !resolvableDependencies.getName().startsWith('testTarget')\n"  // TODO: Fix for test plugin.
+                    + "                && project.findProperty(\"" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "\")?.toBoolean() != true) {\n"
+                    + "            throw new RuntimeException(\n"
+                    + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "\n"
+                    + "    @Override\n"
+                    + "    void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
+                    + "}\n"
+                    + "\n"
+                    + "gradle.addListener(dependencyResolutionChecker)\n";
+        }
+        return result;
     }
 
     @NonNull

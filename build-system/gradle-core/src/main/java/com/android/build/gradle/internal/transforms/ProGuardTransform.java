@@ -118,18 +118,20 @@ public class ProGuardTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        final List<File> files = Lists.newArrayList();
+        final List<SecondaryFile> files = Lists.newArrayList();
 
-        // the mapping file.
-        File testedMappingFile = computeMappingFile();
-        if (testedMappingFile != null) {
-            files.add(testedMappingFile);
+        if (testedMappingFile != null && testedMappingFile.isFile()) {
+            files.add(SecondaryFile.nonIncremental(testedMappingFile));
+        } else if (testMappingConfiguration != null) {
+            files.add(SecondaryFile.nonIncremental(testMappingConfiguration));
         }
 
         // the config files
-        files.addAll(getAllConfigurationFiles());
+        files.addAll(getAllConfigurationFiles().stream()
+                .map(SecondaryFile::nonIncremental)
+                .collect(Collectors.toList()));
 
-        return files.stream().map(SecondaryFile::nonIncremental).collect(Collectors.toList());
+        return files;
     }
 
     @NonNull

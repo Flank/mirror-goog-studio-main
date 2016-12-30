@@ -40,4 +40,7 @@ public interface ConfigurationProvider {
 
     @NonNull
     Configuration getJackPluginConfiguration();
+
+    @NonNull
+    Configuration getWearAppConfiguration();
 }
