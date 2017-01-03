@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.testutils.filesystemdiff;
 
-package com.android.testutils;
+import java.nio.file.Path;
 
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+public class SymbolicLinkEntry extends FileSystemEntry {
+    private Path mTarget;
 
-@RunWith(JarTestSuiteRunner.class)
-public class JarTestSuite {
-    @BeforeClass
-    public static void setUp() {
-        BazelRunfilesManifestProcessor.setUpRunfiles();
+    public SymbolicLinkEntry(Path path, Path target) {
+        super(path);
+        this.mTarget = target;
+    }
+
+    @Override
+    public Kind getKind() {
+        return Kind.SymbolicLink;
+    }
+
+    public Path getTarget() {
+        return mTarget;
     }
 }
