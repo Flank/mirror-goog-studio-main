@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * An AndroidSourceDirectorySet represents a lit of directory input for an Android project.
+ * An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.
  */
 public interface AndroidSourceDirectorySet extends PatternFilterable {
 
