@@ -61,8 +61,8 @@ public class Revision implements Comparable<Revision> {
         }
     }
     private static final Pattern FULL_REVISION_PATTERN =
-            //                   1=major       2=minor       3=micro     4=separator  5=previewType  6=preview
-            Pattern.compile("\\s*([0-9]+)(?:\\.([0-9]+)(?:\\.([0-9]+))?)?([\\s-]*)?(?:(rc|alpha|beta)([0-9]+))?\\s*");
+            //                   1=major       2=minor       3=micro     4=separator  5=previewType      6=preview
+            Pattern.compile("\\s*([0-9]+)(?:\\.([0-9]+)(?:\\.([0-9]+))?)?([\\s-]*)?(?:(rc|alpha|beta|\\.)([0-9]+))?\\s*");
 
     protected static final String DEFAULT_SEPARATOR = " ";
 
@@ -449,6 +449,10 @@ public class Revision implements Comparable<Revision> {
                 p2 = rhs.mPreview == NOT_A_PREVIEW ? 1 : 0;
                 delta = p1 - p2;
                 break;
+
+            case ASCENDING:
+                delta = mPreview - rhs.mPreview;
+                break;
         }
         return delta;
     }
@@ -471,7 +475,12 @@ public class Revision implements Comparable<Revision> {
         /**
          * The preview field is ignored and not used in the comparison.
          */
-        IGNORE
+        IGNORE,
+        /**
+         * Treat the preview field as just another normal field
+         * (that is, 1.0.0.0 < 1.0.0.1 < 1.0.0.2 < 1.0.1.0)
+         */
+        ASCENDING
     }
 
 
