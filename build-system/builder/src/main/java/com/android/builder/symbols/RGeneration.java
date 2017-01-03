@@ -17,16 +17,12 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
-import com.android.utils.FileUtils;
-import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Utility class to generate {@code R.java} files.
@@ -58,25 +54,23 @@ public class RGeneration {
         /*
          * First we need to make a few changes to the actual symbol tables we are going to write.
          *
-         * We don't write symbol tables for libraries that have the same package and table name as
+         * We don't write symbol tables for libraries that have the same package as
          * the main symbol table because that file is already generated.
          *
-         * Then, we must merge symbol tables if they have the same package and name as symbols for
+         * Then, we must merge symbol tables if they have the same package as symbols for
          * both are read from the same base files.
          */
-        Pair<String, String> mainP = Pair.of(main.getTablePackage(), main.getTableName());
-        Map<Pair<String, String>, SymbolTable> toWrite = new HashMap<>();
+        Map<String, SymbolTable> toWrite = new HashMap<>();
         for (SymbolTable st : libraries) {
-            Pair<String, String> p = Pair.of(st.getTablePackage(), st.getTableName());
-            if (p.equals(mainP)) {
+            if (st.getTablePackage().equals(main.getTablePackage())) {
                 continue;
             }
 
-            SymbolTable existing = toWrite.get(p);
+            SymbolTable existing = toWrite.get(st.getTablePackage());
             if (existing != null) {
-                toWrite.put(p, existing.merge(st));
+                toWrite.put(st.getTablePackage(), existing.merge(st));
             } else {
-                toWrite.put(p, st);
+                toWrite.put(st.getTablePackage(), st);
             }
         }
 
@@ -84,10 +78,10 @@ public class RGeneration {
          * Replace the values of the symbols in the tables to write with the ones in the main
          * symbol table.
          */
-        for (Pair<String, String> k : new HashSet<>(toWrite.keySet())) {
-            SymbolTable st = toWrite.get(k);
-            st = main.filter(st).rename(st.getTablePackage(), st.getTableName());
-            toWrite.put(k, st);
+        for (String pkg : new HashSet<>(toWrite.keySet())) {
+            SymbolTable st = toWrite.get(pkg);
+            st = main.filter(st).rename(st.getTablePackage());
+            toWrite.put(pkg, st);
 
             /*
              * Symbols may actually disappear from the library's symbol table. This can happen

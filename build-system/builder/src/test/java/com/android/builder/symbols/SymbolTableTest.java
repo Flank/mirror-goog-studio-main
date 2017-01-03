@@ -60,20 +60,6 @@ public class SymbolTableTest {
     }
 
     @Test
-    public void tableNameRequiredForEquality() {
-        SymbolTable t0 = SymbolTable.builder().tableName("foo").build();
-        SymbolTable t1 = SymbolTable.builder().tableName("bar").build();
-
-        assertNotEquals(t0, t1);
-        assertNotEquals(t0.hashCode(), t1.hashCode());
-
-        t1 = SymbolTable.builder().tableName("foo").build();
-
-        assertEquals(t0, t1);
-        assertEquals(t0.hashCode(), t1.hashCode());
-    }
-
-    @Test
     public void tablePackageRequiredForEquality() {
         SymbolTable t0 = SymbolTable.builder().tablePackage("foo").build();
         SymbolTable t1 = SymbolTable.builder().tablePackage("bar").build();
@@ -109,28 +95,6 @@ public class SymbolTableTest {
     }
 
     @Test
-    public void setValidName() {
-        SymbolTable t = SymbolTable.builder().tableName("foo").build();
-        assertEquals("foo", t.getTableName());
-    }
-
-    @Test
-    public void defaultTableName() {
-        SymbolTable t = SymbolTable.builder().build();
-        assertEquals("R", t.getTableName());
-    }
-
-    @Test
-    public void setInvalidName() {
-        try {
-            SymbolTable.builder().tableName("f o o");
-            fail();
-        } catch (IllegalArgumentException e) {
-            // Expected.
-        }
-    }
-
-    @Test
     public void setValidPackage() {
         SymbolTable t = SymbolTable.builder().tablePackage("a.bb.ccc").build();
         assertEquals("a.bb.ccc", t.getTablePackage());
@@ -155,7 +119,6 @@ public class SymbolTableTest {
     @Test
     public void mergeNoTables() {
         SymbolTable t = SymbolTable.merge(new ArrayList<>());
-        assertEquals("R", t.getTableName());
         assertEquals("", t.getTablePackage());
     }
 
@@ -163,7 +126,6 @@ public class SymbolTableTest {
     public void mergeOneTable() {
         SymbolTable t =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .build();
@@ -172,7 +134,6 @@ public class SymbolTableTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .build();
@@ -184,14 +145,12 @@ public class SymbolTableTest {
     public void mergeThreeTables() {
         SymbolTable m0 =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .build();
 
         SymbolTable m1 =
                 SymbolTable.builder()
-                        .tableName("mu")
                         .tablePackage("muu")
                         .add(new Symbol("a", "b", "c1", "d1"))
                         .add(new Symbol("a2", "b2", "c2", "d2"))
@@ -199,7 +158,6 @@ public class SymbolTableTest {
 
         SymbolTable m2 =
                 SymbolTable.builder()
-                        .tableName("moo")
                         .tablePackage("moo")
                         .add(new Symbol("a", "b", "c3", "d3"))
                         .add(new Symbol("a2", "b2", "c4", "d4"))
@@ -210,7 +168,6 @@ public class SymbolTableTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .add(new Symbol("a2", "b2", "c2", "d2"))
@@ -224,7 +181,6 @@ public class SymbolTableTest {
     public void tableFilter() {
         SymbolTable t =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .add(new Symbol("e", "f", "g", "h"))
@@ -232,7 +188,6 @@ public class SymbolTableTest {
 
         SymbolTable f =
                 SymbolTable.builder()
-                        .tableName("blah")
                         .tablePackage("bleh")
                         .add(new Symbol("i", "j", "k", "l"))
                         .add(new Symbol("a", "b", "m", "n"))
@@ -242,7 +197,6 @@ public class SymbolTableTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .tableName("foo")
                         .tablePackage("bar")
                         .add(new Symbol("a", "b", "c", "d"))
                         .build();
@@ -253,11 +207,10 @@ public class SymbolTableTest {
     @Test
     public void renameTest() {
         SymbolTable t = SymbolTable.builder().add(new Symbol("a", "b", "c", "d")).build();
-        SymbolTable r = t.rename("x", "y");
+        SymbolTable r = t.rename("x");
         SymbolTable e =
                 SymbolTable.builder()
                         .add(new Symbol("a", "b", "c", "d"))
-                        .tableName("y")
                         .tablePackage("x")
                         .build();
         assertEquals(e, r);

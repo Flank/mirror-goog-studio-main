@@ -18,7 +18,6 @@ package com.android.builder.symbols;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
@@ -107,7 +106,7 @@ public class RGenerationTest {
     }
 
     @Test
-    public void librariesWithSamePackageAndNameAsMainDoNotGenerateAnything() throws Exception {
+    public void librariesWithSamePackageAsMainDoNotGenerateAnything() throws Exception {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
@@ -127,7 +126,7 @@ public class RGenerationTest {
     }
 
     @Test
-    public void librariesWithSamePackageAndNameShareRFile() throws Exception {
+    public void librariesWithSamePackageShareRFile() throws Exception {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
@@ -139,29 +138,25 @@ public class RGenerationTest {
 
         SymbolTable l0 =
                 SymbolTable.builder()
-                        .tablePackage("a.b")
-                        .tableName("Roo")
+                        .tablePackage("a.c")
                         .add(new Symbol("a", "b", "c", "d"))
                         .build();
 
         SymbolTable l1 =
                 SymbolTable.builder()
-                        .tablePackage("a.b")
-                        .tableName("Roo")
+                        .tablePackage("a.c")
                         .add(new Symbol("e", "f", "g", "h"))
                         .build();
 
         SymbolTable l2 =
                 SymbolTable.builder()
-                        .tablePackage("a.b")
-                        .tableName("Room")
+                        .tablePackage("a.d")
                         .add(new Symbol("i", "j", "k", "l"))
                         .build();
 
         SymbolTable l3 =
                 SymbolTable.builder()
                         .tablePackage("a.b.c")
-                        .tableName("Roo")
                         .add(new Symbol("m", "n", "o", "p"))
                         .build();
 
@@ -169,21 +164,21 @@ public class RGenerationTest {
 
         RGeneration.generateRForLibraries(main, Arrays.asList(l0, l1, l2, l3), out, false);
 
-        assertTrue(fileContains(FileUtils.join(out, "a", "b", "Roo.java"), "static c b = d"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "b", "Roo.java"), "static g f = h"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "b", "Roo.java"), "static k j = l"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "b", "Roo.java"), "static o n = p"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "b", "Room.java"), "static c b = d"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "b", "Room.java"), "static g f = h"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "b", "Room.java"), "static k j = l"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "b", "Room.java"), "static o n = p"));
+        assertTrue(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static c b = d"));
+        assertTrue(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static g f = h"));
+        assertFalse(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static k j = l"));
+        assertFalse(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static o n = p"));
+        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static c b = d"));
+        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static g f = h"));
+        assertTrue(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static k j = l"));
+        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static o n = p"));
         assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "Roo.java"), "static c b = d"));
+                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static c b = d"));
         assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "Roo.java"), "static g f = h"));
+                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static g f = h"));
         assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "Roo.java"), "static k j = l"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "b", "c", "Roo.java"), "static o n = p"));
+                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static k j = l"));
+        assertTrue(fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static o n = p"));
     }
 
     @Test
