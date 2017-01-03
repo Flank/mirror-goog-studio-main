@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -75,7 +74,7 @@ public class HotSwapWithNoChangesTest {
         doTestArtifacts(() -> {
             // Force cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
+                    .withInstantRun(24, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
                     .run("assembleDebug");
         });
     }
@@ -90,7 +89,7 @@ public class HotSwapWithNoChangesTest {
 
             // Adding a new class will force a cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE)
+                    .withInstantRun(24, COLDSWAP_MODE)
                     .run("assembleDebug");
         });
     }
@@ -100,7 +99,7 @@ public class HotSwapWithNoChangesTest {
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(24, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
 
@@ -123,11 +122,11 @@ public class HotSwapWithNoChangesTest {
 
         // now run again the incremental build.
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE)
+                .withInstantRun(24, COLDSWAP_MODE)
                 .run("assembleDebug");
 
         InstantRunBuildContext instantRunBuildContext =
-                InstantRunTestUtils.loadBuildContext(23, instantRunModel);
+                InstantRunTestUtils.loadBuildContext(24, instantRunModel);
 
         assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(0);
         assertThat(instantRunBuildContext.getLastBuild().getVerifierStatus())
