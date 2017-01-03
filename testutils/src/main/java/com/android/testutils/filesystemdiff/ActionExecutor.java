@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.testutils;
+package com.android.testutils.filesystemdiff;
 
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+import com.android.utils.ILogger;
 
-@RunWith(JarTestSuiteRunner.class)
-public class JarTestSuite {
-    @BeforeClass
-    public static void setUp() {
-        BazelRunfilesManifestProcessor.setUpRunfiles();
+public class ActionExecutor {
+    public void execute(ILogger logger, Action action) {
+        action.execute(logger);
     }
 }
