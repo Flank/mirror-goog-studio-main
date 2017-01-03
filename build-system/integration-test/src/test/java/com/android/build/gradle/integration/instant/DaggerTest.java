@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.JavaVersion;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -88,6 +90,10 @@ public class DaggerTest {
     @Before
     public void setUp() throws IOException {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
+        if (this.testProject.equals("daggerTwo")) {
+            Assume.assumeTrue(
+                    "Dagger 2 only works on java 7+", JavaVersion.current().isJava7Compatible());
+        }
         mAppModule = project.file("src/main/java/com/android/tests/AppModule.java");
 
         if (testProject.equals("daggerTwo") && !useAndroidApt) {
@@ -162,14 +168,14 @@ public class DaggerTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap24() throws Exception {
-        doTestHotSwap(adb.getDevice(24));
+    public void hotSwap_device_art() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap23() throws Exception {
-        doTestHotSwap(adb.getDevice(23));
+    public void hotSwap_device_dalvik() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
     }
 
     private void doTestHotSwap(IDevice iDevice) throws Exception {

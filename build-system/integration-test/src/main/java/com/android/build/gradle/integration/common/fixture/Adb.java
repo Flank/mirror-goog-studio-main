@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.fixture;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.DeviceHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -113,7 +112,7 @@ public class Adb implements TestRule, Closeable {
 
         // Failed to find, make a pretty error message.
         StringBuilder errorMessage = new StringBuilder("Test requires device that matches ")
-                .append(StringDescription.toString(matcher)).append("\nConnected Devices:\n");
+                .append(StringDescription.toString(matcher)).append("\nConnected Devices:");
         for (IDevice device: devices) {
             errorMessage.append("    ").append(device).append(": ");
             StringDescription mismatch = new StringDescription();
@@ -122,10 +121,6 @@ public class Adb implements TestRule, Closeable {
         }
 
         throw new AssertionError(errorMessage);
-    }
-
-    public IDevice getDevice(int version) {
-        return getDevice(AndroidVersionMatcher.exactly(version));
     }
 
     /**
