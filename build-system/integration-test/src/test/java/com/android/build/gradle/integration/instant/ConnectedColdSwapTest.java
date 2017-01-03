@@ -119,7 +119,7 @@ public class ConnectedColdSwapTest {
         InstantRunTestUtils.unlockDevice(device);
         Logcat.MessageListener messageListener = logcat.listenForMessage("coldswaptest_before");
         InstantRunTestUtils.runApp(device, HelloWorldApp.APP_ID + "/.HelloWorld");
-        InstantRunTestUtils.startService(device, HelloWorldApp.APP_ID);
+
         //Connect to device
         InstantRunClient client =
                 new InstantRunClient(
@@ -159,7 +159,7 @@ public class ConnectedColdSwapTest {
         Logcat.MessageListener afterMessageListener = logcat.listenForMessage("coldswaptest_after");
 
         InstantRunTestUtils.runApp(device, HelloWorldApp.APP_ID + "/.HelloWorld");
-        InstantRunTestUtils.startService(device, HelloWorldApp.APP_ID);
+
         // Check the app is running
         afterMessageListener.await();
         InstantRunTestUtils.waitForAppStart(client, device);

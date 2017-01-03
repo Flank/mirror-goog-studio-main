@@ -130,7 +130,7 @@ public class HotSwapTester {
             InstantRunClient client =
                     new InstantRunClient(packageName, iLogger, token, port);
 
-            InstantRunTestUtils.startService(device, packageName);
+            // Give the app a chance to start
             InstantRunTestUtils.waitForAppStart(client, device);
 
             verifyOriginalCode.run();

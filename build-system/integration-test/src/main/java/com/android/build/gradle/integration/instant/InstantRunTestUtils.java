@@ -31,13 +31,10 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.Variant;
 import com.android.builder.testing.api.DeviceException;
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.TimeoutException;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
@@ -254,18 +251,6 @@ public final class InstantRunTestUtils {
             System.err.println("Unable to print build info xml file: \n" +
                     Throwables.getStackTraceAsString(e));
         }
-    }
-
-    static void startService(@NonNull IDevice device, @NonNull String packageName)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
-        IShellOutputReceiver receiver = new CollectingOutputReceiver();
-        String startIrServiceCmd =
-                String.format(
-                        "am startservice %1$s/com.android.tools.fd.runtime.InstantRunService",
-                        packageName);
-        device.executeShellCommand(
-                startIrServiceCmd, receiver, DEFAULT_ADB_TIMEOUT_MSEC, MILLISECONDS);
     }
 
     static void waitForAppStart(
