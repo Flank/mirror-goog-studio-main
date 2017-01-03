@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import static com.android.SdkConstants.DOT_XML;
-import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
+import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.tools.lint.detector.api.Severity.ERROR;
 import static com.android.tools.lint.detector.api.Severity.FATAL;
 import static com.android.tools.lint.detector.api.Severity.IGNORE;
@@ -26,12 +26,9 @@ import static com.android.tools.lint.detector.api.Severity.WARNING;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.HtmlReporter;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
-import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.detector.api.Issue;
@@ -49,6 +46,7 @@ import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.GradleException;
+import org.gradle.api.Project;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
@@ -480,7 +478,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             @NonNull LintCliClient client,
             @NonNull LintCliFlags flags,
             @Nullable String variantName,
-            @Nullable org.gradle.api.Project project,
+            @Nullable Project project,
+            @Nullable File reportsDir,
             boolean report) {
         if (disable != null) {
             flags.getSuppressedIds().addAll(disable);
@@ -518,14 +517,17 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
                 File file = null;
                 boolean closeWriter;
                 if (isStdOut(output)) {
+                    //noinspection IOResourceOpenedButNotSafelyClosed
                     writer = new PrintWriter(System.out, true);
                     closeWriter = false;
                 } else if (isStdErr(output)) {
+                    //noinspection IOResourceOpenedButNotSafelyClosed
                     writer = new PrintWriter(System.err, true);
                     closeWriter = false;
                 } else {
                     file = output;
                     try {
+                        //noinspection IOResourceOpenedButNotSafelyClosed
                         writer = new BufferedWriter(new FileWriter(output));
                     } catch (IOException e) {
                         throw new org.gradle.api.GradleException("Text invalid argument.", e);
@@ -538,7 +540,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             if (htmlReport) {
                 File output = htmlOutput;
                 if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, ".html", flags.isFatalOnly());
+                    output = createOutputPath(project, variantName, ".html", reportsDir,
+                            flags.isFatalOnly());
                 } else if (!output.isAbsolute()) {
                     output = project.file(output.getPath());
                 }
@@ -553,7 +556,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             if (xmlReport) {
                 File output = xmlOutput;
                 if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, DOT_XML, flags.isFatalOnly());
+                    output = createOutputPath(project, variantName, DOT_XML, reportsDir,
+                            flags.isFatalOnly());
                 } else if (!output.isAbsolute()) {
                     output = project.file(output.getPath());
                 }
@@ -601,13 +605,12 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     private static File createOutputPath(
-            @NonNull org.gradle.api.Project project,
+            @Nullable Project project,
             @Nullable String variantName,
             @NonNull String extension,
+            @Nullable File reportsDir,
             boolean fatalOnly) {
         StringBuilder base = new StringBuilder();
-        base.append(FD_OUTPUTS);
-        base.append(File.separator);
         base.append("lint-results");
         if (!Strings.isNullOrEmpty(variantName)) {
             base.append("-");
@@ -617,7 +620,15 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             base.append("-fatal");
         }
         base.append(extension);
-        return new File(project.getBuildDir(), base.toString());
+
+        if (reportsDir != null) {
+            return new File(reportsDir, base.toString());
+        } else if (project == null) {
+            return new File(base.toString());
+        } else {
+            File buildDir = project.getBuildDir();
+            return new File(buildDir, FD_REPORTS + File.separator + base.toString());
+        }
     }
 
     @Override @Nullable
