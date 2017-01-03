@@ -886,7 +886,9 @@ public class AndroidBuilder {
 
                 File rFile = dependency.getSymbolFile();
                 SymbolTable depSymbols =
-                        rFile.exists()? SymbolIo.read(rFile) : SymbolTable.builder().build();
+                        (rFile != null && rFile.exists())
+                                ? SymbolIo.read(rFile)
+                                : SymbolTable.builder().build();
                 depSymbols = depSymbols.rename(depPackageName);
                 depSymbolTables.add(depSymbols);
             }
