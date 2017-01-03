@@ -326,6 +326,7 @@ public class Lint extends BaseTask {
         if (!report || fatalOnly) {
             flags.setQuiet(true);
         }
+        flags.setWriteBaselineIfMissing(report);
 
         Pair<List<Warning>,LintBaseline> warnings;
         try {

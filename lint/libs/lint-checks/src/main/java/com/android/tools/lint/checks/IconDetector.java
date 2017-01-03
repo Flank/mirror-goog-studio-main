@@ -44,6 +44,7 @@ import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
+import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -55,7 +56,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
@@ -1619,18 +1619,24 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             return false;
         }
 
-        BufferedImage circle = new BufferedImage(imageWidth, imageHeight,
-                BufferedImage.TYPE_INT_ARGB);
+        BufferedImage circle = new BufferedImage(imageWidth, imageHeight, TYPE_INT_ARGB);
         Graphics graphics = circle.getGraphics();
         graphics.fillOval(minX, minY, shapeWidth, shapeHeight);
         graphics.dispose();
 
+        final int threshold = 64;
+
         int different = 0;
         for (int y = 0; y < imageHeight; y++) {
             for (int x = 0; x < imageWidth; x++) {
-                boolean original = (image.getRGB(x, y) & 0xFF000000) != 0;
-                boolean cir = (circle.getRGB(x, y) & 0xFF000000) != 0;
-
+                int sourceAlpha = (image.getRGB(x, y) & 0xFF000000) >>> 24;
+                int circleAlpha = (circle.getRGB(x, y) & 0xFF000000) >>> 24;
+                if (sourceAlpha > 0 && sourceAlpha < threshold) {
+                    // Don't compare pixels in the alpha area
+                    continue;
+                }
+                boolean original = sourceAlpha < threshold;
+                boolean cir = circleAlpha < threshold;
                 if (original != cir) {
                     different++;
                 }
@@ -2072,6 +2078,9 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
         } else if (folderConfig != null && folderConfig.getDensityQualifier() != null
                 && !folderConfig.getDensityQualifier().hasFakeValue()) {
             Density density = folderConfig.getDensityQualifier().getValue();
+            if (density == null) {
+                return;
+            }
             width = mdpiWidth * density.getDpiValue() / Density.DEFAULT_DENSITY;
             height = mdpiHeight * density.getDpiValue() / Density.DEFAULT_DENSITY;
         } else {
