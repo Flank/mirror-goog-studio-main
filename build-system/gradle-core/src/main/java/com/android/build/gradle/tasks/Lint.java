@@ -88,6 +88,7 @@ public class Lint extends BaseTask {
     @Nullable private File sdkHome;
     private boolean fatalOnly;
     private ToolingModelBuilderRegistry toolingRegistry;
+    @Nullable private File reportsDir;
 
     public void setLintOptions(@NonNull LintOptions lintOptions) {
         this.lintOptions = lintOptions;
@@ -99,6 +100,10 @@ public class Lint extends BaseTask {
 
     public void setToolingRegistry(ToolingModelBuilderRegistry toolingRegistry) {
         this.toolingRegistry = toolingRegistry;
+    }
+
+    public void setReportsDir(@Nullable File reportDir) {
+        this.reportsDir = reportDir;
     }
 
     public void setFatalOnly(boolean fatalOnly) {
@@ -181,7 +186,8 @@ public class Lint extends BaseTask {
             LintGradleClient client = new LintGradleClient(
                     registry, flags, getProject(), modelProject,
                     sdkHome, variant, getBuildTools());
-            syncOptions(lintOptions, client, flags, null, getProject(), true, fatalOnly);
+            syncOptions(lintOptions, client, flags, null, getProject(), reportsDir,
+                    true, fatalOnly);
 
             // Compute baseline counts. This is tricky because an error could appear in
             // multiple variants, and in that case it should only be counted as filtered
@@ -321,7 +327,8 @@ public class Lint extends BaseTask {
             flags.setFatalOnly(true);
         }
         if (lintOptions != null) {
-            syncOptions(lintOptions, client, flags, variant, getProject(), report, fatalOnly);
+            syncOptions(lintOptions, client, flags, variant, getProject(), reportsDir, report,
+                    fatalOnly);
         }
         if (!report || fatalOnly) {
             flags.setQuiet(true);
@@ -348,9 +355,11 @@ public class Lint extends BaseTask {
             @NonNull LintCliFlags flags,
             @Nullable Variant variant,
             @NonNull Project project,
+            @Nullable File reportsDir,
             boolean report,
             boolean fatalOnly) {
-        options.syncTo(client, flags, variant != null ? variant.getName() : null, project, report);
+        options.syncTo(client, flags, variant != null ? variant.getName() : null, project,
+                reportsDir, report);
 
         boolean displayEmpty = !(fatalOnly || flags.isQuiet());
         for (Reporter reporter : flags.getReporters()) {
@@ -420,14 +429,16 @@ public class Lint extends BaseTask {
 
         @Override
         public void execute(@NonNull Lint lint) {
-            lint.setLintOptions(scope.getGlobalScope().getExtension().getLintOptions());
-            File sdkFolder = scope.getGlobalScope().getSdkHandler().getSdkFolder();
+            GlobalScope globalScope = scope.getGlobalScope();
+            lint.setLintOptions(globalScope.getExtension().getLintOptions());
+            File sdkFolder = globalScope.getSdkHandler().getSdkFolder();
             if (sdkFolder != null) {
                 lint.setSdkHome(sdkFolder);
             }
-            lint.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            lint.setAndroidBuilder(globalScope.getAndroidBuilder());
             lint.setVariantName(scope.getVariantConfiguration().getFullName());
-            lint.setToolingRegistry(scope.getGlobalScope().getToolingRegistry());
+            lint.setToolingRegistry(globalScope.getToolingRegistry());
+            lint.setReportsDir(globalScope.getReportsDir());
             lint.setDescription("Runs lint on the " + StringHelper
                             .capitalize(scope.getVariantConfiguration().getFullName()) + " build.");
             lint.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
@@ -457,17 +468,18 @@ public class Lint extends BaseTask {
         @Override
         public void execute(@NonNull Lint task) {
             String variantName = scope.getVariantData().getVariantConfiguration().getFullName();
-            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            GlobalScope globalScope = scope.getGlobalScope();
+            task.setAndroidBuilder(globalScope.getAndroidBuilder());
             // TODO: Make this task depend on lintCompile too (resolve initialization order first)
-            task.setLintOptions(scope.getGlobalScope().getExtension().getLintOptions());
+            task.setLintOptions(globalScope.getExtension().getLintOptions());
             task.setSdkHome(checkNotNull(
-                    scope.getGlobalScope().getSdkHandler().getSdkFolder(), "SDK not set up."));
+                    globalScope.getSdkHandler().getSdkFolder(), "SDK not set up."));
             task.setVariantName(variantName);
-            task.setToolingRegistry(scope.getGlobalScope().getToolingRegistry());
+            task.setToolingRegistry(globalScope.getToolingRegistry());
+            task.setReportsDir(globalScope.getReportsDir());
             task.setFatalOnly(true);
             task.setDescription(
                     "Runs lint on just the fatal issues in the " + variantName + " build.");
-
         }
     }
 
@@ -502,6 +514,7 @@ public class Lint extends BaseTask {
                 lintTask.setSdkHome(sdkFolder);
             }
             lintTask.setToolingRegistry(globalScope.getToolingRegistry());
+            lintTask.setReportsDir(globalScope.getReportsDir());
             lintTask.setAndroidBuilder(globalScope.getAndroidBuilder());
         }
     }

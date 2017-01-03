@@ -249,7 +249,7 @@ public class XmlUtils {
     public static String toXmlAttributeValue(@NonNull String attrValue) {
         for (int i = 0, n = attrValue.length(); i < n; i++) {
             char c = attrValue.charAt(i);
-            if (c == '"' || c == '\'' || c == '<' || c == '&' || c == '\n') {
+            if (c == '"' || c == '\'' || c == '<' || c == '>' || c == '&' || c == '\n') {
                 StringBuilder sb = new StringBuilder(2 * attrValue.length());
                 appendXmlAttributeValue(sb, attrValue);
                 return sb.toString();
@@ -316,6 +316,7 @@ public class XmlUtils {
         // &, ", ' and < are illegal in attributes; see http://www.w3.org/TR/REC-xml/#NT-AttValue
         // (' legal in a " string and " is legal in a ' string but here we'll stay on the safe
         // side)
+        char prev = 0;
         for (int i = 0; i < n; i++) {
             char c = attrValue.charAt(i);
             if (c == '"') {
@@ -328,9 +329,14 @@ public class XmlUtils {
                 sb.append(AMP_ENTITY);
             } else if (c == '\n') {
                 sb.append(NEWLINE_ENTITY);
+            } else if (c == '>' && prev == ']') {
+                // '>' doesn't have to be escaped in attributes, but it can be, and it *must*
+                // be if it's the end of the character sequence ]]>. (See b.android.com/231003)
+                sb.append(GT_ENTITY);
             } else {
                 sb.append(c);
             }
+            prev = c;
         }
     }
 

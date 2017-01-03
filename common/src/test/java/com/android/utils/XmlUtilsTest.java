@@ -132,8 +132,8 @@ public class XmlUtilsTest extends TestCase {
 
     public void testAppendXmlAttributeValue() throws Exception {
         StringBuilder sb = new StringBuilder();
-        XmlUtils.appendXmlAttributeValue(sb, "<\"'>&\n\n");
-        assertEquals("&lt;&quot;&apos;>&amp;&#xA;&#xA;", sb.toString());
+        XmlUtils.appendXmlAttributeValue(sb, "<\"'>&\n\n]]>");
+        assertEquals("&lt;&quot;&apos;>&amp;&#xA;&#xA;]]&gt;", sb.toString());
     }
 
     public void testToXmlTextValue() throws Exception {

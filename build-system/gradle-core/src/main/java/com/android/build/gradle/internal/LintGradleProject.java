@@ -48,6 +48,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalDependency;
+import org.gradle.api.artifacts.FileCollectionDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.JavaPlugin;
@@ -985,6 +986,12 @@ public class LintGradleProject extends Project {
                             String group = dependency.getGroup();
                             String name = dependency.getName();
                             String version = dependency.getVersion();
+                            if (name == null || group == null || version == null) {
+                                // This will be the case for example if you use something like
+                                //    repositories { flatDir { dirs 'myjars' } }
+                                //    dependencies { compile name: 'guava-18.0' }
+                                continue;
+                            }
                             MavenCoordinatesImpl coordinates = new MavenCoordinatesImpl(group,
                                     name, version);
                             Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
@@ -998,7 +1005,11 @@ public class LintGradleProject extends Project {
                                 // a real artifact (and creating a fake one and placing it here
                                 // is dangerous; it would mean putting one into the
                                 // map that would prevent a real definition from being inserted.
-                                // finding the actual content to add
+                            }
+                        } else if (dependency instanceof FileCollectionDependency) {
+                            Set<File> files = ((FileCollectionDependency) dependency).resolve();
+                            if (files != null) {
+                                libs.addAll(files);
                             }
                         }
                     }
