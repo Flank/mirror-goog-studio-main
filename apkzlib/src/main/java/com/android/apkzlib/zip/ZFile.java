@@ -373,6 +373,12 @@ public class ZFile implements Closeable {
      */
     private boolean mSkipDataDescriptorVerification;
 
+    /**
+     * Should the "version to extract" field validation be skipped? See
+     * {@link ZFileOptions#getSkipZipVersionToExtractValidation()}.
+     */
+    private boolean mSkipVersionToExtractValidation;
+
 
     /**
      * Creates a new zip file. If the zip file does not exist, then no file is created at this
@@ -415,6 +421,7 @@ public class ZFile implements Closeable {
         mCoverEmptySpaceUsingExtraField = options.getCoverEmptySpaceUsingExtraField();
         mAutoSortFiles = options.getAutoSortFiles();
         mSkipDataDescriptorVerification = options.getSkipDataDescriptorValidation();
+        mSkipVersionToExtractValidation = options.getSkipZipVersionToExtractValidation();
 
         /*
          * These two values will be overwritten by openReadOnly() below if the file exists.
@@ -2413,6 +2420,15 @@ public class ZFile implements Closeable {
      */
     boolean getSkipDataDescriptorVerification() {
         return mSkipDataDescriptorVerification;
+    }
+
+    /**
+     * Checks whether the "version to extract" validation should be skipped.
+     *
+     * @return should it be skipped?
+     */
+    boolean getSkipVersionToExtractValidation() {
+        return mSkipVersionToExtractValidation;
     }
 
     /**

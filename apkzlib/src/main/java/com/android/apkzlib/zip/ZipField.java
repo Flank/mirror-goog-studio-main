@@ -247,6 +247,15 @@ abstract class ZipField {
     }
 
     /**
+     * Obtains the offset at which the field starts.
+     *
+     * @return the start offset
+     */
+    int offset() {
+        return mOffset;
+    }
+
+    /**
      * Obtains the offset at which the field ends. This is the exact offset at which the next
      * field starts.
      *
