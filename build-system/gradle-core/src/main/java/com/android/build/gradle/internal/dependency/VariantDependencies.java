@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static org.gradle.api.artifacts.Configuration.State.RESOLVED;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
@@ -25,21 +23,15 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyContainer;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-
 import java.util.Collection;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -242,6 +234,7 @@ public class VariantDependencies {
                     project.getConfigurations()
                             .maybeCreate(
                                     variantType == VariantType.LIBRARY
+                                                    || variantType == VariantType.ATOM
                                             ? "_" + variantName + "Publish"
                                             : "_" + variantName + "Apk");
 
@@ -262,10 +255,10 @@ public class VariantDependencies {
             if (publishVariant) {
                 publish = project.getConfigurations().maybeCreate(variantName);
                 publish.setDescription("Published Configuration for Variant " + variantName);
-                // if the variant is not a library, then the publishing configuration should
-                // not extend from the apkConfigs. It's mostly there to access the artifact from
-                // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
+                // if the variant is not a dependent bundle, then the publishing configuration
+                // should not extend from the apkConfigs. It's mostly there to access the artifact
+                // from another project but it shouldn't bring any dependencies with it.
+                if (variantType == VariantType.LIBRARY || variantType == VariantType.ATOM) {
                     publish.setExtendsFrom(apkConfigs);
                 }
 
