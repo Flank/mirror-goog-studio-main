@@ -24,13 +24,13 @@ import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
 import com.android.utils.Pair;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * A {@link Downloader} implementation that uses the old {@link DownloadCache}.
@@ -61,11 +61,11 @@ public class LegacyDownloader implements Downloader {
 
     @Nullable
     @Override
-    public File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
+    public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
         File target = File.createTempFile("LegacyDownloader", null);
         downloadFully(url, target, null, indicator);
-        return target;
+        return target.toPath();
     }
 
     @Override

@@ -64,7 +64,6 @@ public class SdkSysImgSource extends SdkSource {
         return true;
     }
 
-
     @Override
     protected String[] getDefaultXmlFileUrls() {
         return new String[] { SdkSysImgConstants.URL_DEFAULT_FILENAME };

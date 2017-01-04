@@ -33,9 +33,6 @@ import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.w3c.dom.ls.LSResourceResolver;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -43,8 +40,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import javax.xml.bind.JAXBException;
+import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * Utility class that loads {@link Repository}s from {@link RepositorySource}s.
@@ -135,7 +132,8 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                         parsedPackages = repo.getRemotePackage();
                     } else if (mFallback != null) {
                         // TODO: don't require downloading again
-                        parsedPackages = mFallback.parseLegacyXml(source, settings, progress);
+                        parsedPackages = mFallback
+                          .parseLegacyXml(source, downloader, settings, progress);
                         legacy = true;
                     }
                     if (parsedPackages != null && !parsedPackages.isEmpty()) {
