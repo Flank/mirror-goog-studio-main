@@ -33,19 +33,19 @@ class ZFileDataSource implements DataSource {
     private static final int MAX_READ_CHUNK_SIZE = 65536;
 
     @Nonnull
-    private final ZFile mFile;
+    private final ZFile file;
 
     /**
      * Offset (in bytes) relative to the start of file where the region visible in this data source
      * starts.
      */
-    private final long mOffset;
+    private final long offset;
 
     /**
      * Size (in bytes) of the file region visible in this data source or {@code -1} if the whole
      * file is visible in this data source and thus its size may change if the file's size changes.
      */
-    private final long mSize;
+    private final long size;
 
     /**
      * Constructs a new {@code ZFileDataSource} based on the data contained in the file. Changes to
@@ -53,9 +53,9 @@ class ZFileDataSource implements DataSource {
      * source.
      */
     public ZFileDataSource(@Nonnull ZFile file) {
-        mFile = file;
-        mOffset = 0;
-        mSize = -1;
+        this.file = file;
+        offset = 0;
+        size = -1;
     }
 
     /**
@@ -66,23 +66,23 @@ class ZFileDataSource implements DataSource {
     public ZFileDataSource(@Nonnull ZFile file, long offset, long size) {
         Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkArgument(size >= 0, "size < 0");
-        mFile = file;
-        mOffset = offset;
-        mSize = size;
+        this.file = file;
+        this.offset = offset;
+        this.size = size;
     }
 
     @Override
     public long size() {
-        if (mSize == -1) {
+        if (size == -1) {
             // Data source size is the current size of the file
             try {
-                return mFile.directSize();
+                return file.directSize();
             } catch (IOException e) {
                 return 0;
             }
         } else {
             // Data source size is fixed
-            return mSize;
+            return size;
         }
     }
 
@@ -94,7 +94,7 @@ class ZFileDataSource implements DataSource {
             return this;
         }
 
-        return new ZFileDataSource(mFile, mOffset + offset, size);
+        return new ZFileDataSource(file, this.offset + offset, size);
     }
 
     @Override
@@ -105,12 +105,12 @@ class ZFileDataSource implements DataSource {
             return;
         }
 
-        long chunkOffsetInFile = mOffset + offset;
+        long chunkOffsetInFile = this.offset + offset;
         long remaining = size;
         byte[] buf = new byte[(int) Math.min(remaining, MAX_READ_CHUNK_SIZE)];
         while (remaining > 0) {
             int chunkSize = (int) Math.min(remaining, buf.length);
-            int readSize = mFile.directRead(chunkOffsetInFile, buf, 0, chunkSize);
+            int readSize = file.directRead(chunkOffsetInFile, buf, 0, chunkSize);
             if (readSize == -1) {
                 throw new EOFException("Premature EOF");
             }
@@ -132,7 +132,7 @@ class ZFileDataSource implements DataSource {
 
         int prevLimit = dest.limit();
         try {
-            mFile.directFullyRead(mOffset + offset, dest);
+            file.directFullyRead(this.offset + offset, dest);
         } finally {
             dest.limit(prevLimit);
         }

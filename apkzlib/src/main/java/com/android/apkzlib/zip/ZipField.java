@@ -58,29 +58,29 @@ abstract class ZipField {
      * Field name. Used for providing (more) useful error messages.
      */
     @Nonnull
-    private final String mName;
+    private final String name;
 
     /**
      * Offset of the file in the record.
      */
-    protected final int mOffset;
+    protected final int offset;
 
     /**
      * Size of the field. Only 2 or 4 allowed.
      */
-    private final int mSize;
+    private final int size;
 
     /**
      * If a fixed value exists for the field, then this attribute will contain that value.
      */
     @Nullable
-    private final Long mExpected;
+    private final Long expected;
 
     /**
      * All invariants that this field must verify.
      */
     @Nonnull
-    private Set<ZipFieldInvariant> mInvariants;
+    private Set<ZipFieldInvariant> invariants;
 
     /**
      * Creates a new field that does not contain a fixed value.
@@ -94,11 +94,11 @@ abstract class ZipField {
         Preconditions.checkArgument(offset >= 0, "offset >= 0");
         Preconditions.checkArgument(size == 2 || size == 4, "size != 2 && size != 4");
 
-        mName = name;
-        mOffset = offset;
-        mSize = size;
-        mExpected = null;
-        mInvariants = Sets.newHashSet(invariants);
+        this.name = name;
+        this.offset = offset;
+        this.size = size;
+        expected = null;
+        this.invariants = Sets.newHashSet(invariants);
     }
 
     /**
@@ -113,11 +113,11 @@ abstract class ZipField {
         Preconditions.checkArgument(offset >= 0, "offset >= 0");
         Preconditions.checkArgument(size == 2 || size == 4, "size != 2 && size != 4");
 
-        mName = name;
-        mOffset = offset;
-        mSize = size;
-        mExpected = expected;
-        mInvariants = Sets.newHashSet();
+        this.name = name;
+        this.offset = offset;
+        this.size = size;
+        this.expected = expected;
+        invariants = Sets.newHashSet();
     }
 
     /**
@@ -128,9 +128,9 @@ abstract class ZipField {
      * @throws IOException the invariants are not verified
      */
     private void checkVerifiesInvariants(long value) throws IOException {
-        for (ZipFieldInvariant invariant : mInvariants) {
+        for (ZipFieldInvariant invariant : invariants) {
             if (!invariant.isValid(value)) {
-                throw new IOException("Value " + value + " of field " + mName + " is invalid "
+                throw new IOException("Value " + value + " of field " + name + " is invalid "
                         + "(fails '" + invariant.getName() + "').");
             }
         }
@@ -144,12 +144,12 @@ abstract class ZipField {
      * @throws IOException failed to advance the buffer
      */
     void skip(@Nonnull ByteBuffer bytes) throws IOException {
-        if (bytes.remaining() < mSize) {
-            throw new IOException("Cannot skip field " + mName + " because only "
+        if (bytes.remaining() < size) {
+            throw new IOException("Cannot skip field " + name + " because only "
                     + bytes.remaining() + " remain in the buffer.");
         }
 
-        bytes.position(bytes.position() + mSize);
+        bytes.position(bytes.position() + size);
     }
 
     /**
@@ -161,15 +161,15 @@ abstract class ZipField {
      * @throws IOException failed to read the field
      */
     long read(@Nonnull ByteBuffer bytes) throws IOException {
-        if (bytes.remaining() < mSize) {
-            throw new IOException("Cannot skip field " + mName + " because only "
+        if (bytes.remaining() < size) {
+            throw new IOException("Cannot skip field " + name + " because only "
                     + bytes.remaining() + " remain in the buffer.");
         }
 
         bytes.order(ByteOrder.LITTLE_ENDIAN);
 
         long r;
-        if (mSize == 2) {
+        if (size == 2) {
             r = LittleEndianUtils.readUnsigned2Le(bytes);
         } else {
             r =  LittleEndianUtils.readUnsigned4Le(bytes);
@@ -188,8 +188,8 @@ abstract class ZipField {
      * @throws IOException failed to read the field or the field does not have the expected value
      */
     void verify(@Nonnull ByteBuffer bytes) throws IOException {
-        Preconditions.checkState(mExpected != null, "mExpected == null");
-        verify(bytes, mExpected);
+        Preconditions.checkState(expected != null, "expected == null");
+        verify(bytes, expected);
     }
 
     /**
@@ -205,7 +205,7 @@ abstract class ZipField {
         checkVerifiesInvariants(expected);
         long r = read(bytes);
         if (r != expected) {
-            throw new IOException("Incorrect value for field '" + mName + "': value is " +
+            throw new IOException("Incorrect value for field '" + name + "': value is " +
                     r + " but " + expected + " expected.");
         }
     }
@@ -223,11 +223,11 @@ abstract class ZipField {
 
         Preconditions.checkArgument(value >= 0, "value (%s) < 0", value);
 
-        if (mSize == 2) {
+        if (size == 2) {
             Preconditions.checkArgument(value <= 0x0000ffff, "value (%s) > 0x0000ffff", value);
             LittleEndianUtils.writeUnsigned2Le(output, Ints.checkedCast(value));
         } else {
-            Verify.verify(mSize == 4);
+            Verify.verify(size == 4);
             Preconditions.checkArgument(value <= 0x00000000ffffffffL,
                     "value (%s) > 0x00000000ffffffffL", value);
             LittleEndianUtils.writeUnsigned4Le(output, value);
@@ -242,8 +242,8 @@ abstract class ZipField {
      * @throws IOException failed to write the value in the stream
      */
     void write(@Nonnull ByteBuffer output) throws IOException {
-        Preconditions.checkState(mExpected != null, "mExpected == null");
-        write(output, mExpected);
+        Preconditions.checkState(expected != null, "expected == null");
+        write(output, expected);
     }
 
     /**
@@ -252,7 +252,7 @@ abstract class ZipField {
      * @return the start offset
      */
     int offset() {
-        return mOffset;
+        return offset;
     }
 
     /**
@@ -262,7 +262,7 @@ abstract class ZipField {
      * @return the end offset
      */
     int endOffset() {
-        return mOffset + mSize;
+        return offset + size;
     }
 
     /**

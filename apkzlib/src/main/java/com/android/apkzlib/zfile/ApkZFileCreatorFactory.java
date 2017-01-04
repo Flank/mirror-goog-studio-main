@@ -30,7 +30,7 @@ public class ApkZFileCreatorFactory implements ApkCreatorFactory {
      * Options for the {@link ZFileOptions} to use in all APKs.
      */
     @Nonnull
-    private final ZFileOptions mOptions;
+    private final ZFileOptions options;
 
     /**
      * Creates a new factory.
@@ -38,7 +38,7 @@ public class ApkZFileCreatorFactory implements ApkCreatorFactory {
      * @param options the options to use for all instances created
      */
     public ApkZFileCreatorFactory(@Nonnull ZFileOptions options) {
-        mOptions = options;
+        this.options = options;
     }
 
 
@@ -46,7 +46,7 @@ public class ApkZFileCreatorFactory implements ApkCreatorFactory {
     @Nonnull
     public ApkCreator make(@Nonnull CreationData creationData) {
         try {
-            return new ApkZFileCreator(creationData, mOptions);
+            return new ApkZFileCreator(creationData, options);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

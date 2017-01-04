@@ -23,20 +23,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.annotation.Nonnull;
 
+/**
+ * Keeps track of used bytes allowing gauging memory usage.
+ */
 public class ByteTracker {
 
     /**
      * Number of bytes currently in use.
      */
-    private long mBytesUsed;
+    private long bytesUsed;
 
     /**
      * Maximum number of bytes used.
      */
-    private long mMaxBytesUsed;
+    private long maxBytesUsed;
 
     /**
      * Creates a new byte source by fully reading an input stream.
+     *
      * @param stream the input stream
      * @return a byte source containing the cached data from the given stream
      * @throws IOException failed to read the stream
@@ -55,11 +59,13 @@ public class ByteTracker {
 
     /**
      * Creates a new byte source by snapshotting the provided stream.
+     *
      * @param stream the stream with the data
      * @return a byte source containing the cached data from the given stream
      * @throws IOException failed to read the stream
      */
-    public CloseableDelegateByteSource fromStream(@Nonnull ByteArrayOutputStream stream) throws IOException {
+    public CloseableDelegateByteSource fromStream(@Nonnull ByteArrayOutputStream stream)
+            throws IOException {
         byte[] data = stream.toByteArray();
         updateUsage(data.length);
         return new CloseableDelegateByteSource(ByteSource.wrap(data), data.length) {
@@ -73,6 +79,7 @@ public class ByteTracker {
 
     /**
      * Creates a new byte source from another byte source.
+     *
      * @param source the byte source to copy data from
      * @return the tracked byte source
      * @throws IOException failed to read data from the byte source
@@ -83,28 +90,31 @@ public class ByteTracker {
 
     /**
      * Updates the memory used by this tracker.
+     *
      * @param delta the number of bytes to add or remove, if negative
      */
     private synchronized void updateUsage(long delta) {
-        mBytesUsed += delta;
-        if (mMaxBytesUsed < mBytesUsed) {
-            mMaxBytesUsed = mBytesUsed;
+        bytesUsed += delta;
+        if (maxBytesUsed < bytesUsed) {
+            maxBytesUsed = bytesUsed;
         }
     }
 
     /**
      * Obtains the number of bytes currently used.
+     *
      * @return the number of bytes
      */
     public synchronized long getBytesUsed() {
-        return mBytesUsed;
+        return bytesUsed;
     }
 
     /**
      * Obtains the maximum number of bytes ever used by this tracker.
+     *
      * @return the number of bytes
      */
     public synchronized long getMaxBytesUsed() {
-        return mMaxBytesUsed;
+        return maxBytesUsed;
     }
 }

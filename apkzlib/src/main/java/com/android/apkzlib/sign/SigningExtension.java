@@ -76,60 +76,60 @@ public class SigningExtension {
     /**
      * Minimum API Level on which this APK is supposed to run.
      */
-    private final int mMinSdkVersion;
+    private final int minSdkVersion;
 
     /**
      * Whether JAR signing (aka v1 signing) is enabled.
      */
-    private final boolean mV1SigningEnabled;
+    private final boolean v1SigningEnabled;
 
     /**
      * Whether APK Signature Scheme v2 sining (aka v2 signing) is enabled.
      */
-    private final boolean mV2SigningEnabled;
+    private final boolean v2SigningEnabled;
 
     /**
      * Certificate of the signer, to be embedded into the APK's signature.
      */
     @Nonnull
-    private final X509Certificate mCertificate;
+    private final X509Certificate certificate;
 
     /**
      * APK signer which performs most of the heavy lifting.
      */
     @Nonnull
-    private final ApkSignerEngine mSigner;
+    private final ApkSignerEngine signer;
 
     /**
-     * Names of APK entries which have been processed by {@link #mSigner}.
+     * Names of APK entries which have been processed by {@link #signer}.
      */
-    private final Set<String> mSignerProcessedOutputEntryNames = new HashSet<>();
+    private final Set<String> signerProcessedOutputEntryNames = new HashSet<>();
 
     /**
      * Cached contents of the most recently output APK Signing Block or {@code null} if the block
      * hasn't yet been output.
      */
     @Nullable
-    private byte[] mCachedApkSigningBlock;
+    private byte[] cachedApkSigningBlock;
 
     /**
      * {@code true} if signatures may need to be output, {@code false} if there's no need to output
      * signatures. This is used in an optimization where we don't modify the APK if it's already
      * signed and if no JAR entries have been added to or removed from the file.
      */
-    private boolean mDirty;
+    private boolean dirty;
 
     /**
      * The extension registered with the {@link ZFile}. {@code null} if not registered.
      */
     @Nullable
-    private ZFileExtension mExtension;
+    private ZFileExtension extension;
 
     /**
      * The file this extension is attached to. {@code null} if not yet registered.
      */
     @Nullable
-    private ZFile mZFile;
+    private ZFile zFile;
 
     public SigningExtension(
             int minSdkVersion,
@@ -140,24 +140,24 @@ public class SigningExtension {
         DefaultApkSignerEngine.SignerConfig signerConfig =
                 new DefaultApkSignerEngine.SignerConfig.Builder(
                         "CERT", privateKey, ImmutableList.of(certificate)).build();
-        mSigner =
+        signer =
                 new DefaultApkSignerEngine.Builder(ImmutableList.of(signerConfig), minSdkVersion)
                         .setOtherSignersSignaturesPreserved(false)
                         .setV1SigningEnabled(v1SigningEnabled)
                         .setV2SigningEnabled(v2SigningEnabled)
                         .setCreatedBy("1.0 (Android)")
                         .build();
-        mMinSdkVersion = minSdkVersion;
-        mV1SigningEnabled = v1SigningEnabled;
-        mV2SigningEnabled = v2SigningEnabled;
-        mCertificate = certificate;
+        this.minSdkVersion = minSdkVersion;
+        this.v1SigningEnabled = v1SigningEnabled;
+        this.v2SigningEnabled = v2SigningEnabled;
+        this.certificate = certificate;
     }
 
     public void register(@Nonnull ZFile zFile) throws NoSuchAlgorithmException, IOException {
-        Preconditions.checkState(mExtension == null, "register() already invoked");
-        mZFile = zFile;
-        mDirty = !isCurrentSignatureAsRequested();
-        mExtension = new ZFileExtension() {
+        Preconditions.checkState(extension == null, "register() already invoked");
+        this.zFile = zFile;
+        dirty = !isCurrentSignatureAsRequested();
+        extension = new ZFileExtension() {
             @Override
             public IOExceptionRunnable added(
                     @Nonnull StoredEntry entry, @Nullable StoredEntry replaced) {
@@ -185,7 +185,7 @@ public class SigningExtension {
                 onOutputClosed();
             }
         };
-        mZFile.addZFileExtension(mExtension);
+        this.zFile.addZFileExtension(extension);
     }
 
     /**
@@ -196,8 +196,8 @@ public class SigningExtension {
         ApkVerifier.Result result;
         try {
             result =
-                    new ApkVerifier.Builder(new ZFileDataSource(mZFile))
-                            .setMinCheckedPlatformVersion(mMinSdkVersion)
+                    new ApkVerifier.Builder(new ZFileDataSource(zFile))
+                            .setMinCheckedPlatformVersion(minSdkVersion)
                             .build()
                             .verify();
         } catch (ApkFormatException e) {
@@ -210,8 +210,8 @@ public class SigningExtension {
             return false;
         }
 
-        if ((result.isVerifiedUsingV1Scheme() != mV1SigningEnabled)
-                || (result.isVerifiedUsingV2Scheme() != mV2SigningEnabled)) {
+        if ((result.isVerifiedUsingV1Scheme() != v1SigningEnabled)
+                || (result.isVerifiedUsingV2Scheme() != v2SigningEnabled)) {
             // APK isn't signed with exactly the schemes we want it to be signed
             return false;
         }
@@ -225,7 +225,7 @@ public class SigningExtension {
         byte[] expectedEncodedCert;
         byte[] actualEncodedCert;
         try {
-            expectedEncodedCert = mCertificate.getEncoded();
+            expectedEncodedCert = certificate.getEncoded();
             actualEncodedCert = verifiedSignerCerts.get(0).getEncoded();
         } catch (CertificateEncodingException e) {
             // Failed to encode signing certificates
@@ -250,8 +250,8 @@ public class SigningExtension {
             return;
         }
         ApkSignerEngine.InspectJarEntryRequest inspectEntryRequest =
-                mSigner.outputJarEntry(entryName);
-        mSignerProcessedOutputEntryNames.add(entryName);
+                signer.outputJarEntry(entryName);
+        signerProcessedOutputEntryNames.add(entryName);
         if (inspectEntryRequest != null) {
             byte[] entryContents = entry.read();
             inspectEntryRequest.getDataSink().consume(entryContents, 0, entryContents.length);
@@ -261,23 +261,23 @@ public class SigningExtension {
 
     private void onZipEntryRemovedFromOutput(@Nonnull String entryName) {
         setDirty();
-        mSigner.outputJarEntryRemoved(entryName);
-        mSignerProcessedOutputEntryNames.remove(entryName);
+        signer.outputJarEntryRemoved(entryName);
+        signerProcessedOutputEntryNames.remove(entryName);
     }
 
     private void onOutputZipReadyForUpdate() throws IOException {
-        if (!mDirty) {
+        if (!dirty) {
             return;
         }
 
         // Notify signer engine about ZIP entries that have appeared in the output without the
         // engine knowing. Also identify ZIP entries which disappeared from the output without the
         // engine knowing.
-        Set<String> unprocessedRemovedEntryNames = new HashSet<>(mSignerProcessedOutputEntryNames);
-        for (StoredEntry entry : mZFile.entries()) {
+        Set<String> unprocessedRemovedEntryNames = new HashSet<>(signerProcessedOutputEntryNames);
+        for (StoredEntry entry : zFile.entries()) {
             String entryName = entry.getCentralDirectoryHeader().getName();
             unprocessedRemovedEntryNames.remove(entryName);
-            if (!mSignerProcessedOutputEntryNames.contains(entryName)) {
+            if (!signerProcessedOutputEntryNames.contains(entryName)) {
                 // Signer engine is not yet aware that this entry is in the output
                 onZipEntryOutput(entry);
             }
@@ -292,7 +292,7 @@ public class SigningExtension {
         // Check whether we need to output additional JAR entries which comprise the v1 signature
         ApkSignerEngine.OutputJarSignatureRequest addV1SignatureRequest;
         try {
-            addV1SignatureRequest = mSigner.outputJarEntries();
+            addV1SignatureRequest = signer.outputJarEntries();
         } catch (Exception e) {
             throw new IOException("Failed to generate v1 signature", e);
         }
@@ -324,36 +324,36 @@ public class SigningExtension {
         for (ApkSignerEngine.OutputJarSignatureRequest.JarEntry entry : v1SignatureEntries) {
             String name = entry.getName();
             byte[] data = entry.getData();
-            mZFile.add(name, new ByteArrayInputStream(data));
+            zFile.add(name, new ByteArrayInputStream(data));
         }
 
         addV1SignatureRequest.done();
     }
 
     private void onOutputZipEntriesWritten() throws IOException {
-        if (!mDirty) {
+        if (!dirty) {
             return;
         }
 
         // Check whether we should output an APK Signing Block which contains v2 signatures
         byte[] apkSigningBlock;
-        byte[] centralDirBytes = mZFile.getCentralDirectoryBytes();
-        byte[] eocdBytes = mZFile.getEocdBytes();
+        byte[] centralDirBytes = zFile.getCentralDirectoryBytes();
+        byte[] eocdBytes = zFile.getEocdBytes();
         ApkSignerEngine.OutputApkSigningBlockRequest addV2SignatureRequest;
         // This event may arrive a second time -- after we write out the APK Signing Block. Thus, we
         // cache the block to speed things up. The cached block is invalidated by any changes to the
         // file (as reported to this extension).
-        if (mCachedApkSigningBlock != null) {
-            apkSigningBlock = mCachedApkSigningBlock;
+        if (cachedApkSigningBlock != null) {
+            apkSigningBlock = cachedApkSigningBlock;
             addV2SignatureRequest = null;
         } else {
             DataSource centralDir = DataSources.asDataSource(ByteBuffer.wrap(centralDirBytes));
             DataSource eocd = DataSources.asDataSource(ByteBuffer.wrap(eocdBytes));
             long zipEntriesSizeBytes =
-                    mZFile.getCentralDirectoryOffset() - mZFile.getExtraDirectoryOffset();
-            DataSource zipEntries = new ZFileDataSource(mZFile, 0, zipEntriesSizeBytes);
+                    zFile.getCentralDirectoryOffset() - zFile.getExtraDirectoryOffset();
+            DataSource zipEntries = new ZFileDataSource(zFile, 0, zipEntriesSizeBytes);
             try {
-                addV2SignatureRequest = mSigner.outputZipSections(zipEntries, centralDir, eocd);
+                addV2SignatureRequest = signer.outputZipSections(zipEntries, centralDir, eocd);
             } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException
                     | ApkFormatException | IOException e) {
                 throw new IOException("Failed to generate v2 signature", e);
@@ -361,16 +361,16 @@ public class SigningExtension {
             apkSigningBlock =
                     (addV2SignatureRequest != null)
                             ? addV2SignatureRequest.getApkSigningBlock() : new byte[0];
-            mCachedApkSigningBlock = apkSigningBlock;
+            cachedApkSigningBlock = apkSigningBlock;
         }
 
         // Insert the APK Signing Block into the output right before the ZIP Central Directory and
         // accordingly update the start offset of ZIP Central Directory in ZIP End of Central
         // Directory.
-        mZFile.directWrite(
-                mZFile.getCentralDirectoryOffset() - mZFile.getExtraDirectoryOffset(),
+        zFile.directWrite(
+                zFile.getCentralDirectoryOffset() - zFile.getExtraDirectoryOffset(),
                 apkSigningBlock);
-        mZFile.setExtraDirectoryOffset(apkSigningBlock.length);
+        zFile.setExtraDirectoryOffset(apkSigningBlock.length);
 
         if (addV2SignatureRequest != null) {
             addV2SignatureRequest.done();
@@ -378,15 +378,15 @@ public class SigningExtension {
     }
 
     private void onOutputClosed() {
-        if (!mDirty) {
+        if (!dirty) {
             return;
         }
-        mSigner.outputDone();
-        mDirty = false;
+        signer.outputDone();
+        dirty = false;
     }
 
     private void setDirty() {
-        mDirty = true;
-        mCachedApkSigningBlock = null;
+        dirty = true;
+        cachedApkSigningBlock = null;
     }
 }

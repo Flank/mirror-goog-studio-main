@@ -49,53 +49,59 @@ public interface ApkCreatorFactory {
          * the APK may be updated instead of created).
          */
         @Nonnull
-        private final File mApkPath;
+        private final File apkPath;
 
         /**
          * Key used to sign the APK. May be {@code null}.
          */
         @Nullable
-        private final PrivateKey mKey;
+        private final PrivateKey key;
 
         /**
-         * Certificate used to sign the APK. Is {@code null} if and only if {@link #mKey} is
+         * Certificate used to sign the APK. Is {@code null} if and only if {@link #key} is
          * {@code null}.
          */
         @Nullable
-        private final X509Certificate mCertificate;
+        private final X509Certificate certificate;
 
         /**
          * Whether signing the APK with JAR Signing Scheme (aka v1 signing) is enabled.
          */
-        private final boolean mV1SigningEnabled;
+        private final boolean v1SigningEnabled;
 
         /**
          * Whether signing the APK with APK Signature Scheme v2 (aka v2 signing) is enabled.
          */
-        private final boolean mV2SigningEnabled;
+        private final boolean v2SigningEnabled;
 
         /**
          * Built-by information for the APK, if any.
          */
         @Nullable
-        private final String mBuiltBy;
+        private final String builtBy;
 
         /**
          * Created-by information for the APK, if any.
          */
         @Nullable
-        private final String mCreatedBy;
+        private final String createdBy;
 
         /**
          * Minimum SDk version that will run the APK.
          */
-        private final int mMinSdkVersion;
+        private final int minSdkVersion;
 
+        /**
+         * How should native libraries be packaged?
+         */
         @Nonnull
-        private final NativeLibrariesPackagingMode mNativeLibrariesPackagingMode;
+        private final NativeLibrariesPackagingMode nativeLibrariesPackagingMode;
 
+        /**
+         * Predicate identifying paths that should not be compressed.
+         */
         @Nonnull
-        private final Predicate<String> mNoCompressPredicate;
+        private final Predicate<String> noCompressPredicate;
 
         /**
          *
@@ -132,16 +138,16 @@ public interface ApkCreatorFactory {
                     "(key == null) != (certificate == null)");
             Preconditions.checkArgument(minSdkVersion >= 0, "minSdkVersion < 0");
 
-            mApkPath = apkPath;
-            mKey = key;
-            mCertificate = certificate;
-            mV1SigningEnabled = v1SigningEnabled;
-            mV2SigningEnabled = v2SigningEnabled;
-            mBuiltBy = builtBy;
-            mCreatedBy = createdBy;
-            mMinSdkVersion = minSdkVersion;
-            mNativeLibrariesPackagingMode = checkNotNull(nativeLibrariesPackagingMode);
-            mNoCompressPredicate = checkNotNull(noCompressPredicate);
+            this.apkPath = apkPath;
+            this.key = key;
+            this.certificate = certificate;
+            this.v1SigningEnabled = v1SigningEnabled;
+            this.v2SigningEnabled = v2SigningEnabled;
+            this.builtBy = builtBy;
+            this.createdBy = createdBy;
+            this.minSdkVersion = minSdkVersion;
+            this.nativeLibrariesPackagingMode = checkNotNull(nativeLibrariesPackagingMode);
+            this.noCompressPredicate = checkNotNull(noCompressPredicate);
         }
 
         /**
@@ -152,7 +158,7 @@ public interface ApkCreatorFactory {
          */
         @Nonnull
         public File getApkPath() {
-            return mApkPath;
+            return apkPath;
         }
 
         /**
@@ -162,7 +168,7 @@ public interface ApkCreatorFactory {
          */
         @Nullable
         public PrivateKey getPrivateKey() {
-            return mKey;
+            return key;
         }
 
         /**
@@ -173,7 +179,7 @@ public interface ApkCreatorFactory {
          */
         @Nullable
         public X509Certificate getCertificate() {
-            return mCertificate;
+            return certificate;
         }
 
         /**
@@ -181,7 +187,7 @@ public interface ApkCreatorFactory {
          * scheme).
          */
         public boolean isV1SigningEnabled() {
-            return mV1SigningEnabled;
+            return v1SigningEnabled;
         }
 
         /**
@@ -189,7 +195,7 @@ public interface ApkCreatorFactory {
          * scheme).
          */
         public boolean isV2SigningEnabled() {
-            return mV2SigningEnabled;
+            return v2SigningEnabled;
         }
 
         /**
@@ -199,7 +205,7 @@ public interface ApkCreatorFactory {
          */
         @Nullable
         public String getBuiltBy() {
-            return mBuiltBy;
+            return builtBy;
         }
 
         /**
@@ -209,7 +215,7 @@ public interface ApkCreatorFactory {
          */
         @Nullable
         public String getCreatedBy() {
-            return mCreatedBy;
+            return createdBy;
         }
 
         /**
@@ -218,7 +224,7 @@ public interface ApkCreatorFactory {
          * @return the minimum SDK version
          */
         public int getMinSdkVersion() {
-            return mMinSdkVersion;
+            return minSdkVersion;
         }
 
         /**
@@ -226,7 +232,7 @@ public interface ApkCreatorFactory {
          */
         @Nonnull
         public NativeLibrariesPackagingMode getNativeLibrariesPackagingMode() {
-            return mNativeLibrariesPackagingMode;
+            return nativeLibrariesPackagingMode;
         }
 
         /**
@@ -234,7 +240,7 @@ public interface ApkCreatorFactory {
          */
         @Nonnull
         public Predicate<String> getNoCompressPredicate() {
-            return mNoCompressPredicate;
+            return noCompressPredicate;
         }
     }
 }

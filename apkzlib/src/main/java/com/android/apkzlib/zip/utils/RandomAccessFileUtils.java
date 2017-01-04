@@ -23,12 +23,9 @@ import javax.annotation.Nonnull;
 /**
  * Utility class with utility methods for random access files.
  */
-public class RandomAccessFileUtils {
-    /**
-     * Utility class: no constructor.
-     */
-    private RandomAccessFileUtils() {
-    }
+public final class RandomAccessFileUtils {
+
+    private RandomAccessFileUtils() {}
 
     /**
      * Reads from an random access file until the provided array is filled. Data is read from the
@@ -36,7 +33,7 @@ public class RandomAccessFileUtils {
      *
      * @param raf the file to read data from
      * @param data the array that will receive the data
-     * @throws IOException
+     * @throws IOException failed to read the data
      */
     public static void fullyRead(@Nonnull RandomAccessFile raf, @Nonnull byte[] data)
             throws IOException {
@@ -51,8 +48,12 @@ public class RandomAccessFileUtils {
         }
 
         if (p < data.length) {
-            throw new IOException("Failed to read " + data.length + " bytes from file. Only "
-                    + p + " bytes could be read.");
+            throw new IOException(
+                    "Failed to read "
+                            + data.length
+                            + " bytes from file. Only "
+                            + p
+                            + " bytes could be read.");
         }
     }
 }

@@ -65,25 +65,25 @@ public class ManifestGenerationExtension {
      * Who should be reported as the manifest builder.
      */
     @Nonnull
-    private final String mBuiltBy;
+    private final String builtBy;
 
     /**
      * Who should be reported as the manifest creator.
      */
     @Nonnull
-    private final String mCreatedBy;
+    private final String createdBy;
 
     /**
      * The file this extension is attached to. {@code null} if not yet registered.
      */
     @Nullable
-    private ZFile mZFile;
+    private ZFile zFile;
 
     /**
      * The zip file's manifest.
      */
     @Nonnull
-    private final Manifest mManifest;
+    private final Manifest manifest;
 
     /**
      * Byte representation of the manifest. There is no guarantee that two writes of the java's
@@ -99,22 +99,22 @@ public class ManifestGenerationExtension {
      * receive the same byte array.
      */
     @Nonnull
-    private CachedSupplier<byte[]> mManifestBytes;
+    private CachedSupplier<byte[]> manifestBytes;
 
     /**
-     * Has the current manifest been changed and not yet flushed? If {@link #mDirty} is
-     * {@code true}, then {@link #mManifestBytes} should not be valid. This means that
-     * marking the manifest as dirty should also invalidate {@link #mManifestBytes}. To avoid
-     * breaking the invariant, instead of setting {@link #mDirty}, {@link #markDirty()} should
+     * Has the current manifest been changed and not yet flushed? If {@link #dirty} is
+     * {@code true}, then {@link #manifestBytes} should not be valid. This means that
+     * marking the manifest as dirty should also invalidate {@link #manifestBytes}. To avoid
+     * breaking the invariant, instead of setting {@link #dirty}, {@link #markDirty()} should
      * be called.
      */
-    private boolean mDirty;
+    private boolean dirty;
 
     /**
      * The extension to register with the {@link ZFile}. {@code null} if not registered.
      */
     @Nullable
-    private ZFileExtension mExtension;
+    private ZFileExtension extension;
 
     /**
      * Creates a new extension. This will not register the extension with the provided
@@ -124,14 +124,14 @@ public class ManifestGenerationExtension {
      * @param createdBy who created the manifest?
      */
     public ManifestGenerationExtension(@Nonnull String builtBy, @Nonnull String createdBy) {
-        mBuiltBy = builtBy;
-        mCreatedBy = createdBy;
-        mManifest = new Manifest();
-        mDirty = false;
-        mManifestBytes = new CachedSupplier<>(() -> {
+        this.builtBy = builtBy;
+        this.createdBy = createdBy;
+        manifest = new Manifest();
+        dirty = false;
+        manifestBytes = new CachedSupplier<>(() -> {
             ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
             try {
-                mManifest.write(outBytes);
+                manifest.write(outBytes);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -145,8 +145,8 @@ public class ManifestGenerationExtension {
      * read and/or written.
      */
     private void markDirty() {
-        mDirty = true;
-        mManifestBytes.reset();
+        dirty = true;
+        manifestBytes.reset();
     }
 
     /**
@@ -156,12 +156,12 @@ public class ManifestGenerationExtension {
      * @throws IOException failed to analyze the zip
      */
     public void register(@Nonnull ZFile zFile) throws IOException {
-        Preconditions.checkState(mExtension == null, "register() has already been invoked.");
-        mZFile = zFile;
+        Preconditions.checkState(extension == null, "register() has already been invoked.");
+        this.zFile = zFile;
 
         rebuildManifest();
 
-        mExtension = new ZFileExtension() {
+        extension = new ZFileExtension() {
             @Nullable
             @Override
             public IOExceptionRunnable beforeUpdate() {
@@ -169,16 +169,16 @@ public class ManifestGenerationExtension {
             }
         };
 
-        mZFile.addZFileExtension(mExtension);
+        this.zFile.addZFileExtension(extension);
     }
 
     /**
      * Rebuilds the zip file's manifest, if it needs changes.
      */
     private void rebuildManifest() throws IOException {
-        Verify.verifyNotNull(mZFile, "mZFile == null");
+        Verify.verifyNotNull(zFile, "zFile == null");
 
-        StoredEntry manifestEntry = mZFile.get(MANIFEST_NAME);
+        StoredEntry manifestEntry = zFile.get(MANIFEST_NAME);
 
         if (manifestEntry != null) {
             /*
@@ -186,13 +186,13 @@ public class ManifestGenerationExtension {
              * because writing the manifest may not generate the same byte sequence, which may
              * trigger an unnecessary re-sign of the jar.
              */
-            mManifest.clear();
+            manifest.clear();
             byte[] manifestBytes = manifestEntry.read();
-            mManifest.read(new ByteArrayInputStream(manifestBytes));
-            mManifestBytes.precomputed(manifestBytes);
+            manifest.read(new ByteArrayInputStream(manifestBytes));
+            this.manifestBytes.precomputed(manifestBytes);
         }
 
-        Attributes mainAttributes = mManifest.getMainAttributes();
+        Attributes mainAttributes = manifest.getMainAttributes();
         String currentVersion = mainAttributes.getValue(ManifestAttributes.MANIFEST_VERSION);
         if (currentVersion == null) {
             setMainAttribute(
@@ -207,8 +207,8 @@ public class ManifestGenerationExtension {
         /*
          * We "blindly" override all other main attributes.
          */
-        setMainAttribute(ManifestAttributes.BUILT_BY, mBuiltBy);
-        setMainAttribute(ManifestAttributes.CREATED_BY, mCreatedBy);
+        setMainAttribute(ManifestAttributes.BUILT_BY, builtBy);
+        setMainAttribute(ManifestAttributes.CREATED_BY, createdBy);
     }
 
     /**
@@ -218,7 +218,7 @@ public class ManifestGenerationExtension {
      * @param value the value
      */
     private void setMainAttribute(@Nonnull String attribute, @Nonnull String value) {
-        Attributes mainAttributes = mManifest.getMainAttributes();
+        Attributes mainAttributes = manifest.getMainAttributes();
         String current = mainAttributes.getValue(attribute);
         if (!value.equals(current)) {
             mainAttributes.putValue(attribute, value);
@@ -232,13 +232,13 @@ public class ManifestGenerationExtension {
      * @throws IOException failed to update the manifest
      */
     private void updateManifest() throws IOException {
-        Verify.verifyNotNull(mZFile, "mZFile == null");
+        Verify.verifyNotNull(zFile, "zFile == null");
 
-        if (!mDirty) {
+        if (!dirty) {
             return;
         }
 
-        mZFile.add(MANIFEST_NAME, new ByteArrayInputStream(mManifestBytes.get()));
-        mDirty = false;
+        zFile.add(MANIFEST_NAME, new ByteArrayInputStream(manifestBytes.get()));
+        dirty = false;
     }
 }

@@ -34,50 +34,53 @@ public class ProcessedAndRawByteSources implements Closeable {
      * The processed byte source.
      */
     @Nonnull
-    private final CloseableByteSource mProcessedSource;
+    private final CloseableByteSource processedSource;
 
     /**
      * The processed raw source.
      */
     @Nonnull
-    private final CloseableByteSource mRawSource;
+    private final CloseableByteSource rawSource;
 
     /**
      * Creates a new container.
+     *
      * @param processedSource the processed source
      * @param rawSource the raw source
      */
     public ProcessedAndRawByteSources(@Nonnull CloseableByteSource processedSource,
             @Nonnull CloseableByteSource rawSource) {
-        mProcessedSource = processedSource;
-        mRawSource = rawSource;
+        this.processedSource = processedSource;
+        this.rawSource = rawSource;
     }
 
     /**
      * Obtains a byte source that read the processed contents of the entry.
+     *
      * @return a byte source
      */
     @Nonnull
     public CloseableByteSource getProcessedByteSource() {
-        return mProcessedSource;
+        return processedSource;
     }
 
     /**
      * Obtains a byte source that reads the raw contents of an entry. This is the data that is
      * ultimately stored in the file and, in the case of compressed files, is the same data in the
      * source returned by {@link #getProcessedByteSource()}.
+     * 
      * @return a byte source
      */
     @Nonnull
     public CloseableByteSource getRawByteSource() {
-        return mRawSource;
+        return rawSource;
     }
 
     @Override
     public void close() throws IOException {
         Closer closer = Closer.create();
-        closer.register(mProcessedSource);
-        closer.register(mRawSource);
+        closer.register(processedSource);
+        closer.register(rawSource);
         closer.close();
     }
 }

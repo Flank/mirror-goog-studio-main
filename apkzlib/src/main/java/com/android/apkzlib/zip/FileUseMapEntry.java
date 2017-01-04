@@ -50,18 +50,18 @@ class FileUseMapEntry<T> {
     /**
      * The first byte in the entry.
      */
-    private final long mStart;
+    private final long start;
 
     /**
      * The first byte no longer in the entry.
      */
-    private final long mEnd;
+    private final long end;
 
     /**
      * The stored data. If {@code null} then this entry represents a free entry.
      */
     @Nullable
-    private final T mStore;
+    private final T store;
 
     /**
      * Creates a new map entry.
@@ -74,9 +74,9 @@ class FileUseMapEntry<T> {
         Preconditions.checkArgument(start >= 0, "start < 0");
         Preconditions.checkArgument(end > start, "end <= start");
 
-        mStart = start;
-        mEnd = end;
-        mStore = store;
+        this.start = start;
+        this.end = end;
+        this.store = store;
     }
 
     /**
@@ -111,7 +111,7 @@ class FileUseMapEntry<T> {
      * is empty and contains no data)
      */
     long getStart() {
-        return mStart;
+        return start;
     }
 
     /**
@@ -120,7 +120,7 @@ class FileUseMapEntry<T> {
      * @return the first byte no longer in the entry
      */
     long getEnd() {
-        return mEnd;
+        return end;
     }
 
     /**
@@ -129,7 +129,7 @@ class FileUseMapEntry<T> {
      * @return the number of bytes contained in the entry
      */
     long getSize() {
-        return mEnd - mStart;
+        return end - start;
     }
 
     /**
@@ -138,7 +138,7 @@ class FileUseMapEntry<T> {
      * @return is this entry free?
      */
     boolean isFree() {
-        return mStore == null;
+        return store == null;
     }
 
     /**
@@ -148,15 +148,15 @@ class FileUseMapEntry<T> {
      */
     @Nullable
     T getStore() {
-        return mStore;
+        return store;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("start", mStart)
-                .add("end", mEnd)
-                .add("store", mStore)
+                .add("start", start)
+                .add("end", end)
+                .add("store", store)
                 .toString();
     }
 }

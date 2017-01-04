@@ -35,14 +35,14 @@ public class InflaterByteSource extends CloseableByteSource {
      * The stream factory for the deflated data.
      */
     @Nonnull
-    private final CloseableByteSource mDeflatedSource;
+    private final CloseableByteSource deflatedSource;
 
     /**
      * Creates a new source.
      * @param byteSource the factory for deflated data
      */
     public InflaterByteSource(@Nonnull CloseableByteSource byteSource) {
-        mDeflatedSource = byteSource;
+        deflatedSource = byteSource;
     }
 
     @Override
@@ -53,12 +53,12 @@ public class InflaterByteSource extends CloseableByteSource {
          * "Oh, I need an extra dummy byte to allow for some... err... optimizations..."
          */
         ByteArrayInputStream hackByte = new ByteArrayInputStream(new byte[] { 0 });
-        return new InflaterInputStream(new SequenceInputStream(mDeflatedSource.openStream(),
+        return new InflaterInputStream(new SequenceInputStream(deflatedSource.openStream(),
                 hackByte), new Inflater(true));
     }
 
     @Override
     public void innerClose() throws IOException {
-        mDeflatedSource.close();
+        deflatedSource.close();
     }
 }

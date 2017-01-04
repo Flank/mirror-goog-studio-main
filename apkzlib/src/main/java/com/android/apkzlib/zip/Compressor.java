@@ -29,6 +29,7 @@ public interface Compressor {
 
     /**
      * Compresses an entry source.
+     *
      * @param source the source to compress
      * @return a future that will eventually contain the compression result
      */

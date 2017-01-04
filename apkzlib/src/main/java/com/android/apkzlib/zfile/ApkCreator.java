@@ -31,9 +31,9 @@ public interface ApkCreator extends Closeable {
 
     /**
      * Copies the content of a Jar/Zip archive into the receiver archive.
-     * <p>
-     * An optional {@link ZipEntryFilter} allows to selectively choose which files
-     * to copy over.
+     *
+     * <p>An optional predicate allows to selectively choose which files to copy over and an
+     * option function allows renaming the files as they are copied.
      *
      * @param zip the zip to copy data from
      * @param transform an optional transform to apply to file names before copying them
@@ -42,8 +42,11 @@ public interface ApkCreator extends Closeable {
      * predicate applies after transformation
      * @throws IOException I/O error
      */
-    void writeZip(@Nonnull File zip, @Nullable Function<String, String> transform,
-            @Nullable Predicate<String> isIgnored) throws IOException;
+    void writeZip(
+            @Nonnull File zip,
+            @Nullable Function<String, String> transform,
+            @Nullable Predicate<String> isIgnored)
+            throws IOException;
 
     /**
      * Writes a new {@link File} into the archive. If a file already existed with the given
