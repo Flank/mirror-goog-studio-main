@@ -41,7 +41,7 @@ class UidFetcher {
       // and check the uid value contains 0-9 only.
       Tokenizer tokenizer(content, " \t");
       tokenizer.set_index(start + strlen(kUidPrefix));
-      tokenizer.EatDelimiters();
+      tokenizer.SkipDelimiters();
       std::string uid;
       char next_char;
       if (tokenizer.GetNextToken(Tokenizer::IsDigit, &uid) &&

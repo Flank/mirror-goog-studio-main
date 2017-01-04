@@ -37,11 +37,11 @@ void NetStatsFileReader::Refresh() {
     // traffic. We agree as of right now that, users care about traffic from
     // outside much more than inter-process traffic.
     std::string str;
-    if (t.EatTokens(1) && t.GetNextToken(&str) && str != "lo" && t.EatTokens(1)
-        && t.GetNextToken(&str) && str == uid_) {
+    if (t.SkipTokens(1) && t.GetNextToken(&str) && str != "lo" &&
+        t.SkipTokens(1) && t.GetNextToken(&str) && str == uid_) {
       std::string rx_str;
       std::string tx_str;
-      if (t.EatTokens(1) && t.GetNextToken(&rx_str) && t.EatTokens(1) &&
+      if (t.SkipTokens(1) && t.GetNextToken(&rx_str) && t.SkipTokens(1) &&
           t.GetNextToken(&tx_str)) {
         // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
         bytes_tx_ += atol(tx_str.c_str());

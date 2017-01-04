@@ -60,7 +60,7 @@ const bool EnergyUsageSampler::VerifyRequiredHeading(
     Tokenizer* tokenizer, const int32_t required_uid) {
   string log_type;
   string uid;
-  return (tokenizer->EatNextToken(Tokenizer::IsDigit) &&
+  return (tokenizer->SkipNextToken(Tokenizer::IsDigit) &&
           tokenizer->GetNextToken(&uid) && temp_stoi(uid) == required_uid &&
           tokenizer->GetNextToken(&log_type) && log_type.compare("l") == 0);
 }
@@ -93,9 +93,9 @@ const void EnergyUsageSampler::ParseStatTokens(Tokenizer* tokenizer,
     // Format: wifi-idle-time-ms, wifi-rx-time-ms,
     //         wifi-power-counter (unreliable), {wifi-tx-time-ms}+
     int32_t wifi_usage_ms = 0;
-    tokenizer->EatNextToken();
+    tokenizer->SkipNextToken();
     wifi_usage_ms += getNextInteger(tokenizer);  // rx time.
-    tokenizer->EatNextToken();
+    tokenizer->SkipNextToken();
 
     string wifi_tx_times;
     while (tokenizer->GetNextToken(&wifi_tx_times)) {
@@ -118,9 +118,9 @@ const void EnergyUsageSampler::ParseStatTokens(Tokenizer* tokenizer,
     // Format: modem-idle-time-ms, modem-rx-time-ms,
     //         modem-power-counter (unreliable), {modem-tx-time-ms}+
     int32_t modem_usage_ms = 0;
-    tokenizer->EatNextToken();
+    tokenizer->SkipNextToken();
     modem_usage_ms += getNextInteger(tokenizer);  // rx time.
-    tokenizer->EatNextToken();
+    tokenizer->SkipNextToken();
 
     string modem_tx_times;
     while (tokenizer->GetNextToken(&modem_tx_times)) {

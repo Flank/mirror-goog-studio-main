@@ -26,11 +26,11 @@ using std::string;
 // Returns whether the next token is a valid heading which is the same as
 // regex "[0-9]+:". For example, a valid heading is "01:"
 //
-// If successful, the heading token is consumed; otherwise, the tokenizer will
-// be left wherever it failed and you shouldn't continue to use it.
-bool EatValidHeading(Tokenizer *t) {
+// If successful, the heading token is skipped over; otherwise, the tokenizer
+// will be left wherever it failed and you shouldn't continue to use it.
+bool SkipValidHeading(Tokenizer *t) {
   char separator;
-  return (t->EatNextToken(Tokenizer::IsDigit) && t->GetNextChar(&separator) &&
+  return (t->SkipNextToken(Tokenizer::IsDigit) && t->GetNextChar(&separator) &&
           separator == ':');
 }
 
@@ -38,7 +38,7 @@ bool EatValidHeading(Tokenizer *t) {
 // regex "[0-9]+:[0-9A-Za-z]{4}". If valid, the parameter |address| will be set
 // to its value.
 //
-// If successful, the address is consumed; otherwise, the tokenizer will
+// If successful, the address is skipped over; otherwise, the tokenizer will
 // be left wherever it failed and you shouldn't continue to use it.
 bool GetAddress(Tokenizer *t, string *address) {
   char separator;
@@ -56,9 +56,9 @@ bool GetAddress(Tokenizer *t, string *address) {
 // "0100007F:[0-9A-Za-z]{4}" or
 // 0000000000000000FFFF00000100007F:[0-9A-Za-z]{4}".
 //
-// If successful, the IP address is consumed; otherwise, the tokenizer will
+// If successful, the IP address is skipped over; otherwise, the tokenizer will
 // be left wherever it failed and you shouldn't continue to use it.
-bool EatLoopbackAddress(Tokenizer *t) {
+bool SkipLoopbackAddress(Tokenizer *t) {
   std::string address;
   if (GetAddress(t, &address)) {
     return address == "0100007F" ||
@@ -77,16 +77,16 @@ bool EatLoopbackAddress(Tokenizer *t) {
 bool IsLocalInterface(Tokenizer *t) {
   // It's possible to have empty space in the beginning, for example, " 1:" has
   // empty space and "100:" does not have empty space.
-  bool valid_heading = t->EatWhile(Tokenizer::IsWhitespace) &&
-                       EatValidHeading(t) &&
-                       t->EatWhile(Tokenizer::IsWhitespace);
+  bool valid_heading = t->SkipWhile(Tokenizer::IsWhitespace) &&
+                       SkipValidHeading(t) &&
+                       t->SkipWhile(Tokenizer::IsWhitespace);
 
   if (!valid_heading) {
     return false;
   }
 
-  if (EatLoopbackAddress(t) && t->EatWhile(Tokenizer::IsWhitespace) &&
-      EatLoopbackAddress(t) && t->EatWhile(Tokenizer::IsWhitespace)) {
+  if (SkipLoopbackAddress(t) && t->SkipWhile(Tokenizer::IsWhitespace) &&
+      SkipLoopbackAddress(t) && t->SkipWhile(Tokenizer::IsWhitespace)) {
     return true;
   }
 
@@ -117,7 +117,7 @@ int ConnectionSampler::ReadConnectionNumber(const string &file) {
     if (!IsLocalInterface(&t)) {
       t.set_index(0);
       string uid;
-      if (t.EatTokens(kUidTokenIndex) && t.GetNextToken(&uid) && uid == uid_) {
+      if (t.SkipTokens(kUidTokenIndex) && t.GetNextToken(&uid) && uid == uid_) {
         count++;
       }
     }
