@@ -18,6 +18,7 @@ package com.android.apkzlib.zip;
 
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.CloseableDelegateByteSource;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteSource;
@@ -84,7 +85,8 @@ public class StoredEntry {
     /**
      * Local header field: version to extract, should match the CDH's.
      */
-    private static final ZipField.F2 F_VERSION_EXTRACT = new ZipField.F2(
+    @VisibleForTesting
+    static final ZipField.F2 F_VERSION_EXTRACT = new ZipField.F2(
             F_LOCAL_SIGNATURE.endOffset(), "Version to extract",
             new ZipFieldInvariantNonNegative());
 
@@ -399,7 +401,13 @@ public class StoredEntry {
 
         ByteBuffer bytes = ByteBuffer.wrap(localHeader);
         F_LOCAL_SIGNATURE.verify(bytes);
-        F_VERSION_EXTRACT.verify(bytes, compressInfo.getVersionExtract());
+
+        if (mFile.getSkipVersionToExtractValidation()) {
+            F_VERSION_EXTRACT.skip(bytes);
+        } else {
+            F_VERSION_EXTRACT.verify(bytes, compressInfo.getVersionExtract());
+        }
+
         F_GP_BIT.verify(bytes, mCdh.getGpBit().getValue());
         F_METHOD.verify(bytes, compressInfo.getMethod().methodCode);
 

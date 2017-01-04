@@ -45,6 +45,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1394,8 +1395,6 @@ public class ZFileTest {
             /*
              * We should be complaining about the CRC32 somewhere...
              */
-            boolean foundCrc32Complain = false;
-
             assertTrue(
                     Throwables.getCausalChain(e).stream()
                             .map(Throwable::getMessage)
@@ -1407,6 +1406,112 @@ public class ZFileTest {
          */
         ZFileOptions options = new ZFileOptions();
         options.setSkipDataDescriptionValidation(true);
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            /*
+             * Nothing to do.
+             */
+        }
+    }
+
+    @Test
+    public void detectIncorrectVersionToExtractInCentralDirectory() throws Exception {
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+
+        /*
+         * Create a valid zip file.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            zf.add("foo", new ByteArrayInputStream(new byte[0]));
+        }
+
+        /*
+         * Change the "version to extract" in the central directory to 0x7777.
+         */
+        int versionToExtractOffset =
+                ZFileTestConstants.LOCAL_HEADER_SIZE
+                        + 3
+                        + CentralDirectory.F_VERSION_EXTRACT.offset();
+        byte[] allZipBytes = Files.toByteArray(zipFile);
+        allZipBytes[versionToExtractOffset] = 0x77;
+        allZipBytes[versionToExtractOffset + 1] = 0x77;
+        Files.write(allZipBytes, zipFile);
+
+        /*
+         * Opening the file should fail.
+         */
+        try {
+            new ZFile(zipFile);
+            fail();
+        } catch (IOException e) {
+            /*
+             * We should complain about the version to extract somewhere...
+             */
+            assertTrue(
+                    Throwables.getCausalChain(e).stream()
+                            .map(Throwable::getMessage)
+                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("version")));
+            assertTrue(
+                    Throwables.getCausalChain(e).stream()
+                            .map(Throwable::getMessage)
+                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("extract")));
+        }
+
+        /*
+         * Setting the ignore version extract validation should allow the zip to be opened.
+         */
+        ZFileOptions options = new ZFileOptions();
+        options.setSkipZipVersionToExtractValidation(true);
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            /*
+             * Nothing to do.
+             */
+        }
+    }
+    @Test
+    public void detectIncorrectVersionToExtractInLocalHeader() throws Exception {
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+
+        /*
+         * Create a valid zip file.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            zf.add("foo", new ByteArrayInputStream(new byte[0]));
+        }
+
+        /*
+         * Change the "version to extract" in the local header to 0x7777.
+         */
+        int versionToExtractOffset = StoredEntry.F_VERSION_EXTRACT.offset();
+        byte[] allZipBytes = Files.toByteArray(zipFile);
+        allZipBytes[versionToExtractOffset] = 0x77;
+        allZipBytes[versionToExtractOffset + 1] = 0x77;
+        Files.write(allZipBytes, zipFile);
+
+        /*
+         * Opening the file should fail.
+         */
+        try {
+            new ZFile(zipFile);
+            fail();
+        } catch (IOException e) {
+            /*
+             * We should complain about the version to extract somewhere...
+             */
+            assertTrue(
+                    Throwables.getCausalChain(e).stream()
+                            .map(Throwable::getMessage)
+                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("version")));
+            assertTrue(
+                    Throwables.getCausalChain(e).stream()
+                            .map(Throwable::getMessage)
+                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("extract")));
+        }
+
+        /*
+         * Setting the ignore version extract validation should allow the zip to be opened.
+         */
+        ZFileOptions options = new ZFileOptions();
+        options.setSkipZipVersionToExtractValidation(true);
         try (ZFile zf = new ZFile(zipFile, options)) {
             /*
              * Nothing to do.
