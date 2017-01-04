@@ -26,8 +26,10 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.core.VariantType;
 import com.android.io.FileWrapper;
 import com.android.manifmerger.ManifestProvider;
+import com.android.utils.FileUtils;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -71,7 +73,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private Boolean handleProfiling;
     private Boolean functionalTest;
     private Map<String, Object> placeholdersValues;
+
     private ArtifactCollection manifests;
+    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
+    private FileCollection testedManifest;
 
     @Nullable
     private String testLabel;
@@ -209,7 +214,20 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     MergeManifests.getArtifactName(artifact)));
         }
 
+        //add the tested manifest.
+        if (testedManifest != null) {
+            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
+                    testedManifest.getSingleFile(),
+                    "__tested_library__"));
+        }
+
         return providers;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getTestedManifest() {
+        return testedManifest;
     }
 
     @InputFiles
@@ -255,8 +273,11 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.setTestManifestFile(config.getMainManifest());
 
-            processTestManifestTask.setTmpDir(
-                    new File(scope.getGlobalScope().getIntermediatesDir(), "manifest/tmp"));
+            processTestManifestTask.setTmpDir(FileUtils.join(
+                    scope.getGlobalScope().getIntermediatesDir(),
+                    "tmp",
+                    "manifest",
+                    scope.getDirName()));
 
             // get single output for now.
             final BaseVariantOutputData variantOutputData =
@@ -267,6 +288,12 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processTestManifestTask.setVariantName(config.getFullName());
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
+
+            // only add the resources for tested libraries.
+            processTestManifestTask.testedManifest = scope.getTestedArtifact(
+                    AndroidArtifacts.TYPE_MANIFEST,
+                    VariantType.LIBRARY);
+
 
             ConventionMappingHelper.map(processTestManifestTask, "minSdkVersion", () -> {
                         if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {

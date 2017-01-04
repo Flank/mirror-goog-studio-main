@@ -164,9 +164,7 @@ public class LibraryTaskManager extends TaskManager {
                             = createMergeLibManifestsTask(tasks, variantScope);
 
                     // publish intermediate manifest file
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
+                    variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FN_ANDROID_MANIFEST_XML),
                             task.getName(),
                             AndroidArtifacts.TYPE_MANIFEST);
@@ -188,8 +186,7 @@ public class LibraryTaskManager extends TaskManager {
                                 tasks,
                                 variantData,
                                 variantScope,
-                                variantBundleDir,
-                                publishConfigName));
+                                variantBundleDir));
 
         // Add a task to merge the assets folders
         recorder.record(
@@ -201,9 +198,7 @@ public class LibraryTaskManager extends TaskManager {
                             = createMergeAssetsTask(tasks, variantScope);
 
                     // publish intermediate assets folder
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
+                    variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FD_ASSETS),
                             task.getName(),
                             AndroidArtifacts.TYPE_ASSETS);
@@ -235,12 +230,10 @@ public class LibraryTaskManager extends TaskManager {
                     final VariantOutputScope variantOutputScope = vod.getScope();
 
                     // publish the intermediates symbol file
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
+                    variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FN_RESOURCE_TEXT),
                             variantOutputScope.getProcessResourcesTask().getName(),
-                            AndroidArtifacts.TYPE_SYMBOLS);
+                            AndroidArtifacts.TYPE_SYMBOL);
 
                     // process java resources
                     createProcessJavaResTasks(tasks, variantScope);
@@ -254,9 +247,7 @@ public class LibraryTaskManager extends TaskManager {
                     AndroidTask<AidlCompile> task = createAidlTask(tasks, variantScope);
 
                     // publish intermediate aidl folder
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
+                    variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FD_AIDL),
                             task.getName(),
                             AndroidArtifacts.TYPE_AIDL);
@@ -325,9 +316,7 @@ public class LibraryTaskManager extends TaskManager {
                                                 new PackageRenderscriptConfigAction(variantScope)));
 
         // publish the renderscript intermediate files
-        AndroidArtifacts.publishIntermediateArtifact(
-                project,
-                publishConfigName,
+        variantScope.publishIntermediateArtifact(
                 new File(variantBundleDir, FN_RENDERSCRIPT),
                 packageRenderscriptTask.getName(),
                 AndroidArtifacts.TYPE_RENDERSCRIPT);
@@ -341,9 +330,7 @@ public class LibraryTaskManager extends TaskManager {
                         () -> createMergeFileTask(tasks, variantScope));
 
         // publish the proguard intermediate file
-        AndroidArtifacts.publishIntermediateArtifact(
-                project,
-                publishConfigName,
+        variantScope.publishIntermediateArtifact(
                 new File(variantBundleDir, FN_PROGUARD_TXT),
                 mergeProguardFilesTask.getName(),
                 AndroidArtifacts.TYPE_PROGUARD_RULES);
@@ -354,9 +341,7 @@ public class LibraryTaskManager extends TaskManager {
         copyLintTask.dependsOn(tasks, LINT_COMPILE);
 
         // publish the lint intermediate file
-        AndroidArtifacts.publishIntermediateArtifact(
-                project,
-                publishConfigName,
+        variantScope.publishIntermediateArtifact(
                 FileUtils.join(variantBundleDir, FD_RES),
                 copyLintTask.getName(),
                 AndroidArtifacts.TYPE_LINT_JAR);
@@ -371,9 +356,7 @@ public class LibraryTaskManager extends TaskManager {
             extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
 
             // publish intermediate annotation data
-            AndroidArtifacts.publishIntermediateArtifact(
-                    project,
-                    publishConfigName,
+            variantScope.publishIntermediateArtifact(
                     new File(variantBundleDir, FN_ANNOTATIONS_ZIP),
                     extractAnnotationsTask.getName(),
                     AndroidArtifacts.TYPE_EXT_ANNOTATIONS);
@@ -488,9 +471,7 @@ public class LibraryTaskManager extends TaskManager {
                             bundle.dependsOn(t.getName());
 
                             // publish the jni folder as intermediate
-                            AndroidArtifacts.publishIntermediateArtifact(
-                                    project,
-                                    publishConfigName,
+                            variantScope.publishIntermediateArtifact(
                                     jniLibsFolder,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JNI);
@@ -516,31 +497,23 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(t -> {
                             // publish the intermediate classes.jar.
-                            AndroidArtifacts.publishIntermediateArtifact(
-                                    project,
-                                    publishConfigName,
+                            variantScope.publishIntermediateArtifact(
                                     mainClassJar,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JAR);
-                            AndroidArtifacts.publishIntermediateArtifact(
-                                    project,
-                                    publishConfigName,
+                            variantScope.publishIntermediateArtifact(
                                     mainClassJar,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JAR_SUB_PROJECTS);
 
                             // publish intermediate local jars as a folder
-                            AndroidArtifacts.publishIntermediateArtifact(
-                                    project,
-                                    publishConfigName,
+                            variantScope.publishIntermediateArtifact(
                                     localClassJarFolder,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_LOCAL_JARS);
 
                             // publish the res jar
-                            AndroidArtifacts.publishIntermediateArtifact(
-                                    project,
-                                    publishConfigName,
+                            variantScope.publishIntermediateArtifact(
                                     mainResJar,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JAVA_RES);
@@ -625,8 +598,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull VariantScope variantScope,
-            @NonNull File variantBundleDir,
-            @NonNull String publishConfigName) {
+            @NonNull File variantBundleDir) {
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
         File resFolder = FileUtils.join(variantBundleDir, FD_RES);
@@ -640,12 +612,10 @@ public class LibraryTaskManager extends TaskManager {
                         false /*processResources*/);
 
         // publish the intermediate res folder
-        AndroidArtifacts.publishIntermediateArtifact(
-                project,
-                publishConfigName,
+        variantScope.publishIntermediateArtifact(
                 resFolder,
                 mergeResourceTask.getName(),
-                AndroidArtifacts.TYPE_RESOURCES);
+                AndroidArtifacts.TYPE_ANDROID_RES);
 
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
                 || variantData.getVariantDependency().hasNonOptionalLibraries()) {
@@ -661,9 +631,7 @@ public class LibraryTaskManager extends TaskManager {
                 tasks, task -> task.setPublicFile(publicTxt));
 
         // publish the intermediate public res file
-        AndroidArtifacts.publishIntermediateArtifact(
-                project,
-                publishConfigName,
+        variantScope.publishIntermediateArtifact(
                 publicTxt,
                 mergeResourceTask.getName(),
                 AndroidArtifacts.TYPE_PUBLIC_RES);

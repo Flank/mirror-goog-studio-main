@@ -527,7 +527,13 @@ public abstract class TaskManager {
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_JARS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getExternalJars())
+                .setFileCollection(variantScope.getExternalPackageJars())
+                .build());
+
+        transformManager.addStream(OriginalStream.builder(project)
+                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                .addScope(Scope.EXTERNAL_LIBRARIES)
+                .setFileCollection(variantScope.getExternalPackageJars())
                 .build());
 
         if (variantScope.isJackEnabled()) {
@@ -570,44 +576,64 @@ public abstract class TaskManager {
         if (extension.getDataBinding().isEnabled()) {
             transformManager.addStream(OriginalStream.builder(project)
                     .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
-                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                    .addScope(Scope.SUB_PROJECTS)
                     .setFileCollection(variantScope.getSubProjectDataBindingArtifactFolders())
                     .build()
             );
+            transformManager.addStream(OriginalStream.builder(project)
+                    .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
+                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                    .setFileCollection(variantScope.getExternalAarDataBindingFolders())
+                    .build()
+            );
         }
-
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getExternalAarJniLibFolders())
-                .build());
 
         // for the sub modules, the new intermediary classes.jar does not have resources.
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedClassJars())
+                .setFileCollection(variantScope.getSubProjectPackagedAarClassJars())
                 .build());
 
         // for the sub modules, thew new intermediary res.jar only has resources
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_RESOURCES)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedResourceJars())
+                .setFileCollection(variantScope.getSubProjectPackagedAarResourceJars())
+                .build());
+
+        // but we also need non android sub-projects
+        // FIXME we need a way to query only for the resources/native libs of sub-projects
+        transformManager.addStream(OriginalStream.builder(project)
+                .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                .addScope(Scope.SUB_PROJECTS)
+                .setFileCollection(variantScope.getSubProjectPackagedJars()
+                        .minus(variantScope.getSubProjectPackagedAarClassJars())
+                        .minus(variantScope.getSubProjectPackagedAarLocalJars()))
                 .build());
 
         // the local deps don't have resources (been merged into the main jar)
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS_LOCAL_DEPS)
-                .setFileCollection(variantScope.getSubProjectLocalPackagedJars())
+                .setFileCollection(variantScope.getSubProjectPackagedAarLocalJars())
                 .build());
 
         // and the native libs of the libraries are in a separate folder.
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJniJarsAndFolders())
+                .setFileCollection(variantScope.getSubProjectPackagedJniFolders())
+                .build());
+
+        // but we also need non android sub-projects
+        // FIXME we need a way to query only for the resources/native libs of sub-projects
+        transformManager.addStream(OriginalStream.builder(project)
+                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                .addScope(Scope.SUB_PROJECTS)
+                .setFileCollection(variantScope.getSubProjectPackagedJars()
+                        .minus(variantScope.getSubProjectPackagedAarClassJars())
+                        .minus(variantScope.getSubProjectPackagedAarLocalJars()))
                 .build());
 
         // provided only scopes.
@@ -761,13 +787,10 @@ public abstract class TaskManager {
                             .getManifestProcessorTask()
                             .get(tasks);
 
-            AndroidArtifacts.publishIntermediateArtifact(
-                    project,
-                    variantData.getVariantDependency().getPublishConfiguration().getName(),
+            variantData.getScope().publishIntermediateArtifact(
                     mergeManifestsTask.getManifestOutputFile(),
                     mergeManifestsTask.getName(),
-                    AndroidArtifacts.TYPE_TESTED_MANIFEST
-            );
+                    AndroidArtifacts.TYPE_TESTED_MANIFEST);
         }
     }
 
@@ -1273,9 +1296,7 @@ public abstract class TaskManager {
                     androidTasks.create(tasks, configAction);
             packageJarArtifact.dependsOn(tasks, javacTask);
 
-            AndroidArtifacts.publishIntermediateArtifact(
-                    project,
-                    variantData.getVariantDependency().getPublishConfiguration().getName(),
+            scope.publishIntermediateArtifact(
                     configAction.getOutputFile(),
                     packageJarArtifact.getName(),
                     AndroidArtifacts.TYPE_JAR);
@@ -2374,9 +2395,7 @@ public abstract class TaskManager {
 
             if (type == VariantType.LIBRARY) {
                 // need to publish
-                AndroidArtifacts.publishIntermediateArtifact(
-                        variantScope.getGlobalScope().getProject(),
-                        variantData.getVariantDependency().getPublishConfiguration().getName(),
+                variantScope.publishIntermediateArtifact(
                         variantScope.getBundleFolderForDataBinding(),
                         task.getName(),
                         AndroidArtifacts.TYPE_DATA_BINDING);
@@ -2674,15 +2693,9 @@ public abstract class TaskManager {
             variantOutputScope.getAssembleTask().dependsOn(tasks, appTask);
 
             if (publishApk) {
-                final String projectBaseName = globalScope.getProjectBaseName();
-                final VariantDependencies variantDeps = variantData.getVariantDependency();
-                final String publishConfigName = variantDeps.getPublishConfiguration().getName();
-
                 appTask.configure(tasks, packageTask -> {
                     FileSupplier apkSupplier = (FileSupplier) packageTask;
-                    AndroidArtifacts.publishIntermediateArtifact(
-                            project,
-                            publishConfigName,
+                    variantScope.publishIntermediateArtifact(
                             apkSupplier.get(),
                             apkSupplier.getTask().getName(),
                             AndroidArtifacts.TYPE_APK);
@@ -2701,9 +2714,7 @@ public abstract class TaskManager {
                 try {
                     final FileSupplier metadataFile = variantOutputData.getMetadataFile();
                     if (metadataFile != null) {
-                        AndroidArtifacts.publishIntermediateArtifact(
-                                project,
-                                publishConfigName,
+                        variantScope.publishIntermediateArtifact(
                                 metadataFile.get(),
                                 metadataFile.getTask().getName(),
                                 AndroidArtifacts.TYPE_METADATA);
@@ -2716,9 +2727,7 @@ public abstract class TaskManager {
                 if (mappingFileProvider != null) {
                     final File mappingFile = mappingFileProvider.get();
                     if (mappingFile != null) {
-                        AndroidArtifacts.publishIntermediateArtifact(
-                                project,
-                                publishConfigName,
+                        variantScope.publishIntermediateArtifact(
                                 mappingFile,
                                 mappingFileProvider.getTask().getName(),
                                 AndroidArtifacts.TYPE_MAPPING);

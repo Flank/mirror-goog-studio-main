@@ -43,8 +43,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PUBLIC_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RESOURCES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOLS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
@@ -69,7 +69,7 @@ public class AarTransform extends ExtractTransform {
 
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_JAR);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_MANIFEST);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_RESOURCES);
+        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ANDROID_RES);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ASSETS);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_LOCAL_JARS);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_JNI);
@@ -79,7 +79,7 @@ public class AarTransform extends ExtractTransform {
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_LINT_JAR);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_EXT_ANNOTATIONS);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_PUBLIC_RES);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_SYMBOLS);
+        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_SYMBOL);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_DATA_BINDING);
     }
 
@@ -110,7 +110,7 @@ public class AarTransform extends ExtractTransform {
             case TYPE_MANIFEST:
                 file = new File(explodedAar, FN_ANDROID_MANIFEST_XML);
                 break;
-            case TYPE_RESOURCES:
+            case TYPE_ANDROID_RES:
                 file = new File(explodedAar, FD_RES);
                 break;
             case TYPE_ASSETS:
@@ -134,7 +134,7 @@ public class AarTransform extends ExtractTransform {
             case TYPE_PUBLIC_RES:
                 file = new File(explodedAar, FN_PUBLIC_TXT);
                 break;
-            case TYPE_SYMBOLS:
+            case TYPE_SYMBOL:
                 file = new File(explodedAar, FN_RESOURCE_TEXT);
                 break;
             case TYPE_DATA_BINDING:

@@ -53,7 +53,7 @@ public class AndroidArtifacts {
     public static final String TYPE_JAR = "jar";
     public static final String TYPE_JAVA_RES = "java-res";
     public static final String TYPE_MANIFEST = "android-manifest";
-    public static final String TYPE_RESOURCES = "android-res";
+    public static final String TYPE_ANDROID_RES = "android-res";
     public static final String TYPE_ASSETS = "android-assets";
     public static final String TYPE_LOCAL_JARS = "android-local-jars";
     public static final String TYPE_JNI = "android-jni";
@@ -62,7 +62,7 @@ public class AndroidArtifacts {
     public static final String TYPE_LINT_JAR = "android-lint";
     public static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
     public static final String TYPE_PUBLIC_RES = "android-public-res";
-    public static final String TYPE_SYMBOLS = "android-symbols";
+    public static final String TYPE_SYMBOL = "android-symbol";
     public static final String TYPE_PROGUARD_RULES = "android-proguad";
     public static final String TYPE_DATA_BINDING = "android-databinding";
     public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
@@ -98,44 +98,12 @@ public class AndroidArtifacts {
         });
     }
 
-    public static PublishArtifact buildArtifact(
-            @NonNull String name,
-            @NonNull String type,
-            @Nullable String classifier,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(name, type, type, classifier, outputFileSupplier);
-    }
-
-    public static PublishArtifact buildApkArtifact(
-            @NonNull String name,
-            @Nullable String classifier,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(
-                name, TYPE_APK, TYPE_APK, classifier, outputFileSupplier);
-    }
-
     public static PublishArtifact buildAtomArtifact(
             @NonNull String name,
             @Nullable String classifier,
             @NonNull FileSupplier outputFileSupplier) {
         return new AndroidArtifact(
                 name, TYPE_ATOM_BUNDLE, TYPE_ATOM_BUNDLE, classifier, outputFileSupplier);
-    }
-
-    public static void publishIntermediateArtifact(
-            Project project,
-            String publishConfigName,
-            File file,
-            String builtBy,
-            String type) {
-        project.getConfigurations().getByName(publishConfigName).getOutgoing().variants(
-                (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
-                    variants.create(type, (variant) ->
-                            variant.artifact(file, (artifact) -> {
-                                artifact.setType(type);
-                                artifact.builtBy(project.getTasks().getByName(builtBy));
-                            }));
-                });
     }
 
     private static class AndroidArtifact implements PublishArtifact {

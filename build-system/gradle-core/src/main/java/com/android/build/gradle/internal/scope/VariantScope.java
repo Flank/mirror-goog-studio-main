@@ -40,6 +40,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
@@ -48,6 +49,7 @@ import java.util.List;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -163,6 +165,19 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull AnchorOutputType outputType,
             @NonNull FileCollection fileCollection);
 
+    void publishIntermediateArtifact(
+            @NonNull File file,
+            @NonNull String builtBy,
+            @NonNull String type);
+
+    @Nullable
+    ConfigurableFileCollection getInternalArtifact(@NonNull String type);
+
+    @Nullable
+    ConfigurableFileCollection getTestedArtifact(
+            @NonNull String type,
+            @NonNull VariantType testedVariantType);
+
     @Override
     @NonNull
     GlobalScope getGlobalScope();
@@ -245,22 +260,28 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getSubProjectDataBindingArtifactFolders();
 
     @NonNull
-    FileCollection getExternalAarJniLibFolders();
+    FileCollection getExternalAarDataBindingFolders();
 
     @NonNull
-    FileCollection getSubProjectPackagedClassJars();
+    FileCollection getSubProjectPackagedJars();
 
     @NonNull
-    FileCollection getSubProjectPackagedResourceJars();
+    FileCollection getSubProjectPackagedAarClassJars();
 
     @NonNull
-    FileCollection getSubProjectLocalPackagedJars();
+    FileCollection getSubProjectPackagedAarResourceJars();
 
     @NonNull
-    FileCollection getSubProjectPackagedJniJarsAndFolders();
+    FileCollection getSubProjectPackagedAarLocalJars();
 
     @NonNull
-    FileCollection getExternalJars();
+    FileCollection getSubProjectPackagedJniFolders();
+
+    @NonNull
+    FileCollection getExternalCompileJars();
+
+    @NonNull
+    FileCollection getExternalPackageJars();
 
     @NonNull
     FileCollection getLocalPackagedJars();

@@ -24,9 +24,11 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -99,6 +101,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private ArtifactCollection manifests;
     private ArtifactCollection symbolFiles;
+    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
+    private FileCollection testedManifest;
+    private FileCollection testedSymbolFile;
 
     private String packageForR;
 
@@ -208,6 +213,16 @@ public class ProcessAndroidResources extends IncrementalTask {
                         symbolMap.get(artifactResult.getId())));
             }
 
+            // add the tested library if present
+            if (testedManifest != null) {
+                File symbolFile = testedSymbolFile != null
+                        ? testedSymbolFile.getSingleFile()
+                        : null;
+                computedLibraryInfo.add(new LibraryInfo(
+                        testedManifest.getSingleFile(),
+                        symbolFile));
+            }
+
             computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
         }
 
@@ -247,23 +262,23 @@ public class ProcessAndroidResources extends IncrementalTask {
         @Override
         public void execute(@NonNull ProcessAndroidResources processResources) {
             final BaseVariantOutputData variantOutputData = scope.getVariantOutputData();
+            final VariantScope variantScope = scope.getVariantScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantScope().getVariantData();
+                    variantScope.getVariantData();
+
             variantOutputData.processResourcesTask = processResources;
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             processResources.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
             processResources.setIncrementalFolder(
-                    scope.getVariantScope().getIncrementalDir(getName()));
+                    variantScope.getIncrementalDir(getName()));
 
             if (variantData.getSplitHandlingPolicy() ==
                     SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
                 Set<String> allFilters = new HashSet<>();
-                allFilters.addAll(
-                        variantData.getFilters(OutputFile.FilterType.DENSITY));
-                allFilters.addAll(
-                        variantData.getFilters(OutputFile.FilterType.LANGUAGE));
+                allFilters.addAll(variantData.getFilters(OutputFile.FilterType.DENSITY));
+                allFilters.addAll(variantData.getFilters(OutputFile.FilterType.LANGUAGE));
                 processResources.splits = allFilters;
             }
 
@@ -277,8 +292,14 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
                         .getEnforceUniquePackageName();
 
-                processResources.manifests = scope.getVariantScope().getManifests();
-                processResources.symbolFiles = scope.getVariantScope().getSymbolsFile();
+                processResources.manifests = variantScope.getManifests();
+                processResources.symbolFiles = variantScope.getSymbolsFile();
+                processResources.testedManifest = variantScope.getTestedArtifact(
+                        AndroidArtifacts.TYPE_MANIFEST,
+                        VariantType.LIBRARY);
+                processResources.testedSymbolFile = variantScope.getTestedArtifact(
+                        AndroidArtifacts.TYPE_SYMBOL,
+                        VariantType.LIBRARY);
 
                 ConventionMappingHelper.map(processResources, "packageForR",
                         () -> {
@@ -292,7 +313,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
                 processResources
-                        .setSourceOutputDir(scope.getVariantScope().getRClassSourceOutputDir());
+                        .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
                 if (config.getBuildType().isMinifyEnabled()) {
@@ -302,7 +323,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 "shrinkResources does not yet work with useJack=true");
                     }
                     processResources.setProguardOutputFile(
-                            scope.getVariantScope().getProcessAndroidResourcesProguardOutputFile());
+                            variantScope.getProcessAndroidResourcesProguardOutputFile());
 
                 } else if (config.getBuildType().isShrinkResources()) {
                     LoggingUtil.displayWarning(Logging.getLogger(getClass()),
@@ -312,7 +333,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 if (generateLegacyMultidexMainDexProguardRules) {
                     processResources.setAaptMainDexListProguardOutputFile(
-                            scope.getVariantScope().getManifestKeepListProguardFile());
+                            variantScope.getManifestKeepListProguardFile());
                 }
             }
 
@@ -331,7 +352,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             ConventionMappingHelper.map(
                     processResources,
                     "resDir",
-                    () -> scope.getVariantScope().getFinalResourcesDir());
+                    () -> variantScope.getFinalResourcesDir());
 
             processResources.setPackageOutputFile(packageOutputSupplier);
 
@@ -368,13 +389,13 @@ public class ProcessAndroidResources extends IncrementalTask {
                     });
 
             processResources.setMergeBlameLogFolder(
-                    scope.getVariantScope().getResourceBlameLogDir());
+                    variantScope.getResourceBlameLogDir());
 
             processResources.instantRunBuildContext =
-                    scope.getVariantScope().getInstantRunBuildContext();
+                    variantScope.getInstantRunBuildContext();
 
             processResources.setPreviousFeatures(ImmutableSet.of());
-            processResources.setBaseFeature(scope.getVariantScope().getBaseAtomResourcePkg());
+            processResources.setBaseFeature(variantScope.getBaseAtomResourcePkg());
         }
     }
 
@@ -499,6 +520,18 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getTestedManifest() {
+        return testedManifest;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getTestedSymbolFile() {
+        return testedSymbolFile;
     }
 
     @InputFiles

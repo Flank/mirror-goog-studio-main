@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -86,8 +87,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
     // ----- PRIVATE TASK API -----
 
     private InputSupplier<List<AssetSet>> assetSetSupplier;
+
     // for the dependencies
     private ArtifactCollection libraries = null;
+    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
+    private FileCollection testedLibrary;
+
     private FileCollection shadersOutputDir = null;
     private FileCollection copyApk = null;
     private String ignoreAssets = null;
@@ -199,6 +204,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
+    @InputFiles
+    @Optional
+    public FileCollection getTestedLibrary() {
+        return testedLibrary;
+    }
+
     @SuppressWarnings("unused")
     @InputFiles
     @Optional
@@ -300,6 +311,16 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 }
             }
 
+            if (testedLibrary != null) {
+                AssetSet assetSet = new AssetSet("__tested_library__");
+                assetSet.addSource(testedLibrary.getSingleFile());
+
+                // add at the beginning since the libraries are less important than the folder based
+                // resource sets.
+                sets.add(assetSet);
+            }
+
+
             // add the generated folders to the first set of the folder-based sets.
             List<File> generatedAssetFolders = Lists.newArrayList();
 
@@ -390,6 +411,11 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
                 mergeAssetsTask.libraries = scope.getDependenciesAssetFolders();
+
+                // only add the assets for tested libraries.
+                mergeAssetsTask.testedLibrary = scope.getTestedArtifact(
+                        AndroidArtifacts.TYPE_ANDROID_RES,
+                        VariantType.LIBRARY);
             }
 
             mergeAssetsTask.setOutputDir(scope.getMergeAssetsOutputDir());

@@ -20,17 +20,16 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.core.VariantType;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
-import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
@@ -38,7 +37,6 @@ import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.NoOpResourcePreprocessor;
 import com.android.ide.common.res2.QueueableResourceCompiler;
-import com.android.ide.common.res2.ResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
@@ -46,11 +44,9 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.google.common.collect.Sets;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -69,16 +65,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 
 @ParallelizableTask
 public class MergeResources extends IncrementalTask {
@@ -109,7 +96,11 @@ public class MergeResources extends IncrementalTask {
 
     // actual inputs
     private InputSupplier<List<ResourceSet>> sourceFolderInputs;
+
     private ArtifactCollection libraries;
+    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
+    private FileCollection testedLibrary;
+
     private FileCollection renderscriptResOutputDir;
     private FileCollection generatedResOutputDir;
     private FileCollection microApkResDirectory;
@@ -349,6 +340,12 @@ public class MergeResources extends IncrementalTask {
 
     @InputFiles
     @Optional
+    public FileCollection getTestedLibrary() {
+        return testedLibrary;
+    }
+
+    @InputFiles
+    @Optional
     public FileCollection getLibraries() {
         if (libraries != null) {
             return libraries.getArtifactFiles();
@@ -493,7 +490,16 @@ public class MergeResources extends IncrementalTask {
             }
         }
 
-        // FIXME add tested library here!
+        if (testedLibrary != null) {
+            ResourceSet resourceSet = new ResourceSet(
+                    "__tested_library__",
+                    validateEnabled);
+            resourceSet.addSource(testedLibrary.getSingleFile());
+
+            // add at the beginning since the libraries are less important than the folder based
+            // resource sets.
+            resourceSets.add(resourceSet);
+        }
 
         // add the folder based next
         List<ResourceSet> sourceFolderSets = sourceFolderInputs.getLastValue();
@@ -616,6 +622,10 @@ public class MergeResources extends IncrementalTask {
 
             if (includeDependencies) {
                 mergeResourcesTask.libraries = scope.getDependenciesResourceFolders();
+                // only add the resources for tested libraries.
+                mergeResourcesTask.testedLibrary = scope.getTestedArtifact(
+                        AndroidArtifacts.TYPE_ANDROID_RES,
+                        VariantType.LIBRARY);
             }
 
             mergeResourcesTask.sourceFolderInputs = InputSupplier.from(

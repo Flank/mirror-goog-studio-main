@@ -39,8 +39,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RESOURCES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOLS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static java.util.Collections.singletonMap;
@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -109,8 +110,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -129,10 +133,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private static final Map<String, String> ARTIFACTS_AIDL = singletonMap(ARTIFACT_TYPE, TYPE_AIDL);
     private static final Map<String, String> ARTIFACTS_RENDERSCRIPT = singletonMap(ARTIFACT_TYPE, TYPE_RENDERSCRIPT);
     private static final Map<String, String> ARTIFACTS_MANIFEST = singletonMap(ARTIFACT_TYPE, TYPE_MANIFEST);
-    private static final Map<String, String> ARTIFACTS_SYMBOLS = singletonMap(ARTIFACT_TYPE, TYPE_SYMBOLS);
+    private static final Map<String, String> ARTIFACTS_SYMBOL = singletonMap(ARTIFACT_TYPE, TYPE_SYMBOL);
     private static final Map<String, String> ARTIFACTS_DATA_BINDING = singletonMap(ARTIFACT_TYPE, TYPE_DATA_BINDING);
-    public static final Map<String, String> ARTIFACTS_RESOURCES = singletonMap(ARTIFACT_TYPE, TYPE_RESOURCES);
-    public static final Map<String, String> ARTIFACTS_ASSETS = singletonMap(ARTIFACT_TYPE, TYPE_ASSETS);
+    private static final Map<String, String> ARTIFACTS_RESOURCES = singletonMap(ARTIFACT_TYPE, TYPE_ANDROID_RES);
+    private static final Map<String, String> ARTIFACTS_ASSETS = singletonMap(ARTIFACT_TYPE, TYPE_ASSETS);
 
     @NonNull
     private GlobalScope globalScope;
@@ -227,6 +231,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     private final Map<OutputType, FileCollection> outputMap = Maps.newHashMap();
+    private final Map<String, ConfigurableFileCollection> artifactMap = Maps.newHashMap();
 
     @NonNull
     @Override
@@ -297,8 +302,54 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         ((ConfigurableFileCollection) anchorCollection).from(fileCollection);
     }
 
+    @Override
+    public void publishIntermediateArtifact(
+            @NonNull File file,
+            @NonNull String builtBy,
+            @NonNull String type) {
+        final Project project = getGlobalScope().getProject();
+
+        variantData.getVariantDependency().getPublishConfiguration()
+                .getOutgoing().variants(
+                (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
+                    variants.create(type, (variant) ->
+                            variant.artifact(file, (artifact) -> {
+                                artifact.setType(type);
+                                artifact.builtBy(project.getTasks().getByName(builtBy));
+                            }));
+                });
+
+        artifactMap.put(type, createCollection(file, builtBy));
+    }
+
+    @Override
+    @Nullable
+    public ConfigurableFileCollection getInternalArtifact(@NonNull String type) {
+        return artifactMap.get(type);
+    }
+
+    @Nullable
+    @Override
+    public ConfigurableFileCollection getTestedArtifact(
+            @NonNull String type,
+            @NonNull VariantType testedVariantType) {
+        // get the matching file collection for the tested variant, if any.
+        if (variantData instanceof TestVariantData) {
+            TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
+
+            if (tested instanceof BaseVariantData) {
+                BaseVariantData testedVariantData = (BaseVariantData) tested;
+                if (testedVariantData.getVariantConfiguration().getType() == testedVariantType) {
+                    return testedVariantData.getScope().getInternalArtifact(type);
+                }
+            }
+        }
+
+        return null;
+    }
+
     @NonNull
-    private FileCollection createCollection(@NonNull File file, @NonNull String taskName) {
+    private ConfigurableFileCollection createCollection(@NonNull File file, @NonNull String taskName) {
         return getGlobalScope().getProject().files(file).builtBy(taskName);
     }
 
@@ -608,7 +659,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public ArtifactCollection getSymbolsFile() {
         // TODO cache?
-        return getPackageArtifactCollection(ARTIFACTS_SYMBOLS);
+        return getPackageArtifactCollection(ARTIFACTS_SYMBOL);
     }
 
     @NonNull
@@ -620,39 +671,47 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public FileCollection getExternalAarJniLibFolders() {
+    public FileCollection getExternalAarDataBindingFolders() {
         // TODO cache?
-        return getPackageCollection(singletonMap(
+        return getExternalPackageCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_DATA_BINDING));
     }
 
     @Override
     @NonNull
-    public FileCollection getSubProjectPackagedClassJars() {
+    public FileCollection getSubProjectPackagedJars() {
         // TODO cache?
-        return getPackageCollection(singletonMap(
+        return getSubprojectPackageCollection(singletonMap(
+                ARTIFACT_TYPE, TYPE_JAR));
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getSubProjectPackagedAarClassJars() {
+        // TODO cache?
+        return getSubprojectPackageCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_JAR_SUB_PROJECTS));
     }
 
     @Override
     @NonNull
-    public FileCollection getSubProjectPackagedResourceJars() {
+    public FileCollection getSubProjectPackagedAarResourceJars() {
         // TODO cache?
-        return getPackageCollection(singletonMap(
+        return getSubprojectPackageCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_JAVA_RES));
     }
 
     @Override
     @NonNull
-    public FileCollection getSubProjectLocalPackagedJars() {
+    public FileCollection getSubProjectPackagedAarLocalJars() {
         // TODO cache?
-        return getPackageCollection(singletonMap(
+        return getSubprojectPackageCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS));
     }
 
     @Override
     @NonNull
-    public FileCollection getSubProjectPackagedJniJarsAndFolders() {
+    public FileCollection getSubProjectPackagedJniFolders() {
         // TODO cache?
         return getSubprojectPackageCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_JNI));
@@ -660,14 +719,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getExternalJars() {
+    public FileCollection getExternalCompileJars() {
         // TODO cache?
-        FileCollection collection = getExternalPackageCollection(singletonMap(
+        FileCollection collection = getExternalCompileCollection(singletonMap(
                 ARTIFACT_TYPE, TYPE_JAR));
         Set<File> files = globalScope.getAndroidBuilder()
                 .getAdditionalPackagedJars(getVariantConfiguration());
 
         return collection.plus(globalScope.getProject().files(files));
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getExternalPackageJars() {
+        // TODO cache?
+        return getExternalPackageCollection(singletonMap(ARTIFACT_TYPE, TYPE_JAR));
     }
 
     /**
@@ -1661,28 +1727,61 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private FileCollection getCompileCollection(Map<String, String> map) {
-        return getVariantData().getVariantDependency()
+        FileCollection fileCollection = getVariantData().getVariantDependency()
                 .getCompileConfiguration().getIncoming().getFiles(map);
+
+        return addTestedCollection(fileCollection, map);
+    }
+
+    private FileCollection addTestedCollection(
+            @NonNull FileCollection fileCollection,
+            @NonNull Map<String, String> map) {
+        // get the matching file collection for the tested variant, if any.
+        if (variantData instanceof TestVariantData) {
+            TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
+
+            if (tested instanceof BaseVariantData) {
+                final BaseVariantData testedVariantData = (BaseVariantData) tested;
+                ConfigurableFileCollection testedFC = testedVariantData.getScope()
+                        .getInternalArtifact(map.get(ARTIFACT_TYPE));
+
+                if (testedFC != null) {
+                    fileCollection = testedFC.from(fileCollection);
+                }
+            }
+        }
+
+        return fileCollection;
     }
 
     @NonNull
     private FileCollection getPackageCollection(Map<String, String> map) {
-        return getVariantData().getVariantDependency()
+        final FileCollection fileCollection = getVariantData().getVariantDependency()
                 .getPackageConfiguration().getIncoming().getFiles(map);
+        return addTestedCollection(fileCollection, map);
     }
 
     @NonNull
     private FileCollection getSubprojectPackageCollection(Map<String, String> map) {
-        return getVariantData().getVariantDependency()
+        final FileCollection fileCollection = getVariantData().getVariantDependency()
                 .getPackageConfiguration().getIncoming().getFiles(
                         map,
                         (id) -> id instanceof ProjectComponentIdentifier);
+        return addTestedCollection(fileCollection, map);
     }
 
     @NonNull
     private FileCollection getExternalPackageCollection(Map<String, String> map) {
         return getVariantData().getVariantDependency()
                 .getPackageConfiguration().getIncoming().getFiles(
+                        map,
+                        (id) -> id instanceof ModuleComponentIdentifier);
+    }
+
+    @NonNull
+    private FileCollection getExternalCompileCollection(Map<String, String> map) {
+        return getVariantData().getVariantDependency()
+                .getCompileConfiguration().getIncoming().getFiles(
                         map,
                         (id) -> id instanceof ModuleComponentIdentifier);
     }
