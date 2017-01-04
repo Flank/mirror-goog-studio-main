@@ -97,40 +97,40 @@ TEST(Tokenizer, GetNextToken_GetFirstTokenWithDelimitersWorks) {
   EXPECT_EQ("first", token);
 }
 
-TEST(Tokenizer, EatNextToken_SkipsToken) {
+TEST(Tokenizer, SkipNextToken_SkipsToken) {
   string input("first second");
   Tokenizer t(input);
   string token;
 
-  EXPECT_TRUE(t.EatNextToken());
+  EXPECT_TRUE(t.SkipNextToken());
   EXPECT_TRUE(t.GetNextToken(&token));
   EXPECT_EQ("second", token);
 }
 
-TEST(Tokenizer, EatNextToken_ReturnsFalseIfNoToken) {
+TEST(Tokenizer, SkipNextToken_ReturnsFalseIfNoToken) {
   string input("token");
   Tokenizer t(input);
 
-  EXPECT_TRUE(t.EatNextToken());
-  EXPECT_FALSE(t.EatNextToken());
+  EXPECT_TRUE(t.SkipNextToken());
+  EXPECT_FALSE(t.SkipNextToken());
 }
 
-TEST(Tokenizer, EatTokensWorks) {
+TEST(Tokenizer, SkipTokensWorks) {
   string input("first second third fourth fifth");
   Tokenizer t(input);
   string token;
 
-  EXPECT_TRUE(t.EatTokens(3));
+  EXPECT_TRUE(t.SkipTokens(3));
   EXPECT_TRUE(t.GetNextToken(&token));
   EXPECT_EQ("fourth", token);
 }
 
-TEST(Tokenizer, EatTokens_ReturnsFalseIfNotEnoughTokens) {
+TEST(Tokenizer, SkipTokens_ReturnsFalseIfNotEnoughTokens) {
   string input("first second third fourth fifth");
   Tokenizer t(input);
   string token;
 
-  EXPECT_FALSE(t.EatTokens(10));
+  EXPECT_FALSE(t.SkipTokens(10));
 }
 
 TEST(Tokenizer, GetNextToken_LambdaAllowsCustomTokenRetrieval) {
@@ -166,50 +166,50 @@ TEST(Tokenizer, GetNextChar_GetsNextCharFailsIfNoMoreChars) {
   EXPECT_EQ(c, 'B');
 }
 
-TEST(Tokenizer, EatNextChar_SkipsChar) {
+TEST(Tokenizer, SkipNextChar_SkipsChar) {
   string input("AB");
   Tokenizer t(input);
 
   EXPECT_EQ(t.index(), 0u);
-  t.EatNextChar();
+  t.SkipNextChar();
   EXPECT_EQ(t.index(), 1u);
-  t.EatNextChar();
+  t.SkipNextChar();
   EXPECT_EQ(t.index(), 2u);
 }
 
-TEST(Tokenizer, EatDelimiters_AlwaysReturnsTrue) {
+TEST(Tokenizer, SkipDelimiters_AlwaysReturnsTrue) {
   string input("   ABC");
   Tokenizer t(input);
 
   EXPECT_EQ(t.index(), 0u);
-  EXPECT_TRUE(t.EatDelimiters());
+  EXPECT_TRUE(t.SkipDelimiters());
   EXPECT_EQ(t.index(), 3u);
 
-  EXPECT_TRUE(t.EatDelimiters());
+  EXPECT_TRUE(t.SkipDelimiters());
   EXPECT_EQ(t.index(), 3u);
 }
 
-TEST(Tokenizer, EatWhile_LambdaAllowsSkippingNonDelimeterCharacters) {
+TEST(Tokenizer, SkipWhile_LambdaAllowsSkippingNonDelimeterCharacters) {
   string input("ABC123ABC");
   Tokenizer t(input);
 
   EXPECT_EQ(t.index(), 0u);
-  EXPECT_TRUE(t.EatWhile(Tokenizer::IsAlpha));
+  EXPECT_TRUE(t.SkipWhile(Tokenizer::IsAlpha));
   EXPECT_EQ(t.index(), 3u);
 
-  EXPECT_TRUE(t.EatWhile(Tokenizer::IsDigit));
+  EXPECT_TRUE(t.SkipWhile(Tokenizer::IsDigit));
   EXPECT_EQ(t.index(), 6u);
 }
 
-TEST(Tokenizer, EatWhile_AlwaysReturnsTrue) {
+TEST(Tokenizer, SkipWhile_AlwaysReturnsTrue) {
   string input("ABC123ABC");
   Tokenizer t(input);
 
   EXPECT_EQ(t.index(), 0u);
-  EXPECT_TRUE(t.EatWhile(Tokenizer::IsAlpha));
+  EXPECT_TRUE(t.SkipWhile(Tokenizer::IsAlpha));
   EXPECT_EQ(t.index(), 3u);
 
-  EXPECT_TRUE(t.EatWhile(Tokenizer::IsAlpha));
+  EXPECT_TRUE(t.SkipWhile(Tokenizer::IsAlpha));
   EXPECT_EQ(t.index(), 3u);
 }
 
@@ -225,8 +225,8 @@ TEST(Tokenizer, SetIndex_UpdatesIndex) {
 TEST(Tokenizer, SetIndex_CanMoveBackward) {
   string input("ABC ABC");
   Tokenizer t(input);
-  t.EatTokens(1);
-  t.EatDelimiters();
+  t.SkipTokens(1);
+  t.SkipDelimiters();
 
   EXPECT_EQ(t.index(), 4u);
   t.set_index(0u);
@@ -246,7 +246,7 @@ TEST(Tokenizer, IsAlpha) {
   string input("ABCxyz");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsAlpha);
+  t.SkipNextToken(Tokenizer::IsAlpha);
   EXPECT_TRUE(t.done());
 }
 
@@ -254,7 +254,7 @@ TEST(Tokenizer, IsAlphaNum) {
   string input("ABC123xyz");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsAlphaNum);
+  t.SkipNextToken(Tokenizer::IsAlphaNum);
   EXPECT_TRUE(t.done());
 }
 
@@ -262,7 +262,7 @@ TEST(Tokenizer, IsDigit) {
   string input("54321");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsDigit);
+  t.SkipNextToken(Tokenizer::IsDigit);
   EXPECT_TRUE(t.done());
 }
 
@@ -270,7 +270,7 @@ TEST(Tokenizer, IsLower) {
   string input("abcxyz");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsLower);
+  t.SkipNextToken(Tokenizer::IsLower);
   EXPECT_TRUE(t.done());
 }
 
@@ -278,7 +278,7 @@ TEST(Tokenizer, IsUpper) {
   string input("ABCXYZ");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsUpper);
+  t.SkipNextToken(Tokenizer::IsUpper);
   EXPECT_TRUE(t.done());
 }
 
@@ -286,7 +286,7 @@ TEST(Tokenizer, IsWhitespace) {
   string input(" \t \n \r \f ");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsWhitespace);
+  t.SkipNextToken(Tokenizer::IsWhitespace);
   EXPECT_TRUE(t.done());
 }
 
@@ -294,6 +294,6 @@ TEST(Tokenizer, IsOneOf) {
   string input("ABCxyz");
   Tokenizer t(input);
 
-  t.EatNextToken(Tokenizer::IsOneOf("xyzABC"));
+  t.SkipNextToken(Tokenizer::IsOneOf("xyzABC"));
   EXPECT_TRUE(t.done());
 }

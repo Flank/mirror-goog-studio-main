@@ -29,7 +29,7 @@ namespace profiler {
 // Example:
 //    Tokenizer t("1 1 3 5 8 13"); // Delimiter defaults to whitespace
 //    string token;
-//    t.EatTokens(4); // Skip over '1', '1', '3', and '5'
+//    t.SkipTokens(4); // Skip over '1', '1', '3', and '5'
 //    t.GetNextToken(&token); // token == "8"
 //    t.GetNextToken(&token); // token == "13"
 //    t.GetNextToken(&token); // Returns false, token still "13"
@@ -38,7 +38,7 @@ namespace profiler {
 //    Tokenizer t("123+321=444");
 //    string token;
 //    t.GetNextToken(Tokenizer::IsDigit, &token); // 123
-//    t.EatNextChar();                            // Skip over +
+//    t.SkipNextChar();                           // Skip over +
 //    t.GetNextToken(Tokenizer::IsDigit, &token); // 321
 //    ...
 //
@@ -61,16 +61,18 @@ class Tokenizer final {
 
   // Returns a list of tokens by splitting |input| by |delimiters|.
   //
-  // When |start_token_index| is specified, we keep eat tokens for that amount,
-  // result includes only tokens following if any; otherwise, no token is eaten.
-  // For example, |input| = "first second", |start_token_index| = 1, |delimiter|
-  // = " ", then token "first" is eaten and result is {"second"}.
+  // When |start_token_index| is specified, we skip that many tokens. The final
+  // results include only tokens after that index, if any; otherwise, no token
+  // is skipped.
   //
-  // If |max_token_count| is specified, at most first |max_token_count| of
-  // tokens are returned; otherwise, it does not limit how many tokens in
-  // result.
-  // For example, |input| = "first second", |start_token_index| = 0, |delimiter|
-  // = " ", |max_token_count| = 1, then result is {"first"}.
+  // For example, with |input| = "1 2 3", |start_token_index| = 1, and
+  // |delimiter| = " ", then the result is {"2", "3"}.
+  //
+  // If |max_token_count| is specified, at most |max_token_count| tokens are
+  // returned; otherwise, the results are not limited.
+  //
+  // For example, with |input| = "1 2 3", |start_token_index| = 1,
+  // |delimiter| = " ", and |max_token_count| = 1, then the result is {"2"}.
   static std::vector<std::string> GetTokens(
       const std::string &input, const std::string &delimiters,
       const int32_t start_token_index = 0,
@@ -88,14 +90,14 @@ class Tokenizer final {
   // delimiters. If found, return true and set |token| to its value. Otherwise,
   // |token| will be left unset.
   //
-  // This method will eat any leading delimiters first. If this causes the index
-  // to move to the end of the input string, then this method returns false and
-  // leaves |token| unset.
+  // This method will skip over any leading delimiters first. If this causes the
+  // index to move to the end of the input string, then this method returns
+  // false and leaves |token| unset.
   //
   // After this method is called, the index will be positioned after the end of
   // the token.
   //
-  // If you don't care about the token result, use |EatNextToken| instead.
+  // If you don't care about the token result, use |SkipNextToken| instead.
   bool GetNextToken(std::string *token);
 
   // Like |GetNextToken(token)|, but which uses a custom lambda method to
@@ -115,37 +117,37 @@ class Tokenizer final {
   // After this method is called, the index will be positioned one character
   // forward.
   //
-  // If you don't care about the character result, use |EatNextChar| instead.
+  // If you don't care about the character result, use |SkipNextChar| instead.
   bool GetNextChar(char *c);
 
   // Convenience method for calling |GetNextToken| when you don't care about the
   // token result.
-  bool EatNextToken() { return GetNextToken(nullptr); }
+  bool SkipNextToken() { return GetNextToken(nullptr); }
 
   // Convenience method for calling |GetNextToken| when you don't care about the
   // token result.
-  bool EatNextToken(std::function<bool(char)> is_valid_char) {
+  bool SkipNextToken(std::function<bool(char)> is_valid_char) {
     return GetNextToken(is_valid_char, nullptr);
   }
 
   // Convenience method for calling |GetNextChar| when you don't care about the
   // char result.
-  bool EatNextChar() { return GetNextChar(nullptr); }
+  bool SkipNextChar() { return GetNextChar(nullptr); }
 
   // Skip over |token_count| number of tokens, returning true if it could skip
   // over that many.
   //
   // After this method is called, the index will be positioned after the end of
   // the last token skipped.
-  bool EatTokens(int32_t token_count);
+  bool SkipTokens(int32_t token_count);
 
   // If the tokenizer is currently pointing at any character which is a
   // delimiter, keep skipping over until all are passed. If not pointing at a
   // delimiter, this method leaves the tokenizer at its current index.
   //
   // This method always returns true, so that it can be chained safely without
-  // breaking flow, e.g. GetToken && EatDelimeters && GetToken
-  bool EatDelimiters();
+  // breaking flow, e.g. GetToken && SkipDelimeters && GetToken
+  bool SkipDelimiters();
 
   // If the tokenizer is currently pointing at any character matched by
   // |should_skip|, keep skipping over until all are passed. If |should_skip|
@@ -153,8 +155,8 @@ class Tokenizer final {
   // index.
   //
   // This method always returns true, so that it can be chained safely without
-  // breaking flow, e.g. GetToken && EatWhile && GetToken
-  bool EatWhile(std::function<bool(char)> should_eat);
+  // breaking flow, e.g. GetToken && SkipWhile && GetToken
+  bool SkipWhile(std::function<bool(char)> should_skip);
 
   // Set the tokenizer's index directly, although it will be clamped to the
   // length of the input text.
