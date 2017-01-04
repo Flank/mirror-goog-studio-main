@@ -250,13 +250,14 @@ public class LintGradleClient extends LintCliClient {
 
     @Override
     public void report(@NonNull Context context, @NonNull Issue issue, @NonNull Severity severity,
-            @NonNull Location location, @NonNull String message, @NonNull TextFormat format) {
+            @NonNull Location location, @NonNull String message, @NonNull TextFormat format,
+            @Nullable Object quickfixData) {
         if (issue == IssueRegistry.LINT_ERROR
                 && message.startsWith("No `.class` files were found in project")) {
             // In Gradle, .class files are always generated when needed, so no need
             // to flag this (and it's erroneous on library projects)
             return;
         }
-        super.report(context, issue, severity, location, message, format);
+        super.report(context, issue, severity, location, message, format, quickfixData);
     }
 }

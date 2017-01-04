@@ -289,6 +289,18 @@ public class GradleModelMocker {
         if (commentIndex != -1) {
             line = line.substring(0, commentIndex).trim();
         }
+        while (true) {
+            // Strip out embedded comment markers, if any (there could be multiple)
+            commentIndex = line.indexOf("/*");
+            if (commentIndex == -1) {
+                break;
+            }
+            int commentEnd = line.indexOf("*/", commentIndex + 2);
+            if (commentEnd == -1) {
+                break;
+            }
+            line = line.substring(0, commentIndex) + line.substring(commentEnd + 2);
+        }
 
         return line.replaceAll("\\s+", " ").replace('"', '\'').replace(" = ", " ");
     }

@@ -134,29 +134,24 @@ public class XmlContext extends ResourceContext {
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message) {
-        if (scope != null && driver.isSuppressed(this, issue, scope)) {
-            return;
-        }
-        super.report(issue, location, message);
+        report(issue, scope, location, message, null);
     }
 
     /**
      * Report an error.
      * Like {@link #report(Issue, org.w3c.dom.Node, Location, String)} but with
      * a now-unused data parameter at the end.
-     *
-     * @deprecated Use {@link #report(Issue, org.w3c.dom.Node, Location, String)} instead;
-     *    this method is here for custom rule compatibility
      */
-    @SuppressWarnings("UnusedDeclaration") // Potentially used by external existing custom rules
-    @Deprecated
     public void report(
             @NonNull Issue issue,
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message,
-            @SuppressWarnings("UnusedParameters") @Nullable Object data) {
-        report(issue, scope, location, message);
+            @Nullable Object data) {
+        if (scope != null && driver.isSuppressed(this, issue, scope)) {
+            return;
+        }
+        super.report(issue, location, message, data);
     }
 
     @Override

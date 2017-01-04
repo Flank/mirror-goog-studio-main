@@ -135,7 +135,7 @@ public class LintBaseline {
             client.report(new Context(driver, project, project, baselineFile),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW);
+                    Location.create(baselineFile), message, TextFormat.RAW, null);
         }
 
         int fixedCount = getFixedCount();
@@ -149,7 +149,7 @@ public class LintBaseline {
             client.report(new Context(driver, project, project, baselineFile),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW);
+                    Location.create(baselineFile), message, TextFormat.RAW, null);
         }
     }
 

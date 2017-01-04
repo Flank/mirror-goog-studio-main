@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
@@ -39,6 +40,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
+import com.android.utils.Pair;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,6 +52,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -507,10 +510,12 @@ public class TestLintTask {
 
         List<File> projectDirs = createProjects(rootDir);
         try {
-            String output = checkLint(projectDirs);
-            return new TestLintResult(output);
+            Pair<String,List<Warning>> result = checkLint(projectDirs);
+            String output = result.getFirst();
+            List<Warning> warnings = result.getSecond();
+            return new TestLintResult(this, output, null, warnings);
         } catch (Exception e) {
-            return new TestLintResult(e);
+            return new TestLintResult(this, null, e, Collections.emptyList());
         } finally {
             TestUtils.deleteFile(rootDir);
         }
@@ -557,7 +562,7 @@ public class TestLintTask {
     }
 
     @NonNull
-    private String checkLint(@NonNull List<File> files) throws Exception {
+    private Pair<String,List<Warning>> checkLint(@NonNull List<File> files) throws Exception {
         TestLintClient lintClient = createClient();
         lintClient.task = this;
         try {

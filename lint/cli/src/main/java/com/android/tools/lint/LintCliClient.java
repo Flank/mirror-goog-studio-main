@@ -268,7 +268,8 @@ public class LintCliClient extends LintClient {
             @NonNull Severity severity,
             @NonNull Location location,
             @NonNull String message,
-            @NonNull TextFormat format) {
+            @NonNull TextFormat format,
+            @Nullable Object quickfixData) {
         assert context.isEnabled(issue) || issue == LINT_ERROR;
 
         if (severity.isError()) {
@@ -609,7 +610,7 @@ public class LintCliClient extends LintClient {
                 report(new Context(driver, project, project, project.getDir()),
                         IssueRegistry.LINT_ERROR,
                         project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
-                        location, message, TextFormat.RAW);
+                        location, message, TextFormat.RAW, id);
             }
         } else {
             log(Severity.ERROR, null, "Lint: %1$s", message);

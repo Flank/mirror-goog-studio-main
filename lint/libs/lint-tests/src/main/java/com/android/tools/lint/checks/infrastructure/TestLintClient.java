@@ -73,6 +73,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.utils.ILogger;
+import com.android.utils.Pair;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -131,7 +132,8 @@ public class TestLintClient extends LintCliClient {
         return true;
     }
 
-    protected String checkLint(List<File> files, List<Issue> issues) throws Exception {
+    protected Pair<String,List<Warning>> checkLint(List<File> files, List<Issue> issues)
+            throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
             for (File dir : files) {
@@ -206,7 +208,7 @@ public class TestLintClient extends LintCliClient {
             TestUtils.deleteFile(f);
         }
 
-        return result;
+        return Pair.of(result, warnings);
     }
 
     private boolean runExtraTokenChecks() {
@@ -452,7 +454,8 @@ public class TestLintClient extends LintCliClient {
             @NonNull Severity severity,
             @NonNull Location location,
             @NonNull String message,
-            @NonNull TextFormat format) {
+            @NonNull TextFormat format,
+            @Nullable Object quickfixData) {
         assertNotNull(location);
 
         if (task.allowSystemErrors && issue == IssueRegistry.LINT_ERROR) {
@@ -492,7 +495,7 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        super.report(context, issue, severity, location, message, format);
+        super.report(context, issue, severity, location, message, format, quickfixData);
 
         // Make sure errors are unique!
         Warning prev = null;

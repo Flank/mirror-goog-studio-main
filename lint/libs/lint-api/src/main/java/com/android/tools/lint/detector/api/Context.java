@@ -255,6 +255,22 @@ public class Context {
             @NonNull Issue issue,
             @NonNull Location location,
             @NonNull String message) {
+        report(issue, location, message, null);
+    }
+
+    /**
+     * Reports an issue. Convenience wrapper around {@link LintClient#report}
+     *
+     * @param issue        the issue to report
+     * @param location     the location of the issue
+     * @param message      the message for this warning
+     * @param quickfixData parameterized data for IDE quickfixes
+     */
+    public void report(
+            @NonNull Issue issue,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable Object quickfixData) {
         //noinspection ConstantConditions
         if (location == null) {
             // Misbehaving third-party lint detectors
@@ -291,25 +307,8 @@ public class Context {
             return;
         }
 
-        driver.getClient().report(this, issue, severity, location, message, TextFormat.RAW);
-    }
-
-    /**
-     * Report an error.
-     * Like {@link #report(Issue, Location, String)} but with
-     * a now-unused data parameter at the end
-     *
-     * @deprecated Use {@link #report(Issue, Location, String)} instead;
-     *    this method is here for custom rule compatibility
-     */
-    @SuppressWarnings("UnusedDeclaration") // Potentially used by external existing custom rules
-    @Deprecated
-    public void report(
-            @NonNull Issue issue,
-            @NonNull Location location,
-            @NonNull String message,
-            @SuppressWarnings("UnusedParameters") @Nullable Object data) {
-        report(issue, location, message);
+        driver.getClient().report(this, issue, severity, location, message, TextFormat.RAW,
+                quickfixData);
     }
 
     /**

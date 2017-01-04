@@ -743,10 +743,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:13: Error: The leading 0 turns this number into octal which is probably not what was intended (interpreted as 8) [AccidentalOctal]\n"
                 + "        versionCode 010\n"
                 + "        ~~~~~~~~~~~~~~~\n"
-                + "build.gradle:16: Error: The leading 0 turns this number into octal which is probably not what was intended (and it is not a valid octal number) [AccidentalOctal]\n"
-                + "        versionCode 01 // line suffix comments are not handled correctly\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "2 errors, 0 warnings\n";
+                + "1 errors, 0 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
@@ -1524,6 +1521,14 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
                 }
             }
+
+            if (node instanceof ArgumentListExpression) {
+                List<Expression> expressions = ((ArgumentListExpression) node).getExpressions();
+                if (expressions.size() == 1) {
+                    return getOffsets(expressions.get(0), context);
+                }
+            }
+
             CharSequence source = context.getContents();
             assert source != null; // because we successfully parsed
             int start = 0;
