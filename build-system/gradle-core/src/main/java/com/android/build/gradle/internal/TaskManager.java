@@ -902,7 +902,7 @@ public abstract class TaskManager {
         variantScope.getTransformManager().addStream(OriginalStream.builder(project)
                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.PROJECT)
-                .setFolders(() -> variantScope.getNdkSoFolder())
+                .setFolders(variantScope::getNdkSoFolder)
                 .setDependency(getNdkBuildable(variantScope.getVariantData()))
                 .build());
 

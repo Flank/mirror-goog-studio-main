@@ -309,6 +309,7 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         // TODO not sure what to do about this...
+        createMergeJniLibFoldersTasks(tasks, variantScope);
         createStripNativeLibraryTask(tasks, variantScope);
 
         // package the renderscript header files files into the bundle folder

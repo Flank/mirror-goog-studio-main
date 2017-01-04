@@ -36,6 +36,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAVA_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RESOURCES;
@@ -654,7 +655,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public FileCollection getSubProjectPackagedJniJarsAndFolders() {
         // TODO cache?
         return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR));
+                ARTIFACT_TYPE, TYPE_JNI));
     }
 
     @Override
