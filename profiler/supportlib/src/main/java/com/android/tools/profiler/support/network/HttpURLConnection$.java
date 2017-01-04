@@ -35,8 +35,10 @@ import java.util.Map;
 @SuppressWarnings("DollarSignInName")
 final class HttpURLConnection$ extends HttpURLConnection {
 
-    private HttpURLConnection myWrapped;
-    private HttpConnectionTracker myConnectionTracker;
+    private final HttpURLConnection myWrapped;
+    private final HttpConnectionTracker myConnectionTracker;
+
+    private boolean myConnectTracked;
 
     public HttpURLConnection$(HttpURLConnection wrapped, StackTraceElement[] callstack) {
         super(wrapped.getURL());
@@ -124,13 +126,17 @@ final class HttpURLConnection$ extends HttpURLConnection {
 
     @Override
     public void connect() throws IOException {
-        myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
         try {
             myWrapped.connect();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
+        } finally {
+            myConnectTracked = true;
         }
     }
 
@@ -226,7 +232,9 @@ final class HttpURLConnection$ extends HttpURLConnection {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
         try {
             InputStream stream = myWrapped.getInputStream();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
@@ -234,6 +242,8 @@ final class HttpURLConnection$ extends HttpURLConnection {
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
+        } finally {
+            myConnectTracked = true;
         }
     }
 

@@ -25,7 +25,6 @@ import java.security.Principal;
 import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Map;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -42,8 +41,10 @@ import javax.net.ssl.SSLSocketFactory;
 @SuppressWarnings("DollarSignInName")
 final class HttpsURLConnection$ extends HttpsURLConnection {
 
-    private HttpsURLConnection myWrapped;
-    private HttpConnectionTracker myConnectionTracker;
+    private final HttpsURLConnection myWrapped;
+    private final HttpConnectionTracker myConnectionTracker;
+
+    private boolean myConnectTracked;
 
     public HttpsURLConnection$(HttpsURLConnection wrapped, StackTraceElement[] callstack) {
         super(wrapped.getURL());
@@ -176,13 +177,18 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public void connect() throws IOException {
-        myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
         try {
             myWrapped.connect();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
+        }
+        finally {
+            myConnectTracked = true;
         }
     }
 
@@ -278,7 +284,9 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
         try {
             InputStream stream = myWrapped.getInputStream();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
@@ -286,6 +294,8 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
+        } finally {
+            myConnectTracked = true;
         }
     }
 
