@@ -26,7 +26,7 @@ std::vector<std::string> Tokenizer::GetTokens(const std::string &input,
                                               const int32_t max_token_count) {
   vector<string> tokens{};
   Tokenizer tokenizer(input, delimiters);
-  if (tokenizer.EatTokens(start_token_index)) {
+  if (tokenizer.SkipTokens(start_token_index)) {
     std::string token;
     int32_t count = 0;
     while (count < max_token_count && tokenizer.GetNextToken(&token)) {
@@ -38,15 +38,15 @@ std::vector<std::string> Tokenizer::GetTokens(const std::string &input,
 }
 
 bool Tokenizer::GetNextToken(std::string *token) {
-  EatDelimiters();
+  SkipDelimiters();
   return GetNextToken(
       [this](char c) { return delimiters_.find(c) == string::npos; }, token);
 }
 
-bool Tokenizer::EatTokens(int32_t token_count) {
+bool Tokenizer::SkipTokens(int32_t token_count) {
   int32_t remaining_count = token_count;
   while (remaining_count > 0) {
-    if (!EatNextToken()) {
+    if (!SkipNextToken()) {
       return false;
     }
     remaining_count--;
@@ -87,13 +87,13 @@ bool Tokenizer::GetNextChar(char *c) {
   return true;
 }
 
-bool Tokenizer::EatDelimiters() {
-  return EatWhile(
+bool Tokenizer::SkipDelimiters() {
+  return SkipWhile(
       [this](char c) { return delimiters_.find(c) != string::npos; });
 }
 
-bool Tokenizer::EatWhile(std::function<bool(char)> should_eat) {
-  while (index_ < input_.size() && should_eat(input_[index_])) {
+bool Tokenizer::SkipWhile(std::function<bool(char)> should_skip) {
+  while (index_ < input_.size() && should_skip(input_[index_])) {
     index_++;
   }
   return true;
