@@ -25,14 +25,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -1386,30 +1384,17 @@ public class ZFileTest {
         }
 
         /*
-         * Now open the zip file and it should fail.
-         */
-        try {
-            new ZFile(zipFile);
-            fail();
-        } catch (IOException e) {
-            /*
-             * We should be complaining about the CRC32 somewhere...
-             */
-            assertTrue(
-                    Throwables.getCausalChain(e).stream()
-                            .map(Throwable::getMessage)
-                            .anyMatch(s -> s.contains("CRC32")));
-        }
-
-        /*
-         * But opening with data validation skip should work.
+         * Now open the zip file and it should write a message in the log.
          */
         ZFileOptions options = new ZFileOptions();
-        options.setSkipDataDescriptionValidation(true);
+        options.setVerifyLogFactory(VerifyLogs::unlimited);
         try (ZFile zf = new ZFile(zipFile, options)) {
-            /*
-             * Nothing to do.
-             */
+            VerifyLog vl = zf.getVerifyLog();
+            assertTrue(vl.getLogs().isEmpty());
+            StoredEntry fooEntry = zf.get("foo");
+            vl = fooEntry.getVerifyLog();
+            assertEquals(1, vl.getLogs().size());
+            assertTrue(vl.getLogs().get(0).contains("CRC32"));
         }
     }
 
@@ -1437,36 +1422,25 @@ public class ZFileTest {
         Files.write(allZipBytes, zipFile);
 
         /*
-         * Opening the file should fail.
-         */
-        try {
-            new ZFile(zipFile);
-            fail();
-        } catch (IOException e) {
-            /*
-             * We should complain about the version to extract somewhere...
-             */
-            assertTrue(
-                    Throwables.getCausalChain(e).stream()
-                            .map(Throwable::getMessage)
-                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("version")));
-            assertTrue(
-                    Throwables.getCausalChain(e).stream()
-                            .map(Throwable::getMessage)
-                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("extract")));
-        }
-
-        /*
-         * Setting the ignore version extract validation should allow the zip to be opened.
+         * Opening the file and it should write a message in the log. The entry has the right
+         * version to extract (20), but it issues a warning because it is not equal to the one
+         * in the central directory.
          */
         ZFileOptions options = new ZFileOptions();
-        options.setSkipZipVersionToExtractValidation(true);
+        options.setVerifyLogFactory(VerifyLogs::unlimited);
         try (ZFile zf = new ZFile(zipFile, options)) {
-            /*
-             * Nothing to do.
-             */
+            VerifyLog vl = zf.getVerifyLog();
+            assertEquals(1, vl.getLogs().size());
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("version"));
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("extract"));
+            StoredEntry fooEntry = zf.get("foo");
+            vl = fooEntry.getVerifyLog();
+            assertEquals(1, vl.getLogs().size());
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("version"));
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("extract"));
         }
     }
+
     @Test
     public void detectIncorrectVersionToExtractInLocalHeader() throws Exception {
         File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
@@ -1488,34 +1462,18 @@ public class ZFileTest {
         Files.write(allZipBytes, zipFile);
 
         /*
-         * Opening the file should fail.
-         */
-        try {
-            new ZFile(zipFile);
-            fail();
-        } catch (IOException e) {
-            /*
-             * We should complain about the version to extract somewhere...
-             */
-            assertTrue(
-                    Throwables.getCausalChain(e).stream()
-                            .map(Throwable::getMessage)
-                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("version")));
-            assertTrue(
-                    Throwables.getCausalChain(e).stream()
-                            .map(Throwable::getMessage)
-                            .anyMatch(s -> s.toLowerCase(Locale.US).contains("extract")));
-        }
-
-        /*
-         * Setting the ignore version extract validation should allow the zip to be opened.
+         * Opening the file should log an error message.
          */
         ZFileOptions options = new ZFileOptions();
-        options.setSkipZipVersionToExtractValidation(true);
+        options.setVerifyLogFactory(VerifyLogs::unlimited);
         try (ZFile zf = new ZFile(zipFile, options)) {
-            /*
-             * Nothing to do.
-             */
+            VerifyLog vl = zf.getVerifyLog();
+            assertTrue(vl.getLogs().isEmpty());
+            StoredEntry fooEntry = zf.get("foo");
+            vl = fooEntry.getVerifyLog();
+            assertEquals(1, vl.getLogs().size());
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("version"));
+            assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("extract"));
         }
     }
 }

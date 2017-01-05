@@ -193,6 +193,12 @@ public class StoredEntry {
     private ProcessedAndRawByteSources source;
 
     /**
+     * Verify log for the entry.
+     */
+    @Nonnull
+    private final VerifyLog verifyLog;
+
+    /**
      * Creates a new stored entry.
      *
      * @param header the header with the entry information; if the header does not contain an
@@ -202,11 +208,15 @@ public class StoredEntry {
      * read from the zip file, that is, if {@code header.getOffset()} is non-negative
      * @throws IOException failed to create the entry
      */
-    StoredEntry(@Nonnull CentralDirectoryHeader header, @Nonnull ZFile file,
-            @Nullable ProcessedAndRawByteSources source) throws IOException {
+    StoredEntry(
+            @Nonnull CentralDirectoryHeader header,
+            @Nonnull ZFile file,
+            @Nullable ProcessedAndRawByteSources source)
+            throws IOException {
         cdh = header;
         this.file = file;
         deleted = false;
+        verifyLog = file.makeVerifyLog();
 
         if (header.getOffset() >= 0) {
             /*
@@ -217,8 +227,9 @@ public class StoredEntry {
 
             readLocalHeader();
 
-            Preconditions.checkArgument(source == null, "Source was defined but contents already "
-                    + "exist on file.");
+            Preconditions.checkArgument(
+                    source == null,
+                    "Source was defined but contents already exist on file.");
 
             /*
              * Since the file is already in the zip, dynamically create a source that will read
@@ -232,8 +243,9 @@ public class StoredEntry {
              */
             localExtra = new ExtraField();
 
-            Preconditions.checkNotNull(source, "Source was not defined, but contents are not "
-                    + "on file.");
+            Preconditions.checkNotNull(
+                    source,
+                    "Source was not defined, but contents are not on file.");
             this.source = source;
         }
 
@@ -244,10 +256,13 @@ public class StoredEntry {
          */
         if (cdh.getName().endsWith(Character.toString(ZFile.SEPARATOR))) {
             type = StoredEntryType.DIRECTORY;
-            Verify.verify(this.source.getProcessedByteSource().isEmpty(),
+            verifyLog.verify(
+                    this.source.getProcessedByteSource().isEmpty(),
                     "Directory source is not empty.");
-            Verify.verify(cdh.getCrc32() == 0, "Directory has CRC32 = %s.", cdh.getCrc32());
-            Verify.verify(cdh.getUncompressedSize() == 0, "Directory has uncompressed size = %s.",
+            verifyLog.verify(cdh.getCrc32() == 0, "Directory has CRC32 = %s.", cdh.getCrc32());
+            verifyLog.verify(
+                    cdh.getUncompressedSize() == 0,
+                    "Directory has uncompressed size = %s.",
                     cdh.getUncompressedSize());
 
             /*
@@ -256,7 +271,8 @@ public class StoredEntry {
              * zero and we're just wasting space.
              */
             long compressedSize = cdh.getCompressionInfoWithWait().getCompressedSize();
-            Verify.verify(compressedSize == 0 || compressedSize == 2,
+            verifyLog.verify(
+                    compressedSize == 0 || compressedSize == 2,
                     "Directory has compressed size = %s.", compressedSize);
         } else {
             type = StoredEntryType.FILE;
@@ -401,22 +417,16 @@ public class StoredEntry {
 
         ByteBuffer bytes = ByteBuffer.wrap(localHeader);
         F_LOCAL_SIGNATURE.verify(bytes);
-
-        if (file.getSkipVersionToExtractValidation()) {
-            F_VERSION_EXTRACT.skip(bytes);
-        } else {
-            F_VERSION_EXTRACT.verify(bytes, compressInfo.getVersionExtract());
-        }
-
-        F_GP_BIT.verify(bytes, cdh.getGpBit().getValue());
-        F_METHOD.verify(bytes, compressInfo.getMethod().methodCode);
+        F_VERSION_EXTRACT.verify(bytes, compressInfo.getVersionExtract(), verifyLog);
+        F_GP_BIT.verify(bytes, cdh.getGpBit().getValue(), verifyLog);
+        F_METHOD.verify(bytes, compressInfo.getMethod().methodCode, verifyLog);
 
         if (file.areTimestampsIgnored()) {
             F_LAST_MOD_TIME.skip(bytes);
             F_LAST_MOD_DATE.skip(bytes);
         } else {
-            F_LAST_MOD_TIME.verify(bytes, cdh.getLastModTime());
-            F_LAST_MOD_DATE.verify(bytes, cdh.getLastModDate());
+            F_LAST_MOD_TIME.verify(bytes, cdh.getLastModTime(), verifyLog);
+            F_LAST_MOD_DATE.verify(bytes, cdh.getLastModDate(), verifyLog);
         }
 
         /*
@@ -429,9 +439,9 @@ public class StoredEntry {
             F_COMPRESSED_SIZE.skip(bytes);
             F_UNCOMPRESSED_SIZE.skip(bytes);
         } else {
-            F_CRC32.verify(bytes, cdh.getCrc32());
-            F_COMPRESSED_SIZE.verify(bytes, compressInfo.getCompressedSize());
-            F_UNCOMPRESSED_SIZE.verify(bytes, cdh.getUncompressedSize());
+            F_CRC32.verify(bytes, cdh.getCrc32(), verifyLog);
+            F_COMPRESSED_SIZE.verify(bytes, compressInfo.getCompressedSize(), verifyLog);
+            F_UNCOMPRESSED_SIZE.verify(bytes, cdh.getUncompressedSize(), verifyLog);
         }
 
         F_FILE_NAME_LENGTH.verify(bytes, cdh.getEncodedFileName().length);
@@ -442,8 +452,12 @@ public class StoredEntry {
 
         String fileName = EncodeUtils.decode(fileNameData, cdh.getGpBit());
         if (!fileName.equals(cdh.getName())) {
-            throw new IOException("Central directory reports file as being named '" + cdh.getName()
-                    + "' but local header reports file being named '" + fileName + "'.");
+            verifyLog.log(
+                    String.format(
+                            "Central directory reports file as being named '%s' but local header"
+                                    + "reports file being named '%s'.",
+                    cdh.getName(),
+                    fileName));
         }
 
         long localExtraStart = fileNameStart + cdh.getEncodedFileName().length;
@@ -487,11 +501,9 @@ public class StoredEntry {
         ZipField.F4 uncompressedField = new ZipField.F4(compressedField.endOffset(),
                 "Uncompressed size");
 
-        if (!file.getSkipDataDescriptorVerification()) {
-            crc32Field.verify(ddBytes, cdh.getCrc32());
-            compressedField.verify(ddBytes, compressInfo.getCompressedSize());
-            uncompressedField.verify(ddBytes, cdh.getUncompressedSize());
-        }
+        crc32Field.verify(ddBytes, cdh.getCrc32(), verifyLog);
+        compressedField.verify(ddBytes, compressInfo.getCompressedSize(), verifyLog);
+        uncompressedField.verify(ddBytes, cdh.getUncompressedSize(), verifyLog);
     }
 
     /**
@@ -756,5 +768,15 @@ public class StoredEntry {
 
         this.localExtra = localExtra;
         return sizeChanged;
+    }
+
+    /**
+     * Obtains the verify log for the entry.
+     *
+     * @return the verify log
+     */
+    @Nonnull
+    public VerifyLog getVerifyLog() {
+        return verifyLog;
     }
 }

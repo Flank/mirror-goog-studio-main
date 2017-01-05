@@ -188,8 +188,22 @@ abstract class ZipField {
      * @throws IOException failed to read the field or the field does not have the expected value
      */
     void verify(@Nonnull ByteBuffer bytes) throws IOException {
+        verify(bytes, null);
+    }
+
+    /**
+     * Verifies that the field at the current buffer position has the expected value. The field
+     * must have been created with the constructor that defines the expected value.
+     *
+     * @param bytes the byte buffer with the record data; after this method finishes, the buffer
+     * will be positioned at the first byte after the field
+     * @param verifyLog if non-{@code null}, will log the verification error
+     * @throws IOException failed to read the data or the field does not have the expected value;
+     * only thrown if {@code verifyLog} is {@code null}
+     */
+    void verify(@Nonnull ByteBuffer bytes, @Nullable VerifyLog verifyLog) throws IOException {
         Preconditions.checkState(expected != null, "expected == null");
-        verify(bytes, expected);
+        verify(bytes, expected, verifyLog);
     }
 
     /**
@@ -202,11 +216,39 @@ abstract class ZipField {
      * @throws IOException failed to read the data or the field does not have the expected value
      */
     void verify(@Nonnull ByteBuffer bytes, long expected) throws IOException {
+        verify(bytes, expected, null);
+    }
+
+    /**
+     * Verifies that the field has an expected value.
+     *
+     * @param bytes the byte buffer with the record data; after this method finishes, the buffer
+     * will be positioned at the first byte after the field
+     * @param expected the value we expect the field to have; if this field has invariants, the
+     * value must verify them
+     * @param verifyLog if non-{@code null}, will log the verification error
+     * @throws IOException failed to read the data or the field does not have the expected value;
+     * only thrown if {@code verifyLog} is {@code null}
+     */
+    void verify(
+            @Nonnull ByteBuffer bytes,
+            long expected,
+            @Nullable VerifyLog verifyLog) throws IOException {
         checkVerifiesInvariants(expected);
         long r = read(bytes);
         if (r != expected) {
-            throw new IOException("Incorrect value for field '" + name + "': value is " +
-                    r + " but " + expected + " expected.");
+            String error =
+                    String.format(
+                            "Incorrect value for field '%s': value is %s but %s expected.",
+                            name,
+                            r,
+                            expected);
+
+            if (verifyLog == null) {
+                throw new IOException(error);
+            } else {
+                verifyLog.log(error);
+            }
         }
     }
 

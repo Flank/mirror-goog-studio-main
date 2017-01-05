@@ -190,6 +190,12 @@ class CentralDirectory {
     private final CachedSupplier<byte[]> bytesSupplier;
 
     /**
+     * Verify log for the central directory.
+     */
+    @Nonnull
+    private final VerifyLog verifyLog;
+
+    /**
      * Creates a new, empty, central directory, for a given zip file.
      *
      * @param file the file
@@ -198,6 +204,7 @@ class CentralDirectory {
         entries = Maps.newHashMap();
         this.file = file;
         bytesSupplier = new CachedSupplier<>(this::computeByteRepresentation);
+        verifyLog = file.getVerifyLog();
     }
 
     /**
@@ -223,7 +230,7 @@ class CentralDirectory {
 
         for (int i = 0; i < count; i++) {
             try {
-                directory.readEntry(bytes, file);
+                directory.readEntry(bytes);
             } catch (IOException e) {
                 throw new IOException(
                         "Failed to read directory entry index "
@@ -247,7 +254,8 @@ class CentralDirectory {
      * @param file the zip file itself
      * @return the created central directory
      */
-    static CentralDirectory makeFromEntries(@Nonnull Set<StoredEntry> entries,
+    static CentralDirectory makeFromEntries(
+            @Nonnull Set<StoredEntry> entries,
             @Nonnull ZFile file) {
         CentralDirectory directory = new CentralDirectory(file);
         for (StoredEntry entry : entries) {
@@ -267,33 +275,29 @@ class CentralDirectory {
      * @param bytes the central directory's data, positioned starting at the beginning of the next
      * entry to read; when finished, the buffer's position will be at the first byte after the
      * entry
-     * @param file the file this entry belongs to
      * @throws IOException failed to read the directory entry, either because of an I/O error,
      * because it is corrupt or contains unsupported features
      */
-    private void readEntry(@Nonnull ByteBuffer bytes, @Nonnull ZFile file) throws IOException {
+    private void readEntry(@Nonnull ByteBuffer bytes) throws IOException {
         F_SIGNATURE.verify(bytes);
         long madeBy = F_MADE_BY.read(bytes);
 
         long versionNeededToExtract = F_VERSION_EXTRACT.read(bytes);
-        if (versionNeededToExtract > MAX_VERSION_TO_EXTRACT
-                && !file.getSkipVersionToExtractValidation()) {
-            throw new IOException("Unknown version needed to extract in zip directory entry: "
-                    + versionNeededToExtract + ".");
-        }
+        verifyLog.verify(
+                versionNeededToExtract <= MAX_VERSION_TO_EXTRACT,
+                "Ignored unknown version needed to extract in zip directory entry: %s.",
+                versionNeededToExtract);
 
         long gpBit = F_GP_BIT.read(bytes);
         GPFlags flags = GPFlags.from(gpBit);
 
         long methodCode = F_METHOD.read(bytes);
         CompressionMethod method = CompressionMethod.fromCode(methodCode);
-        if (method == null) {
-            throw new IOException("Unknown method in zip directory entry: " + methodCode + ".");
-        }
+        verifyLog.verify(method != null, "Unknown method in zip directory entry: %s.", methodCode);
 
         long lastModTime;
         long lastModDate;
-        if (this.file.areTimestampsIgnored()) {
+        if (file.areTimestampsIgnored()) {
             lastModTime = 0;
             lastModDate = 0;
             F_LAST_MOD_TIME.skip(bytes);
@@ -310,11 +314,12 @@ class CentralDirectory {
         int extraFieldLength = Ints.checkedCast(F_EXTRA_FIELD_LENGTH.read(bytes));
         int fileCommentLength = Ints.checkedCast(F_COMMENT_LENGTH.read(bytes));
 
-        F_DISK_NUMBER_START.verify(bytes);
+        F_DISK_NUMBER_START.verify(bytes, verifyLog);
         long internalAttributes = F_INTERNAL_ATTRIBUTES.read(bytes);
-        if ((internalAttributes & ~ASCII_BIT) != 0) {
-            throw new IOException("Invalid internal attributes: " + internalAttributes + ".");
-        }
+        verifyLog.verify(
+                (internalAttributes & ~ASCII_BIT) == 0,
+                "Ignored invalid internal attributes: %s.",
+                internalAttributes);
 
         long externalAttributes = F_EXTERNAL_ATTRIBUTES.read(bytes);
         long entryOffset = F_OFFSET.read(bytes);
@@ -322,10 +327,18 @@ class CentralDirectory {
         long remainingSize = fileNameLength + extraFieldLength + fileCommentLength;
 
         if (bytes.remaining() < fileNameLength + extraFieldLength + fileCommentLength) {
-            throw new IOException("Directory entry should have " + remainingSize
-                    + " bytes remaining (name = " + fileNameLength + ", extra = "
-                    + extraFieldLength + ", comment = " + fileCommentLength + "), but it has "
-                    + bytes.remaining() + ".");
+            throw new IOException(
+                    "Directory entry should have "
+                            + remainingSize
+                            + " bytes remaining (name = "
+                            + fileNameLength
+                            + ", extra = "
+                            + extraFieldLength
+                            + ", comment = "
+                            + fileCommentLength
+                            + "), but it has "
+                            + bytes.remaining()
+                            + ".");
         }
 
         String fileName = EncodeUtils.decode(bytes, fileNameLength, flags);
@@ -342,8 +355,11 @@ class CentralDirectory {
          * information we need the CentralDirectoryHeader
          */
         ListenableFuture<CentralDirectoryHeaderCompressInfo> compressInfo =
-                Futures.immediateFuture(new CentralDirectoryHeaderCompressInfo(method,
-                        compressedSize, versionNeededToExtract));
+                Futures.immediateFuture(
+                        new CentralDirectoryHeaderCompressInfo(
+                                method,
+                                compressedSize,
+                                versionNeededToExtract));
         CentralDirectoryHeader centralDirectoryHeader =
                 new CentralDirectoryHeader(
                         fileName,
@@ -364,13 +380,13 @@ class CentralDirectory {
         StoredEntry entry;
 
         try {
-            entry = new StoredEntry(centralDirectoryHeader, this.file, null);
+            entry = new StoredEntry(centralDirectoryHeader, file, null);
         } catch (IOException e) {
             throw new IOException("Failed to read stored entry '" + fileName + "'.", e);
         }
 
         if (entries.containsKey(fileName)) {
-            throw new IOException("File file contains duplicate file '" + fileName + "'.");
+            verifyLog.log("File file contains duplicate file '" + fileName + "'.");
         }
 
         entries.put(fileName, entry);
