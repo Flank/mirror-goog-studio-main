@@ -221,3 +221,9 @@ filegroup(
     ),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "sources",
+    srcs = glob(["*/sources/**"]),
+    visibility = ["//visibility:public"],
+)
