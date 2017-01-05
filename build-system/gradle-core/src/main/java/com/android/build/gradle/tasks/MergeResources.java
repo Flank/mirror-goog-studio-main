@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
@@ -47,6 +48,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -95,7 +97,7 @@ public class MergeResources extends IncrementalTask {
     private File blameLogFolder;
 
     // actual inputs
-    private InputSupplier<List<ResourceSet>> sourceFolderInputs;
+    private Supplier<List<ResourceSet>> sourceFolderInputs;
 
     private ArtifactCollection libraries;
     // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
@@ -360,7 +362,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @VisibleForTesting
-    void setSourceFolderInputs(@NonNull InputSupplier<List<ResourceSet>> sourceFolderInputs) {
+    void setSourceFolderInputs(@NonNull Supplier<List<ResourceSet>> sourceFolderInputs) {
         this.sourceFolderInputs = sourceFolderInputs;
     }
 
@@ -502,7 +504,7 @@ public class MergeResources extends IncrementalTask {
         }
 
         // add the folder based next
-        List<ResourceSet> sourceFolderSets = sourceFolderInputs.getLastValue();
+        List<ResourceSet> sourceFolderSets = sourceFolderInputs.get();
         resourceSets.addAll(sourceFolderSets);
 
 
@@ -628,7 +630,7 @@ public class MergeResources extends IncrementalTask {
                         VariantType.LIBRARY);
             }
 
-            mergeResourcesTask.sourceFolderInputs = InputSupplier.from(
+            mergeResourcesTask.sourceFolderInputs = TaskInputHelper.memoize(
                     () -> variantData.getVariantConfiguration().getResourceSets(validateEnabled));
             mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
             mergeResourcesTask.renderscriptResOutputDir = project.files(scope.getRenderscriptResOutputDir());

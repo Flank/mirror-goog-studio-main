@@ -26,10 +26,12 @@ import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import org.gradle.api.logging.Logger;
@@ -45,8 +47,8 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     private InstantRunBuildContext instantRunBuildContext;
     private File instantRunSupportDir;
-    private InputSupplier<File> packageOutputFile;
-    private InputSupplier<File> instantRunManifestFile;
+    private Supplier<File> packageOutputFile;
+    private Supplier<File> instantRunManifestFile;
 
     @TaskAction
     public void checkManifestChanges() throws IOException {
@@ -176,8 +178,8 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         @Override
         public void execute(@NonNull CheckManifestInInstantRunMode task) {
 
-            task.packageOutputFile = InputSupplier.from(processedResourcesOutputFile);
-            task.instantRunManifestFile = InputSupplier.from(instantRunMergedManifest);
+            task.packageOutputFile = TaskInputHelper.memoize(processedResourcesOutputFile);
+            task.instantRunManifestFile = TaskInputHelper.memoize(instantRunMergedManifest);
             task.instantRunBuildContext = instantRunVariantScope.getInstantRunBuildContext();
             task.instantRunSupportDir = instantRunVariantScope.getInstantRunSupportDir();
             task.setVariantName(transformVariantScope.getFullVariantName());

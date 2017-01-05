@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -61,6 +60,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -105,8 +105,6 @@ import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.attributes.Attribute;
-import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
@@ -315,7 +313,9 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                             private final LibraryCache libraryCache = LibraryCache.getCache();
 
                             @Override
-                            public void buildStarted(Gradle gradle) {}
+                            public void buildStarted(Gradle gradle) {
+                                TaskInputHelper.enableBypass();
+                            }
 
                             @Override
                             public void settingsEvaluated(Settings settings) {}
@@ -363,6 +363,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 .getTaskGraph()
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
+                            TaskInputHelper.disableBypass();
+
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
                                     Transform transform = ((TransformTask) task).getTransform();

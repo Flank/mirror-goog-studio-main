@@ -64,7 +64,7 @@ public class MergeSourceSetFoldersTest {
         task = project.getTasks().create("test", MergeSourceSetFolders.class);
 
         folderSets = Lists.newArrayList();
-        task.setAssetSetSupplier(InputSupplier.from(() -> folderSets));
+        task.setAssetSetSupplier(() -> folderSets);
     }
 
     @After

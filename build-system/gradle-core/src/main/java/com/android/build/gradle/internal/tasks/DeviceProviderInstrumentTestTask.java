@@ -26,15 +26,12 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.internal.testing.SimpleTestCallable;
-import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.SimpleTestRunner;
@@ -48,11 +45,10 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 
+import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.Nullable;
-import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -61,7 +57,6 @@ import org.gradle.internal.logging.ConsoleRenderer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.concurrent.Callable;
 
 /**
  * Run instrumentation tests for a given variant
@@ -81,7 +76,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     private TestData testData;
 
     @Nullable
-    private InputSupplier<File> splitSelectExec;
+    private Supplier<File> splitSelectExec;
     private ProcessExecutor processExecutor;
 
     private boolean ignoreFailures;
@@ -116,7 +111,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
 
             final TestRunner testRunner;
             testRunner = new SimpleTestRunner(
-                    splitSelectExec.getLastValue(),
+                    splitSelectExec.get(),
                     getProcessExecutor(),
                     enableSharding,
                     numShards);
@@ -339,7 +334,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            task.splitSelectExec = InputSupplier.from(() -> {
+            task.splitSelectExec = TaskInputHelper.memoize(() -> {
                 // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
                 // if the task is not going to run, so use a supplier.
                 final TargetInfo info = scope.getGlobalScope().getAndroidBuilder()

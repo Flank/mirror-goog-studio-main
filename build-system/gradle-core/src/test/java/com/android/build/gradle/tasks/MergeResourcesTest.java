@@ -70,7 +70,7 @@ public class MergeResourcesTest {
         task.setGeneratedResOutputDir(empty);
 
         folderSets = Lists.newArrayList();
-        task.setSourceFolderInputs(InputSupplier.from(() -> folderSets));
+        task.setSourceFolderInputs(() -> folderSets);
     }
 
     @After

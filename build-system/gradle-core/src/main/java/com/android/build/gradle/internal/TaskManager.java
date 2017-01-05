@@ -521,7 +521,7 @@ public abstract class TaskManager {
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(fullJar)
                 .addScope(Scope.PROJECT_LOCAL_DEPS)
-                .setFileCollection(variantScope.getLocalPackagedJars())
+                .setJars(variantScope.getLocalPackagedJars())
                 .build());
 
         transformManager.addStream(OriginalStream.builder(project)
@@ -603,20 +603,10 @@ public abstract class TaskManager {
                 .build());
 
         // but we also need non android sub-projects
-        // FIXME we need a way to query only for the resources/native libs of sub-projects
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_RESOURCES)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJars()
-                        .minus(variantScope.getSubProjectPackagedAarClassJars())
-                        .minus(variantScope.getSubProjectPackagedAarLocalJars()))
-                .build());
-
-        // the local deps don't have resources (been merged into the main jar)
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(Scope.SUB_PROJECTS_LOCAL_DEPS)
-                .setFileCollection(variantScope.getSubProjectPackagedAarLocalJars())
+                .setFileCollection(variantScope.getSubProjectPackagedJavaJars())
                 .build());
 
         // and the native libs of the libraries are in a separate folder.
@@ -627,13 +617,10 @@ public abstract class TaskManager {
                 .build());
 
         // but we also need non android sub-projects
-        // FIXME we need a way to query only for the resources/native libs of sub-projects
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJars()
-                        .minus(variantScope.getSubProjectPackagedAarClassJars())
-                        .minus(variantScope.getSubProjectPackagedAarLocalJars()))
+                .setFileCollection(variantScope.getSubProjectPackagedJavaJars())
                 .build());
 
         // provided only scopes.
@@ -1205,15 +1192,16 @@ public abstract class TaskManager {
      * applied.</li>
      * </ul>
      *
+     * This sets up only the Sync part. The transform is setup via
+     * {@link #createMergeJavaResTransform(TaskFactory, VariantScope)}
+     *
      * @param tasks tasks factory to create tasks.
      * @param variantScope the variant scope we are operating under.
      */
-    public void createProcessJavaResTasks(
+    public void createProcessJavaResTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope) {
-        TransformManager transformManager = variantScope.getTransformManager();
-
-        // now copy the source folders java resources into the temporary location, mainly to
+        // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
         AndroidTask<Sync> processJavaResourcesTask =
                 androidTasks.create(tasks, new ProcessJavaResConfigAction(variantScope));
@@ -1227,6 +1215,22 @@ public abstract class TaskManager {
                 .setFolder(variantScope.getSourceFoldersJavaResDestinationDir())
                 .setDependency(processJavaResourcesTask.getName())
                 .build());
+
+    }
+
+    /**
+     * Sets up the Merge Java Res transform.
+     *
+     *
+     * @param tasks tasks factory to create tasks.
+     * @param variantScope the variant scope we are operating under.
+     *
+     * @see #createProcessJavaResTask(TaskFactory, VariantScope)
+     */
+    public void createMergeJavaResTransform(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope) {
+        TransformManager transformManager = variantScope.getTransformManager();
 
         // compute the scopes that need to be merged.
         Set<Scope> mergeScopes = getResMergingScopes(variantScope);
@@ -1500,7 +1504,8 @@ public abstract class TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(tasks, variantScope);
 
-        createProcessJavaResTasks(tasks, variantScope);
+        createProcessJavaResTask(tasks, variantScope);
+        createMergeJavaResTransform(tasks, variantScope);
         createCompileAnchorTask(tasks, variantScope);
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add an
@@ -1575,7 +1580,8 @@ public abstract class TaskManager {
         createApkProcessResTask(tasks, variantScope);
 
         // process java resources
-        createProcessJavaResTasks(tasks, variantScope);
+        createProcessJavaResTask(tasks, variantScope);
+        createMergeJavaResTransform(tasks, variantScope);
 
         createAidlTask(tasks, variantScope);
 

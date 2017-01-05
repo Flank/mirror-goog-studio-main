@@ -29,8 +29,11 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipEntryFilter;
+import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -38,6 +41,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 /**
@@ -62,12 +67,11 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
 
     public LibraryIntermediateJarsTransform(
             @NonNull File mainClassLocation,
-            @NonNull File localJarsLocation,
             @NonNull File resJarLocation,
             @Nullable File typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
-        super(mainClassLocation, localJarsLocation, typedefRecipe, packageName, packageBuildConfig);
+        super(mainClassLocation, null, typedefRecipe, packageName, packageBuildConfig);
         this.resJarLocation = resJarLocation;
     }
 
@@ -81,6 +85,12 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public Collection<File> getSecondaryFileOutputs() {
         return ImmutableList.of(mainClassLocation, resJarLocation);
+    }
+
+    @NonNull
+    @Override
+    public Set<QualifiedContent.Scope> getReferencedScopes() {
+        return TransformManager.PROJECT_ONLY;
     }
 
     @Override
@@ -99,8 +109,6 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         // be quick and it'll allow us to minimize jar merging if we don't have to.
         boolean mainClassInputChanged = incrementalDisabled;
         List<QualifiedContent> mainClassInputs = new ArrayList<>();
-        boolean localClassJarInputChanged = incrementalDisabled;
-        List<QualifiedContent> localClassJarInputs = new ArrayList<>();
         boolean resJarInputChanged = incrementalDisabled;
         List<QualifiedContent> resJarInputs = new ArrayList<>();
 
@@ -116,15 +124,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 }
 
                 if (jarInput.getContentTypes().contains(CLASSES)) {
-                    if (jarInput.getScopes().contains(PROJECT)) {
-                        // even if the scope contains both project + local jar, we treat this as main
-                        // scope.
-                        mainClassInputs.add(jarInput);
-                        mainClassInputChanged |= changed;
-                    } else {
-                        localClassJarInputs.add(jarInput);
-                        localClassJarInputChanged |= changed;
-                    }
+                    mainClassInputs.add(jarInput);
+                    mainClassInputChanged |= changed;
                 }
             }
 
@@ -139,30 +140,32 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 }
 
                 if (dirInput.getContentTypes().contains(CLASSES)) {
-                    if (dirInput.getScopes().contains(PROJECT)) {
-                        // even if the scope contains both project + local jar, we treat this as main
-                        // scope.
-                        mainClassInputs.add(dirInput);
-                        mainClassInputChanged |= changed;
-                    } else {
-                        localClassJarInputs.add(dirInput);
-                        localClassJarInputChanged |= changed;
-                    }
+                    mainClassInputs.add(dirInput);
+                    mainClassInputChanged |= changed;
                 }
             }
-
         }
+
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         if (mainClassInputChanged) {
-            handleMainClass(mainClassInputs, excludePatterns);
-        }
-
-        if (localClassJarInputChanged) {
-            handleLocalClass(localClassJarInputs, excludePatterns);
+            executor.execute(() -> {
+                handleMainClass(mainClassInputs, excludePatterns);
+                return null;
+            });
         }
 
         if (resJarInputChanged) {
-            handleMainRes(resJarInputs);
+            executor.execute(() -> {
+                handleMainRes(resJarInputs);
+                return null;
+            });
+        }
+
+        try {
+            executor.waitForTasksWithQuickFail(true);
+        } catch (LoggedErrorException e) {
+            throw new TransformException(e);
         }
     }
 
@@ -179,14 +182,6 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 : null;
 
         handleJarOutput(mainClassInputs, mainClassLocation, filter, typedefRemover);
-    }
-
-    private void handleLocalClass(
-            @NonNull List<QualifiedContent> localClassJarInputs,
-            @NonNull List<Pattern> excludePatterns) throws IOException {
-        FileUtils.deleteDirectoryContents(localJarsLocation);
-        FileUtils.mkdirs(localJarsLocation);
-        processLocalJars(localClassJarInputs);
     }
 
     private void handleMainRes(

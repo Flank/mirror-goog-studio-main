@@ -20,18 +20,15 @@ import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES_RAW;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static java.util.Collections.singletonMap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
@@ -41,11 +38,9 @@ import com.google.common.io.Files;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -55,7 +50,6 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.Callable;
 
 /**
  * Task to generate micro app data res file.

@@ -41,7 +41,6 @@ import org.junit.Test;
 public class LibraryIntermediateJarsTransformTest {
 
     private File mainClassLocation;
-    private File localJarsLocation;
     private File resJarLocation;
     private File typedefRecipe;
     private String packageName;
@@ -55,11 +54,9 @@ public class LibraryIntermediateJarsTransformTest {
 
         mainClassLocation = Files.createTempFile(null, null).toFile();
         resJarLocation = Files.createTempFile(null, null).toFile();
-        localJarsLocation = Files.createTempDirectory(null).toFile();
 
         transform = new LibraryIntermediateJarsTransform(
                 mainClassLocation,
-                localJarsLocation,
                 resJarLocation,
                 typedefRecipe,
                 packageName,
@@ -70,8 +67,6 @@ public class LibraryIntermediateJarsTransformTest {
     public void tearDown() throws Exception {
         FileUtils.deleteIfExists(mainClassLocation);
         FileUtils.deleteIfExists(resJarLocation);
-        FileUtils.deleteDirectoryContents(localJarsLocation);
-        FileUtils.deleteIfExists(localJarsLocation);
     }
 
     @Test
@@ -106,57 +101,6 @@ public class LibraryIntermediateJarsTransformTest {
         // no folder either. Can't check this yet.
         //assertThat(classZip).doesNotContain("com/example/");
         //assertThat(resZip).doesNotContain("com/example/");
-    }
-
-    @Test
-    public void testSimpleMainInputWithLocal()
-            throws TransformException, InterruptedException, IOException {
-        // 2 inputs.
-        final File localJarSource = getInputFile("test-jar2.jar");
-        TransformInvocation invocation = invocationBuilder()
-                .setIncremental(false)
-                .addReferenceInput(singleJarBuilder(getInputFile("test-jar1.jar"))
-                        .setContentTypes(CLASSES, RESOURCES)
-                        .setScopes(PROJECT)
-                        .build())
-                .addReferenceInput(singleJarBuilder(localJarSource)
-                        .setContentTypes(CLASSES)
-                        .setScopes(PROJECT_LOCAL_DEPS)
-                        .build())
-                .build();
-
-        transform.transform(invocation);
-
-        // check the output
-        File localJar = new File(localJarsLocation, localJarSource.getName());
-        assertThat(localJar).named("generated local jar").isFile();
-
-        final Zip classZip = new Zip(mainClassLocation);
-        final Zip resZip = new Zip(resJarLocation);
-        final Zip localzip = new Zip(localJar);
-
-        // source code in classZip only
-        assertThat(classZip).contains("com/example/android/multiproject/person/People.class");
-        assertThat(resZip).doesNotContain("com/example/android/multiproject/person/People.class");
-        assertThat(localzip).doesNotContain("com/example/android/multiproject/person/People.class");
-
-        // resources in resZip only
-        assertThat(classZip).doesNotContain("file1.txt");
-        assertThat(resZip).contains("file1.txt");
-        assertThat(localzip).doesNotContain("file1.txt");
-        assertThat(classZip).doesNotContain("file2.txt");
-        assertThat(resZip).doesNotContain("file2.txt");
-        assertThat(localzip).doesNotContain("file2.txt");
-
-        // R class nowhere
-        assertThat(classZip).doesNotContain("com/example/android/multiproject/person/R.class");
-        assertThat(resZip).doesNotContain("com/example/android/multiproject/person/R.class");
-        assertThat(localzip).doesNotContain("com/example/android/multiproject/person/R.class");
-
-        // class from local jar in local jar only.
-        assertThat(classZip).doesNotContain("com/example/android/multiproject/person/Foo.class");
-        assertThat(resZip).doesNotContain("com/example/android/multiproject/person/Foo.class");
-        assertThat(localzip).contains("com/example/android/multiproject/person/Foo.class");
     }
 
     private File getInputFile(@NonNull String name) throws IOException {

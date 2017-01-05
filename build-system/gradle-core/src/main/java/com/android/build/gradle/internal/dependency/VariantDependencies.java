@@ -335,8 +335,6 @@ public class VariantDependencies {
                                 .orElseThrow(() -> new RuntimeException(
                                         "aar transform can only work with the build cache")));
                     });
-            configuration.getResolutionStrategy().registerTransform(LocalJarTransform.class,
-                    transform -> {});
         }
     }
 

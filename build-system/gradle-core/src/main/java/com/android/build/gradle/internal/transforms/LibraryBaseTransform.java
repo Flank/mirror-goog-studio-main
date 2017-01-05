@@ -58,10 +58,9 @@ public abstract class LibraryBaseTransform extends Transform {
         @Nullable List<String> getExcludeList();
     }
 
-
     @NonNull
     protected final File mainClassLocation;
-    @NonNull
+    @Nullable
     protected final File localJarsLocation;
     @NonNull
     protected final String packagePath;
@@ -74,7 +73,7 @@ public abstract class LibraryBaseTransform extends Transform {
 
     public LibraryBaseTransform(
             @NonNull File mainClassLocation,
-            @NonNull File localJarsLocation,
+            @Nullable File localJarsLocation,
             @Nullable File typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
@@ -123,6 +122,9 @@ public abstract class LibraryBaseTransform extends Transform {
     @NonNull
     @Override
     public Collection<File> getSecondaryDirectoryOutputs() {
+        if (localJarsLocation == null) {
+            return ImmutableList.of();
+        }
         return ImmutableList.of(localJarsLocation);
     }
 

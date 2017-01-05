@@ -23,6 +23,7 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RENDERSCRIPT;
@@ -31,6 +32,7 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
@@ -53,6 +55,7 @@ import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
+import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
@@ -235,8 +238,9 @@ public class LibraryTaskManager extends TaskManager {
                             variantOutputScope.getProcessResourcesTask().getName(),
                             AndroidArtifacts.TYPE_SYMBOL);
 
-                    // process java resources
-                    createProcessJavaResTasks(tasks, variantScope);
+                    // process java resources only, the merge is setup after
+                    // the task to generate intermediate jars for project to project publishing.
+                    createProcessJavaResTask(tasks, variantScope);
                 });
 
         recorder.record(
@@ -395,7 +399,7 @@ public class LibraryTaskManager extends TaskManager {
                             Sets.SetView<? super Scope> difference =
                                     Sets.difference(
                                             transform.getScopes(),
-                                            TransformManager.SCOPE_FULL_LIBRARY);
+                                            TransformManager.PROJECT_ONLY);
                             if (!difference.isEmpty()) {
                                 String scopes = difference.toString();
                                 androidBuilder
@@ -428,6 +432,67 @@ public class LibraryTaskManager extends TaskManager {
                                             });
                         }
 
+                        String packageName = variantConfig.getPackageFromManifest();
+                        if (packageName == null) {
+                            throw new BuildException("Failed to read manifest", null);
+                        }
+
+                        // Now add transforms for intermediate publishing (projects to projects).
+                        File intermediateFolder = variantScope.getIntermediateJarOutputFolder();
+                        File mainClassJar = new File(intermediateFolder, FN_CLASSES_JAR);
+                        File mainResJar = new File(intermediateFolder, FN_INTERMEDIATE_RES_JAR);
+                        LibraryIntermediateJarsTransform intermediateTransform =
+                                new LibraryIntermediateJarsTransform(
+                                        mainClassJar,
+                                        mainResJar,
+                                        variantScope.getTypedefFile(),
+                                        packageName,
+                                        getExtension().getPackageBuildConfig());
+                        excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
+
+                        Optional<AndroidTask<TransformTask>> intermediateTransformTask =
+                                transformManager.addTransform(tasks, variantScope, intermediateTransform);
+
+                        intermediateTransformTask.ifPresent(t -> {
+                            // publish the intermediate classes.jar.
+                            variantScope.publishIntermediateArtifact(
+                                    mainClassJar,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JAR);
+                            // publish the res jar
+                            variantScope.publishIntermediateArtifact(
+                                    mainResJar,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JAVA_RES);
+                        });
+
+                        // now add a transform that will take all the native libs and package
+                        // them into an intermediary folder. This processes only the PROJECT
+                        // scope
+                        final File intermediateJniLibsFolder = new File(intermediateFolder, FD_JNI);
+                        LibraryJniLibsTransform intermediateJniTransform =
+                                new LibraryJniLibsTransform(
+                                        "intermediateJniLibs",
+                                        intermediateJniLibsFolder,
+                                        TransformManager.PROJECT_ONLY);
+                        Optional<AndroidTask<TransformTask>> task =
+                                transformManager.addTransform(tasks, variantScope, intermediateJniTransform);
+                        task.ifPresent(t -> {
+                            // publish the jni folder as intermediate
+                            variantScope.publishIntermediateArtifact(
+                                    intermediateJniLibsFolder,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JNI);
+                        });
+
+
+                        // Now go back to fill the pipeline with transforms used when
+                        // publishing the AAR
+
+                        // first merge the resources. This takes the PROJECT and LOCAL_DEPS
+                        // and merges them together.
+                        createMergeJavaResTransform(tasks, variantScope);
+
                         // ----- Minify next -----
                         if (buildType.isMinifyEnabled()) {
                             createMinifyTransform(tasks, variantScope, false);
@@ -439,11 +504,6 @@ public class LibraryTaskManager extends TaskManager {
                         // ok. We use the transform mechanism to get incremental data from
                         // the streams.
                         // This is used for building the AAR.
-
-                        String packageName = variantConfig.getPackageFromManifest();
-                        if (packageName == null) {
-                            throw new BuildException("Failed to read manifest", null);
-                        }
 
                         LibraryAarJarsTransform transform =
                                 new LibraryAarJarsTransform(
@@ -461,63 +521,17 @@ public class LibraryTaskManager extends TaskManager {
                         });
 
                         // now add a transform that will take all the native libs and package
-                        // them into the libs folder of the bundle.
+                        // them into the libs folder of the bundle. This processes both the PROJECT
+                        // and the LOCAL_PROJECT scopes
                         final File jniLibsFolder = new File(variantBundleDir, FD_JNI);
                         LibraryJniLibsTransform jniTransform =
-                                new LibraryJniLibsTransform(jniLibsFolder);
+                                new LibraryJniLibsTransform(
+                                        "syncJniLibs",
+                                        jniLibsFolder,
+                                        TransformManager.SCOPE_FULL_LIBRARY);
                         Optional<AndroidTask<TransformTask>> jniPackagingTask =
                                 transformManager.addTransform(tasks, variantScope, jniTransform);
-                        jniPackagingTask.ifPresent(t -> {
-                            bundle.dependsOn(t.getName());
-
-                            // publish the jni folder as intermediate
-                            variantScope.publishIntermediateArtifact(
-                                    jniLibsFolder,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_JNI);
-                        });
-
-                        // Now add transforms for intermediate publishing (projects to projects).
-                        File intermediateFolder = variantScope.getIntermediateJarOutputFolder();
-                        File mainClassJar = new File(intermediateFolder, FN_CLASSES_JAR);
-                        File localClassJarFolder = new File(intermediateFolder, "local-jars");
-                        File mainResJar = new File(intermediateFolder, "res.jar");
-                        LibraryIntermediateJarsTransform intermediateTransform =
-                                new LibraryIntermediateJarsTransform(
-                                        mainClassJar,
-                                        localClassJarFolder,
-                                        mainResJar,
-                                        variantScope.getTypedefFile(),
-                                        packageName,
-                                        getExtension().getPackageBuildConfig());
-                        excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
-
-                        Optional<AndroidTask<TransformTask>> intermediateTransformTask =
-                                transformManager.addTransform(tasks, variantScope, intermediateTransform);
-
-                        intermediateTransformTask.ifPresent(t -> {
-                            // publish the intermediate classes.jar.
-                            variantScope.publishIntermediateArtifact(
-                                    mainClassJar,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_JAR);
-                            variantScope.publishIntermediateArtifact(
-                                    mainClassJar,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_JAR_SUB_PROJECTS);
-
-                            // publish intermediate local jars as a folder
-                            variantScope.publishIntermediateArtifact(
-                                    localClassJarFolder,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_LOCAL_JARS);
-
-                            // publish the res jar
-                            variantScope.publishIntermediateArtifact(
-                                    mainResJar,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_JAVA_RES);
-                        });
+                        jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
 
                         return null;
                     }

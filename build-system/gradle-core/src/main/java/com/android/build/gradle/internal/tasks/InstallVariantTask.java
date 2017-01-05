@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.sdk.SdkInfo;
@@ -45,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -59,8 +59,8 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class InstallVariantTask extends BaseTask {
 
-    private InputSupplier<File> adbExe;
-    private InputSupplier<File> splitSelectExe;
+    private Supplier<File> adbExe;
+    private Supplier<File> splitSelectExe;
 
     private ProcessExecutor processExecutor;
 
@@ -82,7 +82,7 @@ public class InstallVariantTask extends BaseTask {
     @TaskAction
     public void install() throws DeviceException, ProcessException, InterruptedException {
         final ILogger iLogger = getILogger();
-        DeviceProvider deviceProvider = new ConnectedDeviceProvider(adbExe.getLastValue(),
+        DeviceProvider deviceProvider = new ConnectedDeviceProvider(adbExe.get(),
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
@@ -97,7 +97,7 @@ public class InstallVariantTask extends BaseTask {
                     device, variantConfig.getMinSdkVersion(), iLogger, projectName, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
                 final List<File> apkFiles = SplitOutputMatcher.computeBestOutput(processExecutor,
-                        splitSelectExe.getLastValue(),
+                        splitSelectExe.get(),
                         new DeviceConfigProviderImpl(device),
                         variantData.getOutputs(),
                         variantData.getVariantConfiguration().getSupportedAbis());
@@ -234,11 +234,11 @@ public class InstallVariantTask extends BaseTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             installTask.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
-            installTask.adbExe = InputSupplier.from(() -> {
+            installTask.adbExe = TaskInputHelper.memoize(() -> {
                 final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
                 return (info == null ? null : info.getAdb());
             });
-            installTask.splitSelectExe = InputSupplier.from(() -> {
+            installTask.splitSelectExe = TaskInputHelper.memoize(() -> {
                 // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
                 // if the task is not going to run, so use a supplier.
                 final TargetInfo info =

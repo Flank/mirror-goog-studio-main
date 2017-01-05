@@ -30,16 +30,15 @@ import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AIDL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR_AAR_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -82,6 +81,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -104,17 +104,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ProjectDependency;
+import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -137,6 +143,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private static final Map<String, String> ARTIFACTS_DATA_BINDING = singletonMap(ARTIFACT_TYPE, TYPE_DATA_BINDING);
     private static final Map<String, String> ARTIFACTS_RESOURCES = singletonMap(ARTIFACT_TYPE, TYPE_ANDROID_RES);
     private static final Map<String, String> ARTIFACTS_ASSETS = singletonMap(ARTIFACT_TYPE, TYPE_ASSETS);
+    private static final Map<String, String> ARTIFACTS_JAR_AAR_CLASSES = singletonMap(ARTIFACT_TYPE, TYPE_JAR_AAR_CLASSES);
+    private static final Map<String, String> ARTIFACTS_JAVA_RES = singletonMap(ARTIFACT_TYPE, TYPE_JAVA_RES);
+    private static final Map<String, String> ARTIFACTS_JNI = singletonMap(ARTIFACT_TYPE, TYPE_JNI);
+    private static final Map<String, String> ARTIFACTS_RESOURCES_PKG = singletonMap(ARTIFACT_TYPE, AndroidArtifacts.TYPE_RESOURCES_PKG);
 
     @NonNull
     private GlobalScope globalScope;
@@ -673,56 +683,53 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public FileCollection getExternalAarDataBindingFolders() {
         // TODO cache?
-        return getExternalPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_DATA_BINDING));
+        return getExternalPackageCollection(ARTIFACTS_DATA_BINDING);
     }
 
     @Override
     @NonNull
     public FileCollection getSubProjectPackagedJars() {
+        // All sub-project jars.
         // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR));
+        return getSubprojectPackageCollection(ARTIFACTS_JARS);
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getSubProjectPackagedJavaJars() {
+        // TODO cache?
+        // Java Sub-project output.jar
+        // FIXME: find a better way to query this.
+        return getSubProjectPackagedJars().minus(getSubProjectPackagedAarClassJars());
     }
 
     @Override
     @NonNull
     public FileCollection getSubProjectPackagedAarClassJars() {
         // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR_SUB_PROJECTS));
+        // Android Sub-project classes.jar
+        return getSubprojectPackageCollection(ARTIFACTS_JAR_AAR_CLASSES);
     }
 
     @Override
     @NonNull
     public FileCollection getSubProjectPackagedAarResourceJars() {
         // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAVA_RES));
-    }
-
-    @Override
-    @NonNull
-    public FileCollection getSubProjectPackagedAarLocalJars() {
-        // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS));
+        return getSubprojectPackageCollection(ARTIFACTS_JAVA_RES);
     }
 
     @Override
     @NonNull
     public FileCollection getSubProjectPackagedJniFolders() {
         // TODO cache?
-        return getSubprojectPackageCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JNI));
+        return getSubprojectPackageCollection(ARTIFACTS_JNI);
     }
 
     @Override
     @NonNull
     public FileCollection getExternalCompileJars() {
         // TODO cache?
-        FileCollection collection = getExternalCompileCollection(singletonMap(
-                ARTIFACT_TYPE, TYPE_JAR));
+        FileCollection collection = getExternalCompileCollection(ARTIFACTS_JARS);
         Set<File> files = globalScope.getAndroidBuilder()
                 .getAdditionalPackagedJars(getVariantConfiguration());
 
@@ -733,7 +740,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public FileCollection getExternalPackageJars() {
         // TODO cache?
-        return getExternalPackageCollection(singletonMap(ARTIFACT_TYPE, TYPE_JAR));
+        return getExternalPackageCollection(ARTIFACTS_JARS);
     }
 
     /**
@@ -743,13 +750,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
      */
     @NonNull
     @Override
-    public FileCollection getLocalPackagedJars() {
-        // the Spec is not applied to file dependencies, so rejecting anything that shows
-        // up is the same as filtering out both the inter-project dependencies and the
-        // remote dependencies, which is what we want.
-        return getVariantData().getVariantDependency()
-                .getPackageConfiguration().getIncoming().getFiles(
-                ARTIFACTS_JARS, id -> false);
+    public Supplier<Collection<File>> getLocalPackagedJars() {
+        final Configuration packageConfiguration = getVariantData().getVariantDependency()
+                .getPackageConfiguration();
+
+        return TaskInputHelper.bypassFileSupplier(() -> {
+            List<File> files = new ArrayList<>();
+            for (Dependency dependency : packageConfiguration.getAllDependencies()) {
+                if (dependency instanceof SelfResolvingDependency &&
+                        !(dependency instanceof ProjectDependency)) {
+                    files.addAll(((SelfResolvingDependency) dependency).resolve());
+                }
+            }
+            return files;
+        });
     }
 
     @NonNull
@@ -769,8 +783,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public FileCollection getBaseAtomResourcePkg() {
-        return getPackageCollection(singletonMap(
-                ARTIFACT_TYPE, AndroidArtifacts.TYPE_RESOURCES_PKG));
+        return getPackageCollection(ARTIFACTS_RESOURCES_PKG);
     }
 
     @Override
@@ -1763,27 +1776,59 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private FileCollection getSubprojectPackageCollection(Map<String, String> map) {
-        final FileCollection fileCollection = getVariantData().getVariantDependency()
-                .getPackageConfiguration().getIncoming().getFiles(
+        final Configuration packageConfiguration = getVariantData().getVariantDependency()
+                .getPackageConfiguration();
+
+        FileCollection fileCollection = packageConfiguration.getIncoming().getFiles(
                         map,
                         (id) -> id instanceof ProjectComponentIdentifier);
-        return addTestedCollection(fileCollection, map);
+        fileCollection = addTestedCollection(fileCollection, map);
+
+        // FIXME remove once filtering with a Spec supports local jars.
+        if (map == ARTIFACTS_JARS) {
+            fileCollection = fileCollection.minus(localJars(packageConfiguration));
+        }
+
+        return fileCollection;
     }
 
     @NonNull
     private FileCollection getExternalPackageCollection(Map<String, String> map) {
-        return getVariantData().getVariantDependency()
-                .getPackageConfiguration().getIncoming().getFiles(
-                        map,
-                        (id) -> id instanceof ModuleComponentIdentifier);
+        final Configuration packageConfiguration = getVariantData().getVariantDependency()
+                .getPackageConfiguration();
+
+        FileCollection fileCollection = packageConfiguration.getIncoming().getFiles(
+                map,
+                (id) -> id instanceof ModuleComponentIdentifier);
+
+        // FIXME remove once filtering with a Spec supports local jars.
+        if (map == ARTIFACTS_JARS) {
+            fileCollection = fileCollection.minus(localJars(packageConfiguration));
+        }
+
+        return fileCollection;
     }
 
     @NonNull
     private FileCollection getExternalCompileCollection(Map<String, String> map) {
-        return getVariantData().getVariantDependency()
-                .getCompileConfiguration().getIncoming().getFiles(
-                        map,
-                        (id) -> id instanceof ModuleComponentIdentifier);
+        final Configuration compileConfiguration = getVariantData().getVariantDependency()
+                .getCompileConfiguration();
+
+        FileCollection fileCollection = compileConfiguration.getIncoming().getFiles(
+                map,
+                (id) -> id instanceof ModuleComponentIdentifier);
+
+        // FIXME remove once filtering with a Spec supports local jars.
+        if (map == ARTIFACTS_JARS) {
+            fileCollection = fileCollection.minus(localJars(compileConfiguration));
+        }
+
+        return fileCollection;
+    }
+
+    @NonNull
+    private static FileCollection localJars(@NonNull Configuration configuration) {
+        return configuration.getIncoming().getFiles(ARTIFACTS_JARS, id -> false);
     }
 
     @NonNull

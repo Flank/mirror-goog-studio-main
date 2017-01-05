@@ -46,6 +46,7 @@ import com.android.builder.model.ApiVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -266,13 +267,13 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getSubProjectPackagedJars();
 
     @NonNull
+    FileCollection getSubProjectPackagedJavaJars();
+
+    @NonNull
     FileCollection getSubProjectPackagedAarClassJars();
 
     @NonNull
     FileCollection getSubProjectPackagedAarResourceJars();
-
-    @NonNull
-    FileCollection getSubProjectPackagedAarLocalJars();
 
     @NonNull
     FileCollection getSubProjectPackagedJniFolders();
@@ -284,7 +285,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getExternalPackageJars();
 
     @NonNull
-    FileCollection getLocalPackagedJars();
+    Supplier<Collection<File>> getLocalPackagedJars();
 
     @NonNull
     ArtifactCollection getDependenciesResourceFolders();

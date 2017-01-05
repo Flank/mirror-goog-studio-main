@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.api.transform.DirectoryInput;
@@ -27,6 +28,8 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
+import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +44,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -55,20 +59,28 @@ import java.util.zip.ZipFile;
 public class LibraryJniLibsTransform extends Transform {
 
     @NonNull
+    private final String name;
+    @NonNull
     private final File jniLibsFolder;
+    @NonNull
+    private final Set<Scope> scopes;
 
     private final Pattern pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so");
 
 
     public LibraryJniLibsTransform(
-            @NonNull File jniLibsFolder) {
+            @NonNull String name,
+            @NonNull File jniLibsFolder,
+            @NonNull Set<Scope> scopes) {
+        this.name = name;
         this.jniLibsFolder = jniLibsFolder;
+        this.scopes = scopes;
     }
 
     @NonNull
     @Override
     public String getName() {
-        return "syncJniLibs";
+        return name;
     }
 
     @NonNull
@@ -86,7 +98,7 @@ public class LibraryJniLibsTransform extends Transform {
     @NonNull
     @Override
     public Set<Scope> getReferencedScopes() {
-        return TransformManager.SCOPE_FULL_LIBRARY;
+        return scopes;
     }
 
     @Override
@@ -107,14 +119,28 @@ public class LibraryJniLibsTransform extends Transform {
 
         FileUtils.cleanOutputDir(jniLibsFolder);
 
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+
         for (TransformInput input : invocation.getReferencedInputs()) {
             for (JarInput jarInput : input.getJarInputs()) {
-                copyFromJar(jarInput.getFile());
+                executor.execute(() -> {
+                    copyFromJar(jarInput.getFile());
+                    return null;
+                });
             }
 
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                copyFromFolder(directoryInput.getFile());
+                executor.execute(() -> {
+                    copyFromFolder(directoryInput.getFile());
+                    return null;
+                });
             }
+        }
+
+        try {
+            executor.waitForTasksWithQuickFail(true);
+        } catch (LoggedErrorException e) {
+            throw new TransformException(e);
         }
     }
 

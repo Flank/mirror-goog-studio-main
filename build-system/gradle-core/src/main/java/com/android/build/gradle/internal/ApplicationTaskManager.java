@@ -144,7 +144,8 @@ public class ApplicationTaskManager extends TaskManager {
                     createApkProcessResTask(tasks, variantScope);
 
                     // Add a task to process the java resources
-                    createProcessJavaResTasks(tasks, variantScope);
+                    createProcessJavaResTask(tasks, variantScope);
+                    createMergeJavaResTransform(tasks, variantScope);
                 });
 
         recorder.record(

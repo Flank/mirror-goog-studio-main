@@ -22,6 +22,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
@@ -38,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +75,7 @@ public class AidlCompile extends IncrementalTask {
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
     }
-    private InputFilesSupplier sourceDirs;
+    private Supplier<Collection<File>> sourceDirs;
     private FileCollection importDirs;
 
     @InputFiles
@@ -128,7 +130,7 @@ public class AidlCompile extends IncrementalTask {
     private void compileAllFiles(DependencyFileProcessor dependencyFileProcessor)
             throws InterruptedException, ProcessException, LoggedErrorException, IOException {
         getBuilder().compileAllAidlFiles(
-                sourceDirs.getLastValue(),
+                sourceDirs.get(),
                 getSourceOutputDir(),
                 getPackagedDir(),
                 getPackageWhitelist(),
@@ -144,7 +146,7 @@ public class AidlCompile extends IncrementalTask {
     private List<File> getImportFolders() {
         List<File> fullImportDir = Lists.newArrayList();
         fullImportDir.addAll(getImportDirs().getFiles());
-        fullImportDir.addAll(sourceDirs.getLastValue());
+        fullImportDir.addAll(sourceDirs.get());
 
         return fullImportDir;
     }
@@ -289,7 +291,7 @@ public class AidlCompile extends IncrementalTask {
     private File getSourceFolder(@NonNull File file) {
         File parentDir = file;
         while ((parentDir = parentDir.getParentFile()) != null) {
-            for (File folder : sourceDirs.getLastValue()) {
+            for (File folder : sourceDirs.get()) {
                 if (parentDir.equals(folder)) {
                     return folder;
                 }
@@ -378,8 +380,8 @@ public class AidlCompile extends IncrementalTask {
             compileTask.setVariantName(scope.getVariantConfiguration().getFullName());
             compileTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
 
-            compileTask.sourceDirs = InputFilesSupplier
-                    .from(variantConfiguration::getAidlSourceList);
+            compileTask.sourceDirs = TaskInputHelper
+                    .bypassFileSupplier(variantConfiguration::getAidlSourceList);
             compileTask.importDirs = scope.getAidlImports();
 
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());

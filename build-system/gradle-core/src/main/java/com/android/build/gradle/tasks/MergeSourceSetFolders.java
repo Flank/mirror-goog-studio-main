@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
@@ -34,14 +35,10 @@ import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.MergedAssetWriter;
 import com.android.ide.common.res2.MergingException;
-import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
@@ -58,15 +55,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
 
 @ParallelizableTask
 public class MergeSourceSetFolders extends IncrementalTask {
@@ -86,7 +74,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
-    private InputSupplier<List<AssetSet>> assetSetSupplier;
+    private Supplier<List<AssetSet>> assetSetSupplier;
 
     // for the dependencies
     private ArtifactCollection libraries = null;
@@ -263,7 +251,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
     @VisibleForTesting
-    void setAssetSetSupplier(InputSupplier<List<AssetSet>> assetSetSupplier) {
+    void setAssetSetSupplier(Supplier<List<AssetSet>> assetSetSupplier) {
         this.assetSetSupplier = assetSetSupplier;
     }
 
@@ -288,7 +276,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     List<AssetSet> computeAssetSetList() {
         List<AssetSet> sets;
 
-        List<AssetSet> assetSets = assetSetSupplier.getLastValue();
+        List<AssetSet> assetSets = assetSetSupplier.get();
         if (copyApk == null
                 && shadersOutputDir == null
                 && ignoreAssets == null
@@ -397,7 +385,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             variantData.mergeAssetsTask = mergeAssetsTask;
 
-            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getAssetSets);
+            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getAssetSets);
 
             mergeAssetsTask.shadersOutputDir = project.files(scope.getShadersOutputDir());
             if (variantData.copyApkTask != null) {
@@ -440,7 +428,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getJniLibsSets);
+            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getJniLibsSets);
             mergeAssetsTask.setOutputDir(scope.getMergeNativeLibsOutputDir());
         }
     }
@@ -463,7 +451,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            mergeAssetsTask.assetSetSupplier = InputSupplier.from(variantConfig::getShaderSets);
+            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getShaderSets);
             mergeAssetsTask.setOutputDir(scope.getMergeShadersOutputDir());
         }
     }

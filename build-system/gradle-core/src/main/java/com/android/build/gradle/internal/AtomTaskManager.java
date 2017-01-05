@@ -166,7 +166,8 @@ public class AtomTaskManager extends TaskManager {
                             });
 
                     // process java resources
-                    createProcessJavaResTasks(tasks, variantScope);
+                    createProcessJavaResTask(tasks, variantScope);
+                    createMergeJavaResTransform(tasks, variantScope);
                 });
 
         recorder.record(

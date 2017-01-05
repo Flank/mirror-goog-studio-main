@@ -67,12 +67,9 @@ public class AndroidArtifacts {
     public static final String TYPE_DATA_BINDING = "android-databinding";
     public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
 
-    // scoped types for jars
-    // This is the published folders of local jars for AAR modules
-    public static final String TYPE_JAR_SUB_PROJECTS = "jar-scope-sub";
-    // This is the list of local jars transformed from TYPE_JAR_SUB_PROJECT, in order to query
-    // only these.
-    public static final String TYPE_JAR_SUB_PROJECTS_LOCAL_DEPS = "jar-scope-sub-local";
+    // custom type for classes of AARs. This allows to get the "jar" type for non android
+    // sub-projects, by asking for jar/sub-project and substracting this custom type.
+    public static final String TYPE_JAR_AAR_CLASSES = "android-aar-classes";
 
     // types for additional artifacts to go with APK
     public static final String TYPE_MAPPING = "android-mapping";
