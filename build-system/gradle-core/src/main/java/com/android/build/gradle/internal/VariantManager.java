@@ -44,6 +44,8 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -58,6 +60,7 @@ import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.Action;
@@ -109,6 +112,8 @@ public class VariantManager implements VariantModel {
     private final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList = Lists.newArrayList();
     @Nullable
     private CoreSigningConfig signingOverride;
+
+    @NonNull Map<File, ManifestAttributeSupplier> manifestParserMap = new HashMap<>();
 
     public VariantManager(
             @NonNull Project project,
@@ -498,13 +503,14 @@ public class VariantManager implements VariantModel {
             @NonNull List<? extends ProductFlavor> productFlavorList) {
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
-
+        final DefaultAndroidSourceSet sourceSet = defaultConfigData.getSourceSet();
         GradleVariantConfiguration variantConfig =
                 GradleVariantConfiguration.getBuilderForExtension(extension)
                         .create(
                                 project,
                                 defaultConfigData.getProductFlavor(),
-                                defaultConfigData.getSourceSet(),
+                                sourceSet,
+                                getParser(sourceSet.getManifestFile()),
                                 buildTypeData.getBuildType(),
                                 buildTypeData.getSourceSet(),
                                 variantFactory.getVariantConfigurationType(),
@@ -673,11 +679,14 @@ public class VariantManager implements VariantModel {
         // to return @Nullable and the constructor is @NonNull on this parameter,
         // but it's never the case on defaultConfigData
         // The constructor does a runtime check on the instances so we should be safe.
+        final DefaultAndroidSourceSet testSourceSet = defaultConfigData.getTestSourceSet(type);
         @SuppressWarnings("ConstantConditions")
         GradleVariantConfiguration testVariantConfig =
                 testedConfig.getMyTestConfig(
-                        defaultConfigData.getTestSourceSet(type),
-                        buildTypeData.getTestSourceSet(type), type);
+                        testSourceSet,
+                        testSourceSet != null ? getParser(testSourceSet.getManifestFile()) : null,
+                        buildTypeData.getTestSourceSet(type),
+                        type);
 
 
         for (CoreProductFlavor productFlavor : productFlavorList) {
@@ -882,4 +891,8 @@ public class VariantManager implements VariantModel {
         return null;
     }
 
+    @NonNull
+    private ManifestAttributeSupplier getParser(@NonNull File file) {
+        return manifestParserMap.computeIfAbsent(file, DefaultManifestParser::new);
+    }
 }

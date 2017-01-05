@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.builder.core.DefaultApiVersion;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
@@ -81,15 +82,25 @@ public class GradleVariantConfiguration
 
     private GradleVariantConfiguration(
             @NonNull Project project,
-            @Nullable VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> testedConfig,
+            @Nullable
+                    VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
+                            testedConfig,
             @NonNull CoreProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
             @NonNull CoreBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable CoreSigningConfig signingConfigOverride) {
-        super(defaultConfig, defaultSourceProvider, buildType, buildTypeSourceProvider, type,
-                testedConfig, signingConfigOverride);
+        super(
+                defaultConfig,
+                defaultSourceProvider,
+                mainManifestAttributeSupplier,
+                buildType,
+                buildTypeSourceProvider,
+                type,
+                testedConfig,
+                signingConfigOverride);
         mergeOptions();
         this.project = project;
     }
@@ -99,6 +110,7 @@ public class GradleVariantConfiguration
      */
     public GradleVariantConfiguration getMyTestConfig(
             @NonNull SourceProvider defaultSourceProvider,
+            @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type) {
         return new GradleVariantConfiguration(
@@ -106,6 +118,7 @@ public class GradleVariantConfiguration
                 this,
                 getDefaultConfig(),
                 defaultSourceProvider,
+                mainManifestAttributeSupplier,
                 getBuildType(),
                 buildTypeSourceProvider,
                 type,
@@ -152,6 +165,7 @@ public class GradleVariantConfiguration
                 @NonNull Project project,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
+                @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
@@ -166,6 +180,7 @@ public class GradleVariantConfiguration
                 @NonNull Project project,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
+                @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
@@ -175,6 +190,7 @@ public class GradleVariantConfiguration
                     null /*testedConfig*/,
                     defaultConfig,
                     defaultSourceProvider,
+                    mainManifestAttributeSupplier,
                     buildType,
                     buildTypeSourceProvider,
                     type,
@@ -198,6 +214,7 @@ public class GradleVariantConfiguration
                 @NonNull Project project,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
+                @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
@@ -207,6 +224,7 @@ public class GradleVariantConfiguration
                     null /*testedConfig*/,
                     defaultConfig,
                     defaultSourceProvider,
+                    mainManifestAttributeSupplier,
                     buildType,
                     buildTypeSourceProvider,
                     type,
@@ -238,6 +256,7 @@ public class GradleVariantConfiguration
                 @Override
                 public GradleVariantConfiguration getMyTestConfig(
                         @NonNull SourceProvider defaultSourceProvider,
+                        @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
                         @Nullable SourceProvider buildTypeSourceProvider,
                         @NonNull VariantType type) {
                     throw new UnsupportedOperationException("Test modules have no test variants.");
