@@ -86,7 +86,10 @@ public final class SdkConstants {
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex";                //$NON-NLS-1$
 
     /** intermediate publishing between projects */
-    public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";
+    public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";                   //$NON-NLS-1$
+
+    /** list of splits for a variant */
+    public static final String FN_SPLIT_LIST = "split-list.gson";                     //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml";                            //$NON-NLS-1$

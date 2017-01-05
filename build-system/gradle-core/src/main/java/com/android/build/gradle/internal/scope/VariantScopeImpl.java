@@ -125,6 +125,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -1168,6 +1169,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
+    public File getSplitSupportDirectory() {
+        return new File(globalScope.getIntermediatesDir(),
+                "splits-support/" + getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
     public File getSplitOutputDirectory() {
         return new File(globalScope.getIntermediatesDir(),
                 "splits/" + getVariantConfiguration().getDirName());
@@ -1842,5 +1850,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         FileCollection compile = getCompileCollection(map);
         FileCollection pkg = getPackageCollection(map);
         return compile.minus(pkg);
+    }
+
+    @Nullable
+    private SplitList splitList;
+
+    @Nullable
+    @Override
+    public SplitList getSplitList() {
+        return splitList;
+    }
+
+    @Override
+    public void setSplitList(@NonNull SplitList splitList) {
+        this.splitList = splitList;
     }
 }

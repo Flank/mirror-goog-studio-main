@@ -620,7 +620,7 @@ public class LibraryTaskManager extends TaskManager {
                 basicCreateMergeResourcesTask(
                         tasks,
                         variantScope,
-                        "package",
+                        MergeType.PACKAGE,
                         resFolder,
                         false /*includeDependencies*/,
                         false /*processResources*/);

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
@@ -65,6 +66,7 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -140,6 +142,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.build.gradle.tasks.ZipAlign;
@@ -168,7 +171,6 @@ import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -180,6 +182,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -197,6 +200,7 @@ import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.execution.TaskExecutionGraph;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -849,33 +853,67 @@ public abstract class TaskManager {
         return basicCreateMergeResourcesTask(
                 tasks,
                 scope,
-                "merge",
+                MergeType.MERGE,
                 null /*outputLocation*/,
                 true /*includeDependencies*/,
                 processResources);
     }
 
+    /**
+     * Defines the merge type for {@link #basicCreateMergeResourcesTask}
+     */
+    enum MergeType {
+        /**
+         * Merge all resources with all the dependencies resources.
+         */
+        MERGE {
+            @Override
+            VariantScope.TaskOutputType getOutputType() {
+                return VariantScope.TaskOutputType.MERGED_RES;
+            }
+        },
+        /**
+         * Merge all resources without the dependencies resources for an aar.
+         */
+        PACKAGE {
+            @Override
+            VariantScope.TaskOutputType getOutputType() {
+                return VariantScope.TaskOutputType.PACKAGED_RES;
+            }
+        };
+
+        abstract VariantScope.TaskOutputType getOutputType();
+    }
+
     public AndroidTask<MergeResources> basicCreateMergeResourcesTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
-            @NonNull String taskNamePrefix,
+            @NonNull MergeType mergeType,
             @Nullable File outputLocation,
             final boolean includeDependencies,
             final boolean processResources) {
+
+        File mergedOutputDir = MoreObjects
+                .firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir());
+
+        String taskNamePrefix = mergeType.name().toLowerCase(Locale.ENGLISH);
+
         AndroidTask<MergeResources> mergeResourcesTask = androidTasks.create(tasks,
                 new MergeResources.ConfigAction(
                         scope,
                         taskNamePrefix,
-                        outputLocation,
+                        mergedOutputDir,
                         includeDependencies,
                         processResources));
+
+        scope.addTaskOutput(
+                mergeType.getOutputType(), mergedOutputDir, mergeResourcesTask.getName());
 
         mergeResourcesTask.dependsOn(
                 tasks,
                 scope.getResourceGenTask());
         scope.setMergeResourcesTask(mergeResourcesTask);
-        scope.setResourceOutputDir(
-                Objects.firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir()));
+        scope.setResourceOutputDir(mergedOutputDir);
         scope.setMergeResourceOutputDir(outputLocation);
         return scope.getMergeResourcesTask();
     }
@@ -1023,6 +1061,14 @@ public abstract class TaskManager {
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 isLegacyMultidexMode(scope);
+
+        // split list calculation and save to this file.
+        File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
+        ConfigurableFileCollection splitList = project.files(splitListOutputFile);
+        scope.setSplitList(new SplitList(splitList));
+        AndroidTask<SplitsDiscovery> splitsDiscoveryAndroidTask = androidTasks
+                .create(tasks, new SplitsDiscovery.ConfigAction(scope, splitListOutputFile));
+        splitList.builtBy(splitsDiscoveryAndroidTask.getName());
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.

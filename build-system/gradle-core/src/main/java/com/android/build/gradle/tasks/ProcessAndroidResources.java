@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -66,6 +67,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
@@ -108,7 +110,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String packageForR;
 
-    private Collection<String> splits;
+    private SplitList splitList;
+    private SplitHandlingPolicy splitHandlingPolicy;
 
     private boolean enforceUniquePackageName;
 
@@ -129,6 +132,12 @@ public class ProcessAndroidResources extends IncrementalTask {
     private Collection<File> previousFeatures;
 
     private List<LibraryInfo> computedLibraryInfo;
+
+    public Set<String> getSplits() throws IOException {
+        return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
+                ? splitList.getResourcesSplit()
+                : ImmutableSet.of();
+    }
 
     @Override
     protected void doFullTaskAction() throws IOException {
@@ -275,13 +284,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setIncrementalFolder(
                     variantScope.getIncrementalDir(getName()));
 
-            if (variantData.getSplitHandlingPolicy() ==
-                    SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
-                Set<String> allFilters = new HashSet<>();
-                allFilters.addAll(variantData.getFilters(OutputFile.FilterType.DENSITY));
-                allFilters.addAll(variantData.getFilters(OutputFile.FilterType.LANGUAGE));
-                processResources.splits = allFilters;
-            }
+            processResources.splitList = scope.getVariantScope().getSplitList();
+            processResources.splitHandlingPolicy = variantData.getSplitHandlingPolicy();
 
             // only generate code if the density filter is null, and if we haven't generated
             // it yet (if you have abi + density splits, then several abi output will have no
@@ -556,15 +560,9 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.packageForR = packageForR;
     }
 
-    @Input
-    @Optional
-    @Nullable
-    public Collection<String> getSplits() {
-        return splits;
-    }
-
-    public void setSplits(Collection<String> splits) {
-        this.splits = splits;
+    @InputFiles
+    public FileCollection getSplitListResource() {
+        return splitList.getFileCollection();
     }
 
     @Input
@@ -639,5 +637,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setPreviousFeatures(Collection<File> previousFeatures) {
         this.previousFeatures = previousFeatures;
+    }
+
+    @Input
+    public SplitHandlingPolicy getSplitHandlingPolicy() {
+        return splitHandlingPolicy;
+    }
+
+    public void setSplitHandlingPolicy(SplitHandlingPolicy splitHandlingPolicy) {
+        this.splitHandlingPolicy = splitHandlingPolicy;
     }
 }

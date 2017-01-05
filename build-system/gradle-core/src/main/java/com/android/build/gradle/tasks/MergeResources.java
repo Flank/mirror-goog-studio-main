@@ -640,11 +640,7 @@ public class MergeResources extends IncrementalTask {
                 mergeResourcesTask.microApkResDirectory = project.files(scope.getMicroApkResDirectory());
             }
 
-            mergeResourcesTask.setOutputDir(
-                    outputLocation != null
-                            ? outputLocation
-                            : scope.getDefaultMergeResourcesOutputDir());
-
+            mergeResourcesTask.setOutputDir(outputLocation);
             mergeResourcesTask.setGeneratedPngsOutputDir(scope.getGeneratedPngsOutputDir());
 
             variantData.mergeResourcesTask = mergeResourcesTask;
