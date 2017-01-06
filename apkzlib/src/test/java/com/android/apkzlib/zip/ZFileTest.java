@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -1474,6 +1475,103 @@ public class ZFileTest {
             assertEquals(1, vl.getLogs().size());
             assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("version"));
             assertTrue(vl.getLogs().get(0).toLowerCase(Locale.US).contains("extract"));
+        }
+    }
+
+    @Test
+    public void sortZipContentsWithDeferredCrc32() throws Exception {
+        /*
+         * Create a zip file with deferred CRC32 and files in non-alphabetical order.
+         * ZipOutputStream always creates deferred CRC32 entries.
+         */
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            zos.putNextEntry(new ZipEntry("b"));
+            zos.write(new byte[1000]);
+            zos.putNextEntry(new ZipEntry("a"));
+            zos.write(new byte[1000]);
+        }
+
+        /*
+         * Now open the zip using a ZFile and sort the contents and check that the deferred CRC32
+         * bits were reset.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            StoredEntry a = zf.get("a");
+            assertNotNull(a);
+            assertNotSame(DataDescriptorType.NO_DATA_DESCRIPTOR, a.getDataDescriptorType());
+            StoredEntry b = zf.get("b");
+            assertNotNull(b);
+            assertNotSame(DataDescriptorType.NO_DATA_DESCRIPTOR, b.getDataDescriptorType());
+            assertTrue(
+                    a.getCentralDirectoryHeader().getOffset()
+                            > b.getCentralDirectoryHeader().getOffset());
+
+            zf.sortZipContents();
+            zf.update();
+
+            a = zf.get("a");
+            assertNotNull(a);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, a.getDataDescriptorType());
+            b = zf.get("b");
+            assertNotNull(b);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, b.getDataDescriptorType());
+
+            assertTrue(
+                    a.getCentralDirectoryHeader().getOffset()
+                            < b.getCentralDirectoryHeader().getOffset());
+        }
+    }
+
+    @Test
+    public void alignZipContentsWithDeferredCrc32() throws Exception {
+        /*
+         * Create an unaligned zip file with deferred CRC32 and files in non-alphabetical order.
+         * We need an uncompressed file to make realigning have any effect.
+         */
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            zos.putNextEntry(new ZipEntry("x"));
+            zos.write(new byte[1000]);
+            zos.putNextEntry(new ZipEntry("y"));
+            zos.write(new byte[1000]);
+            ZipEntry zEntry = new ZipEntry("z");
+            zEntry.setSize(1000);
+            zEntry.setMethod(ZipEntry.STORED);
+            zEntry.setCrc(Hashing.crc32().hashBytes(new byte[1000]).asInt());
+            zos.putNextEntry(zEntry);
+            zos.write(new byte[1000]);
+        }
+
+        /*
+         * Now open the zip using a ZFile and realign the contents and check that the deferred CRC32
+         * bits were reset.
+         */
+        ZFileOptions options = new ZFileOptions();
+        options.setAlignmentRule(AlignmentRules.constant(2000));
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            StoredEntry x = zf.get("x");
+            assertNotNull(x);
+            assertNotSame(DataDescriptorType.NO_DATA_DESCRIPTOR, x.getDataDescriptorType());
+            StoredEntry y = zf.get("y");
+            assertNotNull(y);
+            assertNotSame(DataDescriptorType.NO_DATA_DESCRIPTOR, y.getDataDescriptorType());
+            StoredEntry z = zf.get("z");
+            assertNotNull(z);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, z.getDataDescriptorType());
+
+            zf.realign();
+            zf.update();
+
+            x = zf.get("x");
+            assertNotNull(x);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, x.getDataDescriptorType());
+            y = zf.get("y");
+            assertNotNull(y);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, y.getDataDescriptorType());
+            z = zf.get("z");
+            assertNotNull(z);
+            assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, z.getDataDescriptorType());
         }
     }
 }
