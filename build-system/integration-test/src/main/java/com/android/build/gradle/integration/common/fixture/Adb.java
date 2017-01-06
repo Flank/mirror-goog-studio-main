@@ -43,13 +43,13 @@ import org.junit.runners.model.Statement;
 /**
  * Utilities for handling real devices.
  *
- * To request a device use {@link #getDevice(Matcher)}. This reserves the device from the device
+ * <p>To request a device use {@link #getDevice(Matcher)}. This reserves the device from the device
  * pool, allowing the connected integration tests to run in parallel without interfering with each
  * other.
  *
- * At the end of the test method, the device is returned to the pool.
+ * <p>At the end of the test method, the device is returned to the pool.
  */
-public class Adb implements TestRule, Closeable {
+public class Adb implements TestRule {
 
     private List<String> devicesToReturn = Lists.newArrayList();
     private boolean exclusiveAccess = false;
@@ -60,7 +60,7 @@ public class Adb implements TestRule, Closeable {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                try (Closeable ignored = Adb.this) {
+                try (Closeable ignored = Adb.this::close) {
                     displayName = description.getDisplayName();
                     base.evaluate();
                 }
@@ -68,7 +68,6 @@ public class Adb implements TestRule, Closeable {
         };
     }
 
-    @Override
     public void close() throws IOException {
         if (!devicesToReturn.isEmpty()) {
             DevicePoolClient.returnDevices(devicesToReturn, displayName);
