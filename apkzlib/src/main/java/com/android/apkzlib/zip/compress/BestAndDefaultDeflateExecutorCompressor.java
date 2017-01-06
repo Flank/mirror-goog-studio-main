@@ -34,19 +34,19 @@ public class BestAndDefaultDeflateExecutorCompressor extends ExecutorCompressor 
      * Deflater using the default compression level.
      */
     @Nonnull
-    private final DeflateExecutionCompressor mDefaultDeflater;
+    private final DeflateExecutionCompressor defaultDeflater;
 
     /**
      * Deflater using the best compression level.
      */
     @Nonnull
-    private final DeflateExecutionCompressor mBestDeflater;
+    private final DeflateExecutionCompressor bestDeflater;
 
     /**
      * Minimum best compression size / default compression size ratio needed to pick the default
      * compression size.
      */
-    private final double mMinRatio;
+    private final double minRatio;
 
     /**
      * Creates a new compressor.
@@ -65,22 +65,22 @@ public class BestAndDefaultDeflateExecutorCompressor extends ExecutorCompressor 
         Preconditions.checkArgument(minRatio >= 0.0, "minRatio < 0.0");
         Preconditions.checkArgument(minRatio <= 1.0, "minRatio > 1.0");
 
-        mDefaultDeflater = new DeflateExecutionCompressor(executor, tracker,
-                Deflater.DEFAULT_COMPRESSION);
-        mBestDeflater = new DeflateExecutionCompressor(executor, tracker,
-                Deflater.BEST_COMPRESSION);
-        mMinRatio = minRatio;
+        defaultDeflater =
+                new DeflateExecutionCompressor(executor, tracker, Deflater.DEFAULT_COMPRESSION);
+        bestDeflater =
+                new DeflateExecutionCompressor(executor, tracker, Deflater.BEST_COMPRESSION);
+        this.minRatio = minRatio;
     }
 
     @Nonnull
     @Override
     protected CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
             throws Exception {
-        CompressionResult defaultResult = mDefaultDeflater.immediateCompress(source);
-        CompressionResult bestResult = mBestDeflater.immediateCompress(source);
+        CompressionResult defaultResult = defaultDeflater.immediateCompress(source);
+        CompressionResult bestResult = bestDeflater.immediateCompress(source);
 
         double sizeRatio = bestResult.getSize() / (double) defaultResult.getSize();
-        if (sizeRatio >= mMinRatio) {
+        if (sizeRatio >= minRatio) {
             return defaultResult;
         } else {
             return bestResult;

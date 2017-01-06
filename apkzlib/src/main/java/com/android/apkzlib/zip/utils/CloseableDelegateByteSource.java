@@ -38,11 +38,11 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      * The byte source we delegate all operations to. {@code null} if disposed.
      */
     @Nullable
-    private ByteSource mInner;
+    private ByteSource inner;
 
     /**
-     * Size of the byte source. This is the same as {@code mInner.size()} (when {@code mInner}
-     * is not {@code null}), but we keep it separate to avoid calling {@code mInner.size()}
+     * Size of the byte source. This is the same as {@code inner.size()} (when {@code inner}
+     * is not {@code null}), but we keep it separate to avoid calling {@code inner.size()}
      * because it might throw {@code IOException}.
      */
     private final long mSize;
@@ -54,7 +54,7 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      * @param size the size of the source
      */
     public CloseableDelegateByteSource(@Nonnull ByteSource inner, long size) {
-        mInner = inner;
+        this.inner = inner;
         mSize = size;
     }
 
@@ -66,11 +66,11 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      */
     @Nonnull
     private synchronized ByteSource get() {
-        if (mInner == null) {
+        if (inner == null) {
             throw new ByteSourceDisposedException();
         }
 
-        return mInner;
+        return inner;
     }
 
     /**
@@ -78,11 +78,11 @@ public class CloseableDelegateByteSource extends CloseableByteSource {
      */
     @Override
     protected synchronized void innerClose() throws IOException {
-        if (mInner == null) {
+        if (inner == null) {
             return;
         }
 
-        mInner = null;
+        inner = null;
     }
 
     /**

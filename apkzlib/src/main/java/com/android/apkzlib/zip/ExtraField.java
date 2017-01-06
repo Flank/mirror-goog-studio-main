@@ -55,11 +55,11 @@ public class ExtraField {
     static final int ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID = 0xd935;
 
     /**
-     * The field's raw data, if it is known. Either this variable or {@link #mSegments} must be
+     * The field's raw data, if it is known. Either this variable or {@link #segments} must be
      * non-{@code null}.
      */
     @Nullable
-    private final byte[] mRawData;
+    private final byte[] rawData;
 
     /**
      * The list of field's segments. Will be populated if the extra field is created based on a
@@ -67,7 +67,7 @@ public class ExtraField {
      * on the raw bytes.
      */
     @Nullable
-    private ImmutableList<Segment> mSegments;
+    private ImmutableList<Segment> segments;
 
     /**
      * Creates an extra field based on existing raw data.
@@ -75,16 +75,16 @@ public class ExtraField {
      * @param rawData the raw data; will not be parsed unless needed
      */
     public ExtraField(@Nonnull byte[] rawData) {
-        mRawData = rawData;
-        mSegments = null;
+        this.rawData = rawData;
+        segments = null;
     }
 
     /**
      * Creates a new extra field with no segments.
      */
     public ExtraField() {
-        mRawData = null;
-        mSegments = ImmutableList.of();
+        rawData = null;
+        segments = ImmutableList.of();
     }
 
     /**
@@ -93,8 +93,8 @@ public class ExtraField {
      * @param segments the segments
      */
     public ExtraField(@Nonnull ImmutableList<Segment> segments) {
-        mRawData = null;
-        mSegments = segments;
+        rawData = null;
+        this.segments = segments;
     }
 
     /**
@@ -104,12 +104,12 @@ public class ExtraField {
      * @throws IOException failed to parse the extra field
      */
     public ImmutableList<Segment> getSegments() throws IOException {
-        if (mSegments == null) {
+        if (segments == null) {
             parseSegments();
         }
 
-        Preconditions.checkNotNull(mSegments);
-        return mSegments;
+        Preconditions.checkNotNull(segments);
+        return segments;
     }
 
     /**
@@ -135,16 +135,16 @@ public class ExtraField {
     }
 
     /**
-     * Parses the raw data and generates all segments in {@link #mSegments}.
+     * Parses the raw data and generates all segments in {@link #segments}.
      *
      * @throws IOException failed to parse the data
      */
     private void parseSegments() throws IOException {
-        Preconditions.checkNotNull(mRawData);
-        Preconditions.checkState(mSegments == null);
+        Preconditions.checkNotNull(rawData);
+        Preconditions.checkState(segments == null);
 
         List<Segment> segments = new ArrayList<>();
-        ByteBuffer buffer = ByteBuffer.wrap(mRawData);
+        ByteBuffer buffer = ByteBuffer.wrap(rawData);
 
         while (buffer.remaining() > 0) {
             int headerId = LittleEndianUtils.readUnsigned2Le(buffer);
@@ -165,7 +165,7 @@ public class ExtraField {
             segments.add(seg);
         }
 
-        mSegments = ImmutableList.copyOf(segments);
+        this.segments = ImmutableList.copyOf(segments);
     }
 
     /**
@@ -174,12 +174,12 @@ public class ExtraField {
      * @return the size
      */
     public int size() {
-        if (mRawData != null) {
-            return mRawData.length;
+        if (rawData != null) {
+            return rawData.length;
         } else {
-            Preconditions.checkNotNull(mSegments);
+            Preconditions.checkNotNull(segments);
             int sz = 0;
-            for (Segment s : mSegments) {
+            for (Segment s : segments) {
                 sz += s.size();
             }
 
@@ -195,11 +195,11 @@ public class ExtraField {
      * @throws IOException failed to write the extra fields
      */
     public void write(@Nonnull ByteBuffer out) throws IOException {
-        if (mRawData != null) {
-            out.put(mRawData);
+        if (rawData != null) {
+            out.put(rawData);
         } else {
-            Preconditions.checkNotNull(mSegments);
-            for (Segment s : mSegments) {
+            Preconditions.checkNotNull(segments);
+            for (Segment s : segments) {
                 s.write(out);
             }
         }
@@ -277,13 +277,13 @@ public class ExtraField {
         /**
          * Header ID.
          */
-        private final int mHeaderId;
+        private final int headerId;
 
         /**
          * Data in the segment.
          */
         @Nonnull
-        private final byte[] mData;
+        private final byte[] data;
 
         /**
          * Creates a new raw data segment.
@@ -292,25 +292,25 @@ public class ExtraField {
          * @param data the segment data
          */
         RawDataSegment(int headerId, @Nonnull byte[] data) {
-            mHeaderId = headerId;
-            mData = data;
+            this.headerId = headerId;
+            this.data = data;
         }
 
         @Override
         public int getHeaderId() {
-            return mHeaderId;
+            return headerId;
         }
 
         @Override
         public void write(@Nonnull ByteBuffer out) throws IOException {
-            LittleEndianUtils.writeUnsigned2Le(out, mHeaderId);
-            LittleEndianUtils.writeUnsigned2Le(out, mData.length);
-            out.put(mData);
+            LittleEndianUtils.writeUnsigned2Le(out, headerId);
+            LittleEndianUtils.writeUnsigned2Le(out, data.length);
+            out.put(data);
         }
 
         @Override
         public int size() {
-            return 4 + mData.length;
+            return 4 + data.length;
         }
     }
 
@@ -326,12 +326,12 @@ public class ExtraField {
         /**
          * The alignment value.
          */
-        private int mAlignment;
+        private int alignment;
 
         /**
          * How many bytes of padding are in this segment?
          */
-        private int mPadding;
+        private int padding;
 
         /**
          * Creates a new alignment segment.
@@ -347,8 +347,8 @@ public class ExtraField {
              * We have 6 bytes of fixed data: header ID (2 bytes), data size (2 bytes), alignment
              * value (2 bytes).
              */
-            mAlignment = alignment;
-            mPadding = totalSize - 6;
+            this.alignment = alignment;
+            padding = totalSize - 6;
         }
 
         /**
@@ -362,25 +362,25 @@ public class ExtraField {
             Preconditions.checkArgument(headerId == ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID);
 
             ByteBuffer dataBuffer = ByteBuffer.wrap(data);
-            mAlignment = LittleEndianUtils.readUnsigned2Le(dataBuffer);
-            if (mAlignment <= 0) {
-                throw new IOException("Invalid alignment in alignment field: " + mAlignment);
+            alignment = LittleEndianUtils.readUnsigned2Le(dataBuffer);
+            if (alignment <= 0) {
+                throw new IOException("Invalid alignment in alignment field: " + alignment);
             }
 
-            mPadding = data.length - 2;
+            padding = data.length - 2;
         }
 
         @Override
         public void write(@Nonnull ByteBuffer out) throws IOException {
             LittleEndianUtils.writeUnsigned2Le(out, ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID);
-            LittleEndianUtils.writeUnsigned2Le(out, mPadding + 2);
-            LittleEndianUtils.writeUnsigned2Le(out, mAlignment);
-            out.put(new byte[mPadding]);
+            LittleEndianUtils.writeUnsigned2Le(out, padding + 2);
+            LittleEndianUtils.writeUnsigned2Le(out, alignment);
+            out.put(new byte[padding]);
         }
 
         @Override
         public int size() {
-            return mPadding + 6;
+            return padding + 6;
         }
 
         @Override

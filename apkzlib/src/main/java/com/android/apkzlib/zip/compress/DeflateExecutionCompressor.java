@@ -35,13 +35,13 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
     /**
      * Deflate compression level.
      */
-    private final int mLevel;
+    private final int level;
 
     /**
      * Byte tracker to use to create byte sources.
      */
     @Nonnull
-    private final ByteTracker mTracker;
+    private final ByteTracker tracker;
 
     /**
      * Creates a new compressor.
@@ -50,12 +50,14 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
      * @param tracker the byte tracker to use to keep track of memory usage
      * @param level the compression level
      */
-    public DeflateExecutionCompressor(@Nonnull Executor executor, @Nonnull ByteTracker tracker,
+    public DeflateExecutionCompressor(
+            @Nonnull Executor executor,
+            @Nonnull ByteTracker tracker,
             int level) {
         super(executor);
 
-        mLevel = level;
-        mTracker = tracker;
+        this.level = level;
+        this.tracker = tracker;
     }
 
     @Nonnull
@@ -63,13 +65,13 @@ public class DeflateExecutionCompressor extends ExecutorCompressor {
     protected CompressionResult immediateCompress(@Nonnull CloseableByteSource source)
             throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        Deflater deflater = new Deflater(mLevel, true);
+        Deflater deflater = new Deflater(level, true);
 
         try (DeflaterOutputStream dos = new DeflaterOutputStream(output, deflater)) {
             dos.write(source.read());
         }
 
-        CloseableByteSource result = mTracker.fromStream(output);
+        CloseableByteSource result = tracker.fromStream(output);
         if (result.size() >= source.size()) {
             return new CompressionResult(source, CompressionMethod.STORE, source.size());
         } else {

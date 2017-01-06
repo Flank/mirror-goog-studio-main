@@ -73,8 +73,10 @@ public class LittleEndianUtils {
         Preconditions.checkNotNull(bytes, "bytes == null");
 
         if (bytes.remaining() < 2) {
-            throw new EOFException("Not enough data: 2 bytes expected, " + bytes.remaining()
-                    + " available.");
+            throw new EOFException(
+                    "Not enough data: 2 bytes expected, "
+                            + bytes.remaining()
+                            + " available.");
         }
 
         byte b0 = bytes.get();
@@ -97,8 +99,10 @@ public class LittleEndianUtils {
             throws IOException {
         Preconditions.checkNotNull(output, "output == null");
         Preconditions.checkArgument(value >= 0, "value (%s) < 0", value);
-        Preconditions.checkArgument(value <= 0x00000000ffffffffL,
-                "value (%s) > 0x00000000ffffffffL", value);
+        Preconditions.checkArgument(
+                value <= 0x00000000ffffffffL,
+                "value (%s) > 0x00000000ffffffffL",
+                value);
 
         output.put((byte) (value & 0xff));
         output.put((byte) ((value >> 8) & 0xff));
