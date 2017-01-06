@@ -50,24 +50,24 @@ import javax.annotation.Nullable;
 class FileUseMap {
     /**
      * Size of the file according to the map. This should always match the last entry in
-     * {@code #mMap}.
+     * {@code #map}.
      */
-    private long mSize;
+    private long size;
 
     /**
-     * Tree with all intervals ordered by position. Contains coverage from 0 up to {@link #mSize}.
-     * If {@link #mSize} is zero then this set is empty. This is the only situation in which the map
+     * Tree with all intervals ordered by position. Contains coverage from 0 up to {@link #size}.
+     * If {@link #size} is zero then this set is empty. This is the only situation in which the map
      * will be empty.
      */
     @Nonnull
-    private TreeSet<FileUseMapEntry<?>> mMap;
+    private TreeSet<FileUseMapEntry<?>> map;
 
     /**
-     * Tree with all free blocks ordered by size. This is essentially a view over {@link #mMap}
+     * Tree with all free blocks ordered by size. This is essentially a view over {@link #map}
      * containing only the free blocks, but in a different order.
      */
     @Nonnull
-    private TreeSet<FileUseMapEntry<?>> mFree;
+    private TreeSet<FileUseMapEntry<?>> free;
 
     /**
      * If defined, defines the minimum size for a free entry.
@@ -84,9 +84,9 @@ class FileUseMap {
         Preconditions.checkArgument(size >= 0, "size < 0");
         Preconditions.checkArgument(minFreeSize >= 0, "minFreeSize < 0");
 
-        mSize = size;
-        mMap = new TreeSet<>(FileUseMapEntry.COMPARE_BY_START);
-        mFree = new TreeSet<>(FileUseMapEntry.COMPARE_BY_SIZE);
+        this.size = size;
+        map = new TreeSet<>(FileUseMapEntry.COMPARE_BY_START);
+        free = new TreeSet<>(FileUseMapEntry.COMPARE_BY_SIZE);
         mMinFreeSize = minFreeSize;
 
         if (size > 0) {
@@ -100,10 +100,10 @@ class FileUseMap {
      * @param entry the entry to add
      */
     private void internalAdd(@Nonnull FileUseMapEntry<?> entry) {
-        mMap.add(entry);
+        map.add(entry);
 
         if (entry.isFree()) {
-            mFree.add(entry);
+            free.add(entry);
         }
     }
 
@@ -113,11 +113,11 @@ class FileUseMap {
      * @param entry the entry to remove
      */
     private void internalRemove(@Nonnull FileUseMapEntry<?> entry) {
-        boolean wasRemoved = mMap.remove(entry);
-        Preconditions.checkState(wasRemoved, "entry not in mMap");
+        boolean wasRemoved = map.remove(entry);
+        Preconditions.checkState(wasRemoved, "entry not in map");
 
         if (entry.isFree()) {
-            mFree.remove(entry);
+            free.remove(entry);
         }
     }
 
@@ -129,8 +129,8 @@ class FileUseMap {
      * @param entry the entry to add
      */
     private void add(@Nonnull FileUseMapEntry<?> entry) {
-        Preconditions.checkArgument(entry.getStart() < mSize, "entry.getStart() >= mSize");
-        Preconditions.checkArgument(entry.getEnd() <= mSize, "entry.getEnd() > mSize");
+        Preconditions.checkArgument(entry.getStart() < size, "entry.getStart() >= size");
+        Preconditions.checkArgument(entry.getEnd() <= size, "entry.getEnd() > size");
         Preconditions.checkArgument(!entry.isFree(), "entry.isFree()");
 
         FileUseMapEntry<?> container = findContainer(entry);
@@ -150,7 +150,7 @@ class FileUseMap {
      * @param entry the entry
      */
     void remove(@Nonnull FileUseMapEntry<?> entry) {
-        Preconditions.checkState(mMap.contains(entry), "!mMap.contains(entry)");
+        Preconditions.checkState(map.contains(entry), "!map.contains(entry)");
         Preconditions.checkArgument(!entry.isFree(), "entry.isFree()");
 
         internalRemove(entry);
@@ -191,7 +191,7 @@ class FileUseMap {
      */
     @Nonnull
     private FileUseMapEntry<?> findContainer(@Nonnull FileUseMapEntry<?> entry) {
-        FileUseMapEntry container = mMap.floor(entry);
+        FileUseMapEntry container = map.floor(entry);
         Verify.verifyNotNull(container);
         Verify.verify(container.getStart() <= entry.getStart());
         Verify.verify(container.getEnd() >= entry.getEnd());
@@ -203,7 +203,7 @@ class FileUseMap {
      * Splits a container to add an entry, adding new free entries before and after the provided
      * entry if needed.
      *
-     * @param container the container entry, a free entry that is in {@link #mMap} that that
+     * @param container the container entry, a free entry that is in {@link #map} that that
      * encloses {@code entry}
      * @param entry the entry that will be used to split {@code container}
      * @return a set of non-overlapping entries that completely covers {@code container} and that
@@ -252,7 +252,7 @@ class FileUseMap {
             /*
              * See if we have a previous entry to merge with this one.
              */
-            prevToMerge = mMap.floor(FileUseMapEntry.makeFree(start - 1, start));
+            prevToMerge = map.floor(FileUseMapEntry.makeFree(start - 1, start));
             Verify.verifyNotNull(prevToMerge);
             if (!prevToMerge.isFree()) {
                 prevToMerge = null;
@@ -261,11 +261,11 @@ class FileUseMap {
 
         FileUseMapEntry<?> nextToMerge = null;
         long end = entry.getEnd();
-        if (end < mSize) {
+        if (end < size) {
             /*
              * See if we have a next entry to merge with this one.
              */
-            nextToMerge = mMap.ceiling(FileUseMapEntry.makeFree(end, end + 1));
+            nextToMerge = map.ceiling(FileUseMapEntry.makeFree(end, end + 1));
             Verify.verifyNotNull(nextToMerge);
             if (!nextToMerge.isFree()) {
                 nextToMerge = null;
@@ -296,18 +296,18 @@ class FileUseMap {
      * Truncates map removing the top entry if it is free and reducing the map's size.
      */
     void truncate() {
-        if (mSize == 0) {
+        if (size == 0) {
             return;
         }
 
         /*
          * Find the last entry.
          */
-        FileUseMapEntry<?> last = mMap.last();
+        FileUseMapEntry<?> last = map.last();
         Verify.verifyNotNull(last, "last == null");
         if (last.isFree()) {
             internalRemove(last);
-            mSize = last.getStart();
+            size = last.getStart();
         }
     }
 
@@ -317,7 +317,7 @@ class FileUseMap {
      * @return the size
      */
     long size() {
-        return mSize;
+        return size;
     }
 
     /**
@@ -326,7 +326,7 @@ class FileUseMap {
      * @return the size of the file discounting the last block if it is empty
      */
     long usedSize() {
-        if (mSize == 0) {
+        if (size == 0) {
             return 0;
         }
 
@@ -334,13 +334,13 @@ class FileUseMap {
          * Find the last entry to see if it is an empty entry. If it is, we need to remove its size
          * from the returned value.
          */
-        FileUseMapEntry<?> last = mMap.last();
+        FileUseMapEntry<?> last = map.last();
         Verify.verifyNotNull(last, "last == null");
         if (last.isFree()) {
             return last.getStart();
         } else {
-            Verify.verify(last.getEnd() == mSize);
-            return mSize;
+            Verify.verify(last.getEnd() == size);
+            return size;
         }
     }
 
@@ -351,16 +351,16 @@ class FileUseMap {
      * @param size the new size of the map that cannot be smaller that the current size
      */
     void extend(long size) {
-        Preconditions.checkArgument(size >= mSize, "size < mSize");
+        Preconditions.checkArgument(size >= this.size, "size < size");
 
-        if (mSize == size) {
+        if (this.size == size) {
             return;
         }
 
-        FileUseMapEntry<?> newBlock = FileUseMapEntry.makeFree(mSize, size);
+        FileUseMapEntry<?> newBlock = FileUseMapEntry.makeFree(this.size, size);
         internalAdd(newBlock);
 
-        mSize = size;
+        this.size = size;
 
         coalesce(newBlock);
     }
@@ -389,10 +389,10 @@ class FileUseMap {
 
         switch (alg) {
             case BEST_FIT:
-                matches = mFree.tailSet(minimumSizedEntry);
+                matches = free.tailSet(minimumSizedEntry);
                 break;
             case FIRST_FIT:
-                matches = mMap;
+                matches = map;
                 break;
             default:
                 throw new AssertionError();
@@ -445,7 +445,7 @@ class FileUseMap {
              */
             long emptySpaceLeft = curr.getSize() - (size + extraSize);
             if (emptySpaceLeft > 0 && emptySpaceLeft < mMinFreeSize) {
-                FileUseMapEntry<?> next = mMap.higher(curr);
+                FileUseMapEntry<?> next = map.higher(curr);
                 if (next != null && !next.isFree()) {
                     continue;
                 }
@@ -473,9 +473,9 @@ class FileUseMap {
         /*
          * If no entry that could hold size is found, get the first free byte.
          */
-        long firstFree = mSize;
-        if (best == null && !mMap.isEmpty()) {
-            FileUseMapEntry<?> last = mMap.last();
+        long firstFree = this.size;
+        if (best == null && !map.isEmpty()) {
+            FileUseMapEntry<?> last = map.last();
             if (last.isFree()) {
                 firstFree = last.getStart();
             }
@@ -515,8 +515,8 @@ class FileUseMap {
     List<FileUseMapEntry<?>> getFreeAreas() {
         List<FileUseMapEntry<?>> freeAreas = Lists.newArrayList();
 
-        for (FileUseMapEntry<?> area : mMap) {
-            if (area.isFree() && area.getEnd() != mSize) {
+        for (FileUseMapEntry<?> area : map) {
+            if (area.isFree() && area.getEnd() != size) {
                 freeAreas.add(area);
             }
         }
@@ -535,13 +535,13 @@ class FileUseMap {
     FileUseMapEntry<?> before(@Nonnull FileUseMapEntry<?> entry) {
         Preconditions.checkNotNull(entry, "entry == null");
 
-        return mMap.lower(entry);
+        return map.lower(entry);
     }
 
     @Override
     public String toString() {
         StringJoiner j = new StringJoiner(", ");
-        mMap.stream()
+        map.stream()
                 .map(e -> e.getStart() + " - " + e.getEnd() + ": " + e.getStore())
                 .forEach(j::add);
         return "FileUseMap[" + j.toString() + "]";

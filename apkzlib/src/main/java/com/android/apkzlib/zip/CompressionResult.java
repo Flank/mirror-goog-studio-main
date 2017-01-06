@@ -28,52 +28,56 @@ public class CompressionResult {
      * The compression method used.
      */
     @Nonnull
-    private final CompressionMethod mCompressionMethod;
+    private final CompressionMethod compressionMethod;
 
     /**
      * The resulting data.
      */
     @Nonnull
-    private final CloseableByteSource mSource;
+    private final CloseableByteSource source;
 
     /**
-     * Size of the compressed source. Kept because {@code mSource.size()} can throw
+     * Size of the compressed source. Kept because {@code source.size()} can throw
      * {@code IOException}.
      */
     private final long mSize;
 
     /**
      * Creates a new compression result.
+     *
      * @param source the data source
      * @param method the compression method
      */
     public CompressionResult(@Nonnull CloseableByteSource source, @Nonnull CompressionMethod method,
             long size) {
-        mCompressionMethod = method;
-        mSource = source;
+        compressionMethod = method;
+        this.source = source;
         mSize = size;
     }
 
     /**
      * Obtains the compression method.
+     *
      * @return the compression method
      */
     @Nonnull
     public CompressionMethod getCompressionMethod() {
-        return mCompressionMethod;
+        return compressionMethod;
     }
 
     /**
      * Obtains the compressed data.
+     *
      * @return the data, the resulting array should not be modified
      */
     @Nonnull
     public CloseableByteSource getSource() {
-        return mSource;
+        return source;
     }
 
     /**
      * Obtains the size of the compression result.
+     *
      * @return the size
      */
     public long getSize() {

@@ -175,19 +175,19 @@ class CentralDirectory {
      * Contains all entries in the directory mapped from their names.
      */
     @Nonnull
-    private final Map<String, StoredEntry> mEntries;
+    private final Map<String, StoredEntry> entries;
 
     /**
      * The file where this directory belongs to.
      */
     @Nonnull
-    private final ZFile mFile;
+    private final ZFile file;
 
     /**
      * Supplier that provides a byte representation of the central directory.
      */
     @Nonnull
-    private final CachedSupplier<byte[]> mBytesSupplier;
+    private final CachedSupplier<byte[]> bytesSupplier;
 
     /**
      * Creates a new, empty, central directory, for a given zip file.
@@ -195,9 +195,9 @@ class CentralDirectory {
      * @param file the file
      */
     CentralDirectory(@Nonnull ZFile file) {
-        mEntries = Maps.newHashMap();
-        mFile = file;
-        mBytesSupplier = new CachedSupplier<>(this::computeByteRepresentation);
+        entries = Maps.newHashMap();
+        this.file = file;
+        bytesSupplier = new CachedSupplier<>(this::computeByteRepresentation);
     }
 
     /**
@@ -253,16 +253,16 @@ class CentralDirectory {
         for (StoredEntry entry : entries) {
             CentralDirectoryHeader cdr = entry.getCentralDirectoryHeader();
             Preconditions.checkArgument(
-                    !directory.mEntries.containsKey(cdr.getName()),
+                    !directory.entries.containsKey(cdr.getName()),
                     "Duplicate filename");
-            directory.mEntries.put(cdr.getName(), entry);
+            directory.entries.put(cdr.getName(), entry);
         }
 
         return directory;
     }
 
     /**
-     * Reads the next entry from the central directory and adds it to {@link #mEntries}.
+     * Reads the next entry from the central directory and adds it to {@link #entries}.
      *
      * @param bytes the central directory's data, positioned starting at the beginning of the next
      * entry to read; when finished, the buffer's position will be at the first byte after the
@@ -293,7 +293,7 @@ class CentralDirectory {
 
         long lastModTime;
         long lastModDate;
-        if (mFile.areTimestampsIgnored()) {
+        if (this.file.areTimestampsIgnored()) {
             lastModTime = 0;
             lastModDate = 0;
             F_LAST_MOD_TIME.skip(bytes);
@@ -364,16 +364,16 @@ class CentralDirectory {
         StoredEntry entry;
 
         try {
-            entry = new StoredEntry(centralDirectoryHeader, mFile, null);
+            entry = new StoredEntry(centralDirectoryHeader, this.file, null);
         } catch (IOException e) {
             throw new IOException("Failed to read stored entry '" + fileName + "'.", e);
         }
 
-        if (mEntries.containsKey(fileName)) {
+        if (entries.containsKey(fileName)) {
             throw new IOException("File file contains duplicate file '" + fileName + "'.");
         }
 
-        mEntries.put(fileName, entry);
+        entries.put(fileName, entry);
     }
 
     /**
@@ -383,7 +383,7 @@ class CentralDirectory {
      */
     @Nonnull
     Map<String, StoredEntry> getEntries() {
-        return ImmutableMap.copyOf(mEntries);
+        return ImmutableMap.copyOf(entries);
     }
 
     /**
@@ -393,7 +393,7 @@ class CentralDirectory {
      * @throws IOException failed to write the byte array
      */
     byte[] toBytes() throws IOException {
-        return mBytesSupplier.get();
+        return bytesSupplier.get();
     }
 
     /**
@@ -404,15 +404,15 @@ class CentralDirectory {
      */
     private byte[] computeByteRepresentation() {
 
-        List<StoredEntry> sorted = Lists.newArrayList(mEntries.values());
+        List<StoredEntry> sorted = Lists.newArrayList(entries.values());
         sorted.sort(StoredEntry.COMPARE_BY_NAME);
 
-        CentralDirectoryHeader[] cdhs = new CentralDirectoryHeader[mEntries.size()];
+        CentralDirectoryHeader[] cdhs = new CentralDirectoryHeader[entries.size()];
         CentralDirectoryHeaderCompressInfo[] compressInfos =
-                new CentralDirectoryHeaderCompressInfo[mEntries.size()];
-        byte[][] encodedFileNames = new byte[mEntries.size()][];
-        byte[][] extraFields = new byte[mEntries.size()][];
-        byte[][] comments = new byte[mEntries.size()][];
+                new CentralDirectoryHeaderCompressInfo[entries.size()];
+        byte[][] encodedFileNames = new byte[entries.size()][];
+        byte[][] extraFields = new byte[entries.size()][];
+        byte[][] comments = new byte[entries.size()][];
 
         try {
             /*
@@ -435,14 +435,14 @@ class CentralDirectory {
 
             ByteBuffer out = ByteBuffer.allocate(total);
 
-            for (idx = 0; idx < mEntries.size(); idx++) {
+            for (idx = 0; idx < entries.size(); idx++) {
                 F_SIGNATURE.write(out);
                 F_MADE_BY.write(out, cdhs[idx].getMadeBy());
                 F_VERSION_EXTRACT.write(out, compressInfos[idx].getVersionExtract());
                 F_GP_BIT.write(out, cdhs[idx].getGpBit().getValue());
                 F_METHOD.write(out, compressInfos[idx].getMethod().methodCode);
 
-                if (mFile.areTimestampsIgnored()) {
+                if (file.areTimestampsIgnored()) {
                     F_LAST_MOD_TIME.write(out, 0);
                     F_LAST_MOD_DATE.write(out, 0);
                 } else {

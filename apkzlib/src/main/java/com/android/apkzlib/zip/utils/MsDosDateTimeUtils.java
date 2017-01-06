@@ -33,6 +33,7 @@ public class MsDosDateTimeUtils {
 
     /**
      * Packs java time value into an MS-DOS time value.
+     *
      * @param time the time value
      * @return the MS-DOS packed time
      */
@@ -57,6 +58,7 @@ public class MsDosDateTimeUtils {
 
     /**
      * Packs the current time value into an MS-DOS time value.
+     *
      * @return the MS-DOS packed time
      */
     public static int packCurrentTime() {
@@ -65,6 +67,7 @@ public class MsDosDateTimeUtils {
 
     /**
      * Packs java time value into an MS-DOS date value.
+     *
      * @param time the time value
      * @return the MS-DOS packed date
      */
@@ -99,6 +102,7 @@ public class MsDosDateTimeUtils {
 
     /**
      * Packs the current time value into an MS-DOS date value.
+     *
      * @return the MS-DOS packed date
      */
     public static int packCurrentDate() {

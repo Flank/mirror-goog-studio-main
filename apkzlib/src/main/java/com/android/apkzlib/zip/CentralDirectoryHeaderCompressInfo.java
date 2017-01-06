@@ -43,12 +43,12 @@ public class CentralDirectoryHeaderCompressInfo {
     /**
      * Size of the file compressed. 0 if the file has no data.
      */
-    private final long mCompressedSize;
+    private final long compressedSize;
 
     /**
      * Version needed to extract the zip.
      */
-    private final long mVersionExtract;
+    private final long versionExtract;
 
     /**
      * Creates new compression information for the central directory header.
@@ -63,8 +63,8 @@ public class CentralDirectoryHeaderCompressInfo {
             long compressedSize,
             long versionToExtract) {
         mMethod = method;
-        mCompressedSize = compressedSize;
-        mVersionExtract = versionToExtract;
+        this.compressedSize = compressedSize;
+        versionExtract = versionToExtract;
     }
 
     /**
@@ -77,15 +77,15 @@ public class CentralDirectoryHeaderCompressInfo {
     public CentralDirectoryHeaderCompressInfo(@Nonnull CentralDirectoryHeader header,
             @Nonnull CompressionMethod method, long compressedSize) {
         mMethod = method;
-        mCompressedSize = compressedSize;
+        this.compressedSize = compressedSize;
 
         if (header.getName().endsWith("/") || method == CompressionMethod.DEFLATE) {
             /*
              * Directories and compressed files only in version 2.0.
              */
-            mVersionExtract = VERSION_WITH_DIRECTORIES_AND_DEFLATE;
+            versionExtract = VERSION_WITH_DIRECTORIES_AND_DEFLATE;
         } else {
-            mVersionExtract = VERSION_WITH_STORE_FILES_ONLY;
+            versionExtract = VERSION_WITH_STORE_FILES_ONLY;
         }
     }
 
@@ -95,7 +95,7 @@ public class CentralDirectoryHeaderCompressInfo {
      * @return the compressed data size
      */
     public long getCompressedSize() {
-        return mCompressedSize;
+        return compressedSize;
     }
 
     /**
@@ -114,6 +114,6 @@ public class CentralDirectoryHeaderCompressInfo {
      * @return the minimum version
      */
     public long getVersionExtract() {
-        return mVersionExtract;
+        return versionExtract;
     }
 }

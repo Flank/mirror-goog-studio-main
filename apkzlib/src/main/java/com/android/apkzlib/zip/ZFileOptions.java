@@ -30,57 +30,57 @@ public class ZFileOptions {
      * The byte tracker.
      */
     @Nonnull
-    private ByteTracker mTracker;
+    private ByteTracker tracker;
 
     /**
      * The compressor to use.
      */
     @Nonnull
-    private Compressor mCompressor;
+    private Compressor compressor;
 
     /**
      * Should timestamps be zeroed?
      */
-    private boolean mNoTimestamps;
+    private boolean noTimestamps;
 
     /**
      * The alignment rule to use.
      */
     @Nonnull
-    private AlignmentRule mAlignmentRule;
+    private AlignmentRule alignmentRule;
 
     /**
      * Should the extra field be used to cover empty space?
      */
-    private boolean mCoverEmptySpaceUsingExtraField;
+    private boolean coverEmptySpaceUsingExtraField;
 
     /**
      * Should files be automatically sorted before update?
      */
-    private boolean mAutoSortFiles;
+    private boolean autoSortFiles;
 
     /**
      * Should validation of the data descriptors of entries be skipped? See
      * {@link #getSkipDataDescriptorValidation()}
      */
-    private boolean mSkipDataDescriptionValidation;
+    private boolean skipDataDescriptionValidation;
 
     /**
      * Should validation of minimum zip version to extract be performed?
      */
-    private boolean mSkipZipVersionToExtractValidation;
+    private boolean skipZipVersionToExtractValidation;
 
     /**
      * Creates a new options object. All options are set to their defaults.
      */
     public ZFileOptions() {
-        mTracker = new ByteTracker();
-        mCompressor =
+        tracker = new ByteTracker();
+        compressor =
                 new DeflateExecutionCompressor(
                         Runnable::run,
-                        mTracker,
+                        tracker,
                         Deflater.DEFAULT_COMPRESSION);
-        mAlignmentRule = AlignmentRules.compose();
+        alignmentRule = AlignmentRules.compose();
     }
 
     /**
@@ -90,7 +90,7 @@ public class ZFileOptions {
      */
     @Nonnull
     public ByteTracker getTracker() {
-        return mTracker;
+        return tracker;
     }
 
     /**
@@ -100,7 +100,7 @@ public class ZFileOptions {
      */
     @Nonnull
     public Compressor getCompressor() {
-        return mCompressor;
+        return compressor;
     }
 
     /**
@@ -109,7 +109,7 @@ public class ZFileOptions {
      * @param compressor the compressor
      */
     public void setCompressor(@Nonnull Compressor compressor) {
-        mCompressor = compressor;
+        this.compressor = compressor;
     }
 
     /**
@@ -118,7 +118,7 @@ public class ZFileOptions {
      * @return should timestamps be zeroed?
      */
     public boolean getNoTimestamps() {
-        return mNoTimestamps;
+        return noTimestamps;
     }
 
     /**
@@ -127,7 +127,7 @@ public class ZFileOptions {
      * @param noTimestamps should timestamps be zeroed?
      */
     public void setNoTimestamps(boolean noTimestamps) {
-        mNoTimestamps = noTimestamps;
+        this.noTimestamps = noTimestamps;
     }
 
     /**
@@ -137,7 +137,7 @@ public class ZFileOptions {
      */
     @Nonnull
     public AlignmentRule getAlignmentRule() {
-        return mAlignmentRule;
+        return alignmentRule;
     }
 
     /**
@@ -146,7 +146,7 @@ public class ZFileOptions {
      * @param alignmentRule the alignment rule
      */
     public void setAlignmentRule(@Nonnull AlignmentRule alignmentRule) {
-        mAlignmentRule = alignmentRule;
+        this.alignmentRule = alignmentRule;
     }
 
     /**
@@ -156,7 +156,7 @@ public class ZFileOptions {
      * @return should the extra field be used to cover empty spaces?
      */
     public boolean getCoverEmptySpaceUsingExtraField() {
-        return mCoverEmptySpaceUsingExtraField;
+        return coverEmptySpaceUsingExtraField;
     }
 
     /**
@@ -166,7 +166,7 @@ public class ZFileOptions {
      * @param coverEmptySpaceUsingExtraField should the extra field be used to cover empty spaces?
      */
     public void setCoverEmptySpaceUsingExtraField(boolean coverEmptySpaceUsingExtraField) {
-        mCoverEmptySpaceUsingExtraField = coverEmptySpaceUsingExtraField;
+        this.coverEmptySpaceUsingExtraField = coverEmptySpaceUsingExtraField;
     }
 
     /**
@@ -176,7 +176,7 @@ public class ZFileOptions {
      * @return should the file be automatically sorted?
      */
     public boolean getAutoSortFiles() {
-        return mAutoSortFiles;
+        return autoSortFiles;
     }
 
     /**
@@ -186,7 +186,7 @@ public class ZFileOptions {
      * @param autoSortFiles should the file be automatically sorted?
      */
     public void setAutoSortFiles(boolean autoSortFiles) {
-        mAutoSortFiles = autoSortFiles;
+        this.autoSortFiles = autoSortFiles;
     }
 
     /**
@@ -198,7 +198,7 @@ public class ZFileOptions {
      * @return should data descriptors be validated?
      */
     public boolean getSkipDataDescriptorValidation() {
-        return mSkipDataDescriptionValidation;
+        return skipDataDescriptionValidation;
     }
 
     /**
@@ -208,7 +208,7 @@ public class ZFileOptions {
      * @param skip should validation be skipped?
      */
     public void setSkipDataDescriptionValidation(boolean skip) {
-        mSkipDataDescriptionValidation = skip;
+        skipDataDescriptionValidation = skip;
     }
 
     /**
@@ -218,7 +218,7 @@ public class ZFileOptions {
      * @return should the "zip version to extract" field be ignored?
      */
     public boolean getSkipZipVersionToExtractValidation() {
-        return mSkipZipVersionToExtractValidation;
+        return skipZipVersionToExtractValidation;
     }
 
     /**
@@ -228,6 +228,6 @@ public class ZFileOptions {
      * @param skip should the "zip version to extract" field be ignored?
      */
     public void setSkipZipVersionToExtractValidation(boolean skip) {
-        mSkipZipVersionToExtractValidation = skip;
+        skipZipVersionToExtractValidation = skip;
     }
 }

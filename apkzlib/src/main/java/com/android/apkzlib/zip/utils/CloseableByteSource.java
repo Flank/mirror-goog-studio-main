@@ -32,31 +32,32 @@ public abstract class CloseableByteSource extends ByteSource implements Closeabl
     /**
      * Has the source been closed?
      */
-    private boolean mClosed;
+    private boolean closed;
 
     /**
      * Creates a new byte source.
      */
     public CloseableByteSource() {
-        mClosed = false;
+        closed = false;
     }
 
     @Override
     public final synchronized void close() throws IOException {
-        if (mClosed) {
+        if (closed) {
             return;
         }
 
         try {
             innerClose();
         } finally {
-            mClosed = true;
+            closed = true;
         }
     }
 
     /**
      * Closes the by source. This method is only invoked once, even if {@link #close()} is
-     * called multiple times
+     * called multiple times.
+     *
      * @throws IOException failed to close
      */
     protected abstract void innerClose() throws IOException;

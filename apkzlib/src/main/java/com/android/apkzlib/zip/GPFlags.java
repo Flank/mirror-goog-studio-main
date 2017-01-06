@@ -67,20 +67,21 @@ class GPFlags {
      */
     private static final int BIT_UNUSED = (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10)
             | (1 << 14) | (1 << 15);
+
     /**
      * Bit flag value.
      */
-    private final long mValue;
+    private final long value;
 
     /**
      * Has the CRC computation beeen deferred?
      */
-    private boolean mDeferredCrc;
+    private boolean deferredCrc;
 
     /**
      * Is the file name encoded in UTF-8?
      */
-    private boolean mUtf8FileName;
+    private boolean utf8FileName;
 
     /**
      * Creates a new flags object.
@@ -88,10 +89,10 @@ class GPFlags {
      * @param value the value of the bit mask
      */
     private GPFlags(long value) {
-        mValue = value;
+        this.value = value;
 
-        mDeferredCrc = ((value & BIT_DEFERRED_CRC) != 0);
-        mUtf8FileName = ((value & BIT_EFS) != 0);
+        deferredCrc = ((value & BIT_DEFERRED_CRC) != 0);
+        utf8FileName = ((value & BIT_EFS) != 0);
     }
 
     /**
@@ -100,7 +101,7 @@ class GPFlags {
      * @return the value of the bit mask
      */
     public long getValue() {
-        return mValue;
+        return value;
     }
 
     /**
@@ -109,7 +110,7 @@ class GPFlags {
      * @return is the CRC computation deferred?
      */
     public boolean isDeferredCrc() {
-        return mDeferredCrc;
+        return deferredCrc;
     }
 
     /**
@@ -118,7 +119,7 @@ class GPFlags {
      * @return is the file name encoded in UTF-8?
      */
     public boolean isUtf8FileName() {
-        return mUtf8FileName;
+        return utf8FileName;
     }
 
     /**

@@ -234,28 +234,28 @@ public class ZFile implements Closeable {
      * File zip file.
      */
     @Nonnull
-    private final File mFile;
+    private final File file;
 
     /**
      * The random access file used to access the zip file. This will be {@code null} if and only
-     * if {@link #mState} is {@link ZipFileState#CLOSED}.
+     * if {@link #state} is {@link ZipFileState#CLOSED}.
      */
     @Nullable
-    private RandomAccessFile mRaf;
+    private RandomAccessFile raf;
 
     /**
      * The map containing the in-memory contents of the zip file. It keeps track of which parts of
      * the zip file are used and which are not.
      */
     @Nonnull
-    private final FileUseMap mMap;
+    private final FileUseMap map;
 
     /**
      * The EOCD entry. Will be {@code null} if there is no EOCD (because the zip is new) or the
      * one that exists on disk is no longer valid (because the zip has been changed).
      */
     @Nullable
-    private FileUseMapEntry<Eocd> mEocdEntry;
+    private FileUseMapEntry<Eocd> eocdEntry;
 
     /**
      * The Central Directory entry. Will be {@code null} if there is no Central Directory (because
@@ -263,42 +263,42 @@ public class ZFile implements Closeable {
      * has been changed).
      */
     @Nullable
-    private FileUseMapEntry<CentralDirectory> mDirectoryEntry;
+    private FileUseMapEntry<CentralDirectory> directoryEntry;
 
     /**
      * All entries in the zip file. It includes in-memory changes and may not reflect what is
      * written on disk. Only entries that have been compressed are in this list.
      */
     @Nonnull
-    private final Map<String, FileUseMapEntry<StoredEntry>> mEntries;
+    private final Map<String, FileUseMapEntry<StoredEntry>> entries;
 
     /**
      * Entries added to the zip file, but that are not yet compressed. When compression is done,
-     * these entries are eventually moved to {@link #mEntries}. mUncompressedEntries is a list
+     * these entries are eventually moved to {@link #entries}. uncompressedEntries is a list
      * because entries need to be kept in the order by which they were added. It allows adding
      * multiple files with the same name and getting the right notifications on which files replaced
      * which.
      *
      * <p>Files are placed in this list in {@link #add(StoredEntry)} method. This method will
-     * keep files here temporarily and move then to {@link #mEntries} when the data is
+     * keep files here temporarily and move then to {@link #entries} when the data is
      * available.
      *
-     * <p>Moving files out of this list to {@link #mEntries} is done by
+     * <p>Moving files out of this list to {@link #entries} is done by
      * {@link #processAllReadyEntries()}.
      */
     @Nonnull
-    private final List<StoredEntry> mUncompressedEntries;
+    private final List<StoredEntry> uncompressedEntries;
 
     /**
      * Current state of the zip file.
      */
     @Nonnull
-    private ZipFileState mState;
+    private ZipFileState state;
 
     /**
      * Are the in-memory changes that have not been written to the zip file?
      */
-    private boolean mDirty;
+    private boolean dirty;
 
     /**
      * Non-{@code null} only if the file is currently closed. Used to detect if the zip is
@@ -306,78 +306,78 @@ public class ZFile implements Closeable {
      * be {@code null} even if it is closed.
      */
     @Nullable
-    private CachedFileContents<Object> mClosedControl;
+    private CachedFileContents<Object> closedControl;
 
     /**
      * The alignment rule.
      */
     @Nonnull
-    private final AlignmentRule mAlignmentRule;
+    private final AlignmentRule alignmentRule;
 
     /**
      * Extensions registered with the file.
      */
     @Nonnull
-    private final List<ZFileExtension> mExtensions;
+    private final List<ZFileExtension> extensions;
 
     /**
      * When notifying extensions, extensions may request that some runnables are executed. This
      * list collects all runnables by the order they were requested. Together with
-     * {@link #mIsNotifying}, it is used to avoid reordering notifications.
+     * {@link #isNotifying}, it is used to avoid reordering notifications.
      */
     @Nonnull
-    private final List<IOExceptionRunnable> mToRun;
+    private final List<IOExceptionRunnable> toRun;
 
     /**
      * {@code true} when {@link #notify(com.android.apkzlib.utils.IOExceptionFunction)} is notifying extensions. Used
      * to avoid reordering notifications.
      */
-    private boolean mIsNotifying;
+    private boolean isNotifying;
 
     /**
      * An extra offset for the central directory location. {@code 0} if the central directory
      * should be written in its standard location.
      */
-    private long mExtraDirectoryOffset;
+    private long extraDirectoryOffset;
 
     /**
      * Should all timestamps be zeroed when reading / writing the zip?
      */
-    private boolean mNoTimestamps;
+    private boolean noTimestamps;
 
     /**
      * Compressor to use.
      */
     @Nonnull
-    private Compressor mCompressor;
+    private Compressor compressor;
 
     /**
      * Byte tracker to use.
      */
     @Nonnull
-    private final ByteTracker mTracker;
+    private final ByteTracker tracker;
 
     /**
      * Use the zip entry's "extra field" field to cover empty space in the zip file?
      */
-    private boolean mCoverEmptySpaceUsingExtraField;
+    private boolean coverEmptySpaceUsingExtraField;
 
     /**
      * Should files be automatically sorted when updating?
      */
-    private boolean mAutoSortFiles;
+    private boolean autoSortFiles;
 
     /**
      * Should data descriptor verification be skipped? See
      * {@link ZFileOptions#getSkipDataDescriptorValidation()}.
      */
-    private boolean mSkipDataDescriptorVerification;
+    private boolean skipDataDescriptorVerification;
 
     /**
      * Should the "version to extract" field validation be skipped? See
      * {@link ZFileOptions#getSkipZipVersionToExtractValidation()}.
      */
-    private boolean mSkipVersionToExtractValidation;
+    private boolean skipVersionToExtractValidation;
 
 
     /**
@@ -404,49 +404,49 @@ public class ZFile implements Closeable {
      * @throws IOException some file exists but could not be read
      */
     public ZFile(@Nonnull File file, @Nonnull ZFileOptions options) throws IOException {
-        mFile = file;
-        mMap = new FileUseMap(
+        this.file = file;
+        map = new FileUseMap(
                 0,
                 options.getCoverEmptySpaceUsingExtraField()
                         ? MINIMUM_EXTRA_FIELD_SIZE
                         : 0);
-        mDirty = false;
-        mClosedControl = null;
-        mAlignmentRule = options.getAlignmentRule();
-        mExtensions = Lists.newArrayList();
-        mToRun = Lists.newArrayList();
-        mNoTimestamps = options.getNoTimestamps();
-        mTracker = options.getTracker();
-        mCompressor = options.getCompressor();
-        mCoverEmptySpaceUsingExtraField = options.getCoverEmptySpaceUsingExtraField();
-        mAutoSortFiles = options.getAutoSortFiles();
-        mSkipDataDescriptorVerification = options.getSkipDataDescriptorValidation();
-        mSkipVersionToExtractValidation = options.getSkipZipVersionToExtractValidation();
+        dirty = false;
+        closedControl = null;
+        alignmentRule = options.getAlignmentRule();
+        extensions = Lists.newArrayList();
+        toRun = Lists.newArrayList();
+        noTimestamps = options.getNoTimestamps();
+        tracker = options.getTracker();
+        compressor = options.getCompressor();
+        coverEmptySpaceUsingExtraField = options.getCoverEmptySpaceUsingExtraField();
+        autoSortFiles = options.getAutoSortFiles();
+        skipDataDescriptorVerification = options.getSkipDataDescriptorValidation();
+        skipVersionToExtractValidation = options.getSkipZipVersionToExtractValidation();
 
         /*
          * These two values will be overwritten by openReadOnly() below if the file exists.
          */
-        mState = ZipFileState.CLOSED;
-        mRaf = null;
+        state = ZipFileState.CLOSED;
+        raf = null;
 
         if (file.exists()) {
             openReadOnly();
         } else {
-            mDirty = true;
+            dirty = true;
         }
 
-        mEntries = Maps.newHashMap();
-        mUncompressedEntries = Lists.newArrayList();
-        mExtraDirectoryOffset = 0;
+        entries = Maps.newHashMap();
+        uncompressedEntries = Lists.newArrayList();
+        extraDirectoryOffset = 0;
 
         try {
-            if (mState != ZipFileState.CLOSED) {
-                long rafSize = mRaf.length();
+            if (state != ZipFileState.CLOSED) {
+                long rafSize = raf.length();
                 if (rafSize > Integer.MAX_VALUE) {
                     throw new IOException("File exceeds size limit of " + Integer.MAX_VALUE + ".");
                 }
 
-                mMap.extend(Ints.checkedCast(rafSize));
+                map.extend(Ints.checkedCast(rafSize));
                 readData();
 
                 notify(ZFileExtension::open);
@@ -466,7 +466,7 @@ public class ZFile implements Closeable {
     public Set<StoredEntry> entries() {
         Map<String, StoredEntry> entries = Maps.newHashMap();
 
-        for (FileUseMapEntry<StoredEntry> mapEntry : mEntries.values()) {
+        for (FileUseMapEntry<StoredEntry> mapEntry : this.entries.values()) {
             StoredEntry entry = mapEntry.getStore();
             assert entry != null;
             entries.put(entry.getCentralDirectoryHeader().getName(), entry);
@@ -476,7 +476,7 @@ public class ZFile implements Closeable {
          * mUncompressed may override mEntriesReady as we may not have yet processed all
          * entries.
          */
-        for (StoredEntry uncompressed : mUncompressedEntries) {
+        for (StoredEntry uncompressed : uncompressedEntries) {
             entries.put(uncompressed.getCentralDirectoryHeader().getName(), uncompressed);
         }
 
@@ -493,15 +493,15 @@ public class ZFile implements Closeable {
     public StoredEntry get(@Nonnull String path) {
         /*
          * The latest entries are the last ones in uncompressed and they may eventually override
-         * files in mEntries.
+         * files in entries.
          */
-        for (StoredEntry stillUncompressed : Lists.reverse(mUncompressedEntries)) {
+        for (StoredEntry stillUncompressed : Lists.reverse(uncompressedEntries)) {
             if (stillUncompressed.getCentralDirectoryHeader().getName().equals(path)) {
                 return stillUncompressed;
             }
         }
 
-        FileUseMapEntry<StoredEntry> found = mEntries.get(path);
+        FileUseMapEntry<StoredEntry> found = entries.get(path);
         if (found == null) {
             return null;
         }
@@ -516,8 +516,8 @@ public class ZFile implements Closeable {
      * @throws IOException failed to read the zip file
      */
     private void readData() throws IOException {
-        Preconditions.checkState(mState != ZipFileState.CLOSED, "mState == ZipFileState.CLOSED");
-        Preconditions.checkState(mRaf != null, "mRaf == null");
+        Preconditions.checkState(state != ZipFileState.CLOSED, "state == ZipFileState.CLOSED");
+        Preconditions.checkState(raf != null, "raf == null");
 
         readEocd();
         readCentralDirectory();
@@ -528,8 +528,8 @@ public class ZFile implements Closeable {
         long entryEndOffset;
         long directoryStartOffset;
 
-        if (mDirectoryEntry != null) {
-            CentralDirectory directory = mDirectoryEntry.getStore();
+        if (directoryEntry != null) {
+            CentralDirectory directory = directoryEntry.getStore();
             assert directory != null;
 
             entryEndOffset = 0;
@@ -551,23 +551,23 @@ public class ZFile implements Closeable {
                  * file.
                  */
 
-                FileUseMapEntry<StoredEntry> mapEntry = mMap.add(start, end, entry);
-                mEntries.put(entry.getCentralDirectoryHeader().getName(), mapEntry);
+                FileUseMapEntry<StoredEntry> mapEntry = map.add(start, end, entry);
+                entries.put(entry.getCentralDirectoryHeader().getName(), mapEntry);
 
                 if (end > entryEndOffset) {
                     entryEndOffset = end;
                 }
             }
 
-            directoryStartOffset = mDirectoryEntry.getStart();
+            directoryStartOffset = directoryEntry.getStart();
         } else {
             /*
              * No directory means an empty zip file. Use the start of the EOCD to compute
              * an existing offset.
              */
-            Verify.verifyNotNull(mEocdEntry);
-            assert mEocdEntry != null;
-            directoryStartOffset = mEocdEntry.getStart();
+            Verify.verifyNotNull(eocdEntry);
+            assert eocdEntry != null;
+            directoryStartOffset = eocdEntry.getStart();
             entryEndOffset = 0;
         }
 
@@ -577,25 +577,25 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Finds the EOCD marker and reads it. It will populate the {@link #mEocdEntry} variable.
+     * Finds the EOCD marker and reads it. It will populate the {@link #eocdEntry} variable.
      *
      * @throws IOException failed to read the EOCD
      */
     private void readEocd() throws IOException {
-        Preconditions.checkState(mState != ZipFileState.CLOSED, "mState == ZipFileState.CLOSED");
-        Preconditions.checkState(mRaf != null, "mRaf == null");
+        Preconditions.checkState(state != ZipFileState.CLOSED, "state == ZipFileState.CLOSED");
+        Preconditions.checkState(raf != null, "raf == null");
 
         /*
          * Read the last part of the zip into memory. If we don't find the EOCD signature by then,
          * the file is corrupt.
          */
         int lastToRead = LAST_BYTES_TO_READ;
-        if (lastToRead > mRaf.length()) {
-            lastToRead = Ints.checkedCast(mRaf.length());
+        if (lastToRead > raf.length()) {
+            lastToRead = Ints.checkedCast(raf.length());
         }
 
         byte[] last = new byte[lastToRead];
-        directFullyRead(mRaf.length() - lastToRead, last);
+        directFullyRead(raf.length() - lastToRead, last);
 
         byte[] eocdSignature = new byte[] { 0x06, 0x05, 0x4b, 0x50 };
 
@@ -633,14 +633,14 @@ public class ZFile implements Closeable {
 
                 try {
                     eocd = new Eocd(eocdBytes);
-                    eocdStart = Ints.checkedCast(mRaf.length() - lastToRead + foundEocdSignature);
+                    eocdStart = Ints.checkedCast(raf.length() - lastToRead + foundEocdSignature);
 
                     /*
                      * Make sure the EOCD takes the whole file up to the end.
                      */
-                    if (eocdStart + eocd.getEocdSize() != mRaf.length()) {
+                    if (eocdStart + eocd.getEocdSize() != raf.length()) {
                         throw new IOException("EOCD starts at " + eocdStart + " and has "
-                                + eocd.getEocdSize() + " bytes, but file ends at " + mRaf.length()
+                                + eocd.getEocdSize() + " bytes, but file ends at " + raf.length()
                                 + ".");
                     }
                 } catch (IOException e) {
@@ -677,35 +677,35 @@ public class ZFile implements Closeable {
             }
         }
 
-        mEocdEntry = mMap.add(eocdStart, eocdStart + eocd.getEocdSize(), eocd);
+        eocdEntry = map.add(eocdStart, eocdStart + eocd.getEocdSize(), eocd);
     }
 
     /**
-     * Reads the zip's central directory and populates the {@link #mDirectoryEntry} variable. This
+     * Reads the zip's central directory and populates the {@link #directoryEntry} variable. This
      * method can only be called after the EOCD has been read. If the central directory is empty
-     * (if there are no files on the zip archive), then {@link #mDirectoryEntry} will be set to
+     * (if there are no files on the zip archive), then {@link #directoryEntry} will be set to
      * {@code null}.
      *
      * @throws IOException failed to read the central directory
      */
     private void readCentralDirectory() throws IOException {
-        Preconditions.checkNotNull(mEocdEntry, "mEocdEntry == null");
-        Preconditions.checkNotNull(mEocdEntry.getStore(), "mEocdEntry.getStore() == null");
-        Preconditions.checkState(mState != ZipFileState.CLOSED, "mState == ZipFileState.CLOSED");
-        Preconditions.checkState(mRaf != null, "mRaf == null");
-        Preconditions.checkState(mDirectoryEntry == null, "mDirectoryEntry != null");
+        Preconditions.checkNotNull(eocdEntry, "eocdEntry == null");
+        Preconditions.checkNotNull(eocdEntry.getStore(), "eocdEntry.getStore() == null");
+        Preconditions.checkState(state != ZipFileState.CLOSED, "state == ZipFileState.CLOSED");
+        Preconditions.checkState(raf != null, "raf == null");
+        Preconditions.checkState(directoryEntry == null, "directoryEntry != null");
 
-        Eocd eocd = mEocdEntry.getStore();
+        Eocd eocd = eocdEntry.getStore();
 
         long dirSize = eocd.getDirectorySize();
         if (dirSize > Integer.MAX_VALUE) {
             throw new IOException("Cannot read central directory with size " + dirSize + ".");
         }
 
-        if (eocd.getDirectoryOffset() + dirSize != mEocdEntry.getStart()) {
+        if (eocd.getDirectoryOffset() + dirSize != eocdEntry.getStart()) {
             throw new IOException("Central directory is stored in [" + eocd.getDirectoryOffset()
                     + " - " + (eocd.getDirectoryOffset() + dirSize) + "] and EOCD starts at "
-                    + mEocdEntry.getStart() + ".");
+                    + eocdEntry.getStart() + ".");
         }
 
         byte[] directoryData = new byte[Ints.checkedCast(dirSize)];
@@ -717,7 +717,7 @@ public class ZFile implements Closeable {
                         eocd.getTotalRecords(),
                         this);
         if (eocd.getDirectorySize() > 0) {
-            mDirectoryEntry = mMap.add(eocd.getDirectoryOffset(), eocd.getDirectoryOffset()
+            directoryEntry = map.add(eocd.getDirectoryOffset(), eocd.getDirectoryOffset()
                     + eocd.getDirectorySize(), directory);
         }
     }
@@ -736,11 +736,11 @@ public class ZFile implements Closeable {
      */
     @Nonnull
     public InputStream directOpen(final long start, final long end) throws IOException {
-        Preconditions.checkState(mState != ZipFileState.CLOSED, "mState == ZipFileState.CLOSED");
-        Preconditions.checkState(mRaf != null, "mRaf == null");
+        Preconditions.checkState(state != ZipFileState.CLOSED, "state == ZipFileState.CLOSED");
+        Preconditions.checkState(raf != null, "raf == null");
         Preconditions.checkArgument(start >= 0, "start < 0");
         Preconditions.checkArgument(end >= start, "end < start");
-        Preconditions.checkArgument(end <= mRaf.length(), "end > mRaf.length()");
+        Preconditions.checkArgument(end <= raf.length(), "end > raf.length()");
 
         return new InputStream() {
             private long mCurr = start;
@@ -801,14 +801,14 @@ public class ZFile implements Closeable {
      */
     void delete(@Nonnull final StoredEntry entry, boolean notify) throws IOException {
         String path = entry.getCentralDirectoryHeader().getName();
-        FileUseMapEntry<StoredEntry> mapEntry = mEntries.get(path);
+        FileUseMapEntry<StoredEntry> mapEntry = entries.get(path);
         Preconditions.checkNotNull(mapEntry, "mapEntry == null");
         Preconditions.checkArgument(entry == mapEntry.getStore(), "entry != mapEntry.getStore()");
 
-        mDirty = true;
+        dirty = true;
 
-        mMap.remove(mapEntry);
-        mEntries.remove(path);
+        map.remove(mapEntry);
+        entries.remove(path);
 
         if (notify) {
             notify(ext -> ext.removed(entry));
@@ -836,7 +836,7 @@ public class ZFile implements Closeable {
         processAllReadyEntriesWithWait();
 
 
-        if (!mDirty) {
+        if (!dirty) {
             return;
         }
 
@@ -847,7 +847,7 @@ public class ZFile implements Closeable {
          * empty spaces or sort. If we sort, we don't need to repack as sorting forces the
          * zip file to be as compact as possible.
          */
-        if (mAutoSortFiles) {
+        if (autoSortFiles) {
             sortZipContents();
         } else {
             packIfNecessary();
@@ -858,22 +858,22 @@ public class ZFile implements Closeable {
          * will have to be rewritten.
          */
         deleteDirectoryAndEocd();
-        mMap.truncate();
+        map.truncate();
 
         /*
          * If we need to use the extra field to cover empty spaces, we do the processing here.
          */
-        if (mCoverEmptySpaceUsingExtraField) {
+        if (coverEmptySpaceUsingExtraField) {
 
             /* We will go over all files in the zip and check whether there is empty space before
              * them. If there is, then we will move the entry to the beginning of the empty space
              * (covering it) and extend the extra field with the size of the empty space.
              */
-            for (FileUseMapEntry<StoredEntry> entry : new HashSet<>(mEntries.values())) {
+            for (FileUseMapEntry<StoredEntry> entry : new HashSet<>(entries.values())) {
                 StoredEntry storedEntry = entry.getStore();
                 assert storedEntry != null;
 
-                FileUseMapEntry<?> before = mMap.before(entry);
+                FileUseMapEntry<?> before = map.before(entry);
                 if (before == null || !before.isFree()) {
                     continue;
                 }
@@ -899,8 +899,8 @@ public class ZFile implements Closeable {
                  * Remove the entry.
                  */
                 String name = storedEntry.getCentralDirectoryHeader().getName();
-                mMap.remove(entry);
-                Verify.verify(entry == mEntries.remove(name));
+                map.remove(entry);
+                Verify.verify(entry == entries.remove(name));
 
                 /*
                  * Make a list will all existing segments in the entry's extra field, but remove
@@ -927,7 +927,7 @@ public class ZFile implements Closeable {
 
                 storedEntry.setLocalExtraNoNotify(
                         new ExtraField(ImmutableList.copyOf(extraFieldSegments)));
-                mEntries.put(name, mMap.add(newStart, newStart + newSize, storedEntry));
+                entries.put(name, map.add(newStart, newStart + newSize, storedEntry));
 
                 /*
                  * Reset the offset to force the file to be rewritten.
@@ -949,7 +949,7 @@ public class ZFile implements Closeable {
         TreeMap<FileUseMapEntry<?>, StoredEntry> toWriteToStore =
                 new TreeMap<>(FileUseMapEntry.COMPARE_BY_START);
 
-        for (FileUseMapEntry<StoredEntry> entry : mEntries.values()) {
+        for (FileUseMapEntry<StoredEntry> entry : entries.values()) {
             StoredEntry entryStore = entry.getStore();
             assert entryStore != null;
             if (entryStore.getCentralDirectoryHeader().getOffset() == -1) {
@@ -960,7 +960,7 @@ public class ZFile implements Closeable {
         /*
          * Add all free entries to the set.
          */
-        for(FileUseMapEntry<?> freeArea : mMap.getFreeAreas()) {
+        for(FileUseMapEntry<?> freeArea : map.getFreeAreas()) {
             toWriteToStore.put(freeArea, null);
         }
 
@@ -983,7 +983,7 @@ public class ZFile implements Closeable {
             computeCentralDirectory();
             computeEocd();
 
-            hasCentralDirectory = (mDirectoryEntry != null);
+            hasCentralDirectory = (directoryEntry != null);
 
             notify(ext -> {
                 ext.entriesWritten();
@@ -994,15 +994,15 @@ public class ZFile implements Closeable {
                 throw new IOException("Extensions keep resetting the central directory. This is "
                         + "probably a bug.");
             }
-        } while (hasCentralDirectory && mDirectoryEntry == null);
+        } while (hasCentralDirectory && directoryEntry == null);
 
         appendCentralDirectory();
         appendEocd();
 
-        Verify.verifyNotNull(mRaf);
-        mRaf.setLength(mMap.size());
+        Verify.verifyNotNull(raf);
+        raf.setLength(map.size());
 
-        mDirty = false;
+        dirty = false;
 
         notify(ext -> {
            ext.updated();
@@ -1012,7 +1012,7 @@ public class ZFile implements Closeable {
 
     /**
      * Reorganizes the zip so that there are no gaps between files bigger than
-     * {@link #MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE} if {@link #mCoverEmptySpaceUsingExtraField}
+     * {@link #MAX_LOCAL_EXTRA_FIELD_CONTENTS_SIZE} if {@link #coverEmptySpaceUsingExtraField}
      * is set to {@code true}.
      *
      * <p>Essentially, this makes sure we can cover any empty space with the extra field, given
@@ -1022,19 +1022,19 @@ public class ZFile implements Closeable {
      * @throws IOException failed to repack
      */
     private void packIfNecessary() throws IOException {
-        if (!mCoverEmptySpaceUsingExtraField) {
+        if (!coverEmptySpaceUsingExtraField) {
             return;
         }
 
         SortedSet<FileUseMapEntry<StoredEntry>> entriesByLocation =
                 new TreeSet<>(FileUseMapEntry.COMPARE_BY_START);
-        entriesByLocation.addAll(mEntries.values());
+        entriesByLocation.addAll(entries.values());
 
         for (FileUseMapEntry<StoredEntry> entry : entriesByLocation) {
             StoredEntry storedEntry = entry.getStore();
             assert storedEntry != null;
 
-            FileUseMapEntry<?> before = mMap.before(entry);
+            FileUseMapEntry<?> before = map.before(entry);
             if (before == null || !before.isFree()) {
                 continue;
             }
@@ -1063,17 +1063,17 @@ public class ZFile implements Closeable {
     private void reAdd(@Nonnull StoredEntry entry, @Nonnull PositionHint positionHint)
             throws IOException {
         String name = entry.getCentralDirectoryHeader().getName();
-        FileUseMapEntry<StoredEntry> mapEntry = mEntries.get(name);
+        FileUseMapEntry<StoredEntry> mapEntry = entries.get(name);
         Preconditions.checkNotNull(mapEntry);
         Preconditions.checkState(mapEntry.getStore() == entry);
 
         entry.loadSourceIntoMemory();
 
-        mMap.remove(mapEntry);
-        mEntries.remove(name);
+        map.remove(mapEntry);
+        entries.remove(name);
         FileUseMapEntry<StoredEntry> positioned = positionInFile(entry, positionHint);
-        mEntries.put(name, positioned);
-        mDirty = true;
+        entries.put(name, positioned);
+        dirty = true;
     }
 
     /**
@@ -1085,7 +1085,7 @@ public class ZFile implements Closeable {
      * @throws IOException failed to load the entry into memory
      */
     void localHeaderChanged(@Nonnull StoredEntry entry, boolean resized) throws IOException {
-        mDirty = true;
+        dirty = true;
 
         if (resized) {
             reAdd(entry, PositionHint.ANYWHERE);
@@ -1096,7 +1096,7 @@ public class ZFile implements Closeable {
      * Invoked when the central directory has changed and needs to be rewritten.
      */
     void centralDirectoryChanged() {
-        mDirty = true;
+        dirty = true;
         deleteDirectoryAndEocd();
     }
 
@@ -1105,7 +1105,7 @@ public class ZFile implements Closeable {
      */
     @Override
     public void close() throws IOException {
-        // We need to make sure to release mRaf, otherwise we end up locking the file on
+        // We need to make sure to release raf, otherwise we end up locking the file on
         // Windows. Use try-with-resources to handle exception suppressing.
         try (Closeable ignored = this::innerClose) {
             update();
@@ -1122,14 +1122,14 @@ public class ZFile implements Closeable {
      * as well as allowing the zip file to be truncated if files have been removed.
      */
     private void deleteDirectoryAndEocd() {
-        if (mDirectoryEntry != null) {
-            mMap.remove(mDirectoryEntry);
-            mDirectoryEntry = null;
+        if (directoryEntry != null) {
+            map.remove(directoryEntry);
+            directoryEntry = null;
         }
 
-        if (mEocdEntry != null) {
-            mMap.remove(mEocdEntry);
-            mEocdEntry = null;
+        if (eocdEntry != null) {
+            map.remove(eocdEntry);
+            eocdEntry = null;
         }
     }
 
@@ -1146,8 +1146,8 @@ public class ZFile implements Closeable {
         Preconditions.checkArgument(entry.getDataDescriptorType()
                 == DataDescriptorType. NO_DATA_DESCRIPTOR, "Cannot write entries with a data "
                 + "descriptor.");
-        Preconditions.checkNotNull(mRaf, "mRaf == null");
-        Preconditions.checkState(mState == ZipFileState.OPEN_RW, "mState != ZipFileState.OPEN_RW");
+        Preconditions.checkNotNull(raf, "raf == null");
+        Preconditions.checkState(state == ZipFileState.OPEN_RW, "state != ZipFileState.OPEN_RW");
 
         /*
          * Place the cursor and write the local header.
@@ -1183,19 +1183,19 @@ public class ZFile implements Closeable {
 
     /**
      * Computes the central directory. The central directory must not have been computed yet. When
-     * this method finishes, the central directory has been computed {@link #mDirectoryEntry},
-     * unless the directory is empty in which case {@link #mDirectoryEntry}
+     * this method finishes, the central directory has been computed {@link #directoryEntry},
+     * unless the directory is empty in which case {@link #directoryEntry}
      * is left as {@code null}. Nothing is written to disk as a result of this method's invocation.
      *
      * @throws IOException failed to append the central directory
      */
     private void computeCentralDirectory() throws IOException {
-        Preconditions.checkState(mState == ZipFileState.OPEN_RW, "mState != ZipFileState.OPEN_RW");
-        Preconditions.checkNotNull(mRaf, "mRaf == null");
-        Preconditions.checkState(mDirectoryEntry == null, "mDirectoryEntry == null");
+        Preconditions.checkState(state == ZipFileState.OPEN_RW, "state != ZipFileState.OPEN_RW");
+        Preconditions.checkNotNull(raf, "raf == null");
+        Preconditions.checkState(directoryEntry == null, "directoryEntry == null");
 
         Set<StoredEntry> newStored = Sets.newHashSet();
-        for (FileUseMapEntry<StoredEntry> mapEntry : mEntries.values()) {
+        for (FileUseMapEntry<StoredEntry> mapEntry : entries.values()) {
             newStored.add(mapEntry.getStore());
         }
 
@@ -1203,47 +1203,47 @@ public class ZFile implements Closeable {
          * Make sure we truncate the map before computing the central directory's location since
          * the central directory is the last part of the file.
          */
-        mMap.truncate();
+        map.truncate();
 
         CentralDirectory newDirectory = CentralDirectory.makeFromEntries(newStored, this);
         byte[] newDirectoryBytes = newDirectory.toBytes();
-        long directoryOffset = mMap.size() + mExtraDirectoryOffset;
+        long directoryOffset = map.size() + extraDirectoryOffset;
 
-        mMap.extend(directoryOffset + newDirectoryBytes.length);
+        map.extend(directoryOffset + newDirectoryBytes.length);
 
         if (newDirectoryBytes.length > 0) {
-            mDirectoryEntry = mMap.add(directoryOffset, directoryOffset + newDirectoryBytes.length,
+            directoryEntry = map.add(directoryOffset, directoryOffset + newDirectoryBytes.length,
                     newDirectory);
         }
     }
 
     /**
-     * Writes the central directory to the end of the zip file. {@link #mDirectoryEntry} may be
+     * Writes the central directory to the end of the zip file. {@link #directoryEntry} may be
      * {@code null} only if there are no files in the archive.
      *
      * @throws IOException failed to append the central directory
      */
     private void appendCentralDirectory() throws IOException {
-        Preconditions.checkState(mState == ZipFileState.OPEN_RW, "mState != ZipFileState.OPEN_RW");
-        Preconditions.checkNotNull(mRaf, "mRaf == null");
+        Preconditions.checkState(state == ZipFileState.OPEN_RW, "state != ZipFileState.OPEN_RW");
+        Preconditions.checkNotNull(raf, "raf == null");
 
-        if (mEntries.isEmpty()) {
-            Preconditions.checkState(mDirectoryEntry == null, "mDirectoryEntry != null");
+        if (entries.isEmpty()) {
+            Preconditions.checkState(directoryEntry == null, "directoryEntry != null");
             return;
         }
 
-        Preconditions.checkNotNull(mDirectoryEntry, "mDirectoryEntry != null");
+        Preconditions.checkNotNull(directoryEntry, "directoryEntry != null");
 
-        CentralDirectory newDirectory = mDirectoryEntry.getStore();
+        CentralDirectory newDirectory = directoryEntry.getStore();
         Preconditions.checkNotNull(newDirectory, "newDirectory != null");
 
         byte[] newDirectoryBytes = newDirectory.toBytes();
-        long directoryOffset = mDirectoryEntry.getStart();
+        long directoryOffset = directoryEntry.getStart();
 
         /*
          * It is fine to seek beyond the end of file. Seeking beyond the end of file will not extend
          * the file. Even if we do not have any directory data to write, the extend() call below
-         * will force the file to be extended leaving exactly mExtraDirectoryOffset bytes empty at
+         * will force the file to be extended leaving exactly extraDirectoryOffset bytes empty at
          * the beginning.
          */
         directWrite(directoryOffset, newDirectoryBytes);
@@ -1259,77 +1259,77 @@ public class ZFile implements Closeable {
      */
     @Nonnull
     public byte[] getCentralDirectoryBytes() throws IOException {
-        if (mEntries.isEmpty()) {
-            Preconditions.checkState(mDirectoryEntry == null, "mDirectoryEntry != null");
+        if (entries.isEmpty()) {
+            Preconditions.checkState(directoryEntry == null, "directoryEntry != null");
             return new byte[0];
         }
 
-        Preconditions.checkNotNull(mDirectoryEntry, "mDirectoryEntry == null");
+        Preconditions.checkNotNull(directoryEntry, "directoryEntry == null");
 
-        CentralDirectory cd = mDirectoryEntry.getStore();
+        CentralDirectory cd = directoryEntry.getStore();
         Preconditions.checkNotNull(cd, "cd == null");
         return cd.toBytes();
     }
 
     /**
-     * Computes the EOCD. This creates a new {@link #mEocdEntry}. The
-     * central directory must already be written. If {@link #mDirectoryEntry} is {@code null}, then
+     * Computes the EOCD. This creates a new {@link #eocdEntry}. The
+     * central directory must already be written. If {@link #directoryEntry} is {@code null}, then
      * the zip file must not have any entries.
      *
      * @throws IOException failed to write the EOCD
      */
     private void computeEocd() throws IOException {
-        Preconditions.checkState(mState == ZipFileState.OPEN_RW, "mState != ZipFileState.OPEN_RW");
-        Preconditions.checkNotNull(mRaf, "mRaf == null");
-        if (mDirectoryEntry == null) {
-            Preconditions.checkState(mEntries.isEmpty(),
-                    "mDirectoryEntry == null && !mEntries.isEmpty()");
+        Preconditions.checkState(state == ZipFileState.OPEN_RW, "state != ZipFileState.OPEN_RW");
+        Preconditions.checkNotNull(raf, "raf == null");
+        if (directoryEntry == null) {
+            Preconditions.checkState(entries.isEmpty(),
+                    "directoryEntry == null && !entries.isEmpty()");
         }
 
         long dirStart;
         long dirSize = 0;
 
-        if (mDirectoryEntry != null) {
-            CentralDirectory directory = mDirectoryEntry.getStore();
+        if (directoryEntry != null) {
+            CentralDirectory directory = directoryEntry.getStore();
             assert directory != null;
 
-            dirStart = mDirectoryEntry.getStart();
-            dirSize = mDirectoryEntry.getSize();
-            Verify.verify(directory.getEntries().size() == mEntries.size());
+            dirStart = directoryEntry.getStart();
+            dirSize = directoryEntry.getSize();
+            Verify.verify(directory.getEntries().size() == entries.size());
         } else {
             /*
              * If we do not have a directory, then we must leave any requested offset empty.
              */
-            dirStart = mExtraDirectoryOffset;
+            dirStart = extraDirectoryOffset;
         }
 
-        Eocd eocd = new Eocd(mEntries.size(), dirStart, dirSize);
+        Eocd eocd = new Eocd(entries.size(), dirStart, dirSize);
 
         byte[] eocdBytes = eocd.toBytes();
-        long eocdOffset = mMap.size();
+        long eocdOffset = map.size();
 
-        mMap.extend(eocdOffset + eocdBytes.length);
+        map.extend(eocdOffset + eocdBytes.length);
 
-        mEocdEntry = mMap.add(eocdOffset, eocdOffset + eocdBytes.length, eocd);
+        eocdEntry = map.add(eocdOffset, eocdOffset + eocdBytes.length, eocd);
     }
 
     /**
-     * Writes the EOCD to the end of the zip file. This creates a new {@link #mEocdEntry}. The
-     * central directory must already be written. If {@link #mDirectoryEntry} is {@code null}, then
+     * Writes the EOCD to the end of the zip file. This creates a new {@link #eocdEntry}. The
+     * central directory must already be written. If {@link #directoryEntry} is {@code null}, then
      * the zip file must not have any entries.
      *
      * @throws IOException failed to write the EOCD
      */
     private void appendEocd() throws IOException {
-        Preconditions.checkState(mState == ZipFileState.OPEN_RW, "mState != ZipFileState.OPEN_RW");
-        Preconditions.checkNotNull(mRaf, "mRaf == null");
-        Preconditions.checkNotNull(mEocdEntry, "mEocdEntry == null");
+        Preconditions.checkState(state == ZipFileState.OPEN_RW, "state != ZipFileState.OPEN_RW");
+        Preconditions.checkNotNull(raf, "raf == null");
+        Preconditions.checkNotNull(eocdEntry, "eocdEntry == null");
 
-        Eocd eocd = mEocdEntry.getStore();
+        Eocd eocd = eocdEntry.getStore();
         Preconditions.checkNotNull(eocd, "eocd == null");
 
         byte[] eocdBytes = eocd.toBytes();
-        long eocdOffset = mEocdEntry.getStart();
+        long eocdOffset = eocdEntry.getStart();
 
         directWrite(eocdOffset, eocdBytes);
     }
@@ -1343,9 +1343,9 @@ public class ZFile implements Closeable {
      */
     @Nonnull
     public byte[] getEocdBytes() throws IOException {
-        Preconditions.checkNotNull(mEocdEntry, "mEocdEntry == null");
+        Preconditions.checkNotNull(eocdEntry, "eocdEntry == null");
 
-        Eocd eocd = mEocdEntry.getStore();
+        Eocd eocd = eocdEntry.getStore();
         Preconditions.checkNotNull(eocd, "eocd == null");
         return eocd.toBytes();
     }
@@ -1356,20 +1356,20 @@ public class ZFile implements Closeable {
      * @throws IOException failed to close the file
      */
     private void innerClose() throws IOException {
-        if (mState == ZipFileState.CLOSED) {
+        if (state == ZipFileState.CLOSED) {
             return;
         }
 
-        Verify.verifyNotNull(mRaf, "mRaf == null");
+        Verify.verifyNotNull(raf, "raf == null");
 
-        mRaf.close();
-        mRaf = null;
-        mState = ZipFileState.CLOSED;
-        if (mClosedControl == null) {
-            mClosedControl = new CachedFileContents<>(mFile);
+        raf.close();
+        raf = null;
+        state = ZipFileState.CLOSED;
+        if (closedControl == null) {
+            closedControl = new CachedFileContents<>(file);
         }
 
-        mClosedControl.closed(null);
+        closedControl.closed(null);
     }
 
     /**
@@ -1380,28 +1380,28 @@ public class ZFile implements Closeable {
      * @throws IOException failed to open the file
      */
     public void openReadOnly() throws IOException {
-        if (mState != ZipFileState.CLOSED) {
+        if (state != ZipFileState.CLOSED) {
             return;
         }
 
-        mState = ZipFileState.OPEN_RO;
-        mRaf = new RandomAccessFile(mFile, "r");
+        state = ZipFileState.OPEN_RO;
+        raf = new RandomAccessFile(file, "r");
     }
 
     /**
      * Opens (or reopens) the zip file as read-write. This method will ensure that
-     * {@link #mRaf} is not null and open for writing.
+     * {@link #raf} is not null and open for writing.
      *
      * @throws IOException failed to open the file, failed to close it or the file was closed and
      * has been modified outside the control of this object
      */
     private void reopenRw() throws IOException {
-        if (mState == ZipFileState.OPEN_RW) {
+        if (state == ZipFileState.OPEN_RW) {
             return;
         }
 
         boolean wasClosed;
-        if (mState == ZipFileState.OPEN_RO) {
+        if (state == ZipFileState.OPEN_RO) {
             /*
              * ReadAccessFile does not have a way to reopen as RW so we have to close it and
              * open it again.
@@ -1412,16 +1412,16 @@ public class ZFile implements Closeable {
             wasClosed = true;
         }
 
-        Verify.verify(mState == ZipFileState.CLOSED, "mState != ZpiFileState.CLOSED");
-        Verify.verify(mRaf == null, "mRaf != null");
+        Verify.verify(state == ZipFileState.CLOSED, "state != ZpiFileState.CLOSED");
+        Verify.verify(raf == null, "raf != null");
 
-        if (mClosedControl != null && !mClosedControl.isValid()) {
-            throw new IOException("File '" + mFile.getAbsolutePath() + "' has been modified "
+        if (closedControl != null && !closedControl.isValid()) {
+            throw new IOException("File '" + file.getAbsolutePath() + "' has been modified "
                     + "by an external application.");
         }
 
-        mRaf = new RandomAccessFile(mFile, "rw");
-        mState = ZipFileState.OPEN_RW;
+        raf = new RandomAccessFile(file, "rw");
+        state = ZipFileState.OPEN_RW;
 
         if (wasClosed) {
             notify(ZFileExtension::open);
@@ -1457,7 +1457,7 @@ public class ZFile implements Closeable {
             @Nonnull InputStream stream,
             boolean mayCompress)
             throws IOException {
-        CloseableByteSource source = mTracker.fromStream(stream);
+        CloseableByteSource source = tracker.fromStream(stream);
         long crc32 = source.hash(Hashing.crc32()).padToLong();
 
         boolean encodeWithUtf8 = !EncodeUtils.canAsciiEncode(name);
@@ -1505,7 +1505,7 @@ public class ZFile implements Closeable {
             @Nonnull CentralDirectoryHeader newFileData)
             throws IOException {
         if (mayCompress) {
-            ListenableFuture<CompressionResult> result = mCompressor.compress(source);
+            ListenableFuture<CompressionResult> result = compressor.compress(source);
             Futures.addCallback(result, new FutureCallback<CompressionResult>() {
                 @Override
                 public void onSuccess(CompressionResult result) {
@@ -1560,25 +1560,25 @@ public class ZFile implements Closeable {
 
     /**
      * Adds a {@link StoredEntry} to the zip. The entry is not immediately added to
-     * {@link #mEntries} because data may not yet be available. Instead, it is placed under
-     * {@link #mUncompressedEntries} and later moved to {@link #processAllReadyEntries()} when
+     * {@link #entries} because data may not yet be available. Instead, it is placed under
+     * {@link #uncompressedEntries} and later moved to {@link #processAllReadyEntries()} when
      * done.
      *
      * <p>This method invokes {@link #processAllReadyEntries()} to move the entry if it has already
      * been computed so, if there is no delay in compression, and no more files are in waiting
-     * queue, then the entry is added to {@link #mEntries} immediately.
+     * queue, then the entry is added to {@link #entries} immediately.
      *
      * @param newEntry the entry to add
      * @throws IOException failed to process this entry (or a previous one whose future only
      * completed now)
      */
     private void add(@Nonnull final StoredEntry newEntry) throws IOException {
-        mUncompressedEntries.add(newEntry);
+        uncompressedEntries.add(newEntry);
         processAllReadyEntries();
     }
 
     /**
-     * Moves all ready entries from {@link #mUncompressedEntries} to {@link #mEntries}. It will
+     * Moves all ready entries from {@link #uncompressedEntries} to {@link #entries}. It will
      * stop as soon as entry whose future has not been completed is found.
      *
      * @throws IOException the exception reported in the future computation, if any, or failed
@@ -1588,15 +1588,15 @@ public class ZFile implements Closeable {
         /*
          * Many things can happen during addToEntries(). Because addToEntries() fires
          * notifications to extensions, other files can be added, removed, etc. Ee are *not*
-         * guaranteed that new stuff does not get into mUncompressedEntries: add() will still work
+         * guaranteed that new stuff does not get into uncompressedEntries: add() will still work
          * and will add new entries in there.
          *
          * However -- important -- processReadyEntries() may be invoked during addToEntries()
          * because of the extension mechanism. This means that stuff *can* be removed from
-         * mUncompressedEntries and moved to mEntries during addToEntries().
+         * uncompressedEntries and moved to entries during addToEntries().
          */
-        while (!mUncompressedEntries.isEmpty()) {
-            StoredEntry next = mUncompressedEntries.get(0);
+        while (!uncompressedEntries.isEmpty()) {
+            StoredEntry next = uncompressedEntries.get(0);
             CentralDirectoryHeader cdh = next.getCentralDirectoryHeader();
             Future<CentralDirectoryHeaderCompressInfo> compressionInfo = cdh.getCompressionInfo();
             if (!compressionInfo.isDone()) {
@@ -1606,7 +1606,7 @@ public class ZFile implements Closeable {
                 return;
             }
 
-            mUncompressedEntries.remove(0);
+            uncompressedEntries.remove(0);
 
             try {
                 compressionInfo.get();
@@ -1622,19 +1622,19 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Waits until {@link #mUncompressedEntries} is empty.
+     * Waits until {@link #uncompressedEntries} is empty.
      *
      * @throws IOException the exception reported in the future computation, if any, or failed
      * to add a file to the archive
      */
     private void processAllReadyEntriesWithWait() throws IOException {
         processAllReadyEntries();
-        while (!mUncompressedEntries.isEmpty()) {
+        while (!uncompressedEntries.isEmpty()) {
             /*
              * Wait for the first future to complete and then try again. Keep looping until we're
              * done.
              */
-            StoredEntry first = mUncompressedEntries.get(0);
+            StoredEntry first = uncompressedEntries.get(0);
             CentralDirectoryHeader cdh = first.getCentralDirectoryHeader();
             cdh.getCompressionInfoWithWait();
 
@@ -1643,8 +1643,8 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Adds a new file to {@link #mEntries}. This is actually added to the zip and its space
-     * allocated in the {@link #mMap}.
+     * Adds a new file to {@link #entries}. This is actually added to the zip and its space
+     * allocated in the {@link #map}.
      *
      * @param newEntry the new entry to add
      * @throws IOException failed to add the file
@@ -1659,7 +1659,7 @@ public class ZFile implements Closeable {
          * StoredEntry.delete() will call {@link ZFile#delete(StoredEntry, boolean)}  to perform
          * data structure cleanup.
          */
-        FileUseMapEntry<StoredEntry> toReplace = mEntries.get(
+        FileUseMapEntry<StoredEntry> toReplace = entries.get(
                 newEntry.getCentralDirectoryHeader().getName());
         final StoredEntry replaceStore;
         if (toReplace != null) {
@@ -1672,9 +1672,9 @@ public class ZFile implements Closeable {
 
         FileUseMapEntry<StoredEntry> fileUseMapEntry =
                 positionInFile(newEntry, PositionHint.ANYWHERE);
-        mEntries.put(newEntry.getCentralDirectoryHeader().getName(), fileUseMapEntry);
+        entries.put(newEntry.getCentralDirectoryHeader().getName(), fileUseMapEntry);
 
-        mDirty = true;
+        dirty = true;
 
         notify(ext -> ext.added(newEntry, replaceStore));
     }
@@ -1716,13 +1716,13 @@ public class ZFile implements Closeable {
                 throw new AssertionError();
         }
 
-        long newOffset = mMap.locateFree(size, localHeaderSize, alignment, algorithm);
+        long newOffset = map.locateFree(size, localHeaderSize, alignment, algorithm);
         long newEnd = newOffset + entry.getInFileSize();
-        if (newEnd > mMap.size()) {
-            mMap.extend(newEnd);
+        if (newEnd > map.size()) {
+            map.extend(newEnd);
         }
 
-        return mMap.add(newOffset, newEnd, entry);
+        return map.add(newOffset, newEnd, entry);
     }
 
     /**
@@ -1741,7 +1741,7 @@ public class ZFile implements Closeable {
         if (isCompressed) {
             return AlignmentRule.NO_ALIGNMENT;
         } else {
-            return mAlignmentRule.alignment(cdh.getName());
+            return alignmentRule.alignment(cdh.getName());
         }
     }
 
@@ -1768,7 +1768,7 @@ public class ZFile implements Closeable {
 
             boolean replaceCurrent = true;
             String path = fromEntry.getCentralDirectoryHeader().getName();
-            FileUseMapEntry<StoredEntry> currentEntry = mEntries.get(path);
+            FileUseMapEntry<StoredEntry> currentEntry = entries.get(path);
 
             if (currentEntry != null) {
                 long fromSize = fromEntry.getCentralDirectoryHeader().getUncompressedSize();
@@ -1826,7 +1826,7 @@ public class ZFile implements Closeable {
                  * Build the new source and wrap it around an inflater source if data came from
                  * a compressed source.
                  */
-                CloseableByteSource rawContents = mTracker.fromSource(fromSource.getRawByteSource());
+                CloseableByteSource rawContents = tracker.fromSource(fromSource.getRawByteSource());
                 CloseableByteSource processedContents;
                 if (fromCompressInfo.getMethod() == CompressionMethod.DEFLATE) {
                     //noinspection IOResourceOpenedButNotSafelyClosed
@@ -1852,7 +1852,7 @@ public class ZFile implements Closeable {
      * or {@link #close()} are invoked.
      */
     public void touch() {
-        mDirty = true;
+        dirty = true;
     }
 
     /**
@@ -1900,7 +1900,7 @@ public class ZFile implements Closeable {
      */
     boolean realign(@Nonnull StoredEntry entry) throws IOException {
         FileUseMapEntry<StoredEntry> mapEntry =
-                mEntries.get(entry.getCentralDirectoryHeader().getName());
+                entries.get(entry.getCentralDirectoryHeader().getName());
         Verify.verify(entry == mapEntry.getStore());
         long currentDataOffset = mapEntry.getStart() + entry.getLocalHeaderSize();
 
@@ -1918,21 +1918,21 @@ public class ZFile implements Closeable {
              * File is not aligned but it is not written. We do not really need to do much other
              * than find another place in the map.
              */
-            mMap.remove(mapEntry);
+            map.remove(mapEntry);
             long newStart =
-                    mMap.locateFree(
+                    map.locateFree(
                             mapEntry.getSize(),
                             entry.getLocalHeaderSize(),
                             expectedAlignment,
                             FileUseMap.PositionAlgorithm.BEST_FIT);
-            mapEntry = mMap.add(newStart, newStart + entry.getInFileSize(), entry);
-            mEntries.put(entry.getCentralDirectoryHeader().getName(), mapEntry);
+            mapEntry = map.add(newStart, newStart + entry.getInFileSize(), entry);
+            entries.put(entry.getCentralDirectoryHeader().getName(), mapEntry);
 
             /*
              * Just for safety. We're modifying the in-memory structures but the file should
              * already be marked as dirty.
              */
-            Verify.verify(mDirty);
+            Verify.verify(dirty);
 
             return false;
 
@@ -1964,7 +1964,7 @@ public class ZFile implements Closeable {
         clonedCdh.setOffset(-1);
         clonedCdh.resetDeferredCrc();
 
-        CloseableByteSource rawContents = mTracker.fromSource(source.getRawByteSource());
+        CloseableByteSource rawContents = tracker.fromSource(source.getRawByteSource());
         CloseableByteSource processedContents;
 
         if (compressInfo.getMethod() == CompressionMethod.DEFLATE) {
@@ -1991,7 +1991,7 @@ public class ZFile implements Closeable {
      * @param extension the listener to add
      */
     public void addZFileExtension(@Nonnull ZFileExtension extension) {
-        mExtensions.add(extension);
+        extensions.add(extension);
     }
 
     /**
@@ -2000,7 +2000,7 @@ public class ZFile implements Closeable {
      * @param extension the listener to remove
      */
     public void removeZFileExtension(@Nonnull ZFileExtension extension) {
-        mExtensions.remove(extension);
+        extensions.remove(extension);
     }
 
     /**
@@ -2012,23 +2012,23 @@ public class ZFile implements Closeable {
      */
     private void notify(@Nonnull IOExceptionFunction<ZFileExtension, IOExceptionRunnable> function)
             throws IOException {
-        for (ZFileExtension fl : Lists.newArrayList(mExtensions)) {
+        for (ZFileExtension fl : Lists.newArrayList(extensions)) {
             IOExceptionRunnable r = function.apply(fl);
             if (r != null) {
-                mToRun.add(r);
+                toRun.add(r);
             }
         }
 
-        if (!mIsNotifying) {
-            mIsNotifying = true;
+        if (!isNotifying) {
+            isNotifying = true;
 
             try {
-                while (!mToRun.isEmpty()) {
-                    IOExceptionRunnable r = mToRun.remove(0);
+                while (!toRun.isEmpty()) {
+                    IOExceptionRunnable r = toRun.remove(0);
                     r.run();
                 }
             } finally {
-                mIsNotifying = false;
+                isNotifying = false;
             }
         }
     }
@@ -2058,10 +2058,10 @@ public class ZFile implements Closeable {
         Preconditions.checkArgument(start + count <= data.length, "start + count > data.length");
 
         reopenRw();
-        assert mRaf != null;
+        assert raf != null;
 
-        mRaf.seek(offset);
-        mRaf.write(data, start, count);
+        raf.seek(offset);
+        raf.write(data, start, count);
     }
 
     /**
@@ -2084,11 +2084,11 @@ public class ZFile implements Closeable {
         /*
          * Only force a reopen if the file is closed.
          */
-        if (mRaf == null) {
+        if (raf == null) {
             reopenRw();
-            assert mRaf != null;
+            assert raf != null;
         }
-        return mRaf.length();
+        return raf.length();
     }
 
     /**
@@ -2132,13 +2132,13 @@ public class ZFile implements Closeable {
         /*
          * Only force a reopen if the file is closed.
          */
-        if (mRaf == null) {
+        if (raf == null) {
             reopenRw();
-            assert mRaf != null;
+            assert raf != null;
         }
 
-        mRaf.seek(offset);
-        return mRaf.getChannel().read(dest);
+        raf.seek(offset);
+        return raf.getChannel().read(dest);
     }
 
     /**
@@ -2182,12 +2182,12 @@ public class ZFile implements Closeable {
         /*
          * Only force a reopen if the file is closed.
          */
-        if (mRaf == null) {
+        if (raf == null) {
             reopenRw();
-            assert mRaf != null;
+            assert raf != null;
         }
 
-        FileChannel fileChannel = mRaf.getChannel();
+        FileChannel fileChannel = raf.getChannel();
         while (dest.hasRemaining()) {
             fileChannel.position(offset);
             int chunkSize = fileChannel.read(dest);
@@ -2267,22 +2267,22 @@ public class ZFile implements Closeable {
      * includes any extra offset for the central directory
      */
     public long getCentralDirectoryOffset() {
-        if (mDirectoryEntry != null) {
-            return mDirectoryEntry.getStart();
+        if (directoryEntry != null) {
+            return directoryEntry.getStart();
         }
 
         /*
          * If there are no entries, the central directory is written at the start of the file.
          */
-        if (mEntries.isEmpty()) {
-            return mExtraDirectoryOffset;
+        if (entries.isEmpty()) {
+            return extraDirectoryOffset;
         }
 
         /*
          * The Central Directory is written after all entries. This will be at the end of the file
          * if the
          */
-        return mMap.usedSize() + mExtraDirectoryOffset;
+        return map.usedSize() + extraDirectoryOffset;
     }
 
     /**
@@ -2293,11 +2293,11 @@ public class ZFile implements Closeable {
      * been computed
      */
     public long getCentralDirectorySize() {
-        if (mDirectoryEntry != null) {
-            return mDirectoryEntry.getSize();
+        if (directoryEntry != null) {
+            return directoryEntry.getSize();
         }
 
-        if (mEntries.isEmpty()) {
+        if (entries.isEmpty()) {
             return 0;
         }
 
@@ -2310,11 +2310,11 @@ public class ZFile implements Closeable {
      * @return the offset of the EOCD or {@code -1} if none exists yet
      */
     public long getEocdOffset() {
-        if (mEocdEntry == null) {
+        if (eocdEntry == null) {
             return -1;
         }
 
-        return mEocdEntry.getStart();
+        return eocdEntry.getStart();
     }
 
     /**
@@ -2323,11 +2323,11 @@ public class ZFile implements Closeable {
      * @return the size of the EOCD of {@code -1} it none exists yet
      */
     public long getEocdSize() {
-        if (mEocdEntry == null) {
+        if (eocdEntry == null) {
             return -1;
         }
 
-        return mEocdEntry.getSize();
+        return eocdEntry.getSize();
     }
 
     /**
@@ -2340,10 +2340,10 @@ public class ZFile implements Closeable {
     public void setExtraDirectoryOffset(long offset) {
         Preconditions.checkArgument(offset >= 0, "offset < 0");
 
-        if (mExtraDirectoryOffset != offset) {
-            mExtraDirectoryOffset = offset;
+        if (extraDirectoryOffset != offset) {
+            extraDirectoryOffset = offset;
             deleteDirectoryAndEocd();
-            mDirty = true;
+            dirty = true;
         }
     }
 
@@ -2353,7 +2353,7 @@ public class ZFile implements Closeable {
      * @return the offset or {@code 0} if no offset is set
      */
     public long getExtraDirectoryOffset() {
-        return mExtraDirectoryOffset;
+        return extraDirectoryOffset;
     }
 
     /**
@@ -2362,7 +2362,7 @@ public class ZFile implements Closeable {
      * @return are the timestamps being ignored?
      */
     public boolean areTimestampsIgnored() {
-        return mNoTimestamps;
+        return noTimestamps;
     }
 
     /**
@@ -2379,27 +2379,27 @@ public class ZFile implements Closeable {
 
         processAllReadyEntriesWithWait();
 
-        Verify.verify(mUncompressedEntries.isEmpty());
+        Verify.verify(uncompressedEntries.isEmpty());
 
         SortedSet<StoredEntry> sortedEntries = Sets.newTreeSet(StoredEntry.COMPARE_BY_NAME);
-        for (FileUseMapEntry<StoredEntry> fmEntry : mEntries.values()) {
+        for (FileUseMapEntry<StoredEntry> fmEntry : entries.values()) {
             StoredEntry entry = fmEntry.getStore();
             Preconditions.checkNotNull(entry);
             sortedEntries.add(entry);
             entry.loadSourceIntoMemory();
 
-            mMap.remove(fmEntry);
+            map.remove(fmEntry);
         }
 
-        mEntries.clear();
+        entries.clear();
         for (StoredEntry entry : sortedEntries) {
             String name = entry.getCentralDirectoryHeader().getName();
             FileUseMapEntry<StoredEntry> positioned =
                     positionInFile(entry, PositionHint.LOWEST_OFFSET);
-            mEntries.put(name, positioned);
+            entries.put(name, positioned);
         }
 
-        mDirty = true;
+        dirty = true;
     }
 
     /**
@@ -2410,7 +2410,7 @@ public class ZFile implements Closeable {
      */
     @Nonnull
     public File getFile() {
-        return mFile;
+        return file;
     }
 
     /**
@@ -2419,7 +2419,7 @@ public class ZFile implements Closeable {
      * @return should it be skipped?
      */
     boolean getSkipDataDescriptorVerification() {
-        return mSkipDataDescriptorVerification;
+        return skipDataDescriptorVerification;
     }
 
     /**
@@ -2428,7 +2428,7 @@ public class ZFile implements Closeable {
      * @return should it be skipped?
      */
     boolean getSkipVersionToExtractValidation() {
-        return mSkipVersionToExtractValidation;
+        return skipVersionToExtractValidation;
     }
 
     /**

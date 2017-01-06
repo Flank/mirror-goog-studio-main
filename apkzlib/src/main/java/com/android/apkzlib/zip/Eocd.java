@@ -89,29 +89,29 @@ class Eocd {
     /**
      * Number of entries in the central directory.
      */
-    private final int mTotalRecords;
+    private final int totalRecords;
 
     /**
      * Offset from the beginning of the archive where the Central Directory is located.
      */
-    private final long mDirectoryOffset;
+    private final long directoryOffset;
 
     /**
      * Number of bytes of the Central Directory.
      */
-    private final long mDirectorySize;
+    private final long directorySize;
 
     /**
      * Contents of the EOCD comment.
      */
     @Nonnull
-    private final byte[] mComment;
+    private final byte[] comment;
 
     /**
      * Supplier of the byte representation of the EOCD.
      */
     @Nonnull
-    private final CachedSupplier<byte[]> mByteSupplier;
+    private final CachedSupplier<byte[]> byteSupplier;
 
     /**
      * Creates a new EOCD, reading it from a byte source. This method will parse the byte source
@@ -145,18 +145,18 @@ class Eocd {
 
         Verify.verify(totalRecords1 <= Integer.MAX_VALUE);
 
-        mTotalRecords = Ints.checkedCast(totalRecords1);
-        mDirectorySize = directorySize;
-        mDirectoryOffset = directoryOffset;
+        totalRecords = Ints.checkedCast(totalRecords1);
+        this.directorySize = directorySize;
+        this.directoryOffset = directoryOffset;
 
         if (bytes.remaining() < commentSize) {
             throw new IOException("Corrupt EOCD record: not enough data for comment (comment "
                     + "size is " + commentSize + ").");
         }
 
-        mComment = new byte[commentSize];
-        bytes.get(mComment);
-        mByteSupplier = new CachedSupplier<>(this::computeByteRepresentation);
+        comment = new byte[commentSize];
+        bytes.get(comment);
+        byteSupplier = new CachedSupplier<>(this::computeByteRepresentation);
     }
 
     /**
@@ -173,11 +173,11 @@ class Eocd {
         Preconditions.checkArgument(directoryOffset >= 0, "directoryOffset < 0");
         Preconditions.checkArgument(directorySize >= 0, "directorySize < 0");
 
-        mTotalRecords = totalRecords;
-        mDirectoryOffset = directoryOffset;
-        mDirectorySize = directorySize;
-        mComment = new byte[0];
-        mByteSupplier = new CachedSupplier<byte[]>(this::computeByteRepresentation);
+        this.totalRecords = totalRecords;
+        this.directoryOffset = directoryOffset;
+        this.directorySize = directorySize;
+        comment = new byte[0];
+        byteSupplier = new CachedSupplier<byte[]>(this::computeByteRepresentation);
     }
 
     /**
@@ -186,7 +186,7 @@ class Eocd {
      * @return the number of records
      */
     int getTotalRecords() {
-        return mTotalRecords;
+        return totalRecords;
     }
 
     /**
@@ -196,7 +196,7 @@ class Eocd {
      * @return the offset where the Central Directory is located
      */
     long getDirectoryOffset() {
-        return mDirectoryOffset;
+        return directoryOffset;
     }
 
     /**
@@ -205,7 +205,7 @@ class Eocd {
      * @return the number of bytes that make up the Central Directory
      */
     long getDirectorySize() {
-        return mDirectorySize;
+        return directorySize;
     }
 
     /**
@@ -214,7 +214,7 @@ class Eocd {
      * @return the size, in bytes, of the EOCD
      */
     long getEocdSize() {
-        return F_COMMENT_SIZE.endOffset() + mComment.length;
+        return F_COMMENT_SIZE.endOffset() + comment.length;
     }
 
     /**
@@ -225,7 +225,7 @@ class Eocd {
      */
     @Nonnull
     byte[] toBytes() throws IOException {
-        return mByteSupplier.get();
+        return byteSupplier.get();
     }
 
     /**
@@ -236,18 +236,18 @@ class Eocd {
      */
     @Nonnull
     private byte[] computeByteRepresentation() {
-        ByteBuffer out = ByteBuffer.allocate(F_COMMENT_SIZE.endOffset() + mComment.length);
+        ByteBuffer out = ByteBuffer.allocate(F_COMMENT_SIZE.endOffset() + comment.length);
 
         try {
             F_SIGNATURE.write(out);
             F_NUMBER_OF_DISK.write(out);
             F_DISK_CD_START.write(out);
-            F_RECORDS_DISK.write(out, mTotalRecords);
-            F_RECORDS_TOTAL.write(out, mTotalRecords);
-            F_CD_SIZE.write(out, mDirectorySize);
-            F_CD_OFFSET.write(out, mDirectoryOffset);
-            F_COMMENT_SIZE.write(out, mComment.length);
-            out.put(mComment);
+            F_RECORDS_DISK.write(out, totalRecords);
+            F_RECORDS_TOTAL.write(out, totalRecords);
+            F_CD_SIZE.write(out, directorySize);
+            F_CD_OFFSET.write(out, directoryOffset);
+            F_COMMENT_SIZE.write(out, comment.length);
+            out.put(comment);
 
             return out.array();
         } catch (IOException e) {

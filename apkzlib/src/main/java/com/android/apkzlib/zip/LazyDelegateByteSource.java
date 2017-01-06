@@ -42,14 +42,14 @@ public class LazyDelegateByteSource extends CloseableByteSource {
      * Byte source where we delegate operations to.
      */
     @Nonnull
-    private final ListenableFuture<CloseableByteSource> mDelegate;
+    private final ListenableFuture<CloseableByteSource> delegate;
 
     /**
      * Creates a new byte source that delegates operations to the provided source.
      * @param delegate the source that will receive all operations
      */
     public LazyDelegateByteSource(@Nonnull ListenableFuture<CloseableByteSource> delegate) {
-        mDelegate = delegate;
+        this.delegate = delegate;
     }
 
     /**
@@ -58,7 +58,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
      */
     @Nonnull
     public ListenableFuture<CloseableByteSource> getDelegate() {
-        return mDelegate;
+        return delegate;
     }
 
     /**
@@ -69,7 +69,7 @@ public class LazyDelegateByteSource extends CloseableByteSource {
     @Nonnull
     private CloseableByteSource get() throws IOException {
         try {
-            CloseableByteSource r = mDelegate.get();
+            CloseableByteSource r = delegate.get();
             if (r == null) {
                 throw new IOException("Delegate byte source computation resulted in null.");
             }

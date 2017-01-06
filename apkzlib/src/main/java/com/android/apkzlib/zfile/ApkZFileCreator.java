@@ -51,18 +51,18 @@ class ApkZFileCreator implements ApkCreator {
      * The zip file.
      */
     @Nonnull
-    private final ZFile mZip;
+    private final ZFile zip;
 
     /**
      * Has the zip file been closed?
      */
-    private boolean mClosed;
+    private boolean closed;
 
     /**
      * Predicate defining which files should not be compressed.
      */
     @Nonnull
-    private final Predicate<String> mNoCompressPredicate;
+    private final Predicate<String> noCompressPredicate;
 
     /**
      * Creates a new creator.
@@ -78,10 +78,10 @@ class ApkZFileCreator implements ApkCreator {
 
         switch (creationData.getNativeLibrariesPackagingMode()) {
             case COMPRESSED:
-                mNoCompressPredicate = creationData.getNoCompressPredicate();
+                noCompressPredicate = creationData.getNoCompressPredicate();
                 break;
             case UNCOMPRESSED_AND_ALIGNED:
-                mNoCompressPredicate =
+                noCompressPredicate =
                         creationData.getNoCompressPredicate().or(
                                 name -> name.endsWith(NATIVE_LIBRARIES_SUFFIX));
                 options.setAlignmentRule(
@@ -91,7 +91,7 @@ class ApkZFileCreator implements ApkCreator {
                 throw new AssertionError();
         }
 
-        mZip = ZFiles.apk(
+        zip = ZFiles.apk(
                 creationData.getApkPath(),
                 options,
                 creationData.getPrivateKey(),
@@ -101,13 +101,13 @@ class ApkZFileCreator implements ApkCreator {
                 creationData.getBuiltBy(),
                 creationData.getCreatedBy(),
                 creationData.getMinSdkVersion());
-        mClosed = false;
+        closed = false;
     }
 
     @Override
     public void writeZip(@Nonnull File zip, @Nullable Function<String, String> transform,
             @Nullable Predicate<String> isIgnored) throws IOException {
-        Preconditions.checkState(!mClosed, "mClosed == true");
+        Preconditions.checkState(!closed, "closed == true");
         Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
 
         Closer closer = Closer.create();
@@ -121,7 +121,7 @@ class ApkZFileCreator implements ApkCreator {
                 predicate = isIgnored;
             }
 
-            mZip.mergeFrom(toMerge, predicate);
+            this.zip.mergeFrom(toMerge, predicate);
         } catch (Throwable t) {
             throw closer.rethrow(t);
         } finally {
@@ -131,14 +131,14 @@ class ApkZFileCreator implements ApkCreator {
 
     @Override
     public void writeFile(@Nonnull File inputFile, @Nonnull String apkPath) throws IOException {
-        Preconditions.checkState(!mClosed, "mClosed == true");
+        Preconditions.checkState(!closed, "closed == true");
 
-        boolean mayCompress = !mNoCompressPredicate.test(apkPath);
+        boolean mayCompress = !noCompressPredicate.test(apkPath);
 
         Closer closer = Closer.create();
         try {
             FileInputStream inputFileStream = closer.register(new FileInputStream(inputFile));
-            mZip.add(apkPath, inputFileStream, mayCompress);
+            zip.add(apkPath, inputFileStream, mayCompress);
         } catch (IOException e) {
             throw closer.rethrow(e, IOException.class);
         } catch (Throwable t) {
@@ -150,9 +150,9 @@ class ApkZFileCreator implements ApkCreator {
 
     @Override
     public void deleteFile(@Nonnull String apkPath) throws IOException {
-        Preconditions.checkState(!mClosed, "mClosed == true");
+        Preconditions.checkState(!closed, "closed == true");
 
-        StoredEntry entry = mZip.get(apkPath);
+        StoredEntry entry = zip.get(apkPath);
         if (entry != null) {
             entry.delete();
         }
@@ -160,11 +160,11 @@ class ApkZFileCreator implements ApkCreator {
 
     @Override
     public void close() throws IOException {
-        if (mClosed) {
+        if (closed) {
             return;
         }
 
-        mZip.close();
-        mClosed = true;
+        zip.close();
+        closed = true;
     }
 }

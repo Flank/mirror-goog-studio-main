@@ -37,5 +37,3 @@ public interface AlignmentRule {
      */
     int alignment(@Nonnull String path);
 }
-
-

@@ -34,14 +34,14 @@ public abstract class ExecutorCompressor implements Compressor {
      * The executor that does the work.
      */
     @Nonnull
-    private final Executor mExecutor;
+    private final Executor executor;
 
     /**
      * Compressor that delegates execution into the given executor.
      * @param executor the executor that will do the compress
      */
     public ExecutorCompressor(@Nonnull Executor executor) {
-        mExecutor = executor;
+        this.executor = executor;
     }
 
     @Nonnull
@@ -49,7 +49,7 @@ public abstract class ExecutorCompressor implements Compressor {
     public ListenableFuture<CompressionResult> compress(
             @Nonnull final CloseableByteSource source) {
         final SettableFuture<CompressionResult> future = SettableFuture.create();
-        mExecutor.execute(() -> {
+        executor.execute(() -> {
             try {
                 future.set(immediateCompress(source));
             } catch (Exception e) {

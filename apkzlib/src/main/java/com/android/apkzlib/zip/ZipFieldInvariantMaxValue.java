@@ -24,7 +24,7 @@ class ZipFieldInvariantMaxValue implements ZipFieldInvariant {
     /**
      * The maximum value allowed.
      */
-    private long mMax;
+    private long max;
 
     /**
      * Creates a new invariant.
@@ -32,16 +32,16 @@ class ZipFieldInvariantMaxValue implements ZipFieldInvariant {
      * @param max the maximum value allowed for the field
      */
     ZipFieldInvariantMaxValue(int max) {
-        mMax = max;
+        this.max = max;
     }
 
     @Override
     public boolean isValid(long value) {
-        return value <= mMax;
+        return value <= max;
     }
 
     @Override
     public String getName() {
-        return "Maximum value " + mMax;
+        return "Maximum value " + max;
     }
 }
