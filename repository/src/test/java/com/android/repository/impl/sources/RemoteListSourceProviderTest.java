@@ -30,6 +30,7 @@ import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import java.nio.file.Path;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -100,7 +101,7 @@ public class RemoteListSourceProviderTest extends TestCase {
 
             @NonNull
             @Override
-            public File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
+            public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
                     throws IOException {
                 fail("shouldn't be downloading again");
                 return null;

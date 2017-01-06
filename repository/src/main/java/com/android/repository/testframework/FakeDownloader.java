@@ -20,14 +20,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.io.FileOpUtils;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -72,11 +73,12 @@ public class FakeDownloader implements Downloader {
 
     @Nullable
     @Override
-    public File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
+    public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
-        String filename = getFileName(url);
-        mFileOp.recordExistingFile(filename, mRegisteredFiles.get(url));
-        return new File(filename);
+        File file = new File(FileOpUtils.getNewTempDir("FakeDownloader", mFileOp),
+                url.getFile());
+        mFileOp.recordExistingFile(file.getPath(), mRegisteredFiles.get(url));
+        return mFileOp.toPath(file);
     }
 
     @Override

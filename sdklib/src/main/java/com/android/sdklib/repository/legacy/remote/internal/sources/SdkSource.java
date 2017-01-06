@@ -16,16 +16,18 @@
 
 package com.android.sdklib.repository.legacy.remote.internal.sources;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.NonClosingInputStream;
 import com.android.io.NonClosingInputStream.CloseBehavior;
+import com.android.repository.api.Downloader;
+import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
+import com.android.repository.api.SettingsController;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.remote.RemotePkgInfo;
-import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
-import com.android.sdklib.repository.legacy.remote.internal.ITaskMonitor;
 import com.android.sdklib.repository.legacy.remote.internal.packages.PlatformToolRemotePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteAddonPkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteBuildToolPkgInfo;
@@ -38,26 +40,19 @@ import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSampl
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSourcePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSystemImagePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteToolPkgInfo;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.net.ssl.SSLKeyException;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -67,6 +62,13 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * An sdk-addon or sdk-repository source, i.e. a download site. It may be a full repository or an
@@ -81,7 +83,6 @@ public abstract class SdkSource implements Comparable<SdkSource> {
     private String mUrl;
 
     private RemotePkgInfo[] mPackages;
-    private String mDescription;
     private String mFetchError;
     private final String mUiName;
 
@@ -94,7 +95,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      *               repository.xml filename will be appended automatically.
      * @param uiName The UI-visible name of the source. Can be null.
      */
-    public SdkSource(String url, String uiName) {
+    public SdkSource(@Nullable String url, @Nullable String uiName) {
 
         // URLs should not be null and should not have whitespace.
         if (url == null) {
@@ -121,7 +122,6 @@ public abstract class SdkSource implements Comparable<SdkSource> {
 
         mUrl = url;
         mUiName = uiName;
-        setDefaultDescription();
     }
 
     /**
@@ -134,7 +134,6 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * sources.
      */
     public abstract boolean isSysImgSource();
-
 
     /**
      * Returns the basename of the default URLs to try to download the XML manifest. E.g. this is
@@ -177,15 +176,15 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * @param xml The input XML stream. Can be null.
      * @return Null on failure, otherwise returns an XML DOM with just the tools we need to update
      * this SDK Manager.
-     * @null Can return null on failure.
      */
+    @Nullable
     protected abstract Document findAlternateToolsXml(@Nullable InputStream xml) throws IOException;
 
     /**
      * Two repo source are equal if they have the same URL.
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj instanceof SdkSource) {
             SdkSource rs = (SdkSource) obj;
             return rs.getUrl().equals(this.getUrl());
@@ -203,15 +202,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * string's default ordering.
      */
     @Override
-    public int compareTo(SdkSource rhs) {
+    public int compareTo(@NonNull SdkSource rhs) {
         return this.getUrl().compareTo(rhs.getUrl());
-    }
-
-    /**
-     * Returns the UI-visible name of the source. Can be null.
-     */
-    public String getUiName() {
-        return mUiName;
     }
 
     /**
@@ -225,12 +217,13 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * Returns the list of known packages found by the last call to load(). This is null when the
      * source hasn't been loaded yet -- caller should then call {@link #load} to load the packages.
      */
+    @Nullable
     public RemotePkgInfo[] getPackages() {
         return mPackages;
     }
 
     @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected void setPackages(RemotePkgInfo[] packages) {
+    protected void setPackages(@Nullable RemotePkgInfo[] packages) {
         mPackages = packages;
 
         if (mPackages != null) {
@@ -282,11 +275,9 @@ public abstract class SdkSource implements Comparable<SdkSource> {
     /**
      * Returns the short description of the source, if not null. Otherwise returns the default
      * Object toString result.
-     * <p/>
-     * This is mostly helpful for debugging. For UI display, use the {@link IDescription}
-     * interface.
      */
     @Override
+    @NonNull
     public String toString() {
         String s = getShortDescription();
         if (s != null) {
@@ -295,8 +286,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
         return super.toString();
     }
 
+    @NonNull
     public String getShortDescription() {
-
         if (mUiName != null && mUiName.length() > 0) {
 
             String host = "malformed URL";
@@ -329,25 +320,22 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      *
      * TODO(jbakermalone): clean up below once validation in UI can match most restrictive case.
      */
-    public void load(DownloadCache cache, ITaskMonitor logger, boolean forceHttp) {
-
-        setDefaultDescription();
-        logger.setProgressMax(7);
+    public void load(@NonNull Downloader downloader, @NonNull SettingsController settings,
+      @NonNull ProgressIndicator progress) {
 
         if (!isEnabled()) {
             setPackages(new RemotePkgInfo[0]);
-            mDescription += "\nSource is disabled.";
-            logger.incProgress(7);
+            progress.setFraction(1);
             return;
         }
 
         String url = mUrl;
-        if (forceHttp) {
+        if (settings.getForceHttp()) {
             url = url.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        logger.setDescription("Fetching URL: %1$s", url);
-        logger.incProgress(1);
+        progress.setSecondaryText("Fetching URL: " + url);
+        progress.setFraction(1./7.);
 
         mFetchError = null;
         Boolean[] validatorFound = new Boolean[]{Boolean.FALSE};
@@ -361,7 +349,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
         String[] defaultNames = getDefaultXmlFileUrls();
         String firstDefaultName = defaultNames.length > 0 ? defaultNames[0] : "";
 
-        InputStream xml = fetchXmlUrl(url, cache, logger.createSubMonitor(1), exception);
+        InputStream xml = fetchXmlUrl(url, downloader, progress.createSubProgress(2./7.),
+                exception);
         if (xml != null) {
             int version = getXmlSchemaVersion(xml);
             if (version == 0) {
@@ -373,8 +362,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
         // FIXME: this is a quick fix to support an alternate upgrade path.
         // The whole logic below needs to be updated.
         if (xml == null && defaultNames.length > 0) {
-            ITaskMonitor subMonitor = logger.createSubMonitor(1);
-            subMonitor.setProgressMax(defaultNames.length);
+            ProgressIndicator subProgress = progress.createSubProgress(3./7.);
 
             String baseUrl = url;
             if (!baseUrl.endsWith("/")) {
@@ -384,12 +372,15 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                 }
             }
 
+            double nameProgress = 0;
             for (String name : defaultNames) {
                 String newUrl = baseUrl + name;
                 if (newUrl.equals(url)) {
                     continue;
                 }
-                xml = fetchXmlUrl(newUrl, cache, subMonitor.createSubMonitor(1), exception);
+                xml = fetchXmlUrl(newUrl, downloader,
+                        subProgress.createSubProgress(nameProgress + (1. / defaultNames.length)),
+                        exception);
                 if (xml != null) {
                     int version = getXmlSchemaVersion(xml);
                     if (version == 0) {
@@ -397,14 +388,13 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                         xml = null;
                     } else {
                         url = newUrl;
-                        subMonitor.incProgress(
-                                subMonitor.getProgressMax() - subMonitor.getProgress());
+                        subProgress.setFraction(1);
                         break;
                     }
                 }
             }
         } else {
-            logger.incProgress(1);
+            progress.setFraction(3./7.);
         }
 
         // If the original URL can't be fetched
@@ -417,18 +407,18 @@ public abstract class SdkSource implements Comparable<SdkSource> {
             }
             url += firstDefaultName;
 
-            xml = fetchXmlUrl(url, cache, logger.createSubMonitor(1), exception);
+            xml = fetchXmlUrl(url, downloader, progress.createSubProgress(4./7.), exception);
             usingAlternateUrl = true;
         } else {
-            logger.incProgress(1);
+            progress.setFraction(4./7.);
         }
 
         // FIXME this needs to revisited.
         if (xml != null) {
-            logger.setDescription("Validate XML: %1$s", url);
+            progress.setSecondaryText("Validate XML: " + url);
 
-            ITaskMonitor subMonitor = logger.createSubMonitor(2);
-            subMonitor.setProgressMax(2);
+            ProgressIndicator subProgress = progress.createSubProgress(5./7.);
+
             for (int tryOtherUrl = 0; tryOtherUrl < 2; tryOtherUrl++) {
                 // Explore the XML to find the potential XML schema version
                 int version = getXmlSchemaVersion(xml);
@@ -440,13 +430,13 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                     String uri = validateXml(xml, url, version, validationError, validatorFound);
                     if (uri != null) {
                         // Validation was successful
-                        validatedDoc = getDocument(xml, logger);
+                        validatedDoc = getDocument(xml, progress);
                         validatedUri = uri;
 
                         if (usingAlternateUrl && validatedDoc != null) {
                             // If the second tentative succeeded, indicate it in the console
                             // with the URL that worked.
-                            logger.log("Repository found at %1$s", url);
+                            progress.logInfo("Repository found at " + url);
 
                             // Keep the modified URL
                             mUrl = url;
@@ -491,8 +481,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                         url += firstDefaultName;
 
                         closeStream(xml);
-                        xml = fetchXmlUrl(url, cache, subMonitor.createSubMonitor(1), null /* outException */);
-                        subMonitor.incProgress(1);
+                        xml = fetchXmlUrl(url, downloader, subProgress, null);
                         // Loop to try the alternative document
                         if (xml != null) {
                             usingAlternateUrl = true;
@@ -534,11 +523,12 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                 reason = exception[0].toString();
             }
 
-            logger.warning("Failed to fetch URL %1$s, reason: %2$s", url, reason);
+            progress.logWarning(
+                    String.format("Failed to fetch URL %1$s, reason: %2$s", url, reason));
         }
 
         if (validationError[0] != null) {
-            logger.logError("%s", validationError[0]);  //$NON-NLS-1$
+            progress.logError(validationError[0]);  //$NON-NLS-1$
         }
 
         // Stop here if we failed to validate the XML. We don't want to load it.
@@ -567,55 +557,24 @@ public abstract class SdkSource implements Comparable<SdkSource> {
             if (isADT) {
                 info
                         = "This repository requires a more recent version of ADT. Please update the Eclipse Android plugin.";
-                mDescription =
-                        "This repository requires a more recent version of ADT, the Eclipse Android plugin.\n"
-                                +
-                                "You must update it before you can see other new packages.";
-
             } else {
                 info
                         = "This repository requires a more recent version of the Tools. Please update.";
-                mDescription =
-                        "This repository requires a more recent version of the Tools.\nYou must update it before you can see other new packages.";
             }
 
             mFetchError = mFetchError == null ? info : mFetchError + ". " + info;
         }
 
-        logger.incProgress(1);
+        progress.setFraction(6./7.);
 
         if (xml != null) {
-            logger.setDescription("Parse XML:    %1$s", url);
-            logger.incProgress(1);
-            parsePackages(validatedDoc, validatedUri, logger);
-            if (mPackages == null || mPackages.length == 0) {
-                mDescription += "\nNo packages found.";
-            } else if (mPackages.length == 1) {
-                mDescription += "\nOne package found.";
-            } else {
-                mDescription += String.format("\n%1$d packages found.", mPackages.length);
-            }
+            progress.setSecondaryText("Parse XML:    " + url);
+            parsePackages(validatedDoc, validatedUri, progress);
         }
 
         // done
-        logger.incProgress(1);
+        progress.setFraction(1);
         closeStream(xml);
-    }
-
-    private void setDefaultDescription() {
-        if (isAddonSource()) {
-            String desc = "";
-
-            if (mUiName != null) {
-                desc += "Add-on Provider: " + mUiName;
-                desc += "\n";
-            }
-            desc += "Add-on URL: " + mUrl;
-
-            mDescription = desc;
-        } else {
-            mDescription = String.format("SDK Source: %1$s", mUrl);
-        }
     }
 
     /**
@@ -623,14 +582,17 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * wrong happens and write errors to the monitor.
      *
      * @param urlString    The URL to load, as a string.
-     * @param monitor      {@link ITaskMonitor} related to this URL.
+     * @param progress     {@link ProgressIndicator} related to this URL.
      * @param outException If non null, where to store any exception that happens during the fetch.
      */
-    private InputStream fetchXmlUrl(String urlString, DownloadCache cache, ITaskMonitor monitor,
-            Exception[] outException) {
+    private InputStream fetchXmlUrl(@NonNull String urlString, @NonNull Downloader downloader,
+            @NonNull ProgressIndicator progress, @Nullable Exception[] outException) {
         try {
-            InputStream xml = cache.openCachedUrl(urlString, monitor);
-            if (xml != null) {
+            // Download fully and then create a new stream, since we require mark support.
+            Path downloaded = downloader.downloadFully(new URL(urlString), progress);
+            InputStream xml = null;
+            if (downloaded != null) {
+                xml = new BufferedInputStream(Files.newInputStream(downloaded));
                 xml.mark(500000);
                 xml = new NonClosingInputStream(xml);
                 ((NonClosingInputStream) xml).setCloseBehavior(CloseBehavior.RESET);
@@ -649,7 +611,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * Closes the stream, ignore any exception from InputStream.close(). If the stream is a
      * NonClosingInputStream, sets it to CloseBehavior.CLOSE first.
      */
-    private void closeStream(InputStream is) {
+    private void closeStream(@Nullable InputStream is) {
         if (is != null) {
             if (is instanceof NonClosingInputStream) {
                 ((NonClosingInputStream) is).setCloseBehavior(CloseBehavior.CLOSE);
@@ -668,7 +630,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * validatorFound[0] to false.
      */
     @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected String validateXml(InputStream xml, String url, int version, String[] outError,
+    protected String validateXml(@Nullable InputStream xml, @Nullable String url, int version,
+      @NonNull String[] outError,
             Boolean[] validatorFound) {
 
         if (xml == null) {
@@ -717,7 +680,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * schema could be found.
      */
     @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected int getXmlSchemaVersion(InputStream xml) {
+    protected int getXmlSchemaVersion(@Nullable InputStream xml) {
         if (xml == null) {
             return 0;
         }
@@ -824,6 +787,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      *
      * @param version The version of the XML Schema. See {@link SdkRepoConstants#getXsdStream(int)}
      */
+    @Nullable
     private Validator getValidator(int version) throws SAXException {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
@@ -863,7 +827,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * them.
      */
     @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected boolean parsePackages(Document doc, String nsUri, ITaskMonitor monitor) {
+    protected boolean parsePackages(@NonNull Document doc, @NonNull String nsUri,
+      @NonNull ProgressIndicator progress) {
 
         Node root = getFirstChild(doc, nsUri, getRootElementName());
         if (root != null) {
@@ -927,13 +892,13 @@ public abstract class SdkSource implements Comparable<SdkSource> {
 
                         if (p != null) {
                             packages.add(p);
-                            monitor.logVerbose("Found %1$s", p.getShortDescription());
+                            progress.logVerbose("Found " + p.getShortDescription());
                         }
                     } catch (Exception e) {
                         // Ignore invalid packages
                         String msg = String
                                 .format("Ignoring invalid %1$s element: %2$s", name, e.toString());
-                        monitor.logError(msg);
+                        progress.logError(msg);
                     }
                 }
             }
@@ -950,7 +915,8 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * Returns the first child element with the given XML local name. If xmlLocalName is null,
      * returns the very first child element.
      */
-    private Node getFirstChild(Node node, String nsUri, String xmlLocalName) {
+    private Node getFirstChild(@NonNull Node node, @NonNull String nsUri,
+      @Nullable String xmlLocalName) {
 
         for (Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
             if (child.getNodeType() == Node.ELEMENT_NODE && nsUri.equals(child.getNamespaceURI())) {
@@ -969,7 +935,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * On error, returns null and prints a (hopefully) useful message on the monitor.
      */
     @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected Document getDocument(InputStream xml, ITaskMonitor monitor) {
+    protected Document getDocument(@NonNull InputStream xml, @NonNull ProgressIndicator progress) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setIgnoringComments(true);
@@ -982,13 +948,13 @@ public abstract class SdkSource implements Comparable<SdkSource> {
 
             return doc;
         } catch (ParserConfigurationException e) {
-            monitor.logError("Failed to create XML document builder");
+            progress.logError("Failed to create XML document builder");
 
         } catch (SAXException e) {
-            monitor.logError("Failed to parse XML document");
+            progress.logError("Failed to parse XML document");
 
         } catch (IOException e) {
-            monitor.logError("Failed to read XML document");
+            progress.logError("Failed to read XML document");
         }
 
         return null;

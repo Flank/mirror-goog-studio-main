@@ -25,9 +25,9 @@ import java.util.Collection;
 /**
  * An implementation of a remote repo parser to use to try to parse and xml file if the normal
  * mechanism doesn't. If one is provided to RepoManager,
- * {@link #parseLegacyXml(RepositorySource, SettingsController, ProgressIndicator)} will be run on
- * every xml file retrieved from a {@link RepositorySource} that isn't recognized by the normal
- * mechanism.
+ * {@link #parseLegacyXml}
+ * will be run on every xml file retrieved from a {@link RepositorySource} that isn't recognized by
+ * the normal mechanism.
  */
 public interface FallbackRemoteRepoLoader {
 
@@ -38,5 +38,6 @@ public interface FallbackRemoteRepoLoader {
      */
     @Nullable
     Collection<RemotePackage> parseLegacyXml(@NonNull RepositorySource xml,
-            @NonNull SettingsController settings, @NonNull ProgressIndicator progress);
+            @NonNull Downloader downloader, @NonNull SettingsController settings,
+            @NonNull ProgressIndicator progress);
 }

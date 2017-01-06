@@ -38,6 +38,7 @@ import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
+import java.nio.file.Path;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
@@ -343,7 +344,7 @@ public class BasicInstallerTest extends TestCase {
 
             @Nullable
             @Override
-            public File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
+            public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
                     throws IOException {
                 fail();
                 return null;

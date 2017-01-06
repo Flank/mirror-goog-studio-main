@@ -28,18 +28,13 @@ import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.net.URL;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link LegacyRemoteRepoLoader}.
@@ -70,52 +65,44 @@ public class LegacyRemoteTest extends TestCase {
 
         FakeSettingsController settings = new FakeSettingsController(false);
         LegacyRemoteRepoLoader sdk = new LegacyRemoteRepoLoader();
-        sdk.setDownloadCache(
-                new DownloadCache(
-                        ANDROID_FOLDER, fop, DownloadCache.Strategy.ONLY_CACHE, settings));
         mgr.setFallbackRemoteRepoLoader(sdk);
         FakeDownloader downloader = new FakeDownloader(fop);
-        // TODO: find a better way to get it into the cache/have the fallback load it
-        fop.recordExistingFile(fop.getAgnosticAbsPath(
-                ANDROID_FOLDER + "/cache/sdkbin-1_951b49ff-test_epo"), ByteStreams
-                .toByteArray(getClass().getResourceAsStream("/repository_sample_10.xml")));
-
         downloader.registerUrl(new URL("http://www.example.com/testRepo2"),
                 getClass().getResourceAsStream("/repository2_sample_1.xml"));
         downloader.registerUrl(new URL("http://www.example.com/testRepo"),
                 getClass().getResourceAsStream("/repository_sample_10.xml"));
         FakeProgressRunner runner = new FakeProgressRunner();
 
-        mgr.load(0, Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
-                Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
-                Lists.<Runnable>newArrayList(), runner, downloader, settings, true);
+        mgr.load(0, Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(), runner, downloader, settings, true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages packages = mgr.getPackages();
 
         Map<String, UpdatablePackage> consolidatedPkgs = packages.getConsolidatedPkgs();
-        Assert.assertEquals(12, consolidatedPkgs.size());
-        Assert.assertEquals(12, packages.getNewPkgs().size());
+        assertEquals(12, consolidatedPkgs.size());
+        assertEquals(12, packages.getNewPkgs().size());
 
         settings.setChannel(Channel.create(1));
         mgr.markInvalid();
-        mgr.load(0, Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
-                Lists.<RepoManager.RepoLoadedCallback>newArrayList(),
-                Lists.<Runnable>newArrayList(), runner, downloader, settings, true);
+        mgr.load(0, Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(), runner, downloader, settings, true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         packages = mgr.getPackages();
 
         consolidatedPkgs = packages.getConsolidatedPkgs();
-        Assert.assertEquals(14, consolidatedPkgs.size());
+        assertEquals(14, consolidatedPkgs.size());
         UpdatablePackage doc = consolidatedPkgs.get("docs");
-        Assert.assertEquals(new Revision(43), doc.getRemote().getVersion());
+        assertEquals(new Revision(43), doc.getRemote().getVersion());
         UpdatablePackage pastry = consolidatedPkgs.get("platforms;android-Pastry");
         TypeDetails pastryDetails = pastry.getRepresentative().getTypeDetails();
         assertTrue(pastryDetails instanceof DetailsTypes.PlatformDetailsType);
         DetailsTypes.PlatformDetailsType platformDetails
                 = (DetailsTypes.PlatformDetailsType) pastryDetails;
-        Assert.assertEquals(5, platformDetails.getApiLevel());
-        Assert.assertEquals("Pastry", platformDetails.getCodename());
-        Assert.assertEquals(1, platformDetails.getLayoutlib().getApi());
+        assertEquals(5, platformDetails.getApiLevel());
+        assertEquals("Pastry", platformDetails.getCodename());
+        assertEquals(1, platformDetails.getLayoutlib().getApi());
 
         // TODO: more specific checks
     }
