@@ -61,6 +61,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
@@ -199,9 +200,9 @@ public class ProcessAndroidResources extends IncrementalTask {
     public List<LibraryInfo> getLibraryInfoList() {
         if (computedLibraryInfo == null) {
             // first build a map for the optional symbols.
-            Map<ComponentArtifactIdentifier, File> symbolMap = new HashMap<>();
+            Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
             for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
-                symbolMap.put(artifactResult.getId(), artifactResult.getFile());
+                symbolMap.put(artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
             }
 
             // now loop through all the manifests and associate to a symbol file, if applicable.
@@ -210,7 +211,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
                 computedLibraryInfo.add(new LibraryInfo(
                         artifactResult.getFile(),
-                        symbolMap.get(artifactResult.getId())));
+                        symbolMap.get(artifactResult.getId().getComponentIdentifier())));
             }
 
             // add the tested library if present
