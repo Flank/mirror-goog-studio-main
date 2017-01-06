@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * Decorator around another {@link Downloader} that handles {@code file:///} URLs. Such URLs can
@@ -52,7 +53,7 @@ public class LocalFileAwareDownloader implements Downloader {
 
     @Override
     @Nullable
-    public File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
+    public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
         if ("file".equals(url.getProtocol())) {
             File tempFile = File.createTempFile(LocalFileAwareDownloader.class.getName(), null);

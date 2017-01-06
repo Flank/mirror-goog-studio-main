@@ -140,7 +140,7 @@ public class RemoteRepoTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, settings, progress1) -> {
+                (source1, downloader1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
                     FakeRemotePackage legacy = new FakeRemotePackage("legacy");
                     legacy.setRevision(new Revision(1, 2, 9));
@@ -171,7 +171,7 @@ public class RemoteRepoTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, settings, progress1) -> {
+                (source1, downloader1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
                     FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
                     legacy.setRevision(new Revision(1, 2, 3));
@@ -271,7 +271,7 @@ public class RemoteRepoTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
                 new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, settings, progress1) -> {
+                (source1, downloader1, settings, progress1) -> {
                     assertEquals(legacyUrl, source1.getUrl());
                     FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
                     legacy.setRevision(new Revision(1, 2, 4));

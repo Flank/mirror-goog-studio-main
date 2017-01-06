@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * Implementations provide a general mechanism for downloading files.
@@ -53,7 +54,7 @@ public interface Downloader {
      * @return The temporary file, or {@code null} if the download is cancelled.
      */
     @Nullable
-    File downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator) throws IOException;
+    Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator) throws IOException;
 
     /**
      * Downloads the content at the given URL to the given file.
