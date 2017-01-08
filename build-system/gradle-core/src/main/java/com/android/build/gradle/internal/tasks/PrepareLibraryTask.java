@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.LibraryCache;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -32,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
@@ -96,8 +98,8 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                 bundle,
                 explodedDir,
                 buildCache,
-                mavenCoordinates,
                 unzipAarAction,
+                getLogger(),
                 shouldUseBuildCache);
     }
 
@@ -122,8 +124,8 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
             @NonNull File inputAar,
             @NonNull File outputDir,
             @Nullable FileCache buildCache,
-            @NonNull MavenCoordinates mavenCoordinates,
             @NonNull Consumer<File> action,
+            @NonNull Logger logger,
             boolean useBuildCache) throws IOException {
 
         // If the build cache is used, we create and cache the exploded aar using the cache's API;
@@ -131,10 +133,9 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
         if (useBuildCache) {
             Preconditions.checkNotNull(buildCache);
             FileCache.Inputs buildCacheInputs = getBuildCacheInputs(inputAar);
+            FileCache.QueryResult result;
             try {
-                buildCache.createFileInCacheIfAbsent(
-                        buildCacheInputs,
-                        action::accept);
+                result = buildCache.createFileInCacheIfAbsent(buildCacheInputs, action::accept);
             } catch (ExecutionException exception) {
                 throw new RuntimeException(
                         String.format(
@@ -146,16 +147,28 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                 throw new RuntimeException(
                         String.format(
                                 "Unable to unzip '%1$s' to '%2$s' or find the cached output '%2$s'"
-                                        + " using the build cache at '%3$s'\n"
-                                        + "Please fix the underlying cause if possible or file a"
-                                        + " bug.\n"
-                                        + "To suppress this warning, disable the build cache by"
-                                        + " setting android.enableBuildCache=false in the"
-                                        + " gradle.properties file.",
-                            inputAar.getAbsolutePath(),
-                            outputDir.getAbsolutePath(),
-                            buildCache.getCacheDirectory().getAbsolutePath()),
+                                        + " using the build cache at '%3$s'.\n"
+                                        + "If you are unable to fix the underlying cause, please"
+                                        + " file a bug or disable the build cache by setting"
+                                        + " android.enableBuildCache=false in the gradle.properties"
+                                        + " file.",
+                                inputAar.getAbsolutePath(),
+                                outputDir.getAbsolutePath(),
+                                buildCache.getCacheDirectory().getAbsolutePath()),
                         exception);
+            }
+            if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                logger.info(
+                        String.format(
+                                "The build cache at '%1$s' contained an invalid cache entry.\n"
+                                        + "Cause: %2$s\n"
+                                        + "We have recreated the cache entry.\n"
+                                        + "If this issue persists, please file a bug or disable the"
+                                        + " build cache by setting android.enableBuildCache=false"
+                                        + " in the gradle.properties file.",
+                                buildCache.getCacheDirectory().getAbsolutePath(),
+                                Throwables.getStackTraceAsString(
+                                        result.getCauseOfCorruption().get())));
             }
         } else {
             action.accept(outputDir);
