@@ -20,8 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -159,23 +165,36 @@ public final class JvmWideVariable<T> {
      * <p>The type {@code T} of the variable must be loaded by a single class loader. Currently,
      * this method requires the single class loader to be the bootstrap class loader.
      *
+     * <p>Since the generic type {@code T} does not exist at run time, the client needs to
+     * explicitly pass that type via a {@link Class} or a {@link TypeToken} instance. This method
+     * takes a ({@code TypeToken} as it is more general (it supports capturing complex types such as
+     * {@code Map<K, V>}). If the given type is simple (can be represented fully by a {@code Class}
+     * instance), the client can use the {@link #JvmWideVariable(String, String, Class, Object)}
+     * method instead.
+     *
      * @param group the group of the variable
      * @param name the name of the variable
-     * @param type the type of the variable
+     * @param typeToken the type of the variable
      * @param defaultValue the default value of the variable, can be null
      */
     public JvmWideVariable(
             @NonNull String group,
             @NonNull String name,
-            @NonNull TypeToken<T> type,
+            @NonNull TypeToken<T> typeToken,
             @Nullable T defaultValue) {
-        // If type.getType() is an instance of ParameterizedType, we might need to check its actual
-        // type arguments as well (currently we do not check them yet).
-        Preconditions.checkArgument(
-                type.getRawType().getClassLoader() == null,
-                "Type %s of JVM-wide variable %s:%s must be loaded by the bootstrap class loader"
-                        + " but is loaded by %s",
-                type.getRawType(), group, name, type.getRawType().getClassLoader());
+        // Collect all classes that are involved in defining the JVM-wide variable's type
+        Type type = typeToken.getType();
+        ImmutableSet.Builder<Class<?>> builder = ImmutableSet.builder();
+        collectComponentClasses(type, builder);
+        Set<Class<?>> classes = builder.build();
+
+        for (Class<?> clazz : classes) {
+            Preconditions.checkArgument(
+                    clazz.getClassLoader() == null,
+                    "Type %s used to define JVM-wide variable %s:%s must be loaded by the bootstrap"
+                            + " class loader but is loaded by %s",
+                    clazz, group, name, clazz.getClassLoader());
+        }
 
         this.group = group;
         this.name = name;
@@ -202,11 +221,13 @@ public final class JvmWideVariable<T> {
         // variable. Therefore, they can at most run concurrently with the condition check of the if
         // statement below but can never run concurrently with the then-block of the if statement,
         // which makes this synchronized block safe.
+        boolean variableExists = true;
         synchronized (server) {
             if (!server.isRegistered(objectName)) {
+                variableExists = false;
                 ValueWrapper objectWrapper = new ValueWrapper();
                 objectWrapper.setValue(defaultValue);
-                objectWrapper.setValueType(type);
+                objectWrapper.setType(type);
                 try {
                     server.registerMBean(objectWrapper, objectName);
                 } catch (InstanceAlreadyExistsException | MBeanRegistrationException
@@ -219,17 +240,69 @@ public final class JvmWideVariable<T> {
         // Check if the type is consistent.
         // We don't need to wrap this code in a synchronized block as server.getAttribute() is
         // thread-safe.
-        Object variableType;
-        try {
-            variableType = server.getAttribute(objectName, ValueWrapperMBean.VALUE_TYPE_PROPERTY);
-        } catch (MBeanException | AttributeNotFoundException | InstanceNotFoundException
-                | ReflectionException e) {
-            throw new RuntimeException(e);
+        if (variableExists) {
+            Type existingType;
+            try {
+                // The cast below should be safe, as Type should be loaded by the bootstrap class
+                // loader
+                existingType =
+                        (Type) server.getAttribute(objectName, ValueWrapperMBean.TYPE_PROPERTY);
+            } catch (MBeanException | AttributeNotFoundException | InstanceNotFoundException
+                    | ReflectionException e) {
+                throw new RuntimeException(e);
+            }
+            Preconditions.checkArgument(
+                    existingType.equals(type),
+                    "Expected type %s but found type %s for JVM-wide variable %s:%s",
+                    existingType, type, group, name);
         }
-        Preconditions.checkArgument(
-                variableType.equals(type),
-                "Expected type %s but found type %s for JVM-wide variable %s:%s",
-                variableType, type, group, name);
+    }
+
+    /**
+     * Creates a {@code JvmWideVariable} instance that can access a JVM-wide variable. This method
+     * will call {@link #JvmWideVariable(String, String, TypeToken, Object)}. See the javadoc of
+     * that method for more details.
+     *
+     * @see #JvmWideVariable(String, String, TypeToken, Object)
+     */
+    public JvmWideVariable(
+            @NonNull String group,
+            @NonNull String name,
+            @NonNull Class<T> type,
+            @Nullable T defaultValue) {
+        this(group, name, TypeToken.of(type), defaultValue);
+    }
+
+    /**
+     * Collects all classes that are involved in defining a type.
+     */
+    private void collectComponentClasses(
+            @NonNull Type type, @NonNull ImmutableSet.Builder<Class<?>> builder) {
+        if (type instanceof Class<?>) {
+            builder.add((Class<?>) type);
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            collectComponentClasses(parameterizedType.getRawType(), builder);
+            if (parameterizedType.getOwnerType() != null) {
+                collectComponentClasses(parameterizedType.getOwnerType(), builder);
+            }
+            for (Type componentType : parameterizedType.getActualTypeArguments()) {
+                collectComponentClasses(componentType, builder);
+            }
+        } else if (type instanceof GenericArrayType) {
+            collectComponentClasses(((GenericArrayType) type).getGenericComponentType(), builder);
+        } else if (type instanceof WildcardType) {
+            WildcardType wildcardType = (WildcardType) type;
+            for (Type componentType : wildcardType.getLowerBounds()) {
+                collectComponentClasses(componentType, builder);
+            }
+            for (Type componentType : wildcardType.getUpperBounds()) {
+                collectComponentClasses(componentType, builder);
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    "Type " + type + " is not yet supported by the JvmWideVariable class");
+        }
     }
 
     @NonNull
@@ -350,7 +423,7 @@ public final class JvmWideVariable<T> {
 
         @Nullable private T value;
 
-        @NonNull private TypeToken<T> valueType;
+        @NonNull private Type type;
 
         @Nullable
         @Override
@@ -365,13 +438,13 @@ public final class JvmWideVariable<T> {
 
         @NonNull
         @Override
-        public TypeToken<T> getValueType() {
-            return this.valueType;
+        public Type getType() {
+            return this.type;
         }
 
         @Override
-        public void setValueType(@NonNull TypeToken<T> valueType) {
-            this.valueType = valueType;
+        public void setType(@NonNull Type type) {
+            this.type = type;
         }
 
         @Override
@@ -388,7 +461,7 @@ public final class JvmWideVariable<T> {
 
         String VALUE_PROPERTY = "Value";
 
-        String VALUE_TYPE_PROPERTY = "ValueType";
+        String TYPE_PROPERTY = "Type";
 
         String THIS_INSTANCE_PROPERTY = "ThisInstance";
 
@@ -396,9 +469,9 @@ public final class JvmWideVariable<T> {
 
         void setValue(@Nullable T value);
 
-        @NonNull TypeToken<T> getValueType();
+        @NonNull Type getType();
 
-        void setValueType(@NonNull TypeToken<T> valueType);
+        void setType(@NonNull Type type);
 
         @NonNull ValueWrapperMBean<T> getThisInstance();
     }
