@@ -18,6 +18,7 @@ package com.android.apkzlib.zip;
 
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.ByteTracker;
+import java.util.function.Supplier;
 import java.util.zip.Deflater;
 import javax.annotation.Nonnull;
 
@@ -60,15 +61,10 @@ public class ZFileOptions {
     private boolean autoSortFiles;
 
     /**
-     * Should validation of the data descriptors of entries be skipped? See
-     * {@link #getSkipDataDescriptorValidation()}
+     * Factory creating verification logs to use.
      */
-    private boolean skipDataDescriptionValidation;
-
-    /**
-     * Should validation of minimum zip version to extract be performed?
-     */
-    private boolean skipZipVersionToExtractValidation;
+    @Nonnull
+    private Supplier<VerifyLog> verifyLogFactory;
 
     /**
      * Creates a new options object. All options are set to their defaults.
@@ -81,6 +77,7 @@ public class ZFileOptions {
                         tracker,
                         Deflater.DEFAULT_COMPRESSION);
         alignmentRule = AlignmentRules.compose();
+        verifyLogFactory = VerifyLogs::devNull;
     }
 
     /**
@@ -190,44 +187,22 @@ public class ZFileOptions {
     }
 
     /**
-     * Should data descriptor validation be skipped? This should generally be
-     * set to false. However, some tools (proguard -- http://b.android.com/221057) generate zips
-     * with incorrect data descriptors and to open the zips we need to skip the validation of data
-     * descriptors.
+     * Sets the verification log factory.
      *
-     * @return should data descriptors be validated?
+     * @param verifyLogFactory verification log factory
      */
-    public boolean getSkipDataDescriptorValidation() {
-        return skipDataDescriptionValidation;
+    public void setVerifyLogFactory(@Nonnull Supplier<VerifyLog> verifyLogFactory) {
+        this.verifyLogFactory = verifyLogFactory;
     }
 
     /**
-     * Sets whether data descriptors validation should be skipped. See
-     * {@link #getSkipDataDescriptorValidation()}.
+     * Obtains the verification log factory. By default, the verification log doesn't store
+     * anything and will always return an empty log.
      *
-     * @param skip should validation be skipped?
+     * @return the verification log factory
      */
-    public void setSkipDataDescriptionValidation(boolean skip) {
-        skipDataDescriptionValidation = skip;
-    }
-
-    /**
-     * Should the "minimum zip version to extract" field of the local and central headers be
-     * validated or not? By default they are, but some zip tools put weird values in there.
-     *
-     * @return should the "zip version to extract" field be ignored?
-     */
-    public boolean getSkipZipVersionToExtractValidation() {
-        return skipZipVersionToExtractValidation;
-    }
-
-    /**
-     * Sets whether the "zip version to extract" field validation should be skipped. See
-     * {@link #getSkipZipVersionToExtractValidation()}.
-     *
-     * @param skip should the "zip version to extract" field be ignored?
-     */
-    public void setSkipZipVersionToExtractValidation(boolean skip) {
-        skipZipVersionToExtractValidation = skip;
+    @Nonnull
+    public Supplier<VerifyLog> getVerifyLogFactory() {
+        return verifyLogFactory;
     }
 }
