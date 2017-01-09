@@ -190,7 +190,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     private RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .disableBuildCache()
+                .disablePreDexBuildCache()
                 .disableAaptV2()
                 .withoutOfflineFlag();
     }

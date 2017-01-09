@@ -240,7 +240,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     private RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .disableBuildCache()
+                .disablePreDexBuildCache()
                 .disableAaptV2()
                 .withoutOfflineFlag();
     }
