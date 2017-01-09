@@ -10,7 +10,7 @@ buildscript {
 </#if>
 <#if isInstantApp!false>
         maven {
-            url(System.getenv("WH_SDK") + "/maven-repo")
+            url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
         }
 </#if>
     }
@@ -32,7 +32,7 @@ allprojects {
 </#if>
 <#if isInstantApp!false>
         maven {
-            url(System.getenv("WH_SDK") + "/maven-repo")
+            url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
         }
 </#if>
     }
