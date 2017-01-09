@@ -57,7 +57,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     boolean enableInfoLogging;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
-    private boolean enableBuildCache = true;
+    private boolean enablePreDexBuildCache = true;
     private boolean enableAaptV2 = true;
 
     BaseGradleExecutor(
@@ -103,8 +103,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    public T disableBuildCache() {
-        enableBuildCache = false;
+    public T disablePreDexBuildCache() {
+        enablePreDexBuildCache = false;
         return (T) this;
     }
 
@@ -179,8 +179,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false"));
         }
 
-        if (!enableBuildCache) {
-            arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_BUILD_CACHE, "false"));
+        if (!enablePreDexBuildCache) {
+            arguments.add(
+                    propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_PREDEX_BUILD_CACHE, "false"));
         }
 
         try {
