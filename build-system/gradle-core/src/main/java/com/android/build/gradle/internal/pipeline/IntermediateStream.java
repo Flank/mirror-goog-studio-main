@@ -23,6 +23,7 @@ import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -32,9 +33,11 @@ import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -173,7 +176,7 @@ class IntermediateStream extends TransformStream {
         // inputs.
         // However the content of the intermediate root folder isn't known at configuration
         // time so we need to pass a callable that will compute the files dynamically.
-        Callable<List<File>> callable = () -> {
+        Supplier<Collection<File>> supplier = () -> {
             List<File> files = Lists.newArrayList();
 
             // get the inputs
@@ -190,7 +193,8 @@ class IntermediateStream extends TransformStream {
             return files;
         };
 
-        return project.files(callable).builtBy(getFiles().getBuildDependencies());
+        return project.files(TaskInputHelper.bypassFileCallable(supplier))
+                .builtBy(getFiles().getBuildDependencies());
     }
 
     @Override
