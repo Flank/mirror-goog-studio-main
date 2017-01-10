@@ -16,17 +16,17 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -155,7 +155,11 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         access = transformAccessForInstantRun(access);
 
         MethodVisitor defaultVisitor = super.visitMethod(access, name, desc, signature, exceptions);
-        MethodNode method = getMethodByNameInClass(name, desc, classNode);
+        MethodNode method =
+                checkNotNull(
+                        getMethodByNameInClass(name, desc, classNode),
+                        "Method found by visitor but not in the pre-parsed class node.");
+
         // does the method use blacklisted APIs.
         boolean hasIncompatibleChange = InstantRunMethodVerifier.verifyMethod(method)
                 != InstantRunVerifierStatus.COMPATIBLE;
@@ -165,7 +169,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 || name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
             return defaultVisitor;
         } else {
-            ArrayList<Type> args = new ArrayList<Type>(Arrays.asList(Type.getArgumentTypes(desc)));
+            ArrayList<Type> args = new ArrayList<>(Arrays.asList(Type.getArgumentTypes(desc)));
             boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
             if (!isStatic) {
                 args.add(0, Type.getType(Object.class));
@@ -648,6 +652,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             // check that this parent is visible, there might be several layers of package
             // private classes.
             if (isParentClassVisible(node, classNode)) {
+                //noinspection unchecked: ASM API
                 for (MethodNode methodNode : (List<MethodNode>) node.methods) {
                     // do not reference bridge methods, they might not be translated into dex, or
                     // might disappear in the next javac compiler for that use case.
