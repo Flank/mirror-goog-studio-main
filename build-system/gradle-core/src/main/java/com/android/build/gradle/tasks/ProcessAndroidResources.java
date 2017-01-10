@@ -141,6 +141,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Override
     protected void doFullTaskAction() throws IOException {
+
         // we have to clean the source folder output in case the package name changed.
         File srcOut = getSourceOutputDir();
         if (srcOut != null) {

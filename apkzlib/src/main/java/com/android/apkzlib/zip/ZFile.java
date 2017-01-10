@@ -59,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -368,16 +369,16 @@ public class ZFile implements Closeable {
     private boolean autoSortFiles;
 
     /**
-     * Should data descriptor verification be skipped? See
-     * {@link ZFileOptions#getSkipDataDescriptorValidation()}.
+     * Verify log factory to use.
      */
-    private boolean skipDataDescriptorVerification;
+    @Nonnull
+    private final Supplier<VerifyLog> verifyLogFactory;
 
     /**
-     * Should the "version to extract" field validation be skipped? See
-     * {@link ZFileOptions#getSkipZipVersionToExtractValidation()}.
+     * Verify log to use.
      */
-    private boolean skipVersionToExtractValidation;
+    @Nonnull
+    private final VerifyLog verifyLog;
 
 
     /**
@@ -420,8 +421,8 @@ public class ZFile implements Closeable {
         compressor = options.getCompressor();
         coverEmptySpaceUsingExtraField = options.getCoverEmptySpaceUsingExtraField();
         autoSortFiles = options.getAutoSortFiles();
-        skipDataDescriptorVerification = options.getSkipDataDescriptorValidation();
-        skipVersionToExtractValidation = options.getSkipZipVersionToExtractValidation();
+        verifyLogFactory = options.getVerifyLogFactory();
+        verifyLog = verifyLogFactory.get();
 
         /*
          * These two values will be overwritten by openReadOnly() below if the file exists.
@@ -636,12 +637,17 @@ public class ZFile implements Closeable {
                     eocdStart = Ints.checkedCast(raf.length() - lastToRead + foundEocdSignature);
 
                     /*
-                     * Make sure the EOCD takes the whole file up to the end.
+                     * Make sure the EOCD takes the whole file up to the end. Log an error if it
+                     * doesn't.
                      */
                     if (eocdStart + eocd.getEocdSize() != raf.length()) {
-                        throw new IOException("EOCD starts at " + eocdStart + " and has "
-                                + eocd.getEocdSize() + " bytes, but file ends at " + raf.length()
-                                + ".");
+                        verifyLog.log("EOCD starts at "
+                                        + eocdStart
+                                        + " and has "
+                                        + eocd.getEocdSize()
+                                        + " bytes, but file ends at "
+                                        + raf.length()
+                                        + ".");
                     }
                 } catch (IOException e) {
                     if (errorFindingSignature != null) {
@@ -702,10 +708,26 @@ public class ZFile implements Closeable {
             throw new IOException("Cannot read central directory with size " + dirSize + ".");
         }
 
-        if (eocd.getDirectoryOffset() + dirSize != eocdEntry.getStart()) {
-            throw new IOException("Central directory is stored in [" + eocd.getDirectoryOffset()
-                    + " - " + (eocd.getDirectoryOffset() + dirSize) + "] and EOCD starts at "
-                    + eocdEntry.getStart() + ".");
+        long centralDirectoryEnd = eocd.getDirectoryOffset() + dirSize;
+        if (centralDirectoryEnd != eocdEntry.getStart()) {
+            String msg = "Central directory is stored in ["
+                    + eocd.getDirectoryOffset()
+                    + " - "
+                    + (centralDirectoryEnd - 1)
+                    + "] and EOCD starts at "
+                    + eocdEntry.getStart()
+                    + ".";
+
+            /*
+             * If there is an empty space between the central directory and the EOCD, we proceed
+             * logging an error. If the central directory ends after the start of the EOCD (and
+             * therefore, they overlap), throw an exception.
+             */
+            if (centralDirectoryEnd > eocdEntry.getSize()) {
+                throw new IOException(msg);
+            } else {
+                verifyLog.log(msg);
+            }
         }
 
         byte[] directoryData = new byte[Ints.checkedCast(dirSize)];
@@ -717,8 +739,10 @@ public class ZFile implements Closeable {
                         eocd.getTotalRecords(),
                         this);
         if (eocd.getDirectorySize() > 0) {
-            directoryEntry = map.add(eocd.getDirectoryOffset(), eocd.getDirectoryOffset()
-                    + eocd.getDirectorySize(), directory);
+            directoryEntry = map.add(
+                    eocd.getDirectoryOffset(),
+                    eocd.getDirectoryOffset() + eocd.getDirectorySize(),
+                    directory);
         }
     }
 
@@ -2221,7 +2245,8 @@ public class ZFile implements Closeable {
      * @param mayCompress a function that decides whether files may be compressed
      * @throws IOException failed to some (or all ) of the files
      */
-    public void addAllRecursively(@Nonnull File file,
+    public void addAllRecursively(
+            @Nonnull File file,
             @Nonnull Function<? super File, Boolean> mayCompress) throws IOException {
         /*
          * The case of file.isFile() is different because if file.isFile() we will add it to the
@@ -2414,21 +2439,25 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Checks whether data description verification should be skipped.
+     * Creates a new verify log.
      *
-     * @return should it be skipped?
+     * @return the new verify log
      */
-    boolean getSkipDataDescriptorVerification() {
-        return skipDataDescriptorVerification;
+    @Nonnull
+    VerifyLog makeVerifyLog() {
+        VerifyLog log = verifyLogFactory.get();
+        assert log != null;
+        return log;
     }
 
     /**
-     * Checks whether the "version to extract" validation should be skipped.
+     * Obtains the zip file's verify log.
      *
-     * @return should it be skipped?
+     * @return the verify log
      */
-    boolean getSkipVersionToExtractValidation() {
-        return skipVersionToExtractValidation;
+    @Nonnull
+    VerifyLog getVerifyLog() {
+        return verifyLog;
     }
 
     /**
