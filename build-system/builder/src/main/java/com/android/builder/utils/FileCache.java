@@ -56,7 +56,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * deleted first and will be treated as if it never existed.
  */
 @Immutable
-public final class FileCache {
+public class FileCache {
 
     /**
      * The scope of the locking facility. With {@code INTER_PROCESS} scope, synchronization takes

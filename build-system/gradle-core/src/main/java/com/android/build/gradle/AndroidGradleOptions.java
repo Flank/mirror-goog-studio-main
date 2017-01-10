@@ -18,6 +18,7 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -25,7 +26,6 @@ import com.android.builder.utils.FileCache;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -458,18 +458,13 @@ public class AndroidGradleOptions {
             try {
                 return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
             } catch (Exception exception) {
-                project.getLogger().warn(
+                throw new RuntimeException(
                         String.format(
                                 "Unable to create the build cache at '%1$s'.\n"
-                                        + "Cause: %2$s\n"
-                                        + "We have temporarily disabled the build cache.\n"
-                                        + "If you are unable to fix the underlying cause, please"
-                                        + " file a bug or disable the build cache by setting"
-                                        + " android.enableBuildCache=false in the gradle.properties"
-                                        + " file.",
+                                        + "%2$s",
                                 buildCacheDir.getAbsolutePath(),
-                                Throwables.getStackTraceAsString(exception)));
-                return Optional.empty();
+                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
+                        exception);
             }
         } else {
             return Optional.empty();

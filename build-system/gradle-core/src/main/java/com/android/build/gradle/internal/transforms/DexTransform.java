@@ -31,6 +31,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -523,31 +524,26 @@ public class DexTransform extends Transform {
                                     to.getAbsolutePath()),
                             exception);
                 } catch (Exception exception) {
-                    logger.warning(
-                            "Unable to pre-dex '%1$s' to '%2$s' using the build cache at '%3$s'.\n"
-                                    + "Cause: %4$s\n"
-                                    + "We have temporarily disabled the build cache for the current"
-                                    + " pre-dex task.\n"
-                                    + "If you are unable to fix the underlying cause, please file a"
-                                    + " bug or disable the build cache by setting"
-                                    + " android.enableBuildCache=false in the gradle.properties"
-                                    + " file.",
-                            from.getAbsolutePath(),
-                            to.getAbsolutePath(),
-                            buildCache.get().getCacheDirectory().getAbsolutePath(),
-                            Throwables.getStackTraceAsString(exception));
-                    preDexLibraryAction.call();
+                    throw new RuntimeException(
+                            String.format(
+                                    "Unable to pre-dex '%1$s' to '%2$s' using the build cache at"
+                                            + " '%3$s'.\n"
+                                            + "%4$s",
+                                    from.getAbsolutePath(),
+                                    to.getAbsolutePath(),
+                                    buildCache.get().getCacheDirectory().getAbsolutePath(),
+                                    BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
+                            exception);
                 }
                 if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
                     logger.verbose(
                             "The build cache at '%1$s' contained an invalid cache entry.\n"
                                     + "Cause: %2$s\n"
                                     + "We have recreated the cache entry.\n"
-                                    + "If this issue persists, please file a bug or disable the"
-                                    + " build cache by setting android.enableBuildCache=false in"
-                                    + " the gradle.properties file.",
+                                    + "%3$s",
                             buildCache.get().getCacheDirectory().getAbsolutePath(),
-                            Throwables.getStackTraceAsString(result.getCauseOfCorruption().get()));
+                            Throwables.getStackTraceAsString(result.getCauseOfCorruption().get()),
+                            BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
                 }
             } else {
                 preDexLibraryAction.call();
