@@ -87,13 +87,17 @@ public class ProguardMapTest extends TestCase {
         assertEquals("SourceFile.java", frame.filename);
         assertEquals(123, frame.line);
 
-        // Test deobfuscated of class names
+        // Test deobfuscation of class names
         assertEquals("class.that.is.Empty", map.getClassName("a"));
         assertEquals("class.that.is.Empty$subclass", map.getClassName("b"));
         assertEquals("class.with.only.Fields", map.getClassName("c"));
         assertEquals("class.with.Methods", map.getClassName("d"));
 
-        // Test deobfuscated of methods
+        // Test deobfuscation of array classes.
+        assertEquals("class.with.Methods[]", map.getClassName("d[]"));
+        assertEquals("class.with.Methods[][]", map.getClassName("d[][]"));
+
+        // Test deobfuscation of methods
         assertEquals("prim_type_field", map.getFieldName("class.with.only.Fields", "a"));
         assertEquals("prim_array_type_field", map.getFieldName("class.with.only.Fields", "b"));
         assertEquals("class_type_field", map.getFieldName("class.with.only.Fields", "c"));
@@ -101,7 +105,7 @@ public class ProguardMapTest extends TestCase {
         assertEquals("longObfuscatedNameField", map.getFieldName("class.with.only.Fields", "abc"));
         assertEquals("some_field", map.getFieldName("class.with.Methods", "a"));
 
-        // Test deobfuscated of frames
+        // Test deobfuscation of frames
         frame = map.getFrame("class.with.Methods", "<clinit>", "()V", "SourceFile.java", 13);
         assertEquals("<clinit>", frame.methodName);
         assertEquals("()V", frame.signature);
