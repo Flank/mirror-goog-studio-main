@@ -165,6 +165,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.resources.Density;
@@ -2081,6 +2082,12 @@ public abstract class TaskManager {
             dexOptions.setAdditionalParameters(ImmutableList.of());
         }
 
+        Optional<FileCache> buildCache;
+        if (AndroidGradleOptions.isPreDexBuildCacheEnabled(project)) {
+            buildCache = globalScope.getBuildCache();
+        } else {
+            buildCache = Optional.empty();
+        }
         DexTransform dexTransform = new DexTransform(
                 dexOptions,
                 config.getBuildType().isDebuggable(),
@@ -2090,7 +2097,7 @@ public abstract class TaskManager {
                 variantScope.getGlobalScope().getAndroidBuilder(),
                 getLogger(),
                 variantScope.getInstantRunBuildContext(),
-                getGlobalScope().getBuildCache());
+                buildCache);
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream

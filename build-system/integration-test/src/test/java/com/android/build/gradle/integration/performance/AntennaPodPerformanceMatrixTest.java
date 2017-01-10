@@ -279,7 +279,7 @@ public class AntennaPodPerformanceMatrixTest {
     public RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .disableBuildCache()
+                .disablePreDexBuildCache()
                 .disableAaptV2()
                 .withoutOfflineFlag();
     }

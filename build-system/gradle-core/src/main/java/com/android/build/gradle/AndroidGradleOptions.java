@@ -21,19 +21,15 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.utils.FileCache;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.StringTokenizer;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 
 /**
@@ -82,6 +78,14 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_ENABLE_BUILD_CACHE = "android.enableBuildCache";
 
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
+
+    /**
+     * Build cache is used for dependency resolution, and when pre-dexing. Setting this property
+     * to {@code false} will disable it when pre-dexing external dependencies. This is useful for
+     * e.g. plugin performance benchmarks.
+     */
+    public static final String PROPERTY_ENABLE_PREDEX_BUILD_CACHE =
+            "android.enabledPreDexBuildCache";
 
     /**
      * Set to true to delay dependency resolution to task execution.
@@ -384,6 +388,10 @@ public class AndroidGradleOptions {
 
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
         return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
+    }
+
+    public static boolean isPreDexBuildCacheEnabled(@NonNull Project project) {
+        return getBoolean(project, PROPERTY_ENABLE_PREDEX_BUILD_CACHE, true);
     }
 
     @Nullable
