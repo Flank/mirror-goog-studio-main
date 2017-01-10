@@ -18,6 +18,7 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -112,14 +113,17 @@ public class AndroidGradleOptions {
 
     private final boolean buildCacheEnabled;
 
-    @Nullable private final String buildCacheDir;
+    @Nullable private final File buildCacheDir;
 
     private final boolean useMainDexList2;
 
     public AndroidGradleOptions(@NonNull Project project) {
         buildCacheEnabled =
                 getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
-        buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
+
+        String buildCacheDirString = getString(project, PROPERTY_BUILD_CACHE_DIR);
+        buildCacheDir = buildCacheDirString != null ? project.file(buildCacheDirString) : null;
+
         useMainDexList2 = getBoolean(project, PROPERTY_USE_MAIN_DEX_LIST_2);
     }
 
@@ -127,10 +131,8 @@ public class AndroidGradleOptions {
      * Returns {@code true} if {@link #PROPERTY_ENABLE_BUILD_CACHE} is set to {@code true}, and
      * {@code false} otherwise.
      *
-     * <p>Note: This method is not meant to be called directly, it is made public only for use by
-     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, even if
-     * this property is set to {@code true}, the build cache may still get disabled if the build
-     * cache directory is invalid. For a reliable check, use {@code
+     * <p>Note: This method is not meant to be called directly, it is made public for use only by
+     * the {@link BuildCacheUtils} class. Use {@code
      * TransformGlobalScope.getBuildCache().isPresent()} instead.
      */
     public boolean isBuildCacheEnabled() {
@@ -138,15 +140,14 @@ public class AndroidGradleOptions {
     }
 
     /**
-     * Returns the value of {@link #PROPERTY_BUILD_CACHE_DIR}.
+     * Returns the file specified by {@link #PROPERTY_BUILD_CACHE_DIR}.
      *
-     * <p>Note: This method is not meant to be called directly, it is made public only for use by
-     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, if this
-     * property is not set, we will use a default build cache location. For the resolved location,
-     * use {@code TransformGlobalScope.getBuildCache().getCacheDirectory()} instead.
+     * <p>Note: This method is not meant to be called directly, it is made public for use only by
+     * the {@link BuildCacheUtils} class. Use {@code
+     * TransformGlobalScope.getBuildCache().getCacheDirectory()} instead.
      */
     @Nullable
-    public String getBuildCacheDir() {
+    public File getBuildCacheDir() {
         return buildCacheDir;
     }
 

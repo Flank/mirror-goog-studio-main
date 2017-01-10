@@ -18,6 +18,10 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.builder.dependency.MavenCoordinatesImpl;
@@ -25,6 +29,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +39,7 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -191,6 +197,30 @@ public class PrepareLibraryTaskTest {
         assertThat(FileUtils.join(explodedDir, "no-classes.jar")).hasContents("Library content");
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
                 .doesNotContain("Library content");
+    }
+
+    @Test
+    public void testBuildCacheFailure() throws Exception {
+        // Let the build cache throw an exception when called
+        FileCache buildCache = mock(FileCache.class);
+        when(buildCache.getFileInCache(any())).thenReturn(new File(buildCacheDir, "foo"));
+        when(buildCache.createFileInCacheIfAbsent(any(), any())).thenThrow(
+                new RuntimeException("Build cache error"));
+        when(buildCache.getCacheDirectory()).thenReturn(buildCacheDir);
+
+        // Run PrepareLibraryTask, expect it to fail
+        try {
+            File explodedDir =
+                    buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
+            PrepareLibraryTask task = createPrepareLibraryTask(
+                    projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
+            task.execute();
+            fail("Expected TaskExecutionException");
+        } catch (TaskExecutionException exception) {
+            assertThat(exception.getCause().getMessage()).contains("Unable to unzip");
+            assertThat(Throwables.getRootCause(exception).getMessage())
+                    .contains("Build cache error");
+        }
     }
 
     private void createAar(@NonNull File jarFile, @NonNull File aarFile) throws IOException {
