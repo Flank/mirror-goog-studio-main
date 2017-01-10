@@ -13,6 +13,10 @@ platforms;android-25
 platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
+# Sources
+sources;android-24:{package.xml,android/view/View.java}
+sources;android-25:{package.xml,android/view/View.java}
+
 # Parts of older platforms needed for testing Instant Run.
 platforms;android-23:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-21:**:{data/**,skins/**,templates/**,*-src.jar}
