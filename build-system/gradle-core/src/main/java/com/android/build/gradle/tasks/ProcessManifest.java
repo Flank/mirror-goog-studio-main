@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -29,6 +30,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
 
+import com.android.manifmerger.MergingReport;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -56,12 +58,14 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     private File reportFile;
 
+    private BuildContext buildContext;
+
     @Override
     protected void doFullTaskAction() {
         File aaptManifestFile = getAaptFriendlyManifestOutputFile();
         String aaptFriendlyManifestOutputFilePath =
                 aaptManifestFile == null ? null : aaptManifestFile.getAbsolutePath();
-        getBuilder().mergeManifestsForApplication(
+        MergingReport mergingReport = getBuilder().mergeManifestsForApplication(
                 getMainManifest(),
                 getManifestOverlays(),
                 Collections.emptyList(),
@@ -78,6 +82,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                 variantConfiguration.getManifestPlaceholders(),
                 Collections.emptyList(),
                 getReportFile());
+        buildContext.setPackageId(mergingReport.getPackageName());
     }
 
     @Input
@@ -200,6 +205,7 @@ public class ProcessManifest extends ManifestProcessorTask {
             variantOutputData.manifestProcessorTask = processManifest;
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
+            processManifest.buildContext = scope.getBuildContext();
 
             processManifest.variantConfiguration = config;
 

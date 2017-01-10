@@ -254,6 +254,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
+    public boolean hasOutput(@NonNull OutputType outputType) {
+        return outputMap.containsKey(outputType);
+    }
+
+    @Override
     public void addTaskOutput(
             @NonNull TaskOutputType outputType,
             @NonNull File file,

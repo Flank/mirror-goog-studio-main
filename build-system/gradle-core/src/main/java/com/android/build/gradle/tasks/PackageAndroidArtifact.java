@@ -77,7 +77,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.tooling.BuildException;
 
 /**
  * Abstract task to package an Android artifact.
@@ -390,13 +389,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 }
             });
 
-        // Mark this APK production, this will eventually be saved when instant-run is enabled.
-        // this might get overridden if the apk is signed/aligned.
-        try {
-            instantRunContext.addChangedFile(instantRunFileType, getOutputFile());
-        } catch (IOException e) {
-            throw new BuildException(e.getMessage(), e);
-        }
+        // Mark this APK production, this might get overridden if the apk is signed/aligned.
+        instantRunContext.addChangedFile(instantRunFileType, getOutputFile());
     }
 
     @Override

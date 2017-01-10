@@ -31,7 +31,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
 
 /**
- * Instant run task to finalize and write the {@code build-info.xml}.
+ * Task to finalize and write the {@code build-info.xml}.
  *
  * If the build has failed, it writes a tmp build info instead, which is loaded in the next build.
  *

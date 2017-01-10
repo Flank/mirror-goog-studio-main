@@ -19,14 +19,19 @@ package com.android.build.gradle.internal.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.TestData;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Common implementation of {@link TestData} for embedded test projects (in androidTest folder)

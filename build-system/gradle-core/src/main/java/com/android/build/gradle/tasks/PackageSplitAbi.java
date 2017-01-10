@@ -114,6 +114,12 @@ public class PackageSplitAbi extends SplitRelatedTask {
     }
 
     @Override
+    @Nullable
+    public String getPackageId() {
+        return null;
+    }
+
+    @Override
     @NonNull
     public synchronized ImmutableList<ApkOutputFile> getOutputSplitFiles() {
 

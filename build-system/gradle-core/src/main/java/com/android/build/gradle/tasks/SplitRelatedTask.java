@@ -42,6 +42,13 @@ import java.util.Optional;
  */
 public abstract class SplitRelatedTask extends BaseTask {
 
+    /**
+     * Returns the package Id for this variant.
+     * @return null or the variant's package id.
+     */
+    @Nullable
+    public abstract String getPackageId();
+
     @Nullable
     public abstract File getApkMetadataFile();
 
@@ -106,8 +113,10 @@ public abstract class SplitRelatedTask extends BaseTask {
         try {
             metadataFile.getParentFile().mkdirs();
             fileWriter = new FileWriter(metadataFile);
-            FilterDataPersistence persistence = new FilterDataPersistence();
-            persistence.persist(getOutputFileSuppliers(), fileWriter);
+            // TODO : replace with BuildContext population.
+            FilterDataPersistence.persist(
+                    getPackageId(),
+                    getOutputFileSuppliers(), fileWriter);
 
         } finally {
             if (fileWriter != null) {

@@ -18,18 +18,14 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MAPPING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_METADATA;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_TESTED_MANIFEST;
 import static java.util.Collections.singletonMap;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.TestAndroidConfig;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -47,14 +43,12 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.utils.StringHelper;
-import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.util.List;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvableDependencies;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -63,8 +57,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  * application.
  */
 public class TestApplicationTaskManager extends ApplicationTaskManager {
-
-    //private static final String TEST_CONFIGURATION_PREFIX = "testTarget";
 
     private FileCollection mTestTargetMapping = null;
     private FileCollection mTargetManifestConfiguration = null;
@@ -102,16 +94,24 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 variantData.getVariantDependency().getCompileConfiguration();
         final ResolvableDependencies incoming = compileConfiguration.getIncoming();
 
-        // create a FileCollection that will contain the APKs
+        // TODO: replace hack below with a FileCollection that will contain the testing APK,
+        // obtained from the scope anchor types.
+        BaseVariantOutputData baseVariantOutputData = variantData.getOutputs().get(0);
+        File testingApk = baseVariantOutputData.getOutputFile();
+
+        // create a FileCollection that will contain the APKs to be tested.
         FileCollection testedApks = incoming
                 .getFiles(singletonMap(ARTIFACT_TYPE, TYPE_APK));
 
         // same for the metadata
-        FileCollection testedMetaData = incoming
+        FileCollection testTargetMetadata = incoming
                 .getFiles(singletonMap(ARTIFACT_TYPE, TYPE_METADATA));
 
         TestApplicationTestData testData = new TestApplicationTestData(
-                variantData, testedApks, testedMetaData, androidBuilder);
+                variantData.getVariantConfiguration(),
+                variantData.getApplicationId(),
+                testingApk,
+                testedApks);
 
         configureTestData(testData);
 
@@ -125,21 +125,14 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                                         sdkHandler.getSdkInfo().getAdb(),
                                         getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(getLogger())),
-                                testData) {
+                                testData,
+                                testTargetMetadata) {
                             @NonNull
                             @Override
                             public String getName() {
                                 return super.getName() + VariantType.ANDROID_TEST.getSuffix();
                             }
                         });
-
-        // FIXME, the test task should declare its inputs as the FileCollections
-        instrumentTestTask.dependsOn(tasks, testedApks, testedMetaData);
-
-        // FIX ME make the task use the Filecollection as an input instead.
-        AndroidTask manifestProcessorTask =
-                variantData.getOutputs().get(0).getScope().getManifestProcessorTask();
-        manifestProcessorTask.dependsOn(tasks, getTargetManifestFileCollection(variantData));
 
         Task connectedAndroidTest = tasks.named(BuilderConstants.CONNECTED
                 + VariantType.ANDROID_TEST.getSuffix());
@@ -183,12 +176,12 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTargetManifestFileCollection(
+    private FileCollection getTestTargetMetadata(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (mTargetManifestConfiguration == null){
             mTargetManifestConfiguration = variantData
                     .getVariantDependency().getCompileConfiguration()
-                    .getIncoming().getFiles(singletonMap(ARTIFACT_TYPE, TYPE_TESTED_MANIFEST));
+                    .getIncoming().getFiles(singletonMap(ARTIFACT_TYPE, TYPE_METADATA));
         }
 
         return mTargetManifestConfiguration;
@@ -201,6 +194,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull List<ManifestMerger2.Invoker.Feature> optionalFeatures) {
         return new ProcessTestManifest.ConfigAction(
                 scope.getVariantScope(),
-                getTargetManifestFileCollection(scope.getVariantScope().getVariantData()));
+                getTestTargetMetadata(scope.getVariantScope().getVariantData()));
     }
 }

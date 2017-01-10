@@ -45,6 +45,7 @@ import org.gradle.api.Action;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -81,6 +82,8 @@ public class SplitZipAlign extends SplitRelatedTask {
     private File outputDirectory;
 
     private File zipAlignExe;
+
+    private String packageId;
 
     @Nullable
     private File apkMetadataFile;
@@ -129,6 +132,14 @@ public class SplitZipAlign extends SplitRelatedTask {
 
     public void setLanguageFilters(Set<String> languageFilters) {
         this.languageFilters = languageFilters;
+    }
+
+    @Override
+    @Input
+    @Optional
+    @Nullable
+    public String getPackageId() {
+        return packageId;
     }
 
     public File getOutputDirectory() {
@@ -381,6 +392,7 @@ public class SplitZipAlign extends SplitRelatedTask {
                     "metadata");
             zipAlign.setApkMetadataFile(new File(metadataDirectory, config.getFullName() + ".mtd"));
             ((ApkVariantOutputData) variantOutputData).splitZipAlign = zipAlign;
+            zipAlign.packageId = scope.getVariantConfiguration().getIdOverride();
         }
     }
 }

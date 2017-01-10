@@ -746,8 +746,6 @@ public abstract class TaskManager {
             if (csmTask != null) {
                 processManifestTask.dependsOn(tasks, csmTask);
             }
-
-            addManifestArtifact(tasks, scope.getVariantScope().getVariantData());
         }
 
     }
@@ -758,32 +756,6 @@ public abstract class TaskManager {
             @NonNull VariantOutputScope scope,
             @NonNull List<ManifestMerger2.Invoker.Feature> optionalFeatures) {
         return new MergeManifests.ConfigAction(scope, optionalFeatures);
-    }
-
-    /**
-     * Adds the manifest artifact for the variant.
-     *
-     * <p>This artifact is added if the publishNonDefault option is {@code true}.
-     * See {@link VariantDependencies.Builder#build()}  variant dependencies evaluation}
-     * for more details
-     */
-    private void addManifestArtifact(
-            @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
-            ManifestProcessorTask mergeManifestsTask =
-                    variantData
-                            .getOutputs()
-                            .get(0)
-                            .getScope()
-                            .getManifestProcessorTask()
-                            .get(tasks);
-
-            variantData.getScope().publishIntermediateArtifact(
-                    mergeManifestsTask.getManifestOutputFile(),
-                    mergeManifestsTask.getName(),
-                    AndroidArtifacts.TYPE_TESTED_MANIFEST);
-        }
     }
 
     public AndroidTask<ProcessManifest> createMergeLibManifestsTask(
@@ -803,10 +775,15 @@ public abstract class TaskManager {
 
     protected void createProcessTestManifestTask(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope) {
+            @NonNull VariantScope scope,
+            @NonNull VariantScope testedScope) {
 
+        FileCollection testedMetadata = null;
+        if (testedScope.hasOutput(VariantScope.TaskOutputType.APK_METADATA)) {
+            testedMetadata = testedScope.getOutputs(VariantScope.TaskOutputType.APK_METADATA);
+        }
         AndroidTask<ProcessTestManifest> processTestManifestTask = androidTasks.create(tasks,
-                new ProcessTestManifest.ConfigAction(scope));
+                new ProcessTestManifest.ConfigAction(scope, testedMetadata));
 
         processTestManifestTask.optionalDependsOn(tasks, scope.getCheckManifestTask());
 
@@ -1595,7 +1572,8 @@ public abstract class TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest
-        createProcessTestManifestTask(tasks, variantScope);
+        createProcessTestManifestTask(tasks, variantScope,
+                variantScope.getTestedVariantData().getScope());
 
         // Add a task to create the res values
         createGenerateResValuesTask(tasks, variantScope);
@@ -1889,7 +1867,7 @@ public abstract class TaskManager {
                         testVariantData.getScope(),
                         new ConnectedDeviceProvider(sdkHandler.getSdkInfo().getAdb(),
                                 globalScope.getExtension().getAdbOptions().getTimeOutInMs(),
-                                new LoggerWrapper(logger)), testData));
+                                new LoggerWrapper(logger)), testData, null /* testTargetMetadata */));
 
         connectedTask.dependsOn(tasks, artifactsTasks.toArray());
 
@@ -1925,7 +1903,8 @@ public abstract class TaskManager {
 
             final AndroidTask<DeviceProviderInstrumentTestTask> providerTask = androidTasks
                     .create(tasks, new DeviceProviderInstrumentTestTask.ConfigAction(
-                            testVariantData.getScope(), deviceProvider, testData));
+                            testVariantData.getScope(), deviceProvider, testData,
+                            null /* testTargetMetadata */));
 
             providerTask.dependsOn(tasks, artifactsTasks.toArray());
             tasks.named(DEVICE_ANDROID_TEST,
@@ -2704,9 +2683,9 @@ public abstract class TaskManager {
             if (fullBuildInfoGeneratorTask != null) {
                 AndroidTask<PackageApplication> finalPackageInstantRunResources =
                         packageInstantRunResources;
+                fullBuildInfoGeneratorTask.dependsOn(tasks, appTask);
                 fullBuildInfoGeneratorTask.configure(tasks, task -> {
-                    task.mustRunAfter(
-                            appTask.getName());
+                    task.mustRunAfter(appTask.getName());
                     if (finalPackageInstantRunResources != null) {
                         task.mustRunAfter(finalPackageInstantRunResources.getName());
                     }
@@ -2771,17 +2750,15 @@ public abstract class TaskManager {
                 //            AndroidArtifacts.TYPE_APK);
                 //}
 
-                try {
-                    final FileSupplier metadataFile = variantOutputData.getMetadataFile();
-                    if (metadataFile != null) {
-                        variantScope.publishIntermediateArtifact(
-                                metadataFile.get(),
-                                metadataFile.getTask().getName(),
-                                AndroidArtifacts.TYPE_METADATA);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                FileCollection metadataFile = variantScope.getOutputs(
+                        VariantScope.TaskOutputType.APK_METADATA);
+                variantScope.publishIntermediateArtifact(
+                        metadataFile.getSingleFile(),
+                        metadataFile.getBuildDependencies().getDependencies(null)
+                            .stream()
+                                .map(Task::getName)
+                                .collect(Collectors.joining(",")),
+                        AndroidArtifacts.TYPE_METADATA);
 
                 final FileSupplier mappingFileProvider = variantData.getMappingFileProvider();
                 if (mappingFileProvider != null) {

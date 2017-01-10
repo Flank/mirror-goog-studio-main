@@ -131,12 +131,7 @@ public class ZipAlign extends DefaultTask implements FileSupplier {
             execSpec.args(getOutputFile());
         });
 
-        // mark this APK production, this will eventually be saved when instant-run is enabled.
-        try {
-            buildContext.addChangedFile(FileType.MAIN, getOutputFile());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        buildContext.addChangedFile(FileType.MAIN, getOutputFile());
     }
 
     // ----- FileSupplierTask -----

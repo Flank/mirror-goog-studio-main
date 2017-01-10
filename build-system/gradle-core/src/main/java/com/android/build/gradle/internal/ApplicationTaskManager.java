@@ -274,11 +274,15 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     @NonNull
-                    AndroidTask<BuildInfoWriterTask> builInfoWriterTask = createBuilInfoWriterTask(
+                    AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = createBuildInfoWriterTask(
                             tasks, variantScope);
-                    createInstantRunPackagingTasks(tasks, builInfoWriterTask, variantScope);
+                    variantScope.addTaskOutput(VariantScope.TaskOutputType.APK_METADATA,
+                            BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
+                            buildInfoWriterTask.getName());
+
+                    createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
                     createPackagingTask(
-                            tasks, variantScope, true /*publishApk*/, builInfoWriterTask);
+                            tasks, variantScope, true /*publishApk*/, buildInfoWriterTask);
                 });
 
         // create the lint tasks.
@@ -290,7 +294,7 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     @NonNull
-    protected AndroidTask<BuildInfoWriterTask> createBuilInfoWriterTask(
+    protected AndroidTask<BuildInfoWriterTask> createBuildInfoWriterTask(
             @NonNull TaskFactory tasks, VariantScope scope) {
         return getAndroidTasks().create(tasks,
                         new BuildInfoWriterTask.ConfigAction(scope, getLogger()));

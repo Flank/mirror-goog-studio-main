@@ -171,7 +171,7 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
     }
 
     @Nullable
-    public FileSupplier getMetadataFile() throws IOException {
+    public FileSupplier getMetadataFile() {
 
         if (splitZipAlign == null) {
             return null;

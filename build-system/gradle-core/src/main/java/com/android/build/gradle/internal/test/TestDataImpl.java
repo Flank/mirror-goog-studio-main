@@ -34,7 +34,10 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Implementation of {@link TestData} on top of a {@link TestVariantData}
@@ -55,6 +58,12 @@ public class TestDataImpl extends AbstractTestDataImpl {
         if (testVariantData.getOutputs().size() > 1) {
             throw new RuntimeException("Multi-output in test variant not yet supported");
         }
+    }
+
+    @Override
+    public void loadFromMetadataFile(File metadataFile)
+            throws ParserConfigurationException, SAXException, IOException {
+        // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
     @NonNull

@@ -39,6 +39,8 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
@@ -565,7 +567,18 @@ public class LibraryTaskManager extends TaskManager {
         LibVariantOutputData variantOutputData = libVariantData.getOutputs().get(0);
         variantOutputData.packageLibTask = bundle;
 
-        variantScope.getAssembleTask().dependsOn(tasks, bundle);
+        AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = getAndroidTasks().create(
+                tasks, new BuildInfoWriterTask.ConfigAction(variantScope, getLogger()));
+
+        variantScope.addTaskOutput(VariantScope.TaskOutputType.APK_METADATA,
+                BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
+                buildInfoWriterTask.getName());
+
+        buildInfoWriterTask.configure(tasks, task -> task.mustRunAfter(bundle));
+        buildInfoWriterTask.dependsOn(tasks, bundle);
+
+        variantScope.getBuildContext().addChangedFile(FileType.AAR, bundle.getArchivePath());
+        variantScope.getAssembleTask().dependsOn(tasks, bundle, buildInfoWriterTask);
         variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
         variantOutputData.assembleTask = variantData.assembleVariantTask;
 

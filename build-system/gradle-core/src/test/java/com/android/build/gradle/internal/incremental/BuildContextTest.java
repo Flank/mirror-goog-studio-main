@@ -19,16 +19,22 @@ package com.android.build.gradle.internal.incremental;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.FilterData;
+import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.incremental.BuildContext.Build;
 import com.android.builder.Version;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Test;
@@ -646,6 +652,77 @@ public class BuildContextTest {
                 BuildContext.Artifact::getType).collect(
                 Collectors.toList())).containsExactlyElementsIn(
                 ImmutableList.of(FileType.SPLIT));
+    }
+
+    @Test
+    public void testFullSplitNoFilter() throws Exception {
+        BuildContext initial = new BuildContext(idAllocator);
+        initial.addChangedFile(FileType.FULL_SPLIT, new File("fullSplit.apk"));
+        initial.close();
+
+        String buildInfo = initial.toXml();
+
+        BuildContext reloaded = new BuildContext(idAllocator);
+        reloaded.loadFromXml(buildInfo);
+        assertThat(reloaded.getPreviousBuilds().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifacts().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifactForType(FileType.FULL_SPLIT)).isNotNull();
+        BuildContext.Artifact artifact = reloaded.getLastBuild().getArtifacts().get(0);
+        assertThat(artifact.getType()).isEqualTo(FileType.FULL_SPLIT);
+        assertThat(artifact.getLocation().getName()).isEqualTo("fullSplit.apk");
+        assertThat(artifact.getFilters().size()).isEqualTo(0);
+    }
+
+    @Test
+    public void testFullSplitWithOneFilter() throws Exception {
+        BuildContext initial = new BuildContext(idAllocator);
+        initial.addChangedFile(FileType.FULL_SPLIT,
+                new File("fullSplit.apk"),
+                ImmutableList.of(new FilterDataImpl("density", "xxhdpi")));
+        initial.close();
+
+        String buildInfo = initial.toXml();
+
+        BuildContext reloaded = new BuildContext(idAllocator);
+        reloaded.loadFromXml(buildInfo);
+        assertThat(reloaded.getPreviousBuilds().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifacts().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifactForType(FileType.FULL_SPLIT)).isNotNull();
+        BuildContext.Artifact artifact = reloaded.getLastBuild().getArtifacts().get(0);
+        assertThat(artifact.getType()).isEqualTo(FileType.FULL_SPLIT);
+        assertThat(artifact.getLocation().getName()).isEqualTo("fullSplit.apk");
+        assertThat(artifact.getFilters().size()).isEqualTo(1);
+        FilterData filter = Iterators.getOnlyElement(artifact.getFilters().iterator());
+        assertThat(filter.getFilterType()).isEqualTo("density");
+        assertThat(filter.getIdentifier()).isEqualTo("xxhdpi");
+    }
+
+    @Test
+    public void testFullSplitWithMultipleFilter() throws Exception {
+        BuildContext initial = new BuildContext(idAllocator);
+        initial.addChangedFile(FileType.FULL_SPLIT,
+                new File("fullSplit.apk"),
+                ImmutableList.of(
+                        new FilterDataImpl("density", "xxhdpi"),
+                        new FilterDataImpl("density", "hdpi"),
+                        new FilterDataImpl("abi", "arm")));
+        initial.close();
+
+        String buildInfo = initial.toXml();
+
+        BuildContext reloaded = new BuildContext(idAllocator);
+        reloaded.loadFromXml(buildInfo);
+        assertThat(reloaded.getPreviousBuilds().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifacts().size()).isEqualTo(1);
+        assertThat(reloaded.getLastBuild().getArtifactForType(FileType.FULL_SPLIT)).isNotNull();
+        BuildContext.Artifact artifact = reloaded.getLastBuild().getArtifacts().get(0);
+        assertThat(artifact.getType()).isEqualTo(FileType.FULL_SPLIT);
+        assertThat(artifact.getLocation().getName()).isEqualTo("fullSplit.apk");
+        assertThat(artifact.getFilters().size()).isEqualTo(3);
+        assertThat(artifact.getFilters()).containsExactly(
+                new FilterDataImpl("density", "xxhdpi"),
+                new FilterDataImpl("density", "hdpi"),
+                new FilterDataImpl("abi", "arm"));
     }
 
     private static List<Element> getElementsByName(Node parent, String nodeName) {
