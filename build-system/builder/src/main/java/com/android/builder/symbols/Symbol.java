@@ -39,8 +39,8 @@ import java.util.regex.Pattern;
  * {@code bar}.
  *
  * <p>The java type is the java data type that contains the resource value. This is generally
- * be {@code int}, but other values (such as {@code int[]}) are allowed. This class poses no
- * restrictions on the type other that it may not contain any spaces.
+ * {@code int}, but other values (such as {@code int[]}) are allowed. Type should not contain any
+ * whitespaces, be {@code null} or empty.
  *
  * <p>The value is a java expression that conforms to the resource type and contains the value of
  * the resource. This may be just an integer like {@code 3}, if the resource has type {@code int}.
@@ -52,26 +52,6 @@ import java.util.regex.Pattern;
  */
 @Immutable
 public class Symbol {
-
-    /**
-     * Pattern that validates resource types.
-     */
-    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile("\\S+");
-
-    /**
-     * Pattern that validates symbol names.
-     */
-    private static final Pattern NAME_PATTERN = Pattern.compile("\\S+");
-
-    /**
-     * Pattern that validates symbol java types.
-     */
-    private static final Pattern JAVA_TYPE_PATTERN = Pattern.compile("\\S+");
-
-    /**
-     * Pattern that validates symbol values.
-     */
-    private static final Pattern VALUE_PATTERN = Pattern.compile(".*\\S+.*");
 
     /**
      * The name of the symbol.
@@ -110,15 +90,34 @@ public class Symbol {
             @NonNull String name,
             @NonNull String javaType,
             @NonNull String value) {
-        Preconditions.checkArgument(RESOURCE_TYPE_PATTERN.matcher(resourceType).matches());
-        Preconditions.checkArgument(NAME_PATTERN.matcher(name).matches());
-        Preconditions.checkArgument(JAVA_TYPE_PATTERN.matcher(javaType).matches());
-        Preconditions.checkArgument(VALUE_PATTERN.matcher(value).matches());
+
+        validateName(name);
 
         this.resourceType = resourceType;
         this.name = name;
         this.javaType = javaType;
         this.value = value;
+    }
+
+    /**
+     * Checks whether the given resource name meets all the criteria: cannot be null or empty and
+     * cannot contain whitespaces.
+     *
+     * @param name the name of the resource that needs to be validated
+     */
+    private void validateName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Resource name cannot be null");
+        } else if (name.isEmpty()) {
+            throw new IllegalArgumentException("Resource name cannot be empty");
+        }
+
+        for (int i = 0; i < name.length(); ++i) {
+            if (Character.isWhitespace(name.charAt(i))) {
+                throw new IllegalArgumentException(
+                        String.format("Resource name '%s' contains whitespaces", name));
+            }
+        }
     }
 
     /**

@@ -47,61 +47,25 @@ public class SymbolTest {
     }
 
     @Test
-    public void javaTypesCannotContainSpaces() {
-        try {
-            new Symbol("d", "a", "b b", "c");
-            fail();
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
-    }
-
-    @Test
     public void valuesCanContainSpaces() {
         new Symbol("d", "a", "b", "c c");
-    }
-
-    @Test
-    public void resourceTypesCannotContainSpaces() {
-        try {
-            new Symbol("d d", "a", "b", "c");
-            fail();
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
     }
 
     @Test
     public void nameCannotBeEmpty() {
         try {
             new Symbol("d", "", "b", "c");
+            fail();
         } catch (IllegalArgumentException e) {
             // Expected
         }
     }
 
     @Test
-    public void javaTypeCannotBeEmpty() {
+    public void nameCannotBeNull() {
         try {
-            new Symbol("d", "a", "", "c");
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
-    }
-
-    @Test
-    public void valueCannotBeEmpty() {
-        try {
-            new Symbol("d", "a", "b", "");
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
-    }
-
-    @Test
-    public void resourceTypeCannotBeEmpty() {
-        try {
-            new Symbol("", "a", "b", "c");
+            new Symbol("a", null, "", "");
+            fail();
         } catch (IllegalArgumentException e) {
             // Expected
         }
