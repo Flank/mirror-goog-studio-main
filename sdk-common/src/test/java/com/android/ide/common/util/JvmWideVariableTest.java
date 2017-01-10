@@ -23,9 +23,11 @@ import com.android.annotations.NonNull;
 import com.android.testutils.classloader.SingleClassLoader;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
-import java.util.Map;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.WildcardType;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.junit.After;
 import org.junit.Test;
@@ -36,7 +38,7 @@ import org.junit.Test;
 public class JvmWideVariableTest {
 
     @NonNull private JvmWideVariable<String> variable =
-            new JvmWideVariable<>("group", "name", TypeToken.of(String.class), "Some text");
+            new JvmWideVariable<>("group", "name", String.class, "Some text");
 
     @After
     public void tearDown() {
@@ -50,9 +52,7 @@ public class JvmWideVariableTest {
 
     @Test
     public void testInitializeTwiceThenRead() {
-        variable =
-                new JvmWideVariable<>(
-                        "group", "name", TypeToken.of(String.class), "Some other text");
+        variable = new JvmWideVariable<>("group", "name", String.class, "Some other text");
         // Expect that the second default value is ignored
         assertThat(variable.get()).isEqualTo("Some text");
     }
@@ -76,7 +76,7 @@ public class JvmWideVariableTest {
         variable.set("This text");
 
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name", TypeToken.of(String.class), "That text");
+                new JvmWideVariable<>("group", "name", String.class, "That text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("This text");
 
@@ -90,7 +90,7 @@ public class JvmWideVariableTest {
         variable.set("This text");
 
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name2", TypeToken.of(String.class), "That text");
+                new JvmWideVariable<>("group", "name2", String.class, "That text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("That text");
 
@@ -104,7 +104,7 @@ public class JvmWideVariableTest {
     @Test
     public void testNullValues() {
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name2", TypeToken.of(String.class), null);
+                new JvmWideVariable<>("group", "name2", String.class, null);
         assertThat(variable2.get()).isNull();
 
         variable2.set("Some text");
@@ -117,40 +117,37 @@ public class JvmWideVariableTest {
     }
 
     @Test
-    public void testVariables_WithSameGroupSameNameDifferentTypes() throws Exception {
+    public void testVariables_WithSameGroupSameName_DifferentSimpleTypes() throws Exception {
         // Create another JVM-wide variable with the same group, same name, but different type,
         // expect failure
         try {
-            new JvmWideVariable<>("group", "name", TypeToken.of(Integer.class), new Integer(1));
+            new JvmWideVariable<>("group", "name", Integer.class, null);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).isEqualTo(
                     String.format(
                             "Expected type %s but found type %s for JVM-wide variable %s:%s",
-                            TypeToken.of(String.class),
-                            TypeToken.of(Integer.class),
-                            "group",
-                            "name"));
+                            String.class, Integer.class, "group", "name"));
         }
     }
 
     @Test
-    public void testVariables_WithSameGroupSameNameDifferentComplexTypes() throws Exception {
-        // Create a JVM-wide variable with a complex type
-        JvmWideVariable<Map<String, Integer>> complexVariable =
-                new JvmWideVariable<>("group", "foo", mapToken(String.class, Integer.class), null);
+    public void testVariables_WithSameGroupSameName_DifferentParameterizedTypes() throws Exception {
+        // Create a JVM-wide variable with a ParameterizedType
+        JvmWideVariable<List<String>> complexVariable =
+                new JvmWideVariable<>("group", "foo", getParameterizedToken(String.class), null);
 
-        // Create another JVM-wide variable with the same group, same name, but different complex
-        // type, expect failure
+        // Create another JVM-wide variable with the same group, same name, but a different
+        // ParameterizedType, expect failure
         try {
-            new JvmWideVariable<>("group", "foo", mapToken(Integer.class, String.class), null);
+            new JvmWideVariable<>("group", "foo", getParameterizedToken(Integer.class), null);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).isEqualTo(
                     String.format(
                             "Expected type %s but found type %s for JVM-wide variable %s:%s",
-                            mapToken(String.class, Integer.class),
-                            mapToken(Integer.class, String.class),
+                            getParameterizedToken(String.class).getType(),
+                            getParameterizedToken(Integer.class).getType(),
                             "group",
                             "foo"));
         }
@@ -159,52 +156,231 @@ public class JvmWideVariableTest {
     }
 
     @Test
-    public void testVariables_WithNonBootstrapClassLoaders() throws Exception {
-        // Create a JVM-wide variable for an instance of a class loaded by the bootstrap class
-        // loader, expect success
-        JvmWideVariable<Integer> fooVariable =
-                new JvmWideVariable<>("group", "foo", TypeToken.of(Integer.class), new Integer(1));
-        fooVariable.unregister();
+    public void testVariables_WithSameGroupSameName_DifferentGenericArrayTypes() throws Exception {
+        // Create a JVM-wide variable with a GenericArrayType
+        JvmWideVariable<List<String>[]> complexVariable =
+                new JvmWideVariable<>("group", "foo", getGenericArrayToken(String.class), null);
 
-        // Create a JVM-wide variable for an instance of a class loaded by the application
-        // (non-bootstrap) class loader, expect failure
-        FooCounter fooCounter1 = new FooCounter();
+        // Create another JVM-wide variable with the same group, same name, but a different
+        // GenericArrayType, expect failure
         try {
-            new JvmWideVariable<>(
-                    "group", "fooCounter1", TypeToken.of(FooCounter.class), fooCounter1);
+            new JvmWideVariable<>("group", "foo", getGenericArrayToken(Integer.class), null);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).isEqualTo(
                     String.format(
-                            "Type %s of JVM-wide variable %s:%s must be loaded by the bootstrap"
-                                    + " class loader but is loaded by %s",
-                            fooCounter1.getClass(),
+                            "Expected type %s but found type %s for JVM-wide variable %s:%s",
+                            getGenericArrayToken(String.class).getType(),
+                            getGenericArrayToken(Integer.class).getType(),
                             "group",
-                            "fooCounter1",
-                            fooCounter1.getClass().getClassLoader()));
+                            "foo"));
         }
 
-        // Create an instance of the same class loaded by a custom class loader
-        SingleClassLoader classLoader = new SingleClassLoader(FooCounter.class.getName());
-        Class clazz = classLoader.load();
-        Constructor constructor  = clazz.getConstructor();
-        constructor.setAccessible(true);
-        Object fooCounter2 = constructor.newInstance();
+        complexVariable.unregister();
+    }
 
-        // Create a JVM-wide variable for that instance, expect failure
+    @Test
+    public void testVariables_WithSameGroupSameName_DifferentUpperBoundWildcardTypes()
+            throws Exception {
+        // Create a JVM-wide variable with an upper-bound WildcardType
+        JvmWideVariable<Class<? extends CharSequence>> complexVariable =
+                new JvmWideVariable<>(
+                        "group", "foo", getUpperBoundWildcardToken(CharSequence.class), null);
+
+        // Create another JVM-wide variable with the same group, same name, but a different
+        // upper-bound WildcardType, expect failure
         try {
-            new JvmWideVariable<>(
-                    "group", "fooCounter2", TypeToken.of(clazz), fooCounter2);
+            new JvmWideVariable<>("group", "foo", getUpperBoundWildcardToken(Number.class), null);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).isEqualTo(
                     String.format(
-                            "Type %s of JVM-wide variable %s:%s must be loaded by the bootstrap"
-                                    + " class loader but is loaded by %s",
-                            fooCounter2.getClass(),
+                            "Expected type %s but found type %s for JVM-wide variable %s:%s",
+                            getUpperBoundWildcardToken(CharSequence.class).getType(),
+                            getUpperBoundWildcardToken(Number.class).getType(),
                             "group",
-                            "fooCounter2",
-                            fooCounter2.getClass().getClassLoader()));
+                            "foo"));
+        }
+
+        complexVariable.unregister();
+    }
+
+    @Test
+    public void testVariables_WithSameGroupSameName_DifferentLowerBoundWildcardTypes()
+            throws Exception {
+        // Create a JVM-wide variable with a lower-bound WildcardType
+        JvmWideVariable<Class<? super String>> complexVariable =
+                new JvmWideVariable<>(
+                        "group", "foo", getLowerBoundWildcardToken(String.class), null);
+
+        // Create another JVM-wide variable with the same group, same name, but a different
+        // lower-bound WildcardType, expect failure
+        try {
+            new JvmWideVariable<>("group", "foo", getLowerBoundWildcardToken(Integer.class), null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Expected type %s but found type %s for JVM-wide variable %s:%s",
+                            getLowerBoundWildcardToken(String.class).getType(),
+                            getLowerBoundWildcardToken(Integer.class).getType(),
+                            "group",
+                            "foo"));
+        }
+
+        complexVariable.unregister();
+    }
+
+    @Test
+    public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_SimpleTypes()
+            throws Exception {
+        // Create a JVM-wide variable whose type is loaded by the bootstrap class loader, expect
+        // success
+        JvmWideVariable<String> fooVariable =
+                new JvmWideVariable<>("group", "foo", String.class, null);
+        fooVariable.unregister();
+
+        // Create a JVM-wide variable whose type is loaded by the application (non-bootstrap) class
+        // loader, expect failure
+        try {
+            new JvmWideVariable<>("group", "fooCounter", FooCounter.class, null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            FooCounter.class,
+                            "group",
+                            "fooCounter",
+                            FooCounter.class.getClassLoader()));
+        }
+
+        // Create a JVM-wide variable whose type is loaded by a custom class loader, expect failure
+        SingleClassLoader classLoader = new SingleClassLoader(FooCounter.class.getName());
+        Class clazz = classLoader.load();
+        try {
+            new JvmWideVariable<>("group", "fooCounter", clazz, null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            clazz,
+                            "group",
+                            "fooCounter",
+                            clazz.getClassLoader()));
+        }
+    }
+
+    @Test
+    public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_ParameterizeTypes()
+            throws Exception {
+        // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
+        // loaded by the bootstrap class loader, expect success
+        JvmWideVariable<List<String>> fooVariable =
+                new JvmWideVariable<>("group", "foo", getParameterizedToken(String.class), null);
+        fooVariable.unregister();
+
+        // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
+        // loaded by the application (non-bootstrap) class loader, expect failure
+        try {
+            new JvmWideVariable<>(
+                    "group", "fooCounter", getParameterizedToken(FooCounter.class), null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            FooCounter.class,
+                            "group",
+                            "fooCounter",
+                            FooCounter.class.getClassLoader()));
+        }
+    }
+
+    @Test
+    public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_GenericArrayTypes()
+            throws Exception {
+        // Create a JVM-wide variable whose type is a GenericArrayType, and its component type is
+        // loaded by the bootstrap class loader, expect success
+        JvmWideVariable<List<String>[]> fooVariable =
+                new JvmWideVariable<>("group", "foo", getGenericArrayToken(String.class), null);
+        fooVariable.unregister();
+
+        // Create a JVM-wide variable whose type is a GenericArrayType, and its component type is
+        // loaded by the application (non-bootstrap) class loader, expect failure
+        try {
+            new JvmWideVariable<>(
+                    "group", "fooCounter", getGenericArrayToken(FooCounter.class), null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            FooCounter.class,
+                            "group",
+                            "fooCounter",
+                            FooCounter.class.getClassLoader()));
+        }
+    }
+
+    @Test
+    public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_UpperBoundWildcardTypes()
+            throws Exception {
+        // Create a JVM-wide variable whose type is an upper-bound WildcardType, and the upper-bound
+        // type is loaded by the bootstrap class loader, expect success
+        JvmWideVariable<Class<? extends CharSequence>> fooVariable =
+                new JvmWideVariable<>(
+                        "group", "foo", getUpperBoundWildcardToken(CharSequence.class), null);
+        fooVariable.unregister();
+
+        // Create a JVM-wide variable whose type is an upper-bound WildcardType, and the upper-bound
+        // type is loaded by the application (non-bootstrap) class loader, expect failure
+        try {
+            new JvmWideVariable<>(
+                    "group", "fooCounter", getUpperBoundWildcardToken(FooCounter.class), null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            FooCounter.class,
+                            "group",
+                            "fooCounter",
+                            FooCounter.class.getClassLoader()));
+        }
+    }
+
+    @Test
+    public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_LowerBoundWildcardTypes()
+            throws Exception {
+        // Create a JVM-wide variable whose type is an lower-bound WildcardType, and the lower-bound
+        // type is loaded by the bootstrap class loader, expect success
+        JvmWideVariable<Class<? super String>> fooVariable =
+                new JvmWideVariable<>(
+                        "group", "foo", getLowerBoundWildcardToken(String.class), null);
+        fooVariable.unregister();
+
+        // Create a JVM-wide variable whose type is a lower-bound WildcardType, and the lower-bound
+        // type is loaded by the application (non-bootstrap) class loader, expect failure
+        try {
+            new JvmWideVariable<>(
+                    "group", "fooCounter", getLowerBoundWildcardToken(FooCounter.class), null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    String.format(
+                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
+                                    + " bootstrap class loader but is loaded by %s",
+                            FooCounter.class,
+                            "group",
+                            "fooCounter",
+                            FooCounter.class.getClassLoader()));
         }
     }
 
@@ -233,13 +409,16 @@ public class JvmWideVariableTest {
         assertThat(counter2).isSameAs(counter);
     }
 
+    /**
+     * Sample class containing a {@link JvmWideVariable} static field.
+     */
     private static class FooCounter {
 
         private static final JvmWideVariable<Integer> COUNT =
                 new JvmWideVariable<>(
                         FooCounter.class.getName(),
                         "COUNT",
-                        TypeToken.of(Integer.class),
+                        Integer.class,
                         new Integer(1));
 
         public FooCounter() {
@@ -251,11 +430,46 @@ public class JvmWideVariableTest {
     }
 
     /**
-     * Returns a {@link TypeToken} for the {@link Map} type.
+     * Returns the {@link TypeToken} for a {@link List} of elements (e.g., {@code List<String>}).
+     * The returned {@code TypeToken} captures a {@link ParameterizedType}.
      */
-    private static <K, V> TypeToken<Map<K, V>> mapToken(Class<K> keyClass, Class<V> valueClass) {
-        return new TypeToken<Map<K, V>>() {}
-                .where(new TypeParameter<K>() {}, TypeToken.of(keyClass))
-                .where(new TypeParameter<V>() {}, TypeToken.of(valueClass));
+    @NonNull
+    private static <E> TypeToken<List<E>> getParameterizedToken(@NonNull Class<E> elementClass) {
+        return new TypeToken<List<E>>() {}
+                .where(new TypeParameter<E>() {}, TypeToken.of(elementClass));
+    }
+
+    /**
+     * Returns the {@link TypeToken} for an array of {@link List} (e.g., {@code List<String>[]}).
+     * The returned {@code TypeToken} captures a {@link GenericArrayType}.
+     */
+    @NonNull
+    private static <E> TypeToken<List<E>[]> getGenericArrayToken(@NonNull Class<E> elementClass) {
+        return new TypeToken<List<E>[]>() {}
+                .where(new TypeParameter<E>() {}, TypeToken.of(elementClass));
+    }
+
+    /**
+     * Returns the {@link TypeToken} for a {@link Class} of upper-bound {@link WildcardType}. The
+     * returned {@code TypeToken} captures a {@link ParameterizedType} of upper-bound {@link
+     * WildcardType}.
+     */
+    @NonNull
+    private static <T> TypeToken<Class<? extends T>> getUpperBoundWildcardToken(
+            @NonNull Class<T> typeClass) {
+        return new TypeToken<Class<? extends T>>() {}
+                .where(new TypeParameter<T>() {}, TypeToken.of(typeClass));
+    }
+
+    /**
+     * Returns the {@link TypeToken} for a {@link Class} of lower-bound {@link WildcardType}. The
+     * returned {@code TypeToken} captures a {@link ParameterizedType} of lower-bound {@link
+     * WildcardType}.
+     */
+    @NonNull
+    private static <T> TypeToken<Class<? super T>> getLowerBoundWildcardToken(
+            @NonNull Class<T> typeClass) {
+        return new TypeToken<Class<? super T>>() {}
+                .where(new TypeParameter<T>() {}, TypeToken.of(typeClass));
     }
 }
