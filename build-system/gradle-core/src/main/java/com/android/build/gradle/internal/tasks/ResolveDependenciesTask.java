@@ -88,8 +88,8 @@ public class ResolveDependenciesTask extends BaseTask {
                     input,
                     output,
                     buildCache.isPresent() ? buildCache.get() : null,
-                    androidDependency.getCoordinates(),
                     createAction(project, executor, input),
+                    project.getLogger(),
                     useBuildCache);
         }
         executor.waitForTasksWithQuickFail(false);
