@@ -53,8 +53,8 @@ import java.util.Map;
 @Immutable
 public class ManifestMerger2 {
 
-    static final String BOOTSTRAP_INSTANT_RUN_SERVICE
-            = "com.android.tools.fd.runtime.InstantRunService";
+    static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER
+            = "com.android.tools.fd.runtime.InstantRunContentProvider";
 
     @NonNull
     private final File mManifestFile;
@@ -381,22 +381,32 @@ public class ManifestMerger2 {
                         enabledAttribute.getName(),
                         SdkConstants.VALUE_TRUE);
             }
-            addService(document, application);
+            addIrContentProvider(document, application);
         } else {
             throw new RuntimeException("Application not defined in AndroidManifest.xml");
         }
         return document.reparse();
     }
 
-    private static void addService(XmlDocument document, XmlElement application ) {
-        // <service
-        //     android:name="com.android.tools.fd.runtime.InstantRunService"
-        //     android:exported="true"/>
-        Element service = document.getXml().createElement(SdkConstants.TAG_SERVICE);
-        setAndroidAttribute(service, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_SERVICE);
-        // Export it so we can start it with a shell command from adb.
-        setAndroidAttribute(service, SdkConstants.ATTR_EXPORTED, SdkConstants.VALUE_TRUE);
-        application.getXml().appendChild(service);
+    private static void addIrContentProvider(XmlDocument document, XmlElement application) {
+        // <provider
+        //     android:name="com.android.tools.fd.runtime.InstantRunContentProvider"
+        //     android:authorities="com.android.tools.fd.runtime.InstantRunContentProvider"
+        //     android:multiprocess="true" />
+        Element cp = document.getXml().createElement(SdkConstants.TAG_PROVIDER);
+        setAndroidAttribute(cp, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
+        // Qualify authority as unique so that multiple IR app packages installed on a single
+        // device do not conflict.
+        String pkg = document.getXml().getDocumentElement().getAttribute(SdkConstants.ATTR_PACKAGE);
+        if (pkg == null) {
+            throw new RuntimeException("no package name set");
+        }
+        setAndroidAttribute(cp, SdkConstants.ATTR_AUTHORITIES, pkg + "." +
+                            BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
+        // Multiprocess so we start in every process and decide on our own how to handle
+        // having multiple processes
+        setAndroidAttribute(cp, SdkConstants.ATTR_MULTIPROCESS, SdkConstants.VALUE_TRUE);
+        application.getXml().appendChild(cp);
     }
 
     /**
