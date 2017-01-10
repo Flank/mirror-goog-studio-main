@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -421,7 +422,6 @@ public class VariantManager implements VariantModel {
             VariantDependencies.Builder builder = VariantDependencies
                     .builder(
                             project,
-                            variantData.getScope().getGlobalScope(),
                             androidBuilder.getErrorReporter(),
                             testVariantConfig)
                     .setPublishVariant(false)
@@ -474,6 +474,16 @@ public class VariantManager implements VariantModel {
      * Create all variants.
      */
     public void populateVariantDataList() {
+        // register transforms.
+        project.getDependencies().registerTransform(AarTransform.class,
+                transform -> {
+                    final AarTransform aarTransform = (AarTransform) transform;
+                    aarTransform.setProject(project);
+                    aarTransform.setFileCache(taskManager.getGlobalScope().getBuildCache()
+                            .orElseThrow(() -> new RuntimeException(
+                                    "aar transform can only work with the build cache")));
+                });
+
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
@@ -640,7 +650,6 @@ public class VariantManager implements VariantModel {
         VariantDependencies.Builder builder = VariantDependencies
                 .builder(
                         project,
-                        variantData.getScope().getGlobalScope(),
                         androidBuilder.getErrorReporter(),
                         variantConfig)
                 .setPublishVariant(true)

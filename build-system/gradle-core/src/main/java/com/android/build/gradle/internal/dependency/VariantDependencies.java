@@ -90,8 +90,6 @@ public class VariantDependencies {
         @NonNull
         private final Project project;
         @NonNull
-        private final GlobalScope scope;
-        @NonNull
         private final ErrorReporter errorReporter;
         @NonNull
         private final GradleVariantConfiguration variantConfiguration;
@@ -114,12 +112,10 @@ public class VariantDependencies {
 
         protected Builder(
                 @NonNull Project project,
-                @NonNull GlobalScope scope,
                 @NonNull ErrorReporter errorReporter,
                 @NonNull GradleVariantConfiguration variantConfiguration) {
 
             this.project = project;
-            this.scope = scope;
             this.errorReporter = errorReporter;
             this.variantConfiguration = variantConfiguration;
         }
@@ -220,7 +216,6 @@ public class VariantDependencies {
             compile.setExtendsFrom(compileConfigs);
             compile.setCanBeConsumed(false);
             applyAttributes(compile, buildType, flavorMap);
-            applyTransforms(project, compile);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -247,7 +242,6 @@ public class VariantDependencies {
             apk.setDescription("Resolved configuration for runtime for variant: " + variantName);
             apk.setExtendsFrom(apkConfigs);
             applyAttributes(apk, buildType, flavorMap);
-            applyTransforms(project, apk);
             apk.setCanBeConsumed(false);
 
             Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
@@ -323,27 +317,13 @@ public class VariantDependencies {
             configuration.attribute(CONFIG_ATTR_BUILD_TYPE, buildType);
             configuration.attributes(flavorMap);
         }
-
-        private void applyTransforms(
-                @NonNull Project project,
-                @NonNull Configuration configuration) {
-            configuration.getResolutionStrategy().registerTransform(AarTransform.class,
-                    transform -> {
-                        final AarTransform aarTransform = (AarTransform) transform;
-                        aarTransform.setProject(project);
-                        aarTransform.setFileCache(scope.getBuildCache()
-                                .orElseThrow(() -> new RuntimeException(
-                                        "aar transform can only work with the build cache")));
-                    });
-        }
     }
 
     public static Builder builder(
             @NonNull Project project,
-            @NonNull GlobalScope scope,
             @NonNull ErrorReporter errorReporter,
             @NonNull GradleVariantConfiguration variantConfiguration) {
-        return new Builder(project, scope, errorReporter, variantConfiguration);
+        return new Builder(project, errorReporter, variantConfiguration);
     }
 
     private VariantDependencies(
