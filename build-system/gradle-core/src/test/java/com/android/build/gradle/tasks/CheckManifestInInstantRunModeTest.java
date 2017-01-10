@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -60,7 +60,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // Initial build
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             Files.write("Original Manifest", manifestFileToPackage, Charsets.UTF_8);
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
@@ -69,7 +69,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // No changes
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             Files.write("Original Manifest", manifestFileToPackage, Charsets.UTF_8);
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
@@ -78,7 +78,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // Change
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             Files.write("Changed Manifest", manifestFileToPackage, Charsets.UTF_8);
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
@@ -87,7 +87,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // No changes
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             Files.write("Changed Manifest", manifestFileToPackage, Charsets.UTF_8);
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
@@ -105,7 +105,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // Initial build
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             CheckManifestInInstantRunMode.runManifestBinaryChangeVerifier(
                     context, instantRunSupportDir, resOutBaseNameFile);
             verify(context).setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
@@ -113,7 +113,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // No changes
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             writeManifestFile(resOutBaseNameFile, "Initial binary manifest");
             CheckManifestInInstantRunMode.runManifestBinaryChangeVerifier(
                     context, instantRunSupportDir, resOutBaseNameFile);
@@ -122,7 +122,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // Change
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             writeManifestFile(resOutBaseNameFile, "Changed binary manifest");
             CheckManifestInInstantRunMode.runManifestBinaryChangeVerifier(
                     context, instantRunSupportDir, resOutBaseNameFile);
@@ -132,7 +132,7 @@ public class CheckManifestInInstantRunModeTest {
 
         // No changes
         {
-            InstantRunBuildContext context = mock(InstantRunBuildContext.class);
+            BuildContext context = mock(BuildContext.class);
             writeManifestFile(resOutBaseNameFile, "Changed binary manifest");
             CheckManifestInInstantRunMode.runManifestBinaryChangeVerifier(
                     context, instantRunSupportDir, resOutBaseNameFile);

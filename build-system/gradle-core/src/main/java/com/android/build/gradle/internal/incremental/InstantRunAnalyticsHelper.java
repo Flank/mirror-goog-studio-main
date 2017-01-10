@@ -27,16 +27,16 @@ public class InstantRunAnalyticsHelper {
     /** Generate a scrubbed proto of the instant run build context for analytics. */
     @NonNull
     public static InstantRunStatus generateAnalyticsProto(
-            @NonNull InstantRunBuildContext instantRunBuildContext) {
+            @NonNull BuildContext buildContext) {
         InstantRunStatus.Builder builder = InstantRunStatus.newBuilder();
 
-        builder.setBuildMode(convert(instantRunBuildContext.getBuildMode()));
-        builder.setPatchingPolicy(convert(instantRunBuildContext.getPatchingPolicy()));
-        builder.setVerifierStatus(convert(instantRunBuildContext.getVerifierResult()));
+        builder.setBuildMode(convert(buildContext.getBuildMode()));
+        builder.setPatchingPolicy(convert(buildContext.getPatchingPolicy()));
+        builder.setVerifierStatus(convert(buildContext.getVerifierResult()));
 
-        InstantRunBuildContext.Build last = instantRunBuildContext.getLastBuild();
+        BuildContext.Build last = buildContext.getLastBuild();
         if (last != null) {
-            for (InstantRunBuildContext.Artifact artifact : last.getArtifacts()) {
+            for (BuildContext.Artifact artifact : last.getArtifacts()) {
                 builder.addArtifact(
                         InstantRunArtifact.newBuilder().setType(convert(artifact.getType())));
             }

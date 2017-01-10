@@ -22,7 +22,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -129,7 +129,7 @@ public class InstantRunTaskManager {
         NoChangesVerifierTransform javaResourcesVerifierTransform =
                 new NoChangesVerifierTransform(
                         "javaResourcesVerifier",
-                        variantScope.getInstantRunBuildContext(),
+                        variantScope.getBuildContext(),
                         ImmutableSet.of(
                                 QualifiedContent.DefaultContentType.RESOURCES,
                                 ExtendedContentType.NATIVE_LIBS),
@@ -172,7 +172,7 @@ public class InstantRunTaskManager {
             NoChangesVerifierTransform dependenciesVerifierTransform =
                     new NoChangesVerifierTransform(
                             "dependencyChecker",
-                            variantScope.getInstantRunBuildContext(),
+                            variantScope.getBuildContext(),
                             ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                             Sets.immutableEnumSet(
                                     QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
@@ -252,7 +252,7 @@ public class InstantRunTaskManager {
             @NonNull Project project) {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
-        InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
+        BuildContext context = variantScope.getBuildContext();
 
         context.setApiLevel(
                 AndroidGradleOptions.getTargetFeatureLevel(project),
@@ -291,7 +291,7 @@ public class InstantRunTaskManager {
     }
 
     /**
-     * Creates the task to save the build-info.xml and sets its dependencies.
+     * Configures the task to save the build-info.xml and sets its dependencies for instant run.
      *
      * <p>This task does not depend on other tasks, so if previous tasks fails it will still run.
      * Instead the read build info task is {@link Task#finalizedBy(Object...)} the write build info
@@ -301,14 +301,11 @@ public class InstantRunTaskManager {
      * those tasks, but runs even if those tasks fail. Using {@link Task#dependsOn(Object...)}
      * would not run the task if a previous task failed.
      *
-     * @return the task instance.
+     * @param buildInfoWriterTask the task instance.
      */
-    @NonNull
-    public AndroidTask<BuildInfoWriterTask> createBuildInfoWriterTask(
+    public void configureBuildInfoWriterTask(
+            @NonNull AndroidTask<BuildInfoWriterTask> buildInfoWriterTask,
             AndroidTask<?>... dependencies) {
-        AndroidTask<BuildInfoWriterTask> buildInfoWriterTask =
-                androidTasks.create(tasks,
-                        new BuildInfoWriterTask.ConfigAction(variantScope, logger));
         Preconditions.checkNotNull(buildInfoLoaderTask,
                 "createInstantRunAllTasks() should have been called first ");
         buildInfoLoaderTask.configure(
@@ -316,7 +313,9 @@ public class InstantRunTaskManager {
                 readerTask -> readerTask.finalizedBy(buildInfoWriterTask.getName()));
 
         buildInfoWriterTask.configure(tasks, writerTask -> {
-            writerTask.mustRunAfter(reloadDexTask.getName());
+            if (reloadDexTask != null) {
+                writerTask.mustRunAfter(reloadDexTask.getName());
+            }
             if (dependencies != null) {
                 for (AndroidTask<?> dependency : dependencies) {
                     writerTask.mustRunAfter(dependency.getName());
@@ -332,12 +331,10 @@ public class InstantRunTaskManager {
                     public void afterExecute(Task task, TaskState state) {
                         //noinspection ThrowableResultOfMethodCallIgnored
                         if (state.getFailure() != null) {
-                            variantScope.getInstantRunBuildContext().setBuildHasFailed();
+                            variantScope.getBuildContext().setBuildHasFailed();
                         }
                     }
                 });
-
-        return buildInfoWriterTask;
     }
 
 }

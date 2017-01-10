@@ -1960,7 +1960,7 @@ public abstract class TaskManager {
 
         checkNotNull(variantScope.getJavacTask());
 
-        variantScope.getInstantRunBuildContext().setInstantRunMode(
+        variantScope.getBuildContext().setInstantRunMode(
                 getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE);
 
         final BaseVariantData<? extends BaseVariantOutputData> variantData =
@@ -2017,7 +2017,7 @@ public abstract class TaskManager {
         // ----- 10x support
 
         AndroidTask<PreColdSwapTask> preColdSwapTask = null;
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
+        if (variantScope.getBuildContext().isInInstantRunMode()) {
 
             AndroidTask<DefaultTask> allActionsAnchorTask =
                     createInstantRunAllActionsTasks(tasks, variantScope);
@@ -2029,7 +2029,7 @@ public abstract class TaskManager {
             // when dealing with platforms that can handle multi dexes natively, automatically
             // turn on multi dexing so shards are packaged as individual dex files.
             if (InstantRunPatchingPolicy.PRE_LOLLIPOP !=
-                    variantScope.getInstantRunBuildContext().getPatchingPolicy()) {
+                    variantScope.getBuildContext().getPatchingPolicy()) {
                 isMultiDexEnabled = true;
                 // force pre-dexing to be true as we rely on individual slices to be packaged
                 // separately.
@@ -2096,7 +2096,7 @@ public abstract class TaskManager {
                 variantScope.getPreDexOutputDir(),
                 variantScope.getGlobalScope().getAndroidBuilder(),
                 getLogger(),
-                variantScope.getInstantRunBuildContext(),
+                variantScope.getBuildContext(),
                 buildCache);
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
@@ -2117,7 +2117,7 @@ public abstract class TaskManager {
     private boolean isLegacyMultidexMode(@NonNull VariantScope variantScope) {
         return variantScope.getVariantData().getVariantConfiguration().isLegacyMultiDexMode() &&
                 (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE
-                        || variantScope.getInstantRunBuildContext().getPatchingPolicy() ==
+                        || variantScope.getBuildContext().getPatchingPolicy() ==
                         InstantRunPatchingPolicy.PRE_LOLLIPOP);
 
     }
@@ -2624,7 +2624,7 @@ public abstract class TaskManager {
 
             final String outputName = variantOutputData.getFullName();
             InstantRunPatchingPolicy patchingPolicy =
-                    variantScope.getInstantRunBuildContext().getPatchingPolicy();
+                    variantScope.getBuildContext().getPatchingPolicy();
 
             DefaultGradlePackagingScope packagingScope =
                     new DefaultGradlePackagingScope(variantOutputScope);
@@ -2637,7 +2637,7 @@ public abstract class TaskManager {
 
             AndroidTask<PackageApplication> packageInstantRunResources = null;
 
-            if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
+            if (variantScope.getBuildContext().isInInstantRunMode()) {
                 packageInstantRunResources = androidTasks.create(
                         tasks,
                         new PackageApplication.InstantRunResourcesConfigAction(
@@ -2704,11 +2704,12 @@ public abstract class TaskManager {
             if (fullBuildInfoGeneratorTask != null) {
                 AndroidTask<PackageApplication> finalPackageInstantRunResources =
                         packageInstantRunResources;
-                AndroidTask<?> finalAppTask = appTask;
                 fullBuildInfoGeneratorTask.configure(tasks, task -> {
                     task.mustRunAfter(
-                            finalAppTask.getName(),
-                            finalPackageInstantRunResources.getName());
+                            appTask.getName());
+                    if (finalPackageInstantRunResources != null) {
+                        task.mustRunAfter(finalPackageInstantRunResources.getName());
+                    }
                 });
                 variantScope.getAssembleTask().dependsOn(
                         tasks, fullBuildInfoGeneratorTask.getName());

@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
@@ -33,9 +32,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformStream;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
@@ -60,6 +57,7 @@ import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
 /**
@@ -198,13 +196,13 @@ class ExternalBuildTaskManager {
         AndroidTask<PreColdSwapTask> preColdswapTask = instantRunTaskManager
                 .createPreColdswapTask(project);
 
-        if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
+        if (variantScope.getBuildContext().getPatchingPolicy()
                 != InstantRunPatchingPolicy.PRE_LOLLIPOP) {
             instantRunTaskManager.createSlicerTask();
         }
 
         boolean multiDex =
-                variantScope.getInstantRunBuildContext().getPatchingPolicy().useMultiDex();
+                variantScope.getBuildContext().getPatchingPolicy().useMultiDex();
         DexTransform dexTransform =
                 new DexTransform(
                         new DefaultDexOptions(),
@@ -214,7 +212,7 @@ class ExternalBuildTaskManager {
                         variantScope.getPreDexOutputDir(),
                         externalBuildContext.getAndroidBuilder(),
                         project.getLogger(),
-                        variantScope.getInstantRunBuildContext(),
+                        variantScope.getBuildContext(),
                         globalScope.getBuildCache());
 
         transformManager.addTransform(tasks, variantScope, dexTransform);
@@ -251,12 +249,13 @@ class ExternalBuildTaskManager {
                             }
                         });
 
+        Logger logger = Logging.getLogger(ExternalBuildTaskManager.class);
 
         InstantRunSliceSplitApkBuilder slicesApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
-                        Logging.getLogger(ExternalBuildTaskManager.class),
+                        logger,
                         project,
-                        variantScope.getInstantRunBuildContext(),
+                        variantScope.getBuildContext(),
                         externalBuildContext.getAndroidBuilder(),
                         packagingScope,
                         packagingScope.getSigningConfig(),
@@ -276,7 +275,7 @@ class ExternalBuildTaskManager {
                         new PackageApplication.StandardConfigAction(
                                 project,
                                 packagingScope,
-                                variantScope.getInstantRunBuildContext().getPatchingPolicy()));
+                                variantScope.getBuildContext().getPatchingPolicy()));
 
         if (transformTaskAndroidTask.isPresent()) {
             packageApp.dependsOn(tasks, transformTaskAndroidTask.get());
@@ -285,9 +284,11 @@ class ExternalBuildTaskManager {
         variantScope.setPackageApplicationTask(packageApp);
         packageApp.dependsOn(tasks, createAssetsDirectory);
 
+        AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = androidTasks.create(tasks,
+                new BuildInfoWriterTask.ConfigAction(variantScope, logger));
+
         // finally, generate the build-info.xml
-        AndroidTask<BuildInfoWriterTask>buildInfoWriterTask =
-                instantRunTaskManager.createBuildInfoWriterTask(packageApp);
+        instantRunTaskManager.configureBuildInfoWriterTask(buildInfoWriterTask, packageApp);
 
         externalBuildAnchorTask.dependsOn(tasks, packageApp);
         externalBuildAnchorTask.dependsOn(tasks, buildInfoWriterTask);

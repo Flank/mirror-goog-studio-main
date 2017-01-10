@@ -33,7 +33,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
@@ -391,7 +391,7 @@ public class DexTransformTest {
                         preDexOutputDir,
                         fakeAndroidBuilder,
                         mock(Logger.class),
-                        mock(InstantRunBuildContext.class),
+                        mock(BuildContext.class),
                         Optional.of(buildCache));
 
         TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);

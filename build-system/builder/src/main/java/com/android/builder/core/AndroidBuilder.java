@@ -467,7 +467,7 @@ public class AndroidBuilder {
     /**
      * Invoke the Manifest Merger version 2.
      */
-    public void mergeManifestsForApplication(
+    public MergingReport mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
@@ -547,6 +547,7 @@ public class AndroidBuilder {
                     throw new RuntimeException("Unhandled result type : "
                             + mergingReport.getResult());
             }
+            return mergingReport;
         } catch (ManifestMerger2.MergeFailureException e) {
             // TODO: unacceptable.
             throw new RuntimeException(e);

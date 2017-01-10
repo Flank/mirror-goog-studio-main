@@ -70,7 +70,7 @@ public class BuildInfoTasksTest {
 
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        BuildContext context = new BuildContext();
         context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
         runLoaderTask(project, context);
 
@@ -82,7 +82,7 @@ public class BuildInfoTasksTest {
 
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        BuildContext context = new BuildContext();
         context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
 
         runLoaderTask(project, context);
@@ -99,24 +99,24 @@ public class BuildInfoTasksTest {
 
     private void runLoaderTask(
             @NonNull Project project,
-            @NonNull InstantRunBuildContext context) {
+            @NonNull BuildContext context) {
         BuildInfoLoaderTask loader = project.getTasks().create("loader", BuildInfoLoaderTask.class);
         loader.buildInfoFile = buildInfoFile;
         loader.tmpBuildInfoFile = tmpBuildInfoFile;
         loader.pastBuildsFolder = pastBuildsDirectory;
-        loader.instantRunBuildContext = context;
+        loader.buildContext = context;
         loader.logger = logger;
         loader.execute();
     }
 
     private void runWriterTask(
             @NonNull Project project,
-            @NonNull InstantRunBuildContext context) {
+            @NonNull BuildContext context) {
         BuildInfoWriterTask writer = project.getTasks().create("writer", BuildInfoWriterTask.class);
         writer.buildInfoFile = buildInfoFile;
         writer.tmpBuildInfoFile = tmpBuildInfoFile;
         writer.logger = logger;
-        writer.instantRunBuildContext = context;
+        writer.buildContext = context;
         writer.execute();
     }
 

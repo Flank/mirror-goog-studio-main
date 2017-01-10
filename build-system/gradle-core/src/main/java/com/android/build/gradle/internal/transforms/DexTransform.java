@@ -32,7 +32,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
@@ -109,7 +109,7 @@ public class DexTransform extends Transform {
     @NonNull
     private final ILogger logger;
 
-    private final InstantRunBuildContext instantRunBuildContext;
+    private final BuildContext buildContext;
 
     @NonNull
     private final Optional<FileCache> buildCache;
@@ -122,7 +122,7 @@ public class DexTransform extends Transform {
             @NonNull File intermediateFolder,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull Logger logger,
-            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull BuildContext buildContext,
             @NonNull Optional<FileCache> buildCache) {
         this.dexOptions = dexOptions;
         this.debugMode = debugMode;
@@ -131,7 +131,7 @@ public class DexTransform extends Transform {
         this.intermediateFolder = intermediateFolder;
         this.androidBuilder = androidBuilder;
         this.logger = new LoggerWrapper(logger);
-        this.instantRunBuildContext = instantRunBuildContext;
+        this.buildContext = buildContext;
         this.buildCache = buildCache;
     }
 
@@ -710,7 +710,7 @@ public class DexTransform extends Transform {
         // transform. adding sha1 to the name can lead to cleaning issues in device, it's much
         // easier if the slices always have the same names, irrespective of the current variant,
         // last version wins.
-        String name = instantRunBuildContext.isInInstantRunMode()
+        String name = buildContext.isInInstantRunMode()
                 && (qualifiedContent.getScopes().contains(Scope.PROJECT)
                     || qualifiedContent.getScopes().contains(Scope.SUB_PROJECTS))
                 ? getInstantRunFileName(file) : getFilename(file);

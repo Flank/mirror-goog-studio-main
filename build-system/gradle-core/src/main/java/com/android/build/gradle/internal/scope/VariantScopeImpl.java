@@ -57,7 +57,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -125,7 +125,6 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -398,7 +397,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
                 && (!buildType.isMinifyEnabled() || buildType.isUseProguard())
-                && !getInstantRunBuildContext().isInInstantRunMode();
+                && !getBuildContext().isInInstantRunMode();
     }
 
     @Override
@@ -535,6 +534,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(globalScope.getIntermediatesDir(),
                 FD_DEX,
                 androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
+    public File getBuildInfoOutputFolder() {
+        return new File(globalScope.getIntermediatesDir(), "/build-info/" + getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1597,14 +1602,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @NonNull
-    private InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+    private BuildContext buildContext = new BuildContext();
 
     @Override
     @NonNull
-    public InstantRunBuildContext getInstantRunBuildContext() {
-        return instantRunBuildContext;
+    public BuildContext getBuildContext() {
+        return buildContext;
     }
-
 
     @NonNull
     @Override

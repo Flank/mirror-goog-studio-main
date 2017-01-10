@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitList;
@@ -55,19 +55,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
@@ -125,7 +122,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File mergeBlameLogFolder;
 
-    private InstantRunBuildContext instantRunBuildContext;
+    private BuildContext buildContext;
 
     private FileCollection baseFeature;
 
@@ -153,7 +150,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         // If are in instant run mode and we have an instant run enabled manifest
         File instantRunManifest = getInstantRunManifestFile();
-        File manifestFileToPackage = instantRunBuildContext.isInInstantRunMode() &&
+        File manifestFileToPackage = buildContext.isInInstantRunMode() &&
                 instantRunManifest != null && instantRunManifest.exists()
                     ? instantRunManifest
                     : getManifestFile();
@@ -397,8 +394,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setMergeBlameLogFolder(
                     variantScope.getResourceBlameLogDir());
 
-            processResources.instantRunBuildContext =
-                    variantScope.getInstantRunBuildContext();
+            processResources.buildContext =
+                    variantScope.getBuildContext();
 
             processResources.setPreviousFeatures(ImmutableSet.of());
             processResources.setBaseFeature(variantScope.getBaseAtomResourcePkg());
@@ -435,7 +432,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @SuppressWarnings("unused")
     @Input
     public boolean isInstantRunMode() {
-        return this.instantRunBuildContext.isInInstantRunMode();
+        return this.buildContext.isInInstantRunMode();
     }
 
     @NonNull

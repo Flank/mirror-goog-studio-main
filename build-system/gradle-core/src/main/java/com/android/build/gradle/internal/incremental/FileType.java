@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.incremental;
 
 /**
- * Enumeration of the possible file types produced by an instant run enabled build.
+ * Enumeration of the possible file types produced by a build.
  */
 public enum FileType {
     /**
@@ -40,4 +40,8 @@ public enum FileType {
      * Resources: res.ap_ file
      */
     RESOURCES,
+    /**
+     * Full split (main APK with reduced sets of resources).
+     */
+    FULL_SPLIT
 }

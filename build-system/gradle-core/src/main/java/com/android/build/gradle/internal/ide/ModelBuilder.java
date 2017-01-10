@@ -525,7 +525,6 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
 
         InstantRunImpl instantRun = new InstantRunImpl(
-                // todo : move this to a shared location.
                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
                 variantConfiguration.getInstantRunSupportStatus());
 

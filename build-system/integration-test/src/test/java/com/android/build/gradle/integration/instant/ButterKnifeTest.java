@@ -27,11 +27,10 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -111,9 +110,9 @@ public class ButterKnifeTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    @NonNull List<BuildContext.Artifact> artifacts)
                                     throws Exception {
-                                InstantRunBuildContext.Artifact artifact =
+                                BuildContext.Artifact artifact =
                                         Iterables.getOnlyElement(artifacts);
                                 assertThatApk(new Apk(artifact.getLocation()))
                                         .hasClass(ACTIVITY_DESC)

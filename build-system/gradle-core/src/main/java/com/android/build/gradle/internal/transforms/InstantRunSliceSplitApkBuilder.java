@@ -26,11 +26,10 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -55,14 +54,14 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
 
     public InstantRunSliceSplitApkBuilder(@NonNull Logger logger,
             @NonNull Project project,
-            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull BuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
             @NonNull com.android.builder.model.AaptOptions aaptOptions,
             @NonNull File outputDirectory, @NonNull File supportDirectory,
             @NonNull String applicationId, @Nullable String versionName, int versionCode) {
-        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
+        super(logger, project, buildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
                 outputDirectory, supportDirectory, applicationId, versionName, versionCode);
     }
 

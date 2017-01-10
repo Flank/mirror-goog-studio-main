@@ -39,7 +39,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
@@ -86,7 +86,7 @@ public class InstantRunTransformTest {
     GlobalScope globalScope;
 
     @Mock
-    InstantRunBuildContext instantRunBuildContext;
+    BuildContext buildContext;
 
     @Mock
     Project project;
@@ -105,9 +105,9 @@ public class InstantRunTransformTest {
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
         when(globalScope.getProject()).thenReturn(project);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
+        when(variantScope.getBuildContext()).thenReturn(buildContext);
         when(variantScope.getInstantRunBootClasspath()).thenReturn(ImmutableList.of());
-        when(instantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
+        when(buildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
 
         doAnswer(invocation -> {
             Object[] args = invocation.getArguments();
@@ -281,9 +281,9 @@ public class InstantRunTransformTest {
         final ImmutableList.Builder<File> filesElectedForClasses2Transformation = ImmutableList.builder();
         final ImmutableList.Builder<File> filesElectedForClasses3Transformation = ImmutableList.builder();
 
-        when(instantRunBuildContext.getVerifierResult()).thenReturn(
+        when(buildContext.getVerifierResult()).thenReturn(
                 InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
-        when(instantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
+        when(buildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
 
         InstantRunTransform transform = createTransform(
                 filesElectedForClasses2Transformation, filesElectedForClasses2Transformation);
@@ -327,7 +327,7 @@ public class InstantRunTransformTest {
                 .setIncrementalMode(false)
                 .build());
 
-        verify(instantRunBuildContext).setVerifierStatus(
+        verify(buildContext).setVerifierStatus(
                     Mockito.eq(InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL));
 
         ImmutableList<File> processedFiles = filesElectedForClasses2Transformation.build();
@@ -359,9 +359,9 @@ public class InstantRunTransformTest {
         final ImmutableList.Builder<File> filesElectedForClasses2Transformation = ImmutableList.builder();
         final ImmutableList.Builder<File> filesElectedForClasses3Transformation = ImmutableList.builder();
 
-        when(instantRunBuildContext.getVerifierResult()).thenReturn(
+        when(buildContext.getVerifierResult()).thenReturn(
                 InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
-        when(instantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
+        when(buildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
 
         InstantRunTransform transform = createTransform(
                 filesElectedForClasses2Transformation, filesElectedForClasses2Transformation);
@@ -404,7 +404,7 @@ public class InstantRunTransformTest {
                 .setIncrementalMode(false)
                 .build());
 
-        verify(instantRunBuildContext).setVerifierStatus(
+        verify(buildContext).setVerifierStatus(
                 Mockito.eq(InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL));
 
         ImmutableList<File> processedFiles = filesElectedForClasses2Transformation.build();
@@ -491,7 +491,7 @@ public class InstantRunTransformTest {
         // delete the "deleted" file.
         FileUtils.delete(originalFile);
         if (!incrementalMode) {
-            when(instantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
+            when(buildContext.getBuildMode()).thenReturn(InstantRunBuildMode.COLD);
         }
 
         transform.transform(new TransformInvocationBuilder(context)
@@ -502,7 +502,7 @@ public class InstantRunTransformTest {
 
 
         if (!incrementalMode) {
-            verify(instantRunBuildContext).setVerifierStatus(
+            verify(buildContext).setVerifierStatus(
                     Mockito.eq(InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL));
         }
 
