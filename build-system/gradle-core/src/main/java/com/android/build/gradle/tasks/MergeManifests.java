@@ -120,7 +120,6 @@ public class MergeManifests extends ManifestProcessorTask {
      * This serialized form is only used by gradle to compare past and present tasks to determine
      * whether a task need to be re-run or not.
      */
-    @SuppressWarnings("unused")
     @Input
     @Optional
     public String getManifestPlaceholders() {
@@ -133,7 +132,6 @@ public class MergeManifests extends ManifestProcessorTask {
      * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
-    @SuppressWarnings("unused")
     @InputFiles
     public List<File> getManifestInputs() {
         List<ManifestProvider> providers = getProviders();
@@ -192,7 +190,6 @@ public class MergeManifests extends ManifestProcessorTask {
     }
 
     /** Synthetic input for {@link #getOptionalFeatures()} */
-    @SuppressWarnings("unused")
     @Input
     public List<String> getOptionalFeaturesString() {
         return optionalFeatures.stream().map(Enum::toString).collect(Collectors.toList());

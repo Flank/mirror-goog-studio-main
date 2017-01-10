@@ -23,7 +23,6 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -33,7 +32,8 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
@@ -43,10 +43,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.Callable;
 
 /**
  * Task to generate micro app data res file.
@@ -109,14 +105,12 @@ public class GenerateApkDataTask extends BaseTask {
         this.resOutputDir = resOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFile
     @Optional
     public File getApkFile() {
         return apkFile.get();
     }
 
-    @SuppressWarnings("unused")
     @Input
     public String getMainPkgName() {
         return mainPkgName;

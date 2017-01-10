@@ -20,17 +20,14 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
-import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
@@ -38,7 +35,6 @@ import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.NoOpResourcePreprocessor;
 import com.android.ide.common.res2.QueueableResourceCompiler;
-import com.android.ide.common.res2.ResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
@@ -46,7 +42,6 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -289,7 +284,6 @@ public class MergeResources extends IncrementalTask {
         return resourceSets;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getRenderscriptResOutputDir() {
         return renderscriptResOutputDir;
@@ -300,7 +294,6 @@ public class MergeResources extends IncrementalTask {
         this.renderscriptResOutputDir = renderscriptResOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getGeneratedResOutputDir() {
         return generatedResOutputDir;
@@ -311,7 +304,6 @@ public class MergeResources extends IncrementalTask {
         this.generatedResOutputDir = generatedResOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getMicroApkResDirectory() {
@@ -323,7 +315,6 @@ public class MergeResources extends IncrementalTask {
         this.microApkResDirectory = microApkResDirectory;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getExtraGeneratedResFolders() {
@@ -353,7 +344,6 @@ public class MergeResources extends IncrementalTask {
         this.sourceFolderInputs = sourceFolderInputs;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public Set<File> getDependencyInputs() {
@@ -399,7 +389,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     // Synthetic input: the validation flag is set on the resource sets in ConfigAction.execute.
-    @SuppressWarnings("unused")
     @Input
     public boolean isValidateEnabled() {
         return validateEnabled;

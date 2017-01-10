@@ -339,7 +339,6 @@ public class AidlCompile extends IncrementalTask {
         this.packageWhitelist = packageWhitelist;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public Collection<File> getImportDirs() {
         return importDirs.get();

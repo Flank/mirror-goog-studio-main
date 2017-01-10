@@ -68,7 +68,6 @@ public class GenerateSplitAbiRes extends BaseTask {
 
     private ApkVariantOutputData variantOutputData;
 
-    @SuppressWarnings("unused") // Synthetic task output
     @OutputFiles
     public List<File> getOutputFiles() {
         return getSplits().stream()

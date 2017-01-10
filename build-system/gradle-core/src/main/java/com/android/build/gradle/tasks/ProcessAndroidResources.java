@@ -385,7 +385,6 @@ public class ProcessAndroidResources extends IncrementalTask {
      * <p>
      * Fix for <a href="http://b.android.com/209985">b.android.com/209985</a>.
      */
-    @SuppressWarnings("unused")
     @Input
     public boolean isInstantRunMode() {
         return this.instantRunBuildContext.isInInstantRunMode();

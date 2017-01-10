@@ -207,7 +207,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
      * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
      * this method gathers and returns the underlying manifest files.
      */
-    @SuppressWarnings("unused")
     @InputFiles
     public List<File> getLibraryManifests() {
         List<ManifestProvider> manifestProviders = getProviders();
