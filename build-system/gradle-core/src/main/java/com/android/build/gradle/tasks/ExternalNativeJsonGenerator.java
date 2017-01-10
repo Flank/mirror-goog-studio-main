@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFiles;
@@ -659,12 +660,13 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @Input
+    @InputFile
     public File getMakefile() {
         return makefile;
     }
 
     @NonNull
+    @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getObjFolder() {
         return objFolder;
     }
@@ -676,7 +678,7 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @Input
+    @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getNdkFolder() {
         return ndkFolder;
     }
@@ -708,23 +710,24 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
     @OutputFiles
     public List<File> getNativeBuildConfigurationsJsons() {
         return nativeBuildConfigurationsJsons;
     }
 
     @NonNull
+    @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getSoFolder() {
         return soFolder;
     }
 
     @NonNull
-    @Input
+    @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getSdkFolder() {
         return sdkFolder;
     }
 
+    @Input
     @NonNull
     List<Abi> getAbis() {
         return abis;
