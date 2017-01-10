@@ -298,7 +298,7 @@ public class DefaultConfiguration extends Configuration {
         client.report(new Context(driver, project, project, configFile),
                 IssueRegistry.LINT_ERROR,
                 project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
-                Location.create(configFile), message, TextFormat.RAW);
+                Location.create(configFile), message, TextFormat.RAW, null);
     }
 
     private void readConfig() {

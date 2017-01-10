@@ -162,7 +162,7 @@ public class Main {
                                 IssueRegistry.LINT_ERROR,
                                 project.getConfiguration(null).getSeverity(
                                         IssueRegistry.LINT_ERROR), location, message,
-                                TextFormat.RAW);
+                                TextFormat.RAW, null);
                     }
                 }
                 return project;

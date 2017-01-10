@@ -191,4 +191,13 @@ public class ResourceEvaluatorTest extends TestCase {
                         + "int w = toString().indexOf('x') > 2 ? z : R.string.foo",
                 "w");
     }
+
+    public void testResourceTypes() {
+        assertEquals(ResourceType.ANIM, ResourceEvaluator.getTypeFromAnnotationSignature(
+                ResourceEvaluator.ANIM_RES_ANNOTATION));
+        assertEquals(ResourceType.STRING, ResourceEvaluator.getTypeFromAnnotationSignature(
+                ResourceEvaluator.STRING_RES_ANNOTATION));
+        assertEquals(ResourceType.LAYOUT, ResourceEvaluator.getTypeFromAnnotationSignature(
+                ResourceEvaluator.LAYOUT_RES_ANNOTATION));
+    }
 }

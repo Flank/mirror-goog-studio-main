@@ -280,7 +280,9 @@ public class JavaContext extends Context {
      *    nodes) and if so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
      * @param message the message for this warning
+     * @deprecated use {@link #report(Issue, PsiElement, Location, String)} instead
      */
+    @Deprecated
     public void report(
             @NonNull Issue issue,
             @Nullable Node scope,
@@ -292,15 +294,48 @@ public class JavaContext extends Context {
         super.report(issue, location, message);
     }
 
+    /**
+     * Reports an issue applicable to a given AST node. The AST node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue    the issue to report
+     * @param scope    the AST node scope the error applies to. The lint infrastructure will check
+     *                 whether there are suppress annotations on this node (or its enclosing nodes)
+     *                 and if so suppress the warning without involving the client.
+     * @param location the location of the issue, or null if not known
+     * @param message  the message for this warning
+     */
     public void report(
             @NonNull Issue issue,
             @Nullable PsiElement scope,
             @NonNull Location location,
             @NonNull String message) {
+        report(issue, scope, location, message, null);
+    }
+
+    /**
+     * Reports an issue applicable to a given AST node. The AST node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue        the issue to report
+     * @param scope        the AST node scope the error applies to. The lint infrastructure will
+     *                     check whether there are suppress annotations on this node (or its
+     *                     enclosing nodes) and if so suppress the warning without involving the
+     *                     client.
+     * @param location     the location of the issue, or null if not known
+     * @param message      the message for this warning
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable PsiElement scope,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable Object quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
-        super.report(issue, location, message);
+        super.report(issue, location, message, quickfixData);
     }
 
     /**

@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -199,7 +200,8 @@ public class LintCliXmlParserTest extends TestCase {
                 @NonNull Severity severity,
                 @NonNull Location location,
                 @NonNull String message,
-                @NonNull TextFormat format) {
+                @NonNull TextFormat format,
+                @Nullable Object quickfixData) {
             System.out.println(location + ":" + message);
         }
     }

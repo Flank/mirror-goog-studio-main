@@ -189,6 +189,14 @@ public class GroovyGradleDetector extends GradleDetector {
                         getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
             }
         }
+
+        if (node instanceof ArgumentListExpression) {
+            List<Expression> expressions = ((ArgumentListExpression) node).getExpressions();
+            if (expressions.size() == 1) {
+                return getOffsets(expressions.get(0), context);
+            }
+        }
+
         CharSequence source = context.getContents();
         assert source != null; // because we successfully parsed
         int start = 0;

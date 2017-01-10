@@ -1085,7 +1085,7 @@ public class LintDriver {
                 IssueRegistry.CANCELLED,
                 Severity.INFORMATIONAL,
                 Location.create(project.getDir()),
-                "Lint canceled by user", TextFormat.RAW);
+                "Lint canceled by user", TextFormat.RAW, null);
         }
 
         currentProjects = null;
@@ -1386,7 +1386,7 @@ public class LintDriver {
             client.report(new Context(this, project, main, project.getDir()),
                     IssueRegistry.LINT_ERROR,
                     project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
-                    location, message, TextFormat.RAW);
+                    location, message, TextFormat.RAW, null);
             classEntries = Collections.emptyList();
         } else {
             classEntries = ClassEntry.fromClassPath(client, classFolders, true);
@@ -2032,6 +2032,13 @@ public class LintDriver {
             mDelegate = delegate;
         }
 
+        @Deprecated
+        public void report(@NonNull Context context, @NonNull Issue issue,
+                @NonNull Severity severity,
+                @NonNull Location location, @NonNull String message, @NonNull TextFormat format) {
+            report(context, issue, severity, location, message, format, null);
+        }
+
         @Override
         public void report(
                 @NonNull Context context,
@@ -2039,7 +2046,8 @@ public class LintDriver {
                 @NonNull Severity severity,
                 @NonNull Location location,
                 @NonNull String message,
-                @NonNull TextFormat format) {
+                @NonNull TextFormat format,
+                @Nullable Object quickfixData) {
             //noinspection ConstantConditions
             if (location == null) {
                 // Misbehaving third-party lint detectors
@@ -2077,7 +2085,7 @@ public class LintDriver {
                 }
             }
 
-            mDelegate.report(context, issue, severity, location, message, format);
+            mDelegate.report(context, issue, severity, location, message, format, quickfixData);
         }
 
         // Everything else just delegates to the embedding lint client
