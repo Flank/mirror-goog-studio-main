@@ -154,6 +154,12 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
 
         String methodName = method.getName();
         if (methodName.equals("ofPropertyValuesHolder")) {
+            if (!evaluator.isMemberInClass(method, "android.animation.ObjectAnimator")) {
+                // *Don't* match ValueAnimator.ofPropertyValuesHolder(); for that method,
+                // arg0 is another PropertyValuesHolder, *not* the target object!
+                return;
+            }
+
             // Try to find the corresponding property value holder initializations
             // and validate each one
             checkPropertyValueHolders(context, targetClass, expressions);

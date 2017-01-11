@@ -82,7 +82,7 @@ public class DefaultConfiguration extends Configuration {
     private static final String ATTR_PATH = "path";
     private static final String ATTR_REGEXP = "regexp";
     private static final String TAG_IGNORE = "ignore";
-    private static final String VALUE_ALL = "all";
+    public static final String VALUE_ALL = "all";
     private static final String ATTR_BASELINE = "baseline";
 
     private static final String RES_PATH_START = "res/";

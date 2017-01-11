@@ -381,4 +381,30 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testCreateValueAnimator() throws Exception {
+        // Regression test which makes sure that when we use ValueAnimator.ofPropertyValuesHolder
+        // to create a property holder and we don't know the associated object, we don't falsely
+        // report broken properties
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.animation.PropertyValuesHolder;\n"
+                        + "import android.animation.ValueAnimator;\n"
+                        + "\n"
+                        + "public class MyAndroidLibraryClass {\n"
+                        + "\n"
+                        + "    ValueAnimator create(float fromX, float toX, float fromY, float toY) {\n"
+                        + "        final PropertyValuesHolder xHolder = PropertyValuesHolder.ofFloat(\"x\", fromX, toX);\n"
+                        + "        final PropertyValuesHolder yHolder = PropertyValuesHolder.ofFloat(\"y\", fromY, toY);\n"
+                        + "        return ValueAnimator.ofPropertyValuesHolder(xHolder, yHolder);\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(ObjectAnimatorDetector.BROKEN_PROPERTY)
+                .run()
+                .expectClean();
+    }
 }
