@@ -64,8 +64,4 @@ public class AssumeUtil {
     public static void assumeIsLinux() {
         Assume.assumeTrue(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX);
     }
-
-    public static void assumeResolveDependencyOnConfiguration() {
-        Assume.assumeFalse(GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION);
-    }
 }

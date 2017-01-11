@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
@@ -71,8 +70,10 @@ class ShrinkResourcesTest {
                 project.buildFile,
                 "android.buildTypes.debug.shrinkResources = true")
 
-        GradleBuildResult result = project.executor().expectFailure().run(":assembleDebug")
-        assertThat(result.failureMessage).contains("requires minifyEnabled")
+        AndroidProject model =
+                project.model().ignoreSyncIssues().getMulti().getModelMap().get(":")
+        assertThat(model.syncIssues).hasSize(1)
+        assertThat(model.syncIssues.first().message).contains("requires minifyEnabled")
     }
 
     @Test
