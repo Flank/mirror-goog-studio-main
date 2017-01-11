@@ -17,14 +17,20 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import java.io.File;
+import java.io.IOException;
 import org.gradle.api.Project;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -33,14 +39,29 @@ import org.mockito.MockitoAnnotations;
  */
 public class ExternalBuildGlobalScopeTest {
 
+    @Rule
+    public TemporaryFolder testDir = new TemporaryFolder();
+
     @Mock
     Project project;
 
     ExternalBuildGlobalScope scope;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
+
+        // Set a custom build cache directory so that the plugin won't attempt to use the default
+        // build cache directory under the ".android" directory, which will fail in a testing
+        // environment
+        File buildCacheDir = testDir.newFolder();
+        when(project.hasProperty(AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR)).thenReturn(true);
+        when(project.property(AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR))
+                .thenReturn(buildCacheDir.getPath());
+        Project rootProject = mock(Project.class);
+        when(project.getRootProject()).thenReturn(rootProject);
+        when(rootProject.file(any())).thenAnswer(
+                invocation -> new File((String) invocation.getArguments()[0]));
     }
 
     @Test

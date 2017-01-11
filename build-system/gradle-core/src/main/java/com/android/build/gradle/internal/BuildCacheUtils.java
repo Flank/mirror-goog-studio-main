@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.utils.FileCache;
-import com.android.utils.FileUtils;
+import com.android.prefs.AndroidLocation;
 import java.io.File;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Class that contains utility methods for working with the build cache.
@@ -40,31 +42,47 @@ public final class BuildCacheUtils {
      * is set to a user-defined directory, or a default directory if the user-defined directory is
      * not provided.
      *
-     * @throws RuntimeException if the build cache cannot be created
+     * @throws RuntimeException if the ".android" directory does not exist or the build cache cannot
+     * be created
      */
     @NonNull
     public static Optional<FileCache> createBuildCacheIfEnabled(
             @NonNull AndroidGradleOptions androidGradleOptions) {
-        if (androidGradleOptions.isBuildCacheEnabled()) {
-            File buildCacheDir =
-                    androidGradleOptions.getBuildCacheDir() != null
-                            ? androidGradleOptions.getBuildCacheDir()
-                            // Use a default directory if the user-defined directory is not provided
-                            : new File(FileUtils.join(
-                            System.getProperty("user.home"), ".android", "build-cache"));
+        // Use a default directory if the user-defined directory is not provided
+        Supplier<File> defaultBuildCacheDirSupplier = () -> {
             try {
-                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
-            } catch (Exception exception) {
-                throw new RuntimeException(
-                        String.format(
-                                "Unable to create the build cache at '%1$s'.\n"
-                                        + "%2$s",
-                                buildCacheDir.getAbsolutePath(),
-                                BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
-                        exception);
+                return new File(AndroidLocation.getFolder(), "build-cache");
+            } catch (AndroidLocation.AndroidLocationException e) {
+                throw new RuntimeException(e);
             }
-        } else {
+        };
+
+        return doCreateBuildCacheIfEnabled(androidGradleOptions, defaultBuildCacheDirSupplier);
+    }
+
+    @VisibleForTesting
+    @NonNull
+    static Optional<FileCache> doCreateBuildCacheIfEnabled(
+            @NonNull AndroidGradleOptions androidGradleOptions,
+            @NonNull Supplier<File> defaultBuildCacheDirSupplier) {
+        if (!androidGradleOptions.isBuildCacheEnabled()) {
             return Optional.empty();
+        }
+
+        File buildCacheDir =
+                androidGradleOptions.getBuildCacheDir() != null
+                        ? androidGradleOptions.getBuildCacheDir()
+                        : defaultBuildCacheDirSupplier.get();
+        try {
+            return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
+        } catch (Exception exception) {
+            throw new RuntimeException(
+                    String.format(
+                            "Unable to create the build cache at '%1$s'.\n"
+                                    + "%2$s",
+                            buildCacheDir.getAbsolutePath(),
+                            BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
+                    exception);
         }
     }
 }
