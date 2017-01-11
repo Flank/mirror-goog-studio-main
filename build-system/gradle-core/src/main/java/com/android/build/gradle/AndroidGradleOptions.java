@@ -23,9 +23,9 @@ import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
+import com.android.prefs.AndroidLocation;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -442,12 +442,15 @@ public class AndroidGradleOptions {
     public static File getBuildCacheDir(@NonNull Project project) {
         String buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
         if (buildCacheDir != null) {
-            return new File(buildCacheDir);
+            return project.getRootProject().file(buildCacheDir);
         } else {
-            // Use a directory under the user home directory if the build cache directory is not set
-            return new File(
-                    FileUtils.join(
-                            System.getProperty("user.home"), ".android", "build-cache"));
+            // Use a directory under the ".android" directory if the build cache directory is not
+            // set
+            try {
+                return new File(AndroidLocation.getFolder(), "build-cache");
+            } catch (AndroidLocation.AndroidLocationException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
