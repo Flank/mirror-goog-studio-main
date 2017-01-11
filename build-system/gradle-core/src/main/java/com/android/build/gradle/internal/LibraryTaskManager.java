@@ -353,6 +353,8 @@ public class LibraryTaskManager extends TaskManager {
                             createMinifyTransform(tasks, variantScope, false);
                         }
 
+                        maybeCreateShrinkResourcesTransform(tasks, variantScope);
+
                         // now add a transform that will take all the class/res and package them
                         // into the main and secondary jar files.
                         // This transform technically does not use its transform output, but that's

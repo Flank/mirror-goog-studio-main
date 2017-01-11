@@ -1886,6 +1886,8 @@ public abstract class TaskManager {
             createMinifyTransform(tasks, variantScope, outputToJarFile);
         }
 
+        maybeCreateShrinkResourcesTransform(tasks, variantScope);
+
         // ----- 10x support
 
         AndroidTask<PreColdSwapTask> preColdSwapTask = null;
@@ -2834,13 +2836,11 @@ public abstract class TaskManager {
                 .getBuildType()
                 .isUseProguard()) {
             createProguardTransform(taskFactory, variantScope, mappingConfiguration);
-            createShrinkResourcesTransform(taskFactory, variantScope);
         } else {
             // Since the built-in class shrinker does not obfuscate, there's no point running
             // it on the test APK (it also doesn't have a -dontshrink mode).
             if (variantScope.getTestedVariantData() == null) {
                 createNewShrinkerTransform(variantScope, taskFactory);
-                createShrinkResourcesTransform(taskFactory, variantScope);
             }
         }
     }
@@ -2949,9 +2949,12 @@ public abstract class TaskManager {
         transform.keepattributes();
     }
 
-    private void createShrinkResourcesTransform(
-            @NonNull TaskFactory taskFactory,
-            @NonNull VariantScope scope) {
+    /**
+     * Checks if {@link ShrinkResourcesTransform} should be added to the build pipeline and either
+     * adds it or registers a {@link SyncIssue} with the reason why it was skipped.
+     */
+    protected void maybeCreateShrinkResourcesTransform(
+            @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
         CoreBuildType buildType = scope.getVariantConfiguration().getBuildType();
 
         if (!buildType.isShrinkResources()) {
@@ -2964,16 +2967,31 @@ public abstract class TaskManager {
             // explain.
 
             if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
-                logger.warn("Instant Run: Resource shrinker automatically disabled for {}",
+                logger.warn(
+                        "Instant Run: Resource shrinker automatically disabled for {}.",
                         scope.getVariantConfiguration().getFullName());
                 return;
             }
 
+            if (!buildType.isMinifyEnabled()) {
+                androidBuilder
+                        .getErrorReporter()
+                        .handleSyncError(
+                                null,
+                                SyncIssue.TYPE_GENERIC,
+                                "shrinkResources requires minifyEnabled to be turned on. See "
+                                        + "https://developer.android.com/studio/build/shrink-code.html#shrink-resources "
+                                        + "for more information.");
+                return;
+            }
+
             if (buildType.isMinifyEnabled() && !buildType.isUseProguard()) {
-                androidBuilder.getErrorReporter().handleSyncError(
-                        null,
-                        SyncIssue.TYPE_GENERIC,
-                        "Built-in class shrinker and resource shrinking are not supported yet.");
+                androidBuilder
+                        .getErrorReporter()
+                        .handleSyncError(
+                                null,
+                                SyncIssue.TYPE_GENERIC,
+                                "Built-in class shrinker and resource shrinking are not supported yet.");
                 return;
             }
 
@@ -2985,12 +3003,13 @@ public abstract class TaskManager {
         for (final BaseVariantOutputData variantOutputData : scope.getVariantData().getOutputs()) {
             VariantOutputScope variantOutputScope = variantOutputData.getScope();
 
-            ShrinkResourcesTransform shrinkResTransform = new ShrinkResourcesTransform(
-                    variantOutputData,
-                    variantOutputScope.getProcessResourcePackageOutputFile(),
-                    variantOutputScope.getShrinkedResourcesFile(),
-                    androidBuilder,
-                    logger);
+            ShrinkResourcesTransform shrinkResTransform =
+                    new ShrinkResourcesTransform(
+                            variantOutputData,
+                            variantOutputScope.getProcessResourcePackageOutputFile(),
+                            variantOutputScope.getShrinkedResourcesFile(),
+                            androidBuilder,
+                            logger);
             AndroidTask<TransformTask> shrinkTask =
                     scope.getTransformManager()
                             .addTransform(taskFactory, variantOutputScope, shrinkResTransform)

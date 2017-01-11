@@ -230,9 +230,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean useResourceShrinker() {
+        // Cases when resource shrinking is disabled despite the user setting the flag should
+        // be explained in TaskManager#maybeCreateShrinkResourcesTransform.
+
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
-                && (!buildType.isMinifyEnabled() || buildType.isUseProguard())
+                && buildType.isMinifyEnabled()
+                && !buildType.isUseProguard()
                 && !getInstantRunBuildContext().isInInstantRunMode();
     }
 
