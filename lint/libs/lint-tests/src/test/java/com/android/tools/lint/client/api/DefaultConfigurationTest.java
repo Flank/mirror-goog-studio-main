@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.FieldGetterDetector;
+import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.MathDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.SdCardDetector;
@@ -66,6 +67,19 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertEquals(Severity.WARNING, FieldGetterDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, configuration.getSeverity(FieldGetterDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(MathDetector.ISSUE));
+    }
+
+    public void testAllIds() throws Exception {
+        DefaultConfiguration configuration = getConfiguration(""
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<lint>\n"
+                + "    <issue id=\"all\" severity=\"ignore\" />\n"
+                + "    <issue id=\"FloatMath\" severity=\"error\" />\n"
+                + "</lint>");
+        assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE));
+        assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE));
+        assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE));
+        assertEquals(Severity.ERROR, configuration.getSeverity(MathDetector.ISSUE));
     }
 
     public void testPathIgnore() throws Exception {

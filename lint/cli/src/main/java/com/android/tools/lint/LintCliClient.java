@@ -463,17 +463,26 @@ public class LintCliClient extends LintClient {
      * Consult the lint.xml file, but override with the --enable and --disable
      * flags supplied on the command line
      */
-    class CliConfiguration extends DefaultConfiguration {
+    protected class CliConfiguration extends DefaultConfiguration {
         private final boolean mFatalOnly;
 
-        CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
+        protected CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
                 boolean fatalOnly) {
             super(LintCliClient.this, project, parent);
             mFatalOnly = fatalOnly;
         }
 
-        CliConfiguration(File lintFile, boolean fatalOnly) {
-            super(LintCliClient.this, null /*project*/, null /*parent*/, lintFile);
+        protected CliConfiguration(File lintFile, boolean fatalOnly) {
+            super(LintCliClient.this, null, null, lintFile);
+            mFatalOnly = fatalOnly;
+        }
+
+        protected CliConfiguration(
+                @NonNull File lintFile,
+                @Nullable Configuration parent,
+                @Nullable Project project,
+                boolean fatalOnly) {
+            super(LintCliClient.this, project, parent, lintFile);
             mFatalOnly = fatalOnly;
         }
 
@@ -523,6 +532,24 @@ public class LintCliClient extends LintClient {
 
             Severity manual = flags.getSeverityOverrides().get(id);
             if (manual != null) {
+                if (this.severity != null && (this.severity.containsKey(id)
+                        || this.severity.containsKey(VALUE_ALL))) {
+                    // Ambiguity! We have a specific severity override provided
+                    // via lint options for the main app module, but a local lint.xml
+                    // file in the library (not a lintOptions definition) which also
+                    // specifies severity for the same issue.
+                    //
+                    // Who should win? Should the intent from the main app module
+                    // win, such that you have a global way to say "this is the severity
+                    // I want during this lint run?". Or should the library-local definition
+                    // win, to say "there's a local problem in this library; I need to
+                    // change things here?".
+                    //
+                    // Both are plausible, so for now I'm going with a middle ground: local
+                    // definitions should be used to turn of issues that don't work right.
+                    // Therefore, we'll take the minimum of the two severities!
+                    return Severity.min(severity, manual);
+                }
                 return manual;
             }
 
@@ -758,7 +785,7 @@ public class LintCliClient extends LintClient {
     private static Set<File> sAlreadyWarned;
 
     /** Returns the configuration used by this client */
-    Configuration getConfiguration() {
+    protected Configuration getConfiguration() {
         if (configuration == null) {
             File configFile = flags.getDefaultConfiguration();
             if (configFile != null) {

@@ -58,4 +58,18 @@ public class SeverityTest extends TestCase {
         assertThat(Severity.ERROR.isError()).isTrue();
         assertThat(Severity.FATAL.isError()).isTrue();
     }
+
+    public void testMin() {
+        assertSame(Severity.INFORMATIONAL, Severity.min(Severity.ERROR, Severity.INFORMATIONAL));
+        assertSame(Severity.INFORMATIONAL, Severity.min(Severity.INFORMATIONAL, Severity.ERROR));
+        assertSame(Severity.ERROR, Severity.min(Severity.ERROR, Severity.ERROR));
+        assertSame(Severity.ERROR, Severity.min(Severity.FATAL, Severity.ERROR));
+    }
+
+    public void testMax() {
+        assertSame(Severity.ERROR, Severity.max(Severity.ERROR, Severity.INFORMATIONAL));
+        assertSame(Severity.ERROR, Severity.max(Severity.INFORMATIONAL, Severity.ERROR));
+        assertSame(Severity.ERROR, Severity.max(Severity.ERROR, Severity.ERROR));
+        assertSame(Severity.FATAL, Severity.max(Severity.FATAL, Severity.ERROR));
+    }
 }

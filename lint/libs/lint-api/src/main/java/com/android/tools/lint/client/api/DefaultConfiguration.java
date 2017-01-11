@@ -82,7 +82,7 @@ public class DefaultConfiguration extends Configuration {
     private static final String ATTR_PATH = "path";
     private static final String ATTR_REGEXP = "regexp";
     private static final String TAG_IGNORE = "ignore";
-    private static final String VALUE_ALL = "all";
+    public static final String VALUE_ALL = "all";
     private static final String ATTR_BASELINE = "baseline";
 
     private static final String RES_PATH_START = "res/";
@@ -104,7 +104,7 @@ public class DefaultConfiguration extends Configuration {
     /**
      * Map from id to custom {@link Severity} override
      */
-    private Map<String, Severity> severity;
+    protected Map<String, Severity> severity;
 
     protected DefaultConfiguration(
             @NonNull LintClient client,
@@ -145,13 +145,13 @@ public class DefaultConfiguration extends Configuration {
      * file, not affiliated with a project. This is used for global
      * configurations.
      *
-     * @param client the client to report errors to etc
+     * @param client   the client to report errors to etc
      * @param lintFile the lint file containing the configuration
      * @return a new configuration
      */
     @NonNull
     public static DefaultConfiguration create(@NonNull LintClient client, @NonNull File lintFile) {
-        return new DefaultConfiguration(client, null /*project*/, null /*parent*/, lintFile);
+        return new DefaultConfiguration(client, null, null, lintFile);
     }
 
     @Override

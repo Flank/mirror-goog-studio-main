@@ -1565,7 +1565,13 @@ public class EcjParser extends JavaParser {
                 int startPosition,
                 int endPosition, int lineNumber, int columnNumber) {
             boolean isError = (severity & ProblemSeverities.Error) != 0;
+            if (problemId == IProblem.DuplicateTypes) {
+                // Don't treat duplicate classes as a symbol resolution bug
+                isError = false;
+            }
+
             hasErrors |= isError;
+
             if (DEBUG_DUMP_PARSE_ERRORS) {
                 if (isError) {
                     String s = describeError(isError,
@@ -1596,7 +1602,13 @@ public class EcjParser extends JavaParser {
                 int severity,
                 int startPosition, int endPosition, int lineNumber, int columnNumber) {
             boolean isError = (severity & ProblemSeverities.Error) != 0;
+            if (problemId == IProblem.DuplicateTypes) {
+                // Don't treat duplicate classes as a symbol resolution bug
+                isError = false;
+            }
+
             hasErrors |= isError;
+
             if (DEBUG_DUMP_PARSE_ERRORS) {
                 if (isError) {
                     String s = describeError(isError,
