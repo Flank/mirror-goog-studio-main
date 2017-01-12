@@ -533,7 +533,8 @@ public class LintCliClient extends LintClient {
 
             Severity manual = flags.getSeverityOverrides().get(id);
             if (manual != null) {
-                if (this.severity != null && this.severity.containsKey(id)) {
+                if (this.severity != null && (this.severity.containsKey(id)
+                        || this.severity.containsKey(VALUE_ALL))) {
                     // Ambiguity! We have a specific severity override provided
                     // via lint options for the main app module, but a local lint.xml
                     // file in the library (not a lintOptions definition) which also
