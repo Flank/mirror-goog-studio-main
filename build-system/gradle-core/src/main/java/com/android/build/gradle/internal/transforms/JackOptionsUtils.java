@@ -149,8 +149,7 @@ public class JackOptionsUtils {
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
-                                project, scope, compileOptions, annotationConfig, logger)
-                        && !config.isTestCoverageEnabled();
+                                project, scope, compileOptions, annotationConfig, logger);
         if (incremental) {
             builder.setIncrementalDir(getJackIncrementalDir(scope));
         }
@@ -173,9 +172,9 @@ public class JackOptionsUtils {
      * @return options for configuring Jack
      */
     public static JackProcessOptions forDexGeneration(@NonNull VariantScope scope) {
-        JackProcessOptions sourceCompilation = forPreDexing(scope);
+        JackProcessOptions preDexOptions = forPreDexing(scope);
 
-        JackProcessOptions.Builder builder = JackProcessOptions.builder(sourceCompilation);
+        JackProcessOptions.Builder builder = JackProcessOptions.builder(preDexOptions);
 
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
         Project project = scope.getGlobalScope().getProject();
@@ -216,7 +215,7 @@ public class JackOptionsUtils {
 
         Map<String, String> additionalParameters = Maps.newHashMap();
         additionalParameters.put("jack.android.api-level.check", "false");
-        additionalParameters.putAll(sourceCompilation.getAdditionalParameters());
+        additionalParameters.putAll(preDexOptions.getAdditionalParameters());
         builder.setAdditionalParameters(additionalParameters);
 
         builder.setJackOutputFile(null).setIncrementalDir(null);
