@@ -2813,10 +2813,11 @@ public abstract class TaskManager {
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope,
             boolean createJarFile) {
-        doCreateMinifyTransform(taskFactory,
+        doCreateMinifyTransform(
+                taskFactory,
                 variantScope,
-                null /*mappingConfiguration*/, // No mapping in non-test modules.
-                createJarFile);
+                // No mapping in non-test modules.
+                null);
     }
 
     /**
@@ -2826,14 +2827,13 @@ public abstract class TaskManager {
     protected final void doCreateMinifyTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope,
-            @Nullable Configuration mappingConfiguration,
-            boolean createJarFile) {
+            @Nullable Configuration mappingConfiguration) {
         if (variantScope
                 .getVariantData()
                 .getVariantConfiguration()
                 .getBuildType()
                 .isUseProguard()) {
-            createProguardTransform(taskFactory, variantScope, mappingConfiguration, createJarFile);
+            createProguardTransform(taskFactory, variantScope, mappingConfiguration);
             createShrinkResourcesTransform(taskFactory, variantScope);
         } else {
             // Since the built-in class shrinker does not obfuscate, there's no point running
@@ -2863,8 +2863,7 @@ public abstract class TaskManager {
     private void createProguardTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull VariantScope variantScope,
-            @Nullable Configuration mappingConfiguration,
-            boolean createJarFile) {
+            @Nullable Configuration mappingConfiguration) {
         if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
             logger.warn(
                     "ProGuard is disabled for variant {} because it is not compatible with Instant Run. See "
@@ -2879,7 +2878,7 @@ public abstract class TaskManager {
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
-        ProGuardTransform transform = new ProGuardTransform(variantScope, createJarFile);
+        ProGuardTransform transform = new ProGuardTransform(variantScope);
 
         if (testedVariantData != null) {
             applyProguardDefaultsForTest(transform);
@@ -2927,7 +2926,15 @@ public abstract class TaskManager {
                                 transform,
                                 proGuardTransformCallback);
 
-        task.ifPresent(t -> t.optionalDependsOn(taskFactory, mappingConfiguration));
+        task.ifPresent(
+                t -> {
+                    t.optionalDependsOn(taskFactory, mappingConfiguration);
+
+                    if (testedVariantData != null) {
+                        // We need the mapping file for the app code to exist by the time we run.
+                        t.dependsOn(taskFactory, testedVariantData.assembleVariantTask);
+                    }
+                });
     }
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {

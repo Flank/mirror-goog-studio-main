@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.builder.Version
 import com.android.builder.model.AndroidProject
@@ -32,22 +33,18 @@ import org.objectweb.asm.tree.FieldNode
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.testutils.truth.MoreTruth.assertThatZip
-import static com.google.common.truth.TruthJUnit.assume
 /**
  * Assemble tests for minify.
  */
 @CompileStatic
 class MinifyTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("minify")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("minify").create()
 
     @Before
-    void setUp() {
-        assume().that(GradleTestProject.USE_JACK).isFalse()
-        project.execute("clean", "assembleMinified",
-                "assembleMinifiedAndroidTest", "jarDebugClasses")
+    void skipUnderJack() throws Exception {
+        AssumeUtil.assumeNotUsingJack()
     }
 
     @Test
@@ -58,6 +55,7 @@ class MinifyTest {
 
     @Test
     void 'App APK is minified'() throws Exception {
+        project.execute("assembleMinified")
         File jarFile = project.file(
                 "build/" +
                         "$AndroidProject.FD_INTERMEDIATES/" +
@@ -79,15 +77,28 @@ class MinifyTest {
                 // No entry for UnusedClass, it gets removed.
         )
 
+        File defaultProguardFile = project.file(
+                "build/" +
+                        AndroidProject.FD_INTERMEDIATES +
+                        "/proguard-files" +
+                        "/proguard-android.txt" +
+                        "-" +
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        assertThat(defaultProguardFile).exists()
+
         assertThat(project.getApk("minified"))
                 .hasMainClass("Lcom/android/tests/basic/Main;")
                 .that()
                 // Make sure default ProGuard rules were applied.
-                .hasMethod("handleOnClick");
+                .hasMethod("handleOnClick")
+
     }
 
     @Test
     void 'Test APK is not minified, but mappings are applied'() throws Exception {
+        // Run just a single task, to make sure task dependencies are correct.
+        project.execute("assembleMinifiedAndroidTest")
+
         File jarFile = project.file(
                 "build/" +
                         "$AndroidProject.FD_INTERMEDIATES/" +
@@ -114,23 +125,12 @@ class MinifyTest {
 
     @Test
     void 'Test classes.jar is present for non Jack enabled variants'() throws Exception {
+        project.execute("jarDebugClasses")
+
         ZipFileSubject classes = assertThatZip(project.file(
                 "build/$AndroidProject.FD_INTERMEDIATES/packaged/debug/classes.jar"))
 
         classes.contains("com/android/tests/basic/Main.class")
         classes.doesNotContain("com/android/tests/basic/MainTest.class")
     }
-
-    @Test
-    void 'Default ProGuard file created'() {
-        File defaultProguardFile = project.file(
-                "build/" +
-                        AndroidProject.FD_INTERMEDIATES +
-                        "/proguard-files" +
-                        "/proguard-android.txt" +
-                        "-" +
-                        Version.ANDROID_GRADLE_PLUGIN_VERSION)
-        assertThat(defaultProguardFile).exists();
-    }
-
 }
