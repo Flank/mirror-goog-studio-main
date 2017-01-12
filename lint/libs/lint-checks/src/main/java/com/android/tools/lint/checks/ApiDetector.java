@@ -2496,20 +2496,57 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            // If you're simply calling super.X from method X, even if method X is in a higher
-            // API level than the minSdk, we're generally safe; that method should only be
-            // called by the framework on the right API levels. (There is a danger of somebody
-            // calling that method locally in other contexts, but this is hopefully unlikely.)
             if (expression instanceof PsiMethodCallExpression) {
                 PsiMethodCallExpression call = (PsiMethodCallExpression) expression;
                 PsiReferenceExpression methodExpression = call.getMethodExpression();
-                if (methodExpression.getQualifierExpression() instanceof PsiSuperExpression) {
+                PsiExpression qualifierExpression = methodExpression.getQualifierExpression();
+
+                PsiClass target = null;
+                if (!method.isConstructor()) {
+                    if (qualifierExpression != null) {
+                        PsiType type = qualifierExpression.getType();
+                        if (type instanceof PsiClassType) {
+                            target = ((PsiClassType)type).resolve();
+                        }
+                    }
+                    else {
+                        target = PsiTreeUtil.getParentOfType(expression, PsiClass.class, true);
+                    }
+                }
+
+                // Look to see if there's a possible local receiver
+                if (target != null) {
+                    PsiMethod[] methods = target.findMethodsBySignature(method, true);
+                    if (methods.length > 1) {
+                        for (PsiMethod m : methods) {
+                            if (!method.equals(m)) {
+                                PsiClass provider = m.getContainingClass();
+                                if (provider != null) {
+                                    String methodOwner = evaluator.getInternalName(provider);
+                                    if (methodOwner != null) {
+                                        int methodApi = mApiDatabase.getCallVersion(methodOwner, name, desc);
+                                        if (methodApi == -1 || methodApi <= minSdk) {
+                                            // Yes, we found another call that doesn't have an API requirement
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If you're simply calling super.X from method X, even if method X is in a higher
+                // API level than the minSdk, we're generally safe; that method should only be
+                // called by the framework on the right API levels. (There is a danger of somebody
+                // calling that method locally in other contexts, but this is hopefully unlikely.)
+                if (qualifierExpression instanceof PsiSuperExpression) {
                     PsiMethod containingMethod = PsiTreeUtil
                             .getParentOfType(expression, PsiMethod.class, true);
                     if (containingMethod != null && name.equals(containingMethod.getName())
                             && evaluator.areSignaturesEqual(method, containingMethod)
                             // We specifically exclude constructors from this check, because we
-                            // do want to flag constructors requiring thenew API level; it's
+                            // do want to flag constructors requiring the new API level; it's
                             // highly likely that the constructor is called by local code so
                             // you should specifically investigate this as a developer
                             && !method.isConstructor()) {
