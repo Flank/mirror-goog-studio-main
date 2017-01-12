@@ -141,7 +141,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         }
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @NonNull
     public Collection<File> getManifestFilesCollection() {
@@ -158,7 +157,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.manifestFiles = manifestFiles;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @NonNull
     public Collection<File> getResDirsCollection() {
@@ -175,7 +173,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.resDirs = resDirs;
     }
 
-    @SuppressWarnings("unused")
     @OutputDirectories
     @NonNull
     public Collection<File> getSourceOutputDirsCollection() {
@@ -191,7 +188,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.sourceOutputDirs = sourceOutputDirs;
     }
 
-    @SuppressWarnings("unused")
     @OutputDirectories
     @NonNull
     public Collection<File> getTextSymbolOutputDirsCollection() {
@@ -208,7 +204,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.textSymbolOutputDirs = textSymbolOutputDirs;
     }
 
-    @SuppressWarnings("unused")
     @OutputFiles
     @NonNull
     public Collection<File> getPackageOutputFilesCollection() {
@@ -246,7 +241,6 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.preferredDensity = preferredDensity;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @NonNull
     public List<File> getInputFilesFromLibraries() {

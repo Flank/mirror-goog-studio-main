@@ -89,7 +89,6 @@ public class UninstallTask extends BaseTask {
 
     }
 
-    @SuppressWarnings("unused")
     @InputFile
     public File getAdbExe() {
         return adbSupplier.get();

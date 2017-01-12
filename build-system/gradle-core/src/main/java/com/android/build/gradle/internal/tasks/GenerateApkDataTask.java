@@ -35,7 +35,8 @@ import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
@@ -47,9 +48,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Task to generate micro app data res file.
@@ -129,14 +127,12 @@ public class GenerateApkDataTask extends BaseTask {
         this.resOutputDir = resOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getApkFileCollection() {
         return apkFile;
     }
 
-    @SuppressWarnings("unused")
     @Input
     public String getMainPkgName() {
         return mainPkgName;

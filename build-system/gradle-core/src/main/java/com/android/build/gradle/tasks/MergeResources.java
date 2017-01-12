@@ -294,7 +294,6 @@ public class MergeResources extends IncrementalTask {
         return resourceSets;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getRenderscriptResOutputDir() {
         return renderscriptResOutputDir;
@@ -305,7 +304,6 @@ public class MergeResources extends IncrementalTask {
         this.renderscriptResOutputDir = renderscriptResOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getGeneratedResOutputDir() {
         return generatedResOutputDir;
@@ -316,7 +314,6 @@ public class MergeResources extends IncrementalTask {
         this.generatedResOutputDir = generatedResOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getMicroApkResDirectory() {
@@ -328,7 +325,6 @@ public class MergeResources extends IncrementalTask {
         this.microApkResDirectory = microApkResDirectory;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getExtraGeneratedResFolders() {
@@ -414,7 +410,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     // Synthetic input: the validation flag is set on the resource sets in ConfigAction.execute.
-    @SuppressWarnings("unused")
     @Input
     public boolean isValidateEnabled() {
         return validateEnabled;

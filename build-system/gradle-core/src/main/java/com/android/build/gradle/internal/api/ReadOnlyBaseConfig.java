@@ -158,8 +158,7 @@ public abstract class ReadOnlyBaseConfig extends GroovyObjectSupport implements 
                         baseConfig.getClass().getName()));
     }
 
-    // This is part of the Groovy/Gradle method dispatch convention.
-    @SuppressWarnings({"unused"})
+    @SuppressWarnings("unused") // This is part of the Groovy/Gradle method dispatch convention.
     public boolean hasProperty(String name) {
         if (DefaultGroovyMethods.hasProperty(this, name) != null) {
             return true;

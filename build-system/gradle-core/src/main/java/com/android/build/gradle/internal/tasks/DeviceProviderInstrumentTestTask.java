@@ -44,7 +44,9 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.Nullable;
@@ -53,10 +55,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Run instrumentation tests for a given variant
@@ -238,7 +236,6 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         this.testData = testData;
     }
 
-    @SuppressWarnings("unused")
     @InputFile
     public File getSplitSelectExec() {
         return splitSelectExec.get();

@@ -142,13 +142,11 @@ public class InstallVariantTask extends BaseTask {
         }
     }
 
-    @SuppressWarnings("unused")
     @InputFile
     public File getAdbExe() {
         return adbExe.get();
     }
 
-    @SuppressWarnings("unused")
     @InputFile
     @Optional
     public File getSplitSelectExe() {
@@ -180,7 +178,6 @@ public class InstallVariantTask extends BaseTask {
         this.timeOutInMs = timeOutInMs;
     }
 
-    @SuppressWarnings("unused")
     @Input
     @Optional
     public Collection<String> getInstallOptions() {

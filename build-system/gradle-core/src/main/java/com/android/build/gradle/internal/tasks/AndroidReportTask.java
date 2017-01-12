@@ -61,7 +61,6 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     private Supplier<File> reportsDir;
     private Supplier<File> resultsDir;
 
-    @SuppressWarnings("unused")
     @OutputDirectory
     public File getReportsDir() {
         return reportsDir.get();

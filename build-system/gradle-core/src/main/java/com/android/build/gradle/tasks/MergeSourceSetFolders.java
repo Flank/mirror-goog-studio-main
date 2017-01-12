@@ -198,7 +198,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         return testedLibrary;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getLibraries() {
@@ -214,7 +213,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         this.libraries = libraries;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getShadersOutputDir() {
@@ -226,7 +224,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         this.shadersOutputDir = shadersOutputDir;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getCopyApk() {
@@ -238,7 +235,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         this.copyApk = copyApk;
     }
 
-    @SuppressWarnings("unused")
     @Input
     @Optional
     public String getIgnoreAssets() {
@@ -256,7 +252,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
     // input list for the source folder based asset folders.
-    @SuppressWarnings("unused")
     @InputFiles
     public Set<File> getSourceFolderInputs() {
         List<AssetSet> sets = assetSetSupplier.get();

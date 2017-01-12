@@ -41,7 +41,6 @@ public class StreamBasedTask extends BaseTask {
 
     private Iterable<FileCollection> allInputs;
 
-    @SuppressWarnings("unused")
     @NonNull
     @InputFiles
     public Iterable<FileCollection> getStreamInputs() {
@@ -53,7 +52,6 @@ public class StreamBasedTask extends BaseTask {
         return allInputs;
     }
 
-    @SuppressWarnings("unused")
     @Nullable
     @Optional
     @OutputDirectory
