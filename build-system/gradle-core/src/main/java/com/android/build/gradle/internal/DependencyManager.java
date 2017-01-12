@@ -53,7 +53,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -233,11 +232,11 @@ public class DependencyManager {
             // if we're only syncing (building the model), then we only need the package
             // scope if we will actually pass it to the IDE.
             Integer modelLevelInt = AndroidGradleOptions.buildModelOnlyVersion(project);
-            int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+            int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
             if (modelLevelInt != null) {
                 modelLevel = modelLevelInt;
             }
-            if (modelLevel > AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+            if (modelLevel > AndroidProject.MODEL_LEVEL_2_DONT_USE) {
                 needPackageScope = AndroidGradleOptions.buildModelWithFullDependencies(project);
             }
         }

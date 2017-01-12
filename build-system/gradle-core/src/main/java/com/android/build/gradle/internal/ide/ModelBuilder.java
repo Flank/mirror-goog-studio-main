@@ -113,7 +113,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private NativeLibraryFactory nativeLibFactory;
     private final int projectType;
     private final int generation;
-    private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+    private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
 
     public ModelBuilder(
@@ -396,7 +396,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
 
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+        if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
             dependencies = DependenciesConverter.getEmpty();
 
             dependencyGraphs = cloneGraph(
@@ -533,7 +533,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
 
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL) {
+        if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
             dependencies = DependenciesConverter.getEmpty();
 
             dependencyGraphs = cloneGraph(
