@@ -18,23 +18,19 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
+import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,66 +48,7 @@ public class AntennaPodInstantRunTest {
     @Before
     public void setUp() throws IOException {
         project = mainProject.getSubproject("AntennaPod");
-
-        Files.move(
-                mainProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
-                project.file(SdkConstants.FN_LOCAL_PROPERTIES));
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "classpath \"com.android.tools.build:gradle:\\d+.\\d+.\\d+\"",
-                "classpath \"com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + '"');
-
-        StringBuilder localRepositoriesSnippet = new StringBuilder();
-        for (Path repo : GradleTestProject.getLocalRepositories()) {
-            localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
-        }
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "jcenter\\(\\)", localRepositoriesSnippet.toString());
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "buildToolsVersion = \".*\"",
-                "buildToolsVersion = \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\" // Updated by test");
-
-        List<String> subprojects =
-                ImmutableList.of("AudioPlayer/library", "afollestad/commons", "afollestad/core");
-
-        for (String subproject: subprojects) {
-            TestFileUtils.searchAndReplace(
-                    mainProject.getSubproject(subproject).getBuildFile(),
-                    "buildToolsVersion \".*\"",
-                    "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                            + "\" // Updated by test");
-        }
-
-        // Update the support lib and fix resulting issue:
-        List<File> filesWithSupportLibVersion =
-                ImmutableList.of(
-                        project.getBuildFile(),
-                        mainProject.file("afollestad/core/build.gradle"),
-                        mainProject.file("afollestad/commons/build.gradle"));
-
-        for (File buildFile : filesWithSupportLibVersion) {
-            TestFileUtils.searchAndReplace(
-                    buildFile,
-                    " 23",
-                    " " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
-
-            TestFileUtils.searchAndReplace(
-                    buildFile,
-                    "23.1.1",
-                    GradleTestProject.SUPPORT_LIB_VERSION);
-        }
-
-        TestFileUtils.searchAndReplace(
-                mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),
-                "abc_ic_ab_back_mtrl_am_alpha",
-                "abc_ic_ab_back_material");
+        PerformanceTestProjects.initializeAntennaPod(mainProject);
     }
 
     @Test
