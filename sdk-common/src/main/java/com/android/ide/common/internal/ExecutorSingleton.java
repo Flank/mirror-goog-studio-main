@@ -16,6 +16,8 @@
 
 package com.android.ide.common.internal;
 
+import com.android.annotations.NonNull;
+import com.android.ide.common.util.JvmWideVariable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,23 +26,40 @@ import java.util.concurrent.Executors;
  */
 public class ExecutorSingleton {
 
-    private static ExecutorService sExecutorService;
+    @NonNull
+    private static final JvmWideVariable<ExecutorService> sExecutorService =
+            new JvmWideVariable<>(
+                    ExecutorSingleton.class.getName(),
+                    "sExecutorService",
+                    ExecutorService.class,
+                    null);
 
-    private static int sThreadPoolSize = Runtime.getRuntime().availableProcessors();
+    @NonNull
+    private static final JvmWideVariable<Integer> sThreadPoolSize =
+            new JvmWideVariable<>(
+                    ExecutorSingleton.class.getName(),
+                    "sThreadPoolSize",
+                    Integer.class,
+                    Runtime.getRuntime().availableProcessors());
 
-    public static synchronized ExecutorService getExecutor() {
-        if (sExecutorService == null) {
-            sExecutorService = Executors.newFixedThreadPool(sThreadPoolSize);
-        }
-
-        return sExecutorService;
+    @NonNull
+    public static ExecutorService getExecutor() {
+        return sExecutorService.doSupplierSynchronized(() -> {
+            if (sExecutorService.get() == null) {
+                sExecutorService.set(Executors.newFixedThreadPool(sThreadPoolSize.get()));
+            }
+            return sExecutorService.get();
+        });
     }
 
-    public static synchronized void shutdown() {
-        if (sExecutorService != null) {
-            sExecutorService.shutdown();
-            sExecutorService = null;
-        }
+    @NonNull
+    public static void shutdown() {
+        sExecutorService.doRunnableSynchronized(() -> {
+            if (sExecutorService.get() != null) {
+                sExecutorService.get().shutdown();
+                sExecutorService.set(null);
+            }
+        });
     }
 
     /**
@@ -52,6 +71,8 @@ public class ExecutorSingleton {
      * @param threadPoolSize the number of threads to use.
      */
     public static void setThreadPoolSize(int threadPoolSize) {
-        sThreadPoolSize = threadPoolSize;
+        sExecutorService.doRunnableSynchronized(() -> {
+            sThreadPoolSize.set(threadPoolSize);
+        });
     }
 }
