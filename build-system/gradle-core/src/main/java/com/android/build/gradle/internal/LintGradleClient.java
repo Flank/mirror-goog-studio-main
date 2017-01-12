@@ -24,13 +24,17 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.Lint;
 import com.android.builder.Version;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -91,6 +95,46 @@ public class LintGradleClient extends LintCliClient {
 
     public void setCustomRules(List<File> customRules) {
         this.customRules = customRules;
+    }
+
+    @NonNull
+    @Override
+    public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
+        // Look up local lint configuration for this project, either via Gradle lintOptions
+        // or via local lint.xml
+        AndroidProject gradleProjectModel = project.getGradleProjectModel();
+        if (gradleProjectModel != null) {
+            LintOptions lintOptions = gradleProjectModel.getLintOptions();
+            File lintXml = lintOptions.getLintConfig();
+            if (lintXml == null) {
+                lintXml = new File(project.getDir(), DefaultConfiguration.CONFIG_FILE_NAME);
+            }
+
+            Map<String, Integer> overrides = lintOptions.getSeverityOverrides();
+            if (overrides != null && !overrides.isEmpty()) {
+                return new CliConfiguration(lintXml, getConfiguration(), project,
+                        flags.isFatalOnly()) {
+                    @NonNull
+                    @Override
+                    public Severity getSeverity(@NonNull Issue issue) {
+                        Integer optionSeverity = overrides.get(issue.getId());
+                        if (optionSeverity != null) {
+                            Severity severity = Severity.fromLintOptionSeverity(optionSeverity);
+
+                            if (flags.isFatalOnly() && severity != Severity.FATAL) {
+                                return Severity.IGNORE;
+                            }
+
+                            return severity;
+                        }
+
+                        return super.getSeverity(issue);
+                    }
+                };
+            }
+        }
+
+        return super.getConfiguration(project, driver);
     }
 
     @NonNull

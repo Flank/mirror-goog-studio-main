@@ -532,8 +532,6 @@ public class MaterialHtmlReporter extends Reporter {
             }
         });
 
-        writeNewHtmlFormatInfoCard();
-
         if (!issues.isEmpty()) {
             append("\n<a name=\"overview\"></a>\n");
             writeCard(() -> writeOverview(related, missing.size()), "Overview", true);
@@ -800,20 +798,6 @@ public class MaterialHtmlReporter extends Reporter {
             }
         }
         return related;
-    }
-
-    private void writeNewHtmlFormatInfoCard() {
-        writeCard(() -> {
-            append("This is a new version of Android Lint's HTML report. ");
-            append("You can temporarily switch back to the old format by setting "
-                    + "the following property in your <code>gradle.properties</code> file:");
-            append("<pre>\n");
-            append("    " + NEW_FORMAT_PROPERTY + "=true\n");
-            append("</pre>\n");
-            append(""
-                    + "Please also file a tools bug on <a href=\"http://b.android.com\">http://b.android.com</a> "
-                    + "explaining what is wrong with the new format or what it is missing.\n");
-        }, "New Lint Format", true);
     }
 
     private void startReport(@NonNull Stats stats) {
