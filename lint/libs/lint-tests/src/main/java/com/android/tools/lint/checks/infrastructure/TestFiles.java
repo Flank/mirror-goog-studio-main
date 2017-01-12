@@ -72,7 +72,8 @@ public class TestFiles {
         if (!to.endsWith(DOT_XML)) {
             throw new IllegalArgumentException("Expected .xml suffix for XML test file");
         }
-        return file().to(to).withSource(source);
+
+        return TestFile.XmlTestFile.create(to, source);
     }
 
     @NonNull

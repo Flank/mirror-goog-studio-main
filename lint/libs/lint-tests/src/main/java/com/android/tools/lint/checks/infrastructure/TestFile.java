@@ -22,6 +22,7 @@ import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.checks.infrastructure.BaseLintDetectorTest.makeTestFile;
 import static com.android.utils.SdkUtils.escapePropertyValue;
@@ -166,6 +167,11 @@ public class TestFile {
         return null;
     }
 
+    @Nullable
+    public String getRawContents() {
+        return contents;
+    }
+
     public TestFile withBytes(@NonNull byte[] bytes) {
         this.bytes = bytes;
         return this;
@@ -203,6 +209,81 @@ public class TestFile {
                 throw new IllegalArgumentException("Expected .java suffix for Java test file");
             }
             return new JavaTestFile().to(to).withSource(source);
+        }
+    }
+
+    public static class XmlTestFile extends LintDetectorTest.TestFile {
+
+        public XmlTestFile() {
+        }
+
+        @NonNull
+        public static LintDetectorTest.TestFile create(@NonNull String to,
+                @NonNull @Language("XML") String source) {
+            if (!to.endsWith(DOT_XML)) {
+                throw new IllegalArgumentException("Expected .xml suffix for XML test file");
+            }
+
+            String plainSource = stripErrorMarkers(source);
+            return new XmlTestFile().withRawSource(source).to(to).withSource(plainSource);
+        }
+
+        private String rawSource;
+
+        private XmlTestFile withRawSource(String rawSource) {
+            this.rawSource = rawSource;
+            return this;
+        }
+
+        /** Normally, XML processing instructions (other than {@code <?xml?>} are
+         * taken to be inlined error messages and are stripped before being passed to
+         * the XML parser. This flag allows you to tell lint to leave your processing
+         * instructions alone, if needed by your test.
+         */
+        public XmlTestFile keepProcessingInstructions() {
+            withSource(rawSource);
+            return this;
+        }
+
+        @Nullable
+        @Override
+        public String getRawContents() {
+            return rawSource;
+        }
+
+        private static String stripErrorMarkers(@NonNull String source) {
+            if (source.contains("<?error")
+                    || source.contains("<?warning")
+                    || source.contains("?info")) {
+                StringBuilder sb = new StringBuilder(source.length());
+                int prev = 0;
+                int index = 0;
+                while (true) {
+                    index = source.indexOf("<?", index);
+                    if (index == -1) {
+                        break;
+                    }
+
+                    // Keep XML preprocessing instructions
+                    if (source.startsWith("<?xml", index)) {
+                        index += 4;
+                        continue;
+                    }
+
+                    sb.append(source.substring(prev, index));
+                    index = source.indexOf("?>", index);
+                    if (index == -1) {
+                        break;
+                    }
+                    index += 2;
+                    prev = index;
+                }
+
+                sb.append(source.substring(prev, source.length()));
+
+                return sb.toString();
+            }
+            return source;
         }
     }
 

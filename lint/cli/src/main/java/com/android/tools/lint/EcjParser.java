@@ -367,7 +367,7 @@ public class EcjParser extends JavaParser {
         List<String> classPath = computeClassPath(contexts);
         try {
             ecjResult = parse(createCompilerOptions(), sources, classPath, client);
-            resolver = new EcjPsiJavaEvaluator(ecjResult.psiManager);
+            resolver = new EcjPsiJavaEvaluator(ecjResult.psiManager, project);
 
             if (DEBUG_DUMP_PARSE_ERRORS) {
                 for (CompilationUnitDeclaration unit : ecjResult.getCompilationUnits()) {

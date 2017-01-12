@@ -28,14 +28,11 @@ import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.client.api.JavaParser.ResolvedAnnotation;
 import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.detector.api.Detector;
-import java.io.IOException;
 
 @SuppressWarnings("all") // Lots of test sample projects with faulty code
 public class SupportAnnotationDetectorTest extends AbstractCheckTest {
 
-    private static final boolean SDK_ANNOTATIONS_AVAILABLE =
-            new SupportAnnotationDetectorTest().createClient().findResource(
-            ExternalAnnotationRepository.SDK_ANNOTATIONS_PATH) != null;
+    private static final boolean SDK_ANNOTATIONS_AVAILABLE = true;
 
     @Override
     protected Detector getDetector() {
@@ -715,13 +712,13 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
     }
 
     public void testResourceType() throws Exception {
-        assertEquals((SDK_ANNOTATIONS_AVAILABLE ? ""
+        assertEquals(""
                 + "src/p1/p2/Flow.java:13: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        resources.getDrawable(10); // ERROR\n"
                 + "                              ~~\n"
                 + "src/p1/p2/Flow.java:18: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        resources.getDrawable(R.string.my_string); // ERROR\n"
-                + "                              ~~~~~~~~~~~~~~~~~~\n" : "")
+                + "                              ~~~~~~~~~~~~~~~~~~\n"
                 + "src/p1/p2/Flow.java:22: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        myMethod(R.string.my_string, null); // ERROR\n"
                 + "                 ~~~~~~~~~~~~~~~~~~\n"
@@ -731,16 +728,22 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/p1/p2/Flow.java:32: Error: Expected resource identifier (R.type.name) [ResourceType]\n"
                 + "        myAnyResMethod(50); // ERROR\n"
                 + "                       ~~\n"
-                + (SDK_ANNOTATIONS_AVAILABLE ? "src/p1/p2/Flow.java:60: Error: Expected resource of type drawable [ResourceType]\n"
+                + "src/p1/p2/Flow.java:43: Error: Expected resource of type drawable [ResourceType]\n"
+                + "        resources.getDrawable(s1); // ERROR\n"
+                + "                              ~~\n"
+                + "src/p1/p2/Flow.java:50: Error: Expected resource of type drawable [ResourceType]\n"
+                + "        resources.getDrawable(MimeTypes.style); // ERROR\n"
+                + "                              ~~~~~~~~~~~~~~~\n"
+                + "src/p1/p2/Flow.java:60: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        resources.getDrawable(MimeTypes.getAnnotatedString()); // Error\n"
-                + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" : "")
+                + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/p1/p2/Flow.java:68: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        myMethod(z, null); // ERROR\n"
                 + "                 ~\n"
                 + "src/p1/p2/Flow.java:71: Error: Expected resource of type drawable [ResourceType]\n"
                 + "        myMethod(w, null); // ERROR\n"
                 + "                 ~\n"
-                + (SDK_ANNOTATIONS_AVAILABLE ? "8 errors, 0 warnings\n" : "5 errors, 0 warnings\n"),
+                + "10 errors, 0 warnings\n",
 
                 lintProject(
                         java("src/p1/p2/Flow.java", ""
@@ -1935,13 +1938,16 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
 
     public void testCombinedIntDefAndIntRange() throws Exception {
         assertEquals(""
-                + "src/test/pkg/X.java:28: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be \u2265 10 (was -5) [WrongConstant]\n"
+                + "src/test/pkg/X.java:27: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG [WrongConstant]\n"
+                + "        setDuration(UNRELATED); /// OK within range\n" // Not sure about this one
+                + "                    ~~~~~~~~~\n"
+                + "src/test/pkg/X.java:28: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was -5) [WrongConstant]\n"
                 + "        setDuration(-5); // ERROR (not right int def or value\n"
                 + "                    ~~\n"
-                + "src/test/pkg/X.java:29: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be \u2265 10 (was 8) [WrongConstant]\n"
+                + "src/test/pkg/X.java:29: Error: Must be one of: X.LENGTH_INDEFINITE, X.LENGTH_SHORT, X.LENGTH_LONG or value must be ≥ 10 (was 8) [WrongConstant]\n"
                 + "        setDuration(8); // ERROR (not matching number range)\n"
                 + "                    ~\n"
-                + "2 errors, 0 warnings\n",
+                + "3 errors, 0 warnings\n",
                 lintProject(
                         getManifestWithPermissions(14, 23),
                         java("src/test/pkg/X.java", ""
@@ -2151,13 +2157,19 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/IntDefMultiple.java:24: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
                 + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/new int[]{VALUE_A, 0, VALUE_B}/**/); // ERROR;\n"
                 + "                                                                                   ~\n"
+                + "src/test/pkg/IntDefMultiple.java:26: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
+                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/INVALID_ARRAY/**/); // ERROR\n"
+                + "                                                                ~~~~~~~~~~~~~\n"
+                + "src/test/pkg/IntDefMultiple.java:27: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
+                + "        restrictedArray(/*Must be one of: X.VALUE_A, X.VALUE_B*/INVALID_ARRAY2/**/); // ERROR\n"
+                + "                                                                ~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/IntDefMultiple.java:31: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
                 + "        restrictedEllipsis(VALUE_A, /*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/, VALUE_B); // ERROR\n"
                 + "                                                                            ~\n"
                 + "src/test/pkg/IntDefMultiple.java:32: Error: Must be one of: IntDefMultiple.VALUE_A, IntDefMultiple.VALUE_B [WrongConstant]\n"
                 + "        restrictedEllipsis(/*Must be one of: X.VALUE_A, X.VALUE_B*/0/**/); // ERROR\n"
                 + "                                                                   ~\n"
-                + "3 errors, 0 warnings\n",
+                + "5 errors, 0 warnings\n",
                 lintProject(
                         java("src/test/pkg/IntDefMultiple.java", ""
                                 + "package test.pkg;\n"
@@ -2211,16 +2223,31 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
      */
     public void testRangesMultiple() throws Exception {
         assertEquals(""
-                + "src/test/pkg/RangesMultiple.java:22: Error: Value must be \u2265 10.0 (was 5.0) [Range]\n"
-                + "        varargsFloat(15.0f, 10.0f, /*Value must be \u2265 10.0 and \u2264 15.0 (was 5.0f)*/5.0f/**/); // ERROR\n"
-                + "                                                                                 ~~~~\n"
-                + "src/test/pkg/RangesMultiple.java:32: Error: Value must be \u2264 500 (was 510) [Range]\n"
-                + "        varargsInt(15, 10, /*Value must be \u2265 10 and \u2264 500 (was 510)*/510/**/); // ERROR\n"
-                + "                                                                     ~~~\n"
-                + "src/test/pkg/RangesMultiple.java:36: Error: Value must be \u2265 10 (was 0) [Range]\n"
-                + "        restrictedIntArray(/*Value must be \u2265 10 and \u2264 500*/new int[]{0, 500}/**/); // ERROR\n"
-                + "                                                           ~~~~~~~~~~~~~~~~~\n"
-                + "3 errors, 0 warnings\n",
+                        + "src/test/pkg/RangesMultiple.java:20: Error: Value must be ≥ 10.0 (was 5) [Range]\n"
+                        + "        a[0] = /*Value must be ≥ 10.0 and ≤ 15.0 (was 5f)*/5f/**/; // ERROR\n"
+                        + "                                                           ~~\n"
+                        + "src/test/pkg/RangesMultiple.java:22: Error: Value must be ≥ 10.0 (was 5.0) [Range]\n"
+                        + "        varargsFloat(15.0f, 10.0f, /*Value must be ≥ 10.0 and ≤ 15.0 (was 5.0f)*/5.0f/**/); // ERROR\n"
+                        + "                                                                                 ~~~~\n"
+                        + "src/test/pkg/RangesMultiple.java:24: Error: Value must be ≥ 10.0 (was 5.0) [Range]\n"
+                        + "        restrictedFloatArray(/*Value must be ≥ 10.0 and ≤ 15.0*/INVALID_FLOAT_ARRAY/**/); // ERROR\n"
+                        + "                                                                ~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/RangesMultiple.java:26: Error: Value must be ≤ 15.0 (was 500.0) [Range]\n"
+                        + "        restrictedFloatArray(/*Value must be ≥ 10.0 and ≤ 15.0*/new float[]{12.0f, 500.0f}/**/); // ERROR\n"
+                        + "                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/RangesMultiple.java:30: Error: Value must be ≥ 10 (was 5) [Range]\n"
+                        + "        b[0] = /*Value must be ≥ 10 and ≤ 500 (was 5)*/5/**/; // ERROR\n"
+                        + "                                                       ~\n"
+                        + "src/test/pkg/RangesMultiple.java:32: Error: Value must be ≤ 500 (was 510) [Range]\n"
+                        + "        varargsInt(15, 10, /*Value must be ≥ 10 and ≤ 500 (was 510)*/510/**/); // ERROR\n"
+                        + "                                                                     ~~~\n"
+                        + "src/test/pkg/RangesMultiple.java:34: Error: Value must be ≥ 10 (was 5) [Range]\n"
+                        + "        restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/INVALID_INT_ARRAY/**/); // ERROR\n"
+                        + "                                                           ~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]\n"
+                        + "        restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/new int[]{0, 500}/**/); // ERROR\n"
+                        + "                                                           ~~~~~~~~~~~~~~~~~\n"
+                        + "8 errors, 0 warnings\n",
                 lintProject(
                         java("src/test/pkg/RangesMultiple.java", ""
                                 + "package test.pkg;\n"

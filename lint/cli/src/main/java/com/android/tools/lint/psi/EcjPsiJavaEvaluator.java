@@ -19,8 +19,11 @@ package com.android.tools.lint.psi;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.builder.model.Dependencies;
+import com.android.builder.model.Variant;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.client.api.JavaEvaluator;
+import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
@@ -51,9 +54,11 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 public class EcjPsiJavaEvaluator extends JavaEvaluator {
     private final EcjPsiManager mManager;
+    private final Project lintProject;
 
-    public EcjPsiJavaEvaluator(@NonNull EcjPsiManager manager) {
+    public EcjPsiJavaEvaluator(@NonNull EcjPsiManager manager, @Nullable Project lintProject) {
         mManager = manager;
+        this.lintProject = lintProject;
     }
 
     @Override
@@ -622,4 +627,15 @@ public class EcjPsiJavaEvaluator extends JavaEvaluator {
         return binding != null ? mManager.findPackage(binding.fPackage) : null;
     }
 
+    @Nullable
+    @Override
+    public Dependencies getDependencies() {
+        if (lintProject != null && lintProject.isAndroidProject()) {
+            Variant variant = lintProject.getCurrentVariant();
+            if (variant != null) {
+                return variant.getMainArtifact().getDependencies();
+            }
+        }
+        return null;
+    }
 }

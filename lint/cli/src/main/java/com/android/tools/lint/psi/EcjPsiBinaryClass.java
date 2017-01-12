@@ -475,7 +475,7 @@ class EcjPsiBinaryClass extends EcjPsiBinaryElement implements PsiClass, PsiModi
     @Override
     public boolean isInheritor(@NonNull PsiClass baseClass, boolean checkDeep) {
         String qualifiedName = baseClass.getQualifiedName();
-        return qualifiedName != null && new EcjPsiJavaEvaluator(mManager)
+        return qualifiedName != null && new EcjPsiJavaEvaluator(mManager, null)
                 .inheritsFrom(this, qualifiedName, false);
     }
 

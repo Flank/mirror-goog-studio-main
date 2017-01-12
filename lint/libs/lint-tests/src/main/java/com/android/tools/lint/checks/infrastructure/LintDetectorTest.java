@@ -813,7 +813,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 @NonNull Severity severity,
                 @NonNull Location location,
                 @NonNull String message,
-                @NonNull TextFormat format) {
+                @NonNull TextFormat format,
+                @Nullable Object quickfixData) {
             assertNotNull(location);
 
             if (ignoreSystemErrors() && issue == IssueRegistry.LINT_ERROR) {
@@ -851,7 +852,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 }
             }
 
-            super.report(context, issue, severity, location, message, format);
+            super.report(context, issue, severity, location, message, format, quickfixData);
 
             // Make sure errors are unique!
             Warning prev = null;

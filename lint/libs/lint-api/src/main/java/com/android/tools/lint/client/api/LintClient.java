@@ -113,16 +113,24 @@ public abstract class LintClient {
 
     /**
      * Report the given issue. This method will only be called if the configuration
-     * provided by {@link #getConfiguration(Project,LintDriver)} has reported the corresponding
+     * provided by {@link #getConfiguration(Project, LintDriver)} has reported the corresponding
      * issue as enabled and has not filtered out the issue with its
-     * {@link Configuration#ignore(Context,Issue,Location,String)} method.
+     * {@link Configuration#ignore(Context, Issue, Location, String)} method.
      * <p>
-     * @param context the context used by the detector when the issue was found
-     * @param issue the issue that was found
-     * @param severity the severity of the issue
-     * @param location the location of the issue
-     * @param message the associated user message
-     * @param format the format of the description and location descriptions
+     *
+     * @param context      the context used by the detector when the issue was found
+     * @param issue        the issue that was found
+     * @param severity     the severity of the issue
+     * @param location     the location of the issue
+     * @param message      the associated user message
+     * @param format       the format of the description and location descriptions
+     * @param quickfixData an optional set of extra data provided by the detector for this issue;
+     *                     this is intended to pass metadata to the IDE to help construct quickfixes
+     *                     without having to parse error messages (which is brittle) or worse having
+     *                     to include information in the error message (for later parsing) which is
+     *                     required by the quickfix but not really helpful in the error message
+     *                     itself (such as the maxVersion for a permission tag to be added to the
+     *                     manifest by the unhandled permission check)
      */
     public abstract void report(
             @NonNull Context context,
@@ -130,7 +138,8 @@ public abstract class LintClient {
             @NonNull Severity severity,
             @NonNull Location location,
             @NonNull String message,
-            @NonNull TextFormat format);
+            @NonNull TextFormat format,
+            @Nullable Object quickfixData);
 
     /**
      * Send an exception or error message (with warning severity) to the log

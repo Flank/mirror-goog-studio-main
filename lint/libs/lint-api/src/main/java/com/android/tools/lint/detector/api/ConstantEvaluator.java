@@ -32,6 +32,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaParser.ResolvedField;
 import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.google.common.collect.Lists;
+import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.JavaTokenType;
 import com.intellij.psi.PsiArrayInitializerExpression;
 import com.intellij.psi.PsiArrayType;
@@ -44,8 +45,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiIfStatement;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiPrefixExpression;
@@ -56,11 +60,13 @@ import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
 import com.intellij.psi.PsiTypeElement;
+import com.intellij.psi.PsiVariable;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.ast.ArrayCreation;
 import lombok.ast.ArrayInitializer;
 import lombok.ast.BinaryExpression;
@@ -91,6 +97,7 @@ import lombok.ast.VariableReference;
 public class ConstantEvaluator {
     private final JavaContext context;
     private boolean allowUnknown;
+    private boolean allowFieldInitializers;
 
     /**
      * Creates a new constant evaluator
@@ -109,6 +116,11 @@ public class ConstantEvaluator {
      */
     public ConstantEvaluator allowUnknowns() {
         allowUnknown = true;
+        return this;
+    }
+
+    public ConstantEvaluator allowFieldInitializers() {
+        allowFieldInitializers = true;
         return this;
     }
 
@@ -856,8 +868,26 @@ public class ConstantEvaluator {
                 if (value != null) {
                     return value;
                 }
-                if (field.getInitializer() != null) {
-                    return evaluate(field.getInitializer());
+                if (field.getInitializer() != null && (allowFieldInitializers
+                        || (field.hasModifierProperty(PsiModifier.STATIC)
+                        && field.hasModifierProperty(PsiModifier.FINAL)))) {
+                    value = evaluate(field.getInitializer());
+                    if (value != null) {
+                        // See if it looks like the value has been clamped locally, e.g.
+                        PsiIfStatement curr = PsiTreeUtil.getParentOfType(node, PsiIfStatement.class);
+                        while (curr != null) {
+                            if (curr.getCondition() != null
+                                    && references(curr.getCondition(), field)) {
+                                // Field is referenced surrounding this reference; don't
+                                // take the field initializer since the value may have been
+                                // value checked for some other later assigned value
+                                return null;
+                            }
+                            curr = PsiTreeUtil.getParentOfType(curr, PsiIfStatement.class, true);
+                        }
+
+                        return value;
+                    }
                 }
                 return null;
             } else if (resolved instanceof PsiLocalVariable) {
@@ -1095,6 +1125,25 @@ public class ConstantEvaluator {
         // Math.* methods, String utility methods like notNullize, etc
 
         return null;
+    }
+
+    /** Returns true if the given variable is referenced from within the given element */
+    private static boolean references(
+            @NonNull PsiExpression element,
+            @NonNull PsiVariable variable) {
+        AtomicBoolean found = new AtomicBoolean();
+        element.accept(new JavaRecursiveElementVisitor() {
+            @Override
+            public void visitReferenceElement(PsiJavaCodeReferenceElement reference) {
+                PsiElement refersTo = reference.resolve();
+                if (variable.equals(refersTo)) {
+                    found.set(true);
+                }
+                super.visitReferenceElement(reference);
+            }
+        });
+
+        return found.get();
     }
 
     /**
