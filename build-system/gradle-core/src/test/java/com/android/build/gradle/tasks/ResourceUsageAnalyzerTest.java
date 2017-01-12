@@ -135,7 +135,6 @@ public class ResourceUsageAnalyzerTest {
                 + "@string/hello_world : reachable=true\n"
                 + "@style/AppTheme : reachable=true\n"
                 + "@style/MyStyle : reachable=true\n"
-                + "    @style/MyStyle_Child\n"
                 + "@style/MyStyle_Child : reachable=true\n"
                 + "    @style/MyStyle\n"
                 + "@xml/android_wear_micro_apk : reachable=true\n"
