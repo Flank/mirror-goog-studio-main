@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.InvalidPathException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -388,24 +389,6 @@ public class FileCacheTest {
             Files.write("Some text", outputFile, StandardCharsets.UTF_8);
         });
         assertThat(fileCache.getCacheDirectory()).exists();
-    }
-
-    @Test
-    public void testSameCacheDirectory() throws IOException {
-        FileCache fileCache1 = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
-        FileCache fileCache2 = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
-        assertThat(fileCache1).isSameAs(fileCache2);
-    }
-
-    @Test
-    public void testInconsistentLockingScope() throws IOException {
-        FileCache.getInstanceWithSingleProcessLocking(cacheDir);
-        try {
-            FileCache.getInstanceWithInterProcessLocking(cacheDir);
-            fail("expected IllegalStateException");
-        } catch (IllegalStateException exception) {
-            // Expected
-        }
     }
 
     @Test
@@ -1124,8 +1107,8 @@ public class FileCacheTest {
             // Use an invalid character in the file name
             accessedFile = new File("\0");
             fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true);
-            fail("expected IOException");
-        } catch (IOException exception) {
+            fail("expected InvalidPathException");
+        } catch (InvalidPathException exception) {
             // Expected
         }
     }
