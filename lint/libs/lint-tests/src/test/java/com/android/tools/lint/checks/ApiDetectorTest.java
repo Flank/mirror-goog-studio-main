@@ -5251,6 +5251,95 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "}\n"));
     }
 
+    public void testMethodWithInterfaceAlternative() throws Exception {
+        // Make sure we correctly handle the case where you ensure that a method exists
+        // at runtime (e.g. is always overridden) by using an interface
+        //noinspection all // Sample code
+        checkApiCheck("No warnings.",
+                "No warnings.",
+
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class MyActivity extends Activity implements LifecycleAware {\n"
+                        + "    private void verifyUserCanBeMessaged(Bundle intentExtras) {\n"
+                        + "        if (isDestroyed() || isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Test scenario where the qualifier is non-null\n"
+                        + "    private void verifyUserCanBeMessaged(MyActivity myActivity, Bundle intentExtras) {\n"
+                        + "        if (myActivity.isDestroyed() || myActivity.isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public interface LifecycleAware {\n"
+                        + "    boolean isDestroyed();\n"
+                        + "}\n"));
+    }
+
+    public void testMethodWithInterfaceAlternative2() throws Exception {
+        // Slight variation on testMethodWithInterfaceAlternative where
+        // we extend a class which implements the interface
+        //noinspection all // Sample code
+        checkApiCheck("No warnings.",
+                "No warnings.",
+
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class MyActivity extends BaseFragmentActivity {\n"
+                        + "    private void verifyUserCanBeMessaged(Bundle intentExtras) {\n"
+                        + "        if (isDestroyed() || isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Test scenario where the qualifier is non-null\n"
+                        + "    private void verifyUserCanBeMessaged(MyActivity myActivity, Bundle intentExtras) {\n"
+                        + "        if (myActivity.isDestroyed() || myActivity.isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "\n"
+                        + "public class BaseFragmentActivity extends Activity implements LifecycleAware {\n"
+                        + "    boolean mDestroyed;\n"
+                        + "    \n"
+                        + "    @Override\n"
+                        + "    public boolean isDestroyed() {\n"
+                        + "        return mDestroyed;\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public interface LifecycleAware {\n"
+                        + "    boolean isDestroyed();\n"
+                        + "}\n"));
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
