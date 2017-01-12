@@ -49,10 +49,26 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-/** Context object for all InstantRun related information. */
-public class InstantRunBuildContext {
+/**
+ * Context object for all build related information that will be persisted at the completion
+ *
+ * Information persisted will have the following purposes :
+ * <ul>
+ * For all types of builds, the list of produced artifacts will contain the filters used when
+ * producing pure or full splits. This can be used to determine which artifact should be installed.
+ * </ul>
+ * <ul>
+ * In Instant Run mode, on top of the list of artifacts produced, the verifier status etc.
+ * It is also read in subsequent builds to keep artifacts history.
+ * </ul>
+ * <ul>
+ * The package id of the application is also stored as it can be used in the presence of separate
+ * test modules.
+ * </ul>
+ */
+public class BuildContext {
 
-    private static final Logger LOG = Logging.getLogger(InstantRunBuildContext.class);
+    private static final Logger LOG = Logging.getLogger(BuildContext.class);
 
     static final String TAG_INSTANT_RUN = "instant-run";
     static final String TAG_BUILD = "build";
@@ -60,6 +76,7 @@ public class InstantRunBuildContext {
     static final String TAG_TASK = "task";
     static final String ATTR_PLUGIN_VERSION = "plugin-version";
     static final String ATTR_NAME = "name";
+    static final String ATTR_PACKAGE_NAME = "package";
     static final String ATTR_DURATION = "duration";
     static final String ATTR_TIMESTAMP = "timestamp";
     static final String ATTR_VERIFIER = "verifier";
@@ -243,18 +260,19 @@ public class InstantRunBuildContext {
 
     private String density = null;
     private String abi = null;
+    private String packageId = null;
     private final Build currentBuild;
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private boolean isInstantRunMode = false;
     private final AtomicLong token = new AtomicLong(0);
     private boolean buildHasFailed = false;
 
-    public InstantRunBuildContext() {
+    public BuildContext() {
         this(defaultBuildIdAllocator);
     }
 
     @VisibleForTesting
-    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
+    BuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
         currentBuild =  new Build(
                 buildIdAllocator.allocatedBuildId(),
                 InstantRunVerifierStatus.NO_CHANGES,
@@ -276,6 +294,10 @@ public class InstantRunBuildContext {
 
     public boolean getBuildHasFailed() {
         return buildHasFailed;
+    }
+
+    public void setPackageId(String packageId) {
+        this.packageId = packageId;
     }
 
     /**
@@ -383,9 +405,6 @@ public class InstantRunBuildContext {
 
     public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file)
             throws IOException {
-        if (patchingPolicy == null) {
-            return;
-        }
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES) {
             currentBuild.verifierStatus = InstantRunVerifierStatus.COMPATIBLE;
         }
@@ -627,7 +646,7 @@ public class InstantRunBuildContext {
         if (!(Version.ANDROID_GRADLE_PLUGIN_VERSION.equals(
                 instantRun.getAttribute(ATTR_PLUGIN_VERSION)))) {
             // Don't load if the plugin version has changed.
-            Logging.getLogger(InstantRunBuildContext.class)
+            Logging.getLogger(BuildContext.class)
                     .quiet("Instant Run: Android plugin version has changed.");
             setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;
@@ -767,15 +786,22 @@ public class InstantRunBuildContext {
             instantRun.appendChild(taskTypeNode);
         }
 
+        if (patchingPolicy != null) {
+            instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getFeatureLevel()));
+            if (density != null) {
+                instantRun.setAttribute(ATTR_DENSITY, density);
+            }
+            if (abi != null) {
+                instantRun.setAttribute(ATTR_ABI, abi);
+            }
+            instantRun.setAttribute(ATTR_TOKEN, token.toString());
+        } else {
+            currentBuild.buildMode = InstantRunBuildMode.FULL;
+            currentBuild.verifierStatus = InstantRunVerifierStatus.NOT_RUN;
+        }
         currentBuild.toXml(document, instantRun);
-        instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getFeatureLevel()));
-        if (density != null) {
-            instantRun.setAttribute(ATTR_DENSITY, density);
-        }
-        if (abi != null) {
-            instantRun.setAttribute(ATTR_ABI, abi);
-        }
-        instantRun.setAttribute(ATTR_TOKEN, token.toString());
+
+        instantRun.setAttribute(ATTR_PACKAGE_NAME, packageId);
         instantRun.setAttribute(ATTR_FORMAT, CURRENT_FORMAT);
         instantRun.setAttribute(ATTR_PLUGIN_VERSION, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 

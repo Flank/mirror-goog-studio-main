@@ -32,9 +32,9 @@ import org.mockito.MockitoAnnotations;
 public class InstantRunAnalyticsHelperTest {
 
     @Mock
-    public InstantRunBuildContext mInstantRunBuildContext;
+    public BuildContext mBuildContext;
     @Mock
-    public InstantRunBuildContext.Build mBuild;
+    public BuildContext.Build mBuild;
 
     @Before
     public void initMocks() {
@@ -43,21 +43,21 @@ public class InstantRunAnalyticsHelperTest {
 
     @Test
     public void testAnalyticsHelper() {
-        when(mInstantRunBuildContext.getLastBuild()).thenReturn(mBuild);
-        when(mInstantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
-        when(mInstantRunBuildContext.getPatchingPolicy())
+        when(mBuildContext.getLastBuild()).thenReturn(mBuild);
+        when(mBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
+        when(mBuildContext.getPatchingPolicy())
                 .thenReturn(InstantRunPatchingPolicy.MULTI_APK);
-        when(mInstantRunBuildContext.getVerifierResult())
+        when(mBuildContext.getVerifierResult())
                 .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
         when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
-                new InstantRunBuildContext.Artifact(FileType.RESOURCES,
+                new BuildContext.Artifact(FileType.RESOURCES,
                         new File("resources.ap_")),
-                new InstantRunBuildContext.Artifact(FileType.RELOAD_DEX,
+                new BuildContext.Artifact(FileType.RELOAD_DEX,
                         new File("reload.dex"))
         ));
 
         InstantRunStatus proto =
-                InstantRunAnalyticsHelper.generateAnalyticsProto(mInstantRunBuildContext);
+                InstantRunAnalyticsHelper.generateAnalyticsProto(mBuildContext);
 
         assertEquals(InstantRunStatus.BuildMode.HOT_WARM, proto.getBuildMode());
         assertEquals(InstantRunStatus.PatchingPolicy.MULTI_APK, proto.getPatchingPolicy());

@@ -19,11 +19,10 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -107,7 +106,7 @@ public class JavaResourcesTest {
                 .run("assembleDebug");
 
         //TODO: switch back to loadContext when it no longer adds more artifacts.
-        InstantRunBuildContext context2 = InstantRunTestUtils.loadBuildContext(apiLevel, instantRunModel);
+        BuildContext context2 = InstantRunTestUtils.loadBuildContext(apiLevel, instantRunModel);
         assertThat(context2.getLastBuild().getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED);
         assertThat(context2.getLastBuild().getArtifacts()).hasSize(1);

@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -64,7 +64,7 @@ public interface PackagingScope {
     ApiVersion getMinSdkVersion();
 
     @NonNull
-    InstantRunBuildContext getInstantRunBuildContext();
+    BuildContext getInstantRunBuildContext();
 
     /**
      * Directory with instant run support files.

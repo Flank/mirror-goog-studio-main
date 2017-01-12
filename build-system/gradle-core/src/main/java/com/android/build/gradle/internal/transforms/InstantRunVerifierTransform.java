@@ -29,7 +29,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier.ClassBytesJarEntryProvider;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -114,12 +114,12 @@ public class InstantRunVerifierTransform extends Transform {
             throw new RuntimeException("Empty list of referenced inputs");
         }
         try {
-            variantScope.getInstantRunBuildContext().startRecording(
-                    InstantRunBuildContext.TaskType.VERIFIER);
+            variantScope.getBuildContext().startRecording(
+                    BuildContext.TaskType.VERIFIER);
             doTransform(invocation.getReferencedInputs(), invocation.isIncremental());
         } finally {
-            variantScope.getInstantRunBuildContext().stopRecording(
-                    InstantRunBuildContext.TaskType.VERIFIER);
+            variantScope.getBuildContext().stopRecording(
+                    BuildContext.TaskType.VERIFIER);
         }
     }
 
@@ -141,7 +141,7 @@ public class InstantRunVerifierTransform extends Transform {
         // if we are being asked to produce the RESTART artifacts, there is no need to set the
         // verifier result, however the transform needed to run to backup the .class files.
         if (!variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY)) {
-            variantScope.getInstantRunBuildContext().setVerifierStatus(resultSoFar);
+            variantScope.getBuildContext().setVerifierStatus(resultSoFar);
         }
     }
 

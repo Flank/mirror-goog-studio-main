@@ -34,7 +34,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
@@ -95,11 +95,11 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     @Input
     public long getSecretToken() {
-        return instantRunBuildcontext.getSecretToken();
+        return buildcontext.getSecretToken();
     }
 
     boolean usingMultiApks;
-    InstantRunBuildContext instantRunBuildcontext;
+    BuildContext buildcontext;
 
     @TaskAction
     public void generateInfoTask() throws IOException {
@@ -256,14 +256,14 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         @Override
         public void execute(@NonNull GenerateInstantRunAppInfoTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.instantRunBuildcontext = variantScope.getInstantRunBuildContext();
+            task.buildcontext = variantScope.getBuildContext();
             task.outputFile =
                     new File(variantScope.getIncrementalApplicationSupportDir(),
                             PackageAndroidArtifact.INSTANT_RUN_PACKAGES_PREFIX + "-bootstrap.jar");
 
             task.mergedManifest = instantRunManifestOutputFile.get();
             ConventionMappingHelper.map(task, "usingMultiApks",
-                    () -> variantScope.getInstantRunBuildContext().getPatchingPolicy()
+                    () -> variantScope.getBuildContext().getPatchingPolicy()
                                     == InstantRunPatchingPolicy.MULTI_APK);
 
         }

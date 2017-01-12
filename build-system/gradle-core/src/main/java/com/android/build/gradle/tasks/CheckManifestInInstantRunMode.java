@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SupplierTask;
@@ -45,7 +45,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     private static final Logger LOG = Logging.getLogger(CheckManifestInInstantRunMode.class);
 
-    private InstantRunBuildContext instantRunBuildContext;
+    private BuildContext buildContext;
     private File instantRunSupportDir;
     private Supplier<File> packageOutputFile;
     private Supplier<File> instantRunManifestFile;
@@ -54,7 +54,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
     public void checkManifestChanges() throws IOException {
 
         // If we are NOT instant run mode, this is an error, this task should not be running.
-        if (!instantRunBuildContext.isInInstantRunMode()) {
+        if (!buildContext.isInInstantRunMode()) {
             LOG.warn("CheckManifestInInstantRunMode configured in non instant run build,"
                     + " please file a bug.");
             return;
@@ -66,7 +66,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         // would call .get() before the task run.
         File manifestFile = instantRunManifestFile.get();
         LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", manifestFile);
-        runManifestChangeVerifier(instantRunBuildContext, instantRunSupportDir,
+        runManifestChangeVerifier(buildContext, instantRunSupportDir,
                 manifestFile);
 
         // Cannot call .getLastValue() since it is not declared as an Input which
@@ -74,13 +74,13 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         File resourcesApk = packageOutputFile.get();
         LOG.info("CheckManifestInInstantRunMode : Resource APK %1$s", resourcesApk);
         if (resourcesApk != null && resourcesApk.exists()) {
-            runManifestBinaryChangeVerifier(instantRunBuildContext, instantRunSupportDir,
+            runManifestBinaryChangeVerifier(buildContext, instantRunSupportDir,
                     resourcesApk);
         }
     }
 
     @VisibleForTesting
-    static void runManifestChangeVerifier(InstantRunBuildContext instantRunBuildContext,
+    static void runManifestChangeVerifier(BuildContext buildContext,
             File instantRunSupportDir,
             @NonNull File manifestFileToPackage) throws IOException {
         File previousManifestFile = new File(instantRunSupportDir, "manifest.xml");
@@ -92,7 +92,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
                     Files.asCharSource(previousManifestFile, Charsets.UTF_8).read();
             if (!currentManifest.equals(previousManifest)) {
                 // TODO: Deeper comparison, call out just a version change.
-                instantRunBuildContext.setVerifierStatus(
+                buildContext.setVerifierStatus(
                         InstantRunVerifierStatus.MANIFEST_FILE_CHANGE);
                 Files.copy(manifestFileToPackage, previousManifestFile);
             }
@@ -100,13 +100,13 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             Files.createParentDirs(previousManifestFile);
             Files.copy(manifestFileToPackage, previousManifestFile);
             // we don't have a back up of the manifest file, better be safe and force the APK build.
-            instantRunBuildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
+            buildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
         }
     }
 
     @VisibleForTesting
     static void runManifestBinaryChangeVerifier(
-            InstantRunBuildContext instantRunBuildContext,
+            BuildContext buildContext,
             File instantRunSupportDir,
             @NonNull File resOutBaseNameFile)
             throws IOException {
@@ -125,12 +125,12 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             // compare its content with the new binary file crc.
             String previousIterationCRC = Files.readFirstLine(crcFile, Charsets.UTF_8);
             if (!currentIterationCRC.equals(previousIterationCRC)) {
-                instantRunBuildContext.setVerifierStatus(
+                buildContext.setVerifierStatus(
                         InstantRunVerifierStatus.BINARY_MANIFEST_FILE_CHANGE);
             }
         } else {
             // we don't have a back up of the crc file, better be safe and force the APK build.
-            instantRunBuildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
+            buildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
         }
 
         if (currentIterationCRC != null) {
@@ -180,7 +180,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
             task.packageOutputFile = TaskInputHelper.memoize(processedResourcesOutputFile);
             task.instantRunManifestFile = TaskInputHelper.memoize(instantRunMergedManifest);
-            task.instantRunBuildContext = instantRunVariantScope.getInstantRunBuildContext();
+            task.buildContext = instantRunVariantScope.getBuildContext();
             task.instantRunSupportDir = instantRunVariantScope.getInstantRunSupportDir();
             task.setVariantName(transformVariantScope.getFullVariantName());
         }

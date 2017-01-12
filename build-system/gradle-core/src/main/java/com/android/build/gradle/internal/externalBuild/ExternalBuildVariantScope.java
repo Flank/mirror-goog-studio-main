@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.externalBuild;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
@@ -44,7 +44,7 @@ import java.util.Collections;
     private final TransformGlobalScope globalScope;
     private final File outputRootFolder;
     private final ExternalBuildContext externalBuildContext;
-    private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext();
+    private final BuildContext mBuildContext = new BuildContext();
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
 
@@ -112,6 +112,12 @@ import java.util.Collections;
 
     @NonNull
     @Override
+    public File getBuildInfoOutputFolder() {
+        return new File(outputRootFolder, "/build-info/debug");
+    }
+
+    @NonNull
+    @Override
     public File getReloadDexOutputFolder() {
         return new File(outputRootFolder, "/reload-dex/debug");
     }
@@ -135,9 +141,8 @@ import java.util.Collections;
     }
 
     @NonNull
-    @Override
-    public InstantRunBuildContext getInstantRunBuildContext() {
-        return mInstantRunBuildContext;
+    public BuildContext getBuildContext() {
+        return mBuildContext;
     }
 
     @Override

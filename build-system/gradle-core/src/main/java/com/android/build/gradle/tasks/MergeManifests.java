@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -30,6 +31,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
+import com.android.manifmerger.MergingReport;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
@@ -57,6 +59,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 @ParallelizableTask
 public class MergeManifests extends ManifestProcessorTask {
 
+    private BuildContext buildContext;
     private String minSdkVersion;
     private String targetSdkVersion;
     private Integer maxSdkVersion;
@@ -71,7 +74,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        getBuilder().mergeManifestsForApplication(
+        MergingReport mergingReport = getBuilder().mergeManifestsForApplication(
                 getMainManifest(),
                 getManifestOverlays(),
                 computeFullProviderList(),
@@ -89,6 +92,7 @@ public class MergeManifests extends ManifestProcessorTask {
                 variantConfiguration.getManifestPlaceholders(),
                 getOptionalFeatures(),
                 getReportFile());
+        buildContext.setPackageId(mergingReport.getPackageName());
     }
 
     @Optional
@@ -320,6 +324,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processManifestTask.setVariantName(config.getFullName());
+            processManifestTask.buildContext = scope.getVariantScope().getBuildContext();
 
             processManifestTask.setVariantConfiguration(config);
             if (variantOutputData instanceof ApkVariantOutputData) {

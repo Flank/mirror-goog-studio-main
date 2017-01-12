@@ -25,7 +25,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
@@ -62,7 +62,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     private final AndroidBuilder androidBuilder;
     @NonNull
-    private final InstantRunBuildContext instantRunBuildContext;
+    private final BuildContext buildContext;
     @NonNull
     protected final File outputDirectory;
     @Nullable
@@ -83,7 +83,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
-            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull BuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
@@ -95,7 +95,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
             int versionCode) {
         this.logger = logger;
         this.project = project;
-        this.instantRunBuildContext = instantRunBuildContext;
+        this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
         this.packagingScope = packagingScope;
         this.signingConf = signingConf;
@@ -176,7 +176,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                 tempDir,
                 ApkCreatorFactories.fromProjectProperties(project, true));
 
-        instantRunBuildContext.addChangedFile(FileType.SPLIT, alignedOutput);
+        buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
         //noinspection ResultOfMethodCallIgnored
         resPackageFile.delete();
         return alignedOutput;

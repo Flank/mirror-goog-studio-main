@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -274,11 +273,12 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    @Nullable
-                    AndroidTask<BuildInfoWriterTask> fullBuildInfoGeneratorTask =
-                            createInstantRunPackagingTasks(tasks, variantScope);
+                    @NonNull
+                    AndroidTask<BuildInfoWriterTask> builInfoWriterTask = createBuilInfoWriterTask(
+                            tasks, variantScope);
+                    createInstantRunPackagingTasks(tasks, builInfoWriterTask, variantScope);
                     createPackagingTask(
-                            tasks, variantScope, true /*publishApk*/, fullBuildInfoGeneratorTask);
+                            tasks, variantScope, true /*publishApk*/, builInfoWriterTask);
                 });
 
         // create the lint tasks.
@@ -289,22 +289,31 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createLintTasks(tasks, variantScope));
     }
 
+    @NonNull
+    protected AndroidTask<BuildInfoWriterTask> createBuilInfoWriterTask(
+            @NonNull TaskFactory tasks, VariantScope scope) {
+        return getAndroidTasks().create(tasks,
+                        new BuildInfoWriterTask.ConfigAction(scope, getLogger()));
+    }
+
     /**
      * Create tasks related to creating pure split APKs containing sharded dex files.
      */
-    @Nullable
-    protected AndroidTask<BuildInfoWriterTask> createInstantRunPackagingTasks(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    protected void createInstantRunPackagingTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull AndroidTask<BuildInfoWriterTask> buildInfoGeneratorTask,
+            @NonNull VariantScope variantScope) {
 
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE) {
-            return null;
+        if (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE
+                || variantScope.getInstantRunTaskManager() == null) {
+            return;
         }
 
-        AndroidTask<BuildInfoWriterTask> buildInfoGeneratorTask =
-                variantScope.getInstantRunTaskManager().createBuildInfoWriterTask();
+        variantScope.getInstantRunTaskManager()
+                        .configureBuildInfoWriterTask(buildInfoGeneratorTask);
 
         InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getInstantRunBuildContext().getPatchingPolicy();
+                variantScope.getBuildContext().getPatchingPolicy();
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
 
@@ -317,7 +326,7 @@ public class ApplicationTaskManager extends TaskManager {
                     new InstantRunDependenciesApkBuilder(
                             getLogger(),
                             project,
-                            variantScope.getInstantRunBuildContext(),
+                            variantScope.getBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
@@ -341,7 +350,7 @@ public class ApplicationTaskManager extends TaskManager {
                     new InstantRunSliceSplitApkBuilder(
                             getLogger(),
                             project,
-                            variantScope.getInstantRunBuildContext(),
+                            variantScope.getBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
@@ -366,7 +375,6 @@ public class ApplicationTaskManager extends TaskManager {
             // the build-info.xml.
             variantScope.getAssembleTask().dependsOn(tasks, buildInfoGeneratorTask);
         }
-        return buildInfoGeneratorTask;
     }
 
     @NonNull

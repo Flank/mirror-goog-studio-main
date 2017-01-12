@@ -49,7 +49,7 @@ public class BuildInfoLoaderTask extends BaseTask {
     Logger logger;
 
     // Variant state that is modified.
-    InstantRunBuildContext instantRunBuildContext;
+    BuildContext buildContext;
 
     @TaskAction
     public void executeAction() {
@@ -57,19 +57,19 @@ public class BuildInfoLoaderTask extends BaseTask {
         try {
             // load the persisted state, this will give us previous build-ids in case we need them.
             if (buildInfoFile.exists()) {
-                instantRunBuildContext.loadFromXmlFile(buildInfoFile);
+                buildContext.loadFromXmlFile(buildInfoFile);
             } else {
-                instantRunBuildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
+                buildContext.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             }
-            long token = instantRunBuildContext.getSecretToken();
+            long token = buildContext.getSecretToken();
             if (token == 0) {
                 token = PackagingUtils.computeApplicationHash(getProject().getBuildDir());
-                instantRunBuildContext.setSecretToken(token);
+                buildContext.setSecretToken(token);
             }
             // check for the presence of a temporary buildInfoFile and if it exists, merge its
             // artifacts into the current build.
             if (tmpBuildInfoFile.exists()) {
-                instantRunBuildContext.mergeFromFile(tmpBuildInfoFile);
+                buildContext.mergeFromFile(tmpBuildInfoFile);
                 FileUtils.delete(tmpBuildInfoFile);
             }
         } catch (Exception e) {
@@ -79,7 +79,7 @@ public class BuildInfoLoaderTask extends BaseTask {
         }
         try {
             // move last iteration artifacts to our back up folder.
-            InstantRunBuildContext.Build lastBuild = instantRunBuildContext.getLastBuild();
+            BuildContext.Build lastBuild = buildContext.getLastBuild();
             if (lastBuild == null) {
                 return;
             }
@@ -87,7 +87,7 @@ public class BuildInfoLoaderTask extends BaseTask {
             // create a new backup folder with the old build-id as the name.
             File backupFolder = new File(pastBuildsFolder, String.valueOf(lastBuild.getBuildId()));
             FileUtils.mkdirs(backupFolder);
-            for (InstantRunBuildContext.Artifact artifact : lastBuild.getArtifacts()) {
+            for (BuildContext.Artifact artifact : lastBuild.getArtifacts()) {
                 if (!artifact.isAccumulative()) {
                     File oldLocation = artifact.getLocation();
                     // last iteration could have been a cold swap.
@@ -145,7 +145,7 @@ public class BuildInfoLoaderTask extends BaseTask {
             task.tmpBuildInfoFile =
                     BuildInfoWriterTask.ConfigAction.getTmpBuildInfoFile(variantScope);
             task.pastBuildsFolder = variantScope.getInstantRunPastIterationsFolder();
-            task.instantRunBuildContext = variantScope.getInstantRunBuildContext();
+            task.buildContext = variantScope.getBuildContext();
             task.logger = logger;
         }
     }

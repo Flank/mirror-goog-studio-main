@@ -17,9 +17,8 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -50,7 +49,7 @@ public class PreColdSwapTask extends DefaultAndroidTask {
 
     private TransformVariantScope transformVariantScope;
     private InstantRunVariantScope instantRunVariantScope;
-    private InstantRunBuildContext instantRunContext;
+    private BuildContext instantRunContext;
 
     @TaskAction
     public void disableBuildTasksAsNeeded() throws IOException {
@@ -112,7 +111,7 @@ public class PreColdSwapTask extends DefaultAndroidTask {
             task.setVariantName(instantRunVariantScope.getFullVariantName());
             task.transformVariantScope = transformVariantScope;
             task.instantRunVariantScope = instantRunVariantScope;
-            task.instantRunContext = instantRunVariantScope.getInstantRunBuildContext();
+            task.instantRunContext = instantRunVariantScope.getBuildContext();
         }
     }
 }

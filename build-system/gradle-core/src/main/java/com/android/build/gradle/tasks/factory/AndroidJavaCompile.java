@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.tasks.factory;
 
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import java.util.List;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
@@ -32,7 +30,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String compileSdkVersion;
 
-    InstantRunBuildContext mBuildContext;
+    BuildContext mBuildContext;
 
     @Override
     protected void compile(IncrementalTaskInputs inputs) {
@@ -47,9 +45,9 @@ public class AndroidJavaCompile extends JavaCompile {
             }
         }
 
-        mBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
+        mBuildContext.startRecording(BuildContext.TaskType.JAVAC);
         super.compile(inputs);
-        mBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);
+        mBuildContext.stopRecording(BuildContext.TaskType.JAVAC);
     }
 
     private boolean isPostN() {

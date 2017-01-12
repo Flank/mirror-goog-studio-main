@@ -23,7 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.ide.common.process.ProcessException;
@@ -88,7 +88,7 @@ public class ColdSwapTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    @NonNull List<BuildContext.Artifact> artifacts)
                                     throws Exception {
                                 assertThat(artifacts).hasSize(1);
                                 checkDalvikApk(new Apk(artifacts.get(0).getLocation()));
@@ -132,10 +132,10 @@ public class ColdSwapTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    @NonNull List<BuildContext.Artifact> artifacts)
                                     throws Exception {
                                 assertThat(artifacts).hasSize(1);
-                                for (InstantRunBuildContext.Artifact artifact : artifacts) {
+                                for (BuildContext.Artifact artifact : artifacts) {
                                     expect.that(artifact.getType()).isEqualTo(FileType.SPLIT);
                                     checkUpdatedClassPresence(
                                             new SplitApks(

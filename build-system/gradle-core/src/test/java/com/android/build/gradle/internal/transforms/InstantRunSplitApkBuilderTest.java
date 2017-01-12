@@ -26,7 +26,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -61,7 +61,7 @@ public class InstantRunSplitApkBuilderTest {
 
     @Mock Logger logger;
     @Mock Project project;
-    @Mock InstantRunBuildContext instantRunBuildContext;
+    @Mock BuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
     @Mock PackagingScope packagingScope;
@@ -89,7 +89,7 @@ public class InstantRunSplitApkBuilderTest {
         instantRunSliceSplitApkBuilder = new InstantRunSliceSplitApkBuilder(
                 logger,
                 project,
-                instantRunBuildContext,
+                buildContext,
                 androidBuilder,
                 packagingScope,
                 coreSigningConfig,
@@ -196,7 +196,7 @@ public class InstantRunSplitApkBuilderTest {
                 any(ApkCreatorFactory.class));
 
         assertThat(outApkLocation.getValue().getName()).isEqualTo(dexFiles.encodeName() + ".apk");
-        Mockito.verify(instantRunBuildContext).addChangedFile(eq(FileType.SPLIT),
+        Mockito.verify(buildContext).addChangedFile(eq(FileType.SPLIT),
                 eq(outApkLocation.getValue()));
 
     }
@@ -209,7 +209,7 @@ public class InstantRunSplitApkBuilderTest {
                 new InstantRunSliceSplitApkBuilder(
                     logger,
                     project,
-                    instantRunBuildContext,
+                    buildContext,
                     androidBuilder,
                     packagingScope,
                     coreSigningConfig,

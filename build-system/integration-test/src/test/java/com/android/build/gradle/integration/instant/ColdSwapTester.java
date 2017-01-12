@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -57,10 +57,10 @@ class ColdSwapTester {
                 .withInstantRun(apiLevel, coldswapMode)
                 .run("assembleDebug");
 
-        InstantRunBuildContext buildContext =
+        BuildContext buildContext =
                 InstantRunTestUtils.loadBuildContext(apiLevel, instantRunModel);
 
-        InstantRunBuildContext.Build lastBuild = buildContext.getLastBuild();
+        BuildContext.Build lastBuild = buildContext.getLastBuild();
         assertNotNull(lastBuild);
         assertThat(lastBuild.getBuildId()).isNotEqualTo(startBuildId);
 
@@ -82,7 +82,7 @@ class ColdSwapTester {
 
         void checkBuildMode(@NonNull InstantRunBuildMode buildMode) throws Exception;
 
-        void checkArtifacts(@NonNull List<InstantRunBuildContext.Artifact> artifacts)
+        void checkArtifacts(@NonNull List<BuildContext.Artifact> artifacts)
                 throws Exception;
     }
 }

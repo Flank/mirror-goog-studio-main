@@ -284,6 +284,7 @@ public class ManifestMerger2 {
         // finally optional features handling.
         processOptionalFeatures(finalMergedDocument, mergingReportBuilder);
 
+        mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
         MergingReport mergingReport = mergingReportBuilder.build();
 
         if (mReportFile.isPresent()) {

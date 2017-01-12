@@ -22,7 +22,7 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -54,8 +54,8 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     private final ExternalBuildVariantScope mVariantScope;
     @NonNull
     private final TransformManager mTransformManager;
-    private InstantRunBuildContext
-            mInstantRunBuildContext;
+    @NonNull
+    private BuildContext mBuildContext;
     @Nullable
     private final SigningConfig mSigningConfig;
 
@@ -71,7 +71,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         mVariantScope = variantScope;
         mTransformManager = transformManager;
         mSigningConfig = signingConfig;
-        mInstantRunBuildContext = mVariantScope.getInstantRunBuildContext();
+        mBuildContext = mVariantScope.getBuildContext();
     }
 
     @NonNull
@@ -97,13 +97,13 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public ApiVersion getMinSdkVersion() {
-        return new DefaultApiVersion(mInstantRunBuildContext.getFeatureLevel());
+        return new DefaultApiVersion(mBuildContext.getFeatureLevel());
     }
 
     @NonNull
     @Override
-    public InstantRunBuildContext getInstantRunBuildContext() {
-        return mInstantRunBuildContext;
+    public BuildContext getInstantRunBuildContext() {
+        return mBuildContext;
     }
 
     @NonNull

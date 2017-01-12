@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalSupportVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalVisitor;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -137,8 +137,8 @@ public class InstantRunTransform extends Transform {
     public Map<String, Object> getParameterInputs() {
         // Force the instant run transform to re-run when the dex patching policy changes,
         // as the slicer will re-run.
-        return transformScope.getInstantRunBuildContext().getPatchingPolicy() != null
-                ? ImmutableMap.of("dex patching policy", transformScope.getInstantRunBuildContext()
+        return transformScope.getBuildContext().getPatchingPolicy() != null
+                ? ImmutableMap.of("dex patching policy", transformScope.getBuildContext()
                         .getPatchingPolicy().getDexPatchingPolicy().toString())
                 : ImmutableMap.of();
 
@@ -159,32 +159,32 @@ public class InstantRunTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
-        instantRunBuildContext.startRecording(
-                InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        BuildContext buildContext = transformScope.getBuildContext();
+        buildContext.startRecording(
+                BuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         try {
             doTransform(invocation);
         } finally {
-            instantRunBuildContext.stopRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+            buildContext.stopRecording(
+                    BuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         }
 
     }
 
     public void doTransform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
+        BuildContext buildContext = transformScope.getBuildContext();
 
         // if we do not run in incremental mode, we should automatically switch to COLD swap.
         if (!invocation.isIncremental()) {
-            instantRunBuildContext.setVerifierStatus(
+            buildContext.setVerifierStatus(
                     InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL);
         }
 
         // If this is not a HOT_WARM build, clean up the enhanced classes and don't generate new
         // ones during this build.
         boolean inHotSwapMode =
-                instantRunBuildContext.getBuildMode() == InstantRunBuildMode.HOT_WARM;
+                buildContext.getBuildMode() == InstantRunBuildMode.HOT_WARM;
 
         TransformOutputProvider outputProvider = invocation.getOutputProvider();
         if (outputProvider == null) {
@@ -288,7 +288,7 @@ public class InstantRunTransform extends Transform {
 
         // If our classes.2 transformations indicated that a cold swap was necessary,
         // clean up the classes.3 output folder as some new files may have been generated.
-        if (instantRunBuildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM) {
+        if (buildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM) {
             FileUtils.cleanOutputDir(classesThreeOutput);
         }
 
@@ -300,7 +300,7 @@ public class InstantRunTransform extends Transform {
 
         // the transform can set the verifier status to failure in some corner cases, in that
         // case, make sure we delete our classes.3
-        if (!transformScope.getInstantRunBuildContext().hasPassedVerification()) {
+        if (!transformScope.getBuildContext().hasPassedVerification()) {
             FileUtils.cleanOutputDir(classes3Folder);
             return;
         }
@@ -308,7 +308,7 @@ public class InstantRunTransform extends Transform {
         ImmutableList<String> generatedClassNames = generatedClasses3Names.build();
         if (!generatedClassNames.isEmpty()) {
             writePatchFileContents(generatedClassNames, classes3Folder,
-                    transformScope.getInstantRunBuildContext().getBuildId());
+                    transformScope.getBuildContext().getBuildId());
         }
     }
 
@@ -419,7 +419,7 @@ public class InstantRunTransform extends Transform {
         // that it was disabled for InstantRun, we don't add it to our collection of generated
         // classes and it will not be part of the Patch class that apply changes.
         if (outputFile == null) {
-            transformScope.getInstantRunBuildContext().setVerifierStatus(
+            transformScope.getBuildContext().setVerifierStatus(
                     InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
             LOGGER.info("Class %s cannot be hot swapped.", inputFile);
             return null;

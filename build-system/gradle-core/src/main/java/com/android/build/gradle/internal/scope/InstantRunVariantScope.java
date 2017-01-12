@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +42,9 @@ public interface InstantRunVariantScope {
     TransformGlobalScope getGlobalScope();
 
     @NonNull
+    File getBuildInfoOutputFolder();
+
+    @NonNull
     File getReloadDexOutputFolder();
 
     @NonNull
@@ -54,7 +57,7 @@ public interface InstantRunVariantScope {
     File getIncrementalVerifierDir();
 
     @NonNull
-    InstantRunBuildContext getInstantRunBuildContext();
+    BuildContext getBuildContext();
 
     @NonNull
     File getInstantRunPastIterationsFolder();

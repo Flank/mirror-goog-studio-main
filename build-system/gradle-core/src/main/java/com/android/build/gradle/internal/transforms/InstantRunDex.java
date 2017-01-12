@@ -27,7 +27,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.builder.core.DexByteCodeConverter;
@@ -100,7 +100,7 @@ public class InstantRunDex extends Transform {
         File outputFolder = InstantRunBuildType.RELOAD.getOutputFolder(variantScope);
 
         boolean changesAreCompatible =
-                variantScope.getInstantRunBuildContext().hasPassedVerification();
+                variantScope.getBuildContext().hasPassedVerification();
         boolean restartDexRequested =
                 variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY);
 
@@ -156,17 +156,17 @@ public class InstantRunDex extends Transform {
         inputFiles.add(classesJar);
 
         try {
-            variantScope.getInstantRunBuildContext().startRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
+            variantScope.getBuildContext().startRecording(
+                    BuildContext.TaskType.INSTANT_RUN_DEX);
             convertByteCode(inputFiles.build(), outputFolder);
-            variantScope.getInstantRunBuildContext().addChangedFile(
+            variantScope.getBuildContext().addChangedFile(
                     FileType.RELOAD_DEX,
                     new File(outputFolder, "classes.dex"));
         } catch (ProcessException e) {
             throw new TransformException(e);
         } finally {
-            variantScope.getInstantRunBuildContext().stopRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
+            variantScope.getBuildContext().stopRecording(
+                    BuildContext.TaskType.INSTANT_RUN_DEX);
         }
     }
 
@@ -256,7 +256,7 @@ public class InstantRunDex extends Transform {
     public Map<String, Object> getParameterInputs() {
         return ImmutableMap.of(
                 "changesAreCompatible",
-                variantScope.getInstantRunBuildContext().hasPassedVerification(),
+                variantScope.getBuildContext().hasPassedVerification(),
                 "restartDexRequested",
                 variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY));
     }

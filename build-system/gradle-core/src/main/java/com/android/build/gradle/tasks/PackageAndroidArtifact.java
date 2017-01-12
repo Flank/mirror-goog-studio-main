@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
@@ -168,7 +168,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     private ApiVersion minSdkVersion;
 
-    protected InstantRunBuildContext instantRunContext;
+    protected BuildContext instantRunContext;
 
     protected File instantRunSupportDir;
 
