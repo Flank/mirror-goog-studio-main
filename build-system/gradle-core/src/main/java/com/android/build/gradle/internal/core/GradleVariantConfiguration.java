@@ -36,6 +36,7 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
@@ -112,9 +113,39 @@ public class GradleVariantConfiguration
     }
 
     /**
-     * Interface for building the {@link GradleVariantConfiguration} instances.
+     * Returns the minimum SDK version for this variant, potentially overridden by a property passed
+     * by the IDE.
+     *
+     * @see VariantConfiguration#getMinSdkVersion()
      */
-    public interface Builder{
+    @NonNull
+    @Override
+    public ApiVersion getMinSdkVersion() {
+        // The changed behavior comes from overriding getApiVersionsNonTestVariant().
+        return super.getMinSdkVersion();
+    }
+
+    /**
+     * Return the minSdkVersion for filtering out resources.
+     *
+     * <p>This is always the minimum SDK version read from the manifest and/or DSL, ignoring the
+     * property passed from the IDE. This way R.java contents don't change depending on the device
+     * selected in the IDE.
+     */
+    @NonNull
+    public ApiVersion getResourcesMinSdkVersion() {
+        VariantConfiguration testedConfig = getTestedConfig();
+        if (testedConfig == null) {
+            return super.getApiVersionsNonTestVariant().minSdkVersion;
+        } else if (testedConfig instanceof GradleVariantConfiguration) {
+            return ((GradleVariantConfiguration) testedConfig).getResourcesMinSdkVersion();
+        } else {
+            return testedConfig.getMinSdkVersion();
+        }
+    }
+
+    /** Interface for building the {@link GradleVariantConfiguration} instances. */
+    public interface Builder {
         /** Creates a variant configuration */
         @NonNull
         GradleVariantConfiguration create(
@@ -277,17 +308,20 @@ public class GradleVariantConfiguration
     }
 
     @Override
-    protected ApiVersions getApiVersionsNonTestVariant() {
+    public ApiVersions getApiVersionsNonTestVariant() {
         ApiVersions apiVersions = super.getApiVersionsNonTestVariant();
         if (project.hasProperty(AndroidProject.PROPERTY_BUILD_API)
                 && getBuildType().isDebuggable()) {
-            // Consider runtime API only if the app is debuggable.
-            Integer targetAPILevel = Integer.parseInt(
-                    project.property(AndroidProject.PROPERTY_BUILD_API).toString());
+            // Consider runtime API passed from the IDE only if the app is debuggable.
+            Integer targetAPILevel =
+                    Integer.parseInt(
+                            project.property(AndroidProject.PROPERTY_BUILD_API).toString());
 
-            int minVersion = apiVersions.targetSdkVersion.getApiLevel() > 0
-                    ? Integer.min(apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
-                    : targetAPILevel;
+            int minVersion =
+                    apiVersions.targetSdkVersion.getApiLevel() > 0
+                            ? Integer.min(
+                                    apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
+                            : targetAPILevel;
 
             return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
         } else {
