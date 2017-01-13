@@ -37,6 +37,8 @@ import org.w3c.dom.NodeList;
 @SuppressWarnings({"WeakerAccess", "unused"}) // Used in studio and in integration tests.
 public class InstantRunBuildInfo {
     private static final String FULL_BUILD_MODE = "FULL";
+    private static final String COLD_SWAP_BUILD_MODE = "COLD";
+
     /**
      * Right now Gradle plugin doesn't sort the build id's, but when it does we can rely on element
      * order in the doc
@@ -101,8 +103,26 @@ public class InstantRunBuildInfo {
         return mRoot.getAttribute(ATTR_BUILD_MODE);
     }
 
-    public boolean isFullBuild() {
-        return mRoot.getAttribute(ATTR_BUILD_MODE).equals(FULL_BUILD_MODE);
+    /** Returns whether the current build only has patches for an existing APK. */
+    public boolean isPatchBuild() {
+        String buildMode = mRoot.getAttribute(ATTR_BUILD_MODE);
+        if (FULL_BUILD_MODE.equals(buildMode)) {
+            return false;
+        }
+
+        if (COLD_SWAP_BUILD_MODE.equals(buildMode)) {
+            // Hack Alert: https://code.google.com/p/android/issues/detail?id=231563
+            // The IDE has no way of knowing if all the splits are present in this build output, but it needs to know this info since
+            // it can't always install split apks as if it were a patch install.
+            // In 2.4, we expect the build-info emitted by gradle to either provide this info directly, or delete all previous builds
+            // in the build info whenever it generates all artifacts.
+            // Until then, we hardcode a check to identify a build as generating a full apk if the number of splits is < 12.
+            // The 12 comes from Gradle currently generating 12 splits for an APK
+            // 12 = InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES (10) + 1 for dependencies apk + 1 for main apk
+            return getArtifacts().size() < 12;
+        }
+
+        return true;
     }
 
     public boolean canHotswap() {
