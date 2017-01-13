@@ -175,7 +175,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     private boolean mTestRunFailReported = false;
 
     /** The elapsed time of the test run, in milliseconds. */
-    private long mTestTime = 0;
+    private Long mTestTime = null;
 
     /** True if current test run has been canceled by user. */
     private boolean mIsCancelled = false;
@@ -212,6 +212,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
 
     /** Error message supplied when the test run is incomplete. */
     static final String INCOMPLETE_RUN_ERR_MSG_PREFIX = "Test run failed to complete";
+
+    /** Error message supplied when the test run output doesn't contain a valid time stamp. */
+    public static final String INVALID_OUTPUT_ERR_MSG =
+            "Output from instrumentation is missing its time stamp";
 
     /**
      * Creates the InstrumentationResultParser.
@@ -586,6 +590,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 listener.testRunStarted(mTestRunName, 0);
             }
             listener.testRunFailed(errorMsg);
+            if (mTestTime == null) {
+                // We don't report an extra failure due to missing time stamp.
+                mTestTime = 0l;
+            }
             listener.testRunEnded(mTestTime, mInstrumentationResultBundle);
         }
         mTestStartReported = true;
@@ -621,6 +629,11 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                     // test run wasn't started, but it finished successfully. Must be a run with
                     // no tests
                     listener.testRunStarted(mTestRunName, 0);
+                }
+                if (mTestTime == null) {
+                    // Report a test run failure since the output was invalid
+                    listener.testRunFailed(INVALID_OUTPUT_ERR_MSG);
+                    mTestTime = 0l;
                 }
                 listener.testRunEnded(mTestTime, mInstrumentationResultBundle);
             }
