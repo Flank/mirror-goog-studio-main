@@ -31,6 +31,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.SecondaryInput;
 import com.android.build.api.transform.Status;
+import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
@@ -49,31 +50,20 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
-import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
 public class TransformTaskTest extends TaskTestUtils {
 
-    private Project project;
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Override
-    public void setUp() throws IOException {
-        super.setUp();
-        File projectDirectory = java.nio.file.Files.createTempDirectory(getClass().getName()).toFile();
-        project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
-    }
 
     @Test
     public void nonIncWithJarInputInOriginalStream()
@@ -1940,6 +1930,47 @@ public class TransformTaskTest extends TaskTestUtils {
     }
 
     @Test
+    public void testSecondaryInputs() {
+        // create a stream and add it to the pipeline
+        OriginalStream projectClass = OriginalStream.builder(project)
+                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
+                .addScope(Scope.PROJECT)
+                .build();
+        transformManager.addStream(projectClass);
+
+        File file1 = new File("file1");
+        File file2 = new File("file2");
+        File file3 = new File("file3");
+        SecondaryFile secondaryFile1 = SecondaryFile.incremental(file2);
+        SecondaryFile secondaryFile2 = SecondaryFile.incremental(project.files(file3));
+        Transform transform = TestTransform.builder()
+                .setInputTypes(DefaultContentType.CLASSES)
+                .setScopes(Scope.PROJECT)
+                .addSecondaryFile(file1)
+                .addSecondaryInput(secondaryFile1)
+                .addSecondaryInput(secondaryFile2)
+                .build();
+
+        // add the transform to the manager
+        AndroidTask<TransformTask> task =
+                transformManager
+                        .addTransform(taskFactory, scope, transform)
+                        .orElseThrow(mTransformTaskFailed);
+
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        assertThat(transformTask).isNotNull();
+
+        assertThat(transformTask.getOldSecondaryInputs()).containsExactly(file1);
+        assertThat(transformTask.getSecondaryFileInputs()).hasSize(2);
+        Collection<File> flattenedFileList = transformTask.getSecondaryFileInputs().stream()
+                .map(FileCollection::getFiles)
+                .flatMap(Set::stream)
+                .collect(Collectors.toList());
+        assertThat(flattenedFileList).containsExactly(project.file(file2), project.file(file3));
+    }
+
+    @Test
     public void secondaryFileAddedWithJarInputInOriginalStream()
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
@@ -1958,7 +1989,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
-                .setSecondaryFile(secondaryFile)
+                .addSecondaryFile(secondaryFile)
                 .build();
 
         // add the transform to the manager
@@ -2018,7 +2049,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
-                .setSecondaryFile(secondaryFile)
+                .addSecondaryFile(secondaryFile)
                 .build();
 
         // add the transform to the manager
@@ -2080,7 +2111,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
-                .setSecondaryFile(secondaryFile)
+                .addSecondaryFile(secondaryFile)
                 .build();
 
         // add the transform to the manager
@@ -2130,7 +2161,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
-                .setSecondaryInput(SecondaryFile.incremental(secondaryFile))
+                .addSecondaryInput(SecondaryFile.incremental(secondaryFile))
                 .build();
 
         // add the transform to the manager
@@ -2207,7 +2238,7 @@ public class TransformTaskTest extends TaskTestUtils {
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
                 .setScopes(Scope.PROJECT)
-                .setSecondaryFile(secondaryFile)
+                .addSecondaryFile(secondaryFile)
                 .build();
 
         // add the transform to the manager
