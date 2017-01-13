@@ -459,6 +459,10 @@ public class LibraryTaskManager extends TaskManager {
                                     mainClassJar,
                                     t.getName(),
                                     AndroidArtifacts.TYPE_JAR);
+                            variantScope.publishIntermediateArtifact(
+                                    mainClassJar,
+                                    t.getName(),
+                                    AndroidArtifacts.TYPE_JAR_AAR_CLASSES);
                             // publish the res jar
                             variantScope.publishIntermediateArtifact(
                                     mainResJar,

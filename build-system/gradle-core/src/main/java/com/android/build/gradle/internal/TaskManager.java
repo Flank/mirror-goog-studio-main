@@ -597,7 +597,7 @@ public abstract class TaskManager {
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedAarClassJars())
+                .setFileCollection(variantScope.getSubProjectPackagedJars())
                 .build());
 
         // for the sub modules, thew new intermediary res.jar only has resources

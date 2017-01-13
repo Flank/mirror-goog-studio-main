@@ -68,14 +68,7 @@ class IntermediateStream extends TransformStream {
             Preconditions.checkState(!scopes.isEmpty());
 
             // create a file collection with the files and the dependencies.
-            FileCollection fileCollection = project.files(rootLocation,
-                    new Closure(project) {
-                        public Object doCall(ConfigurableFileCollection fileCollection) {
-                            fileCollection.builtBy(taskName);
-                            return null;
-                        }
-                    });
-
+            FileCollection fileCollection = project.files(rootLocation).builtBy(taskName);
 
             return new IntermediateStream(
                     ImmutableSet.copyOf(contentTypes),

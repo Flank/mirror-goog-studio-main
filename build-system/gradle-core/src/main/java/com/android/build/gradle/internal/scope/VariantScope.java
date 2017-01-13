@@ -274,9 +274,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getSubProjectPackagedJavaJars();
 
     @NonNull
-    FileCollection getSubProjectPackagedAarClassJars();
-
-    @NonNull
     FileCollection getSubProjectPackagedAarResourceJars();
 
     @NonNull
