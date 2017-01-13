@@ -709,9 +709,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getSubProjectPackagedJars().minus(getSubProjectPackagedAarClassJars());
     }
 
-    @Override
     @NonNull
-    public FileCollection getSubProjectPackagedAarClassJars() {
+    private FileCollection getSubProjectPackagedAarClassJars() {
         // TODO cache?
         // Android Sub-project classes.jar
         return getSubprojectPackageCollection(ARTIFACTS_JAR_AAR_CLASSES);
