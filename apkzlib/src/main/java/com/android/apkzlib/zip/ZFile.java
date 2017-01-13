@@ -1447,6 +1447,14 @@ public class ZFile implements Closeable {
         raf = new RandomAccessFile(file, "rw");
         state = ZipFileState.OPEN_RW;
 
+        /*
+         * Now that we've open the zip and are ready to write, clear out any data descriptors
+         * in the zip since we don't need them and they take space in the archive.
+         */
+        for (StoredEntry entry : entries()) {
+            dirty |= entry.removeDataDescriptor();
+        }
+
         if (wasClosed) {
             notify(ZFileExtension::open);
         }
@@ -1907,6 +1915,10 @@ public class ZFile implements Closeable {
         boolean anyChanges = false;
         for (StoredEntry entry : entries()) {
             anyChanges |= entry.realign();
+        }
+
+        if (anyChanges) {
+            dirty = true;
         }
 
         return anyChanges;
@@ -2421,6 +2433,7 @@ public class ZFile implements Closeable {
             String name = entry.getCentralDirectoryHeader().getName();
             FileUseMapEntry<StoredEntry> positioned =
                     positionInFile(entry, PositionHint.LOWEST_OFFSET);
+
             entries.put(name, positioned);
         }
 
