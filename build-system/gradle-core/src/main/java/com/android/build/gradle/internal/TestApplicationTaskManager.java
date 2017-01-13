@@ -159,8 +159,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull VariantScope variantScope,
             boolean createJarFile) {
         if (getTestTargetMapping(variantScope) != null) {
-            doCreateMinifyTransform(
-                    taskFactory, variantScope, getTestTargetMapping(variantScope), false);
+            doCreateMinifyTransform(taskFactory, variantScope, getTestTargetMapping(variantScope));
         }
     }
 
