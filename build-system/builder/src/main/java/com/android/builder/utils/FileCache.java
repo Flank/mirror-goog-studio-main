@@ -55,7 +55,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  * <p>This class is thread-safe.
  */
 @Immutable
-public final class FileCache {
+public class FileCache {
 
     /**
      * The scope of the locking facility. With {@code INTER_PROCESS} scope, synchronization takes

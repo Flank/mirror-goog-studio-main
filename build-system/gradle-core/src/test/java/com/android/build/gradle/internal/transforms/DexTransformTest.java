@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,6 +50,7 @@ import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -366,6 +369,56 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
         assertEquals(8, buildCache.getCacheDirectory().listFiles().length);
+    }
+
+    @Test
+    public void testBuildCacheFailure() throws Exception {
+        // Inputs for dexing
+        JarInput nonSnapshotExternalLibraryJarInput =
+                getJarInput(
+                        testDir.newFile("nonSnapshotExtLibJar"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        DirectoryInput directoryInput =
+                getDirectoryInput(
+                        testDir.newFolder("dirInput"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+
+        Files.write(
+                "nonSnapshotExtLibJar",
+                nonSnapshotExternalLibraryJarInput.getFile(),
+                StandardCharsets.UTF_8);
+        Files.write(
+                "dirInput",
+                new File(directoryInput.getFile(), "baz"),
+                StandardCharsets.UTF_8);
+
+        // Output directory of pre-dexing
+        File preDexOutputDir = testDir.newFolder("pre-dex");
+
+        // Output directory of dexing
+        File dexOutputDir = testDir.newFolder("dex");
+
+        // Let the build cache throw an exception when called
+        FileCache buildCache = mock(FileCache.class);
+        when(buildCache.createFile(any(), any(), any())).thenThrow(
+                new RuntimeException("Build cache error"));
+        when(buildCache.getCacheDirectory()).thenReturn(testDir.newFolder("cache"));
+
+        // Run dexing, expect it to fail
+        try {
+            runDexing(
+                    ImmutableList.of(nonSnapshotExternalLibraryJarInput),
+                    ImmutableList.of(directoryInput),
+                    preDexOutputDir,
+                    dexOutputDir,
+                    buildCache,
+                    AndroidBuilder.MIN_BUILD_TOOLS_REV);
+            fail("Expected TransformException");
+        } catch (TransformException exception) {
+            assertThat(exception.getMessage()).contains("Unable to pre-dex");
+            assertThat(Throwables.getRootCause(exception).getMessage())
+                    .contains("Build cache error");
+        }
     }
 
     private void runDexing(

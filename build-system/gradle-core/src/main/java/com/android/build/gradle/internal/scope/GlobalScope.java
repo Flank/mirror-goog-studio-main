@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
@@ -35,7 +36,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 
-import com.google.common.base.Throwables;
 import java.util.Optional;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -110,7 +110,7 @@ public class GlobalScope implements TransformGlobalScope {
         outputsDir = new File(getBuildDir(), FD_OUTPUTS);
         optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
         androidGradleOptions = new AndroidGradleOptions(project);
-        buildCache = getBuildCache(project, androidGradleOptions);
+        buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
         validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
     }
 
@@ -269,38 +269,6 @@ public class GlobalScope implements TransformGlobalScope {
     @Override
     public Optional<FileCache> getBuildCache() {
         return buildCache;
-    }
-
-    @NonNull
-    public static Optional<FileCache> getBuildCache(
-            @NonNull Project project, @NonNull AndroidGradleOptions androidGradleOptions) {
-        if (androidGradleOptions.isBuildCacheEnabled()) {
-            String buildCacheDirString = androidGradleOptions.getBuildCacheDir();
-            File buildCacheDir =
-                    androidGradleOptions.getBuildCacheDir() != null
-                            ? new File(buildCacheDirString)
-                            // Use a default directory if the build cache directory is not set
-                            : new File(FileUtils.join(
-                                    System.getProperty("user.home"), ".android", "build-cache"));
-            try {
-                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
-            } catch (Exception exception) {
-                project.getLogger().warn(
-                        String.format(
-                                "Unable to create the build cache at '%1$s'.\n"
-                                        + "Cause: %2$s\n"
-                                        + "We have temporarily disabled the build cache.\n"
-                                        + "If you are unable to fix the underlying cause, please"
-                                        + " file a bug or disable the build cache by setting"
-                                        + " android.enableBuildCache=false in the gradle.properties"
-                                        + " file.",
-                                buildCacheDir.getAbsolutePath(),
-                                Throwables.getStackTraceAsString(exception)));
-                return Optional.empty();
-            }
-        } else {
-            return Optional.empty();
-        }
     }
 
     /**
