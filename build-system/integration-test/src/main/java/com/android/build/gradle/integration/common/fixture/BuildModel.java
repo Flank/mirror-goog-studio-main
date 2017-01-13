@@ -81,7 +81,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     /** Do not fail if there are sync issues */
     public BuildModel ignoreSyncIssues() {
-        Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGNAL,
+        Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
         mAssertNoSyncIssues = false;
         return this;
@@ -90,7 +90,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /** Fetch the model as studio 1.0 would. */
     public BuildModel asStudio1() {
         Preconditions.checkState(mAssertNoSyncIssues, "Studio 1 was not aware of sync issues.");
-        return level(AndroidProject.MODEL_LEVEL_0_ORIGNAL);
+        return level(AndroidProject.MODEL_LEVEL_0_ORIGINAL);
     }
 
     /**
@@ -218,10 +218,10 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         arguments.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
 
         switch (modelLevel) {
-            case AndroidProject.MODEL_LEVEL_0_ORIGNAL:
+            case AndroidProject.MODEL_LEVEL_0_ORIGINAL:
                 // nothing.
                 break;
-            case AndroidProject.MODEL_LEVEL_2_NEW_DEP_MODEL:
+            case AndroidProject.MODEL_LEVEL_2_DONT_USE:
                 arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED + "="
                         + modelLevel);
                 // intended fall-through

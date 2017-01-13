@@ -221,9 +221,9 @@ public class AndroidGradleOptions {
      * @param project the project
      * @return an integer or null if we are not in model-only mode.
      *
-     * @see AndroidProject#MODEL_LEVEL_0_ORIGNAL
+     * @see AndroidProject#MODEL_LEVEL_0_ORIGINAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
-     * @see AndroidProject#MODEL_LEVEL_2_NEW_DEP_MODEL
+     * @see AndroidProject#MODEL_LEVEL_2_DONT_USE
      */
     @Nullable
     public static Integer buildModelOnlyVersion(@NonNull Project project) {
@@ -237,7 +237,7 @@ public class AndroidGradleOptions {
         }
 
         if (getBoolean(project, AndroidProject.PROPERTY_BUILD_MODEL_ONLY)) {
-            return AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+            return AndroidProject.MODEL_LEVEL_0_ORIGINAL;
         }
 
         return null;
