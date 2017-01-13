@@ -38,6 +38,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.artifacts.ResolutionStrategy;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -219,7 +220,7 @@ public class VariantDependencies {
             compile.setCanBeConsumed(false);
             applyVariantAttributes(compile, buildType, flavorMap);
             compile.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
-
+            compile.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -245,15 +246,16 @@ public class VariantDependencies {
             apk.setVisible(false);
             apk.setDescription("Resolved configuration for runtime for variant: " + variantName);
             apk.setExtendsFrom(apkConfigs);
+            apk.setCanBeConsumed(false);
             applyVariantAttributes(apk, buildType, flavorMap);
             apk.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
-            apk.setCanBeConsumed(false);
+            apk.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
 
             Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
             wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
             wearApp.setExtendsFrom(wearAppConfigs);
-            applyVariantAttributes(wearApp, buildType, flavorMap);
             wearApp.setCanBeConsumed(false);
+            applyVariantAttributes(wearApp, buildType, flavorMap);
 
             Configuration publish = null;
 
@@ -262,10 +264,10 @@ public class VariantDependencies {
                 // dependencies and building.
                 publish = project.getConfigurations().maybeCreate(variantName);
                 publish.setDescription("Published Configuration for Variant " + variantName);
-                Map<Attribute<String>, String> flavorMap2 = getFlavorAttributes(null);
-
-                applyVariantAttributes(publish, buildType, flavorMap2);
                 publish.setCanBeResolved(false);
+
+                Map<Attribute<String>, String> flavorMap2 = getFlavorAttributes(null);
+                applyVariantAttributes(publish, buildType, flavorMap2);
 
                 // if the variant is not a library, then the publishing configuration should
                 // not extend from the apkConfigs. It's mostly there to access the artifact from
