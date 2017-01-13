@@ -38,7 +38,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LINT_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LOCAL_JARS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PUBLIC_RES;
@@ -71,7 +70,6 @@ public class AarTransform extends ExtractTransform {
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_MANIFEST);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ANDROID_RES);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ASSETS);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_LOCAL_JARS);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_JNI);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_AIDL);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_RENDERSCRIPT);

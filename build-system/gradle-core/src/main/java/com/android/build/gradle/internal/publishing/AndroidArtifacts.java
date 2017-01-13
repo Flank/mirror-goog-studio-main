@@ -55,7 +55,6 @@ public class AndroidArtifacts {
     public static final String TYPE_MANIFEST = "android-manifest";
     public static final String TYPE_ANDROID_RES = "android-res";
     public static final String TYPE_ASSETS = "android-assets";
-    public static final String TYPE_LOCAL_JARS = "android-local-jars";
     public static final String TYPE_JNI = "android-jni";
     public static final String TYPE_AIDL = "android-aidl";
     public static final String TYPE_RENDERSCRIPT = "android-renderscript";
