@@ -122,7 +122,10 @@ public class AndroidGradleOptions {
                 getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
 
         String buildCacheDirString = getString(project, PROPERTY_BUILD_CACHE_DIR);
-        buildCacheDir = buildCacheDirString != null ? project.file(buildCacheDirString) : null;
+        buildCacheDir =
+                buildCacheDirString != null
+                        ? project.getRootProject().file(buildCacheDirString)
+                        : null;
 
         useMainDexList2 = getBoolean(project, PROPERTY_USE_MAIN_DEX_LIST_2);
     }

@@ -24,7 +24,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.utils.FileCache;
-import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -63,15 +62,16 @@ public class BuildCacheUtilsTest {
 
     @Test
     public void testCreateBuildCache_Enabled_DirectoryNotSet() throws Exception {
+        File defaultBuildCacheDir = testDir.newFolder();
+
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
         when(androidGradleOptions.getBuildCacheDir()).thenReturn(null);
         Optional<FileCache> buildCache =
-                BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+                BuildCacheUtils.doCreateBuildCacheIfEnabled(
+                        androidGradleOptions, () -> defaultBuildCacheDir);
 
         assertThat(buildCache).isPresent();
-        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(
-                FileUtils.join(
-                        new File(System.getProperty("user.home")), ".android", "build-cache"));
+        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(defaultBuildCacheDir);
     }
 
     @Test
