@@ -16,14 +16,9 @@
 
 package com.android.builder.core;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
-
 import junit.framework.TestCase;
-
-import java.io.File;
 
 public class VariantConfigurationTest extends TestCase {
 
@@ -33,6 +28,7 @@ public class VariantConfigurationTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        super.setUp();
         mDefaultConfig = new DefaultProductFlavor("main");
         mFlavorConfig = new DefaultProductFlavor("flavor");
         mBuildType = new DefaultBuildType("debug");
@@ -82,7 +78,7 @@ public class VariantConfigurationTest extends TestCase {
 
         mBuildType.setApplicationIdSuffix("fortytwo");
 
-        VariantConfiguration variant = getVariantWithManifestPackage("fake.package.name");
+        VariantConfiguration variant = getVariantWithManifestPackage();
 
         assertEquals("fake.package.name.fortytwo", variant.getIdOverride());
     }
@@ -99,7 +95,7 @@ public class VariantConfigurationTest extends TestCase {
     public void testVersionNameWithSuffixOnly() {
         mBuildType.setVersionNameSuffix("-DEBUG");
 
-        VariantConfiguration variant = getVariantWithManifestVersion("2.0b1");
+        VariantConfiguration variant = getVariantWithManifestVersion();
 
         assertEquals("2.0b1-DEBUG", variant.getVersionName());
     }
@@ -137,45 +133,58 @@ public class VariantConfigurationTest extends TestCase {
     }
 
     private VariantConfiguration getVariant(SigningConfig signingOverride) {
-        VariantConfiguration variant = new VariantConfiguration(
-                mDefaultConfig, new MockSourceProvider("main"),
-                mBuildType, new MockSourceProvider("debug"),
-                VariantType.DEFAULT,
-                signingOverride);
+        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
+                new VariantConfiguration<>(
+                        mDefaultConfig,
+                        new MockSourceProvider("main"),
+                        mBuildType,
+                        new MockSourceProvider("debug"),
+                        VariantType.DEFAULT,
+                        signingOverride);
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
         return variant;
     }
 
-    private VariantConfiguration getVariantWithManifestPackage(final String packageName) {
-        VariantConfiguration variant = new VariantConfiguration(
-                mDefaultConfig, new MockSourceProvider("main"),
-                mBuildType, new MockSourceProvider("debug"),
-                VariantType.DEFAULT,
-                null /*signingConfigOverride*/) {
-            @Override
-            public String getPackageFromManifest() {
-                return packageName;
-            }
-        };
+    private VariantConfiguration getVariantWithManifestPackage() {
+        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
+                new VariantConfiguration<
+                        DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
+                        mDefaultConfig,
+                        new MockSourceProvider("main"),
+                        mBuildType,
+                        new MockSourceProvider("debug"),
+                        VariantType.DEFAULT,
+                        null /*signingConfigOverride*/) {
+
+                    @Override
+                    public String getPackageFromManifest() {
+                        return "fake.package.name";
+                    }
+                };
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
         return variant;
     }
 
-    private VariantConfiguration getVariantWithManifestVersion(final String versionName) {
-        VariantConfiguration variant = new VariantConfiguration(
-                mDefaultConfig, new MockSourceProvider("main"),
-                mBuildType, new MockSourceProvider("debug"),
-                VariantType.DEFAULT,
-                null /*signingConfigOverride*/) {
-            @Override
-            public String getVersionNameFromManifest() {
-                return versionName;
-            }
-            // don't do validation.
-        };
+    private VariantConfiguration getVariantWithManifestVersion() {
+        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
+                new VariantConfiguration<
+                        DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
+                        mDefaultConfig,
+                        new MockSourceProvider("main"),
+                        mBuildType,
+                        new MockSourceProvider("debug"),
+                        VariantType.DEFAULT,
+                        null /*signingConfigOverride*/) {
+
+                    @Override
+                    public String getVersionNameFromManifest() {
+                        return "2.0b1";
+                    }
+                    // don't do validation.
+                };
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
         return variant;
