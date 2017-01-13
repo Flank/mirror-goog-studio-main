@@ -35,7 +35,6 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
@@ -49,7 +48,9 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,10 +60,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import org.gradle.api.logging.Logger;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -153,13 +154,17 @@ public class DexTransformTest {
         File preDexedNonExternalLibraryJarInput = null;
         File preDexedDirectoryInput = null;
         for (int i = 0; i < 4; i++) {
-            if (preDexOutputFiles[i].getName().contains("nonSnapshotExtLibJar")) {
+            if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("nonSnapshotExtLibJar")) {
                 preDexedNonSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("snapshotExtLibJar")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("snapshotExtLibJar")) {
                 preDexedSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("nonExtLibJar")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("nonExtLibJar")) {
                 preDexedNonExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("dirInput")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("dirInput")) {
                 preDexedDirectoryInput = preDexOutputFiles[i];
             }
         }
@@ -435,19 +440,30 @@ public class DexTransformTest {
         when(mockTargetInfo.getBuildTools()).thenReturn(mockBuildToolInfo);
         fakeAndroidBuilder.setTargetInfo(mockTargetInfo);
 
+        // first we need to pre-dex
+        List<String> preDexNames =
+                ImmutableList.of("predex_0.jar", "predex_1.jar", "predex_2.jar", "predex_3.jar");
+        runPreDexing(jarInputs, directoryInputs, preDexOutputDir, buildCache, preDexNames);
+        List<JarInput> preDexedInputs =
+                preDexNames
+                        .stream()
+                        .map(
+                                name ->
+                                        getJarInput(
+                                                FileUtils.join(preDexOutputDir, name),
+                                                QualifiedContent.Scope.EXTERNAL_LIBRARIES))
+                        .collect(Collectors.toList());
+
+        // no merge dex files
         DexTransform dexTransform =
                 new DexTransform(
                         new DefaultDexOptions(),
-                        false, // debugMode
-                        false, // multiDex
+                        DexingMode.MONO_DEX,
+                        true,
                         null, // mainDexListFile
-                        preDexOutputDir,
-                        fakeAndroidBuilder,
-                        mock(Logger.class),
-                        mock(BuildContext.class),
-                        Optional.of(buildCache));
+                        fakeAndroidBuilder);
 
-        TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
+        TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
                 .thenReturn(dexOutputDir);
@@ -458,6 +474,38 @@ public class DexTransformTest {
                         .build();
 
         dexTransform.transform(transformInvocation);
+    }
+
+    private void runPreDexing(
+            @NonNull Collection<JarInput> jarInputs,
+            @NonNull Collection<DirectoryInput> directoryInputs,
+            @NonNull File preDexOutputDir,
+            @NonNull FileCache buildCache,
+            @NonNull List<String> preDexNames)
+            throws TransformException, InterruptedException, IOException {
+        PreDexTransform preDexTransform =
+                new PreDexTransform(
+                        new DefaultDexOptions(),
+                        fakeAndroidBuilder,
+                        buildCache,
+                        DexingMode.MONO_DEX,
+                        false);
+
+        TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
+        TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
+        when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
+                .thenReturn(
+                        FileUtils.join(preDexOutputDir, preDexNames.get(0)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(1)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(2)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(3)));
+        TransformInvocation transformInvocation =
+                new TransformInvocationBuilder(mock(Context.class))
+                        .addInputs(ImmutableList.of(transformInput))
+                        .addOutputProvider(mockTransformOutputProvider)
+                        .build();
+
+        preDexTransform.transform(transformInvocation);
     }
 
     private static class FakeAndroidBuilder extends AndroidBuilder {

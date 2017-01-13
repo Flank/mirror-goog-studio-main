@@ -94,6 +94,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLay
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.DexTransform;
+import com.android.build.gradle.internal.transforms.DexingMode;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.JackCompileTransform;
 import com.android.build.gradle.internal.transforms.JackGenerateDexTransform;
@@ -104,6 +105,7 @@ import com.android.build.gradle.internal.transforms.JarMergingTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.MultiDexTransform;
 import com.android.build.gradle.internal.transforms.NewShrinkerTransform;
+import com.android.build.gradle.internal.transforms.PreDexTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
@@ -2075,44 +2077,86 @@ public abstract class TaskManager {
         } else {
             multiDexClassListTask = Optional.empty();
         }
-        // create dex transform
-        DefaultDexOptions dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
 
-        if (variantData.getType().isForTesting()) {
-            // Don't use custom dx flags when compiling the test APK. They can break the test APK,
-            // like --minimal-main-dex.
-            dexOptions.setAdditionalParameters(ImmutableList.of());
-        }
-
-        Optional<FileCache> buildCache;
-        if (AndroidGradleOptions.isPreDexBuildCacheEnabled(project)) {
-            buildCache = globalScope.getBuildCache();
+        final DexingMode dexingMode;
+        if (isLegacyMultiDexMode) {
+            dexingMode = DexingMode.LEGACY_MULTIDEX;
+        } else if (!isMultiDexEnabled) {
+            dexingMode = DexingMode.MONO_DEX;
         } else {
-            buildCache = Optional.empty();
+            dexingMode = DexingMode.NATIVE_MULTIDEX;
         }
-        DexTransform dexTransform = new DexTransform(
-                dexOptions,
-                config.getBuildType().isDebuggable(),
-                isMultiDexEnabled,
-                isMultiDexEnabled && isLegacyMultiDexMode ? variantScope.getMainDexListFile() : null,
-                variantScope.getPreDexOutputDir(),
-                variantScope.getGlobalScope().getAndroidBuilder(),
-                getLogger(),
-                variantScope.getBuildContext(),
-                buildCache);
-        Optional<AndroidTask<TransformTask>> dexTask =
-                transformManager.addTransform(tasks, variantScope, dexTransform);
-        // need to manually make dex task depend on MultiDexTransform since there's no stream
-        // consumption making this automatic
-        dexTask.ifPresent(t -> {
-            t.optionalDependsOn(tasks, multiDexClassListTask.orElse(null));
-            variantScope.addColdSwapBuildTask(t);
-        });
+
+        createDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
 
         if (preColdSwapTask != null) {
             for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
                 task.dependsOn(tasks, preColdSwapTask);
             }
+        }
+    }
+
+    /** Creates the pre-dexing task if needed, and task for producing the final DEX file(s). */
+    private void createDexTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
+            @Nullable AndroidTask<TransformTask> multiDexClassListTask,
+            @NonNull DexingMode dexingMode) {
+        TransformManager transformManager = variantScope.getTransformManager();
+
+        DefaultDexOptions dexOptions;
+        if (variantScope.getVariantData().getType().isForTesting()) {
+            // Don't use custom dx flags when compiling the test APK. They can break the test APK,
+            // like --minimal-main-dex.
+            dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
+            dexOptions.setAdditionalParameters(ImmutableList.of());
+        } else {
+            dexOptions = extension.getDexOptions();
+        }
+
+        boolean cachePreDex =
+                dexingMode.preDex
+                        && dexOptions.getPreDexLibraries()
+                        && !isMinifyEnabled(variantScope);
+        boolean preDexEnabled =
+                variantScope.getBuildContext().isInInstantRunMode() || cachePreDex;
+        if (preDexEnabled) {
+            FileCache buildCache;
+            if (cachePreDex && AndroidGradleOptions.isPreDexBuildCacheEnabled(project)) {
+                buildCache = globalScope.getBuildCache().orElse(null);
+            } else {
+                buildCache = null;
+            }
+
+            PreDexTransform preDexTransform =
+                    new PreDexTransform(
+                            dexOptions,
+                            variantScope.getGlobalScope().getAndroidBuilder(),
+                            buildCache,
+                            dexingMode,
+                            variantScope.getBuildContext().isInInstantRunMode());
+            transformManager.addTransform(tasks, variantScope, preDexTransform)
+                    .ifPresent(variantScope::addColdSwapBuildTask);
+        }
+
+        if (!preDexEnabled || dexingMode != DexingMode.NATIVE_MULTIDEX) {
+            // run if non native multidex or no pre-dexing
+            DexTransform dexTransform =
+                    new DexTransform(
+                            dexOptions,
+                            dexingMode,
+                            preDexEnabled,
+                            variantScope.getMainDexListFile(),
+                            variantScope.getGlobalScope().getAndroidBuilder());
+            Optional<AndroidTask<TransformTask>> dexTask =
+                    transformManager.addTransform(tasks, variantScope, dexTransform);
+            // need to manually make dex task depend on MultiDexTransform since there's no stream
+            // consumption making this automatic
+            dexTask.ifPresent(
+                    t -> {
+                        t.optionalDependsOn(tasks, multiDexClassListTask);
+                        variantScope.addColdSwapBuildTask(t);
+                    });
         }
     }
 

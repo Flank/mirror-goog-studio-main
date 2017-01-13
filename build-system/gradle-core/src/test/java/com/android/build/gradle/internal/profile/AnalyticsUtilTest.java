@@ -52,8 +52,8 @@ public class AnalyticsUtilTest {
                 "com.android.build.gradle.internal.transforms.JackGenerateDexTransform",
                 "com.android.build.gradle.internal.transforms.JackCompileTransform",
                 "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
-                "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform"
-                );
+                "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
+                "com.android.build.gradle.internal.transforms.PreDexTransform");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
