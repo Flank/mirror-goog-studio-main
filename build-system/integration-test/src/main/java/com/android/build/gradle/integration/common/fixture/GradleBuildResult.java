@@ -20,15 +20,17 @@ import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
+import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.ProjectConfigurationException;
+import org.gradle.api.tasks.TaskExecutionException;
+import org.gradle.internal.serialize.PlaceholderException;
 import org.gradle.tooling.GradleConnectionException;
-
-import java.io.ByteArrayOutputStream;
 
 /**
  * The result from running a build.
@@ -65,6 +67,33 @@ public class GradleBuildResult {
         return exception;
     }
 
+    /**
+     * Returns the short (single-line) message that Gradle would print out in the console, without
+     * {@code --stacktrace}. If the build succeeded, returns null.
+     */
+    @Nullable
+    public String getFailureMessage() {
+        if (exception == null) {
+            return null;
+        }
+
+        for (Throwable throwable : Throwables.getCausalChain(exception)) {
+            // Because of different class loaders involved, we are forced to do stringly-typed
+            // programming.
+            String throwableType = throwable.getClass().getName();
+            if (throwableType.equals(ProjectConfigurationException.class.getName())) {
+                return throwable.getCause().getMessage();
+            } else if (throwableType.equals(PlaceholderException.class.getName())) {
+                if (throwable.toString().startsWith(TaskExecutionException.class.getName())) {
+                    return throwable.getCause().getMessage();
+                }
+            }
+        }
+
+        throw new AssertionError("Failed to determine the failure message.", exception);
+    }
+
+    @NonNull
     public String getStdout() {
         return stdout;
     }
