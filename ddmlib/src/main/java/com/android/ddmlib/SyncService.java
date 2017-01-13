@@ -22,6 +22,7 @@ import com.android.ddmlib.AdbHelper.AdbResponse;
 import com.android.ddmlib.FileListingService.FileEntry;
 import com.android.ddmlib.SyncException.SyncError;
 import com.android.ddmlib.utils.ArrayHelper;
+import com.android.ddmlib.utils.FilePermissionUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -665,8 +666,9 @@ public class SyncService {
             // create the stream to read the file
             fis = new FileInputStream(f);
 
+            int permissions = FilePermissionUtil.getFilePosixPermission(f);
             // create the header for the action
-            msg = createSendFileReq(ID_SEND, remotePathContent, 0644);
+            msg = createSendFileReq(ID_SEND, remotePathContent, permissions);
 
             // and send it. We use a custom try/catch block to make the difference between
             // file and network IO exceptions.
