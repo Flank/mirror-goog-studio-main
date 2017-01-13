@@ -27,9 +27,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
@@ -1369,6 +1371,7 @@ public class ZFileTest {
         /*
          * Open the zip file and compute where the local header CRC32 is.
          */
+        long crcOffset;
         try (ZFile zf = new ZFile(zipFile)) {
             StoredEntry se = zf.get("foo");
             assertNotNull(se);
@@ -1376,12 +1379,18 @@ public class ZFileTest {
 
             /*
              * Twelve bytes from the CD offset, we have the start of the CRC32 of the zip entry.
-             * Corrupt it.
              */
-            byte[] crc = new byte[4];
-            zf.directFullyRead(cdOffset - 12, crc);
-            crc[0]++;
-            zf.directWrite(cdOffset - 12, crc);
+            crcOffset = cdOffset - 12;
+        }
+
+        /*
+         * Corrupt the CRC32.
+         */
+        byte[] crc = readSegment(zipFile, crcOffset, 4);
+        crc[0]++;
+        try (RandomAccessFile raf = new RandomAccessFile(zipFile, "rw")) {
+            raf.seek(crcOffset);
+            raf.write(crc);
         }
 
         /*
@@ -1521,6 +1530,24 @@ public class ZFileTest {
                     a.getCentralDirectoryHeader().getOffset()
                             < b.getCentralDirectoryHeader().getOffset());
         }
+
+        /*
+         * Open the file again and check there are no warnings.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            VerifyLog vl = zf.getVerifyLog();
+            assertEquals(0, vl.getLogs().size());
+
+            StoredEntry a = zf.get("a");
+            assertNotNull(a);
+            vl = a.getVerifyLog();
+            assertEquals(0, vl.getLogs().size());
+
+            StoredEntry b = zf.get("b");
+            assertNotNull(b);
+            vl = b.getVerifyLog();
+            assertEquals(0, vl.getLogs().size());
+        }
     }
 
     @Test
@@ -1572,6 +1599,36 @@ public class ZFileTest {
             z = zf.get("z");
             assertNotNull(z);
             assertSame(DataDescriptorType.NO_DATA_DESCRIPTOR, z.getDataDescriptorType());
+        }
+    }
+
+    @Test
+    public void openingZFileDoesNotRemoveDataDescriptors() throws Exception {
+        /*
+         * Create a zip file with deferred CRC32.
+         */
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            zos.putNextEntry(new ZipEntry("a"));
+            zos.write(new byte[1000]);
+        }
+
+        /*
+         * Open using ZFile and check that the deferred CRC32 is there.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            StoredEntry se = zf.get("a");
+            assertNotNull(se);
+            assertNotEquals(DataDescriptorType.NO_DATA_DESCRIPTOR, se.getDataDescriptorType());
+        }
+
+        /*
+         * Open using ZFile (again) and check that the deferred CRC32 is there.
+         */
+        try (ZFile zf = new ZFile(zipFile)) {
+            StoredEntry se = zf.get("a");
+            assertNotNull(se);
+            assertNotEquals(DataDescriptorType.NO_DATA_DESCRIPTOR, se.getDataDescriptorType());
         }
     }
 }
