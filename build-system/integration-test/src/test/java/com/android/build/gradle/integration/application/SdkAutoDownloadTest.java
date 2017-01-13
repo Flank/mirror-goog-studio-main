@@ -51,12 +51,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Tests for automatic SDK download from Gradle.
- */
-@SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+/** Tests for automatic SDK download from Gradle. */
 @Category(OnlineTests.class)
-public class SdkDownloadGradleTest {
+public class SdkAutoDownloadTest {
 
     private static String cmakeLists = "cmake_minimum_required(VERSION 3.4.1)"
             + System.lineSeparator()
@@ -68,15 +65,6 @@ public class SdkDownloadGradleTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
-    private static String androidMk = "LOCAL_PATH := $(call my-dir)"
-            + System.lineSeparator()
-            + "include $(CLEAR_VARS)"
-            + System.lineSeparator()
-            + "LOCAL_MODULE    := hello-jni"
-            + System.lineSeparator()
-            + "LOCAL_SRC_FILES := hello-jni.cpp"
-            + System.lineSeparator()
-            + "include $(BUILD_SHARED_LIBRARY)";
     private static final String BUILD_TOOLS_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
     private static final String PLATFORM_VERSION = "25";
 
@@ -177,6 +165,32 @@ public class SdkDownloadGradleTest {
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
                         + "\"");
+
+        getExecutor().run("assembleDebug");
+
+        File platformTarget = getPlatformFolder();
+        assertThat(platformTarget).isDirectory();
+
+        File androidJarFile = FileUtils.join(getPlatformFolder(), "android.jar");
+        assertThat(androidJarFile).exists();
+    }
+
+    /** Tests that calling getBootClasspath() doesn't break auto-download. */
+    @Test
+    public void checkGetBootClasspath() throws Exception {
+        deletePlatforms();
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + PLATFORM_VERSION
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\""
+                        + System.lineSeparator()
+                        + "println(android.bootClasspath)");
 
         getExecutor().run("assembleDebug");
 

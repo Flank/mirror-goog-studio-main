@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -268,18 +269,16 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private void configureProject() {
         extraModelInfo = new ExtraModelInfo(project);
         checkGradleVersion();
-        sdkHandler = new SdkHandler(project, getLogger());
 
-        project.afterEvaluate(p -> {
-            // TODO: Read flag from extension.
-            if (!p.getGradle().getStartParameter().isOffline()
-                    && AndroidGradleOptions.getUseSdkDownload(p)) {
-                SdkLibData sdkLibData =
-                        SdkLibData.download(getDownloader(), getSettingsController());
-                dependencyManager.setSdkLibData(sdkLibData);
-                sdkHandler.setSdkLibData(sdkLibData);
-            }
-        });
+        sdkHandler = new SdkHandler(project, getLogger());
+        dependencyManager = new DependencyManager(project, extraModelInfo, sdkHandler);
+
+        if (!project.getGradle().getStartParameter().isOffline()
+                && AndroidGradleOptions.getUseSdkDownload(project)) {
+            SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
+            dependencyManager.setSdkLibData(sdkLibData);
+            sdkHandler.setSdkLibData(sdkLibData);
+        }
 
         androidBuilder = new AndroidBuilder(
                 project == project.getRootProject() ? project.getName() : project.getPath(),
@@ -417,11 +416,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         productFlavorContainer,
                         signingConfigContainer,
                         extraModelInfo);
-
-        dependencyManager = new DependencyManager(
-                project,
-                extraModelInfo,
-                sdkHandler);
 
         ndkHandler = new NdkHandler(
                 project.getRootDir(),
@@ -677,6 +671,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     extension.getLibraryRequests(),
                     androidBuilder,
                     SdkHandler.useCachedSdk(project));
+
+            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo);
         }
     }
 
