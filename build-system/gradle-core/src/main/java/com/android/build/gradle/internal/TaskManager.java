@@ -3080,7 +3080,7 @@ public abstract class TaskManager {
                                 null,
                                 SyncIssue.TYPE_GENERIC,
                                 "shrinkResources requires minifyEnabled to be turned on. See "
-                                        + "https://developer.android.com/studio/build/shrink-code.html#shrink-resources "
+                                        + "http://d.android.com/r/tools/shrink-resources.html "
                                         + "for more information.");
                 return;
             }

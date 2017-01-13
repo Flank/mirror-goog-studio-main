@@ -48,7 +48,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private final boolean isUseJack;
     @Nullable private final String buildToolsVersion;
-    private final boolean isImproveDependencyEnabled;
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
@@ -65,7 +64,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
-        isImproveDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     }
 
     /**
@@ -153,7 +151,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         args.add(
                 "-Pcom.android.build.gradle.integrationTest.useJack="
                         + Boolean.toString(isUseJack));
-        if (isImproveDependencyEnabled) {
+        if (GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION) {
             args.add(
                     "-P"
                             + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION

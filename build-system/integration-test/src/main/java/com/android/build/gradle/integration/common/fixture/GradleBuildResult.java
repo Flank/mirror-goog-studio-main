@@ -26,10 +26,12 @@ import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import org.gradle.api.ProjectConfigurationException;
 import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.internal.serialize.PlaceholderException;
+import org.gradle.tooling.BuildException;
 import org.gradle.tooling.GradleConnectionException;
 
 /**
@@ -77,7 +79,9 @@ public class GradleBuildResult {
             return null;
         }
 
-        for (Throwable throwable : Throwables.getCausalChain(exception)) {
+        List<Throwable> causalChain = Throwables.getCausalChain(exception);
+        // Try the common scenarios: configuration or task failure.
+        for (Throwable throwable : causalChain) {
             // Because of different class loaders involved, we are forced to do stringly-typed
             // programming.
             String throwableType = throwable.getClass().getName();
@@ -87,6 +91,14 @@ public class GradleBuildResult {
                 if (throwable.toString().startsWith(TaskExecutionException.class.getName())) {
                     return throwable.getCause().getMessage();
                 }
+            }
+        }
+
+        // Look for any BuildException, for other cases.
+        for (Throwable throwable : causalChain) {
+            String throwableType = throwable.getClass().getName();
+            if (throwableType.equals(BuildException.class.getName())) {
+                return throwable.getCause().getMessage();
             }
         }
 
