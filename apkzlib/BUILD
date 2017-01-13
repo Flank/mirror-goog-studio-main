@@ -31,7 +31,6 @@ java_test(
     ]),
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["manual"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":apkzlib",
