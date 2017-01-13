@@ -104,6 +104,7 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/apkzlib",
         "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
