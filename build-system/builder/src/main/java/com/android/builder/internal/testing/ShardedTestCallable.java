@@ -29,7 +29,6 @@ import com.android.ddmlib.testrunner.TestRunResult;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +139,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
                                 "Internal error, file a bug, multi-apk applications"
                                         + " require a device with API level 21+");
                     }
-                    if (device.getApiLevel() >= 21) {
+                    if (testedApks.size() > 1) {
                         device.installPackages(testedApks,
                                 ImmutableList.<String>of() /* installOptions */, timeoutInMs,
                                 logger);

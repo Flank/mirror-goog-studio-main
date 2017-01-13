@@ -18,14 +18,17 @@ package com.android.build.gradle.internal.tasks;
 import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.core.VariantConfiguration;
 import com.android.builder.internal.InstallUtils;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -39,13 +42,15 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.Set;
 import org.gradle.api.GradleException;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
@@ -86,30 +91,61 @@ public class InstallVariantTask extends BaseTask {
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
+        BaseVariantData<? extends BaseVariantOutputData> variantData = getVariantData();
+        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+        install(
+                getProjectName(),
+                variantConfig.getFullName(),
+                deviceProvider,
+                variantConfig.getMinSdkVersion(),
+                getProcessExecutor(),
+                getSplitSelectExe(),
+                variantData.getOutputs(),
+                variantConfig.getSupportedAbis(),
+                getInstallOptions(),
+                getTimeOutInMs(),
+                getLogger());
+    }
 
-        VariantConfiguration variantConfig = variantData.getVariantConfiguration();
-        String variantName = variantConfig.getFullName();
-
+    static void install(
+            @NonNull String projectName,
+            @NonNull String variantName,
+            @NonNull DeviceProvider deviceProvider,
+            @NonNull ApiVersion minSkdVersion,
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull File splitSelectExe,
+            @NonNull List<? extends BaseVariantOutputData> outputs,
+            @Nullable Set<String> supportedAbis,
+            @NonNull Collection<String> installOptions,
+            int timeOutInMs,
+            @NonNull Logger logger)
+            throws DeviceException, ProcessException {
+        ILogger iLogger = new LoggerWrapper(logger);
         int successfulInstallCount = 0;
         List<? extends DeviceConnector> devices = deviceProvider.getDevices();
         for (final DeviceConnector device : devices) {
             if (InstallUtils.checkDeviceApiLevel(
-                    device, variantConfig.getMinSdkVersion(), iLogger, projectName, variantName)) {
+                    device, minSkdVersion, iLogger, projectName, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
-                final List<File> apkFiles = SplitOutputMatcher.computeBestOutput(processExecutor,
-                        splitSelectExe.get(),
-                        new DeviceConfigProviderImpl(device),
-                        variantData.getOutputs(),
-                        variantData.getVariantConfiguration().getSupportedAbis());
+                final List<File> apkFiles =
+                        SplitOutputMatcher.computeBestOutput(
+                                processExecutor,
+                                splitSelectExe,
+                                new DeviceConfigProviderImpl(device),
+                                outputs,
+                                supportedAbis);
 
                 if (apkFiles.isEmpty()) {
-                    getLogger().lifecycle(
-                            "Skipping device '{}' for '{}:{}': Could not find build of variant " +
-                                    "which supports density {} and an ABI in {}",
-                            device.getName(), projectName, variantName,
-                            device.getDensity(), Joiner.on(", ").join(device.getAbis()));
+                    logger.lifecycle(
+                            "Skipping device '{}' for '{}:{}': Could not find build of variant "
+                                    + "which supports density {} and an ABI in {}",
+                            device.getName(),
+                            projectName,
+                            variantName,
+                            device.getDensity(),
+                            Joiner.on(", ").join(device.getAbis()));
                 } else {
-                    getLogger().lifecycle(
+                    logger.lifecycle(
                             "Installing APK '{}' on '{}' for {}:{}",
                             FileUtils.getNamesAsCommaSeparatedList(apkFiles),
                             device.getName(),
@@ -117,16 +153,13 @@ public class InstallVariantTask extends BaseTask {
                             variantName);
 
                     final Collection<String> extraArgs =
-                            Objects.firstNonNull(installOptions, ImmutableList.<String>of());
+                            MoreObjects.firstNonNull(installOptions, ImmutableList.<String>of());
 
-                    if (apkFiles.size() > 1 || device.getApiLevel() >= 21) {
-                        device.installPackages(apkFiles, extraArgs,
-                                getTimeOutInMs(), getILogger());
+                    if (apkFiles.size() > 1) {
+                        device.installPackages(apkFiles, extraArgs, timeOutInMs, iLogger);
                         successfulInstallCount++;
                     } else {
-                        device.installPackage(apkFiles.get(0), extraArgs,
-                                getTimeOutInMs(),
-                                getILogger());
+                        device.installPackage(apkFiles.get(0), extraArgs, timeOutInMs, iLogger);
                         successfulInstallCount++;
                     }
                 }
@@ -136,9 +169,10 @@ public class InstallVariantTask extends BaseTask {
         if (successfulInstallCount == 0) {
             throw new GradleException("Failed to install on any devices.");
         } else {
-            getLogger().quiet("Installed on {} {}.",
+            logger.quiet(
+                    "Installed on {} {}.",
                     successfulInstallCount,
-                    successfulInstallCount==1 ? "device" : "devices");
+                    successfulInstallCount == 1 ? "device" : "devices");
         }
     }
 
