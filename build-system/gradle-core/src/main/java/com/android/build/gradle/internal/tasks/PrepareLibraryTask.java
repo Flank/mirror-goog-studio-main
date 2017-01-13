@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LibraryCache;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
@@ -148,13 +149,11 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                         String.format(
                                 "Unable to unzip '%1$s' to '%2$s' or find the cached output '%2$s'"
                                         + " using the build cache at '%3$s'.\n"
-                                        + "If you are unable to fix the underlying cause, please"
-                                        + " file a bug or disable the build cache by setting"
-                                        + " android.enableBuildCache=false in the gradle.properties"
-                                        + " file.",
+                                        + "%4$s",
                                 inputAar.getAbsolutePath(),
                                 outputDir.getAbsolutePath(),
-                                buildCache.getCacheDirectory().getAbsolutePath()),
+                                buildCache.getCacheDirectory().getAbsolutePath(),
+                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
                         exception);
             }
             if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
@@ -163,12 +162,11 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                                 "The build cache at '%1$s' contained an invalid cache entry.\n"
                                         + "Cause: %2$s\n"
                                         + "We have recreated the cache entry.\n"
-                                        + "If this issue persists, please file a bug or disable the"
-                                        + " build cache by setting android.enableBuildCache=false"
-                                        + " in the gradle.properties file.",
+                                        + "%3$s",
                                 buildCache.getCacheDirectory().getAbsolutePath(),
                                 Throwables.getStackTraceAsString(
-                                        result.getCauseOfCorruption().get())));
+                                        result.getCauseOfCorruption().get()),
+                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE));
             }
         } else {
             action.accept(outputDir);
