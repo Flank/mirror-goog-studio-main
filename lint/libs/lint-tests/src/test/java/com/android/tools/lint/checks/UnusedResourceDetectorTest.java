@@ -718,8 +718,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testStyles() throws Exception {
-        mEnableIds = false;
-        assertEquals(""
+        String expected = ""
                 + "res/values/styles.xml:5: Warning: The resource R.style.UnusedStyle appears to be unused [UnusedResources]\n"
                 + "    <style name=\"UnusedStyle\"/>\n"
                 + "           ~~~~~~~~~~~~~~~~~~\n"
@@ -729,24 +728,24 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 + "res/values/styles.xml:7: Warning: The resource R.style.UnusedStyle_Something_Sub appears to be unused [UnusedResources]\n"
                 + "    <style name=\"UnusedStyle.Something.Sub\" parent=\"UnusedStyle\"/>\n"
                 + "           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 3 warnings\n",
+                + "res/values/styles.xml:9: Warning: The resource R.style.EmptyParent appears to be unused [UnusedResources]\n"
+                + "    <style name=\"EmptyParent\" parent=\"\"/>\n"
+                + "           ~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n";
+        lint().files(
+                xml("res/values/styles.xml", ""
+                        + "<resources>\n\n\n"
+                        +  "   <style name=\"UnusedStyleExtendingFramework\" parent=\"android:Theme\"/>\n"
+                        + "    <style name=\"UnusedStyle\"/>\n"
+                        + "    <style name=\"UnusedStyle.Sub\"/>\n"
+                        + "    <style name=\"UnusedStyle.Something.Sub\" parent=\"UnusedStyle\"/>\n"
 
-                lintProject(
-                        xml("res/values/styles.xml", ""
-                                + "<resources>\n"
-                                + "    <style name=\"UsedStyle\" parent=\"android:Theme\"/>\n"
-                                + "    <style name=\"UsedStyle.Sub\"/>\n"
-                                + "    <style name=\"UsedStyle.Something.Sub\" parent=\"UsedStyle\"/>\n"
-
-                                + "    <style name=\"UnusedStyle\"/>\n"
-                                + "    <style name=\"UnusedStyle.Sub\"/>\n"
-                                + "    <style name=\"UnusedStyle.Something.Sub\" parent=\"UnusedStyle\"/>\n"
-
-                                + "    <style name=\"ImplicitUsed\" parent=\"android:Widget.ActionBar\"/>\n"
-                                + "</resources>")
-                ));
+                        + "    <style name=\"ImplicitUsed\" parent=\"android:Widget.ActionBar\"/>\n"
+                        + "    <style name=\"EmptyParent\" parent=\"\"/>\n"
+                        + "</resources>"))
+                .run()
+                .expect(expected);
     }
-
 
     public void testThemeFromLayout() throws Exception {
         mEnableIds = false;
