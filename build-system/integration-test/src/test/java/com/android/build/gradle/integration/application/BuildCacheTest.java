@@ -65,11 +65,10 @@ public class BuildCacheTest {
                         .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
-        File preDexDir = FileUtils.join(project.getIntermediatesDir(), "pre-dexed", "debug");
-        List<File> dexFiles = Arrays.asList(preDexDir.listFiles());
+        File preDexDir = FileUtils.join(project.getIntermediatesDir(), "transforms", "preDex");
+        List<File> dexFiles = FileUtils.getAllFiles(preDexDir).toList();
         List<File> cachedEntryDirs =
-                Arrays.asList(buildCacheDir.listFiles())
-                        .stream()
+                Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
 
@@ -97,11 +96,10 @@ public class BuildCacheTest {
         executor.run("clean", "assembleDebug");
 
         cachedEntryDirs =
-                Arrays.asList(buildCacheDir.listFiles())
-                        .stream()
+                Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
-        assertThat(preDexDir.list()).hasLength(2);
+        assertThat(FileUtils.getAllFiles(preDexDir)).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
 
         // Assert that the cached file is unchanged and the guava library's pre-dexed file is copied
