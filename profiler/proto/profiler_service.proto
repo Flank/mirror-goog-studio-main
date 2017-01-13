@@ -41,19 +41,6 @@ service ProfilerService {
   rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
   }
 
-  // Connect to remote profiler service
-  rpc Connect(ConnectRequest) returns (ConnectResponse) {
-  }
-
-  // Disconnect from remote profiler service
-  rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {
-  }
-
-  // TODO: Workaround until perfd supports answering device information
-  // Will be removed once perfd is updated.
-  rpc SetProcesses(SetProcessesRequest) returns (SetProcessesResponse) {
-  }
-
   // Query for cached byte data associated with some ID. Other services may
   // return an ID which can be used to fetch data using this central cache.
   rpc GetBytes(BytesRequest) returns (BytesResponse) {
@@ -96,20 +83,6 @@ message GetProcessesResponse {
   repeated Process process = 2;
 }
 
-message ConnectRequest {
-  int32 port = 1;
-}
-
-message ConnectResponse {
-}
-
-message DisconnectRequest {
-  int32 port = 1;
-}
-
-message DisconnectResponse {
-}
-
 message BytesRequest {
   // ID for fetching contents from a cache. The value will always be safe to use
   // as a filename, if you want to cache the contents locally to disk for
@@ -128,19 +101,12 @@ message DeviceProcesses {
   repeated Process process = 2;
 }
 
-message SetProcessesRequest {
-  repeated DeviceProcesses device_processes = 1;
-}
-
-message SetProcessesResponse {
-}
-
 message Device {
   string manufacturer = 1;
   string model = 2;
   string serial = 3;
   string version = 4;
-  string api = 5;  
+  string api = 5;
 }
 
 message Process {
