@@ -16,68 +16,76 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.annotations.NonNull
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.apk.Apk
-import com.google.common.collect.Iterators
+import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
 
 /**
  * Test for the jarjar integration.
  */
 @CompileStatic
+@RunWith(FilterableParameterized)
 public class JarJarTest {
 
-    static AndroidProject model
-
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject(GradleTestProject.USE_JACK ? "jarjarWithJack" : "jarjarIntegration")
-            .create()
-
-    @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+    @Parameterized.Parameters(name = "{0}")
+    public static Iterable<String> projects() {
+        return ImmutableList.of("jarjarWithJack", "jarjarIntegration");
     }
 
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    @Rule
+    public GradleTestProject project;
+
+    public JarJarTest(@NonNull String projectName) {
+        project = GradleTestProject.builder().fromTestProject(projectName).create();
     }
 
     @Test
-    void "check repackaged gson library"() {
-        Collection<Variant> variants = model.getVariants()
-        assertEquals("Variant Count", 2, variants.size())
+    void "check repackaged gson library for monodex"() {
+        project.executeAndReturnModel("clean", "assembleDebug")
+        verifyApk()
+    }
 
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact()
-        assertNotNull("Debug main info null-check", debugMainArtifact)
+    @Test
+    void "check repackaged for native multidex"() {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" +
+                        "android.defaultConfig {\n" +
+                        "    minSdkVersion 21\n" +
+                        "    multiDexEnabled true\n" +
+                        "}\n");
 
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs()
-        assertNotNull(debugOutputs)
-        assertEquals(1, debugOutputs.size())
+        project.executeAndReturnModel("clean", "assembleDebug")
+        verifyApk()
+    }
 
+    @Test
+    void "check repackaged for legacy multidex"() {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" +
+                        "android.defaultConfig {\n" +
+                        "    minSdkVersion 19\n" +
+                        "    multiDexEnabled true\n" +
+                        "}\n");
+
+        project.executeAndReturnModel("clean", "assembleDebug")
+        verifyApk()
+    }
+
+    private void verifyApk() {
         // make sure the Gson library has been renamed and the original one is not present.
-        Apk outputFile =
-                new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).mainOutputFile
-                        .getOutputFile())
+        Apk outputFile = project.getApk("debug");
         assertThatApk(outputFile).containsClass("Lcom/google/repacked/gson/Gson;");
         assertThatApk(outputFile).doesNotContainClass("Lcom/google/gson/Gson;")
     }
