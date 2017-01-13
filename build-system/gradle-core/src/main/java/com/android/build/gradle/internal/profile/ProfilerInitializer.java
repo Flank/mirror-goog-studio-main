@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
@@ -56,7 +57,8 @@ public final class ProfilerInitializer {
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
-                    new File(project.getRootProject().getBuildDir(), "android-profile"));
+                    new File(project.getRootProject().getBuildDir(), "android-profile"),
+                    AndroidGradleOptions.isProfileJsonEnabled(project));
             recordingBuildListener = new RecordingBuildListener(ProcessProfileWriter.get());
             project.getGradle().addListener(recordingBuildListener);
         }

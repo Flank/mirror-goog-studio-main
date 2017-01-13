@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Throwables;

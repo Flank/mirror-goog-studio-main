@@ -44,6 +44,8 @@ public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_USE_MAIN_DEX_LIST_2 = false;
 
+    private static final boolean DEFAULT_ENABLE_PROFILE_JSON = true;
+
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
@@ -61,6 +63,8 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
 
     public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
+
+    public static final String PROPERTY_ENABLE_PROFILE_JSON = "android.enableProfileJson";
 
     public static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
 
@@ -212,6 +216,11 @@ public class AndroidGradleOptions {
 
     public boolean useMainDexList2() {
         return useMainDexList2;
+    }
+
+    public static boolean isProfileJsonEnabled(@NonNull Project project) {
+        return getBoolean(
+                project, PROPERTY_ENABLE_PROFILE_JSON, DEFAULT_ENABLE_PROFILE_JSON);
     }
 
     /**

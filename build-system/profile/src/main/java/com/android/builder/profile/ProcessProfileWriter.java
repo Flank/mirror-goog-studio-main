@@ -65,6 +65,8 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
 
     @NonNull private final Path mBenchmarkProfileOutputFile;
 
+    private final boolean mEnableChromeTracingOutput;
+
     private final AtomicLong lastRecordId = new AtomicLong(1);
 
     private final ConcurrentLinkedQueue<GradleBuildProfileSpan> spans;
@@ -85,8 +87,10 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
     }
 
 
-    ProcessProfileWriter(@NonNull Path benchmarkProfileOutputFile) {
+    ProcessProfileWriter(
+            @NonNull Path benchmarkProfileOutputFile, boolean enableChromeTracingOutput) {
         mBenchmarkProfileOutputFile = benchmarkProfileOutputFile;
+        mEnableChromeTracingOutput = enableChromeTracingOutput;
         mNameAnonymizer = new NameAnonymizer();
         mBuild = GradleBuildProfile.newBuilder();
         mStartMemoryStats = createAndRecordMemorySample();
@@ -145,6 +149,10 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
                             Files.newOutputStream(
                                     mBenchmarkProfileOutputFile, StandardOpenOption.CREATE_NEW))) {
                 mBuild.build().writeTo(outputStream);
+            }
+
+            if (mEnableChromeTracingOutput) {
+                ChromeTracingProfileConverter.toJson(mBenchmarkProfileOutputFile);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
