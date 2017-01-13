@@ -40,6 +40,7 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -1033,5 +1034,43 @@ public class EcjPsiManager {
         }
 
         return result.toArray(PsiAnnotation.EMPTY_ARRAY);
+    }
+
+    private static MethodBinding getMethodBinding(@NonNull PsiMethod method) {
+        if (method instanceof EcjPsiMethod) {
+            return ((EcjPsiMethod) method).getBinding();
+        } else if (method instanceof EcjPsiBinaryMethod) {
+            return ((EcjPsiBinaryMethod) method).getBinding();
+        } else {
+            return null;
+        }
+    }
+
+    static boolean sameSignature(@NonNull PsiMethod method1, @NonNull PsiMethod method2) {
+        MethodBinding binding1 = getMethodBinding(method1);
+        MethodBinding binding2 = getMethodBinding(method2);
+        if (binding1 != null && binding2 != null) {
+            return binding1.areParameterErasuresEqual(binding2);
+        }
+
+        PsiParameterList parameterList = method1.getParameterList();
+        PsiParameter[] parameters = parameterList.getParameters();
+        int parameterCount = parameters.length;
+
+
+        PsiParameterList candidateList = method2.getParameterList();
+        if (candidateList.getParametersCount() != parameterCount) {
+            return false;
+        }
+        PsiParameter[] candidateParameters = candidateList.getParameters();
+        boolean isMatch = true;
+        for (int i = 0; i < candidateParameters.length; i++) {
+            PsiType type = candidateParameters[i].getType();
+            if (!type.equals(parameters[i])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
