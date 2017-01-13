@@ -30,12 +30,14 @@ java_test(
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
-        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
     ],
     deps = [
         ":gradle-api",
         "//tools/base/build-system:gradle-api",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
     ],
 )
