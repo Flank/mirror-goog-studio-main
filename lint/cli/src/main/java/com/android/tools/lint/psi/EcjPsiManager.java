@@ -556,9 +556,9 @@ public class EcjPsiManager {
             if (node instanceof QualifiedNameReference) {
                 QualifiedNameReference qualifiedNameReference = (QualifiedNameReference) node;
                 if (qualifiedNameReference.otherBindings != null &&
-                        qualifiedNameReference.otherBindings.length == 1) {
-                    // for example, array.length
-                    PsiElement element = findElement(qualifiedNameReference.otherBindings[0]);
+                        qualifiedNameReference.otherBindings.length > 0) {
+                    PsiElement element = findElement(qualifiedNameReference.otherBindings[
+                            qualifiedNameReference.otherBindings.length - 1]);
                     if (element != null) {
                         return element;
                     }

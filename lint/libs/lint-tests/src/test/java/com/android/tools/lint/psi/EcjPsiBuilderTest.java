@@ -48,12 +48,14 @@ import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiPackageStatement;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParenthesizedExpression;
+import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterList;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import org.eclipse.jdt.internal.compiler.ast.NameReference;
@@ -1013,6 +1015,66 @@ public class EcjPsiBuilderTest extends TestCase {
         assertTrue(method.getReturnType() instanceof PsiClassType);
         assertEquals("String", ((PsiClassType)method.getReturnType()).getClassName());
         assertEquals("java.lang.String", method.getReturnType().getCanonicalText());
+    }
+
+    public void testResolveQualifiedReferences() {
+        JavaContext javaContext = LintUtilsTest.parsePsi(""
+                + "public class Resolve {\n"
+                + "    public void test(A a) {\n"
+                + "        Object o1 = a;\n"
+                + "        Object o2 = a.b;\n"
+                + "        Object o3 = a.b.c;\n"
+                + "        Object o4 = a.b.c.d;\n"
+                + "        Object o5 = a.b.c.d.e;\n"
+                + "    }\n"
+                + "    \n"
+                + "    public class A {\n"
+                + "        B b;\n"
+                + "    }\n"
+                + "\n"
+                + "    public class B {\n"
+                + "        C c;\n"
+                + "    }\n"
+                + "\n"
+                + "    public class C {\n"
+                + "        D d;\n"
+                + "\n"
+                + "    }\n"
+                + "\n"
+                + "    public class D {\n"
+                + "        Object e;\n"
+                + "    }\n"
+                + "}\n");
+        AtomicBoolean abcFound = new AtomicBoolean();
+        AtomicBoolean abcdFound = new AtomicBoolean();
+        javaContext.getJavaFile().accept(new JavaRecursiveElementVisitor() {
+            @Override
+            public void visitReferenceExpression(PsiReferenceExpression expression) {
+                // Skip nested expressions; ECJ doesn't give us bindings for
+                // the intermediate nodes, such as "b" and "c" in in a.b.c.d
+                if (!(expression.getParent() instanceof PsiReferenceExpression)) {
+                    String test = expression.getText();
+                    if ("a.b.c".equals(test)) {
+                        abcFound.set(true);
+                        PsiElement resolved = expression.resolve();
+                        assertThat(resolved).isNotNull();
+                        assertThat(resolved).isInstanceOf(PsiField.class);
+                        assertThat(((PsiField) resolved).getName()).isEqualTo("c");
+                    }
+                    if ("a.b.c.d".equals(test)) {
+                        abcdFound.set(true);
+                        PsiElement resolved = expression.resolve();
+                        assertThat(resolved).isNotNull();
+                        assertThat(resolved).isInstanceOf(PsiField.class);
+                        assertThat(((PsiField) resolved).getName()).isEqualTo("d");
+                    }
+                }
+
+                super.visitReferenceExpression(expression);
+            }
+        });
+        assertThat(abcFound.get()).isTrue();
+        assertThat(abcdFound.get()).isTrue();
     }
 
     public void testDisjunctionTypes() throws Exception {
