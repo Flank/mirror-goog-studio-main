@@ -1043,10 +1043,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /**
      * Return the minSdkVersion for this variant.
      *
-     * This uses both the value from the manifest (if present), and the override coming
-     * from the flavor(s) (if present). The value of the minSdkVersion will be combined with
-     * the value of the targetSdkVersion. For the details of the overlaying logic check
-     * {@link #getCalculatedApiVersions(ApiVersion, ApiVersion)} method.
+     * <p>This uses both the value from the manifest (if present), and the override coming from the
+     * flavor(s) (if present). The value of the minSdkVersion will be combined with the value of the
+     * targetSdkVersion. For the details of the overlaying logic check {@link
+     * #getCalculatedApiVersions(ApiVersion, ApiVersion)} method.
      *
      * @return the minSdkVersion
      */

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.nio.file.Files;
@@ -69,12 +70,6 @@ public class MergeResourcesTest {
                 "debug",
                 "raw",
                 "me.raw");
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
 
         /*
@@ -93,9 +88,6 @@ public class MergeResourcesTest {
         assertThatApk(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 3 });
         assertThat(inIntermediate).contains(new byte[] { 3 });
-        long intermediateModified = inIntermediate.lastModified();
-        long apUModified = apUnderscore.lastModified();
-        long apkModified = project.getSubproject("app").getApk("debug").lastModified();
 
         /*
          * Now, modify the library's and check that nothing changed.
@@ -253,5 +245,30 @@ public class MergeResourcesTest {
         assertThatApk(apUnderscore).doesNotContain("res/raw/me.raw");
         assertThatApk(apUnderscore)
                 .containsFileWithContent("res/raw/me.war", new byte[] { 1, 2, 3, 4 });
+    }
+
+    @Test
+    public void injectedMinSdk() throws Exception {
+        GradleTestProject appProject = project.getSubproject(":app");
+        File newMainLayout = appProject.file("src/main/res/layout-v23/main.xml");
+        Files.createDirectories(newMainLayout.getParentFile().toPath());
+
+        // This layout does not define the "foo" ID.
+        FileUtils.createFile(
+                newMainLayout,
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" "
+                        + "android:orientation=\"horizontal\" "
+                        + "android:layout_width=\"fill_parent\" "
+                        + "android:layout_height=\"fill_parent\"> "
+                        + "</LinearLayout>\n");
+
+        TestFileUtils.addMethod(
+                appProject.file("src/main/java/com/example/android/multiproject/MainActivity.java"),
+                "public int useFoo() { return R.id.foo; }");
+
+        project.executor()
+                .withProperty(AndroidProject.PROPERTY_BUILD_API, 23)
+                .run(":app:assembleDebug");
     }
 }
