@@ -488,10 +488,10 @@ public class VariantManager implements VariantModel {
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
 
-        // default configure attribute resolution by just registering the attribute
-        project.getDependencies().attributesSchema(schema -> {
-            schema.attribute(Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class));
-        });
+        // default configure attribute resolution for the build type attribute
+        project.getDependencies().attributesSchema(schema -> schema.attribute(
+                Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class),
+                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching
