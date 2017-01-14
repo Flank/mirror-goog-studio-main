@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
+import static com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_FULL_JAR;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -153,7 +154,6 @@ import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.IncrementalSafeguard;
 import com.android.build.gradle.tasks.factory.JacocoAgentConfigAction;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
-import com.android.build.gradle.tasks.factory.PackageJarArtifactConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
@@ -518,30 +518,31 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope variantScope) {
         BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope.getVariantData();
-        final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
-        // content that can be found in a jar:
-        Set<ContentType> fullJar = ImmutableSet.of(
-                DefaultContentType.CLASSES, DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS);
-
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(fullJar)
+                .addContentTypes(TransformManager.CONTENT_FULL_JAR)
                 .addScope(Scope.PROJECT_LOCAL_DEPS)
                 .setJars(variantScope.getLocalPackagedJars())
                 .build());
 
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_JARS)
+                .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getExternalPackageJars())
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.EXTERNAL,
+                        AndroidArtifacts.ArtifactType.CLASSES))
                 .build());
 
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getExternalPackageJars())
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.EXTERNAL,
+                        AndroidArtifacts.ArtifactType.JAVA_RES))
                 .build());
 
         if (variantScope.isJackEnabled()) {
@@ -585,57 +586,58 @@ public abstract class TaskManager {
             transformManager.addStream(OriginalStream.builder(project)
                     .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                     .addScope(Scope.SUB_PROJECTS)
-                    .setFileCollection(variantScope.getSubProjectDataBindingArtifactFolders())
+                    .setFileCollection(variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.DATA_BINDING))
                     .build()
             );
             transformManager.addStream(OriginalStream.builder(project)
                     .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                     .addScope(Scope.EXTERNAL_LIBRARIES)
-                    .setFileCollection(variantScope.getExternalAarDataBindingFolders())
+                    .setFileCollection(variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.EXTERNAL,
+                            AndroidArtifacts.ArtifactType.DATA_BINDING))
                     .build()
             );
         }
 
-        // for the sub modules, the new intermediary classes.jar does not have resources.
+        // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJars())
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactType.CLASSES))
                 .build());
 
-        // for the sub modules, thew new intermediary res.jar only has resources
+        // same for the resources which can be java-res or jni
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedAarResourceJars())
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactType.JAVA_RES))
                 .build());
 
-        // but we also need non android sub-projects
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_RESOURCES)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJavaJars())
-                .build());
-
-        // and the native libs of the libraries are in a separate folder.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJniFolders())
-                .build());
-
-        // but we also need non android sub-projects
+        // and the android library sub-modules also have a specific jni folder
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getSubProjectPackagedJavaJars())
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactType.JNI))
                 .build());
 
         // provided only scopes.
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(fullJar)
+                .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.PROVIDED_ONLY)
-                .setJars(config::getProvidedOnlyJars)
+                .setFileCollection(variantScope.getProvidedOnlyClasspath())
                 .build());
 
         if (variantScope.getTestedVariantData() != null) {
@@ -1342,18 +1344,12 @@ public abstract class TaskManager {
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
-        // Create jar task for uses by external modules.
+        // Create the classes artifact for uses by external modules.
         if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
-            final PackageJarArtifactConfigAction configAction = new PackageJarArtifactConfigAction(
-                    scope);
-            AndroidTask<Jar> packageJarArtifact =
-                    androidTasks.create(tasks, configAction);
-            packageJarArtifact.dependsOn(tasks, javacTask);
-
             scope.publishIntermediateArtifact(
-                    configAction.getOutputFile(),
-                    packageJarArtifact.getName(),
-                    AndroidArtifacts.TYPE_JAR);
+                    scope.getJavaOutputDir(),
+                    javacTask.getName(),
+                    JavaPlugin.CLASS_DIRECTORY);
         }
 
         return javacTask;

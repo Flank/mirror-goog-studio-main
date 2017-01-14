@@ -32,18 +32,20 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AIDL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_EXT_ANNOTATIONS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LINT_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PUBLIC_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
+import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
+import static org.gradle.api.plugins.JavaPlugin.CLASS_DIRECTORY;
+import static org.gradle.api.plugins.JavaPlugin.RESOURCES_DIRECTORY;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
@@ -66,7 +68,8 @@ public class AarTransform extends ExtractTransform {
     public void configure(AttributeContainer from, ArtifactTransformTargets targets) {
         from.attribute(ARTIFACT_FORMAT, TYPE_AAR);
 
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_JAR);
+        targets.newTarget().attribute(ARTIFACT_FORMAT, CLASS_DIRECTORY);
+        targets.newTarget().attribute(ARTIFACT_FORMAT, RESOURCES_DIRECTORY);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_MANIFEST);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ANDROID_RES);
         targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ASSETS);
@@ -100,7 +103,11 @@ public class AarTransform extends ExtractTransform {
         File file;
 
         switch (target.getAttribute(ARTIFACT_FORMAT)) {
-            case TYPE_JAR:
+            case CLASS_DIRECTORY:
+            case RESOURCES_DIRECTORY:
+                // even though resources are supposed to only be in the main jar of the AAR, this
+                // is not necessairy enforced by all build systems generating AAR so it's safer to
+                // read all jars from the manifest.
                 return getJars(explodedAar);
             case TYPE_LINT_JAR:
                 file = FileUtils.join(explodedAar, FD_JARS, FN_LINT_JAR);

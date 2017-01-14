@@ -295,8 +295,16 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
                         .getEnforceUniquePackageName();
 
-                processResources.manifests = variantScope.getManifests();
-                processResources.symbolFiles = variantScope.getSymbolsFile();
+                processResources.manifests = variantScope.getArtifactCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.MANIFEST);
+
+                processResources.symbolFiles = variantScope.getArtifactCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.SYMBOL_LIST);
+
                 processResources.testedManifest = variantScope.getTestedArtifact(
                         AndroidArtifacts.TYPE_MANIFEST,
                         VariantType.LIBRARY);
@@ -398,7 +406,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                     variantScope.getBuildContext();
 
             processResources.setPreviousFeatures(ImmutableSet.of());
-            processResources.setBaseFeature(variantScope.getBaseAtomResourcePkg());
+            processResources.setBaseFeature(variantScope.getArtifactFileCollection(
+                    AndroidArtifacts.ConfigType.PACKAGE,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.RESOURCES_PKG));
         }
     }
 

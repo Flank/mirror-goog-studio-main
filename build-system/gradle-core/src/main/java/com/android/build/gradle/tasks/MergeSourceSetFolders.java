@@ -393,7 +393,10 @@ public class MergeSourceSetFolders extends IncrementalTask {
             }
 
             if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
-                mergeAssetsTask.libraries = scope.getDependenciesAssetFolders();
+                mergeAssetsTask.libraries = scope.getArtifactCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.ASSETS);
 
                 // only add the assets for tested libraries.
                 mergeAssetsTask.testedLibrary = scope.getTestedArtifact(

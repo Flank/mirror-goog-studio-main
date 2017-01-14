@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ApiVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
@@ -333,7 +335,10 @@ public class MergeManifests extends ManifestProcessorTask {
             Project project = scope.getGlobalScope().getProject();
 
             // this includes the libraries and the atoms.
-            processManifestTask.manifests = variantScope.getManifests();
+            processManifestTask.manifests = variantScope.getArtifactCollection(
+                    AndroidArtifacts.ConfigType.PACKAGE,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.MANIFEST);
 
             // optional manifest files too.
             if (variantScope.getMicroApkTask() != null &&

@@ -83,6 +83,7 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Zip;
@@ -458,16 +459,12 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope.publishIntermediateArtifact(
                                     mainClassJar,
                                     t.getName(),
-                                    AndroidArtifacts.TYPE_JAR);
-                            variantScope.publishIntermediateArtifact(
-                                    mainClassJar,
-                                    t.getName(),
-                                    AndroidArtifacts.TYPE_JAR_AAR_CLASSES);
+                                    JavaPlugin.CLASS_DIRECTORY);
                             // publish the res jar
                             variantScope.publishIntermediateArtifact(
                                     mainResJar,
                                     t.getName(),
-                                    AndroidArtifacts.TYPE_JAVA_RES);
+                                    JavaPlugin.RESOURCES_DIRECTORY);
                         });
 
                         // now add a transform that will take all the native libs and package

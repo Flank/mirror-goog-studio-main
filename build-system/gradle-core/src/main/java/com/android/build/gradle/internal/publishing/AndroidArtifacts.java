@@ -22,10 +22,12 @@ import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.builder.model.AndroidArtifact;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -34,6 +36,7 @@ import org.gradle.api.artifacts.ConfigurablePublishArtifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
@@ -50,8 +53,6 @@ public class AndroidArtifacts {
     public static final String TYPE_ATOM_BUNDLE = "atombundle";
 
     // types for AAR/ATOM content
-    public static final String TYPE_JAR = "jar";
-    public static final String TYPE_JAVA_RES = "java-res";
     public static final String TYPE_MANIFEST = "android-manifest";
     public static final String TYPE_ANDROID_RES = "android-res";
     public static final String TYPE_ASSETS = "android-assets";
@@ -66,14 +67,42 @@ public class AndroidArtifacts {
     public static final String TYPE_DATA_BINDING = "android-databinding";
     public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
 
-    // custom type for classes of AARs. This allows to get the "jar" type for non android
-    // sub-projects, by asking for jar/sub-project and substracting this custom type.
-    public static final String TYPE_JAR_AAR_CLASSES = "android-aar-classes";
-
     // types for additional artifacts to go with APK
     public static final String TYPE_MAPPING = "android-mapping";
     public static final String TYPE_METADATA = "android-metadata";
     public static final String TYPE_TESTED_MANIFEST = "android-tested-manifest";
+
+    public enum ConfigType {
+        COMPILE, PACKAGE
+    }
+
+    public enum ArtifactScope {
+        ALL, EXTERNAL, MODULE
+    }
+
+    public enum ArtifactType {
+        CLASSES(JavaPlugin.CLASS_DIRECTORY),
+        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY),
+        MANIFEST(TYPE_MANIFEST),
+        ANDROID_RES(TYPE_ANDROID_RES),
+        ASSETS(TYPE_ASSETS),
+        AIDL(TYPE_AIDL),
+        RENDERSCRIPT(TYPE_RENDERSCRIPT),
+        SYMBOL_LIST(TYPE_SYMBOL),
+        DATA_BINDING(TYPE_DATA_BINDING),
+        JNI(TYPE_JNI),
+        RESOURCES_PKG(TYPE_RESOURCES_PKG),
+        ;
+
+        private final Map<String, String> map;
+        ArtifactType(String type) {
+            map = ImmutableMap.of(ARTIFACT_TYPE, type);
+        }
+
+        public Map<String, String> getMap() {
+            return map;
+        }
+    }
 
     public static PublishArtifact getAarArtifact(
             @NonNull AbstractArchiveTask task,

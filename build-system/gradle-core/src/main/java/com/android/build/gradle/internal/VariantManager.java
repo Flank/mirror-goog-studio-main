@@ -34,12 +34,14 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
+import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -483,6 +485,7 @@ public class VariantManager implements VariantModel {
                             .orElseThrow(() -> new RuntimeException(
                                     "aar transform can only work with the build cache")));
                 });
+        project.getDependencies().registerTransform(JarTransform.class, transform -> {});
 
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).

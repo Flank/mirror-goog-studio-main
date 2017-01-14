@@ -338,7 +338,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             ConventionMappingHelper.map(
                     processTestManifestTask, "testLabel", config::getTestLabel);
 
-            processTestManifestTask.manifests = scope.getManifests();
+            processTestManifestTask.manifests = scope.getArtifactCollection(
+                    AndroidArtifacts.ConfigType.PACKAGE,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.MANIFEST);
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());
