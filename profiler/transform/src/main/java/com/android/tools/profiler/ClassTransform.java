@@ -50,11 +50,8 @@ abstract class ClassTransform extends Transform {
 
     private final String mName;
 
-    private final String[] mJarFilesToSkip;
-
-    public ClassTransform(String name, String[] jarFilesToSkip) {
+    public ClassTransform(String name) {
         mName = name;
-        mJarFilesToSkip = jarFilesToSkip;
     }
 
     @Override
@@ -86,16 +83,6 @@ abstract class ClassTransform extends Transform {
         return String.format("%d_%s", number, name);
     }
 
-    //TODO Make this a regex, to cleanly support filtering.
-    private boolean isFileToSkip(File jarFile) {
-        for(String fileToSkip : mJarFilesToSkip) {
-            if (jarFile.getAbsolutePath().contains(fileToSkip)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public void transform(TransformInvocation invocation)
             throws InterruptedException, IOException {
@@ -108,12 +95,6 @@ abstract class ClassTransform extends Transform {
                 String name = formatOutputName(outputNumber++, getNameWithoutExtension(inputJar.getName()));
                 File outputJar = invocation.getOutputProvider().getContentLocation(
                         name, jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
-
-                // Check if this is a file we should skip or not.
-                if (isFileToSkip(inputJar)) {
-                    FileUtils.copyFile(inputJar,outputJar);
-                    continue;
-                }
 
                 if (invocation.isIncremental()) {
                     switch (jarInput.getStatus()) {
@@ -180,7 +161,8 @@ abstract class ClassTransform extends Transform {
             ZipEntry entry = zis.getNextEntry();
             while (entry != null) {
                 zos.putNextEntry(new ZipEntry(entry.getName()));
-                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                if (!entry.isDirectory() && entry.getName().endsWith(".class")
+                        && !entry.getName().contains("com/android/tools/profiler/support")) {
                     transform(zis, zos);
                 } else {
                     FileUtils.copyStreams(zis, zos);
