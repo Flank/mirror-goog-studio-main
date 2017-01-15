@@ -94,6 +94,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtif
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
+import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.DexingMode;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -1878,6 +1879,16 @@ public abstract class TaskManager {
                             variantScope.getAssembleTask().dependsOn(tasks, t);
                         }
                     });
+        }
+
+        // ----- User transform support (e.g. Studio profilers) -----
+
+        for (String jar : AndroidGradleOptions.getCustomClassTransforms(project)) {
+            if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
+                    && variantData.getType().equals(VariantType.DEFAULT)
+                    && jar != null) {
+                transformManager.addTransform(tasks, variantScope, new CustomClassTransform(jar));
+            }
         }
 
         // ----- Minify next -----
