@@ -18,19 +18,24 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test to assert that the multidex list produced by the wordpress app is correct.
@@ -38,24 +43,44 @@ import org.junit.Test;
  * <p>It compares the existing (Merge jar -> Proguard -> dx call) with the New Shrinker based
  * implementation.
  */
+@RunWith(FilterableParameterized.class)
 public class NewMultiDexMainDexListTest {
 
-    @Rule
-    public GradleTestProject outerProject =
-            GradleTestProject.builder()
-                    .fromExternalProject("AntennaPod")
-                    .withHeap("4096M")
-                    .create();
+    @Parameterized.Parameters(name = "{0}")
+    public static Set<Project> projectList() {
+        return EnumSet.allOf(Project.class);
+    }
+
+    @Rule public GradleTestProject outerProject;
 
     private GradleTestProject project;
 
+    private final Project testProject;
+
+    public NewMultiDexMainDexListTest(Project project) {
+        this.testProject = project;
+        outerProject =
+                GradleTestProject.builder()
+                        .fromExternalProject(project.projectName)
+                        .withHeap("4096M")
+                        .create();
+    }
+
     @Before
     public void initProject() throws IOException {
-        PerformanceTestProjects.initializeAntennaPod(outerProject);
-        project = outerProject.getSubproject("AntennaPod");
-        TestFileUtils.appendToFile(
-                project.getSubproject("AntennaPod/app").getBuildFile(),
-                "\nandroid.defaultConfig.multiDexEnabled true");
+        switch (testProject) {
+            case ANTENNAPOD:
+                PerformanceTestProjects.initializeAntennaPod(outerProject);
+                project = outerProject.getSubproject("AntennaPod");
+                TestFileUtils.appendToFile(
+                        project.getSubproject("AntennaPod/app").getBuildFile(),
+                        "\nandroid.defaultConfig.multiDexEnabled true");
+                break;
+            case WORDPRESS:
+                project = outerProject;
+                PerformanceTestProjects.initializeWordpress(project);
+                break;
+        }
     }
 
     @Test
@@ -66,7 +91,7 @@ public class NewMultiDexMainDexListTest {
         }
         checkBuild();
         TestFileUtils.appendToFile(
-                project.getSubproject("AntennaPod/app").getBuildFile(),
+                project.getSubproject(testProject.appProjectDirectory).getBuildFile(),
                 "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
         checkBuild();
     }
@@ -75,29 +100,54 @@ public class NewMultiDexMainDexListTest {
 
         project.executor()
                 .withProperty(AndroidGradleOptions.PROPERTY_USE_MAIN_DEX_LIST_2, "false")
-                .run(":app:assembleDebug");
+                .run(testProject.assembleTask);
 
         Set<String> mainDexList = getMainDexList();
 
         project.executor()
                 .withProperty(AndroidGradleOptions.PROPERTY_USE_MAIN_DEX_LIST_2, "true")
-                .run(":app:assembleDebug");
+                .run(testProject.assembleTask);
 
         Set<String> mainDexList2 = getMainDexList();
 
         assertThat(mainDexList2).containsExactlyElementsIn(mainDexList);
     }
 
-
     private Set<String> getMainDexList() throws IOException {
         Path listFile =
-                project.getSubproject("AntennaPod/app")
+                project.getSubproject(testProject.appProjectDirectory)
                         .getIntermediatesDir()
                         .toPath()
-                        .resolve("multi-dex/debug/maindexlist.txt");
+                        .resolve("multi-dex/" + testProject.variantDirPath + "/maindexlist.txt");
         return Files.readAllLines(listFile)
                 .stream()
                 .filter(line -> !line.isEmpty())
                 .collect(Collectors.toSet());
+    }
+
+    private enum Project {
+        WORDPRESS(
+                "gradle-perf-android-medium",
+                ":WordPress:assembleVanillaDebug",
+                "WordPress",
+                "vanilla/debug"),
+        ANTENNAPOD("AntennaPod", ":app:assembleDebug", "AntennaPod/app", "debug"),
+        ;
+
+        final String projectName;
+        final String assembleTask;
+        final String appProjectDirectory;
+        final String variantDirPath;
+
+        Project(
+                @NonNull String projectName,
+                @NonNull String assembleTask,
+                @NonNull String appProjectDirectory,
+                @NonNull String variantDirPath) {
+            this.projectName = projectName;
+            this.assembleTask = assembleTask;
+            this.appProjectDirectory = appProjectDirectory;
+            this.variantDirPath = variantDirPath;
+        }
     }
 }
