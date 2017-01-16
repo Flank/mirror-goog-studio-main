@@ -57,7 +57,10 @@ public class BuildCacheUtilsTest {
                 BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
 
         assertThat(buildCache).isPresent();
-        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(buildCacheDirectory);
+        // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
+        // since the build cache (FileCache) might have normalized the directory's path
+        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(
+                buildCacheDirectory.getCanonicalFile());
     }
 
     @Test
@@ -71,7 +74,10 @@ public class BuildCacheUtilsTest {
                         androidGradleOptions, () -> defaultBuildCacheDir);
 
         assertThat(buildCache).isPresent();
-        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(defaultBuildCacheDir);
+        // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
+        // since the build cache (FileCache) might have normalized the directory's path
+        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(
+                defaultBuildCacheDir.getCanonicalFile());
     }
 
     @Test
