@@ -101,7 +101,7 @@ class DexTask extends DefaultTask {
         File classesFolder = getClassesFolder()
         File outputFolder = getOutputFolder()
         def builder = project.getPlugins().findPlugin("com.android.library").androidBuilder
-        builder.convertByteCode(ImmutableList.of(classesFolder),
+        builder.dexByteCodeCoverter.convertByteCode(ImmutableList.of(classesFolder),
                 outputFolder,
                 false /* multiDexEnabled */,
                 null /*getMainDexListFile */,

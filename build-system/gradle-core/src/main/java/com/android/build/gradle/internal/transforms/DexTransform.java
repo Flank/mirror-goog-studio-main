@@ -28,8 +28,9 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Dexing as a transform.
@@ -70,21 +72,27 @@ public class DexTransform extends Transform {
 
     private boolean preDexEnabled;
 
-    @Nullable private final File mainDexListFile;
+    @Nullable private final FileCollection mainDexListFile;
 
-    @NonNull private final AndroidBuilder androidBuilder;
+    @NonNull private final TargetInfo targetInfo;
+    @NonNull private final DexByteCodeConverter dexByteCodeConverter;
+    @NonNull private final ErrorReporter errorReporter;
 
     public DexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull DexingMode dexingMode,
             boolean preDexEnabled,
-            @Nullable File mainDexListFile,
-            @NonNull AndroidBuilder androidBuilder) {
+            @Nullable FileCollection mainDexListFile,
+            @NonNull TargetInfo targetInfo,
+            @NonNull DexByteCodeConverter dexByteCodeConverter,
+            @NonNull ErrorReporter errorReporter) {
         this.dexOptions = dexOptions;
         this.dexingMode = dexingMode;
         this.preDexEnabled = preDexEnabled;
         this.mainDexListFile = mainDexListFile;
-        this.androidBuilder = androidBuilder;
+        this.targetInfo = targetInfo;
+        this.dexByteCodeConverter = dexByteCodeConverter;
+        this.errorReporter = errorReporter;
     }
 
     @NonNull
@@ -144,9 +152,6 @@ public class DexTransform extends Transform {
                     "additional-parameters",
                     Iterables.toString(dexOptions.getAdditionalParameters()));
 
-            TargetInfo targetInfo = androidBuilder.getTargetInfo();
-            Preconditions.checkState(targetInfo != null,
-                    "androidBuilder.targetInfo required for task '%s'.", getName());
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
 
@@ -176,7 +181,7 @@ public class DexTransform extends Transform {
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
                         new ToolOutputParser(new DexParser(), logger),
-                        androidBuilder.getErrorReporter());
+                        errorReporter);
 
         outputProvider.deleteAll();
 
@@ -195,11 +200,16 @@ public class DexTransform extends Transform {
             // this deletes and creates the dir for the output
             FileUtils.cleanOutputDir(outputDir);
 
-            androidBuilder.convertByteCode(
+            File mainDexList = null;
+            if (mainDexListFile != null && dexingMode == DexingMode.LEGACY_MULTIDEX) {
+                mainDexList = mainDexListFile.getSingleFile();
+            }
+
+            dexByteCodeConverter.convertByteCode(
                     transformInputs,
                     outputDir,
                     dexingMode.isMultiDex,
-                    dexingMode == DexingMode.LEGACY_MULTIDEX ? mainDexListFile : null,
+                    mainDexList,
                     dexOptions,
                     outputHandler);
         } catch (Exception e) {
