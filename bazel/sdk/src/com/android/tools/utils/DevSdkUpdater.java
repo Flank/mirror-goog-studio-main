@@ -262,7 +262,6 @@ public final class DevSdkUpdater {
             File osSdkDest = new File(sdkDest, osEntry.mFolder);
             // Delegate download operation to SdkManagerCli program
             List<String> args = new ArrayList<>();
-            args.add("--channel=3");
             args.add("--sdk_root=" + osSdkDest.getAbsolutePath());
             args.add("--verbose");
             args.addAll(packages);
