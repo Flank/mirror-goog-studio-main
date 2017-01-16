@@ -33,5 +33,8 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="module" module-name="analytics-protos-base" exported="" />
     <orderEntry type="module" module-name="apkzlib" exported="" />
+    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="library" name="http-client" level="project" />
   </component>
 </module>
