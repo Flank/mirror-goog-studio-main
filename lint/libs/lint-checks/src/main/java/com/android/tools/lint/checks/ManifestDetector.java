@@ -158,7 +158,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             "MultipleUsesSdk",
             "Multiple `<uses-sdk>` elements in the manifest",
 
-            "The `<uses-sdk>` element should appear just once; the tools will *not* merge the " +
+            "The `<uses-sdk>` element should appear just once; the tools will **not** merge the " +
             "contents of all the elements so if you split up the attributes across multiple " +
             "elements, only one of them will take effect. To fix this, just merge all the " +
             "attributes from the various elements into a single <uses-sdk> element.",
@@ -348,7 +348,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             "Using mock location provider in production",
 
             "Using a mock location provider (by requiring the permission " +
-            "`android.permission.ACCESS_MOCK_LOCATION`) should *only* be done " +
+            "`android.permission.ACCESS_MOCK_LOCATION`) should **only** be done " +
             "in debug builds (or from tests). In Gradle projects, that means you should only " +
             "request this permission in a test or debug source set specific manifest file.\n" +
             "\n" +

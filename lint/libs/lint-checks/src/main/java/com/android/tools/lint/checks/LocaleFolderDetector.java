@@ -92,7 +92,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             "ISO 3166-1 for the region codes. In many cases, the language code and the " +
             "country where the language is spoken is the same, but it is also often not " +
             "the case. For example, while 'se' refers to Sweden, where Swedish is spoken, " +
-            "the language code for Swedish is *not* `se` (which refers to the Northern " +
+            "the language code for Swedish is **not** `se` (which refers to the Northern " +
             "Sami language), the language code is `sv`. And similarly the region code for " +
             "`sv` is El Salvador.\n" +
             "\n" +

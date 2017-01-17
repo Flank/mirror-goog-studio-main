@@ -68,7 +68,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
             "\"if (false)\" check, surrounding your logging calls with a check for " +
             "BuildConfig.DEBUG is a good idea.\n" +
             "\n" +
-            "If you *really* intend for the logging to be present in release mode, you can " +
+            "If you **really** intend for the logging to be present in release mode, you can " +
             "suppress this warning with a @SuppressLint annotation for the intentional " +
             "logging calls.",
 

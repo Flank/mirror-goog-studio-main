@@ -62,7 +62,7 @@ public class OverrideDetector extends Detector implements ClassScanner {
             "If you really did intend for this method to override the other, make the " +
             "method `protected` instead.\n" +
             "\n" +
-            "If you did *not* intend the override, consider making the method private, or " +
+            "If you did **not** intend the override, consider making the method private, or " +
             "changing its name or signature.",
 
             Category.CORRECTNESS,

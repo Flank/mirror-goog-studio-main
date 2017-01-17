@@ -62,8 +62,8 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
             "to invoke when the view is clicked. This name must correspond to a public method " +
             "that takes exactly one parameter of type `View`.\n" +
             "\n" +
-            "Must be a string value, using '\\;' to escape characters such as '\\n' or " +
-            "'\\uxxxx' for a unicode character.",
+            "Must be a string value, using '\\\\;' to escape characters such as '\\\\n' or " +
+            "'\\\\uxxxx' for a unicode character.",
             Category.CORRECTNESS,
             10,
             Severity.ERROR,

@@ -136,7 +136,7 @@ public class WrongIdDetector extends LayoutDetector {
     public static final Issue INVALID = Issue.create(
             "InvalidId",
             "Invalid ID declaration",
-            "An id definition *must* be of the form `@+id/yourname`. The tools have not " +
+            "An id definition **must** be of the form `@+id/yourname`. The tools have not " +
             "rejected strings of the form `@+foo/bar` in the past, but that was an error, " +
             "and could lead to tricky errors because of the way the id integers are assigned.\n" +
             "\n" +
@@ -421,7 +421,8 @@ public class WrongIdDetector extends LayoutDetector {
             int nameStart = id.startsWith(NEW_ID_PREFIX) ? NEW_ID_PREFIX.length() : 2;
             String suggested = NEW_ID_PREFIX + id.substring(nameStart).replace('/', '_');
             String message = String.format(
-                    "ID definitions *must* be of the form `@+id/name`; try using `%1$s`", suggested);
+                    "ID definitions **must** be of the form `@+id/name`; try using `%1$s`",
+                    suggested);
             context.report(INVALID, attribute, context.getLocation(attribute), message);
         }
     }

@@ -57,7 +57,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             "nothing other than return the field, you might want to just reference the " +
             "local field directly instead.\n" +
             "\n" +
-            "*NOTE*: As of Android 2.3 (Gingerbread), this optimization is performed " +
+            "**NOTE**: As of Android 2.3 (Gingerbread), this optimization is performed " +
             "automatically by Dalvik, so there is no need to change your code; this is " +
             "only relevant if you are targeting older versions of Android.",
 

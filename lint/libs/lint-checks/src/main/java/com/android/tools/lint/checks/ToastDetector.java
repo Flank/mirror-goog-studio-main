@@ -45,7 +45,7 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
             "ShowToast",
             "Toast created but not shown",
 
-            "`Toast.makeText()` creates a `Toast` but does *not* show it. You must call " +
+            "`Toast.makeText()` creates a `Toast` but does **not** show it. You must call " +
             "`show()` on the resulting object to actually make the `Toast` appear.",
 
             Category.CORRECTNESS,

@@ -105,7 +105,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
             "use the Android `SparseArray` API. This check identifies scenarios where you might " +
             "want to consider using `SparseArray` instead of `HashMap` for better performance.\n" +
             "\n" +
-            "This is *particularly* useful when the value types are primitives like ints, " +
+            "This is **particularly** useful when the value types are primitives like ints, " +
             "where you can use `SparseIntArray` and avoid auto-boxing the values from `int` to " +
             "`Integer`.\n" +
             "\n" +
