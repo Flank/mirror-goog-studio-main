@@ -93,7 +93,6 @@ public class NativeLibraryInstantRunTest {
         InstantRunTestUtils.unlockDevice(device);
 
         InstantRunTestUtils.runApp(device, "com.example.hellojni/.HelloJni");
-        InstantRunTestUtils.startService(device, "com.example.hellojni");
 
         long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
 

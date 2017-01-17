@@ -666,81 +666,17 @@ public class ManifestMerger2SmallTest {
 
         NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
         assertEquals(1, applications.getLength());
-        Optional<Node> serviceNode = getChildByName(applications.item(0), SdkConstants.TAG_SERVICE);
+        Optional<Node> serviceNode = getChildByName(applications.item(0), SdkConstants.TAG_PROVIDER);
         assertTrue(serviceNode.isPresent());
         Node service = serviceNode.get();
         NamedNodeMap attributes = service.getAttributes();
-        assertEquals(2, attributes.getLength());
-        assertEquals(ManifestMerger2.BOOTSTRAP_INSTANT_RUN_SERVICE,
+        assertEquals(3, attributes.getLength());
+        assertEquals(ManifestMerger2.BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER,
                 attributes.getNamedItemNS(
                         SdkConstants.ANDROID_URI, SdkConstants.ATTR_NAME).getNodeValue());
-        assertEquals("true",
-                attributes.getNamedItemNS(
-                        SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED).getNodeValue());
-    }
-
-    @Test
-    public void testInstantRunReplacementWithNoAppName() throws Exception {
-        String xml = ""
-                + "<manifest\n"
-                + "    package=\"com.foo.bar\""
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                + "    <activity android:name=\"activityOne\"/>\n"
-                + "    <application android:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
-                + "</manifest>";
-
-        File inputFile = inputAsFile("testNoPlaceHolderReplacement", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport = ManifestMerger2
-                .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT)
-                .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_RUN));
-
-        NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
-        assertEquals(1, applications.getLength());
-        Optional<Node> serviceNode = getChildByName(applications.item(0), SdkConstants.TAG_SERVICE);
-        assertTrue(serviceNode.isPresent());
-        Node service = serviceNode.get();
-        NamedNodeMap attributes = service.getAttributes();
-        assertEquals(2, attributes.getLength());
-        assertEquals(ManifestMerger2.BOOTSTRAP_INSTANT_RUN_SERVICE,
-                attributes.getNamedItemNS(
-                        SdkConstants.ANDROID_URI, SdkConstants.ATTR_NAME).getNodeValue());
-        assertEquals("true",
-                attributes.getNamedItemNS(
-                        SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED).getNodeValue());
-    }
-
-    @Test
-    public void testInstantRunReplacementWithExistingServices() throws Exception {
-        String xml = ""
-                + "<manifest\n"
-                + "    package=\"com.foo.bar\""
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                + "    <activity android:name=\"activityOne\"/>\n"
-                + "    <application android:backupAgent=\"com.foo.example.myBackupAgent\">\n"
-                + "        <service android:name=\".Foo\"/>"
-                + "    </application>"
-                + "</manifest>";
-
-        File inputFile = inputAsFile("testNoPlaceHolderReplacement", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport = ManifestMerger2
-                .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT)
-                .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_RUN));
-
-        Optional<Element> serviceElement = getElementByTypeAndKey(xmlDocument,
-                SdkConstants.TAG_SERVICE, ManifestMerger2.BOOTSTRAP_INSTANT_RUN_SERVICE);
-        assertTrue(serviceElement.isPresent());
+        // assertEquals("true",
+        //         attributes.getNamedItemNS(
+        //                 SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED).getNodeValue());
     }
 
     @Test
