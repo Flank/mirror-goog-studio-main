@@ -136,6 +136,7 @@ import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
+import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiQualifiedExpression;
 import com.intellij.psi.PsiReferenceExpression;
@@ -2722,6 +2723,9 @@ public class ApiDetector extends ResourceXmlDetector
                     resolved = ((PsiClassType)type).resolve();
                 }
                 for (PsiElement child : typeElement.getChildren()) {
+                    if (child instanceof PsiParenthesizedExpression) {
+                        child = ((PsiParenthesizedExpression)child).getExpression();
+                    }
                     if (child instanceof PsiTypeElement) {
                         PsiTypeElement childTypeElement = (PsiTypeElement)child;
                         PsiType childType = childTypeElement.getType();

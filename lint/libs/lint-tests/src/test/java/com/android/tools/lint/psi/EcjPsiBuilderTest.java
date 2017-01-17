@@ -859,6 +859,32 @@ public class EcjPsiBuilderTest extends TestCase {
                 PsiAnnotation.class);
     }
 
+    public void testParameterizedSingleTypeReference() throws Exception {
+        @SuppressWarnings("all") // testcase code intentionally not following recommended practices :-)
+                JavaContext context = LintUtilsTest.parsePsi(""
+                + "package test.pkg;\n"
+                + "\n"
+                + "import java.util.Collection;\n"
+                + "import java.util.HashSet;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Set;\n"
+                + "import java.util.function.Supplier;\n"
+                + "\n"
+                + "@SuppressWarnings(\"unused\")\n"
+                + "public class ParameterizedSingleTypeReferenceTest {\n"
+                + "    private static void test(List<String> roster) {\n"
+                + "        Set<String> rosterSet = methodWithTypeArgs(roster, HashSet<String>::new);\n"
+                + "    }\n"
+                + "\n"
+                + "    public static <T, X extends Collection<T>, Y extends Collection<T>> Y methodWithTypeArgs(\n"
+                + "            X sourceCollection,\n"
+                + "            Supplier<Y> collectionFactory) {\n"
+                + "        return null;\n"
+                + "    }\n"
+                + "}\n");
+        assertThat(context).isNotNull();
+    }
+
     public void testPackages() throws Exception {
         assertEquals("test.pkg", mJavaFile.getPackageName());
         PsiPackageStatement packageStatement = mJavaFile.getPackageStatement();
