@@ -86,7 +86,7 @@ android {
 }
 
 dependencies {
-<#if !(isInstantApp!false) || (isBaseAtom!false)>
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:${espressoVersion!"2.0"}', {
         exclude group: 'com.android.support', module: 'support-annotations'

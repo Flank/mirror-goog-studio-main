@@ -5,7 +5,9 @@
     <#if backwardsCompatibility!true>
         <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
     </#if>
+</#if>
 
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <#if unitTestsSupported>
         <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
     </#if>
@@ -74,12 +76,14 @@
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 </#if>
 
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <instantiate from="root/test/app_package/ExampleInstrumentedTest.java.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.java" />
 
-<#if unitTestsSupported>
-    <instantiate from="root/test/app_package/ExampleUnitTest.java.ftl"
-                   to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.java" />
+    <#if unitTestsSupported>
+        <instantiate from="root/test/app_package/ExampleUnitTest.java.ftl"
+                       to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.java" />
+    </#if>
 </#if>
 <#if includeCppSupport!false>
     <instantiate from="root/CMakeLists.txt.ftl"

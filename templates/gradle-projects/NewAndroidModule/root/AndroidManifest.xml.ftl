@@ -3,7 +3,7 @@
     package="${manifestPackageName}"
     <#if (isInstantApp!false) && !(isBaseAtom!false)>split="${splitName}"</#if>>
 
-    <#if !(isInstantApp!false) || isLibraryProject>
+    <#if !(isInstantApp!false) || (isBaseAtom!false)>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
         android:label="@string/app_name"<#if copyIcons && !isLibraryProject>
         android:icon="@mipmap/ic_launcher"
