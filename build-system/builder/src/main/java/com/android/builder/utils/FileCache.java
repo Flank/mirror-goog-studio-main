@@ -662,7 +662,7 @@ public class FileCache {
         // If the file/directory being accessed is the cache directory itself, we use a lock file
         // within the tmpdir directory; otherwise we use a lock file within the cache directory
         File lockFile =
-                accessedFile.getCanonicalFile().equals(mCacheDirectory)
+                accessedFile.getCanonicalFile().equals(mCacheDirectory.getCanonicalFile())
                         ? new File(System.getProperty("java.io.tmpdir"), lockFileName)
                         : new File(mCacheDirectory, lockFileName);
 
