@@ -181,17 +181,21 @@ public final class GradleTestProject implements TestRule {
                     Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
             if (envCustomAndroidHome != null) {
                 ANDROID_HOME = new File(envCustomAndroidHome);
+                assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
             } else {
                 ANDROID_HOME = TestUtils.getSdk();
             }
-            assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
 
             String envCustomAndroidNdkHome =
                     Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
             if (envCustomAndroidNdkHome != null) {
                 ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
+                assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
             } else {
-                ANDROID_NDK_HOME = new File(ANDROID_HOME, SdkConstants.FD_NDK);
+                ANDROID_NDK_HOME =
+                        TestUtils.runningFromBazel()
+                                ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
+                                : new File(ANDROID_HOME, SdkConstants.FD_NDK);
             }
         } catch (Throwable t) {
             // Print something to stdout, to give us a chance to debug initialization problems.
