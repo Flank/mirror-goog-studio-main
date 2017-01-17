@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.core.AndroidBuilder;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +30,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PerformanceTestProjects {
+
+    private static String generateLocalRepositoriesSnippet() {
+        StringBuilder localRepositoriesSnippet = new StringBuilder();
+        for (Path repo : GradleTestProject.getLocalRepositories()) {
+            localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
+        }
+        return localRepositoriesSnippet.toString();
+    }
 
     public static void initializeAntennaPod(GradleTestProject mainProject) throws IOException {
         GradleTestProject project = mainProject.getSubproject("AntennaPod");
@@ -47,13 +54,10 @@ public class PerformanceTestProjects {
                         + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
                         + '"');
 
-        StringBuilder localRepositoriesSnippet = new StringBuilder();
-        for (Path repo : GradleTestProject.getLocalRepositories()) {
-            localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
-        }
+
 
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "jcenter\\(\\)", localRepositoriesSnippet.toString());
+                project.getBuildFile(), "jcenter\\(\\)", generateLocalRepositoriesSnippet());
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
@@ -104,20 +108,21 @@ public class PerformanceTestProjects {
                 project.file("WordPress/gradle.properties-example").toPath(),
                 project.file("WordPress/gradle.properties").toPath());
 
+
+        String localRepositoriesSnippet = generateLocalRepositoriesSnippet();
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "buildscript {\n"
-                        + "    repositories {\n"
-                        + "        maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'       }"
-                        + "    }\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + "'\n"
-                        + "    }\n"
-                        + "}");
+                String.format(
+                        "buildscript {\n"
+                                + "    repositories {\n"
+                                + "        %1$s\n"
+                                + "    }\n"
+                                + "    dependencies {\n"
+                                + "        classpath 'com.android.tools.build:gradle:%2$s'\n"
+                                + "    }\n"
+                                + "}\n",
+                        localRepositoriesSnippet, GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
 
         List<Path> buildGradleFiles =
                 Stream.of(
@@ -142,9 +147,7 @@ public class PerformanceTestProjects {
             TestFileUtils.searchAndReplace(
                     file,
                     "jcenter\\(\\)",
-                    "maven { url '"
-                            + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                            + "'}");
+                    localRepositoriesSnippet);
 
             TestFileUtils.searchAndReplace(
                     file,
