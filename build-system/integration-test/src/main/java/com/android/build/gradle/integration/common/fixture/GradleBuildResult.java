@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.internal.serialize.PlaceholderException;
 import org.gradle.tooling.BuildException;
 import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.events.ProgressEvent;
 
 /**
  * The result from running a build.
@@ -47,6 +49,8 @@ public class GradleBuildResult {
     @NonNull
     private final String stderr;
 
+    @NonNull private final ImmutableList<ProgressEvent> taskEvents;
+
     @Nullable
     private final GradleConnectionException exception;
 
@@ -55,9 +59,11 @@ public class GradleBuildResult {
     public GradleBuildResult(
             @NonNull ByteArrayOutputStream stdout,
             @NonNull ByteArrayOutputStream stderr,
+            @NonNull ImmutableList<ProgressEvent> taskEvents,
             @Nullable GradleConnectionException exception) {
         this.stdout = stdout.toString();
         this.stderr = stderr.toString();
+        this.taskEvents = taskEvents;
         this.exception = exception;
     }
 
@@ -138,9 +144,13 @@ public class GradleBuildResult {
         return initTaskStates().getInputChangedTasks();
     }
 
+    public Set<String> getNotUpToDateTasks() {
+        return initTaskStates().getNotUpToDateTasks();
+    }
+
     private TaskStateList initTaskStates() {
         if (taskStateList == null) {
-            taskStateList = new TaskStateList(stdout);
+            taskStateList = new TaskStateList(taskEvents, stdout);
         }
         return taskStateList;
     }

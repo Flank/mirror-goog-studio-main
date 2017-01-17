@@ -17,10 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.tasks.annotations.Extractor;
+import com.android.testutils.apk.Zip;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -55,12 +57,12 @@ public class ExtractAnnotationTest {
     @Test
     public void checkExtractAnnotation() throws IOException {
         File debugFileOutput = project.file("build/intermediates/annotations/debug");
-        File classesJar = project.file("build/intermediates/bundles/debug/classes.jar");
-        File file = new File(debugFileOutput, "annotations.zip");
+        Zip classesJar = new Zip(project.file("build/intermediates/bundles/debug/classes.jar"));
+        Zip file = new Zip(new File(debugFileOutput, "annotations.zip"));
 
         //noinspection SpellCheckingInspection
         String expectedContent =
-                ""
+                (""
                         + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<root>\n"
                         + "  <item name=\"com.android.tests.extractannotations.ExtractTest int getVisibility()\">\n"
@@ -112,9 +114,9 @@ public class ExtractAnnotationTest {
                         + "      <val name=\"value\" val=\"{com.android.tests.extractannotations.Constants.CONSTANT_1, com.android.tests.extractannotations.Constants.CONSTANT_2}\" />\n"
                         + "    </annotation>\n"
                         + "  </item>\n"
-                        + "</root>\n";
+                        + "</root>\n");
 
-        assertThatZip(file)
+        assertThat(file)
                 .containsFileWithContent(
                         "com/android/tests/extractannotations/annotations.xml", expectedContent);
 
@@ -124,30 +126,40 @@ public class ExtractAnnotationTest {
         // Check typedefs removals:
 
         // public typedef: should be present
-        assertThatZip(classesJar)
+        assertThat(classesJar)
                 .contains("com/android/tests/extractannotations/ExtractTest$Visibility.class");
 
         // private/protected typedefs: should have been removed
-        assertThatZip(classesJar)
+        assertThat(classesJar)
                 .doesNotContain("com/android/tests/extractannotations/ExtractTest$Mask.class");
-        assertThatZip(classesJar)
+        assertThat(classesJar)
                 .doesNotContain(
                         "com/android/tests/extractannotations/ExtractTest$NonMaskType.class");
 
         // public but @hide marked typedefs: should have been removed
         if (Extractor.REMOVE_HIDDEN_TYPEDEFS) {
-            assertThatZip(classesJar)
+            assertThat(classesJar)
                     .doesNotContain(
                             "com/android/tests/extractannotations/ExtractTest$StringMode.class");
         } else {
-            assertThatZip(classesJar)
+            assertThat(classesJar)
                     .contains("com/android/tests/extractannotations/ExtractTest$StringMode.class");
         }
 
         // Make sure the NonMask symbol (from a private typedef) is completely gone from the
         // outer class
-        assertThatZip(classesJar).containsFileWithoutContent(
-                "com/android/tests/extractannotations/ExtractTest.class",
-                "NonMaskType");
+        assertThat(classesJar)
+                .containsFileWithoutContent(
+                        "com/android/tests/extractannotations/ExtractTest.class", "NonMaskType");
+
+        GradleBuildResult result = project.executor().run("assembleDebug");
+
+        assertThat(result.getNotUpToDateTasks())
+                .containsExactly(
+                        ":resolveDebugDependencies",
+                        ":preDebugBuild",
+                        ":checkDebugManifest",
+                        ":prepareDebugDependencies",
+                        ":javaPreCompileDebug");
     }
 }

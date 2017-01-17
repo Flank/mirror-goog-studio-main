@@ -16,19 +16,20 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.android.annotations.NonNull;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.task.TaskFinishEvent;
+import org.gradle.tooling.events.task.TaskOperationResult;
+import org.gradle.tooling.events.task.TaskSuccessResult;
 
 /**
  * List of the task state for a build.
@@ -63,10 +64,16 @@ public class TaskStateList {
         }
 
         public boolean isUpToDate() {
+            if (!wasExecuted) {
+                throw new IllegalStateException("Task " + getTaskName() + " was not executed");
+            }
             return upToDate;
         }
 
         public boolean isInputChanged() {
+            if (!wasExecuted) {
+                throw new IllegalStateException("Task " + getTaskName() + " was not executed");
+            }
             return inputChanged;
         }
 
@@ -74,8 +81,6 @@ public class TaskStateList {
             return taskStateList;
         }
     }
-
-    private static final Pattern UP_TO_DATE_PATTERN = Pattern.compile("(\\S+)\\s+UP-TO-DATE");
 
     private static final Pattern INPUT_CHANGED_PATTERN = Pattern.compile(
             "Value of input property '.*' has changed for task ':(\\S+)'");
@@ -85,40 +90,44 @@ public class TaskStateList {
 
     @NonNull
     private final Map<String, TaskInfo> taskInfoList;
-    @NonNull
-    private final String gradleOutput;
-    @NonNull
-    private final List<String> orderedTasks;
-    @NonNull
-    private final Set<String> upToDateTasks;
-    @NonNull
-    private final Set<String> inputChangedTasks;
+    @NonNull private final ImmutableSet<String> allTasks;
+    @NonNull private final ImmutableList<String> orderedTasks;
+    @NonNull private final ImmutableSet<String> upToDateTasks;
+    @NonNull private final ImmutableSet<String> notUpToDateTasks;
+    @NonNull private final ImmutableSet<String> inputChangedTasks;
 
-    public TaskStateList(@NonNull String gradleOutput) {
-        this.gradleOutput = gradleOutput;
-        List<String> lines = Arrays.stream(gradleOutput.split("\n"))
-                .map(String::trim)
-                .collect(Collectors.toList());
+    public TaskStateList(
+            @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
 
-        Optional<String> taskLine = lines.stream()
-                .map(EXECUTED_PATTERN::matcher)
-                .filter(Matcher::matches)
-                .map(match -> match.group(1))
-                .findFirst();
-        if (!taskLine.isPresent()) {
-            throw new RuntimeException("Unable to determine task lists from Gradle output");
+        ImmutableList.Builder<String> orderedTasksBuilder = ImmutableList.builder();
+        ImmutableSet.Builder<String> upToDateTasksBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> notUpToDateTasksBuilder = ImmutableSet.builder();
+
+        for (ProgressEvent progressEvent : progressEvents) {
+            if (progressEvent instanceof TaskFinishEvent) {
+                String name = progressEvent.getDescriptor().getName();
+                orderedTasksBuilder.add(name);
+
+                TaskFinishEvent taskFinishEvent = (TaskFinishEvent) progressEvent;
+                TaskOperationResult result = taskFinishEvent.getResult();
+
+                if (result instanceof TaskSuccessResult) {
+                    TaskSuccessResult successResult = (TaskSuccessResult) result;
+                    if (successResult.isUpToDate()) {
+                        upToDateTasksBuilder.add(name);
+                    } else {
+                        notUpToDateTasksBuilder.add(name);
+                    }
+                }
+            }
         }
 
-        orderedTasks = Arrays.stream(taskLine.get().split(", "))
-                .map(task -> {
-                    Matcher m = Pattern.compile("task \'(.*)\'").matcher(task);
-                    checkState(m.matches());
-                    return m.group(1);
-                })
-                .collect(Collectors.toList());
+        orderedTasks = orderedTasksBuilder.build();
+        allTasks = ImmutableSet.copyOf(orderedTasks);
+        upToDateTasks = upToDateTasksBuilder.build();
+        notUpToDateTasks = notUpToDateTasksBuilder.build();
+        inputChangedTasks = getInputChangedTasks(gradleOutput, notUpToDateTasks);
 
-        upToDateTasks = getTasksMatching(UP_TO_DATE_PATTERN);
-        inputChangedTasks = getTasksMatching(INPUT_CHANGED_PATTERN);
 
         taskInfoList = Maps.newHashMapWithExpectedSize(orderedTasks.size());
 
@@ -130,6 +139,24 @@ public class TaskStateList {
                     inputChangedTasks.contains(taskName),
                     this));
         }
+    }
+
+    private static ImmutableSet<String> getInputChangedTasks(
+            @NonNull String gradleOutput, @NonNull ImmutableSet<String> notUpToDateTasks) {
+        if (!EXECUTED_PATTERN.matcher(gradleOutput).find()) {
+            throw new RuntimeException("Unable to determine task lists from Gradle output");
+        }
+
+        ImmutableSet.Builder<String> result = ImmutableSet.builder();
+        Matcher matcher = INPUT_CHANGED_PATTERN.matcher(gradleOutput);
+        while (matcher.find()) {
+            String candiate = matcher.group(1);
+            if (!notUpToDateTasks.contains(candiate)) {
+                throw new RuntimeException("Found unexpected input changed task" + candiate);
+            }
+            result.add(candiate);
+        }
+        return result.build();
     }
 
     @NonNull
@@ -149,16 +176,13 @@ public class TaskStateList {
         return inputChangedTasks;
     }
 
-    private Set<String> getTasksMatching(@NonNull Pattern pattern) {
-        Set<String> result = Sets.newHashSet();
-        Matcher matcher = pattern.matcher(gradleOutput);
-        while (matcher.find()) {
-            result.add(matcher.group(1));
-        }
-        return result;
+    @NonNull
+    public Set<String> getNotUpToDateTasks() {
+        return notUpToDateTasks;
     }
 
     int getTaskIndex(String taskName) {
+        Preconditions.checkArgument(allTasks.contains(taskName), "Task %s not run", taskName);
         return orderedTasks.indexOf(taskName);
     }
 
