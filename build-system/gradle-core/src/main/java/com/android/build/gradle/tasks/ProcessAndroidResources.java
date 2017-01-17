@@ -129,9 +129,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private BuildContext buildContext;
 
-    private FileCollection baseFeature;
-
-    private Collection<File> previousFeatures;
+    private FileCollection atomResourcePackages;
 
     private List<LibraryInfo> computedLibraryInfo;
 
@@ -143,15 +141,26 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Override
     protected void doFullTaskAction() throws IOException {
-
         // we have to clean the source folder output in case the package name changed.
         File srcOut = getSourceOutputDir();
         if (srcOut != null) {
             FileUtils.cleanOutputDir(srcOut);
         }
 
-        @Nullable
-        File resOutBaseNameFile = getPackageOutputFile();
+        // Find the base atom package, if it exists.
+        @Nullable File baseAtomPackage = null;
+        for (File atomPackage : atomResourcePackages) {
+            if (atomPackage.exists()) {
+                baseAtomPackage = atomPackage;
+                break;
+            }
+        }
+
+        // For atoms, the output package must only be set for the base atom.
+        @Nullable File resOutBaseNameFile = null;
+        if (getType() != VariantType.ATOM || baseAtomPackage == null) {
+            resOutBaseNameFile = getPackageOutputFile();
+        }
 
         // If are in instant run mode and we have an instant run enabled manifest
         File instantRunManifest = getInstantRunManifestFile();
@@ -176,26 +185,25 @@ public class ProcessAndroidResources extends IncrementalTask {
                             FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                             aaptOptions.getCruncherProcesses());
 
-            FileCollection baseFeature = getBaseFeature();
-            AaptPackageConfig.Builder config = new AaptPackageConfig.Builder()
-                    .setManifestFile(manifestFileToPackage)
-                    .setOptions(getAaptOptions())
-                    .setResourceDir(getResDir())
-                    .setLibraries(getLibraryInfoList())
-                    .setCustomPackageForR(getPackageForR())
-                    .setSymbolOutputDir(getTextSymbolOutputDir())
-                    .setSourceOutputDir(srcOut)
-                    .setResourceOutputApk(resOutBaseNameFile)
-                    .setProguardOutputFile(getProguardOutputFile())
-                    .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
-                    .setVariantType(getType())
-                    .setDebuggable(getDebuggable())
-                    .setPseudoLocalize(getPseudoLocalesEnabled())
-                    .setResourceConfigs(getResourceConfigs())
-                    .setSplits(getSplits())
-                    .setPreferredDensity(getPreferredDensity())
-                    .setBaseFeature(baseFeature.isEmpty() ? null : baseFeature.getSingleFile())
-                    .setPreviousFeatures(getPreviousFeatures());
+            AaptPackageConfig.Builder config =
+                    new AaptPackageConfig.Builder()
+                            .setManifestFile(manifestFileToPackage)
+                            .setOptions(getAaptOptions())
+                            .setResourceDir(getResDir())
+                            .setLibraries(getLibraryInfoList())
+                            .setCustomPackageForR(getPackageForR())
+                            .setSymbolOutputDir(getTextSymbolOutputDir())
+                            .setSourceOutputDir(srcOut)
+                            .setResourceOutputApk(resOutBaseNameFile)
+                            .setProguardOutputFile(getProguardOutputFile())
+                            .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
+                            .setVariantType(getType())
+                            .setDebuggable(getDebuggable())
+                            .setPseudoLocalize(getPseudoLocalesEnabled())
+                            .setResourceConfigs(getResourceConfigs())
+                            .setSplits(getSplits())
+                            .setPreferredDensity(getPreferredDensity())
+                            .setBaseFeature(baseAtomPackage);
 
             builder.processResources(aapt, config, getEnforceUniquePackageName());
 
@@ -414,11 +422,11 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.buildContext =
                     variantScope.getBuildContext();
 
-            processResources.setPreviousFeatures(ImmutableSet.of());
-            processResources.setBaseFeature(variantScope.getArtifactFileCollection(
-                    AndroidArtifacts.ConfigType.PACKAGE,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.RESOURCES_PKG));
+            processResources.setAtomResourcePackages(
+                    variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConfigType.PACKAGE,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.RESOURCES_PKG));
         }
     }
 
@@ -642,22 +650,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     @NonNull
-    public FileCollection getBaseFeature() {
-        return baseFeature;
+    public FileCollection getAtomResourcePackages() {
+        return atomResourcePackages;
     }
 
-    public void setBaseFeature(FileCollection baseFeature) {
-        this.baseFeature = baseFeature;
-    }
-
-    @InputFiles
-    @NonNull
-    public Collection<File> getPreviousFeatures() {
-        return previousFeatures;
-    }
-
-    public void setPreviousFeatures(Collection<File> previousFeatures) {
-        this.previousFeatures = previousFeatures;
+    public void setAtomResourcePackages(FileCollection atomResourcePackages) {
+        this.atomResourcePackages = atomResourcePackages;
     }
 
     @Input

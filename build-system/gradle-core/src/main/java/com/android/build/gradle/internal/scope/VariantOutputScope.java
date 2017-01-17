@@ -30,7 +30,6 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.utils.StringHelper;
 import java.io.File;
 import java.util.Collection;
@@ -192,8 +191,8 @@ public class VariantOutputScope implements TransformVariantScope {
     }
 
     @NonNull
-    public File getProcessResourcePackageOutputFile(@NonNull AtomDependency atomDependency) {
-        return variantOutputData.getProcessResourcePackageOutputFile(atomDependency);
+    public File getProcessResourcePackageOutputFile(@NonNull String atomName) {
+        return variantOutputData.getProcessResourcePackageOutputFile(atomName);
     }
 
     @NonNull

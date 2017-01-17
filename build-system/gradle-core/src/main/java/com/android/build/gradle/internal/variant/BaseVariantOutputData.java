@@ -27,13 +27,13 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -72,6 +72,8 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     public Zip packageInstantAppTask;
 
     public Task assembleTask;
+
+    public AtomConfig atomConfigTask;
 
     @NonNull
     private final VariantOutputScope scope;
@@ -168,11 +170,13 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     }
 
     @NonNull
-    public File getProcessResourcePackageOutputFile(@NonNull AtomDependency atomDependency) {
-        return FileUtils.join(getScope().getGlobalScope().getIntermediatesDir(),
-                FD_RES, FN_RES_BASE
+    public File getProcessResourcePackageOutputFile(@NonNull String atomName) {
+        return FileUtils.join(
+                getScope().getGlobalScope().getIntermediatesDir(),
+                FD_RES,
+                FN_RES_BASE
                         + RES_QUALIFIER_SEP
-                        + atomDependency.getAtomName()
+                        + atomName
                         + RES_QUALIFIER_SEP
                         + getBaseName()
                         + DOT_RES);

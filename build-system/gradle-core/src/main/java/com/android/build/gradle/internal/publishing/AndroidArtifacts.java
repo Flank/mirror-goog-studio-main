@@ -57,7 +57,15 @@ public class AndroidArtifacts {
     public static final String TYPE_SYMBOL = "android-symbol";
     public static final String TYPE_PROGUARD_RULES = "android-proguad";
     public static final String TYPE_DATA_BINDING = "android-databinding";
+
+    // types for ATOM content.
     public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
+    public static final String TYPE_ATOM_MANIFEST = "android-atom-manifest";
+    public static final String TYPE_ATOM_ANDROID_RES = "android-atom-res";
+    public static final String TYPE_ATOM_DEX = "android-atom-dex";
+    public static final String TYPE_ATOM_JAVA_RES = "android-atom-java-res";
+    public static final String TYPE_ATOM_JNI = "android-atom-jni";
+    public static final String TYPE_ATOM_ASSETS = "android-atom-assets";
 
     // types for additional artifacts to go with APK
     public static final String TYPE_MAPPING = "android-mapping";
@@ -83,7 +91,12 @@ public class AndroidArtifacts {
         DATA_BINDING(TYPE_DATA_BINDING),
         JNI(TYPE_JNI),
         RESOURCES_PKG(TYPE_RESOURCES_PKG),
-        ;
+        ATOM_MANIFEST(TYPE_ATOM_MANIFEST),
+        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES),
+        ATOM_DEX(TYPE_ATOM_DEX),
+        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES),
+        ATOM_JNI(TYPE_ATOM_JNI),
+        ATOM_ASSETS(TYPE_ATOM_ASSETS);
 
         private final String type;
         ArtifactType(String type) {

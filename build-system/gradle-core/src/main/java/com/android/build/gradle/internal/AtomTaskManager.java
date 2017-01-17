@@ -31,10 +31,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
+import com.android.build.gradle.tasks.MergeResources;
+import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
-import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Set;
@@ -92,7 +93,7 @@ public class AtomTaskManager extends TaskManager {
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAppManifestsTask(tasks, variantScope));
+                () -> createMergeAtomManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
         recorder.record(
@@ -114,14 +115,32 @@ public class AtomTaskManager extends TaskManager {
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                (Recorder.VoidBlock) () -> createMergeResourcesTask(tasks, variantScope));
+                () -> {
+                    AndroidTask<MergeResources> mergeResourcesTask =
+                            createMergeResourcesTask(tasks, variantScope);
+
+                    // Publish intermediate resources folder.
+                    variantScope.publishIntermediateArtifact(
+                            variantScope.getMergeResourcesOutputDir(),
+                            mergeResourcesTask.getName(),
+                            AndroidArtifacts.TYPE_ATOM_ANDROID_RES);
+                });
 
         // Add a task to merge the assets folders
         recorder.record(
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAssetsTask(tasks, variantScope));
+                () -> {
+                    AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
+                            createMergeAssetsTask(tasks, variantScope);
+
+                    // Publish intermediate assets folder.
+                    variantScope.publishIntermediateArtifact(
+                            variantScope.getMergeAssetsOutputDir(),
+                            mergeAssetsTask.getName(),
+                            AndroidArtifacts.TYPE_ATOM_ASSETS);
+                });
 
         // Add a task to create the BuildConfig class
         recorder.record(
@@ -135,39 +154,26 @@ public class AtomTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    // If this is the base atom, compile the .ap_ that will get packaged in the
-                    // atombundle.
-                    // If this is not the base atom, add a task to generate the resource source
-                    // files, directing the location of the r.txt file to be directly in the
-                    // atombundle.
                     createProcessResTask(
                             tasks,
                             variantScope,
-                            () -> {
-                                boolean isBaseAtom = variantScope
-                                        .getVariantConfiguration()
-                                        .getPackageDependencies()
-                                        .getBaseAtom() == null;
-                                return isBaseAtom
-                                        ? FileUtils.join(
-                                                variantScope.getGlobalScope().getIntermediatesDir(),
-                                                "symbols",
-                                                variantScope.getVariantData().getVariantConfiguration().getDirName())
-                                        : variantBundleDir;
-                            },
-                            (vod) -> {
-                                boolean isBaseAtom = variantScope
-                                        .getVariantConfiguration()
-                                        .getPackageDependencies()
-                                        .getBaseAtom() == null;
-                                return isBaseAtom
-                                        ? vod.getProcessResourcePackageOutputFile()
-                                        : null;
-                            });
+                            () -> variantBundleDir,
+                            BaseVariantOutputData::getProcessResourcePackageOutputFile);
 
                     // process java resources
                     createProcessJavaResTask(tasks, variantScope);
                     createMergeJavaResTransform(tasks, variantScope);
+
+                    // Get the single output.
+                    final VariantOutputScope variantOutputScope =
+                            variantData.getOutputs().get(0).getScope();
+
+                    variantScope.publishIntermediateArtifact(
+                            variantOutputScope
+                                    .getVariantOutputData()
+                                    .getProcessResourcePackageOutputFile(),
+                            variantOutputScope.getProcessResourcesTask().getName(),
+                            AndroidArtifacts.TYPE_RESOURCES_PKG);
                 });
 
         recorder.record(
@@ -233,8 +239,12 @@ public class AtomTaskManager extends TaskManager {
 
                     setJavaCompilerTask(javacTask, tasks, variantScope);
 
-                    getAndroidTasks()
-                            .create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
+                    AndroidTask<AndroidJarTask> jarTask =
+                            getAndroidTasks()
+                                    .create(
+                                            tasks,
+                                            new AndroidJarTask.JarClassesConfigAction(
+                                                    variantScope));
 
                     // Then, build the dex with jack if enabled.
                     // TODO: This means recompiling everything twice if jack is enabled.
@@ -272,6 +282,7 @@ public class AtomTaskManager extends TaskManager {
                         }
                         createPostCompilationTasks(tasks, variantScope);
                     }
+                    // TODO: Publish jar and/or class files when multi atom support is re-enabled.
                 });
 
         // Add data binding tasks if enabled
@@ -330,6 +341,19 @@ public class AtomTaskManager extends TaskManager {
                         getGlobalScope().getProjectBaseName(),
                         classifier,
                         packageTask)));
+
+        variantScope.publishIntermediateArtifact(
+                bundleAtom.get(tasks).getDexBundleFolder(),
+                bundleAtom.getName(),
+                AndroidArtifacts.TYPE_ATOM_DEX);
+        variantScope.publishIntermediateArtifact(
+                bundleAtom.get(tasks).getLibBundleFolder(),
+                bundleAtom.getName(),
+                AndroidArtifacts.TYPE_ATOM_JNI);
+        variantScope.publishIntermediateArtifact(
+                bundleAtom.get(tasks).getJavaResBundleFolder(),
+                bundleAtom.getName(),
+                AndroidArtifacts.TYPE_ATOM_JAVA_RES);
     }
 
     @NonNull

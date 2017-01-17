@@ -76,7 +76,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -522,10 +521,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getDexOutputFolder(@NonNull AtomDependency androidAtom) {
-        return FileUtils.join(globalScope.getIntermediatesDir(),
+    public File getDexOutputFolder(@NonNull String atomName) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
                 FD_DEX,
-                androidAtom.getAtomName() + "-" + getVariantConfiguration().getDirName());
+                atomName + "-" + getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -586,12 +586,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getJavaOutputDir(@NonNull AtomDependency androidAtom) {
+    public File getJavaOutputDir(@NonNull String atomName) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 FD_CLASSES_OUTPUT,
-                androidAtom.getAtomName() + "-" +
-                        variantData.getVariantConfiguration().getDirName());
+                atomName + "-" + variantData.getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -908,11 +907,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getResourceBlameLogDir(@NonNull AtomDependency androidAtom) {
+    public File getResourceBlameLogDir(@NonNull String atomName) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
-                StringHelper.toStrings(
-                        "blame", "res", androidAtom.getAtomName(), getDirectorySegments()));
+                StringHelper.toStrings("blame", "res", atomName, getDirectorySegments()));
     }
 
     @Override
@@ -1030,12 +1028,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRClassSourceOutputDir(@NonNull AtomDependency atomDependency) {
+    public File getRClassSourceOutputDir(@NonNull String atomName) {
         return FileUtils.join(
                 globalScope.getGeneratedDir(),
                 FD_SOURCE_GEN,
                 FD_RES_CLASS,
-                atomDependency.getAtomName() + "-" + getVariantConfiguration().getDirName());
+                atomName + "-" + getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1212,12 +1210,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getPackageAtom(@NonNull AtomDependency androidAtom) {
+    public File getPackageAtom(@NonNull String atomName) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 "atoms",
                 getVariantConfiguration().getDirName(),
-                androidAtom.getAtomName() + DOT_ANDROID_PACKAGE);
+                atomName + DOT_ANDROID_PACKAGE);
     }
 
     @NonNull
