@@ -1016,8 +1016,6 @@ public final class SdkConstants {
     public static final String ATTR_VERSION_NAME = "versionName";      //$NON_NLS-1$
     public static final String ATTR_FULL_BACKUP_CONTENT = "fullBackupContent"; //$NON_NLS-1$
     public static final String ATTR_TEST_ONLY = "testOnly";            //$NON-NLS-1$
-    public static final String ATTR_AUTHORITIES = "authorities";       //$NON-NLS-1$
-    public static final String ATTR_MULTIPROCESS = "multiprocess";     //$NON-NLS-1$
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
