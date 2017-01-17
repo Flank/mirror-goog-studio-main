@@ -10,18 +10,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
-    <orderEntry type="library" exported="" name="guava-tools" level="project" />
-    <orderEntry type="module" module-name="android-annotations" exported="" />
+    <orderEntry type="library" name="guava-tools" level="project" />
+    <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="module" module-name="builder-model" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../external/gradle/gradle-api-3.4-20170114000025+0000.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="library" name="gradle-api" level="project" />
   </component>
 </module>
