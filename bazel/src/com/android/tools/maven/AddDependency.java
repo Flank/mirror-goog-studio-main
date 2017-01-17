@@ -87,7 +87,7 @@ public class AddDependency {
                         .collect(Collectors.toList()));
         request.setRepositories(AetherUtils.REPOSITORIES);
 
-        mRepo.getmRepositorySystemSession()
+        mRepo.getRepositorySystemSession()
                 .setDependencySelector(AetherUtils.buildDependencySelector(EXCLUSIONS));
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));
