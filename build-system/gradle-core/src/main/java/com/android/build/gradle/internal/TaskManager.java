@@ -102,6 +102,7 @@ import com.android.build.gradle.internal.transforms.JackOptionsUtils;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.JarMergingTransform;
+import com.android.build.gradle.internal.transforms.MainDexListTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.MultiDexTransform;
 import com.android.build.gradle.internal.transforms.NewShrinkerTransform;
@@ -2068,9 +2069,16 @@ public abstract class TaskManager {
             // ---------
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
-            MultiDexTransform multiDexTransform = new MultiDexTransform(
-                    variantScope,
-                    extension.getDexOptions());
+            Transform multiDexTransform;
+            if (globalScope.getAndroidGradleOptions().useMainDexList2()) {
+                multiDexTransform = new MainDexListTransform(
+                        variantScope,
+                        extension.getDexOptions());
+            } else {
+                multiDexTransform = new MultiDexTransform(
+                        variantScope,
+                        extension.getDexOptions());
+            }
             multiDexClassListTask =
                     transformManager.addTransform(tasks, variantScope, multiDexTransform);
             multiDexClassListTask.ifPresent(variantScope::addColdSwapBuildTask);
