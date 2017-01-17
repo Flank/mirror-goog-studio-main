@@ -7,7 +7,6 @@ iml_module(
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/common:studio.common"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.common[module]",
