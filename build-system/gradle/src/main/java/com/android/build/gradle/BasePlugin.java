@@ -545,8 +545,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                 "As %s is set, continuing anyways.",
                                 AndroidGradleOptions.GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY);
             } else {
-                extraModelInfo.handleSyncError(
-                        GRADLE_MIN_VERSION.toString(), SyncIssue.TYPE_GRADLE_TOO_OLD, errorMessage);
+                throw new RuntimeException(errorMessage);
             }
         }
     }
