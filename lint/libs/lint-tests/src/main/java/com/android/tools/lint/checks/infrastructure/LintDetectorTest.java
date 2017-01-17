@@ -821,13 +821,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 return;
             }
 
-
-            // Use plain ascii in the test golden files for now. (This also ensures
-            // that the markup is well-formed, e.g. if we have a ` without a matching
-            // closing `, the ` would show up in the plain text.)
-            message = format.convertTo(message, TextFormat.TEXT);
-
-            checkReportedError(context, issue, severity, location, message);
+            checkReportedError(context, issue, severity, location,
+                    format.convertTo(message, TextFormat.TEXT));
 
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.

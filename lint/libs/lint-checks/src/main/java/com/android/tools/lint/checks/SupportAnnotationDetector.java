@@ -1399,7 +1399,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             }
 
             String message = String.format(
-                 "%1$s %2$s must be called from the `%3$s` thread, currently inferred thread is `%4$s` thread",
+                 "%1$s %2$s must be called from the %3$s thread, currently inferred thread is %4$s thread",
                  method.isConstructor() ? "Constructor" : "Method",
                  method.getName(), describeThreads(targetThreads, true),
                  describeThreads(threadContext, false));

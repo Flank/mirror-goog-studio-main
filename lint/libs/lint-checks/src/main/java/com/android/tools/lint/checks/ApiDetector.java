@@ -207,13 +207,13 @@ public class ApiDetector extends ResourceXmlDetector
             "Calling new methods on older versions",
 
             "This check scans through all the Android API calls in the application and " +
-            "warns about any calls that are not available on *all* versions targeted " +
+            "warns about any calls that are not available on **all** versions targeted " +
             "by this application (according to its minimum SDK attribute in the manifest).\n" +
             "\n" +
             "If you really want to use this API and don't need to support older devices just " +
             "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files.\n" +
             "\n" +
-            "If your code is *deliberately* accessing newer APIs, and you have ensured " +
+            "If your code is **deliberately** accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +
             "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
@@ -221,7 +221,7 @@ public class ApiDetector extends ResourceXmlDetector
             "file's minimum SDK as the required API level.\n" +
             "\n" +
             "If you are deliberately setting `android:` attributes in style definitions, " +
-            "make sure you place this in a `values-vNN` folder in order to avoid running " +
+            "make sure you place this in a `values-v`*NN* folder in order to avoid running " +
             "into runtime conflicts on certain devices where manufacturers have added " +
             "custom attributes whose ids conflict with the new ones on later platforms.\n" +
             "\n" +
@@ -256,7 +256,7 @@ public class ApiDetector extends ResourceXmlDetector
             "If you really want to use this API and don't need to support older devices just " +
             "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files." +
             "\n" +
-            "If your code is *deliberately* accessing newer APIs, and you have ensured " +
+            "If your code is **deliberately** accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +
             "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
@@ -282,7 +282,7 @@ public class ApiDetector extends ResourceXmlDetector
             "know about the method.\n" +
             "\n" +
             "The above scenario is what this lint detector looks for. The above example is " +
-            "real, since `isDestroyed()` was added in API 17, but it will be true for *any* " +
+            "real, since `isDestroyed()` was added in API 17, but it will be true for **any** " +
             "method you have added to a subclass of an Android class where your build target " +
             "is lower than the version the method was introduced in.\n" +
             "\n" +
@@ -310,7 +310,7 @@ public class ApiDetector extends ResourceXmlDetector
             "`minSdkVersion` attribute).\n" +
             "\n" +
             "This is not an error; the application will simply ignore the attribute. However, " +
-            "if the attribute is important to the appearance of functionality of your " +
+            "if the attribute is important to the appearance or functionality of your " +
             "application, you should consider finding an alternative way to achieve the " +
             "same result with only available attributes, and then you can optionally create " +
             "a copy of the layout in a layout-vNN folder which will be used on API NN or " +

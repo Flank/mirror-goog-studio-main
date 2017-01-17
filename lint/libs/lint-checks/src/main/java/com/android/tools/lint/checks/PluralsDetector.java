@@ -85,7 +85,7 @@ public class PluralsDetector extends ResourceXmlDetector {
             "quantity distinction, and Android will therefore not look it up.).\n" +
             "\n" +
             "For example, in Chinese, only the `other` quantity is used, so even if you " +
-            "provide translations for `zero` and `one`, these strings will *not* be returned " +
+            "provide translations for `zero` and `one`, these strings will **not** be returned " +
             "when `getQuantityString()` is called, even with `0` or `1`.",
             Category.MESSAGES,
             3,
