@@ -37,8 +37,6 @@ class NetworkCache final {
   // connection's start timestamp.
   explicit NetworkCache(const Clock& clock) : clock_(clock) {}
 
-  FileCache& file_cache() { return file_cache_; }
-
   // Register a new connection, returning a |ConnectionDetails| instance in case
   // there is additional information you can initialize. This will initialize
   // a connection at the time the method is called.
@@ -70,10 +68,6 @@ class NetworkCache final {
   std::list<ConnectionDetails> connections_;
   // A mapping of connection IDs to connection details
   std::unordered_map<int64_t, ConnectionDetails*> conn_id_map_;
-
-  // TODO: Move out of NetworkCache to the top-level and expose it as a single,
-  // unified service for all profilers.
-  FileCache file_cache_;
 };
 
 }  // namespace profiler

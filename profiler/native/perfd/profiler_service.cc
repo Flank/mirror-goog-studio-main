@@ -48,4 +48,12 @@ Status ProfilerServiceImpl::GetVersion(
   response->set_version(profiler::kAndroidStudioVersion);
   return Status::OK;
 }
+
+Status ProfilerServiceImpl::GetBytes(
+    ServerContext* context, const profiler::proto::BytesRequest* request,
+    profiler::proto::BytesResponse* response) {
+  response->set_contents(file_cache_.GetFile(request->id())->Contents());
+  return Status::OK;
+}
+
 }  // namespace profiler
