@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.tools.lint.client.api.JavaEvaluator;
+import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
@@ -473,6 +474,15 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
         } else if (methodLocation != null) {
             location = location.withSecondary(methodLocation, "Property setter here");
         }
+
+        // Allow suppressing at either the property binding site *or* the property site
+        // (we report errors on both)
+        PsiModifierListOwner owner = PsiTreeUtil.getParentOfType(propertyNameExpression,
+                PsiModifierListOwner.class,false);
+        if (owner != null && context.getDriver().isSuppressed(context, issue, owner)) {
+            return;
+        }
+
         context.report(issue, method, location, message);
     }
 
