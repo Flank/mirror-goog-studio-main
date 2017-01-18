@@ -23,8 +23,6 @@ import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.utils.FileUtils;
-import com.google.common.collect.Lists;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -32,21 +30,24 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does clean steps with them.
+ *
+ * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
+ * is left to the underlying build system.
  */
 public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
 
@@ -130,26 +131,6 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
         }
     }
 
-    @NonNull
-    @SuppressWarnings("unused")
-    public List<File> getNativeBuildConfigurationsJsons() {
-        return nativeBuildConfigurationsJsons;
-    }
-
-    private void setNativeBuildConfigurationsJsons(
-            @NonNull List<File> nativeBuildConfigurationsJsons) {
-        this.nativeBuildConfigurationsJsons = nativeBuildConfigurationsJsons;
-    }
-
-    void setObjFolder(File objFolder) {
-        this.objFolder = objFolder;
-    }
-
-    void setStlSharedObjectFiles(
-            Map<Abi, File> stlSharedObjectFiles) {
-        this.stlSharedObjectFiles = stlSharedObjectFiles;
-    }
-
     public static class ConfigAction implements TaskConfigAction<ExternalNativeCleanTask> {
         @NonNull
         private final ExternalNativeJsonGenerator generator;
@@ -184,7 +165,7 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
                     scope.getVariantData();
             task.setVariantName(variantData.getName());
-            
+
             // Attempt to clean every possible ABI even those that aren't currently built.
             // This covers cases where user has changed abiFilters or platform. We don't want
             // to leave stale results hanging around.
@@ -192,12 +173,12 @@ public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
             for(Abi abi : NdkHandler.getAbiList()) {
                 abiNames.add(abi.getName());
             }
-            task.setNativeBuildConfigurationsJsons(ExternalNativeBuildTaskUtils.getOutputJsons(
-                    generator.getJsonFolder(),
-                    abiNames));
             task.setAndroidBuilder(androidBuilder);
-            task.setStlSharedObjectFiles(generator.getStlSharedObjectFiles());
-            task.setObjFolder(generator.getObjFolder());
+            task.nativeBuildConfigurationsJsons =
+                    ExternalNativeBuildTaskUtils.getOutputJsons(
+                            generator.getJsonFolder(), abiNames);
+            task.stlSharedObjectFiles = generator.getStlSharedObjectFiles();
+            task.objFolder = generator.getObjFolder();
         }
     }
 }

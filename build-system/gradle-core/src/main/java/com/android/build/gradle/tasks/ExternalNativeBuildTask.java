@@ -42,10 +42,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.GradleException;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -54,9 +50,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.GradleException;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does build steps with them.
+ *
+ * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
+ * is left to the underlying build system.
  */
 public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
 
@@ -236,6 +237,7 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
     }
 
     @NonNull
+    @SuppressWarnings("unused") // Exposed in Variants API
     public File getSoFolder() {
         return soFolder;
     }
@@ -249,18 +251,17 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
     }
 
     @NonNull
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // Exposed in Variants API
     public File getObjFolder() {
         return objFolder;
     }
 
-    private void setObjFolder(@NonNull
-            File objFolder) {
+    private void setObjFolder(@NonNull File objFolder) {
         this.objFolder = objFolder;
     }
 
     @NonNull
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // Exposed in Variants API
     public List<File> getNativeBuildConfigurationsJsons() {
         return nativeBuildConfigurationsJsons;
     }
