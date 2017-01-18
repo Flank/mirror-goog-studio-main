@@ -36,12 +36,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,12 +49,12 @@ import org.junit.runners.Parameterized;
 public class MediumGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
-    @NonNull private final Set<ProjectScenario> projectScenarios;
+    @NonNull private final ProjectScenario projectScenario;
 
-    public MediumGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
-        this.projectScenarios = projectScenarios;
+    public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+        this.projectScenario = projectScenario;
         String heapSize;
-        if (projectScenarios.contains(ProjectScenario.JACK_ON)) {
+        if (projectScenario.usesJack()) {
             // Jack takes too long with 1.5GB heap. With 6GB, the duration is reasonable.
             heapSize = "6G";
         } else {
@@ -69,41 +65,46 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         .fromExternalProject("gradle-perf-android-medium")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenarios))
+                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenario))
                         .withHeap(heapSize)
                         .create();
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> getParameters() {
-        return Arrays.asList(
-                new Object[][] {
-                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
-                });
+    public static ProjectScenario[] getParameters() {
+        return new ProjectScenario[]{
+                ProjectScenario.LEGACY_MULTIDEX,
+                ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
+                ProjectScenario.NATIVE_MULTIDEX,
+                ProjectScenario.JACK_NATIVE_MULTIDEX,
+                ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
+        };
     }
 
     @Before
     public void initializeProject() throws IOException {
-        for (ProjectScenario projectScenario : projectScenarios) {
-            switch (projectScenario) {
-                case NATIVE_MULTIDEX:
-                    TestFileUtils.searchAndReplace(
-                            project.file("WordPress/build.gradle"),
-                            "minSdkVersion( )* \\d+",
-                            "minSdkVersion 21");
-                    break;
-                case LEGACY_MULTIDEX:
-                    break;
-                case JACK_ON:
-                    JackHelper.enableJack(project.file("WordPress/build.gradle"));
-                    disableCrashlyticsForJack();
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unknown project scenario" + projectScenario);
-            }
+        switch (projectScenario) {
+            case NATIVE_MULTIDEX:
+            case DEX_ARCHIVE_NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("WordPress/build.gradle"),
+                        "minSdkVersion( )* \\d+",
+                        "minSdkVersion 21");
+                break;
+            case LEGACY_MULTIDEX:
+            case DEX_ARCHIVE_LEGACY_MULTIDEX:
+                break;
+            case JACK_NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("WordPress/build.gradle"),
+                        "minSdkVersion( )* \\d+",
+                        "minSdkVersion 21");
+                JackHelper.enableJack(project.file("WordPress/build.gradle"));
+                disableCrashlyticsForJack();
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown project scenario" + projectScenario);
         }
         Files.copy(
                 project.file("WordPress/gradle.properties-example").toPath(),
@@ -220,6 +221,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
         executor().run("clean");
 
+        FileUtils.cleanOutputDir(project.executor().getBuildCacheDir());
+
         executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleVanillaDebug");
 
         executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
@@ -242,6 +245,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
+                .withtUseDexArchive(projectScenario.useDexArchive())
                 .withoutOfflineFlag();
     }
 
