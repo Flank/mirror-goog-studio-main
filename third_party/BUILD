@@ -63,7 +63,7 @@ maven_java_library(
 
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/20.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
