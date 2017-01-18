@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import org.w3c.dom.Attr;
@@ -100,7 +101,7 @@ public class GridLayoutDetector extends LayoutDetector {
         int declaredColumnCount = getInt(element, ATTR_COLUMN_COUNT, -1);
 
         if (declaredColumnCount != -1 || declaredRowCount != -1) {
-            for (Element child : LintUtils.getChildren(element)) {
+            for (Element child : XmlUtils.getSubTags(element)) {
                 if (declaredColumnCount != -1) {
                     int column = getInt(child, ATTR_LAYOUT_COLUMN, -1);
                     if (column >= declaredColumnCount) {
@@ -133,7 +134,7 @@ public class GridLayoutDetector extends LayoutDetector {
             ensureAppNamespace(context, element, "columnOrderPreserved");
             ensureAppNamespace(context, element, "rowOrderPreserved");
 
-            for (Element child : LintUtils.getChildren(element)) {
+            for (Element child : XmlUtils.getSubTags(element)) {
                 ensureAppNamespace(context, child, ATTR_LAYOUT_COLUMN);
                 ensureAppNamespace(context, child, ATTR_LAYOUT_COLUMN_SPAN);
                 ensureAppNamespace(context, child, ATTR_LAYOUT_GRAVITY);

@@ -220,11 +220,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             }
         }
 
-        Set<String> names = mTypeMap.get(type);
-        if (names == null) {
-            names = Sets.newHashSetWithExpectedSize(40);
-            mTypeMap.put(type, names);
-        }
+        Set<String> names = mTypeMap.computeIfAbsent(type,
+                k -> Sets.newHashSetWithExpectedSize(40));
 
         String name = attribute.getValue();
         String originalName = name;
@@ -248,11 +245,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             context.report(ISSUE, attribute, location, message);
         } else {
             names.add(name);
-            List<Pair<String, Handle>> list = mLocations.get(type);
-            if (list == null) {
-                list = Lists.newArrayList();
-                mLocations.put(type, list);
-            }
+            List<Pair<String, Handle>> list = mLocations
+                    .computeIfAbsent(type, k -> Lists.newArrayList());
             Location.Handle handle = context.createLocationHandle(attribute);
             list.add(Pair.of(name, handle));
         }

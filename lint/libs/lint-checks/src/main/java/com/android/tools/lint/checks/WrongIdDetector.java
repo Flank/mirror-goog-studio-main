@@ -30,7 +30,6 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.VALUE_ID;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintUtils.editDistance;
-import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.android.tools.lint.detector.api.LintUtils.isSameResourceFile;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 
@@ -54,6 +53,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -204,9 +204,8 @@ public class WrongIdDetector extends LayoutDetector {
             }
 
             for (Element layout : mRelativeLayouts) {
-                List<Element> children = getChildren(layout);
-                Set<String> ids = Sets.newHashSetWithExpectedSize(children.size());
-                for (Element child : children) {
+                Set<String> ids = Sets.newHashSetWithExpectedSize(20);
+                for (Element child : XmlUtils.getSubTags(layout)) {
                     String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
                     if (id != null && !id.isEmpty()) {
                         ids.add(id);
@@ -215,7 +214,7 @@ public class WrongIdDetector extends LayoutDetector {
 
                 boolean isConstraintLayout = layout.getTagName().equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
 
-                for (Element element : children) {
+                for (Element element : XmlUtils.getSubTags(layout)) {
                     String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));
 
                     NamedNodeMap attributes = element.getAttributes();

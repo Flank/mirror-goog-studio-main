@@ -29,13 +29,12 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
@@ -73,10 +72,9 @@ public class ScrollViewChildDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        List<Element> children = LintUtils.getChildren(element);
         boolean isHorizontal = HORIZONTAL_SCROLL_VIEW.equals(element.getTagName());
         String attributeName = isHorizontal ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
-        for (Element child : children) {
+        for (Element child : XmlUtils.getSubTags(element)) {
             Attr sizeNode = child.getAttributeNodeNS(ANDROID_URI, attributeName);
             if (sizeNode == null) {
                 return;

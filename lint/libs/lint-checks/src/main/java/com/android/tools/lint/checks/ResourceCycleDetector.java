@@ -48,6 +48,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -311,7 +312,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
             }
 
             if (context.isEnabled(CRASH) && context.getDriver().getPhase() == 1) {
-                for (Element item : LintUtils.getChildren(element)) {
+                for (Element item : XmlUtils.getSubTags(element)) {
                     if ("android:id".equals(item.getAttribute(ATTR_NAME))) {
                         checkCrashItem(context, item);
                     }
