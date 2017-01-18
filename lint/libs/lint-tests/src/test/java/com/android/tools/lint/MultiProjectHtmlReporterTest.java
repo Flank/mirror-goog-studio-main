@@ -162,7 +162,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
                     + "    </nav>\n"
                     + "  </div>\n"
                     + "  <main class=\"mdl-layout__content\">\n"
-                    + "    <div class=\"mdl-layout__tab-panel is-active\"><section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"card0\" style=\"display: block;\">\n"
+                    + "    <div class=\"mdl-layout__tab-panel is-active\"><section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"OverviewCard\" style=\"display: block;\">\n"
                     + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n"
                     + "  <div class=\"mdl-card__title\">\n"
                     + "    <h2 class=\"mdl-card__title-text\">Projects</h2>\n"

@@ -169,13 +169,6 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
-    public void testMethodCallTypesNoDereference() throws Exception {
-        checkTypes(null, ""
-                        + "android.app.Activity context = null;"
-                        + "int w = context.getResources().getColor(R.color.green);",
-                "w", false);
-    }
-
     public void testConditionalTypes() throws Exception {
         // Constant expression: we know exactly which branch to take
         checkTypes("[color]", ""

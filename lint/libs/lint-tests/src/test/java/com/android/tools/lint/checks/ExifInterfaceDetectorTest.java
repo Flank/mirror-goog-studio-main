@@ -25,19 +25,13 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
                 + "import android.media.ExifInterface;\n"
                 + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ExifUsage.java:9: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                + "        ExifInterface exif = new ExifInterface(path);\n"
-                + "        ~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ExifUsage.java:9: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                + "        ExifInterface exif = new ExifInterface(path);\n"
-                + "                                 ~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
                 + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
                 + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
                 + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 5 warnings\n";
+                + "0 errors, 3 warnings\n";
 
         //noinspection all
         lint().files(

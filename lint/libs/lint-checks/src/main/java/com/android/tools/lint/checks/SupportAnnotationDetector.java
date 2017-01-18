@@ -137,6 +137,7 @@ import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiParenthesizedExpression;
+import com.intellij.psi.PsiPolyadicExpression;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
@@ -1025,11 +1026,27 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             // (2) package private is available in the same package
             // (3) protected is available either from subclasses or in same package
             PsiFile containingFile = node.getContainingFile();
-            PsiFile containingFile1 = method.getContainingFile();
-            if (Objects.equals(containingFile, containingFile1)) {
+            PsiFile containingFile2 = method.getContainingFile();
+            if (Objects.equals(containingFile, containingFile2)) {
                 // Same compilation unit
                 return;
             }
+
+            // Default constructor? If so the method resolve doesn't point to a
+            // method, so look up the class instead to get a valid file to compare
+            // with
+            if (containingFile2 == null && node instanceof PsiNewExpression) {
+                PsiJavaCodeReferenceElement reference = ((PsiNewExpression) node)
+                        .getClassReference();
+                if (reference != null) {
+                    containingFile2 = reference.getContainingFile();
+                    if (Objects.equals(containingFile, containingFile2)) {
+                        // Same compilation unit
+                        return;
+                    }
+                }
+            }
+
             if (visibility == VISIBILITY_PRIVATE) {
                 if (!isTestContext(context, node)) {
                     reportVisibilityError(context, node, "private");
@@ -2178,14 +2195,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 checkTypeDefConstant(context, annotation, expression.getElseExpression(), errorNode, flag,
                         allAnnotations);
             }
-        } else if (argument instanceof PsiBinaryExpression) {
+        } else if (argument instanceof PsiPolyadicExpression) {
             // If it's ?: then check both the if and else clauses
-            PsiBinaryExpression expression = (PsiBinaryExpression) argument;
+            PsiPolyadicExpression expression = (PsiPolyadicExpression) argument;
             if (flag) {
-                checkTypeDefConstant(context, annotation, expression.getLOperand(), errorNode, true,
-                        allAnnotations);
-                checkTypeDefConstant(context, annotation, expression.getROperand(), errorNode, true,
-                        allAnnotations);
+                for (PsiExpression operand : expression.getOperands()) {
+                    checkTypeDefConstant(context, annotation, operand, errorNode,true,
+                            allAnnotations);
+                }
             } else {
                 IElementType operator = expression.getOperationTokenType();
                 if (operator == JavaTokenType.AND
@@ -2621,9 +2638,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 classAnnotations = evaluator.getAllAnnotations(containingClass, true);
                 classAnnotations = filterRelevantAnnotations(evaluator, classAnnotations);
 
-                PsiElement parent = containingClass.getParent();
-                if (parent instanceof PsiPackage) {
-                    PsiPackage pkg = (PsiPackage) parent;
+                PsiPackage pkg = evaluator.getPackage(containingClass);
+                if (pkg != null) {
                     pkgAnnotations = evaluator.getAllAnnotations(pkg, false);
                     pkgAnnotations = filterRelevantAnnotations(evaluator, pkgAnnotations);
                 } else {

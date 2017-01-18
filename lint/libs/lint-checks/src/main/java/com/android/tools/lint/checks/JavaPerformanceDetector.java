@@ -54,6 +54,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
+import com.intellij.psi.PsiPolyadicExpression;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSuperExpression;
@@ -339,13 +340,15 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaPs
         }
 
         /** Adds any variables referenced in the given expression into the given list */
+        // TODO: This is old, bogus code. We should switch to a simple PsiVariable visitor!
         private static void addReferencedVariables(
                 @NonNull Collection<String> variables,
                 @Nullable PsiExpression expression) {
-            if (expression instanceof PsiBinaryExpression) {
-                PsiBinaryExpression binary = (PsiBinaryExpression) expression;
-                addReferencedVariables(variables, binary.getLOperand());
-                addReferencedVariables(variables, binary.getROperand());
+            if (expression instanceof PsiPolyadicExpression) {
+                PsiPolyadicExpression polyadicExpression = (PsiPolyadicExpression) expression;
+                for (PsiExpression operand : polyadicExpression.getOperands()) {
+                    addReferencedVariables(variables, operand);
+                }
             } else if (expression instanceof PsiPrefixExpression) {
                 PsiPrefixExpression unary = (PsiPrefixExpression) expression;
                 addReferencedVariables(variables, unary.getOperand());

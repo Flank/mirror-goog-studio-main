@@ -34,7 +34,13 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
                 + "res/layout/accessibility.xml:12: Warning: [Accessibility] Empty contentDescription attribute on image [ContentDescription]\n"
                 + "    <ImageButton android:id=\"@+android:id/summary\" android:contentDescription=\"TODO\" />\n"
                 + "                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n";
+                + "res/layout/accessibility.xml:13: Warning: [Accessibility] Empty contentDescription attribute on image [ContentDescription]\n"
+                + "    <ImageButton android:id=\"@+id/summary2\" android:contentDescription=\"\" />\n"
+                + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/accessibility.xml:14: Warning: [Accessibility] Empty contentDescription attribute on image [ContentDescription]\n"
+                + "    <ImageButton android:id=\"@+id/summary3\" android:contentDescription=\"TODO\" />\n"
+                + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 6 warnings\n";
 
         lint().files(
                 xml("res/layout/accessibility.xml", ""
@@ -50,6 +56,8 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
                         + "    <EditText android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
                         + "    <EditText tools:ignore=\"ContentDescription\" android:hint=\"@string/label\" android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
                         + "    <ImageButton android:id=\"@+android:id/summary\" android:contentDescription=\"TODO\" />\n"
+                        + "    <ImageButton android:id=\"@+id/summary2\" android:contentDescription=\"\" />\n"
+                        + "    <ImageButton android:id=\"@+id/summary3\" android:contentDescription=\"TODO\" />\n"
                         + "</LinearLayout>\n"))
                 .run()
                 .expect(expected);

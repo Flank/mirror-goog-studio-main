@@ -32,9 +32,11 @@ import com.intellij.psi.JavaTokenType;
 import com.intellij.psi.PsiBinaryExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
+import com.intellij.psi.PsiPolyadicExpression;
 import java.util.Collections;
 import java.util.List;
 
@@ -126,15 +128,16 @@ public class SetTextDetector extends Detector implements JavaPsiScanner {
                                     "Consider using `String.format` instead.");
                 }
             }
-        } else if (node instanceof PsiBinaryExpression) {
-            PsiBinaryExpression expression = (PsiBinaryExpression) node;
+        } else if (node instanceof PsiPolyadicExpression) {
+            PsiPolyadicExpression expression = (PsiPolyadicExpression) node;
             if (expression.getOperationTokenType() == JavaTokenType.PLUS) {
                 context.report(SET_TEXT_I18N, node, context.getLocation(node),
-                    "Do not concatenate text displayed with `setText`. "
-                            + "Use resource string with placeholders.");
+                        "Do not concatenate text displayed with `setText`. "
+                                + "Use resource string with placeholders.");
             }
-            checkNode(context, expression.getLOperand());
-            checkNode(context, expression.getROperand());
+            for (PsiExpression operand : expression.getOperands()) {
+                checkNode(context, operand);
+            }
         }
     }
 }

@@ -35,6 +35,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
@@ -154,8 +155,20 @@ public class LeakDetector extends Detector implements Detector.JavaPsiScanner {
 
         private void report(@NonNull PsiField field, @NonNull PsiModifierList modifierList,
                 @NonNull String message) {
-            Location location = mContext.getLocation(
-                    modifierList.getTextRange().getLength() > 0 ? modifierList : field);
+            PsiElement locationNode = field;
+            // Try to find the static modifier itself
+            if (modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
+                PsiElement child = modifierList.getFirstChild();
+                while (child != null) {
+                    if (child instanceof PsiKeyword
+                            && PsiKeyword.STATIC.equals(child.getText())) {
+                        locationNode = child;
+                        break;
+                    }
+                    child = child.getNextSibling();
+                }
+            }
+            Location location = mContext.getLocation(locationNode);
             mContext.report(ISSUE, field, location, message);
         }
     }

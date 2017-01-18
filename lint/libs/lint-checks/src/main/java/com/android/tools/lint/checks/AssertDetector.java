@@ -33,6 +33,7 @@ import com.intellij.psi.PsiAssertStatement;
 import com.intellij.psi.PsiBinaryExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiLiteral;
 import java.util.Collections;
 import java.util.List;
@@ -47,8 +48,9 @@ public class AssertDetector extends Detector implements JavaPsiScanner {
             "Assertions",
 
             "Assertions are not checked at runtime. There are ways to request that they be used " +
-            "by Dalvik (`adb shell setprop debug.assert 1`), but the property is ignored in " +
-            "many places and can not be relied upon. Instead, perform conditional checking " +
+            "by Dalvik (`adb shell setprop debug.assert 1`), but note that this is not " +
+            "implemented in ART (the newer runtime), and even in Dalvik the property is ignored " +
+            "in many places and can not be relied upon. Instead, perform conditional checking " +
             "inside `if (BuildConfig.DEBUG) { }` blocks. That constant is a static final boolean " +
             "which is true in debug builds and false in release builds, and the Java compiler " +
             "completely removes all code inside the if-body from the app.\n" +
@@ -108,9 +110,16 @@ public class AssertDetector extends Detector implements JavaPsiScanner {
                         return;
                     }
                 }
-                String message
-                        = "Assertions are unreliable. Use `BuildConfig.DEBUG` conditional checks instead.";
-                context.report(ISSUE, node, context.getLocation(node), message);
+
+                // Tracking bug for ART: b/18833580
+                String message = "Assertions are unreliable in Dalvik and unimplemented in ART. Use `BuildConfig.DEBUG` conditional checks instead.";
+                PsiElement locationNode = node;
+                if (node.getFirstChild() instanceof PsiKeyword
+                        && PsiKeyword.ASSERT.equals(node.getFirstChild().getText())) {
+                    locationNode = locationNode.getFirstChild();
+                }
+
+                context.report(ISSUE, node, context.getLocation(locationNode), message);
             }
         };
     }

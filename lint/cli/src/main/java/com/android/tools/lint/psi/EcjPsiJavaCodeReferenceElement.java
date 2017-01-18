@@ -29,10 +29,13 @@ import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiType;
 import java.util.List;
+import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 class EcjPsiJavaCodeReferenceElement extends EcjPsiSourceElement
         implements PsiJavaCodeReferenceElement {
@@ -97,6 +100,25 @@ class EcjPsiJavaCodeReferenceElement extends EcjPsiSourceElement
         TypeReference[][] typeArguments = typeReference.getTypeArguments();
         if (typeArguments == null || typeArguments.length == 0) {
             return PsiType.EMPTY_ARRAY;
+        }
+
+        // Wildcard?
+        if (typeArguments.length == 1 && typeArguments[0].length == 0
+                && typeReference instanceof ArrayTypeReference) {
+            TypeBinding binding = ((ArrayTypeReference) typeReference).resolvedType;
+            if (binding instanceof ParameterizedTypeBinding) {
+                TypeBinding[] refs = ((ParameterizedTypeBinding) binding).arguments;
+                if (refs != null && refs.length > 0) {
+                    List<PsiType> types = Lists.newArrayListWithCapacity(refs.length);
+                    for (TypeBinding ref : refs) {
+                        PsiType type = mManager.findType(ref);
+                        if (type != null) {
+                            types.add(type);
+                        }
+                    }
+                    return types.toArray(PsiType.EMPTY_ARRAY);
+                }
+            }
         }
 
         for (int i = typeArguments.length - 1; i >= 0; i--) {
