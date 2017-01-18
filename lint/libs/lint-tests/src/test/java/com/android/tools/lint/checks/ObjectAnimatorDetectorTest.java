@@ -407,4 +407,60 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testSuppress() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=232405
+        // Ensure that we can suppress both types of issues by annotating either the
+        // property binding site *or* the property declaration site
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.animation.ObjectAnimator;\n"
+                        + "import android.annotation.SuppressLint;\n"
+                        + "import android.widget.Button;\n"
+                        + "\n"
+                        + "@SuppressWarnings(\"unused\")\n"
+                        + "public class AnimatorTest {\n"
+                        + "\n"
+                        + "    // Suppress at the binding site\n"
+                        + "    @SuppressLint({\"ObjectAnimatorBinding\", \"AnimatorKeep\"})\n"
+                        + "    public void testObjectAnimator02(Button button) {\n"
+                        + "        Object myObject = new MyObject();\n"
+                        + "\n"
+                        + "        ObjectAnimator.ofInt(myObject, \"prop0\", 0, 1, 2, 5);\n"
+                        + "        ObjectAnimator.ofInt(myObject, \"prop2\", 0, 1, 2, 5).start();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Suppressed at the property site\n"
+                        + "    public void testObjectAnimator13(Button button) {\n"
+                        + "        Object myObject = new MyObject();\n"
+                        + "\n"
+                        + "        ObjectAnimator.ofInt(myObject, \"prop1\", 0, 1, 2, 5);\n"
+                        + "        ObjectAnimator.ofInt(myObject, \"prop3\", 0, 1, 2, 5).start();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private static class MyObject {\n"
+                        + "        public void setProp0(int x) {\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        @SuppressLint(\"AnimatorKeep\")\n"
+                        + "        public void setProp1(int x) {\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        private void setProp2(float x) {\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        @SuppressLint(\"ObjectAnimatorBinding\")\n"
+                        + "        private void setProp3(float x) {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}"))
+                .issues(ObjectAnimatorDetector.BROKEN_PROPERTY,
+                        ObjectAnimatorDetector.MISSING_KEEP)
+                .run()
+                .expectClean();
+    }
 }
