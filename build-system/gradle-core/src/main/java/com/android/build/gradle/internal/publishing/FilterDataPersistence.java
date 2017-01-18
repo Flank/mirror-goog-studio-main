@@ -34,6 +34,23 @@ import java.util.List;
  */
 public class FilterDataPersistence {
 
+    private final String packageId;
+    private final List<Record> records;
+
+    public FilterDataPersistence(String packageId,
+            ImmutableList<Record> records) {
+        this.packageId = packageId;
+        this.records = records;
+    }
+
+    public String getPackageId() {
+        return packageId;
+    }
+
+    public ImmutableList<Record> getFilterData() {
+        return ImmutableList.copyOf(records);
+    }
+
     public static class Record {
         public final String filterType;
         public final String filterIdentifier;
@@ -46,7 +63,10 @@ public class FilterDataPersistence {
         }
     }
 
-    public void persist(List<? extends FileSupplier> fileSuppliers, Writer writer) throws IOException {
+    public static void persist(
+            String packageID,
+            List<? extends FileSupplier> fileSuppliers,
+            Writer writer) throws IOException {
         Gson gson = new Gson();
         ImmutableList.Builder<Record> records = ImmutableList.builder();
         for (FileSupplier fileSupplier : fileSuppliers) {
@@ -57,7 +77,8 @@ public class FilterDataPersistence {
                         fileSupplier.get().getName()));
             }
         }
-        String recordsAsString = gson.toJson(records.build());
+        String recordsAsString = gson.toJson(
+                new FilterDataPersistence(packageID, records.build()));
         try {
             writer.append(recordsAsString);
         } finally {
@@ -65,9 +86,9 @@ public class FilterDataPersistence {
         }
     }
 
-    public List<Record> load(Reader reader) throws IOException {
+    public static FilterDataPersistence load(Reader reader) throws IOException {
         Gson gson = new Gson();
-        Type recordType = new TypeToken<List<Record>>() {}.getType();
+        Type recordType = new TypeToken<FilterDataPersistence>() {}.getType();
         return gson.fromJson(reader, recordType);
     }
 }

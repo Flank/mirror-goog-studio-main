@@ -73,7 +73,6 @@ public class AndroidArtifacts {
     // types for additional artifacts to go with APK
     public static final String TYPE_MAPPING = "android-mapping";
     public static final String TYPE_METADATA = "android-metadata";
-    public static final String TYPE_TESTED_MANIFEST = "android-tested-manifest";
 
     public static PublishArtifact getAarArtifact(
             @NonNull AbstractArchiveTask task,

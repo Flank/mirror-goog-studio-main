@@ -100,6 +100,10 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunArtifact.Type.SPLIT;
             case RESOURCES:
                 return InstantRunArtifact.Type.RESOURCES;
+            case FULL_SPLIT:
+                return InstantRunArtifact.Type.FULL_SPLIT;
+            case AAR:
+                return InstantRunArtifact.Type.AAR;
             default:
                 throw new RuntimeException("Cannot convert " + type);
         }

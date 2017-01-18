@@ -41,6 +41,10 @@ public enum FileType {
      */
     RESOURCES,
     /**
+     * Android Library files.
+     */
+    AAR,
+    /**
      * Full split (main APK with reduced sets of resources).
      */
     FULL_SPLIT

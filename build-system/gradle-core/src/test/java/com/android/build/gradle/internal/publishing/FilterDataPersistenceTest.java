@@ -37,33 +37,38 @@ import java.io.StringWriter;
 import java.util.List;
 
 /**
- * Tests for the {@kink FilterDataPersistence}
+ * Tests for the {@link FilterDataPersistence}
  */
 public class FilterDataPersistenceTest {
 
-    FilterDataPersistence persistence = new FilterDataPersistence();
     StringWriter writer = new StringWriter();
 
     @Test
     public void testPersistedFormat() throws IOException {
-        persistence.persist(
+        FilterDataPersistence.persist(
+                "com.foo.package",
                 ImmutableList.<FileSupplier>of(
                         makeFileSupplier(OutputFile.FilterType.DENSITY, "xxhdpi")),
                 writer);
 
-        assertEquals("[{\"filterType\":\"DENSITY\",\"filterIdentifier\":\"xxhdpi\",\"splitFileName\":\"DENSITY_xxhdpi\"}]",
+        assertEquals("{\"packageId\":\"com.foo.package\","
+                        + "\"records\":[{\"filterType\":\"DENSITY\","
+                            + "\"filterIdentifier\":\"xxhdpi\","
+                            + "\"splitFileName\":\"DENSITY_xxhdpi\"}]}",
                 writer.toString());
     }
 
     @Test
     public void testPersistence() throws IOException {
 
-        persistence.persist(
+        FilterDataPersistence.persist(
+                "com.foo.package",
                 ImmutableList.<FileSupplier>of(
                         makeFileSupplier(OutputFile.FilterType.DENSITY, "xxhdpi")),
                 writer);
-        List<FilterDataPersistence.Record> loadedRecords = persistence
-                .load(new StringReader(writer.toString()));
+        FilterDataPersistence persistedData =
+                FilterDataPersistence.load(new StringReader(writer.toString()));
+        List<FilterDataPersistence.Record> loadedRecords = persistedData.getFilterData();
         assertEquals(1, loadedRecords.size());
         assertEquals(OutputFile.FilterType.DENSITY.name(), loadedRecords.get(0).filterType);
         assertEquals("xxhdpi", loadedRecords.get(0).filterIdentifier);
@@ -73,15 +78,17 @@ public class FilterDataPersistenceTest {
     @Test
     public void testMultiplePersistence() throws IOException {
 
-        persistence.persist(
+        FilterDataPersistence.persist(
+                "com.foo.package",
                 ImmutableList.<FileSupplier>of(
                         makeFileSupplier(OutputFile.FilterType.DENSITY, "xxhdpi"),
                         makeFileSupplier(OutputFile.FilterType.ABI, "arm"),
                         makeFileSupplier(OutputFile.FilterType.LANGUAGE, "fr")),
                 writer);
-        List<FilterDataPersistence.Record> loadedRecords = persistence
-                .load(new StringReader(writer.toString()));
-        assertEquals(3, loadedRecords.size());
+        FilterDataPersistence persistedData =
+                FilterDataPersistence.load(new StringReader(writer.toString()));
+        assertEquals("com.foo.package", persistedData.getPackageId());
+        assertEquals(3, persistedData.getFilterData().size());
     }
 
     private SplitFileSupplier makeFileSupplier(final OutputFile.FilterType filterType,

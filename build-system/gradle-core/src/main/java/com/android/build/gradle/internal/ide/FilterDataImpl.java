@@ -33,7 +33,7 @@ public final class FilterDataImpl implements FilterData, Serializable {
     private final String filterType;
     private final String identifier;
 
-    FilterDataImpl(String filterType, String identifier) {
+    public FilterDataImpl(String filterType, String identifier) {
         this.filterType = filterType;
         this.identifier = identifier;
     }
