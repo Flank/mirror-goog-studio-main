@@ -2826,6 +2826,33 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testVisibleForTestingSameCompilationUnit() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.VisibleForTesting;\n"
+                        + "\n"
+                        + "public class PrivTest {\n"
+                        + "    private static CredentialsProvider sCredentialsProvider = new DefaultCredentialsProvider();\n"
+                        + "\n"
+                        + "    static interface CredentialsProvider {\n"
+                        + "        void test();\n"
+                        + "    }\n"
+                        + "    @VisibleForTesting\n"
+                        + "    static class DefaultCredentialsProvider implements CredentialsProvider {\n"
+                        + "        @Override\n"
+                        + "        public void test() {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public void testRequiresPermissionWithinRequires() throws Exception {
         assertEquals("No warnings.",
                 lintProject(
@@ -2998,6 +3025,31 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         + "}"),
                 classpath(SUPPORT_JAR_PATH,
                         "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
+    public void testSizeAnnotations() throws Exception {
+        lint().files(
+                java(""
+                        + "package pkg.my.myapplication;\n"
+                        + "\n"
+                        + "import android.support.annotation.NonNull;\n"
+                        + "import android.support.annotation.Size;\n"
+                        + "\n"
+                        + "public class SizeTest2 {\n"
+                        + "    @Size(3)\n"
+                        + "    public float[] toLinear(float r, float g, float b) {\n"
+                        + "        return toLinear(new float[] { r, g, b });\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @NonNull\n"
+                        + "    public float[] toLinear(@NonNull @Size(min = 3) float[] v) {\n"
+                        + "        return v;\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
                 mSupportJar)
                 .run()
                 .expectClean();

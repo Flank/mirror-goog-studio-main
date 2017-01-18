@@ -42,6 +42,19 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                             + "</LinearLayout>\n")));
     }
 
+    public void testRaw() throws Exception {
+        //noinspection all // Sample code
+        assertEquals("No warnings.",
+                lintProject(xml("res/raw/encoding.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"iso-latin-1\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "</LinearLayout>\n")));
+    }
+
     public void testWithWindowsCarriageReturn() throws Exception {
         //noinspection all // Sample code
         assertEquals(""

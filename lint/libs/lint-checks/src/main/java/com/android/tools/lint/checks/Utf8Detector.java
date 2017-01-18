@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -67,6 +68,9 @@ public class Utf8Detector extends ResourceXmlDetector {
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
+        if (context.getResourceFolderType() == ResourceFolderType.RAW) {
+            return;
+        }
         CharSequence xml = context.getContents();
         if (xml == null) {
             return;
