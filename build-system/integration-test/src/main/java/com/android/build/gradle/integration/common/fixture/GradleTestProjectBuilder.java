@@ -121,6 +121,12 @@ public final class GradleTestProjectBuilder {
                             .getParentFile();
             parentDir = new File(parentDir, "external");
             File projectDir = new File(parentDir, project);
+            if (!projectDir.exists()) {
+                projectDir = new File(parentDir, project.replace('-', '_'));
+            }
+            if (!projectDir.exists()) {
+                throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
+            }
             addAllFiles(app, projectDir);
             return fromTestApp(app);
         } catch (IOException e) {
