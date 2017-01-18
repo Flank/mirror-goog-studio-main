@@ -120,14 +120,9 @@ public class InstantRunVerifier {
 
         @Override
         public byte[] load() throws IOException {
-            InputStream is = jarFile.getInputStream(jarEntry);
-            try {
-                ByteStreams.toByteArray(is);
-            } finally {
-                Closeables.close(is, false /* swallowIOException */);
+            try (InputStream is = jarFile.getInputStream(jarEntry)) {
+                return ByteStreams.toByteArray(is);
             }
-
-            return new byte[0];
         }
     }
 
