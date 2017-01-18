@@ -295,32 +295,13 @@ public class ResourceEvaluator {
         } else if (element instanceof PsiParenthesizedExpression) {
             PsiParenthesizedExpression parenthesizedExpression = (PsiParenthesizedExpression) element;
             return getResourceTypes(parenthesizedExpression.getExpression());
-        } else if (element instanceof PsiMethodCallExpression && allowDereference) {
+        } else if (element instanceof PsiMethodCallExpression) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
-            PsiReferenceExpression expression = call.getMethodExpression();
             PsiMethod method = call.resolveMethod();
             if (method != null && method.getContainingClass() != null) {
                 EnumSet<ResourceType> types = getTypesFromAnnotations(method);
                 if (types != null) {
                     return types;
-                }
-
-                String qualifiedName = method.getContainingClass().getQualifiedName();
-                String name = expression.getReferenceName();
-                if ((CLASS_RESOURCES.equals(qualifiedName)
-                        || CLASS_CONTEXT.equals(qualifiedName)
-                        || CLASS_FRAGMENT.equals(qualifiedName)
-                        || CLASS_V4_FRAGMENT.equals(qualifiedName)
-                        || CLS_TYPED_ARRAY.equals(qualifiedName))
-                        && name != null
-                        && name.startsWith("get")) {
-                    PsiExpression[] args = call.getArgumentList().getExpressions();
-                    if (args.length > 0) {
-                        types = getResourceTypes(args[0]);
-                        if (types != null) {
-                            return types;
-                        }
-                    }
                 }
             }
         } else if (element instanceof PsiReference) {

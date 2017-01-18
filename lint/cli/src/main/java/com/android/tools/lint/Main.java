@@ -876,6 +876,7 @@ public class Main {
             NBSP + "<issue id=\"ObsoleteLayoutParam\">\n" +
             NBSP + NBSP + "<ignore path=\"res/layout/activation.xml\" />\n" +
             NBSP + NBSP + "<ignore path=\"res/layout-xlarge/activation.xml\" />\n" +
+            NBSP + NBSP + "<ignore regexp=\"(foo|bar)\\.java\" />\n" +
             NBSP + "</issue>\n" +
             "\n" +
             NBSP + "<!-- Ignore the UselessLeaf issue in the given file -->\n" +

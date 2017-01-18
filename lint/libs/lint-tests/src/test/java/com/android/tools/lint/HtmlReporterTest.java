@@ -434,6 +434,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                     + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;issue id=\"ObsoleteLayoutParam\"><br/>\n"
                     + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore path=\"res/layout/activation.xml\" /><br/>\n"
                     + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore path=\"res/layout-xlarge/activation.xml\" /><br/>\n"
+                    + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;ignore regexp=\"(foo|bar).java\" /><br/>\n"
                     + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;/issue><br/>\n"
                     + "<br/>\n"
                     + "&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- Ignore the UselessLeaf issue in the given file --><br/>\n"
