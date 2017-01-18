@@ -371,21 +371,32 @@ public class ManifestMerger2 {
                 .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
         if (applicationOptional.isPresent()) {
             XmlElement application = applicationOptional.get();
-            Attr enabledAttribute = application.getXml().getAttributeNodeNS(
-                    SdkConstants.ANDROID_URI, "enabled");
-
-            // force it to be true.
-            if (enabledAttribute != null) {
-                application.getXml().setAttributeNS(
-                        SdkConstants.ANDROID_URI,
-                        enabledAttribute.getName(),
-                        SdkConstants.VALUE_TRUE);
-            }
+            setAttributeToTrue(application.getXml(), SdkConstants.ATTR_ENABLED);
+            setAttributeToTrue(application.getXml(), SdkConstants.ATTR_HAS_CODE);
             addService(document, application);
         } else {
             throw new RuntimeException("Application not defined in AndroidManifest.xml");
         }
         return document.reparse();
+    }
+
+    /**
+     * Sets the element's attribute value to True.
+     * @param element the xml element which attribute should be mutated.
+     * @param attributeName the android namespace attribute name.
+     */
+    private static void setAttributeToTrue(Element element, String attributeName) {
+
+        Attr enabledAttribute = element.getAttributeNodeNS(
+                SdkConstants.ANDROID_URI, attributeName);
+
+        // force it to be true.
+        if (enabledAttribute != null) {
+            element.setAttributeNS(
+                    SdkConstants.ANDROID_URI,
+                    enabledAttribute.getName(),
+                    SdkConstants.VALUE_TRUE);
+        }
     }
 
     private static void addService(XmlDocument document, XmlElement application ) {

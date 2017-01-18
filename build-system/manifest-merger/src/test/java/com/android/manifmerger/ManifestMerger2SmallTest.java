@@ -680,6 +680,36 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testInstantRunReplacementWithNoAppAndFalseHasCode() throws Exception {
+        String xml = ""
+                + "<manifest\n"
+                + "    package=\"com.foo.bar\""
+                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                + "    <activity android:name=\"activityOne\"/>\n"
+                + "    <application android:hasCode=\"false\"/>\n"
+                + "</manifest>";
+
+        File inputFile = inputAsFile("testNoPlaceHolderReplacement", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport = ManifestMerger2
+                .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                .withFeatures(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT)
+                .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_RUN));
+
+        NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
+        assertEquals(1, applications.getLength());
+        Node application = applications.item(0);
+        // verify hasCode has been turned to true.
+        NamedNodeMap applicationAttributes = application.getAttributes();
+        assertTrue(Boolean.parseBoolean(applicationAttributes.getNamedItemNS(
+                SdkConstants.ANDROID_URI, SdkConstants.ATTR_HAS_CODE).getNodeValue()));
+    }
+    
+    @Test
     public void testInstantRunReplacementWithNoAppName() throws Exception {
         String xml = ""
                 + "<manifest\n"
