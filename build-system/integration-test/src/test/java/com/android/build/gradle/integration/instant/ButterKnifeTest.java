@@ -27,10 +27,8 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -50,7 +48,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ButterKnifeTest {
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String ORIGINAL_MESSAGE = "original";
     private static final String ACTIVITY_DESC = "Lcom/example/bk/Activ;";
 
@@ -126,11 +123,11 @@ public class ButterKnifeTest {
     @Test
     public void hotSwap() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, 23, COLDSWAP_MODE);
+                InstantRunTestUtils.doInitialBuild(project, 23);
 
         makeHotSwapChange("CHANGE");
 
-        project.executor().withInstantRun(23, COLDSWAP_MODE).run("assembleDebug");
+        project.executor().withInstantRun(23).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 

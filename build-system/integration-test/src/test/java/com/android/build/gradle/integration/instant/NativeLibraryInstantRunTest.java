@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -83,7 +82,7 @@ public class NativeLibraryInstantRunTest {
         AndroidProject model = project.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
-                .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(21, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
         device.uninstallPackage("com.example.hellojni");

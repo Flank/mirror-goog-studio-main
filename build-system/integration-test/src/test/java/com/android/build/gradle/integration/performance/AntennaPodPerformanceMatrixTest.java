@@ -31,7 +31,6 @@ import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
@@ -205,7 +204,7 @@ public class AntennaPodPerformanceMatrixTest {
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
                     executor()
-                            .withInstantRun(24, ColdswapMode.MULTIAPK)
+                            .withInstantRun(24)
                             .withEnableInfoLogging(false)
                             .run(tasks);
                     isEdit = true;
@@ -261,7 +260,7 @@ public class AntennaPodPerformanceMatrixTest {
             if (instantRunModel != null) {
                 executor()
                         .recordBenchmark(benchmarkMode)
-                        .withInstantRun(24, ColdswapMode.MULTIAPK)
+                        .withInstantRun(24)
                         .run(tasks);
 
                 InstantRunTestUtils.loadContext(instantRunModel).getVerifierStatus();

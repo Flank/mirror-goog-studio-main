@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -43,8 +42,6 @@ import org.junit.Test;
  * Tests how Instant Run cleans up state after a cold swap.
  */
 public class HotSwapWithNoChangesTest {
-
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
 
     private static final String LOG_TAG = "NoCodeChangeAfterCompatibleChangeTest";
 
@@ -74,7 +71,7 @@ public class HotSwapWithNoChangesTest {
         doTestArtifacts(() -> {
             // Force cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
+                    .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                     .run("assembleDebug");
         });
     }
@@ -89,7 +86,7 @@ public class HotSwapWithNoChangesTest {
 
             // Adding a new class will force a cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE)
+                    .withInstantRun(23)
                     .run("assembleDebug");
         });
     }
@@ -99,7 +96,7 @@ public class HotSwapWithNoChangesTest {
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
 
@@ -122,7 +119,7 @@ public class HotSwapWithNoChangesTest {
 
         // now run again the incremental build.
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE)
+                .withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildContext instantRunBuildContext =

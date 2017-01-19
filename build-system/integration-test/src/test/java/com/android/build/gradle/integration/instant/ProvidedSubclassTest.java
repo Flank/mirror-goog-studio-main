@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.truth.Expect;
 import java.io.IOException;
@@ -74,7 +73,7 @@ public class ProvidedSubclassTest {
     public void checkV() throws Exception {
         project.execute("clean");
         GradleBuildResult result = project.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // Check we can find the parent class.

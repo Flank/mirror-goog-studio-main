@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -83,7 +82,7 @@ public class InstantRunAddLibraryTest {
                 .getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // Add dependency
@@ -94,7 +93,7 @@ public class InstantRunAddLibraryTest {
         // Use that dependency
         writeClass("com.google.common.base.Strings.nullToEmpty(null);");
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

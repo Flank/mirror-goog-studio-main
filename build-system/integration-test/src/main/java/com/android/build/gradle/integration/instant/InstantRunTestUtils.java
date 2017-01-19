@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -90,7 +89,7 @@ public final class InstantRunTestUtils {
             int apiLevel,
             @NonNull InstantRun instantRunModel) throws Exception {
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(apiLevel, null, null);
+        context.setApiLevel(apiLevel, null);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;
     }
@@ -132,7 +131,7 @@ public final class InstantRunTestUtils {
         device.installPackages(
                 apkFiles,
                 true /*reinstall*/,
-                ImmutableList.<String>of(),
+                ImmutableList.of(),
                 DEFAULT_ADB_TIMEOUT_MSEC,
                 MILLISECONDS);
     }
@@ -170,14 +169,13 @@ public final class InstantRunTestUtils {
     @NonNull
     static InstantRun doInitialBuild(
             @NonNull GradleTestProject project,
-            int apiLevel,
-            @NonNull ColdswapMode coldswapMode) {
+            int apiLevel) {
         project.execute("clean");
         InstantRun instantRunModel = getInstantRunModel(
                 Iterables.getOnlyElement(project.model().getSingle().getModelMap().values()));
 
         project.executor()
-                .withInstantRun(apiLevel, coldswapMode, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(apiLevel, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         return instantRunModel;

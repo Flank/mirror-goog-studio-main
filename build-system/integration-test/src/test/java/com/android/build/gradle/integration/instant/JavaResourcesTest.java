@@ -19,10 +19,8 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
@@ -81,7 +79,7 @@ public class JavaResourcesTest {
         AndroidProject model = project.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
-                .withInstantRun(apiLevel, ColdswapMode.DEFAULT)
+                .withInstantRun(apiLevel)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -103,7 +101,7 @@ public class JavaResourcesTest {
         Files.write("bar", resource, Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(apiLevel, ColdswapMode.DEFAULT)
+                .withInstantRun(apiLevel)
                 .run("assembleDebug");
 
         //TODO: switch back to loadContext when it no longer adds more artifacts.

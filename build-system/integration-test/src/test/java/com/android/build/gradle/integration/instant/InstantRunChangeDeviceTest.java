@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -103,7 +102,6 @@ public class InstantRunChangeDeviceTest {
             mProject.executor()
                     .withInstantRun(
                             firstBuild.getApiLevel(),
-                            ColdswapMode.MULTIAPK,
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
@@ -119,7 +117,6 @@ public class InstantRunChangeDeviceTest {
             mProject.executor()
                     .withInstantRun(
                             secondBuild.getApiLevel(),
-                            ColdswapMode.MULTIAPK,
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo buildContext = InstantRunTestUtils.loadContext(instantRunModel);

@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -90,17 +89,17 @@ public class ConnectedColdSwapTest {
 
     @Test
     public void dalvikTest() throws Exception {
-        doTest(ColdswapMode.DEFAULT, adb.getDevice(thatUsesDalvik()));
+        doTest(adb.getDevice(thatUsesDalvik()));
     }
 
     @Test
     public void multiApkTest() throws Exception {
-        doTest(ColdswapMode.MULTIAPK, adb.getDevice(thatUsesArt()));
+        doTest(adb.getDevice(thatUsesArt()));
     }
 
     private InstantRun instantRunModel;
 
-    private void doTest(@NonNull ColdswapMode coldswapMode, @NonNull IDevice device)
+    private void doTest(@NonNull IDevice device)
             throws Exception {
         // Set up
         device.uninstallPackage(HelloWorldApp.APP_ID);
@@ -111,7 +110,7 @@ public class ConnectedColdSwapTest {
 
         // Initial build
         project.executor()
-                .withInstantRun(device, coldswapMode, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(device, OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", "assembleDebug");
 
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
@@ -137,12 +136,12 @@ public class ConnectedColdSwapTest {
         // Cold swap
         makeColdSwapChange();
         project.executor()
-                .withInstantRun(device, coldswapMode)
+                .withInstantRun(device)
                 .run("assembleDebug");
 
         InstantRunBuildInfo coldSwapContext = InstantRunTestUtils.loadContext(instantRunModel);
 
-        if (coldswapMode == ColdswapMode.MULTIAPK || thatUsesDalvik().matches(device.getVersion())) {
+        if (thatUsesDalvik().matches(device.getVersion())) {
             InstantRunTestUtils.doInstall(device, info.getArtifacts());
         } else {
             UpdateMode updateMode = client

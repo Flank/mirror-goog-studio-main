@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.tasks.BooleanLatch;
@@ -80,15 +79,13 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * Inject the instant run arguments.
      *
      * @param apiLevel The device api level.
-     * @param coldswapMode The cold swap strategy to use.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
             int apiLevel,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
-                new AndroidVersion(apiLevel, null), null /* density */, coldswapMode, flags);
+                new AndroidVersion(apiLevel, null), null /* density */, flags);
         return this;
     }
 
@@ -96,15 +93,13 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * Inject the instant run arguments.
      *
      * @param device The connected device.
-     * @param coldswapMode The cold swap strategy to use.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
             @NonNull IDevice device,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
-                device.getVersion(), Density.getEnum(device.getDensity()), coldswapMode, flags);
+                device.getVersion(), Density.getEnum(device.getDensity()), flags);
         return this;
     }
 
@@ -238,7 +233,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private void setInstantRunArgs(
             @Nullable AndroidVersion androidVersion,
             @Nullable Density density,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep[] flags) {
         if (androidVersion != null) {
             withProperty(AndroidProject.PROPERTY_BUILD_API, androidVersion.getFeatureLevel());
@@ -247,8 +241,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         if (density != null) {
             withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, density.getResourceValue());
         }
-
-        withProperty(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, coldswapMode.name());
 
         StringBuilder optionalSteps =
                 new StringBuilder()
