@@ -1,5 +1,8 @@
 filegroup(
     name = "all_files",
-    srcs = glob(["**"]),
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD"],
+    ),
     visibility = ["//visibility:public"],
 )
