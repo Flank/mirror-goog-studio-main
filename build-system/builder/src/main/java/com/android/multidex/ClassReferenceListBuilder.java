@@ -17,14 +17,14 @@
 package com.android.multidex;
 
 import com.android.dx.cf.direct.DirectClassFile;
+import com.android.dx.cf.iface.FieldList;
+import com.android.dx.cf.iface.MethodList;
 import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.ConstantPool;
+import com.android.dx.rop.cst.CstBaseMethodRef;
 import com.android.dx.rop.cst.CstFieldRef;
-import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
-import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 
 import java.io.FileNotFoundException;
@@ -40,7 +40,6 @@ import java.util.zip.ZipFile;
  */
 public class ClassReferenceListBuilder {
     private static final String CLASS_EXTENSION = ".class";
-    private static final String CLASS_TO_CHECK = System.getenv("CLASS_TO_CHECK");
 
     private final Path path;
     private final Set<String> classNames = new HashSet<String>();
@@ -59,10 +58,6 @@ public class ClassReferenceListBuilder {
         MainDexListBuilder.main(args);
     }
 
-    private void found() {
-        System.out.println("Found it");
-    }
-
     /**
      * @param jarOfRoots Archive containing the class files resulting of the tracing, typically
      * this is the result of running ProGuard.
@@ -75,9 +70,6 @@ public class ClassReferenceListBuilder {
             ZipEntry entry = entries.nextElement();
             String name = entry.getName();
             if (name.endsWith(CLASS_EXTENSION)) {
-                if (CLASS_TO_CHECK != null && name.contains(CLASS_TO_CHECK)) {
-                  found();
-                }
                 classNames.add(name.substring(0, name.length() - CLASS_EXTENSION.length()));
             }
         }
@@ -95,8 +87,7 @@ public class ClassReferenceListBuilder {
                     throw new IOException("Class " + name +
                             " is missing form original class path " + path, e);
                 }
-
-                addDependencies(classFile.getConstantPool());
+                addDependencies(classFile);
             }
         }
     }
@@ -105,58 +96,69 @@ public class ClassReferenceListBuilder {
         return classNames;
     }
 
-    private void addDependencies(ConstantPool pool) {
-        for (Constant constant : pool.getEntries()) {
+    private void addDependencies(DirectClassFile classFile) {
+        for (Constant constant : classFile.getConstantPool().getEntries()) {
             if (constant instanceof CstType) {
-                checkDescriptor(((CstType) constant).getClassType());
+                checkDescriptor(((CstType) constant).getClassType().getDescriptor());
             } else if (constant instanceof CstFieldRef) {
-                checkDescriptor(((CstFieldRef) constant).getType());
-            } else if (constant instanceof CstMethodRef) {
-                Prototype proto = ((CstMethodRef) constant).getPrototype();
-                checkDescriptor(proto.getReturnType());
-                StdTypeList args = proto.getParameterTypes();
-                for (int i = 0; i < args.size(); i++) {
-                    checkDescriptor(args.get(i));
-                }
+                checkDescriptor(((CstFieldRef) constant).getType().getDescriptor());
+            } else if (constant instanceof CstBaseMethodRef) {
+                checkPrototype(((CstBaseMethodRef) constant).getPrototype());
             }
+        }
+
+        FieldList fields = classFile.getFields();
+        int nbField = fields.size();
+        for (int i = 0; i < nbField; i++) {
+          checkDescriptor(fields.get(i).getDescriptor().getString());
+        }
+
+        MethodList methods = classFile.getMethods();
+        int nbMethods = methods.size();
+        for (int i = 0; i < nbMethods; i++) {
+          checkPrototype(Prototype.intern(methods.get(i).getDescriptor().getString()));
         }
     }
 
-    private void checkDescriptor(Type type) {
-        String descriptor = type.getDescriptor();
-        if (descriptor.endsWith(";")) {
-            int lastBrace = descriptor.lastIndexOf('[');
+    private void checkPrototype(Prototype proto) {
+      checkDescriptor(proto.getReturnType().getDescriptor());
+      StdTypeList args = proto.getParameterTypes();
+      for (int i = 0; i < args.size(); i++) {
+          checkDescriptor(args.get(i).getDescriptor());
+      }
+    }
+
+    private void checkDescriptor(String typeDescriptor) {
+        if (typeDescriptor.endsWith(";")) {
+            int lastBrace = typeDescriptor.lastIndexOf('[');
             if (lastBrace < 0) {
-                addClassWithHierarchy(descriptor.substring(1, descriptor.length()-1));
+                addClassWithHierachy(typeDescriptor.substring(1, typeDescriptor.length()-1));
             } else {
-                assert descriptor.length() > lastBrace + 3
-                && descriptor.charAt(lastBrace + 1) == 'L';
-                addClassWithHierarchy(descriptor.substring(lastBrace + 2,
-                        descriptor.length() - 1));
+                assert typeDescriptor.length() > lastBrace + 3
+                && typeDescriptor.charAt(lastBrace + 1) == 'L';
+                addClassWithHierachy(typeDescriptor.substring(lastBrace + 2,
+                        typeDescriptor.length() - 1));
             }
         }
     }
 
-    private void addClassWithHierarchy(String classBinaryName) {
+    private void addClassWithHierachy(String classBinaryName) {
         if (classNames.contains(classBinaryName)) {
             return;
         }
 
         try {
             DirectClassFile classFile = path.getClass(classBinaryName + CLASS_EXTENSION);
-            if (CLASS_TO_CHECK != null && classBinaryName.contains(CLASS_TO_CHECK)) {
-              found();
-            }
             classNames.add(classBinaryName);
             CstType superClass = classFile.getSuperclass();
             if (superClass != null) {
-                addClassWithHierarchy(superClass.getClassType().getClassName());
+                addClassWithHierachy(superClass.getClassType().getClassName());
             }
 
             TypeList interfaceList = classFile.getInterfaces();
             int interfaceNumber = interfaceList.size();
             for (int i = 0; i < interfaceNumber; i++) {
-                addClassWithHierarchy(interfaceList.getType(i).getClassName());
+                addClassWithHierachy(interfaceList.getType(i).getClassName());
             }
         } catch (FileNotFoundException e) {
             // Ignore: The referenced type is not in the path it must be part of the libraries.

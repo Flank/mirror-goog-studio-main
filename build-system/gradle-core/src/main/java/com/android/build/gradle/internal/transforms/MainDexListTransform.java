@@ -32,9 +32,9 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
+import com.android.multidex.MainDexListBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -47,13 +47,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.logging.LoggingManager;
 import proguard.ParseException;
 
@@ -146,6 +144,7 @@ public class MainDexListTransform extends BaseProguardAction {
     public Map<String, Object> getParameterInputs() {
         ImmutableMap.Builder<String, Object> params = ImmutableMap.builder();
         params.put("keepRuntimeAnnotatedClasses", keepRuntimeAnnotatedClasses);
+        params.put("implementationClass", "MainDexListTransform");
         TargetInfo targetInfo = variantScope.getGlobalScope().getAndroidBuilder().getTargetInfo();
         if (targetInfo != null) {
             params.put("build_tools", targetInfo.getBuildTools().getRevision().toString());
@@ -271,18 +270,13 @@ public class MainDexListTransform extends BaseProguardAction {
 
     }
 
-    private Set<String> callDx(File allClassesJarFile, File jarOfRoots) throws ProcessException {
-        EnumSet<AndroidBuilder.MainDexListOption> mainDexListOptions =
-                EnumSet.noneOf(AndroidBuilder.MainDexListOption.class);
-        if (!keepRuntimeAnnotatedClasses) {
-            mainDexListOptions.add(
-                    AndroidBuilder.MainDexListOption.DISABLE_ANNOTATION_RESOLUTION_WORKAROUND);
-            Logging.getLogger(MainDexListTransform.class).warn(
-                    "Not including classes with runtime retention annotations in the main dex.\n"
-                            + "This can cause issues with reflection in older platforms.");
-        }
-
-        return variantScope.getGlobalScope().getAndroidBuilder().createMainDexList(
-                allClassesJarFile, jarOfRoots, mainDexListOptions);
+    private Set<String> callDx(File allClassesJarFile, File jarOfRoots) throws IOException {
+        MainDexListBuilder builder =
+                new MainDexListBuilder(
+                        keepRuntimeAnnotatedClasses,
+                        jarOfRoots.getAbsolutePath(),
+                        allClassesJarFile.getAbsolutePath());
+        Set<String> mainDexList = builder.getMainDexList();
+        return ImmutableSet.copyOf(mainDexList);
     }
 }
