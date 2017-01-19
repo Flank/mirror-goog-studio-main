@@ -38,7 +38,6 @@ import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -94,7 +93,9 @@ public class DexByteCodeConverter {
     private Boolean mIsDexInProcess = null;
 
 
-    public DexByteCodeConverter(ILogger logger, TargetInfo targetInfo,
+    public DexByteCodeConverter(
+            ILogger logger,
+            TargetInfo targetInfo,
             JavaProcessExecutor javaProcessExecutor,
             boolean verboseExec) {
         mLogger = logger;
@@ -108,9 +109,6 @@ public class DexByteCodeConverter {
      * @param inputs the input files
      * @param outDexFolder the location of the output folder
      * @param dexOptions dex options
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ProcessException
      */
     public void convertByteCode(
             @NonNull Collection<File> inputs,
@@ -240,12 +238,9 @@ public class DexByteCodeConverter {
         }
     }
 
-    /**
-     * Determine whether to dex in process.
-     */
+    /** Determine whether to dex in process. */
     @VisibleForTesting
-    synchronized boolean shouldDexInProcess(
-            @NonNull DexOptions dexOptions) {
+    synchronized boolean shouldDexInProcess(@NonNull DexOptions dexOptions) {
         if (mIsDexInProcess != null) {
             return mIsDexInProcess;
         }

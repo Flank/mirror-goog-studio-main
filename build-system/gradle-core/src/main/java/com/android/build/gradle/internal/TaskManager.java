@@ -23,6 +23,7 @@ import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verifyNotNull;
 
 import android.databinding.tool.DataBindingBuilder;
 import android.databinding.tool.DataBindingCompilerArgs;
@@ -1980,6 +1981,7 @@ public abstract class TaskManager {
             @Nullable AndroidTask<TransformTask> multiDexClassListTask,
             @NonNull DexingMode dexingMode) {
         TransformManager transformManager = variantScope.getTransformManager();
+        AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
 
         DefaultDexOptions dexOptions;
         if (variantScope.getVariantData().getType().isForTesting()) {
@@ -2008,7 +2010,7 @@ public abstract class TaskManager {
             PreDexTransform preDexTransform =
                     new PreDexTransform(
                             dexOptions,
-                            variantScope.getGlobalScope().getAndroidBuilder(),
+                            androidBuilder,
                             buildCache,
                             dexingMode,
                             variantScope.getInstantRunBuildContext().isInInstantRunMode());
@@ -2023,8 +2025,10 @@ public abstract class TaskManager {
                             dexOptions,
                             dexingMode,
                             preDexEnabled,
-                            variantScope.getMainDexListFile(),
-                            variantScope.getGlobalScope().getAndroidBuilder());
+                            project.files(variantScope.getMainDexListFile()),
+                            verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
+                            androidBuilder.getDexByteCodeConverter(),
+                            androidBuilder.getErrorReporter());
             Optional<AndroidTask<TransformTask>> dexTask =
                     transformManager.addTransform(tasks, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream

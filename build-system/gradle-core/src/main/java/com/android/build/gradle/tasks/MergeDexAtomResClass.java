@@ -82,6 +82,7 @@ public class MergeDexAtomResClass extends BaseTask {
             // First dex the R.class file to the temporary directory.
             try {
                 getBuilder()
+                        .getDexByteCodeConverter()
                         .convertByteCode(
                                 ImmutableSet.of(getResClassDirs().get(atomName)),
                                 getTempDirs().get(atomName),
