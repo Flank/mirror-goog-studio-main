@@ -171,7 +171,7 @@ public final class DexMerger {
         contentsOut.header.size = 1;
         contentsOut.fileSize = dexOut.getLength();
         contentsOut.computeSizesFromOffsets();
-        contentsOut.writeHeader(headerOut);
+        contentsOut.writeHeader(headerOut, mergeApiLevels());
         contentsOut.writeMap(mapListOut);
 
         // generate and write the hashes
@@ -359,6 +359,17 @@ public final class DexMerger {
                 return value.compareTo(unsortedValue.value);
             }
         }
+    }
+
+    private int mergeApiLevels() {
+        int maxApi = -1;
+        for (int i = 0; i < dexes.length; i++) {
+            int dexMinApi = dexes[i].getTableOfContents().apiLevel;
+            if (maxApi < dexMinApi) {
+                maxApi = dexMinApi;
+            }
+        }
+        return maxApi;
     }
 
     private void mergeStringIds() {
