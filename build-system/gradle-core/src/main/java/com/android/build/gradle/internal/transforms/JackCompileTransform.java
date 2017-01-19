@@ -159,20 +159,8 @@ public class JackCompileTransform extends Transform {
                         .stream()
                         .map(SecondaryFile::nonIncremental)
                         .collect(Collectors.toList()));
-        builder.addAll(
-                annotationClasspath
-                        .getFiles()
-                        .stream()
-                        .map(SecondaryFile::nonIncremental)
-                        .collect(Collectors.toList()));
-
-        builder.addAll(
-                pluginsClasspath
-                        .getFiles()
-                        .stream()
-                        .map(SecondaryFile::nonIncremental)
-                        .collect(Collectors.toList()));
-
+        builder.add(SecondaryFile.nonIncremental(annotationClasspath));
+        builder.add(SecondaryFile.nonIncremental(pluginsClasspath));
         builder.addAll(
                 getGeneratedSources()
                         .stream()

@@ -15,14 +15,13 @@
  */
 
 package com.android.build.gradle.internal.coverage;
+
 import com.android.annotations.Nullable;
 import java.util.Set;
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
-import org.gradle.api.artifacts.ResolvableDependencies;
 import org.gradle.api.artifacts.ResolvedArtifact;
 
 
@@ -42,13 +41,13 @@ public class JacocoPlugin implements Plugin<Project> {
 
     private Project project;
 
+    @Nullable
+    private String jacocoVersion;
+
     @Override
     public void apply(Project project) {
         this.project = project;
-        String jacocoVersion = getJacocoVersion();
         addJacocoConfigurations();
-        configureAgentDependencies(jacocoVersion);
-        configureTaskClasspathDefaults(jacocoVersion);
     }
 
     /**
@@ -56,28 +55,26 @@ public class JacocoPlugin implements Plugin<Project> {
      */
     private void addJacocoConfigurations() {
         this.project.getConfigurations().create(AGENT_CONFIGURATION_NAME,
-                new Action<Configuration>() {
-                    @Override
-                    public void execute(Configuration files) {
-                        files.setVisible(false);
-                        files.setTransitive(true);
-                        files.setDescription("The Jacoco agent to use to get coverage data.");
-                    }
+                files -> {
+                    files.setVisible(false);
+                    files.setTransitive(true);
+                    files.setDescription("The Jacoco agent to use to get coverage data.");
                 });
         this.project.getConfigurations().create(ANT_CONFIGURATION_NAME,
-                new Action<Configuration>() {
-                    @Override
-                    public void execute(Configuration files) {
-                        files.setVisible(false);
-                        files.setTransitive(true);
-                        files.setDescription(
-                                "The Jacoco ant tasks to use to get execute Gradle tasks.");
-                    }
+                files -> {
+                    files.setVisible(false);
+                    files.setTransitive(true);
+                    files.setDescription(
+                            "The Jacoco ant tasks to use to get execute Gradle tasks.");
                 });
     }
 
     @Nullable
     private String getJacocoVersion() {
+        if (jacocoVersion != null) {
+            return jacocoVersion;
+        }
+
         Project candidateProject = project;
         boolean shouldFailWithException = false;
 
@@ -88,7 +85,8 @@ public class JacocoPlugin implements Plugin<Project> {
             for (ResolvedArtifact artifact : resolvedArtifacts) {
                 ModuleVersionIdentifier moduleVersion = artifact.getModuleVersion().getId();
                 if ("org.jacoco.core".equals(moduleVersion.getName())) {
-                    return moduleVersion.getVersion();
+                    jacocoVersion = moduleVersion.getVersion();
+                    return jacocoVersion;
                 }
             }
             if (!resolvedArtifacts.isEmpty()) {
@@ -106,41 +104,33 @@ public class JacocoPlugin implements Plugin<Project> {
 
         project.getLogger().error(
                 "No resolved dependencies found when searching for the jacoco version.");
-        return DEFAULT_JACOCO_VERSION;
-
+        jacocoVersion = DEFAULT_JACOCO_VERSION;
+        return jacocoVersion;
     }
 
     /**
-     * Configures the agent dependencies using the 'jacocoAnt' configuration.
+     * Configures and resolve the agent dependencies using the 'jacocoAnt' configuration.
      * Uses the version declared as a build script dependency if no other versions are specified.
      */
-    private void configureAgentDependencies(final String jacocoVersion) {
+    public void resolveAgentDependencies() {
         final Configuration config = project.getConfigurations().getByName(AGENT_CONFIGURATION_NAME);
-        config.getIncoming().beforeResolve(new Action<ResolvableDependencies>() {
-            @Override
-            public void execute(ResolvableDependencies resolvableDependencies) {
-                if (config.getDependencies().isEmpty()) {
-                    config.getDependencies().add(project.getDependencies().create(
-                                    "org.jacoco:org.jacoco.agent:" + jacocoVersion));
-                }
-            }
-        });
+        if (config.getDependencies().isEmpty()) {
+            config.getDependencies().add(project.getDependencies().create(
+                    "org.jacoco:org.jacoco.agent:" + getJacocoVersion()));
+        }
+        config.resolve();
     }
 
     /**
-     * Configures the classpath for Jacoco tasks using the 'jacocoAnt' configuration.
+     * Configures and resolve the classpath for Jacoco tasks using the 'jacocoAnt' configuration.
      * Uses the version declared as a build script dependency if no other versions are specified.
      */
-    private void configureTaskClasspathDefaults(final String jacocoVersion) {
+    public void resolveTaskClasspathDefaults() {
         final Configuration config = project.getConfigurations().getByName(ANT_CONFIGURATION_NAME);
-        config.getIncoming().beforeResolve(new Action<ResolvableDependencies>() {
-            @Override
-            public void execute(ResolvableDependencies resolvableDependencies) {
-                if (config.getDependencies().isEmpty()) {
-                    config.getDependencies().add(project.getDependencies().create(
-                            "org.jacoco:org.jacoco.ant:" + jacocoVersion));
-                }
-            }
-        });
+        if (config.getDependencies().isEmpty()) {
+            config.getDependencies().add(project.getDependencies().create(
+                    "org.jacoco:org.jacoco.ant:" + getJacocoVersion()));
+        }
+        config.resolve();
     }
 }

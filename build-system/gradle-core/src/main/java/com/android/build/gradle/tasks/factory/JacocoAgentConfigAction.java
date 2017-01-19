@@ -17,18 +17,19 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.google.common.collect.Lists;
-
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Copy;
-
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Configuration Action for the Jacoco agent unzip task.
@@ -56,19 +57,27 @@ public class JacocoAgentConfigAction implements TaskConfigAction<Copy> {
 
     @Override
     public void execute(@NonNull Copy task) {
-        task.from(new Callable<List<FileTree>>() {
-            @Override
-            public List<FileTree> call() throws Exception {
-                List<FileTree> fileTrees = Lists.newArrayList();
-                for (File file : scope.getProject().getConfigurations().getByName(
-                        JacocoPlugin.AGENT_CONFIGURATION_NAME)) {
-                    fileTrees.add(scope.getProject().zipTree(file));
-                }
-                return fileTrees;
-            }
+        Project project = scope.getProject();
+        Configuration config =
+                project.getConfigurations().getByName(JacocoPlugin.AGENT_CONFIGURATION_NAME);
+
+        // Create bypass supplier to return jacocagent.jar.
+        // We need to unzip the jacoco dependency to get jacocoagent.jar inside.  So we create
+        // {@link FileTree} using {@link project#zipTree}.  To avoid resolving the
+        // AGENT_CONFIGURATION_NAME configuration during configuration phase, we use a bypass
+        // supplier that returns empty list during configuration.
+        Supplier<Collection<File>> jacocoAgent = TaskInputHelper.bypassFileSupplier(() -> {
+            JacocoPlugin plugin = project.getPlugins().getPlugin(JacocoPlugin.class);
+            plugin.resolveAgentDependencies();
+            return config.getFiles();
         });
+        Callable<Collection<FileTree>> callable  =
+                () -> jacocoAgent.get().stream().map(project::zipTree).collect(Collectors.toList());
+
+        task.from(callable);
         task.include(scope.getJacocoAgent().getName());
         task.into(scope.getJacocoAgentOutputDirectory());
+        task.dependsOn(config);
     }
 
 }

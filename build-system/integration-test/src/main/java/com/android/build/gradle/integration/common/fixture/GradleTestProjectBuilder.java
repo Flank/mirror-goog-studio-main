@@ -46,6 +46,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
+    private boolean withDependencyChecker = true;
 
     /** Create a GradleTestProject. */
     public GradleTestProject create() {
@@ -59,6 +60,7 @@ public final class GradleTestProjectBuilder {
                 improvedDependencyEnabled,
                 targetGradleVersion,
                 withoutNdk,
+                withDependencyChecker,
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
@@ -176,6 +178,12 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withImprovedDependencyResolution(
             boolean improvedDependencyEnabled) {
         this.improvedDependencyEnabled = improvedDependencyEnabled;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withDependencyChecker(
+            boolean dependencyChecker) {
+        this.withDependencyChecker = dependencyChecker;
         return this;
     }
 

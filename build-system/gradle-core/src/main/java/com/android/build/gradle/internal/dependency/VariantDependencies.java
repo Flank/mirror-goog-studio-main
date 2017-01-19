@@ -74,6 +74,8 @@ public class VariantDependencies {
     private final Configuration annotationProcessorConfiguration;
     @NonNull
     private final Configuration jackPluginConfiguration;
+    @NonNull
+    private final Configuration wearAppConfiguration;
 
     @Nullable
     private final Configuration mappingConfiguration;
@@ -126,6 +128,7 @@ public class VariantDependencies {
         private final Set<Configuration> apkConfigs = Sets.newHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newHashSet();
         private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
+        private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
 
         protected Builder(
             @NonNull Project project,
@@ -174,6 +177,7 @@ public class VariantDependencies {
                 apkConfigs.add(provider.getPackageConfiguration());
                 annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
                 jackPluginConfigs.add(provider.getJackPluginConfiguration());
+                wearAppConfigs.add(provider.getWearAppConfiguration());
             }
 
             return this;
@@ -245,6 +249,10 @@ public class VariantDependencies {
             apk.setDescription("## Internal use, do not manually configure ##");
             apk.setExtendsFrom(apkConfigs);
 
+            Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
+            wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
+            wearApp.setExtendsFrom(wearAppConfigs);
+
             Configuration publish = null;
             Configuration mapping = null;
             Configuration classes = null;
@@ -296,6 +304,7 @@ public class VariantDependencies {
                     publish,
                     annotationProcessor,
                     jackPlugin,
+                    wearApp,
                     mapping,
                     classes,
                     metadata,
@@ -321,6 +330,7 @@ public class VariantDependencies {
             @Nullable Configuration publishConfiguration,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
+            @NonNull Configuration wearAppConfiguration,
             @Nullable Configuration mappingConfiguration,
             @Nullable Configuration classesConfiguration,
             @Nullable Configuration metadataConfiguration,
@@ -334,6 +344,7 @@ public class VariantDependencies {
         this.publishConfiguration = publishConfiguration;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
+        this.wearAppConfiguration = wearAppConfiguration;
         this.mappingConfiguration = mappingConfiguration;
         this.classesConfiguration = classesConfiguration;
         this.metadataConfiguration = metadataConfiguration;
@@ -369,6 +380,11 @@ public class VariantDependencies {
     @NonNull
     public Configuration getJackPluginConfiguration() {
         return jackPluginConfiguration;
+    }
+
+    @NonNull
+    public Configuration getWearAppConfiguration() {
+        return wearAppConfiguration;
     }
 
     @Nullable
