@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -84,7 +83,7 @@ public class CmakeInstantRunTest {
     @Test
     public void checkHotSwapBuild() throws Exception {
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -102,7 +101,7 @@ public class CmakeInstantRunTest {
                             "tv.setText(\"Hello from Java\")");
 
                     sProject.executor()
-                            .withInstantRun(23, ColdswapMode.DEFAULT)
+                            .withInstantRun(23)
                             .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -114,7 +113,7 @@ public class CmakeInstantRunTest {
     @Test
     public void checkFullBuildIsTriggered() throws Exception {
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -126,7 +125,7 @@ public class CmakeInstantRunTest {
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

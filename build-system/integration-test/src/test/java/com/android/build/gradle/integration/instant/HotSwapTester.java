@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.utils.UninstallOnClose;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.packaging.PackagingUtils;
@@ -45,7 +44,6 @@ import org.mockito.Mockito;
  */
 public class HotSwapTester {
 
-    public static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     @NonNull
     private final GradleTestProject project;
     @NonNull
@@ -109,7 +107,7 @@ public class HotSwapTester {
 
             // Run first time on device
             InstantRunTestUtils.doInitialBuild(
-                    project, device.getVersion().getApiLevel(), COLDSWAP_MODE);
+                    project, device.getVersion().getApiLevel());
 
             // Deploy to device
             InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
@@ -140,7 +138,7 @@ public class HotSwapTester {
 
                 // Now build the hot swap patch.
                 project.executor()
-                        .withInstantRun(device.getVersion().getApiLevel(), COLDSWAP_MODE)
+                        .withInstantRun(device.getVersion().getApiLevel())
                         .run("assembleDebug");
 
                 FileTransfer fileTransfer;

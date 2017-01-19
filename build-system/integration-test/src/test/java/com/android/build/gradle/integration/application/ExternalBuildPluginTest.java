@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -137,7 +136,7 @@ public class ExternalBuildPluginTest {
 + "  buildManifestPath = $/" + manifestFile.getAbsolutePath() + "/$\n"
 + "}\n");
 
-        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("clean", "process");
+        mProject.executor().withInstantRun(23).run("clean", "process");
 
         InstantRunBuildInfo info = loadBuildInfo();
 
@@ -181,7 +180,7 @@ public class ExternalBuildPluginTest {
             }
         }
 
-        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("process");
+        mProject.executor().withInstantRun(23).run("process");
 
         info = loadBuildInfo();
         assertThat(info.getVerifierStatus())

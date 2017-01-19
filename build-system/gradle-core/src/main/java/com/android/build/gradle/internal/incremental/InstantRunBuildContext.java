@@ -298,7 +298,7 @@ public class InstantRunBuildContext {
     }
 
     /**
-     * Setst the verifier status for the current build.
+     * Sets the verifier status for the current build.
      *
      * @param verifierStatus
      */
@@ -349,11 +349,11 @@ public class InstantRunBuildContext {
     }
 
     public void setApiLevel(
-            int featureLevel, @Nullable String coldswapMode, @Nullable String targetAbi) {
+            int featureLevel, @Nullable String targetAbi) {
         this.featureLevel = featureLevel;
         // cache the patching policy.
         this.patchingPolicy =
-                InstantRunPatchingPolicy.getPatchingPolicy(featureLevel, coldswapMode);
+                InstantRunPatchingPolicy.getPatchingPolicy(featureLevel);
         this.abi = targetAbi;
     }
 
