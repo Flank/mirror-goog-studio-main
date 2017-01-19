@@ -25,20 +25,14 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,6 +77,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @Before
     public void initializeProject() throws IOException {
+        PerformanceTestProjects.initializeWordpress(project);
         switch (projectScenario) {
             case NATIVE_MULTIDEX:
             case DEX_ARCHIVE_NATIVE_MULTIDEX:
@@ -106,94 +101,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 throw new IllegalArgumentException(
                         "Unknown project scenario" + projectScenario);
         }
-        Files.copy(
-                project.file("WordPress/gradle.properties-example").toPath(),
-                project.file("WordPress/gradle.properties").toPath());
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "buildscript {\n"
-                        + "    repositories {\n"
-                        + "        maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'       }"
-                        + "    }\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + "'\n"
-                        + "    }\n"
-                        + "}");
-
-        List<Path> buildGradleFiles =
-                ImmutableList.of(
-                                "WordPress/build.gradle",
-                                "libs/utils/WordPressUtils/build.gradle",
-                                "libs/editor/example/build.gradle",
-                                "libs/editor/WordPressEditor/build.gradle",
-                                "libs/networking/WordPressNetworking/build.gradle",
-                                "libs/analytics/WordPressAnalytics/build.gradle")
-                        .stream()
-                        .map(name -> project.file(name).toPath())
-                        .collect(Collectors.toList());
-
-        for (Path file : buildGradleFiles) {
-            TestFileUtils.searchAndReplace(
-                    file, "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'", "");
-
-            TestFileUtils.searchAndReplace(
-                    file,
-                    "jcenter\\(\\)",
-                    "maven { url '"
-                            + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                            + "'}\njcenter()");
-
-            TestFileUtils.searchAndReplace(
-                    file,
-                    "buildToolsVersion \"[^\"]+\"",
-                    String.format("buildToolsVersion \"%s\"", AndroidBuilder.MIN_BUILD_TOOLS_REV));
-        }
-
-        //TODO: Upstream some of this?
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "classpath 'com\\.novoda:bintray-release:0\\.3\\.4'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "apply plugin: 'com\\.novoda\\.bintray-release'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "publish \\{[\\s\\S]*\\}",
-                "");
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/networking/WordPressNetworking/build.gradle"),
-                "maven \\{ url 'http://wordpress-mobile\\.github\\.io/WordPress-Android' \\}",
-                "");
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/networking/WordPressNetworking/build.gradle"),
-                "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                "releaseCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                        + "    debugCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/analytics/WordPressAnalytics/build.gradle"),
-                "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                "releaseCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                        + "    debugCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
-
-        // There is an extraneous BOM in the values-ja/strings.xml
-        Files.copy(
-                project.file("WordPress/src/main/res/values-en-rCA/strings.xml").toPath(),
-                project.file("WordPress/src/main/res/values-ja/strings.xml").toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Test
@@ -245,8 +152,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withtUseDexArchive(projectScenario.useDexArchive())
-                .withoutOfflineFlag();
+                .withtUseDexArchive(projectScenario.useDexArchive());
     }
 
     /** Removes the crashlytics plugin, and any dependencies on it. */

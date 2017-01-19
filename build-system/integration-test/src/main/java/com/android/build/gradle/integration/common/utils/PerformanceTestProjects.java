@@ -292,6 +292,12 @@ public class PerformanceTestProjects {
                 "9.0.2",
                 GradleTestProject.PLAY_SERVICES_VERSION);
 
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.5'",
+                "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.4'");
+
+
 
     }
 }
