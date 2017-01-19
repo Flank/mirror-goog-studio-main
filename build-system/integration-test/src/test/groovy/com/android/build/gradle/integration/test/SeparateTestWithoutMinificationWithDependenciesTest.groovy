@@ -30,6 +30,7 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModuleWithDependencies")
+            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create()
 
 

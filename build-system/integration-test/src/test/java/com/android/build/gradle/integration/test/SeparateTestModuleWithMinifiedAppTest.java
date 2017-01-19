@@ -40,6 +40,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModuleWithMinifiedApp")
+            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create();
 
     @Rule

@@ -513,7 +513,6 @@ public final class GradleTestProject implements TestRule {
                     + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
                     + "        if (!isTaskGraphReady\n"
                     + "                && !resolvableDependencies.getName().equals('classpath')\n"  // classpath is resolved to find the plugin.
-                    + "                && !resolvableDependencies.getName().startsWith('testTarget')\n"  // TODO: Fix for test plugin.
                     + "                && project.findProperty(\"" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "\")?.toBoolean() != true) {\n"
                     + "            throw new RuntimeException(\n"
                     + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
