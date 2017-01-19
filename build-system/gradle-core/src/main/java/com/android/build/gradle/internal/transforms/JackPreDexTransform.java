@@ -173,11 +173,7 @@ public class JackPreDexTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return jackPluginsClassPath
-                .getFiles()
-                .stream()
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList());
+        return ImmutableList.of(SecondaryFile.nonIncremental(jackPluginsClassPath));
     }
 
     @Override

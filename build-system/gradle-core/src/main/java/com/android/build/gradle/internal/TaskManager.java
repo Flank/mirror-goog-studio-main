@@ -40,6 +40,7 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -697,8 +698,7 @@ public abstract class TaskManager {
                                                     .getBuildDependencies(),
                                             testedVariantData
                                                     .getVariantDependency()
-                                                    .getPackageConfiguration()
-                                                    .getBuildDependencies()))
+                                                    .getPackageConfiguration()))
                             .build());
         }
 
@@ -1362,14 +1362,12 @@ public abstract class TaskManager {
                 tasks,
                 scope.getVariantData()
                         .getVariantDependency()
-                        .getCompileConfiguration()
-                        .getBuildDependencies());
+                        .getCompileConfiguration());
         compileTask.dependsOn(
                 tasks,
                 scope.getVariantData()
                         .getVariantDependency()
-                        .getAnnotationProcessorConfiguration()
-                        .getBuildDependencies());
+                        .getAnnotationProcessorConfiguration());
     }
 
     /**
@@ -1887,6 +1885,7 @@ public abstract class TaskManager {
                 reportTask = androidTasks.create(
                         tasks,
                         new JacocoReportTask.ConfigAction(variantScope));
+                reportTask.dependsOn(tasks, project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME));
             }
             reportTask.dependsOn(tasks, connectedTask.getName());
 
@@ -2280,7 +2279,7 @@ public abstract class TaskManager {
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope) {
 
-        JacocoTransform jacocoTransform = new JacocoTransform(project.getConfigurations());
+        JacocoTransform jacocoTransform = new JacocoTransform(variantScope.getGlobalScope().getJacocoAgent());
         Optional<AndroidTask<TransformTask>> task =
                 variantScope
                         .getTransformManager()

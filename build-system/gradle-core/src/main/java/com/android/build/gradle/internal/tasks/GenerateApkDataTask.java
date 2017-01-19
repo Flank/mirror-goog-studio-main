@@ -199,9 +199,7 @@ public class GenerateApkDataTask extends BaseTask {
 
             task.setResOutputDir(scope.getMicroApkResDirectory());
 
-            if (config != null) {
-                task.apkFile = config.getIncoming().getFiles(ARTIFACTS_APK);
-            }
+            task.apkFile = config;
 
             task.manifestFile = scope.getMicroApkManifestFile();
             task.mainPkgName = variantConfiguration.getApplicationId();

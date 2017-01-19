@@ -397,12 +397,14 @@ public class ApplicationTaskManager extends TaskManager {
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 
-        Configuration wearApp = null;
         if (!Boolean.TRUE.equals(unbundledWearApp)
                 && variantConfiguration.getBuildType().isEmbedMicroApp()) {
-            wearApp = variantData.getVariantDependency().getWearAppConfiguration();
+            Configuration wearApp = variantData.getVariantDependency().getWearAppConfiguration();
+            if (!wearApp.getAllDependencies().isEmpty()) {
+                createGenerateMicroApkDataTask(tasks, scope, wearApp);
+            }
+        } else {
+            createGenerateMicroApkDataTask(tasks, scope, null);
         }
-
-        createGenerateMicroApkDataTask(tasks, scope, wearApp);
     }
 }

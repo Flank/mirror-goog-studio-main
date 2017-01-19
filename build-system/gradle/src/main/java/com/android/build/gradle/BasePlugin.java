@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -228,6 +229,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     protected void apply(@NonNull Project project) {
         checkPluginVersion();
+        TaskInputHelper.enableBypass();
 
         this.project = project;
         ExecutionConfigurationUtil.setThreadPoolSize(project);

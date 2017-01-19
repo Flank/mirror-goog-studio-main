@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;

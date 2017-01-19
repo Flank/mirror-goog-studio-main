@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.model.Version;
@@ -40,7 +41,6 @@ import java.util.Locale;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
@@ -68,7 +68,7 @@ import org.jacoco.report.xml.XMLFormatter;
  */
 public class JacocoReportTask extends DefaultTask {
 
-    private FileCollection jacocoClasspath;
+    private Supplier<Collection<File>> jacocoClasspath;
 
     private Supplier<File> coverageDirectory;
     private Supplier<File> classDir;
@@ -128,11 +128,11 @@ public class JacocoReportTask extends DefaultTask {
     }
 
     @InputFiles
-    public FileCollection getJacocoClasspath() {
-        return jacocoClasspath;
+    public Collection<File> getJacocoClasspath() {
+        return jacocoClasspath.get();
     }
 
-    public void setJacocoClasspath(FileCollection jacocoClasspath) {
+    public void setJacocoClasspath(Supplier<Collection<File>> jacocoClasspath) {
         this.jacocoClasspath = jacocoClasspath;
     }
 
@@ -301,7 +301,13 @@ public class JacocoReportTask extends DefaultTask {
             checkNotNull(scope.getTestedVariantData());
             final VariantScope testedScope = scope.getTestedVariantData().getScope();
 
-            task.jacocoClasspath = project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME);
+            task.jacocoClasspath = TaskInputHelper.bypassFileSupplier(() -> {
+                JacocoPlugin plugin = project.getPlugins().getPlugin(JacocoPlugin.class);
+                plugin.resolveTaskClasspathDefaults();
+                return project.getConfigurations()
+                        .getAt(JacocoPlugin.ANT_CONFIGURATION_NAME)
+                        .getFiles();
+            });
 
             task.coverageDirectory = TaskInputHelper.memoize(
                     () -> ((TestVariantData) scope.getVariantData()).connectedTestTask
