@@ -30,27 +30,37 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
 @RunWith(BazelIntegrationTestSuiteRunner.class)
 public class BazelIntegrationTestsSuite {
 
-    public static final Path OFFLINE_REPO = Paths.get("offlineRepo").toAbsolutePath();
-    public static final Path PREBUILTS_REPO = Paths.get("prebuiltsRepo").toAbsolutePath();
-    public static final Path NDK_IN_TMP =
-            Paths.get(System.getenv("TEST_TMPDIR")).resolve("ndk").toAbsolutePath();
+    private static final Path DATA_DIR;
+
+    static {
+        try {
+            DATA_DIR = Files.createTempDirectory("data");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final Path OFFLINE_REPO = DATA_DIR.resolve("offlineRepo").toAbsolutePath();
+    public static final Path PREBUILTS_REPO = DATA_DIR.resolve("prebuiltsRepo").toAbsolutePath();
+    public static final Path NDK_IN_TMP = DATA_DIR.resolve("ndk").toAbsolutePath();
 
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
-        if (System.getenv(GradleTestProject.ENV_CUSTOM_REPO) != null) {
-            // We're running under Gradle.
-            return;
-        }
-
         unzip(OFFLINE_REPO, "tools/base/bazel/offline_repo_repo.zip");
         unzip(PREBUILTS_REPO, "tools/base/build-system/integration-test/prebuilts_repo_repo.zip");
+    }
+
+    @AfterClass
+    public static void deleteData() throws Exception {
+        FileUtils.deletePath(DATA_DIR.toFile());
     }
 
     /**
