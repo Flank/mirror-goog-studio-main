@@ -33,8 +33,13 @@ def main():
   args = sys.argv[1:]
 
   if args[0] == 'test':
-    # For now limit test jobs to 8, until we experiment with higher values.
-    test_jobs = min(multiprocessing.cpu_count() / 2, 8)
+    cpus = multiprocessing.cpu_count()
+    if cpus > 20:
+      # Most likely z840. For now limit test jobs to 8, until we experiment
+      # with higher values.
+      test_jobs = 8
+    else:
+      test_jobs = 2
     args.append('--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
 
