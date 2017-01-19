@@ -113,7 +113,7 @@ public class SplitApkInstaller {
             totalFileSize += apkFile.length();
         }
 
-        MultiInstallReceiver receiver = new MultiInstallReceiver();
+        InstallCreateReceiver receiver = new InstallCreateReceiver();
         String cmd = String.format(mPrefix + " install-create %1$s -S %2$d", pmOptions, totalFileSize);
         mDevice.executeShellCommand(cmd, receiver, timeout, unit);
         return receiver.getSessionId();
@@ -148,7 +148,7 @@ public class SplitApkInstaller {
         InputStream inputStream = null;
         try {
             inputStream = new BufferedInputStream(new FileInputStream(fileToUpload));
-            Device.InstallReceiver receiver = new Device.InstallReceiver();
+            InstallWriteReceiver receiver = new InstallWriteReceiver();
             AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(),
                     AdbHelper.AdbService.EXEC, command, mDevice,
                     receiver, timeout, unit, inputStream);
@@ -244,8 +244,7 @@ public class SplitApkInstaller {
      * Implementation of {@link com.android.ddmlib.MultiLineReceiver} that can receive a
      * Success message from ADB followed by a session ID.
      */
-    private static class MultiInstallReceiver extends MultiLineReceiver {
-
+    private static class InstallCreateReceiver extends MultiLineReceiver {
         private static final Pattern successPattern = Pattern.compile("Success: .*\\[(\\d*)\\]");
 
         @Nullable String sessionId = null;
@@ -268,6 +267,45 @@ public class SplitApkInstaller {
         @Nullable
         public String getSessionId() {
             return sessionId;
+        }
+    }
+
+    static class InstallWriteReceiver extends MultiLineReceiver {
+        private boolean processedFirstLine;
+        private boolean success;
+        private StringBuffer errorBuffer;
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public void processNewLines(String[] lines) {
+            if (!processedFirstLine) {
+                processedFirstLine = true;
+                success = lines[0].startsWith("Success");
+            }
+
+            if (!success) {
+                if (errorBuffer == null) {
+                    errorBuffer = new StringBuffer(100);
+                }
+
+                for (String line : lines) {
+                    errorBuffer.append(line);
+                    errorBuffer.append('\n');
+                }
+            }
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        @Nullable
+        public String getErrorMessage() {
+            return errorBuffer == null ? null : errorBuffer.toString();
         }
     }
 }
