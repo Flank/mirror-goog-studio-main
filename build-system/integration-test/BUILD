@@ -145,6 +145,7 @@ java_test(
 # Test that builds and lints all test projects, without any additional assertions.
 java_test(
     name = "automatic-tests",
+    size = "enormous",
     srcs = glob(["src/test/java/**/CheckAll.java"]),
     data = TEST_DATA,
     jvm_flags = [
