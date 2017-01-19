@@ -55,7 +55,7 @@ public class PerformanceInfrastructureTest {
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.ANTENNA_POD,
-                                        ImmutableSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
+                                        ProjectScenario.DEX_OUT_OF_PROCESS,
                                         benchmarkResults::addAll))
                         .create();
 

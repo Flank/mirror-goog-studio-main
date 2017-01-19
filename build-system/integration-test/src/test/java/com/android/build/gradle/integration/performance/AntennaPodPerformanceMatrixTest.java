@@ -42,10 +42,8 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,18 +54,18 @@ import org.junit.runners.Parameterized;
 public class AntennaPodPerformanceMatrixTest {
 
     @Rule public final GradleTestProject mainProject;
-    @NonNull private final Set<ProjectScenario> projectScenarios;
+    @NonNull private final ProjectScenario projectScenario;
     private int nonce = 0;
     private GradleTestProject project;
 
-    public AntennaPodPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
-        this.projectScenarios = projectScenarios;
+    public AntennaPodPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+        this.projectScenario = projectScenario;
         mainProject =
                 GradleTestProject.builder()
                         .fromExternalProject("AntennaPod")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.ANTENNA_POD, projectScenarios))
+                                        Logging.Benchmark.ANTENNA_POD, projectScenario))
                         .withRelativeProfileDirectory(
                                 Paths.get("AntennaPod", "build", "android-profile"))
                         .withHeap("1536M")
@@ -75,12 +73,13 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Set[] getParameters() {
-        return new Set[] {
-            EnumSet.of(ProjectScenario.NORMAL),
-            EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON),
-            EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
-            EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS),
+    public static ProjectScenario[] getParameters() {
+        return new ProjectScenario[] {
+            ProjectScenario.NORMAL,
+            ProjectScenario.JACK_ON,
+            ProjectScenario.DEX_ARCHIVE_MONODEX,
+            ProjectScenario.DEX_OUT_OF_PROCESS,
+            ProjectScenario.JACK_OUT_OF_PROCESS,
         };
     }
 
@@ -127,27 +126,27 @@ public class AntennaPodPerformanceMatrixTest {
                         + "        jcenter()");
 
         File appBuildFile = project.file("app/build.gradle");
-        for (ProjectScenario projectScenario : projectScenarios) {
-            switch (projectScenario) {
-                case NORMAL:
-                    break;
-                case DEX_OUT_OF_PROCESS:
-                    DexInProcessHelper.disableDexInProcess(appBuildFile);
-                    break;
-                case JACK_ON:
-                    disableRetrolambda(appBuildFile);
-                    JackHelper.enableJack(appBuildFile);
-                    break;
-                case JACK_OUT_OF_PROCESS:
-                    disableRetrolambda(appBuildFile);
-                    // automatically enables Jack as well
-                    JackHelper.disableJackInProcess(appBuildFile);
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unknown project scenario" + projectScenario);
+        switch (projectScenario) {
+            case NORMAL:
+                break;
+            case DEX_OUT_OF_PROCESS:
+                DexInProcessHelper.disableDexInProcess(appBuildFile);
+                break;
+            case JACK_ON:
+                disableRetrolambda(appBuildFile);
+                JackHelper.enableJack(appBuildFile);
+                break;
+            case JACK_OUT_OF_PROCESS:
+                disableRetrolambda(appBuildFile);
+                // automatically enables Jack as well
+                JackHelper.disableJackInProcess(appBuildFile);
+                break;
+            case DEX_ARCHIVE_MONODEX:
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown project scenario" + projectScenario);
             }
-        }
     }
 
     @Test
@@ -177,9 +176,13 @@ public class AntennaPodPerformanceMatrixTest {
                     model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
                     continue;
                 case BUILD__FROM_CLEAN:
+                    FileUtils.cleanOutputDir(executor().getBuildCacheDir());
                     executor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
+                case BUILD__FROM_CLEAN__POPULATED_BUILD_CACHE:
+                    // TODO
+                    continue;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
                 case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
                     tasks = ImmutableList.of(":app:assembleDebug");
@@ -281,12 +284,13 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
+                .withtUseDexArchive(projectScenario.useDexArchive())
                 .withoutOfflineFlag();
     }
 
     private boolean isJackOn() {
-        return projectScenarios.contains(ProjectScenario.JACK_ON)
-                || projectScenarios.contains(ProjectScenario.JACK_OUT_OF_PROCESS);
+        return projectScenario.getFlags().getCompiler()
+                == Logging.GradleBenchmarkResult.Flags.Compiler.JACK;
     }
 
     private boolean isInstantRunOn(BenchmarkMode benchmarkMode) {

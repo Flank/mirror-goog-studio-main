@@ -1940,7 +1940,7 @@ public abstract class TaskManager {
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
             Transform multiDexTransform;
-            if (globalScope.getAndroidGradleOptions().useMainDexList2()) {
+            if (globalScope.getAndroidGradleOptions().useDexArchive()) {
                 multiDexTransform = new MainDexListTransform(
                         variantScope,
                         extension.getDexOptions());

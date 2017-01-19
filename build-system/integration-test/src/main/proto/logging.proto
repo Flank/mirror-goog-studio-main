@@ -112,6 +112,7 @@ message GradleBenchmarkResult {
     enum Compiler {
       DEX = 0;
       JACK = 1;
+      DEX_ARCHIVE = 2;
     }
   }
 
@@ -142,6 +143,7 @@ enum BenchmarkMode {
   SYNC = 2;
 
   BUILD__FROM_CLEAN = 3;
+  BUILD__FROM_CLEAN__POPULATED_BUILD_CACHE = 27;
   BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 4;
   BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE = 11;
   BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE = 12;

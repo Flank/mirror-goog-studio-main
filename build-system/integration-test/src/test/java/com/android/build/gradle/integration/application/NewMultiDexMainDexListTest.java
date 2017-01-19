@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
@@ -99,13 +98,13 @@ public class NewMultiDexMainDexListTest {
     private void checkBuild() throws Exception {
 
         project.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_USE_MAIN_DEX_LIST_2, "false")
+                .disableDexArchive()
                 .run(testProject.assembleTask);
 
         Set<String> mainDexList = getMainDexList();
 
         project.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_USE_MAIN_DEX_LIST_2, "true")
+                .enableDexArchive()
                 .run(testProject.assembleTask);
 
         Set<String> mainDexList2 = getMainDexList();
