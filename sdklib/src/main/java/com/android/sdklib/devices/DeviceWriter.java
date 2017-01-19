@@ -17,6 +17,7 @@
 package com.android.sdklib.devices;
 
 import com.android.dvlib.DeviceSchema;
+import com.android.resources.ScreenRound;
 import com.android.resources.UiMode;
 
 import org.w3c.dom.Document;
@@ -30,6 +31,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -97,8 +99,23 @@ public class DeviceWriter {
             for (Software sw : device.getAllSoftware()) {
                 deviceNode.appendChild(generateSoftwareNode(sw, doc));
             }
+
+            boolean deviceIsRound = false;
             for (State s : device.getAllStates()) {
                 deviceNode.appendChild(generateStateNode(s, doc, device.getDefaultHardware()));
+
+                // See if the device is round
+                Screen theScreen = s.getHardware().getScreen();
+                if (theScreen != null && ScreenRound.ROUND.equals(theScreen.getScreenRound())) {
+                    deviceIsRound = true;
+                }
+            }
+
+            Map<String, String> bootProps = new TreeMap<>(device.getBootProps());
+
+            if (deviceIsRound) {
+                // Ensure that the roundness is one of the boot properties
+                bootProps.put(DeviceParser.ROUND_BOOT_PROP, "true");
             }
 
             String tagId = device.getTagId();
@@ -108,8 +125,7 @@ public class DeviceWriter {
                 deviceNode.appendChild(e);
             }
 
-            Map<String, String> bootProps = device.getBootProps();
-            if (bootProps != null && !bootProps.isEmpty()) {
+            if (!bootProps.isEmpty()) {
                 Element props = doc.createElement(PREFIX + DeviceSchema.NODE_BOOT_PROPS);
                 for (Map.Entry<String, String> bootProp : bootProps.entrySet()) {
                     Element prop = doc.createElement(PREFIX + DeviceSchema.NODE_BOOT_PROP);
