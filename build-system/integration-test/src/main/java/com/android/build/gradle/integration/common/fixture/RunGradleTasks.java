@@ -37,11 +37,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
+import org.gradle.tooling.events.OperationType;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.ProgressListener;
 
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
@@ -183,6 +187,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
         launcher.setStandardError(new TeeOutputStream(stderr, System.err));
 
+        CollectingProgressListener progressListener = new CollectingProgressListener();
+
+        launcher.addProgressListener(progressListener, OperationType.TASK);
+
         GradleConnectionException failure;
 
         // See ProfileCapturer javadoc for explanation.
@@ -200,7 +208,24 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         } else if (!isExpectingFailure && failure != null) {
             throw failure;
         }
-        return new GradleBuildResult(stdout, stderr, failure);
+        return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+    }
+
+    private static class CollectingProgressListener implements ProgressListener {
+        ConcurrentLinkedQueue<ProgressEvent> events;
+
+        private CollectingProgressListener() {
+            events = new ConcurrentLinkedQueue<>();
+        }
+
+        @Override
+        public void statusChanged(ProgressEvent progressEvent) {
+            events.add(progressEvent);
+        }
+
+        ImmutableList<ProgressEvent> getEvents() {
+            return ImmutableList.copyOf(events);
+        }
     }
 
     private static class WaitingResultHandler implements ResultHandler<Void> {

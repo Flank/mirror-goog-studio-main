@@ -21,10 +21,17 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.gradle.tooling.events.OperationDescriptor;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.task.TaskOperationDescriptor;
+import org.gradle.tooling.events.task.TaskProgressEvent;
+import org.gradle.tooling.events.task.internal.DefaultTaskFinishEvent;
+import org.gradle.tooling.events.task.internal.DefaultTaskSuccessResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +46,15 @@ public class GradleTaskSubjectTest {
                 Resources.getResource(
                         "com/android/build/gradle/integration/common/truth/build-output.txt"),
                 Charsets.UTF_8);
-        taskStateList = new TaskStateList(output);
+        ImmutableList.Builder<ProgressEvent> events = ImmutableList.builder();
+
+        events.add(upToDate(":preBuild"));
+        events.add(ran(":prepareDebugAtomDependencies"));
+        events.add(ran(":generateDebugAtomResValues"));
+        events.add(ran(":mergeDebugAtomResources"));
+        events.add(ran(":dataBindingProcessLayoutsDebugAtom"));
+
+        taskStateList = new TaskStateList(events.build(), output);
         failureStrategy = new FakeFailureStrategy();
     }
 
@@ -152,5 +167,52 @@ public class GradleTaskSubjectTest {
         assertThat(failureStrategy.message)
                 .named("Error for " + functionName + " on task " + invalidTask + " with param " + invalidTaskParam)
                 .isEqualTo(errorMessageForInvalidTask);
+    }
+
+
+    private static TaskProgressEvent upToDate(String name) {
+        return new DefaultTaskFinishEvent(
+                0,
+                "Task :" + name + " UP-TO-DATE",
+                new FakeTaskOperationDescriptor(name),
+                new DefaultTaskSuccessResult(0, 5, true, false));
+    }
+
+    private static TaskProgressEvent ran(String name) {
+        return new DefaultTaskFinishEvent(
+                0,
+                "Task :" + name + " SUCCESS",
+                new FakeTaskOperationDescriptor(name),
+                new DefaultTaskSuccessResult(0, 5, false, false));
+    }
+
+    private static class FakeTaskOperationDescriptor
+            implements TaskOperationDescriptor, OperationDescriptor {
+
+        final String name;
+
+        private FakeTaskOperationDescriptor(@NonNull String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getTaskPath() {
+            return name;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Task" + name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public OperationDescriptor getParent() {
+            return null;
+        }
     }
 }

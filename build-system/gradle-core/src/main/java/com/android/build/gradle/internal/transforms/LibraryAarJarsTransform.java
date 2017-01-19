@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -51,7 +52,7 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
     public LibraryAarJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
-            @NonNull File typedefRecipe,
+            @Nullable File typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         super(mainClassLocation, localJarsLocation, typedefRecipe, packageName, packageBuildConfig);

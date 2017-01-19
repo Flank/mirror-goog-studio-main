@@ -87,7 +87,7 @@ public abstract class LibraryBaseTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        if (typedefRecipe != null && typedefRecipe.isFile()) {
+        if (typedefRecipe != null) {
             return ImmutableList.of(SecondaryFile.nonIncremental(typedefRecipe));
         } else {
             return ImmutableList.of();

@@ -32,7 +32,6 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
@@ -57,7 +56,6 @@ import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
-import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
@@ -353,9 +351,12 @@ public class LibraryTaskManager extends TaskManager {
                 AndroidArtifacts.TYPE_LINT_JAR);
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
+
+
+        AndroidTask<ExtractAnnotations> extractAnnotationsTask;
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
                 || variantData.getVariantDependency().isAnnotationsPresent()) {
-            AndroidTask<ExtractAnnotations> extractAnnotationsTask =
+            extractAnnotationsTask =
                     getAndroidTasks().create(
                             tasks,
                             new ExtractAnnotations.ConfigAction(getExtension(), variantScope));
@@ -368,6 +369,8 @@ public class LibraryTaskManager extends TaskManager {
                     AndroidArtifacts.TYPE_EXT_ANNOTATIONS);
 
             bundle.dependsOn(extractAnnotationsTask.getName());
+        } else {
+            extractAnnotationsTask = null;
         }
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
@@ -447,7 +450,9 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryIntermediateJarsTransform(
                                         mainClassJar,
                                         mainResJar,
-                                        variantScope.getTypedefFile(),
+                                        extractAnnotationsTask != null
+                                                ? variantScope.getTypedefFile()
+                                                : null,
                                         packageName,
                                         getExtension().getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
@@ -517,7 +522,9 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryAarJarsTransform(
                                         new File(variantBundleDir, FN_CLASSES_JAR),
                                         new File(variantBundleDir, LIBS_FOLDER),
-                                        variantScope.getTypedefFile(),
+                                        extractAnnotationsTask != null
+                                                ? variantScope.getTypedefFile()
+                                                : null,
                                         packageName,
                                         getExtension().getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
@@ -526,6 +533,7 @@ public class LibraryTaskManager extends TaskManager {
                                 transformManager.addTransform(tasks, variantScope, transform);
                         libraryJarTransformTask.ifPresent(t -> {
                             bundle.dependsOn(t.getName());
+                            t.optionalDependsOn(tasks, extractAnnotationsTask);
                         });
 
                         // now add a transform that will take all the native libs and package
