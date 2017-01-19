@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -46,6 +47,7 @@ import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuild
 import com.android.build.gradle.internal.transforms.PreDexTransform;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PreColdSwapTask;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
@@ -290,6 +292,7 @@ class ExternalBuildTaskManager {
             @NonNull ExternalBuildContext externalBuildContext,
             @NonNull TransformManager transformManager,
             @NonNull ExternalBuildVariantScope variantScope) {
+        AndroidBuilder androidBuilder = externalBuildContext.getAndroidBuilder();
         InstantRunPatchingPolicy patchingPolicy =
                 variantScope.getBuildContext().getPatchingPolicy();
         final DexingMode dexingMode;
@@ -302,7 +305,7 @@ class ExternalBuildTaskManager {
         PreDexTransform preDexTransform =
                 new PreDexTransform(
                         new DefaultDexOptions(),
-                        externalBuildContext.getAndroidBuilder(),
+                        androidBuilder,
                         variantScope.getGlobalScope().getBuildCache().orElse(null),
                         dexingMode,
                         variantScope.getBuildContext().isInInstantRunMode());
@@ -315,7 +318,9 @@ class ExternalBuildTaskManager {
                             dexingMode,
                             true,
                             null,
-                            externalBuildContext.getAndroidBuilder());
+                            verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
+                            androidBuilder.getDexByteCodeConverter(),
+                            androidBuilder.getErrorReporter());
 
             transformManager.addTransform(tasks, variantScope, dexTransform);
         }

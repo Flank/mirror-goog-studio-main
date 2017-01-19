@@ -105,22 +105,28 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * This is the main builder class. It is given all the data to process the build (such as
- * {@link DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing specific
- * build steps.
+ * This is the main builder class. It is given all the data to process the build (such as {@link
+ * DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing
+ * specific build steps.
  *
- * To use:
- * create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor, JavaProcessExecutor, ErrorReporter, ILogger, boolean)}
+ * <p>To use: create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor,
+ * JavaProcessExecutor, ErrorReporter, ILogger, boolean)}
  *
- * then build steps can be done with
- * {@link #mergeManifestsForApplication(File, List, List, String, int, String, String, String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
- * {@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean, Boolean, String, File, List, Map, File, File)}
- * {@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
- * {@link #compileAllAidlFiles(List, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)}
- * {@link #getDexByteCodeConverter()}
+ * <p>then build steps can be done with:
  *
- * Java compilation is not handled but the builder provides the boot classpath with
- * {@link #getBootClasspath(boolean)}.
+ * <ol>
+ *   <li>{@link #mergeManifestsForApplication(File, List, List, String, int, String, String, String,
+ *       Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
+ *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
+ *       Boolean, String, File, List, Map, File, File)}
+ *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
+ *   <li>{@link #compileAllAidlFiles(Collection, File, File, Collection, Collection,
+ *       DependencyFileProcessor, ProcessOutputHandler)}
+ *   <li>{@link #getDexByteCodeConverter()}
+ * </ol>
+ *
+ * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
+ * #getBootClasspath(boolean)}.
  */
 public class AndroidBuilder {
 
@@ -1292,38 +1298,14 @@ public class AndroidBuilder {
 
     @NonNull
     public DexByteCodeConverter getDexByteCodeConverter() {
-        checkState(mDexByteCodeConverter != null,
+        checkState(
+                mDexByteCodeConverter != null,
                 "Cannot call getDexByteCodeConverter() before setTargetInfo() is called.");
         return mDexByteCodeConverter;
     }
 
-    /**
-     * Converts the bytecode to Dalvik format
-     * @param inputs the input files
-     * @param outDexFolder the location of the output folder
-     * @param dexOptions dex options
-     * @throws IOException failed
-     * @throws InterruptedException failed
-     * @throws ProcessException failed
-     */
-    public void convertByteCode(
-            @NonNull Collection<File> inputs,
-            @NonNull File outDexFolder,
-            boolean multidex,
-            @Nullable File mainDexList,
-            @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, ProcessException {
-        getDexByteCodeConverter().convertByteCode(inputs,
-                outDexFolder,
-                multidex,
-                mainDexList,
-                dexOptions,
-                processOutputHandler);
-    }
-
     public enum MainDexListOption {
-        DISABLE_ANNOTATION_RESOLUTION_WORKAROUND;
+        DISABLE_ANNOTATION_RESOLUTION_WORKAROUND,
     }
 
     public Set<String> createMainDexList(
@@ -1436,9 +1418,7 @@ public class AndroidBuilder {
         getDexByteCodeConverter().runDexer(builder, dexOptions, processOutputHandler);
 
         if (multiDex) {
-            File[] files = outFile.listFiles((file, name) -> {
-                return name.endsWith(DOT_DEX);
-            });
+            File[] files = outFile.listFiles((file, name) -> name.endsWith(DOT_DEX));
 
             if (files == null || files.length == 0) {
                 throw new RuntimeException("No dex files created at " + outFile.getAbsolutePath());
