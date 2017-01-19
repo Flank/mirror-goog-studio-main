@@ -17,13 +17,11 @@
 package com.android.ide.common.res2;
 
 import com.android.resources.ResourceType;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class PartialFileResourceNameValidatorTest {
@@ -35,26 +33,30 @@ public class PartialFileResourceNameValidatorTest {
                         + "must contain only lowercase a-z, 0-9, or underscore";
         final String THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG =
                 "The file name must end with .xml or .png";
-        return Arrays.asList(new Object[][]{
-                //{ resourceName, resourceType, sourceFile, expectedException }
-                {"", ResourceType.ANIMATOR, "Resource must have a name"},
-                {"foo.png", ResourceType.DRAWABLE, null},
-                {"foo.xml", ResourceType.DRAWABLE, null},
-                {"foo.9.png", ResourceType.DRAWABLE, null},
-                {"foo.other.png", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                {"foo.xml", ResourceType.XML, null},
-                {"foo.png", ResourceType.XML, "The file name must end with .xml"},
-                {"foo.8.xml", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                {"foo", ResourceType.DRAWABLE, null},
-                {"foo.txt", ResourceType.RAW, null},
-                {"foo", ResourceType.RAW, null},
-                {"foo", ResourceType.RAW, null},
-                {"foo.txt", ResourceType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
-                {"Foo.png", ResourceType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC},
-                {"foo$.png", ResourceType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC},
-                {"enum.png", ResourceType.DRAWABLE,
-                        "enum is not a valid resource name (reserved Java keyword)"},
-        });
+        return Arrays.asList(
+                new Object[][] {
+                    //{ resourceName, resourceType, sourceFile, expectedException }
+                    {"", ResourceType.ANIMATOR, "Resource must have a name"},
+                    {"foo.png", ResourceType.DRAWABLE, null},
+                    {"foo.xml", ResourceType.DRAWABLE, null},
+                    {"foo.9.png", ResourceType.DRAWABLE, null},
+                    {"foo.other.png", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
+                    {"foo.xml", ResourceType.XML, null},
+                    {"foo.png", ResourceType.XML, "The file name must end with .xml"},
+                    {"foo.8.xml", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
+                    {"foo", ResourceType.DRAWABLE, null},
+                    {"foo.txt", ResourceType.RAW, null},
+                    {"foo", ResourceType.RAW, null},
+                    {"foo", ResourceType.RAW, null},
+                    {"foo.txt", ResourceType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
+                    {"Foo.png", ResourceType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC},
+                    {"foo$.png", ResourceType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC},
+                    {
+                        "enum.png",
+                        ResourceType.DRAWABLE,
+                        "enum is not a valid resource name (reserved Java keyword)"
+                    },
+                });
     }
 
     @Parameterized.Parameter(value = 0)
@@ -70,7 +72,8 @@ public class PartialFileResourceNameValidatorTest {
     @Test
     public void validate() {
         String actual =
-                FileResourceNameValidator.getErrorTextForPartialName(mSourceFileName, mResourceType);
+                FileResourceNameValidator.getErrorTextForPartialName(
+                        mSourceFileName, mResourceType);
         FileResourceNameValidatorTest.assertErrorMessageCorrect(mExpectedErrorMessage, actual);
     }
 }

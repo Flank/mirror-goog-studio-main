@@ -15,10 +15,12 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING;
+import static com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_DENISTY;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -37,6 +39,10 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.symbols.IdProvider;
+import com.android.builder.symbols.ResourceDirectoryParser;
+import com.android.builder.symbols.SymbolTable;
+import com.android.builder.symbols.SymbolUtils;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -116,6 +122,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Collection<File> previousFeatures;
 
+    private boolean enableNewResourceProcessing;
+
     @Override
     protected void doFullTaskAction() throws IOException {
 
@@ -128,12 +136,33 @@ public class ProcessAndroidResources extends IncrementalTask {
         @Nullable
         File resOutBaseNameFile = getPackageOutputFile();
 
-        // If are in instant run mode and we have an instant run enabled manifest
+        // If we are in instant run mode and we have an instant run enabled manifest
         File instantRunManifest = getInstantRunManifestFile();
         File manifestFileToPackage = instantRunBuildContext.isInInstantRunMode() &&
                 instantRunManifest != null && instantRunManifest.exists()
                     ? instantRunManifest
                     : getManifestFile();
+
+        // If the new resources flag is enabled and if we are dealing with a library process
+        // resources through the new parsers
+        if (enableNewResourceProcessing && this.type.equals(VariantType.LIBRARY)) {
+
+            // Get symbol table of resources of the library
+            SymbolTable symbolTable =
+                    ResourceDirectoryParser.parseDirectory(getResDir(), IdProvider.sequential());
+
+            SymbolUtils.processLibraryMainSymbolTable(
+                    symbolTable,
+                    getAndroidDependencies(),
+                    getEnforceUniquePackageName(),
+                    getPackageForR(),
+                    manifestFileToPackage,
+                    srcOut,
+                    getTextSymbolOutputDir(),
+                    getProguardOutputFile());
+
+            return;
+        }
 
         AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
@@ -229,6 +258,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setVariantName(config.getFullName());
             processResources.setIncrementalFolder(
                     scope.getVariantScope().getIncrementalDir(getName()));
+            processResources.setEnableNewResourceProcessing(
+                    scope.getGlobalScope().getProjectOptions().get(ENABLE_NEW_RESOURCE_PROCESSING));
 
             if (variantData.getSplitHandlingPolicy() ==
                     SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
@@ -339,8 +370,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                         if (variantFilter != null) {
                             return variantFilter;
                         }
-                        return AndroidGradleOptions.getBuildTargetDensity(
-                                scope.getGlobalScope().getProject());
+                        return scope.getGlobalScope()
+                                .getProjectOptions()
+                                .get(IDE_BUILD_TARGET_DENISTY);
                     });
 
             processResources.setMergeBlameLogFolder(
@@ -601,5 +633,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setPreviousFeatures(Collection<File> previousFeatures) {
         this.previousFeatures = previousFeatures;
+    }
+
+    @Input
+    public boolean isEnabledNewResourceProcessing() {
+        return enableNewResourceProcessing;
+    }
+
+    public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
+        this.enableNewResourceProcessing = enableNewResourceProcessing;
     }
 }

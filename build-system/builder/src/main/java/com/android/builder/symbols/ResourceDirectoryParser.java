@@ -16,15 +16,21 @@
 
 package com.android.builder.symbols;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.DOT_XML;
+
 import com.android.annotations.NonNull;
+import com.android.ide.common.res2.FileResourceNameValidator;
+import com.android.ide.common.res2.MergingException;
+import com.android.resources.FolderTypeRelationship;
+import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -37,38 +43,37 @@ import org.xml.sax.SAXException;
  * {@code X(-Y)*} where {@code X} is a <i>pseudo</i> resource type (see below) and {@code Y} are
  * optional qualifiers. Inside each directory, only resource files should exist.
  *
- * <p>The <i>pseudo</i> resource type is either the resource type or the value {@code values}.
- * If the first segment of the directory name is {@code values}, files in the directory are treated
- * as resource XML values, parsed using {@link ResourceValuesXmlParser} and the generated symbol
- * tables merged to form the resulting one.
+ * <p>The <i>pseudo</i> resource type is either the resource type or the value {@code values}. If
+ * the first segment of the directory name is {@code values}, files in the directory are treated as
+ * resource XML values, parsed using {@link ResourceValuesXmlParser} and the generated symbol tables
+ * are merged to form the resulting one.
  *
  * <p>The qualifiers are irrelevant as far as the directory parser is concerned and are ignored.
  *
  * <p>One symbol will be generated per resource file, with the exception of resource files in the
- * {@code values} directory. The symbol's name is the resource file name with optional extension
- * removed. The only characters allowed in the symbol's name are lowercase letters, digits and
- * the underscore character.
+ * {@code values} directory and resources declared inside other XML files (e.g. "@+string/my_string"
+ * declared inside {@code layout/activity_name.xml} would generate a new Symbol of type {@code
+ * String} and name {@code my_string}).
+ *
+ * <p>For files the symbol's name is the resource file name with optional extension removed. The
+ * only characters allowed in the symbol's name are lowercase letters, digits and the underscore
+ * character.
+ *
+ * <p>For values declared inside XML files the symbol's name is the element's {@code name} XML tag
+ * value. Dots and colons are allowed, but deprecated and therefore support for them will end soon.
  *
  * <p>Subdirectories in the resource directories are ignored.
  *
  * <p>For testing purposes, it is guaranteed that the resource directories are processed by name
  * with all the {@code values} directories being processed last. Inside each directory, files are
  * processed in alphabetical order. All symbols are assigned an ID, even if they are duplicated.
- * Duplicated symbols are not present in the final symbol table. So, if for example, the
- * following resources are defined {@code drawable/a.png}, {@code drawable-hdpi/a.png} and
- * {@code layout/b.xml}, two symbols will exist, {@code drawable/a} and {@code layout/b} with
- * IDs {@code 1} and {@code 3}, respectively. This behavior, that ensures ID assignment is
- * deterministic, should not be relied upon except for testing.
+ * Duplicated symbols are not present in the final symbol table. So, if for example, the following
+ * resources are defined {@code drawable/a.png}, {@code drawable-hdpi/a.png} and {@code
+ * layout/b.xml}, two symbols will exist, {@code drawable/a} and {@code layout/b} with IDs {@code 1}
+ * and {@code 3}, respectively. This behavior, that ensures ID assignment is deterministic, should
+ * not be relied upon except for testing.
  */
 public class ResourceDirectoryParser {
-
-    /**
-     * A valid resource file name has the format X or X.Y where X is a non-empty sequence of
-     * lowercase characters, digits or underscore and Y, if present, is any sequence of characters
-     * that does not contain period.
-     */
-    private static final Pattern VALID_RESOURCE_FILE_NAME =
-            Pattern.compile("([a-z0-9_]+)(?:\\.[^.]*)?");
 
     private ResourceDirectoryParser() {}
 
@@ -82,8 +87,8 @@ public class ResourceDirectoryParser {
      */
     @NonNull
     public static SymbolTable parseDirectory(
-            @NonNull File directory,
-            @NonNull IdProvider idProvider) {
+            @NonNull File directory, @NonNull IdProvider idProvider)
+            throws ResourceDirectoryParseException {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
 
         SymbolTable.Builder builder = SymbolTable.builder();
@@ -93,6 +98,14 @@ public class ResourceDirectoryParser {
 
         Arrays.sort(resourceDirectories, Comparator.comparing(File::getName));
 
+        DocumentBuilder documentBuilder = null;
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        try {
+            documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new ResourceDirectoryParseException("Failed to instantiate DOM parser", e);
+        }
+
         for (File resourceDirectory : resourceDirectories) {
             if (!resourceDirectory.isDirectory()) {
                 throw new ResourceDirectoryParseException(
@@ -101,7 +114,7 @@ public class ResourceDirectoryParser {
                                 + "' is not a directory");
             }
 
-            parseResourceDirectory(resourceDirectory, builder, idProvider);
+            parseResourceDirectory(resourceDirectory, builder, idProvider, documentBuilder);
         }
 
         return builder.build();
@@ -111,51 +124,25 @@ public class ResourceDirectoryParser {
      * Parses a resource directory.
      *
      * @param resourceDirectory the resource directory to parse
-     * @param builder the builer to add symbols to
+     * @param builder the builder to add symbols to
      * @param idProvider the ID provider to get IDs from
      * @throws ResourceDirectoryParseException failed to parse the resource directory
      */
     private static void parseResourceDirectory(
             @NonNull File resourceDirectory,
             @NonNull SymbolTable.Builder builder,
-            @NonNull IdProvider idProvider) {
+            @NonNull IdProvider idProvider,
+            @NonNull DocumentBuilder documentBuilder)
+            throws ResourceDirectoryParseException {
         assert resourceDirectory.isDirectory();
 
-        /*
-         * Compute the pseudo resource type from the resource directory name, discarding any
-         * qualifiers. If the directory name is "foo", then the pseudo resource type is "foo". If
-         * the directory name is "foo-bar-blah", then the pseudo resource type is "foo".
-         */
+        // Compute the pseudo resource type from the resource directory name, discarding any
+        // qualifiers. If the directory name is "foo", then the pseudo resource type is "foo". If
+        // the directory name is "foo-bar-blah", then the pseudo resource type is "foo".
         String directoryName = resourceDirectory.getName();
-        int firstHyphen = directoryName.indexOf(SdkConstants.RES_QUALIFIER_SEP);
-        String pseudoResourceType;
-        if (firstHyphen == -1) {
-            pseudoResourceType = directoryName;
-        } else {
-            pseudoResourceType = directoryName.substring(0, firstHyphen);
-        }
+        ResourceFolderType folderResourceType = ResourceFolderType.getFolderType(directoryName);
 
-        /*
-         * Check if this is a resource values directory or not. If it is, then individual files
-         * are not treated as resources but rather resource value XML files.
-         */
-        boolean isValues = pseudoResourceType.equals(SdkConstants.FD_RES_VALUES);
-        DocumentBuilder documentBuilder = null;
-        if (isValues) {
-            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-            try {
-                documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            } catch (ParserConfigurationException e) {
-                throw new ResourceDirectoryParseException("Failed to instantiate DOM parser", e);
-            }
-        }
-
-
-        /*
-         * Iterate all files int the resource directory and handle each one. Directories are ignored
-         * and each file generates a symbol, except if isValues is true in which case the resource
-         * XML file is parsed.
-         */
+        // Iterate all files in the resource directory and handle each one.
         File[] resourceFiles = resourceDirectory.listFiles();
         assert resourceFiles != null;
         Arrays.sort(resourceFiles, Comparator.comparing(File::getName));
@@ -171,16 +158,9 @@ public class ResourceDirectoryParser {
                                 + "' is not a file nor directory");
             }
 
-            Matcher resourceFileNameMatcher =
-                    VALID_RESOURCE_FILE_NAME.matcher(maybeResourceFile.getName());
-            if (!resourceFileNameMatcher.matches()) {
-                throw new ResourceDirectoryParseException(
-                        "'"
-                                + maybeResourceFile.getAbsolutePath()
-                                + "' is not a valid resource file name.");
-            }
-
-            if (isValues) {
+            // Check if this is a resource values directory or not. If it is, then individual files
+            // are not treated as resources but rather resource value XML files.
+            if (folderResourceType == ResourceFolderType.VALUES) {
                 Document domTree;
                 try {
                     domTree = documentBuilder.parse(maybeResourceFile);
@@ -194,17 +174,69 @@ public class ResourceDirectoryParser {
                 SymbolTable parsedXml = ResourceValuesXmlParser.parse(domTree, idProvider);
                 parsedXml.allSymbols().forEach(s -> addIfNotExisting(builder, s));
             } else {
-                String symbolName = resourceFileNameMatcher.group(1);
-                assert symbolName != null && !symbolName.isEmpty();
+                // We do not need to validate the filenames of files inside the {@code values}
+                // directory as they do not get parsed into Symbols; but we need to validate the
+                // filenames of files inside non-values directories.
+                try {
+                    ResourceType resourceType =
+                            FolderTypeRelationship.getNonIdRelatedResourceType(folderResourceType);
+                    FileResourceNameValidator.validate(maybeResourceFile, resourceType);
+                } catch (MergingException e) {
+                    throw new ResourceDirectoryParseException("Failed file name validation", e);
+                }
+
+                String fileName = maybeResourceFile.getName();
+
+                // Get name without extension.
+                String symbolName = getNameWithoutExtensions(fileName);
+
                 addIfNotExisting(
                         builder,
                         new Symbol(
-                                pseudoResourceType,
+                                folderResourceType.getName(),
                                 symbolName,
                                 "int",
                                 Integer.toString(idProvider.next())));
+
+                if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
+                        && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
+                    // If we are parsing an XML file (but not in values directories), parse the file
+                    // in search of lazy constructions like {@code "@+id/name"} that also declare
+                    // resources.
+                    Document domTree;
+                    try {
+                        domTree = documentBuilder.parse(maybeResourceFile);
+                    } catch (SAXException | IOException e) {
+                        throw new ResourceDirectoryParseException(
+                                "Failed to parse XML resource file '"
+                                        + maybeResourceFile.getAbsolutePath()
+                                        + "'",
+                                e);
+                    }
+                    SymbolTable extraSymbols = ResourceExtraXmlParser.parse(domTree, idProvider);
+                    extraSymbols.allSymbols().forEach(s -> addIfNotExisting(builder, s));
+                }
             }
         }
+    }
+
+    /**
+     * Removes the optional extensions from the filename. This method should be only called on names
+     * verified by {@link FileResourceNameValidator#validate}.
+     *
+     * <p>As opposed to {@link Files#getNameWithoutExtension}, removes all extensions from the given
+     * filename, for example:
+     *
+     * <p>{@code "foo.xml"} -> {@code "foo"} and {code "foo.9.png"} -> {@code "foo"}.
+     *
+     * @param filename the filename with optional extension
+     * @return filename without any extensions
+     */
+    @NonNull
+    private static String getNameWithoutExtensions(@NonNull String filename) {
+        // Find the *first* dot.
+        int dotIndex = filename.indexOf(".");
+        return (dotIndex > 0) ? filename.substring(0, dotIndex) : filename;
     }
 
     /**
@@ -215,8 +247,7 @@ public class ResourceDirectoryParser {
      * @param symbol the symbol
      */
     private static void addIfNotExisting(
-            @NonNull SymbolTable.Builder builder,
-            @NonNull Symbol symbol) {
+            @NonNull SymbolTable.Builder builder, @NonNull Symbol symbol) {
         if (!builder.contains(symbol)) {
             builder.add(symbol);
         }

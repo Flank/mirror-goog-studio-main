@@ -30,7 +30,6 @@ import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
 import com.android.xml.AndroidManifest;
-import com.google.common.io.Closeables;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -579,44 +578,39 @@ public class AndroidManifestParser {
     }
 
     /**
-     * Parses the Android Manifest, and returns a {@link ManifestData} object containing the
-     * result of the parsing.
+     * Parses the Android Manifest, and returns a {@link ManifestData} object containing the result
+     * of the parsing.
      *
      * @param manifestFile the {@link IAbstractFile} representing the manifest file.
      * @param gatherData indicates whether the parsing will extract data from the manifest. If false
-     * the method will always return null.
+     *     the method will always return null.
      * @param errorHandler an optional errorHandler.
      * @return A class containing the manifest info obtained during the parsing, or null on error.
-     *
-     * @throws StreamException
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException If there was a problem parsing the file
+     * @throws SAXException If any SAX errors occurred during processing.
      */
     public static ManifestData parse(
-            IAbstractFile manifestFile,
-            boolean gatherData,
-            ManifestErrorHandler errorHandler)
-                throws SAXException, IOException, StreamException, ParserConfigurationException {
+            IAbstractFile manifestFile, boolean gatherData, ManifestErrorHandler errorHandler)
+            throws IOException, SAXException {
         if (manifestFile != null) {
-            SAXParser parser = sParserFactory.newSAXParser();
+            SAXParser parser;
+            try {
+                parser = sParserFactory.newSAXParser();
+            } catch (ParserConfigurationException | SAXException e) {
+                throw new RuntimeException(e);
+            }
 
             ManifestData data = null;
             if (gatherData) {
                 data = new ManifestData();
             }
 
-            ManifestHandler manifestHandler = new ManifestHandler(manifestFile,
-                    data, errorHandler);
-            InputStream is = manifestFile.getContents();
-            try {
+            ManifestHandler manifestHandler = new ManifestHandler(manifestFile, data, errorHandler);
+
+            try (InputStream is = manifestFile.getContents()) {
                 parser.parse(new InputSource(is), manifestHandler);
-            } finally {
-                try {
-                    Closeables.close(is, true /* swallowIOException */);
-                } catch (IOException e) {
-                    // cannot happen
-                }
+            } catch (StreamException e) {
+                throw new IOException(e);
             }
 
             return data;
@@ -628,23 +622,18 @@ public class AndroidManifestParser {
     /**
      * Parses the Android Manifest, and returns an object containing the result of the parsing.
      *
-     * <p>
-     * This is the equivalent of calling <pre>parse(manifestFile, true, null)</pre>
+     * <p>This is the equivalent of calling {@code parse(manifestFile, true, null)}.
      *
      * @param manifestFile the manifest file to parse.
-     *
-     * @throws ParserConfigurationException
-     * @throws StreamException
      * @throws IOException
      * @throws SAXException
      */
-    public static ManifestData parse(IAbstractFile manifestFile)
-            throws SAXException, IOException, StreamException, ParserConfigurationException {
+    public static ManifestData parse(IAbstractFile manifestFile) throws IOException, SAXException {
         return parse(manifestFile, true, null);
     }
 
     public static ManifestData parse(IAbstractFolder projectFolder)
-            throws SAXException, IOException, StreamException, ParserConfigurationException {
+            throws IOException, SAXException {
         IAbstractFile manifestFile = AndroidManifest.getManifest(projectFolder);
         if (manifestFile == null) {
             throw new FileNotFoundException();
@@ -659,14 +648,12 @@ public class AndroidManifestParser {
      *
      * @param manifestFileStream the {@link InputStream} representing the manifest file.
      * @return A class containing the manifest info obtained during the parsing or null on error.
-     *
-     * @throws StreamException
      * @throws IOException
      * @throws SAXException
      * @throws ParserConfigurationException
      */
     public static ManifestData parse(InputStream manifestFileStream)
-            throws SAXException, IOException, StreamException, ParserConfigurationException {
+            throws ParserConfigurationException, SAXException, IOException {
         if (manifestFileStream != null) {
             SAXParser parser = sParserFactory.newSAXParser();
 

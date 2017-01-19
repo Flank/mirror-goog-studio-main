@@ -43,8 +43,8 @@ public class SymbolTableTest {
 
     @Test
     public void equalNonEmptyTable() {
-        SymbolTable t0 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
-        SymbolTable t1 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
+        SymbolTable t0 = SymbolTable.builder().add(new Symbol("attr", "b", "c", "d")).build();
+        SymbolTable t1 = SymbolTable.builder().add(new Symbol("attr", "b", "c", "d")).build();
 
         assertEquals(t0, t1);
         assertEquals(t0.hashCode(), t1.hashCode());
@@ -52,8 +52,8 @@ public class SymbolTableTest {
 
     @Test
     public void nonEqualTable() {
-        SymbolTable t0 = SymbolTable.builder().add(new Symbol("1", "2", "3", "4")).build();
-        SymbolTable t1 = SymbolTable.builder().add(new Symbol("1", "2", "3", "5")).build();
+        SymbolTable t0 = SymbolTable.builder().add(new Symbol("attr", "b", "c", "d")).build();
+        SymbolTable t1 = SymbolTable.builder().add(new Symbol("attr", "b", "c", "e")).build();
 
         assertNotEquals(t0, t1);
         assertNotEquals(t0.hashCode(), t1.hashCode());
@@ -80,10 +80,10 @@ public class SymbolTableTest {
         ImmutableCollection<Symbol> syms = t.allSymbols();
         assertEquals(0, syms.size());
 
-        t = SymbolTable.builder().add(new Symbol("x", "y", "z", "w")).build();
+        t = SymbolTable.builder().add(new Symbol("attr", "y", "z", "w")).build();
         syms = t.allSymbols();
         assertEquals(1, syms.size());
-        assertTrue(syms.contains(new Symbol("x", "y", "z", "w")));
+        assertTrue(syms.contains(new Symbol("attr", "y", "z", "w")));
     }
 
     @Test
@@ -127,7 +127,7 @@ public class SymbolTableTest {
         SymbolTable t =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable m = SymbolTable.merge(Collections.singletonList(t));
@@ -135,7 +135,7 @@ public class SymbolTableTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         assertEquals(expected, m);
@@ -146,22 +146,22 @@ public class SymbolTableTest {
         SymbolTable m0 =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable m1 =
                 SymbolTable.builder()
                         .tablePackage("muu")
-                        .add(new Symbol("a", "b", "c1", "d1"))
-                        .add(new Symbol("a2", "b2", "c2", "d2"))
+                        .add(new Symbol("attr", "b", "c1", "d1"))
+                        .add(new Symbol("string", "b2", "c2", "d2"))
                         .build();
 
         SymbolTable m2 =
                 SymbolTable.builder()
                         .tablePackage("moo")
-                        .add(new Symbol("a", "b", "c3", "d3"))
-                        .add(new Symbol("a2", "b2", "c4", "d4"))
-                        .add(new Symbol("a5", "b5", "c5", "d5"))
+                        .add(new Symbol("attr", "b", "c3", "d3"))
+                        .add(new Symbol("string", "b2", "c4", "d4"))
+                        .add(new Symbol("color", "b5", "c5", "d5"))
                         .build();
 
         SymbolTable r = SymbolTable.merge(Arrays.asList(m0, m1, m2));
@@ -169,9 +169,9 @@ public class SymbolTableTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("a2", "b2", "c2", "d2"))
-                        .add(new Symbol("a5", "b5", "c5", "d5"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "b2", "c2", "d2"))
+                        .add(new Symbol("color", "b5", "c5", "d5"))
                         .build();
 
         assertEquals(expected, r);
@@ -182,15 +182,15 @@ public class SymbolTableTest {
         SymbolTable t =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("e", "f", "g", "h"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "f", "g", "h"))
                         .build();
 
         SymbolTable f =
                 SymbolTable.builder()
                         .tablePackage("bleh")
-                        .add(new Symbol("i", "j", "k", "l"))
-                        .add(new Symbol("a", "b", "m", "n"))
+                        .add(new Symbol("integer", "j", "k", "l"))
+                        .add(new Symbol("attr", "b", "m", "n"))
                         .build();
 
         SymbolTable r = t.filter(f);
@@ -198,7 +198,7 @@ public class SymbolTableTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .tablePackage("bar")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         assertEquals(expected, r);
@@ -206,11 +206,11 @@ public class SymbolTableTest {
 
     @Test
     public void renameTest() {
-        SymbolTable t = SymbolTable.builder().add(new Symbol("a", "b", "c", "d")).build();
+        SymbolTable t = SymbolTable.builder().add(new Symbol("attr", "b", "c", "d")).build();
         SymbolTable r = t.rename("x");
         SymbolTable e =
                 SymbolTable.builder()
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .tablePackage("x")
                         .build();
         assertEquals(e, r);
@@ -218,8 +218,8 @@ public class SymbolTableTest {
 
     @Test
     public void containsSymbol() {
-        SymbolTable t = SymbolTable.builder().add(new Symbol("a", "b", "c", "d")).build();
-        assertTrue(t.contains("a", "b"));
-        assertFalse(t.contains("aa", "b"));
+        SymbolTable t = SymbolTable.builder().add(new Symbol("attr", "b", "c", "d")).build();
+        assertTrue(t.contains("attr", "b"));
+        assertFalse(t.contains("string", "b"));
     }
 }

@@ -24,10 +24,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
-
 import java.io.File;
 import java.util.List;
-
 import javax.lang.model.SourceVersion;
 
 public final class FileResourceNameValidator {

@@ -60,20 +60,20 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("e", "f", "g", "h"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "f", "g", "h"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("a", "b", "cc", "dd"))
+                        .add(new Symbol("attr", "b", "cc", "dd"))
                         .build();
 
         SymbolTable l1 =
                 SymbolTable.builder()
                         .tablePackage("e.f")
-                        .add(new Symbol("e", "f", "gg", "hh"))
+                        .add(new Symbol("string", "f", "gg", "hh"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -90,14 +90,14 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("eeee", "ffff", "g", "h"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "ffff", "g", "h"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -110,13 +110,13 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -130,34 +130,34 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("e", "f", "g", "h"))
-                        .add(new Symbol("i", "j", "k", "l"))
-                        .add(new Symbol("m", "n", "o", "p"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "f", "g", "h"))
+                        .add(new Symbol("integer", "j", "k", "l"))
+                        .add(new Symbol("menu", "n", "o", "p"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("a.c")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable l1 =
                 SymbolTable.builder()
                         .tablePackage("a.c")
-                        .add(new Symbol("e", "f", "g", "h"))
+                        .add(new Symbol("string", "f", "g", "h"))
                         .build();
 
         SymbolTable l2 =
                 SymbolTable.builder()
                         .tablePackage("a.d")
-                        .add(new Symbol("i", "j", "k", "l"))
+                        .add(new Symbol("integer", "j", "k", "l"))
                         .build();
 
         SymbolTable l3 =
                 SymbolTable.builder()
                         .tablePackage("a.b.c")
-                        .add(new Symbol("m", "n", "o", "p"))
+                        .add(new Symbol("menu", "n", "o", "p"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -186,13 +186,13 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("a", "b", "c", "d"))
+                        .add(new Symbol("attr", "b", "c", "d"))
                         .build();
 
         File out = temporaryFolder.newFolder();
