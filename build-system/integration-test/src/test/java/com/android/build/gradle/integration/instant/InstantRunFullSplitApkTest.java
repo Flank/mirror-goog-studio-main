@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -73,7 +72,6 @@ public class InstantRunFullSplitApkTest {
         mProject.executor()
                 .withInstantRun(
                         24,
-                        ColdswapMode.AUTO,
                         OptionalCompilationStep.FULL_APK)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .run("assembleDebug");

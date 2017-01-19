@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -56,7 +55,6 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DaggerTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String ORIGINAL_MESSAGE = "from module";
     private static final String APP_MODULE_DESC = "Lcom/android/tests/AppModule;";
     private static final String GET_MESSAGE = "getMessage";
@@ -152,11 +150,11 @@ public class DaggerTest {
     @Test
     public void hotSwap() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, 23, COLDSWAP_MODE);
+                InstantRunTestUtils.doInitialBuild(project, 23);
 
         TestFileUtils.searchAndReplace(mAppModule, "from module", "CHANGE");
 
-        project.executor().withInstantRun(23, COLDSWAP_MODE).run("assembleDebug");
+        project.executor().withInstantRun(23).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 

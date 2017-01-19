@@ -25,8 +25,6 @@ import com.android.build.gradle.internal.incremental.BuildContext.Build;
 import com.android.builder.Version;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -34,7 +32,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Test;
@@ -69,7 +66,7 @@ public class BuildContextTest {
     @Test
     public void testPersistenceFromCleanState() throws ParserConfigurationException {
         BuildContext buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         String persistedState = buildContext.toXml();
         assertThat(persistedState).isNotEmpty();
         assertThat(persistedState).contains(BuildContext.ATTR_TIMESTAMP);
@@ -78,7 +75,7 @@ public class BuildContextTest {
     @Test
     public void testFormatPresence() throws ParserConfigurationException {
         BuildContext buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         String persistedState = buildContext.toXml();
         assertThat(persistedState).isNotEmpty();
         assertThat(persistedState).contains(BuildContext.ATTR_FORMAT
@@ -88,7 +85,7 @@ public class BuildContextTest {
     @Test
     public void testDuplicateEntries() throws ParserConfigurationException, IOException {
         BuildContext context = new BuildContext(idAllocator);
-        context.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        context.setApiLevel(21, null /* targetArchitecture */);
         context.addChangedFile(
                 FileType.SPLIT, new File("/tmp/dependencies.apk"));
         context.addChangedFile(
@@ -104,7 +101,7 @@ public class BuildContextTest {
     public void testLoadingFromCleanState()
             throws ParserConfigurationException, SAXException, IOException {
         BuildContext buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null);
+        buildContext.setApiLevel(23, null);
         File file = new File("/path/to/non/existing/file");
         buildContext.loadFromXmlFile(file);
         assertThat(buildContext.getBuildId()).isAtLeast(1L);
@@ -117,7 +114,7 @@ public class BuildContextTest {
         String xml;
         {
             BuildContext context = new BuildContext(idAllocator);
-            context.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null);
+            context.setApiLevel(23, null);
             context.addChangedFile(
                     FileType.MAIN, new File("/tmp/main.apk"));
             context.close();
@@ -127,7 +124,7 @@ public class BuildContextTest {
         xml = xml.replace(Version.ANDROID_GRADLE_PLUGIN_VERSION, "Other");
         {
             BuildContext context = new BuildContext(idAllocator);
-            context.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null);
+            context.setApiLevel(23, null);
             context.loadFromXml(xml);
             assertThat(context.getVerifierResult())
                     .isEqualTo(InstantRunVerifierStatus.INITIAL_BUILD);
@@ -141,7 +138,7 @@ public class BuildContextTest {
         File tmpFile = createMarkedBuildInfo();
 
         BuildContext newContext = new BuildContext(idAllocator);
-        newContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        newContext.setApiLevel(23, null /* targetArchitecture */);
 
         newContext.loadFromXmlFile(tmpFile);
         String xml = newContext.toXml();
@@ -152,17 +149,17 @@ public class BuildContextTest {
     public void testPersistingAndLoadingPastBuilds()
             throws IOException, ParserConfigurationException, SAXException {
         BuildContext buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         buildContext.setSecretToken(12345L);
         File buildInfo = createBuildInfo(buildContext);
         buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         buildContext.loadFromXmlFile(buildInfo);
         assertThat(buildContext.getPreviousBuilds()).hasSize(1);
         saveBuildInfo(buildContext, buildInfo);
 
         buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         buildContext.loadFromXmlFile(buildInfo);
         assertThat(buildContext.getSecretToken()).isEqualTo(12345L);
         assertThat(buildContext.getPreviousBuilds()).hasSize(2);
@@ -171,14 +168,14 @@ public class BuildContextTest {
     @Test
     public void testXmlFormat() throws ParserConfigurationException, IOException, SAXException {
         BuildContext first = new BuildContext(idAllocator);
-        first.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        first.setApiLevel(23, null /* targetArchitecture */);
         first.setDensity("xxxhdpi");
         first.addChangedFile(FileType.MAIN, new File("main.apk"));
         first.addChangedFile(FileType.SPLIT, new File("split.apk"));
         String buildInfo = first.toXml();
 
         BuildContext second = new BuildContext(idAllocator);
-        second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        second.setApiLevel(23, null /* targetArchitecture */);
         second.setDensity("xhdpi");
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("other.apk"));
@@ -235,7 +232,7 @@ public class BuildContextTest {
     public void testArtifactsPersistence()
             throws IOException, ParserConfigurationException, SAXException {
         BuildContext buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         buildContext.addChangedFile(FileType.MAIN,
                 new File("main.apk"));
         buildContext.addChangedFile(FileType.SPLIT,
@@ -244,7 +241,7 @@ public class BuildContextTest {
 
         // check xml format, the IDE depends on it.
         buildContext = new BuildContext(idAllocator);
-        buildContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        buildContext.setApiLevel(23, null /* targetAbi */);
         buildContext.loadFromXml(buildInfo);
         assertThat(buildContext.getPreviousBuilds()).hasSize(1);
         Build build = buildContext.getPreviousBuilds().iterator().next();
@@ -260,13 +257,13 @@ public class BuildContextTest {
     public void testOldReloadPurge()
             throws ParserConfigurationException, IOException, SAXException {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
+        initial.setApiLevel(23, null /* targetArchitecture */);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
         BuildContext first = new BuildContext(idAllocator);
-        first.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
+        first.setApiLevel(23, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
                 new File("reload.dex"));
@@ -275,7 +272,7 @@ public class BuildContextTest {
         buildInfo = first.toXml();
 
         BuildContext second = new BuildContext(idAllocator);
-        second.setApiLevel(23, null /* coldswapMode */, null /* targetArchitecture */);
+        second.setApiLevel(23, null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
         second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
@@ -296,13 +293,13 @@ public class BuildContextTest {
     public void testMultipleReloadCollapse()
             throws ParserConfigurationException, IOException, SAXException {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        initial.setApiLevel(23, null /* targetArchitecture */);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
         BuildContext first = new BuildContext(idAllocator);
-        first.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        first.setApiLevel(23, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
                 new File("reload.dex"));
@@ -311,7 +308,7 @@ public class BuildContextTest {
         buildInfo = first.toXml();
 
         BuildContext second = new BuildContext(idAllocator);
-        second.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        second.setApiLevel(23, null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
         second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
@@ -320,7 +317,7 @@ public class BuildContextTest {
         buildInfo = second.toXml();
 
         BuildContext third = new BuildContext(idAllocator);
-        third.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        third.setApiLevel(23, null /* targetArchitecture */);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.RESOURCES,
                 new File("resources-debug.ap_"));
@@ -331,7 +328,7 @@ public class BuildContextTest {
         buildInfo = third.toXml();
 
         BuildContext fourth = new BuildContext(idAllocator);
-        fourth.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        fourth.setApiLevel(23, null /* targetArchitecture */);
         fourth.loadFromXml(buildInfo);
         fourth.addChangedFile(FileType.RESOURCES,
                 new File("resources-debug.ap_"));
@@ -359,14 +356,14 @@ public class BuildContextTest {
     public void testOverlappingAndEmptyChanges()
             throws ParserConfigurationException, IOException, SAXException {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        initial.setApiLevel(25, null /* targetArchitecture */);
         initial.addChangedFile(FileType.MAIN, new File("/tmp/main.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
         BuildContext first = new BuildContext(idAllocator);
-        first.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        first.setApiLevel(25, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -375,7 +372,7 @@ public class BuildContextTest {
         buildInfo = first.toXml();
 
         BuildContext second = new BuildContext(idAllocator);
-        second.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        second.setApiLevel(25, null /* targetArchitecture */);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         second.setVerifierStatus(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE);
@@ -383,7 +380,7 @@ public class BuildContextTest {
         buildInfo = second.toXml();
 
         BuildContext third = new BuildContext(idAllocator);
-        third.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        third.setApiLevel(25, null /* targetArchitecture */);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-3.apk"));
@@ -438,20 +435,20 @@ public class BuildContextTest {
     public void testTemporaryBuildProduction()
             throws ParserConfigurationException, IOException, SAXException {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        initial.setApiLevel(21, null /* targetArchitecture */);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         String buildInfo = initial.toXml();
 
         BuildContext first = new BuildContext(idAllocator);
-        first.setApiLevel(21, null /* coldswapMode */, null /* targetArchitecture */);
+        first.setApiLevel(21, null /* targetArchitecture */);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RESOURCES, new File("/tmp/resources_ap"));
         first.close();
         String tmpBuildInfo = first.toXml(BuildContext.PersistenceMode.TEMP_BUILD);
 
         BuildContext fixed = new BuildContext(idAllocator);
-        fixed.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetArchitecture */);
+        fixed.setApiLevel(21, null /* targetArchitecture */);
         fixed.loadFromXml(buildInfo);
         fixed.mergeFrom(tmpBuildInfo);
         fixed.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
@@ -475,33 +472,32 @@ public class BuildContextTest {
     public void testX86InjectedArchitecture() {
 
         BuildContext context = new BuildContext(idAllocator);
-        context.setApiLevel(20, null /* coldswapMode */, "x86");
+        context.setApiLevel(20, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.PRE_LOLLIPOP);
 
-        context.setApiLevel(21, null /* coldswapMode */, "x86");
+        context.setApiLevel(21, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
 
-        context.setApiLevel(23, null /* coldswapMode */, "x86");
+        context.setApiLevel(23, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
 
-        context.setApiLevel(21, ColdswapMode.MULTIAPK.name(), "x86");
+        context.setApiLevel(21, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
 
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.name(), "x86");
+        context.setApiLevel(23, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
 
-        context.setApiLevel(21, ColdswapMode.MULTIAPK.name(), "x86");
+        context.setApiLevel(21, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
 
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.name(), "x86");
+        context.setApiLevel(23, "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
     }
 
     @Test
     public void testResourceRemovalWhenBuildingMainApp() throws Exception {
         BuildContext context = new BuildContext(idAllocator);
-        context.setApiLevel(19,
-                ColdswapMode.AUTO.name(), null /* targetArchitecture */);
+        context.setApiLevel(19, null /* targetArchitecture */);
 
         context.addChangedFile(FileType.RESOURCES, new File("res.ap_"));
         String tempXml = context.toXml(BuildContext.PersistenceMode.TEMP_BUILD);
@@ -519,7 +515,7 @@ public class BuildContextTest {
     @Test
     public void testFullAPKRequestWithSplits() throws Exception {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        initial.setApiLevel(25, null /* targetAbi */);
 
         // set the initial build.
         initial.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -531,7 +527,7 @@ public class BuildContextTest {
 
         // re-add only the main apk.
         BuildContext update = new BuildContext(idAllocator);
-        update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(25, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -542,7 +538,7 @@ public class BuildContextTest {
 
         // now add only one split apk.
         update = new BuildContext(idAllocator);
-        update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(25, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
@@ -553,7 +549,7 @@ public class BuildContextTest {
 
         // and one of each type.
         update = new BuildContext(idAllocator);
-        update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(25, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -568,7 +564,7 @@ public class BuildContextTest {
     @Test
     public void testMainSplitReAddingWithSplitAPK() throws Exception {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        initial.setApiLevel(21, null /* targetAbi */);
 
         // set the initial build.
         initial.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -580,7 +576,7 @@ public class BuildContextTest {
 
         // re-add only one of the split apk.
         BuildContext update = new BuildContext(idAllocator);
-        update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(21, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
@@ -597,7 +593,7 @@ public class BuildContextTest {
     @Test
     public void testMainSplitNoReAddingWithAlreadyPresent() throws Exception {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        initial.setApiLevel(21, null /* targetAbi */);
 
         // set the initial build.
         initial.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -609,7 +605,7 @@ public class BuildContextTest {
 
         // re-add only the main apk and a split
         BuildContext update = new BuildContext(idAllocator);
-        update.setApiLevel(21, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(21, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
@@ -628,7 +624,7 @@ public class BuildContextTest {
     @Test
     public void testMainSplitNoReAddingWithSplitAPK() throws Exception {
         BuildContext initial = new BuildContext(idAllocator);
-        initial.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        initial.setApiLevel(25, null /* targetAbi */);
 
         // set the initial build.
         initial.addChangedFile(FileType.MAIN, new File("main.apk"));
@@ -640,7 +636,7 @@ public class BuildContextTest {
 
         // re-add only one of the split apk.
         BuildContext update = new BuildContext(idAllocator);
-        update.setApiLevel(25, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        update.setApiLevel(25, null /* targetAbi */);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
@@ -739,7 +735,7 @@ public class BuildContextTest {
 
     private static File createMarkedBuildInfo() throws IOException, ParserConfigurationException {
         BuildContext originalContext = new BuildContext(idAllocator);
-        originalContext.setApiLevel(23, ColdswapMode.MULTIAPK.name(), null /* targetAbi */);
+        originalContext.setApiLevel(23, null /* targetAbi */);
         return createBuildInfo(originalContext);
     }
 

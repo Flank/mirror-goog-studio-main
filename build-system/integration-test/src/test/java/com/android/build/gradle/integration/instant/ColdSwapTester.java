@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -39,12 +38,12 @@ class ColdSwapTester {
     }
 
     void testDalvik(Steps steps) throws Exception {
-        doTest(steps, 19, ColdswapMode.AUTO);
+        doTest(steps, 19);
     }
 
-    private void doTest(Steps steps, int apiLevel, ColdswapMode coldswapMode) throws Exception {
+    private void doTest(Steps steps, int apiLevel) throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(mProject, apiLevel, coldswapMode);
+                InstantRunTestUtils.doInitialBuild(mProject, apiLevel);
 
         steps.checkApks(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel));
 
@@ -54,7 +53,7 @@ class ColdSwapTester {
         steps.makeChange();
 
         mProject.executor()
-                .withInstantRun(apiLevel, coldswapMode)
+                .withInstantRun(apiLevel)
                 .run("assembleDebug");
 
         BuildContext buildContext =
@@ -70,7 +69,7 @@ class ColdSwapTester {
     }
 
     void testMultiApk(Steps steps) throws Exception {
-        doTest(steps, 24, ColdswapMode.MULTIAPK);
+        doTest(steps, 24);
     }
 
     interface Steps {

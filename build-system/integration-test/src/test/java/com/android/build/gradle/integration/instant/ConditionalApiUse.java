@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.testutils.apk.Apk;
@@ -69,7 +68,7 @@ public class ConditionalApiUse {
     public void buildFor19() throws Exception {
 
         InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(
-                project, 19, ColdswapMode.AUTO);
+                project, 19);
 
         Apk apk = project.getApk("debug");
 
@@ -84,7 +83,7 @@ public class ConditionalApiUse {
         makeHotswapCompatibleChange();
 
         project.executor()
-                .withInstantRun(19, ColdswapMode.AUTO)
+                .withInstantRun(19)
                 .run("assembleDebug");
 
         // because we touched a class that was not compatible with InstantRun, we should have
@@ -100,7 +99,7 @@ public class ConditionalApiUse {
     @Test
     public void buildFor23() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, 23, ColdswapMode.MULTIAPK);
+                InstantRunTestUtils.doInitialBuild(project, 23);
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
 
@@ -113,7 +112,7 @@ public class ConditionalApiUse {
 
         makeHotswapCompatibleChange();
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("assembleDebug");
+        project.executor().withInstantRun(23).run("assembleDebug");
 
         InstantRunArtifact reloadDexArtifact = InstantRunTestUtils
                 .getReloadDexArtifact(instantRunModel);

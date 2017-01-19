@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.testutils.apk.SplitApks;
@@ -97,7 +96,7 @@ public class InstantRunShrinkerTest {
     public void checkApplicationIsNotRemoved() throws Exception {
         project.execute("clean");
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();

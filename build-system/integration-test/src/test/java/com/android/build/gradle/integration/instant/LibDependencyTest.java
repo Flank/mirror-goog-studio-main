@@ -26,7 +26,6 @@ import static com.android.utils.FileUtils.mkdirs;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -69,7 +68,7 @@ public class LibDependencyTest {
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
 
         // Check that original class is included.
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("clean", "assembleRelease", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -99,10 +98,10 @@ public class LibDependencyTest {
         ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
         createJavaLibraryClass("changed");
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
@@ -123,7 +122,7 @@ public class LibDependencyTest {
 
         // Check that original class is included.
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("clean", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -134,7 +133,7 @@ public class LibDependencyTest {
         Files.write("changed java resource", resource, Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
@@ -154,7 +153,7 @@ public class LibDependencyTest {
         createLibraryClass("Hot swap change");
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
