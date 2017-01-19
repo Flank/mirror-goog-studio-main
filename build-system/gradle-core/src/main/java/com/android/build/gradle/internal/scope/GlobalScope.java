@@ -280,8 +280,11 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull Optional<FileCache> buildCache) {
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
                 && !buildCache.isPresent()) {
-            throw new InvalidUserDataException("Build cache must be enable to use improved "
-                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.");
+            throw new InvalidUserDataException("Build cache must be enabled to use improved "
+                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.  "
+                    + "If enabling build cache is not possible, improved dependency resolution can "
+                    + "be disabled by setting "
+                    + "-Pandroid.enableImprovedDependenciesResolution=false.");
         }
     }
 }
