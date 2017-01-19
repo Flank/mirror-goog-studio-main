@@ -55,6 +55,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
+    private Boolean useDexArchive = false;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -171,6 +172,14 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             "-P%s=%s", AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD, "false"));
         }
 
+        if (useDexArchive != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            AndroidGradleOptions.PROPERTY_USE_DEX_ARCHIVE,
+                            Boolean.toString(useDexArchive)));
+        }
+
         args.addAll(arguments);
 
         System.out.println(
@@ -226,6 +235,20 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         ImmutableList<ProgressEvent> getEvents() {
             return ImmutableList.copyOf(events);
         }
+    }
+
+    public RunGradleTasks enableDexArchive() {
+        useDexArchive = true;
+        return this;
+    }
+    public RunGradleTasks disableDexArchive() {
+        useDexArchive = false;
+        return this;
+    }
+
+    public RunGradleTasks withtUseDexArchive(boolean useDexArchive) {
+        this.useDexArchive = useDexArchive;
+        return this;
     }
 
     private static class WaitingResultHandler implements ResultHandler<Void> {

@@ -86,7 +86,7 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
 
-    public static final String PROPERTY_USE_MAIN_DEX_LIST_2 = "android.useMainDexList2";
+    public static final String PROPERTY_USE_DEX_ARCHIVE = "android.useDexArchive";
 
     /**
      * Build cache is used for dependency resolution, and when pre-dexing. Setting this property
@@ -119,7 +119,7 @@ public class AndroidGradleOptions {
 
     @Nullable private final File buildCacheDir;
 
-    private final boolean useMainDexList2;
+    private final boolean useDexArchive;
 
     public AndroidGradleOptions(@NonNull Project project) {
         buildCacheEnabled =
@@ -131,7 +131,7 @@ public class AndroidGradleOptions {
                         ? project.getRootProject().file(buildCacheDirString)
                         : null;
 
-        useMainDexList2 = getBoolean(project, PROPERTY_USE_MAIN_DEX_LIST_2);
+        useDexArchive = getBoolean(project, PROPERTY_USE_DEX_ARCHIVE);
     }
 
     /**
@@ -214,8 +214,8 @@ public class AndroidGradleOptions {
         return getBoolean(project, AndroidProject.PROPERTY_TEST_ONLY);
     }
 
-    public boolean useMainDexList2() {
-        return useMainDexList2;
+    public boolean useDexArchive() {
+        return useDexArchive;
     }
 
     public static boolean isProfileJsonEnabled(@NonNull Project project) {
