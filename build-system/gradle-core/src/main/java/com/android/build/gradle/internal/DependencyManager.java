@@ -59,14 +59,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.CircularReferenceException;
@@ -155,7 +152,7 @@ public class DependencyManager {
     public Set<AndroidDependency> resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
-            @NonNull Optional<FileCache> buildCache) {
+            @Nullable FileCache buildCache) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
         // are now used through their staging folders rather than their bundled AARs.
         // Therefore there is no dependency on these exploded tasks since remote AARs are
@@ -174,7 +171,7 @@ public class DependencyManager {
 
     public void processLibraries(
             @NonNull Set<AndroidDependency> libsToExplode,
-            @NonNull Optional<FileCache> buildCache) {
+            @Nullable FileCache buildCache) {
         for (AndroidDependency lib: libsToExplode) {
             maybeCreatePrepareLibraryTask(lib, project, buildCache);
         }
@@ -186,13 +183,13 @@ public class DependencyManager {
      *
      * @param library the library.
      * @param project the project
-     * @param buildCache the (optional) build cache
+     * @param buildCache the build cache, can be null
      * @return the prepare task.
      */
     private PrepareLibraryTask maybeCreatePrepareLibraryTask(
             @NonNull AndroidDependency library,
             @NonNull Project project,
-            @NonNull Optional<FileCache> buildCache) {
+            @Nullable FileCache buildCache) {
         if (library.isSubModule()) {
             throw new RuntimeException("Creating PrepareLib task for submodule: " + library.getCoordinates());
         }
@@ -233,7 +230,7 @@ public class DependencyManager {
             @NonNull final VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
             @NonNull Set<AndroidDependency> libsToExplodeOut,
-            @NonNull Optional<FileCache> buildCache) {
+            @Nullable FileCache buildCache) {
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
             // if we're only syncing (building the model), then we only need the package
@@ -388,7 +385,7 @@ public class DependencyManager {
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
             @NonNull ScopeType scopeType,
-            @NonNull Optional<FileCache> buildCache) {
+            @Nullable FileCache buildCache) {
 
         // collect the artifacts first.
         Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = Maps.newHashMap();
@@ -625,7 +622,7 @@ public class DependencyManager {
             @NonNull List<String> projectChain,
             @NonNull Set<String> artifactSet,
             @NonNull ScopeType scopeType,
-            @NonNull Optional<FileCache> buildCache,
+            @Nullable FileCache buildCache,
             boolean forceProvided,
             int indent) {
 
@@ -819,14 +816,10 @@ public class DependencyManager {
                                 // to a location inside the project's build directory.
                                 File explodedDir;
                                 if (PrepareLibraryTask.shouldUseBuildCache(
-                                        buildCache.isPresent(), mavenCoordinates)) {
-                                    try {
-                                        explodedDir = buildCache.get().getFileInCache(
-                                                PrepareLibraryTask.getBuildCacheInputs(
-                                                        artifact.getFile()));
-                                    } catch (IOException e) {
-                                        throw new UncheckedIOException(e);
-                                    }
+                                        buildCache != null, mavenCoordinates)) {
+                                    explodedDir = buildCache.getFileInCache(
+                                            PrepareLibraryTask.getBuildCacheInputs(
+                                                    artifact.getFile()));
                                 } else {
                                     if (AndroidGradleOptions
                                                 .isImprovedDependencyResolutionEnabled(project)) {

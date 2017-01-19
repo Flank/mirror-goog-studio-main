@@ -26,7 +26,6 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.utils.FileCache;
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,13 +52,12 @@ public class BuildCacheUtilsTest {
 
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
         when(androidGradleOptions.getBuildCacheDir()).thenReturn(buildCacheDirectory);
-        Optional<FileCache> buildCache =
-                BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
 
-        assertThat(buildCache).isPresent();
+        assertThat(buildCache).isNotNull();
         // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
         // since the build cache (FileCache) might have normalized the directory's path
-        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(
+        assertThat(buildCache.getCacheDirectory()).isEqualTo(
                 buildCacheDirectory.getCanonicalFile());
     }
 
@@ -69,14 +67,14 @@ public class BuildCacheUtilsTest {
 
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
         when(androidGradleOptions.getBuildCacheDir()).thenReturn(null);
-        Optional<FileCache> buildCache =
+        FileCache buildCache =
                 BuildCacheUtils.doCreateBuildCacheIfEnabled(
                         androidGradleOptions, () -> defaultBuildCacheDir);
 
-        assertThat(buildCache).isPresent();
+        assertThat(buildCache).isNotNull();
         // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
         // since the build cache (FileCache) might have normalized the directory's path
-        assertThat(buildCache.get().getCacheDirectory()).isEqualTo(
+        assertThat(buildCache.getCacheDirectory()).isEqualTo(
                 defaultBuildCacheDir.getCanonicalFile());
     }
 
@@ -96,9 +94,8 @@ public class BuildCacheUtilsTest {
     @Test
     public void testCreateBuildCache_Disabled() {
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(false);
-        Optional<FileCache> buildCache =
-                BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
 
-        assertThat(buildCache).isAbsent();
+        assertThat(buildCache).isNull();
     }
 }

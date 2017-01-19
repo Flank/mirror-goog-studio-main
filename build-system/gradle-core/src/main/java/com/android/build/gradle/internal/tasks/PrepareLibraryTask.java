@@ -28,7 +28,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
@@ -60,13 +59,13 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     public void init(
             @NonNull File bundle,
             @NonNull File explodedDir,
-            @NonNull Optional<FileCache> buildCache,
+            @Nullable FileCache buildCache,
             @NonNull MavenCoordinates mavenCoordinates) {
         this.bundle = bundle;
         this.explodedDir = explodedDir;
-        this.shouldUseBuildCache = shouldUseBuildCache(buildCache.isPresent(), mavenCoordinates);
+        this.shouldUseBuildCache = shouldUseBuildCache(buildCache != null, mavenCoordinates);
         if (shouldUseBuildCache) {
-            this.buildCache = buildCache.get();
+            this.buildCache = buildCache;
             this.mavenCoordinates = mavenCoordinates;
         } else {
             // If the build cache is used, we must not register the exploded directory as the output
@@ -189,8 +188,7 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
      * prepare-library task to use the build cache.
      */
     @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile)
-            throws IOException {
+    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile) {
         return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
                 .putFilePath(FileCacheInputParams.FILE_PATH.name(), artifactFile)
                 .putLong(FileCacheInputParams.FILE_SIZE.name(), artifactFile.length())

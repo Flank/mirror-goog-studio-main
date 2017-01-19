@@ -65,6 +65,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +139,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(
@@ -198,10 +199,13 @@ public class DexTransformTest {
 
         // Assert cache results, expect that only the pre-dexed output of non-snapshot external
         // library jar file is cached
-        File[] cachedFiles = buildCache.getCacheDirectory().listFiles();
-        assertNotNull(cachedFiles);
-        assertEquals(1, cachedFiles.length);
-        File cachedPreDexedNonSnapshotExternalLibraryJarInput = new File(cachedFiles[0], "output");
+        File[] files = buildCache.getCacheDirectory().listFiles();
+        assertNotNull(files);
+        List<File> cachedEntries =
+                Arrays.stream(files).filter(File::isDirectory).collect(Collectors.toList());
+        assertEquals(1, cachedEntries.size());
+        File cachedPreDexedNonSnapshotExternalLibraryJarInput =
+                new File(cachedEntries.get(0), "output");
         assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
@@ -243,7 +247,7 @@ public class DexTransformTest {
         assertThat(dexOutputFile).hasContents("Dexed content");
 
         // Assert cache results, expect that the contents are unchanged
-        assertEquals(1, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(1, countCacheEntries(buildCache));
         assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
@@ -280,7 +284,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(
@@ -292,7 +296,7 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert cache results, expect that 2 entries are created
-        assertEquals(2, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(2, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files and build tools revision
         runDexing(
@@ -303,7 +307,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to remain the same
-        assertEquals(2, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(2, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files and different build tools revision
         runDexing(
@@ -314,7 +318,7 @@ public class DexTransformTest {
                 buildCache,
                 new Revision(AndroidBuilder.MIN_BUILD_TOOLS_REV.getMajor() + 1));
         // Expect the cache to contain 2 more entries
-        assertEquals(4, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(4, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files, with the contents of one file changed
         Files.write("New foo content", fooInput.getFile(), StandardCharsets.UTF_8);
@@ -327,7 +331,7 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
         // Expect the cache to contain 1 more entry
-        assertEquals(5, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(5, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with a new input file with the same contents
         JarInput bazInput =
@@ -341,7 +345,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(6, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(6, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with 2 exploded-aar files with the same contents as inputs
         File explodedAarFile1 =
@@ -368,7 +372,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(7, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(7, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with 2 instant-run.jar files with the same contents as inputs
         File instantRunFile1 = new File(testDir.newFolder(), "instant-run.jar");
@@ -387,7 +391,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(8, getFileCount(buildCache.getCacheDirectory()));
+        assertEquals(8, countCacheEntries(buildCache));
     }
 
     @Test
@@ -554,6 +558,13 @@ public class DexTransformTest {
         return files.length;
     }
 
+    private static int countCacheEntries(FileCache buildCache) {
+        // The cache directory contains subdirectories which are cache entries, and lock files.
+        // Therefore, the number of cache entries equals the number of subdirectories.
+        File[] files = buildCache.getCacheDirectory().listFiles();
+        assertNotNull(files);
+        return (int) Arrays.stream(files).filter(File::isDirectory).count();
+    }
 
     private static class FakeAndroidBuilder extends AndroidBuilder {
 

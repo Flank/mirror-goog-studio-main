@@ -68,12 +68,12 @@ public class CleanBuildCache extends BaseTask {
 
         @Override
         public void execute(@NonNull CleanBuildCache task) {
-            Preconditions.checkState(globalScope.getBuildCache().isPresent());
+            Preconditions.checkNotNull(globalScope.getBuildCache());
 
             task.setDescription("Deletes the build cache directory.");
             task.setGroup(BasePlugin.BUILD_GROUP);
             task.setVariantName("");
-            task.setBuildCache(globalScope.getBuildCache().get());
+            task.setBuildCache(globalScope.getBuildCache());
         }
     }
 }
