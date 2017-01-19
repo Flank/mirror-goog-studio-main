@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.performance;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -29,6 +28,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.ColdswapMode;
@@ -36,7 +36,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
@@ -99,31 +98,8 @@ public class AntennaPodPerformanceMatrixTest {
 
     @Before
     public void initializeProject() throws IOException {
+        PerformanceTestProjects.initializeAntennaPod(mainProject);
         project = mainProject.getSubproject("AntennaPod");
-
-        Files.move(
-                mainProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
-                project.file(SdkConstants.FN_LOCAL_PROPERTIES));
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "classpath \"com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+\"",
-                "classpath \"com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + '"');
-
-        upgradeBuildToolsVersion(project.getBuildFile());
-        upgradeBuildToolsVersion(mainProject.file("afollestad/commons/build.gradle"));
-        upgradeBuildToolsVersion(mainProject.file("afollestad/core/build.gradle"));
-        upgradeBuildToolsVersion(mainProject.file("AudioPlayer/library/build.gradle"));
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "jcenter\\(\\)",
-                "maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'} \n"
-                        + "        jcenter()");
 
         File appBuildFile = project.file("app/build.gradle");
         switch (projectScenario) {
@@ -284,8 +260,7 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withtUseDexArchive(projectScenario.useDexArchive())
-                .withoutOfflineFlag();
+                .withtUseDexArchive(projectScenario.useDexArchive());
     }
 
     private boolean isJackOn() {

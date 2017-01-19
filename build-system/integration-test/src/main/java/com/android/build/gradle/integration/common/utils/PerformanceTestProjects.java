@@ -96,6 +96,16 @@ public class PerformanceTestProjects {
         }
 
         TestFileUtils.searchAndReplace(
+                mainProject.file("afollestad/core/build.gradle"),
+                "minSdkVersion 8",
+                "minSdkVersion 10 // Updated by test");
+
+        TestFileUtils.searchAndReplace(
+                mainProject.file("afollestad/commons/build.gradle"),
+                "minSdkVersion 8",
+                "minSdkVersion 10 // Updated by test");
+
+        TestFileUtils.searchAndReplace(
                 mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),
                 "abc_ic_ab_back_mtrl_am_alpha",
                 "abc_ic_ab_back_material");
