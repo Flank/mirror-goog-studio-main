@@ -102,7 +102,10 @@ TEST_DATA = [
 java_library(
     name = "java_tests",
     srcs = glob(
-        ["src/test/java/**/*.java"],
+        [
+            "src/test/java/**/*.java",
+            "src/test/groovy/**/*.java",
+        ],
         exclude = [
             "src/test/java/**/CheckAll*",
             "src/test/java/**/performance/**",
