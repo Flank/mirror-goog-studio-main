@@ -22,13 +22,11 @@ import static com.android.SdkConstants.FD_RES_RAW;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
@@ -45,7 +43,7 @@ public class WearSimpleUnbundledTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         File mainAppBuildGradle = project.file("main/build.gradle");
 
         TestFileUtils.appendToFile(mainAppBuildGradle,
@@ -62,7 +60,7 @@ public class WearSimpleUnbundledTest {
     }
 
     @Test
-    public void checkDefaultNonEmbedding() throws IOException {
+    public void checkDefaultNonEmbedding() throws Exception {
         project.execute("clean", ":main:assemble");
 
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +

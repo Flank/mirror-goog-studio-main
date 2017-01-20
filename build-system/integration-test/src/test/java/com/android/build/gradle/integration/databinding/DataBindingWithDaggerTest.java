@@ -21,9 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.truth.DexSubject;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Rule;
@@ -66,7 +64,7 @@ public class DataBindingWithDaggerTest {
     }
 
     @Test
-    public void testApp() throws IOException, ProcessException {
+    public void testApp() throws Exception {
         project.setBuildFile("build" + buildSuffix);
         project.execute("assembleDebug");
 
@@ -76,7 +74,7 @@ public class DataBindingWithDaggerTest {
     }
 
     @Test
-    public void testAtom() throws IOException, ProcessException {
+    public void testAtom() throws Exception {
         project.setBuildFile("build.atom" + buildSuffix);
         project.execute("assembleDebug");
 

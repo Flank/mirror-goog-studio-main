@@ -28,8 +28,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -48,7 +46,7 @@ public class LibWithPackageLocalJarTest {
     private static LibraryGraphHelper helper;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.library\"\n" +
@@ -76,14 +74,14 @@ public class LibWithPackageLocalJarTest {
     }
 
     @Test
-    public void checkPackagedLocalJarIsPackaged() throws IOException, ProcessException {
+    public void checkPackagedLocalJarIsPackaged() throws Exception {
         // search in secondary jars only.
         assertThat(project.getAar("debug"))
                 .containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void checkPackagedLocalJarIsNotInTheCompileModel() {
+    public void checkPackagedLocalJarIsNotInTheCompileModel() throws Exception {
 
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getOnlyModel().getVariants(), "debug");
@@ -93,7 +91,7 @@ public class LibWithPackageLocalJarTest {
     }
 
     @Test
-    public void checkPackagedLocalJarIsNotInThePackageModel() {
+    public void checkPackagedLocalJarIsNotInThePackageModel() throws Exception {
         Variant variant = ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
 
         DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();

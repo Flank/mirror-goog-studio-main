@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -61,7 +60,7 @@ public class HotSwapWithNoChangesTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass("Original");
     }
@@ -91,7 +90,7 @@ public class HotSwapWithNoChangesTest {
         });
     }
 
-    private void doTestArtifacts(IOExceptionRunnable runColdSwapBuild) throws Exception {
+    private void doTestArtifacts(BuildRunnable runColdSwapBuild) throws Exception {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
@@ -130,12 +129,11 @@ public class HotSwapWithNoChangesTest {
                 .isEqualTo(InstantRunVerifierStatus.NO_CHANGES);
     }
 
-    private void makeHotSwapChange() throws IOException {
+    private void makeHotSwapChange() throws Exception {
         createActivityClass("HOT SWAP!");
     }
 
-    private void createActivityClass(String message)
-            throws IOException {
+    private void createActivityClass(String message) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "import android.app.Activity;\n"
                 + "import android.os.Bundle;\n"
@@ -156,4 +154,8 @@ public class HotSwapWithNoChangesTest {
                 Charsets.UTF_8);
     }
 
+    @FunctionalInterface
+    private interface BuildRunnable {
+        void run() throws IOException, InterruptedException;
+    }
 }

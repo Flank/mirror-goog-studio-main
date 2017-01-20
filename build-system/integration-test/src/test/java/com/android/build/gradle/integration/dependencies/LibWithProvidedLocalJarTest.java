@@ -29,7 +29,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.testutils.truth.MoreTruth;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -47,7 +46,7 @@ public class LibWithProvidedLocalJarTest {
     static ModelContainer<AndroidProject> model;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.library\"\n" +
@@ -72,12 +71,12 @@ public class LibWithProvidedLocalJarTest {
     }
 
     @Test
-    public void checkProvidedLocalJarIsNotPackaged() throws IOException {
+    public void checkProvidedLocalJarIsNotPackaged() throws Exception {
         MoreTruth.assertThat(project.getAar("debug")).doesNotContain("libs/util-1.0.jar");
     }
 
     @Test
-    public void checkProvidedLocalJarIsInTheMainArtifactDependency() {
+    public void checkProvidedLocalJarIsInTheMainArtifactDependency() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");

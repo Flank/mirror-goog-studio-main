@@ -21,14 +21,13 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 
 public class ApkSubjectTest {
 
     @Test
-    public void notInBadgingOutput() throws IOException {
+    public void notInBadgingOutput() throws Exception {
         List<String> strings = Lists.newArrayList(
                 "");
 
@@ -48,7 +47,7 @@ public class ApkSubjectTest {
     }
 
     @Test
-    public void findValidValue() throws IOException {
+    public void findValidValue() throws Exception {
         List<String> strings = Lists.newArrayList(
                 "foo",
                 "maxSdkVersion:'14'",
@@ -66,7 +65,7 @@ public class ApkSubjectTest {
     }
 
     @Test
-    public void findDifferentValue() throws IOException {
+    public void findDifferentValue() throws Exception {
         List<String> strings = Lists.newArrayList(
                 "foo",
                 "maxSdkVersion:'20'",

@@ -38,7 +38,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +55,7 @@ public class LibDependencyTest {
                     .create();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createLibraryClass("Before");
     }
@@ -165,8 +164,7 @@ public class LibDependencyTest {
     }
 
 
-    private void createLibraryClass(String message)
-            throws IOException {
+    private void createLibraryClass(String message) throws Exception {
         String javaCompile = "package com.android.tests.libstest.lib;\n"
             +"public class Lib {\n"
                 +"public static String someString() {\n"
@@ -178,8 +176,7 @@ public class LibDependencyTest {
                 Charsets.UTF_8);
     }
 
-    private void createJavaLibraryClass(String message)
-            throws IOException {
+    private void createJavaLibraryClass(String message) throws Exception {
         File dir = project.file("javalib/src/main/java/com/example/javalib");
         mkdirs(dir);
         String java = "package com.example.javalib;\n"

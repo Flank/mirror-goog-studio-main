@@ -47,7 +47,7 @@ public class PackagingOptionsFilteringTest {
      * @param paths the path to the file starting from the project base directory
      * @throws IOException I/O failed
      */
-    private void dummyFile(@NonNull byte[] contents, @NonNull String... paths) throws IOException {
+    private void dummyFile(@NonNull byte[] contents, @NonNull String... paths) throws Exception {
         File file = FileUtils.join(project.getTestDir(), paths);
         FileUtils.mkdirs(file.getParentFile());
         Files.write(file.toPath(), contents);
@@ -59,7 +59,7 @@ public class PackagingOptionsFilteringTest {
      * @param text text to append
      * @throws IOException I/O failed
      */
-    private void appendBuild(@NonNull String text) throws IOException {
+    private void appendBuild(@NonNull String text) throws Exception {
         File buildFile = project.getBuildFile();
         String contents = com.google.common.io.Files.toString(buildFile, Charsets.US_ASCII);
         contents += System.lineSeparator() + text;

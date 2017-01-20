@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,7 +38,7 @@ public class GenerateSourcesOnlyTest {
                     .create();
 
     @Before
-    public void createBuildFiles() throws IOException {
+    public void createBuildFiles() throws Exception {
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(), "\n"
                 + "apply plugin: \"com.android.application\"\n"
                 + "\n"
@@ -62,7 +61,7 @@ public class GenerateSourcesOnlyTest {
     }
 
     @Test
-    public void checkLibraryNotBuilt() {
+    public void checkLibraryNotBuilt() throws Exception {
         List<String> generateSources =
                 ModelHelper.getDebugGenerateSourcesCommands(project.model().getMulti().getModelMap());
 

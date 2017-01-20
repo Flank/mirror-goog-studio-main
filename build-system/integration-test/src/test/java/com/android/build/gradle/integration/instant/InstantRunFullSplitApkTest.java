@@ -28,7 +28,6 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,7 +45,7 @@ public class InstantRunFullSplitApkTest {
     private InstantRun instantRunModel;
 
     @Before
-    public void getModel() throws IOException {
+    public void getModel() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
         TestFileUtils.appendToFile(mProject.getBuildFile(),

@@ -26,14 +26,12 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Assume;
 import org.junit.Before;
@@ -52,7 +50,7 @@ public class ColdSwapTest {
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass("", "");
     }
@@ -96,7 +94,7 @@ public class ColdSwapTest {
                         });
     }
 
-    private static void checkDalvikApk(@NonNull Apk apk) throws IOException, ProcessException {
+    private static void checkDalvikApk(@NonNull Apk apk) throws Exception {
         assertThat(apk)
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
@@ -146,7 +144,7 @@ public class ColdSwapTest {
                         });
     }
 
-    private void makeColdSwapChange() throws IOException {
+    private void makeColdSwapChange() throws Exception {
         createActivityClass(
                 "import java.util.logging.Logger;",
                 "newMethod();\n"
@@ -165,7 +163,7 @@ public class ColdSwapTest {
     }
 
     private void createActivityClass(@NonNull String imports, @NonNull String newMethodBody)
-            throws IOException {
+            throws Exception {
         String javaCompile =
                 "package com.example.helloworld;\n"
                         + imports

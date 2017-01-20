@@ -22,13 +22,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.builder.model.AndroidProject;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -51,7 +49,7 @@ public class InjectedDensityTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @BeforeClass
-    public static void setup() throws IOException {
+    public static void setup() throws Exception {
 
         String buildScript =
                 GradleTestProject.getGradleBuildscript()
@@ -79,13 +77,13 @@ public class InjectedDensityTest {
     }
 
     @Test
-    public void buildNormallyThenFiltered() throws IOException, ProcessException {
+    public void buildNormallyThenFiltered() throws Exception {
         sProject.execute("clean");
         checkFilteredBuild();
         checkFullBuild();
     }
 
-    private void checkFullBuild() throws IOException, ProcessException {
+    private void checkFullBuild() throws Exception {
         sProject.execute("assembleDebug");
         Apk debug = sProject.getApk("debug");
         assertThat(debug)
@@ -96,7 +94,7 @@ public class InjectedDensityTest {
         assertThat(debug).containsResource("drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
     }
 
-    private void checkFilteredBuild() throws IOException, ProcessException {
+    private void checkFilteredBuild() throws Exception {
         sProject.execute(
                 ImmutableList.of("-P" + AndroidProject.PROPERTY_BUILD_DENSITY + "=xxhdpi"),
                 "assembleDebug");

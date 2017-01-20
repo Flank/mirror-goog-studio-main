@@ -34,7 +34,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -68,7 +67,7 @@ public class JavaResourcesTest {
     private File resource;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         resource = project.file("src/main/resources/foo.txt");
         FileUtils.createFile(resource, "foo");

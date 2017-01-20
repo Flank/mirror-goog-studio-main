@@ -52,7 +52,7 @@ public class FlavoredlibTest {
     static ModelContainer<AndroidProject> models;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         models = project.executeAndReturnMultiModel("clean", "assembleDebug");
     }
 
@@ -63,12 +63,12 @@ public class FlavoredlibTest {
     }
 
     @Test
-    public void lint() {
+    public void lint() throws Exception {
         project.execute("lint");
     }
 
     @Test
-    public void checkExplodedAar() {
+    public void checkExplodedAar() throws Exception {
         File intermediates = FileUtils.join(project.getTestDir(), "app", "build", "intermediates");
         assertThat(intermediates).isDirectory();
         assertThat(new File(intermediates, DependencyManager.EXPLODED_AAR)).doesNotExist();
@@ -123,7 +123,7 @@ public class FlavoredlibTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

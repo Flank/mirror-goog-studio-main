@@ -30,11 +30,9 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,7 +51,7 @@ public class AppWithCompileLibTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getSubproject("app").getBuildFile(),
@@ -71,14 +69,14 @@ public class AppWithCompileLibTest {
     }
 
     @Test
-    public void checkCompiledLibraryIsPackaged() throws IOException, ProcessException {
+    public void checkCompiledLibraryIsPackaged() throws Exception {
         Apk apk = project.getSubproject("app").getApk("debug");
 
         assertThat(apk).containsClass("Lcom/example/android/multiproject/library/PersonView;");
     }
 
     @Test
-    public void checkCompiledLibraryIsInTheModel() {
+    public void checkCompiledLibraryIsInTheModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         Map<String, AndroidProject> models = modelContainer.getModelMap();

@@ -49,7 +49,7 @@ public class InstantRunFullBuildTest {
     private InstantRun instantRunModel;
 
     @Before
-    public void getModel() {
+    public void getModel() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
         mProject.execute("clean");

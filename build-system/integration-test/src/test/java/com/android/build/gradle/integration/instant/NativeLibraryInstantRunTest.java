@@ -33,7 +33,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +57,7 @@ public class NativeLibraryInstantRunTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "project.ext['android.useDeprecatedNdk'] = true"
                         + "\napply plugin: \"com.android.application\"\n"

@@ -31,7 +31,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -111,9 +110,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /**
      * Returns the project model.
      *
-     * This will fail if the project is a multi-project setup.
+     * <p>This will fail if the project is a multi-project setup.
      */
-    public ModelContainer<AndroidProject> getSingle() {
+    public ModelContainer<AndroidProject> getSingle() throws IOException {
         ModelContainer<AndroidProject> container = getSingleModel(AndroidProject.class);
         if (mAssertNoSyncIssues) {
             AndroidProject project = Iterables.getOnlyElement(container.getModelMap().values());
@@ -125,9 +124,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /**
      * Returns the project model.
      *
-     * This will fail if the project is a multi-project setup.
+     * <p>This will fail if the project is a multi-project setup.
      */
-    public <T> T getSingle(@NonNull Class<T> modelClass) {
+    public <T> T getSingle(@NonNull Class<T> modelClass) throws IOException {
         // if passing AndroidStudio.class, use getSingle() instead
         assertThat(modelClass)
                 .named("Class name in getSingle(Class<T>)")
@@ -141,9 +140,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /**
      * Returns the project model.
      *
-     * This will fail if the project is a multi-project setup.
+     * <p>This will fail if the project is a multi-project setup.
      */
-    private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) {
+    private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) throws IOException {
         ModelContainer<T> container =
                 buildModel(new GetAndroidModelAction<>(modelClass), modelLevel);
 
@@ -157,7 +156,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
 
     /** Returns a project model for each sub-project. */
-    public ModelContainer<AndroidProject> getMulti() {
+    public ModelContainer<AndroidProject> getMulti() throws IOException {
         ModelContainer<AndroidProject> container = getMultiContainer(AndroidProject.class);
         if (mAssertNoSyncIssues) {
             container.getModelMap().forEach(BuildModel::assertNoSyncIssues);
@@ -166,7 +165,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     }
 
     /** Returns a project model for each sub-project. */
-    public <T> Map<String, T> getMulti(@NonNull Class<T> modelClass) {
+    public <T> Map<String, T> getMulti(@NonNull Class<T> modelClass) throws IOException {
         assertThat(modelClass)
                 .named("class name in getMulti(Class<T>)")
                 .isNotEqualTo(AndroidProject.class);
@@ -174,7 +173,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         return getMultiContainer(modelClass).getModelMap();
     }
 
-    private <T> ModelContainer<T> getMultiContainer(@NonNull Class<T> modelClass) {
+    private <T> ModelContainer<T> getMultiContainer(@NonNull Class<T> modelClass)
+            throws IOException {
         // TODO: Make buildModel multithreaded all the time.
         // Getting multiple NativeAndroidProject results in duplicated class implemented error
         // in a multithreaded environment.  This is due to issues in Gradle relating to the
@@ -189,7 +189,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     /** Return a list of all task names of the project. */
     @NonNull
-    public List<String> getTaskList() {
+    public List<String> getTaskList() throws IOException {
         GradleProject project =
                 projectConnection
                         .model(GradleProject.class)
@@ -202,13 +202,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /**
      * Returns a project model for each sub-project;
      *
-     * @param action     the build action to gather the model
+     * @param action the build action to gather the model
      * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      */
     @NonNull
     private <T> ModelContainer<T> buildModel(
-            @NonNull BuildAction<ModelContainer<T>> action,
-            int modelLevel) {
+            @NonNull BuildAction<ModelContainer<T>> action, int modelLevel) throws IOException {
         BuildActionExecuter<ModelContainer<T>> executor = this.projectConnection.action(action);
 
         List<String> arguments = Lists.newArrayListWithCapacity(5);
@@ -252,8 +251,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
             return executor.withArguments(arguments).run();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 

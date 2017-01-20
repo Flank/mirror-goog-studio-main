@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -54,7 +53,7 @@ public class JacocoTransformTest {
             GradleTestProject.builder().fromTestApp(TEST_APP).create();
 
     @Before
-    public void enableCodeCoverage() throws IOException {
+    public void enableCodeCoverage() throws Exception {
         Files.append(
                 "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
                 mProject.getBuildFile(), Charsets.UTF_8);
@@ -78,7 +77,7 @@ public class JacocoTransformTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException {
+    public void connectedCheck() throws Exception {
         adb.exclusiveAccess();
         mProject.executor().run("connectedCheck");
         assertThat(mProject.file("build/reports/coverage/debug/index.html"))
@@ -88,7 +87,7 @@ public class JacocoTransformTest {
     @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheckWithJackInProcess() throws IOException {
+    public void connectedCheckWithJackInProcess() throws Exception {
         adb.exclusiveAccess();
         Files.append(
                 "\nandroid.defaultConfig.jackOptions.enabled = true",
@@ -101,7 +100,7 @@ public class JacocoTransformTest {
     @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheckWithJackOutOfProcess() throws IOException {
+    public void connectedCheckWithJackOutOfProcess() throws Exception {
         adb.exclusiveAccess();
         Files.append(
                 "\n"

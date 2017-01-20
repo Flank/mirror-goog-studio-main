@@ -34,7 +34,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +61,7 @@ public class InstantRunAddLibraryTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void addBlankUtilClass() throws IOException {
+    public void addBlankUtilClass() throws Exception {
         writeClass("throw new RuntimeException();");
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.packagingOptions.exclude 'META-INF/maven/com.google.guava/guava/pom.xml'\n"
@@ -114,7 +113,7 @@ public class InstantRunAddLibraryTest {
     }
 
 
-    public void writeClass(String action) throws IOException {
+    public void writeClass(String action) throws Exception {
         String contents = "package com.example.helloworld;" +
                 "public class Util {\n" +
                 "    public static void doStuff() {\n" +

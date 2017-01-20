@@ -48,7 +48,7 @@ import org.junit.Test;
 public class CheckEnvironmentTest {
 
     @Test
-    public void checkBuildToolsLinux_25_0_0() throws IOException {
+    public void checkBuildToolsLinux_25_0_0() throws Exception {
         AssumeUtil.assumeIsLinux();
 
         LocalPackage buildToolsPackage =

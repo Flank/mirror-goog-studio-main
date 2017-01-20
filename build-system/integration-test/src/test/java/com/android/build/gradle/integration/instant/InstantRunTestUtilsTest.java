@@ -46,7 +46,7 @@ public class InstantRunTestUtilsTest {
     @Mock public IDevice device;
 
     @Test
-    public void testDoInstallForMultidex() throws DeviceException, InstallException {
+    public void testDoInstallForMultidex() throws Exception {
         InstantRunTestUtils.doInstall(
                 device,
                 ImmutableList.of(
@@ -57,7 +57,7 @@ public class InstantRunTestUtilsTest {
     }
 
     @Test
-    public void testDoInstallForMultiApk() throws DeviceException, InstallException {
+    public void testDoInstallForMultiApk() throws Exception {
         File apkSplit = new File("test3.apk");
         checkMultiApkInstall(
                 ImmutableList.of(

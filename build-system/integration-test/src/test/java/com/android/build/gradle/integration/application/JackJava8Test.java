@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.gradle.api.JavaVersion;
 import org.junit.Assume;
 import org.junit.Before;
@@ -45,7 +44,7 @@ public class JackJava8Test {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         Assume.assumeTrue("Jack tool requires Java 7", JavaVersion.current().isJava7Compatible());
 
         TestFileUtils.appendToFile(
@@ -109,14 +108,14 @@ public class JackJava8Test {
     }
 
     @Test
-    public void java8FeaturesSanityTest() throws IOException {
+    public void java8FeaturesSanityTest() throws Exception {
         Assume.assumeTrue("Only implicitly upgrades with JDK 1.8",
                 JavaVersion.current().isJava8Compatible());
         project.execute("assembleDebug");
     }
 
     @Test
-    public void java8FeaturesSanityTest_explicitVersion() throws IOException {
+    public void java8FeaturesSanityTest_explicitVersion() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
@@ -130,7 +129,7 @@ public class JackJava8Test {
     }
 
     @Test
-    public void unitTest() {
+    public void unitTest() throws Exception {
         Assume.assumeTrue("Only applicable with JDK 1.8", JavaVersion.current().isJava8Compatible());
         project.execute("testDebug");
     }

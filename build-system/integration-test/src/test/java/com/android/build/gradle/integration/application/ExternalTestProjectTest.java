@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,7 +42,7 @@ public class ExternalTestProjectTest {
     private File app2BuildFile;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getSettingsFile(),
                 "include ':app1'\ninclude ':app2'\n");
 
@@ -79,7 +78,7 @@ public class ExternalTestProjectTest {
     }
 
     @Test
-    public void testExtraJarDependency() throws IOException {
+    public void testExtraJarDependency() throws Exception {
         TestFileUtils.appendToFile(app2BuildFile,
                 "apply plugin: 'com.android.application'\n"
                 + "\n"
@@ -96,7 +95,7 @@ public class ExternalTestProjectTest {
     }
 
     @Test
-    public void testApkDependencyInBuild() throws IOException {
+    public void testApkDependencyInBuild() throws Exception {
         TestFileUtils.appendToFile(app2BuildFile,
                 "apply plugin: 'com.android.application'\n"
                 + "\n"
@@ -138,7 +137,7 @@ public class ExternalTestProjectTest {
     }
 
     @Test
-    public void testApkDependencyInModel() throws IOException {
+    public void testApkDependencyInModel() throws Exception {
         TestFileUtils.appendToFile(app2BuildFile,
                 "apply plugin: 'com.android.application'\n"
                 + "\n"

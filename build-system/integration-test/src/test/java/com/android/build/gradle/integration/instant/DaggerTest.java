@@ -39,7 +39,6 @@ import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -87,7 +86,7 @@ public class DaggerTest {
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         mAppModule = project.file("src/main/java/com/android/tests/AppModule.java");
 
