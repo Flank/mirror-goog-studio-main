@@ -1,0 +1,174 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.checks;
+
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_VALUE;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_REQUIRED;
+import static com.android.xml.AndroidManifest.NODE_APPLICATION;
+import static com.android.xml.AndroidManifest.NODE_METADATA;
+import static com.android.xml.AndroidManifest.NODE_USES_FEATURE;
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Scope;
+import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.XmlContext;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+public class WearStandaloneAppDetector extends Detector implements Detector.XmlScanner {
+
+    public static final Implementation IMPLEMENTATION =
+            new Implementation(WearStandaloneAppDetector.class, Scope.MANIFEST_SCOPE);
+
+    /** Invalid meta-data or missing wear standalone app flag */
+    public static final Issue INVALID_WEAR_FEATURE_ATTRIBUTE = Issue.create(
+            "InvalidWearFeatureAttribute",
+            "Invalid attribute for Wear uses-feature",
+            "For the `android.hardware.type.watch` uses-feature, android:required=\"false\" " +
+            "is disallowed. A single APK for Wear and non-Wear devices is not supported.\n",
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            IMPLEMENTATION).addMoreInfo(
+            "https://developer.android.com/training/wearables/apps/packaging.html");
+
+    /** Invalid meta-data or missing wear standalone app flag */
+    public static final Issue WEAR_STANDALONE_APP_ISSUE = Issue.create(
+            "WearStandaloneAppFlag",
+            "Invalid or missing Wear standalone app flag",
+            "Wearable apps should specify whether they can work standalone, without a phone app." +
+            "Add a valid meta-data entry for `com.google.android.wearable.standalone` to " +
+            "your application element and set the value to `true` or `false`.\n" +
+            "`<meta-data android:name=\"com.google.android.wearable.standalone\"\n" +
+            "            android:value=\"true\"/>`\n",
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            IMPLEMENTATION).addMoreInfo(
+            "https://developer.android.com/training/wearables/apps/packaging.html");
+
+    public static final String WEARABLE_STANDALONE_ATTR = "com.google.android.wearable.standalone";
+
+    // Quickfix extras to identify the kind of error within the WEAR_STANDALONE_APP_ISSUE issue
+    // from the Studio side.
+    public static final int QFX_EXTRA_MISSING_VALUE_ATTRIBUTE = 0;
+    public static final int QFX_EXTRA_INVALID_ATTR_VALUE = 1;
+    public static final int QFX_EXTRA_MISSING_META_DATA = 2;
+
+    /** Constructs a new {@link WearStandaloneAppDetector} check */
+    public WearStandaloneAppDetector() {
+    }
+
+    /** Whether we saw &lt;uses-feature android:name="android.hardware.type.watch" /&gt;*/
+    private boolean sawWearUsesFeature;
+
+    /** Whether we saw the standalone meta-data element for wear */
+    private boolean sawStandaloneMetadata;
+
+    @Override
+    public void beforeCheckFile(@NonNull Context context) {
+        sawWearUsesFeature = false;
+        sawStandaloneMetadata = false;
+    }
+
+    @Nullable
+    @Override
+    public Collection<String> getApplicableElements() {
+        return Arrays.asList(NODE_USES_FEATURE, NODE_METADATA);
+    }
+
+    @Override
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
+        String tagName = element.getTagName();
+        String attrName = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+
+        if (NODE_USES_FEATURE.equals(tagName)) {
+            if ("android.hardware.type.watch".equals(attrName)) {
+                sawWearUsesFeature = true;
+                Attr requiredAttr = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
+                if (requiredAttr != null && !Boolean.valueOf(requiredAttr.getValue())) {
+                    // required=false is not supported for the android.hardware.type.watch feature
+                    context.report(INVALID_WEAR_FEATURE_ATTRIBUTE, requiredAttr, context.getLocation(requiredAttr),
+                            "`android:required=\"false\"` is not supported for this feature");
+                }
+            }
+        } else if (sawWearUsesFeature && NODE_METADATA.equals(tagName)
+                   && WEARABLE_STANDALONE_ATTR.equals(attrName)
+                   && element.getParentNode() != null
+                   && element.getParentNode().getNodeName().equals(NODE_APPLICATION)) {
+            sawStandaloneMetadata = true;
+            // validate android:value
+            Attr valueAttr = element.getAttributeNodeNS(ANDROID_URI, ATTR_VALUE);
+
+            if (valueAttr == null) {
+                context.report(WEAR_STANDALONE_APP_ISSUE, element, context.getLocation(element),
+                        "Missing `android:value` attribute", QFX_EXTRA_MISSING_VALUE_ATTRIBUTE);
+            } else {
+                String value = valueAttr.getValue();
+                if (value == null
+                        || (!value.equalsIgnoreCase(VALUE_TRUE)
+                        && !value.equalsIgnoreCase(VALUE_FALSE))) {
+                    context.report(WEAR_STANDALONE_APP_ISSUE, valueAttr,
+                            context.getValueLocation(valueAttr),
+                            "Expecting a boolean value for attribute `android:value`",
+                            QFX_EXTRA_INVALID_ATTR_VALUE);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void afterCheckFile(@NonNull Context context) {
+        if (context.getMainProject().isLibrary()) {
+            return;
+        }
+
+        if (sawWearUsesFeature
+                && !sawStandaloneMetadata
+                && context.getMainProject().getTargetSdk() >= 23) {
+            XmlContext xmlContext = (XmlContext) context;
+            Node manifestNode = xmlContext.document.getDocumentElement();
+            Optional<Element> applicationOpt = LintUtils.getChildren(manifestNode)
+                    .stream()
+                    .filter(e -> NODE_APPLICATION.equals(e.getTagName()))
+                    .findFirst();
+            if (applicationOpt.isPresent()) {
+                Element application = applicationOpt.get();
+                xmlContext.report(WEAR_STANDALONE_APP_ISSUE, application,
+                        xmlContext.getLocation(application),
+                        "Missing `<meta-data android:name="
+                                + "\"com.google.android.wearable.standalone\" ../>` element",
+                        QFX_EXTRA_MISSING_META_DATA);
+            }
+        }
+    }
+}
