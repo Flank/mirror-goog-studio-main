@@ -131,7 +131,7 @@ java_test(
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
         "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.OnlineTests",
     ],
-    shard_count = 8,
+    shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains
@@ -150,7 +150,6 @@ java_test(
     data = TEST_DATA,
     jvm_flags = [
         "-Dtest.suite.jar=automatic-tests.jar",
-        "-Djunit.parallel.threads=8",
     ],
     tags = ["exclusive"],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",

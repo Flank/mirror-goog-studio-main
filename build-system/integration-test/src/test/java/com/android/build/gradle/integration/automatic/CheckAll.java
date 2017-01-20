@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.ParallelParameterized;
+import com.android.build.gradle.integration.common.runner.CheckAllRunner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -39,7 +39,7 @@ import org.junit.runners.Parameterized;
  *
  * <p>{@code ./gradlew :base:integration-test:automaticTest --tests=*[abiPureSplits]}
  */
-@RunWith(ParallelParameterized.class)
+@RunWith(CheckAllRunner.class)
 public class CheckAll {
 
     @Parameterized.Parameters(name = "{0}")

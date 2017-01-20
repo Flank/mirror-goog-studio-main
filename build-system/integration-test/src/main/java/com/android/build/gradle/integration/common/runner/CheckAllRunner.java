@@ -16,36 +16,44 @@
 
 package com.android.build.gradle.integration.common.runner;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import org.junit.runners.model.RunnerScheduler;
-
+import com.android.testutils.TestUtils;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.runners.model.RunnerScheduler;
 
 /**
  * Version of {@link org.junit.runners.Parameterized} that executes methods in parallel.
  */
-public class ParallelParameterized extends FilterableParameterized {
+public class CheckAllRunner extends FilterableParameterized {
 
     private static class ThreadPoolScheduler implements RunnerScheduler {
         private ExecutorService executor;
 
         public ThreadPoolScheduler() {
-            String threads = System.getProperty("junit.parallel.threads");
-            checkNotNull(threads, "You have to specify the junit.parallel.threads property");
-            executor = Executors.newFixedThreadPool(Integer.parseInt(threads));
+            int cpus = Runtime.getRuntime().availableProcessors();
+            int threads;
+            if (TestUtils.runningFromBazel()) {
+                if (cpus > 20) {
+                    // Use the same number as shards in other integration tests.
+                    threads = 8;
+                } else {
+                    threads = 2;
+                }
+            } else {
+                threads = cpus / 2;
+            }
+            executor = Executors.newFixedThreadPool(threads);
         }
 
         @Override
         public void finished() {
             executor.shutdown();
             try {
-                // Use the same timeout as Jenkins.
                 executor.awaitTermination(60, TimeUnit.MINUTES);
             }
             catch (InterruptedException exc) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(exc);
             }
         }
@@ -56,7 +64,7 @@ public class ParallelParameterized extends FilterableParameterized {
         }
     }
 
-    public ParallelParameterized(Class klass) throws Throwable {
+    public CheckAllRunner(Class klass) throws Throwable {
         super(klass);
         setScheduler(new ThreadPoolScheduler());
     }
