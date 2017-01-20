@@ -181,7 +181,10 @@ public class AndroidUnitTest extends Test {
          * @see AndroidUnitTest#getCandidateClassFiles()
          */
         private static TaskInputs configureSources(@NonNull AndroidUnitTest runTestsTask) {
-            return runTestsTask.getInputs().source(runTestsTask.getCandidateClassFiles());
+            return runTestsTask
+                    .getInputs()
+                    .files(runTestsTask.getCandidateClassFiles())
+                    .skipWhenEmpty();
         }
     }
 }
