@@ -9,7 +9,9 @@ buildscript {
         }
 </#if>
 <#if isInstantApp!false>
-        flatDir(name: 'support', dirs: '${whSupportLibDir}')
+        maven {
+            url(System.getenv("WH_SDK") + "/maven-repo")
+        }
 </#if>
     }
     dependencies {
@@ -29,7 +31,9 @@ allprojects {
         }
 </#if>
 <#if isInstantApp!false>
-        flatDir(name: 'support', dirs: '${whSupportLibDir}')
+        maven {
+            url(System.getenv("WH_SDK") + "/maven-repo")
+        }
 </#if>
     }
 }
