@@ -40,7 +40,9 @@ def main():
       test_jobs = 8
     else:
       test_jobs = 2
-    args.append('--local_test_jobs=' + str(test_jobs))
+
+    # Insert the flag right after "test".
+    args.insert(1, '--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
 
   sys.exit(subprocess.call([bazel] + args, env=env))
