@@ -5,7 +5,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -16,7 +15,7 @@ public class DependencyCyclesTest {
             GradleTestProject.builder().fromTestProject("applibtest").create();
 
     @Test
-    public void cycle() throws IOException {
+    public void cycle() throws Exception {
         TestFileUtils.appendToFile(
                 project.getSubproject(":lib").getBuildFile(),
                 "dependencies { compile project(':app') }");
