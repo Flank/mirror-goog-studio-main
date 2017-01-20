@@ -25,7 +25,6 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.ide.common.repository.SdkMavenRepository.ANDROID;
-import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.google.common.base.Charsets.UTF_8;
 import static java.io.File.separatorChar;
 
@@ -55,7 +54,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -736,7 +734,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                         Document document = XmlUtils.parseDocumentSilently(xml, true);
                         assertNotNull(document);
                         assertNotNull(document.getDocumentElement());
-                        for (Element element : getChildren(document.getDocumentElement())) {
+                        for (Element element : XmlUtils.getSubTags(document.getDocumentElement())) {
                             if (element.getTagName().equals(TAG_USES_SDK)) {
                                 String min = element.getAttributeNS(ANDROID_URI,
                                         ATTR_MIN_SDK_VERSION);

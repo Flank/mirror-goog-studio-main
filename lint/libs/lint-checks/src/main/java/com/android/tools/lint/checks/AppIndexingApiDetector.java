@@ -52,11 +52,11 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaRecursiveElementVisitor;
@@ -431,8 +431,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
                                 null, manifest, null, xmlParser);
                 Document doc = xmlParser.parseXml(xmlContext);
                 if (doc != null) {
-                    List<Element> children = LintUtils.getChildren(doc);
-                    for (Element child : children) {
+                    for (Element child : XmlUtils.getSubTags(doc)) {
                         if (child.getNodeName().equals(NODE_MANIFEST)) {
                             List<Element> apps = extractChildrenByName(child, NODE_APPLICATION);
                             for (Element app : apps) {
@@ -715,8 +714,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Java
     private static List<Element> extractChildrenByName(@NonNull Element node,
             @NonNull String name) {
         List<Element> result = Lists.newArrayList();
-        List<Element> children = LintUtils.getChildren(node);
-        for (Element child : children) {
+        for (Element child : XmlUtils.getSubTags(node)) {
             if (child.getNodeName().equals(name)) {
                 result.add(child);
             }

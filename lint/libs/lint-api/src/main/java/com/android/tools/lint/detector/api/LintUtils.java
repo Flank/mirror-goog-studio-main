@@ -76,6 +76,7 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
@@ -345,16 +346,7 @@ public class LintUtils {
      * @return the count of element children
      */
     public static int getChildCount(@NonNull Node node) {
-        NodeList childNodes = node.getChildNodes();
-        int childCount = 0;
-        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-            Node child = childNodes.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                childCount++;
-            }
-        }
-
-        return childCount;
+        return XmlUtils.getSubTagCount(node);
     }
 
     /**

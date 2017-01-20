@@ -52,6 +52,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -428,11 +429,10 @@ public class ButtonDetector extends ResourceXmlDetector {
         // this won't work, but that's probably not common and has lower overhead.
         Node parentNode = element.getParentNode();
 
-        List<Element> items = LintUtils.getChildren(parentNode);
         if (mKeyToLabel == null) {
-            mKeyToLabel = new HashMap<>(items.size());
+            mKeyToLabel = new HashMap<>();
         }
-        for (Element item : items) {
+        for (Element item : XmlUtils.getSubTags(parentNode)) {
             String itemName = item.getAttribute(ATTR_NAME);
             NodeList childNodes = item.getChildNodes();
             for (int i = 0, n = childNodes.getLength(); i < n; i++) {
@@ -502,11 +502,9 @@ public class ButtonDetector extends ResourceXmlDetector {
         if (mIgnore == null) {
             mIgnore = new HashSet<>();
         }
-        for (Element button : buttons) {
-            // Mark all the siblings in the ignore list to ensure that we don't
-            // report *both* the Cancel and the OK button in "OK | Cancel"
-            mIgnore.add(button);
-        }
+        // Mark all the siblings in the ignore list to ensure that we don't
+        // report *both* the Cancel and the OK button in "OK | Cancel"
+        mIgnore.addAll(buttons);
 
         String message;
         if (isCancel) {
@@ -764,7 +762,7 @@ public class ButtonDetector extends ResourceXmlDetector {
 
     /** Is the given target id the id of a {@code <Button>} within this RelativeLayout? */
     private static boolean isButtonId(Element parent, String targetId) {
-        for (Element child : LintUtils.getChildren(parent)) {
+        for (Element child : XmlUtils.getSubTags(parent)) {
             String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (LintUtils.idReferencesMatch(id, targetId)) {
                 return child.getTagName().equals(BUTTON);
