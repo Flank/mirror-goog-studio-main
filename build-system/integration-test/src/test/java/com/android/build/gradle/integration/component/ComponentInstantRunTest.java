@@ -6,7 +6,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -47,7 +46,7 @@ public class ComponentInstantRunTest {
 
     @Test
     public void basicAssemble() {
-        project.executor().withInstantRun(21, ColdswapMode.DEFAULT).run("assembleDebug");
+        project.executor().withInstantRun(21).run("assembleDebug");
         assertThat(project.getApk("debug")).exists();
     }
 
@@ -64,7 +63,7 @@ public class ComponentInstantRunTest {
                 Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(21, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Apk apk = project.getApk("debug");
@@ -76,7 +75,7 @@ public class ComponentInstantRunTest {
 
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
-                .withInstantRun(21, ColdswapMode.DEFAULT)
+                .withInstantRun(21)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(

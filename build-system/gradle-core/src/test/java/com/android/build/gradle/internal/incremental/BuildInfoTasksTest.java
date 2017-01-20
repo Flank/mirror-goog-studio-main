@@ -71,7 +71,7 @@ public class BuildInfoTasksTest {
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
         BuildContext context = new BuildContext();
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
+        context.setApiLevel(23, null);
         runLoaderTask(project, context);
 
         context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
@@ -83,7 +83,7 @@ public class BuildInfoTasksTest {
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
         BuildContext context = new BuildContext();
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
+        context.setApiLevel(23, null);
 
         runLoaderTask(project, context);
 

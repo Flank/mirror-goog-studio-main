@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.instant.HotSwapTester.COLDSWAP_MODE;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
@@ -83,7 +82,7 @@ public class ResourcesSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(mProject, 21, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(mProject, 21);
         Apk apk = mProject.getApk("debug");
         assertThat(apk).contains("assets/movie.mp4");
         assertThat(apk).contains("classes.dex");
@@ -91,7 +90,7 @@ public class ResourcesSwapTest {
         TestFileUtils.appendToFile(asset, " upgraded");
 
         mProject.executor()
-                .withInstantRun(21, COLDSWAP_MODE)
+                .withInstantRun(21)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getResourcesArtifact(instantRunModel);

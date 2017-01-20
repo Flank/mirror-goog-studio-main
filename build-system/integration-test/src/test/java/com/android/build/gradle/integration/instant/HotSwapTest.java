@@ -30,7 +30,6 @@ import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
@@ -53,7 +52,6 @@ import org.junit.experimental.categories.Category;
  */
 public class HotSwapTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String LOG_TAG = "hotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
     private static final int CHANGES_COUNT = 3;
@@ -84,7 +82,7 @@ public class HotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, 19, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(project, 19);
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         assertThat(apks).hasSize(1);
@@ -100,7 +98,7 @@ public class HotSwapTest {
         createActivityClass("CHANGE");
 
         project.executor()
-                .withInstantRun(19, COLDSWAP_MODE)
+                .withInstantRun(19)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact =

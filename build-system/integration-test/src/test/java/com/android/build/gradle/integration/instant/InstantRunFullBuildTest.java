@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -77,7 +76,6 @@ public class InstantRunFullBuildTest {
         mProject.executor()
                 .withInstantRun(
                         featureLevel,
-                        ColdswapMode.AUTO,
                         OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
@@ -85,7 +83,6 @@ public class InstantRunFullBuildTest {
         mProject.executor()
                 .withInstantRun(
                         featureLevel,
-                        ColdswapMode.AUTO,
                         OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
         InstantRunBuildInfo secondContext = InstantRunTestUtils.loadContext(instantRunModel);
