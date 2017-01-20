@@ -33,6 +33,7 @@ def main():
   args = sys.argv[1:]
 
   if args[0] == 'test':
+    # Keep this logic in sync with integration-test BUILD file and CheckAllRunner.
     cpus = multiprocessing.cpu_count()
     if cpus > 20:
       # Most likely z840. For now limit test jobs to 8, until we experiment
