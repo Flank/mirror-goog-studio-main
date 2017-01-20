@@ -3,12 +3,12 @@ def _jasmin_jar_impl(ctx):
   class_jar = ctx.outputs.class_jar
   args, option_files = create_java_compiler_args(ctx, class_jar.path, [])
 
-  cmd = ctx.executable._jasmin.path + " " + " ".join(args)
   ctx.action(
-    inputs = [ctx.executable._jasmin] + ctx.files.srcs + option_files,
+    inputs = ctx.files.srcs + option_files,
     outputs = [class_jar],
     mnemonic = "jasmin",
-    command = cmd,
+    arguments = args,
+    executable = ctx.executable._jasmin,
   )
 
 _jasmin_jar = rule(

@@ -16,12 +16,12 @@ def _kotlin_jar_impl(ctx):
   args, option_files = create_java_compiler_args(ctx, class_jar.path,
                                                  all_deps)
 
-  cmd = ctx.executable._kotlinc.path + " " + " ".join(args)
   ctx.action(
-    inputs = [ctx.executable._kotlinc] + ctx.files.srcs + list(all_deps) + option_files,
+    inputs = ctx.files.srcs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
-    command = cmd,
+    arguments = args,
+    executable = ctx.executable._kotlinc,
   )
 
 kotlin_jar = rule(
