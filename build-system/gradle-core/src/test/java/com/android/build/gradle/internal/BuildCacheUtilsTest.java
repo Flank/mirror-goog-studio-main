@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -47,7 +46,7 @@ public class BuildCacheUtilsTest {
     }
 
     @Test
-    public void testCreateBuildCache_Enabled_ValidDirectory() throws IOException {
+    public void testCreateBuildCache_Enabled_DirectorySet() throws IOException {
         File buildCacheDirectory = testDir.newFolder();
 
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
@@ -55,14 +54,11 @@ public class BuildCacheUtilsTest {
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
 
         assertThat(buildCache).isNotNull();
-        // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
-        // since the build cache (FileCache) might have normalized the directory's path
-        assertThat(buildCache.getCacheDirectory()).isEqualTo(
-                buildCacheDirectory.getCanonicalFile());
+        assertThat(buildCache.getCacheDirectory()).isEqualTo(buildCacheDirectory);
     }
 
     @Test
-    public void testCreateBuildCache_Enabled_DirectoryNotSet() throws Exception {
+    public void testCreateBuildCache_Enabled_DirectoryNotSet() throws IOException {
         File defaultBuildCacheDir = testDir.newFolder();
 
         when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
@@ -72,23 +68,7 @@ public class BuildCacheUtilsTest {
                         androidGradleOptions, () -> defaultBuildCacheDir);
 
         assertThat(buildCache).isNotNull();
-        // We compare the actual build cache directory with buildCacheDirectory.getCanonicalFile()
-        // since the build cache (FileCache) might have normalized the directory's path
-        assertThat(buildCache.getCacheDirectory()).isEqualTo(
-                defaultBuildCacheDir.getCanonicalFile());
-    }
-
-    @Test
-    public void testCreateBuildCache_Enabled_InvalidDirectory() {
-        when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
-        when(androidGradleOptions.getBuildCacheDir()).thenReturn(new File("\0"));
-
-        try {
-            BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
-            fail("Expected RuntimeException");
-        } catch (RuntimeException exception) {
-            assertThat(exception.getMessage()).contains("Unable to create the build cache");
-        }
+        assertThat(buildCache.getCacheDirectory()).isEqualTo(defaultBuildCacheDir);
     }
 
     @Test
