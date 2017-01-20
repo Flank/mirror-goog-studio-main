@@ -4,7 +4,7 @@
     revision="2"
     name="Fragment (with a +1 button)"
     description="Creates a fragment with a Google Plus +1 button."
-    minApi="8"
+    minApi="14"
     minBuildApi="8">
 
     <category value="Fragment" />
