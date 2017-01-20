@@ -37,11 +37,11 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -536,16 +536,14 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 Element parent = (Element) element.getParentNode();
                 permission = parent.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
             }
-            List<Element> children = LintUtils.getChildren(element);
-            for (Element child : children) {
+            for (Element child : XmlUtils.getSubTags(element)) {
                 String tagName = child.getTagName();
                 if (TAG_INTENT_FILTER.equals(tagName)) {
                     if (name.startsWith(".")) {
                         name = context.getProject().getPackage() + name;
                     }
                     name = name.replace('$', '.');
-                    List<Element> children2 = LintUtils.getChildren(child);
-                    for (Element child2 : children2) {
+                    for (Element child2 : XmlUtils.getSubTags(child)) {
                         if (TAG_ACTION.equals(child2.getTagName())) {
                             String actionName = child2.getAttributeNS(
                                     ANDROID_URI, ATTR_NAME);

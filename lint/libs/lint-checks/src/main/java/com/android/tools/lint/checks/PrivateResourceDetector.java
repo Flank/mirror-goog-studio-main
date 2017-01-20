@@ -58,6 +58,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
@@ -65,7 +66,6 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiReferenceExpression;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -198,7 +198,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (TAG_RESOURCES.equals(element.getTagName())) {
-            for (Element item : LintUtils.getChildren(element)) {
+            for (Element item : XmlUtils.getSubTags(element)) {
                 Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
                 if (nameAttribute != null) {
                     String name = getResourceFieldName(nameAttribute.getValue());
@@ -235,7 +235,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements
                     || TAG_PLURALS.equals(element.getTagName())
                     || TAG_INTEGER_ARRAY.equals(element.getTagName())
                     || TAG_STRING_ARRAY.equals(element.getTagName());
-            for (Element item : LintUtils.getChildren(element)) {
+            for (Element item : XmlUtils.getSubTags(element)) {
                 checkChildRefs(context, item);
             }
         }

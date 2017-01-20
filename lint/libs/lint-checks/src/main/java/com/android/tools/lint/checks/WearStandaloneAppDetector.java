@@ -33,16 +33,14 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 public class WearStandaloneAppDetector extends Detector implements Detector.XmlScanner {
 
@@ -156,13 +154,9 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
                 && !sawStandaloneMetadata
                 && context.getMainProject().getTargetSdk() >= 23) {
             XmlContext xmlContext = (XmlContext) context;
-            Node manifestNode = xmlContext.document.getDocumentElement();
-            Optional<Element> applicationOpt = LintUtils.getChildren(manifestNode)
-                    .stream()
-                    .filter(e -> NODE_APPLICATION.equals(e.getTagName()))
-                    .findFirst();
-            if (applicationOpt.isPresent()) {
-                Element application = applicationOpt.get();
+            Element root = xmlContext.document.getDocumentElement();
+            Element application = XmlUtils.getFirstSubTagTagByName(root, NODE_APPLICATION);
+            if (application != null) {
                 xmlContext.report(WEAR_STANDALONE_APP_ISSUE, application,
                         xmlContext.getLocation(application),
                         "Missing `<meta-data android:name="

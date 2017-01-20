@@ -41,7 +41,6 @@ import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.JavaParser.ResolvedPackage;
 import com.android.tools.lint.client.api.JavaParser.TypeDescriptor;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.psi.ExternalPsiAnnotation;
 import com.android.tools.lint.psi.ExternalPsiAnnotationLiteralMemberValue;
@@ -878,7 +877,7 @@ public class ExternalAnnotationRepository {
                 String rootTag = root.getTagName();
                 assert rootTag.equals("root") : rootTag;
 
-                for (Element item : LintUtils.getChildren(root)) {
+                for (Element item : XmlUtils.getSubTags(root)) {
                     String signature = item.getAttribute(ATTR_NAME);
                     if (signature == null || signature.equals("null")) {
                         continue; // malformed item

@@ -70,12 +70,12 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Arrays;
@@ -668,9 +668,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             } else if (tag.equals(TAG_SERVICE)
                        && context.getMainProject().isGradleProject()) {
                 Attr bindListenerAttr = null;
-                for (Element child : LintUtils.getChildren(element)) {
+                for (Element child : XmlUtils.getSubTags(element)) {
                     if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                        for (Element innerChild : LintUtils.getChildren(child)) {
+                        for (Element innerChild : XmlUtils.getSubTags(child)) {
                             if (innerChild.getTagName().equals(NODE_ACTION)) {
                                 Attr nodeNS = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
                                 if (nodeNS != null
@@ -1051,9 +1051,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             return false;
         }
 
-        for (Element child : LintUtils.getChildren(element)) {
+        for (Element child : XmlUtils.getSubTags(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                for (Element innerChild : LintUtils.getChildren(child)) {
+                for (Element innerChild : XmlUtils.getSubTags(child)) {
                     if (innerChild.getTagName().equals("category")) {
                         String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                         return "android.intent.category.LAUNCHER".equals(categoryString);
@@ -1123,16 +1123,15 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     }
 
     private static void checkDeviceAdmin(XmlContext context, Element element) {
-        List<Element> children = LintUtils.getChildren(element);
         boolean requiredIntentFilterFound = false;
         boolean deviceAdmin = false;
         Attr locationNode = null;
-        for (Element child : children) {
+        for (Element child : XmlUtils.getSubTags(element)) {
             String tagName = child.getTagName();
             if (tagName.equals(TAG_INTENT_FILTER) && !requiredIntentFilterFound) {
                 boolean dataFound = false;
                 boolean actionFound = false;
-                for (Element filterChild : LintUtils.getChildren(child)) {
+                for (Element filterChild : XmlUtils.getSubTags(child)) {
                     String filterTag = filterChild.getTagName();
                     if (filterTag.equals(NODE_ACTION)) {
                         String name = filterChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
