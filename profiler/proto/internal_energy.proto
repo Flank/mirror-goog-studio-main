@@ -24,7 +24,7 @@ service InternalEnergyService {
 }
 
 message RecordWakeLockEventRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
   WakeLockEvent event = 2;
 }
 

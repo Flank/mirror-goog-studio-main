@@ -26,7 +26,7 @@ using grpc::Status;
 Status InternalMemoryServiceImpl::RecordVmStats(
     ServerContext *context, const proto::VmStatsRequest *request,
     proto::EmptyMemoryReply *reply) {
-  auto result = collectors_.find(request->app_id());
+  auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
     return ::grpc::Status(
         ::grpc::StatusCode::NOT_FOUND,

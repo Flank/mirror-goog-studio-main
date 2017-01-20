@@ -42,7 +42,7 @@ const SteadyClock& GetClock() {
 void SendSystemEvent(SystemData* event, long jdownTime) {
   event->set_start_timestamp(GetClock().GetCurrentTime());
   event->set_end_timestamp(0);
-  event->set_app_id(getpid());
+  event->set_process_id(getpid());
   event->set_event_id(jdownTime);
 
   auto event_stub = Perfa::Instance().event_stub();
@@ -59,7 +59,7 @@ void SendActivityEvent(JNIEnv* env, const jstring& name,
   JStringWrapper activity_name(env, name);
   ActivityData activity;
   activity.set_name(activity_name.get());
-  activity.set_app_id(getpid());
+  activity.set_process_id(getpid());
   activity.set_hash(hash);
   ActivityStateData* state_data = activity.add_state_changes();
   state_data->set_state(state);

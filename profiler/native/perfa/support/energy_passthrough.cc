@@ -49,7 +49,7 @@ void SendEnergyStats(WakeLockEvent::WakeLockType type,
   // TODO Should we cache the UIDs? Re-getting the UID every time the user does
   // something wakelock related doesn't make sense if the UIDs are almost
   // always the same.
-  request.set_app_id(UidFetcher::GetUid(getpid()));
+  request.set_process_id(UidFetcher::GetUid(getpid()));
   request.mutable_event()->set_timestamp(clock.GetCurrentTime());
   request.mutable_event()->set_type(type);
   request.mutable_event()->set_action(action);

@@ -44,7 +44,7 @@ namespace profiler {
 grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
                                                 const MemoryStartRequest* request,
                                                 MemoryStartResponse* response) {
-  GetCollector(request->app_id())->Start();
+  GetCollector(request->process_id())->Start();
   response->set_status(MemoryStartResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
@@ -52,7 +52,7 @@ grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* contex
 grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
                                                const MemoryStopRequest* request,
                                                MemoryStopResponse* response) {
-  auto got = collectors_.find(request->app_id());
+  auto got = collectors_.find(request->process_id());
   if (got != collectors_.end()) {
     got->second.Stop();
   }
@@ -64,7 +64,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
                                           const MemoryRequest* request,
                                           MemoryData* response) {
   Trace trace("MEM:GetData");
-  auto result = collectors_.find(request->app_id());
+  auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
     return ::grpc::Status(
         ::grpc::StatusCode::NOT_FOUND,
@@ -91,7 +91,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     ::grpc::ServerContext* context, const TriggerHeapDumpRequest* request,
     TriggerHeapDumpResponse* response) {
   Trace trace("MEM:TriggerHeapDump");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
@@ -110,7 +110,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
     DumpDataResponse* response) {
   Trace trace("MEM:GetHeapDump");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
@@ -143,7 +143,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     ::grpc::ServerContext* context, const TrackAllocationsRequest* request,
     TrackAllocationsResponse* response) {
   Trace trace("MEM:TrackAllocations");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
