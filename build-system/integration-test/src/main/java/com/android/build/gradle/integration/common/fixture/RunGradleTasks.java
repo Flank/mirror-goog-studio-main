@@ -37,7 +37,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
@@ -186,8 +185,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         setJvmArguments(launcher);
 
-        launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
-        launcher.setStandardError(new TeeOutputStream(stderr, System.err));
+        launcher.setStandardOutput(stdout);
+        launcher.setStandardError(stderr);
 
         CollectingProgressListener progressListener = new CollectingProgressListener();
 
@@ -202,13 +201,17 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
+            if (isExpectingFailure && failure == null) {
+                throw new AssertionError("Expecting build to fail");
+            } else if (!isExpectingFailure && failure != null) {
+                throw failure;
+            }
+            return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+        } catch (Exception e) {
+            stderr.writeTo(System.err);
+            stdout.writeTo(System.out);
+            throw e;
         }
-        if (isExpectingFailure && failure == null) {
-            throw new AssertionError("Expecting build to fail");
-        } else if (!isExpectingFailure && failure != null) {
-            throw failure;
-        }
-        return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
     }
 
     private static class CollectingProgressListener implements ProgressListener {
