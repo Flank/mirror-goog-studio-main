@@ -46,6 +46,7 @@ public class AssetPackagingTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
+            .withDependencyChecker(false)
             .create();
 
     private GradleTestProject appProject;
