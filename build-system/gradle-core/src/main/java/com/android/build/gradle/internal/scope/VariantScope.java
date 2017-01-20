@@ -282,9 +282,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getIntermediateJarOutputFolder();
 
     @NonNull
-    File getJavaDependencyCache();
-
-    @NonNull
     File getPreDexOutputDir();
 
     @NonNull

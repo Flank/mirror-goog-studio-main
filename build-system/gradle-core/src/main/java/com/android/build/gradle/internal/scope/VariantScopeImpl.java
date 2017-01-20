@@ -663,8 +663,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public FileCollection getJavaOutputs() {
-        return getJavaClasspath().plus(
-                getGlobalScope().getProject().files(getJavaOutputDir(), getJavaDependencyCache()));
+        return getJavaClasspath().plus(getGlobalScope().getProject().files(getJavaOutputDir()));
     }
 
     @Override
@@ -806,13 +805,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public File getIntermediateJarOutputFolder() {
         return new File(globalScope.getIntermediatesDir(), "/intermediate-jars/" +
-                variantData.getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getJavaDependencyCache() {
-        return new File(globalScope.getIntermediatesDir(), "/dependency-cache/" +
                 variantData.getVariantConfiguration().getDirName());
     }
 
