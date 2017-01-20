@@ -108,6 +108,8 @@ android {
         htmlOutput file("lint-report.html")
         // Reduce severity of this check to just informational
         informational 'LogConditional'
+        // Run all lint checks on all test sources, not just production code
+        checkTestSources true
     }
 
     // Override the versionCode of the release version

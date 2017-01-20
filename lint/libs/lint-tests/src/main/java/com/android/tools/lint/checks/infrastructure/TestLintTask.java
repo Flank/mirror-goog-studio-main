@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
@@ -79,6 +80,7 @@ public class TestLintTask {
     LintListener listener;
     GradleMockModifier mockModifier;
     LintDriverConfigurator driverConfigurator;
+    OptionSetter optionSetter;
     ErrorMessageChecker messageChecker;
     String variantName;
     EnumSet<Scope> customScope;
@@ -297,6 +299,18 @@ public class TestLintTask {
     public TestLintTask configureDriver(@NonNull LintDriverConfigurator configurator) {
         ensurePreRun();
         driverConfigurator = configurator;
+        return this;
+    }
+
+    /**
+     * Registers a hook to initialize the options/flags for lint during test execution
+     *
+     * @param setter the callback to configure the options
+     * @return this, for constructor chaining
+     */
+    public TestLintTask configureOptions(@NonNull OptionSetter setter) {
+        ensurePreRun();
+        optionSetter = setter;
         return this;
     }
 
@@ -543,7 +557,7 @@ public class TestLintTask {
         List<File> projectDirs = createProjects(rootDir);
 
         TestLintClient lintClient = createClient();
-        lintClient.task = this;
+        lintClient.setLintTask(this);
         try {
             List<Project> projects = Lists.newArrayList();
             for (File dir : projectDirs) {
@@ -551,9 +565,7 @@ public class TestLintTask {
             }
             return projects;
         } finally {
-            // Client should not be used outside of the check process
-            //noinspection ConstantConditions
-            lintClient.task = null;
+            lintClient.setLintTask(null);
 
             if (!keepFiles) {
                 TestUtils.deleteFile(rootDir);
@@ -564,13 +576,15 @@ public class TestLintTask {
     @NonNull
     private Pair<String,List<Warning>> checkLint(@NonNull List<File> files) throws Exception {
         TestLintClient lintClient = createClient();
-        lintClient.task = this;
+        lintClient.setLintTask(this);
         try {
+            if (optionSetter != null) {
+                optionSetter.set(lintClient.getFlags());
+            }
+
             return lintClient.checkLint(files, getCheckedIssues());
         } finally {
-            // Client should not be used outside of the check process
-            //noinspection ConstantConditions
-            lintClient.task = null;
+            lintClient.setLintTask(null);
         }
     }
 
@@ -752,6 +766,13 @@ public class TestLintTask {
      */
     public interface LintDriverConfigurator {
         void configure(@NonNull LintDriver driver);
+    }
+
+    /**
+     * Interface to implement a lint test task which customizes the command line flags
+     */
+    public interface OptionSetter {
+        void set(@NonNull LintCliFlags flags);
     }
 
     /**
