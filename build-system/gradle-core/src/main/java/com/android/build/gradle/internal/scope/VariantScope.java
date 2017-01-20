@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
@@ -205,6 +206,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isJackEnabled();
 
+    @Override
     @NonNull
     BuildContext getBuildContext();
 
@@ -259,52 +261,22 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getJavaOutputs();
 
     @NonNull
-    FileCollection getAidlImports();
+    FileCollection getArtifactFileCollection(
+            @NonNull AndroidArtifacts.ConfigType configType,
+            @NonNull AndroidArtifacts.ArtifactScope scope,
+            @NonNull AndroidArtifacts.ArtifactType artifactType);
 
     @NonNull
-    FileCollection getRenderscriptImports();
-
-    @NonNull
-    ArtifactCollection getManifests();
-
-    @NonNull
-    ArtifactCollection getSymbolsFile();
-
-    @NonNull
-    FileCollection getSubProjectDataBindingArtifactFolders();
-
-    @NonNull
-    FileCollection getExternalAarDataBindingFolders();
-
-    @NonNull
-    FileCollection getSubProjectPackagedJars();
-
-    @NonNull
-    FileCollection getSubProjectPackagedJavaJars();
-
-    @NonNull
-    FileCollection getSubProjectPackagedAarResourceJars();
-
-    @NonNull
-    FileCollection getSubProjectPackagedJniFolders();
-
-    @NonNull
-    FileCollection getExternalCompileJars();
-
-    @NonNull
-    FileCollection getExternalPackageJars();
+    ArtifactCollection getArtifactCollection(
+            @NonNull AndroidArtifacts.ConfigType configType,
+            @NonNull AndroidArtifacts.ArtifactScope scope,
+            @NonNull AndroidArtifacts.ArtifactType artifactType);
 
     @NonNull
     Supplier<Collection<File>> getLocalPackagedJars();
 
     @NonNull
-    ArtifactCollection getDependenciesResourceFolders();
-
-    @NonNull
-    ArtifactCollection getDependenciesAssetFolders();
-
-    @NonNull
-    FileCollection getBaseAtomResourcePkg();
+    FileCollection getProvidedOnlyClasspath();
 
     @NonNull
     File getIntermediateJarOutputFolder();

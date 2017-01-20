@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -258,7 +259,10 @@ public class RenderscriptCompile extends NdkTask {
 
             ConventionMappingHelper.map(renderscriptTask, "sourceDirs",
                     config::getRenderscriptSourceList);
-            renderscriptTask.importDirs = scope.getRenderscriptImports();
+            renderscriptTask.importDirs = scope.getArtifactFileCollection(
+                    AndroidArtifacts.ConfigType.COMPILE,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.RENDERSCRIPT);
 
             renderscriptTask.setSourceOutputDir(scope.getRenderscriptSourceOutputDir());
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());

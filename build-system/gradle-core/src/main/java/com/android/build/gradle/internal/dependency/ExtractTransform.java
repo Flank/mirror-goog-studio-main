@@ -40,8 +40,6 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes;
  */
 public abstract class ExtractTransform extends ArtifactTransform {
 
-    protected static final Attribute<String> ARTIFACT_FORMAT = ArtifactAttributes.ARTIFACT_FORMAT;
-
     private Project project;
     private FileCache fileCache;
 

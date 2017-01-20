@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.pipeline;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.JACK;
+import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.utils.StringHelper.capitalize;
 
 import com.android.annotations.NonNull;
@@ -73,8 +74,9 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
     public static final Set<ContentType> CONTENT_RESOURCES = ImmutableSet.of(RESOURCES);
+    public static final Set<ContentType> CONTENT_FULL_JAR = ImmutableSet.of(CLASSES, RESOURCES, NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_NATIVE_LIBS =
-            ImmutableSet.of(ExtendedContentType.NATIVE_LIBS);
+            ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
     public static final Set<ContentType> DATA_BINDING_ARTIFACT =

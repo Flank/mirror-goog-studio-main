@@ -621,7 +621,10 @@ public class MergeResources extends IncrementalTask {
             mergeResourcesTask.setValidateEnabled(validateEnabled);
 
             if (includeDependencies) {
-                mergeResourcesTask.libraries = scope.getDependenciesResourceFolders();
+                mergeResourcesTask.libraries = scope.getArtifactCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.ANDROID_RES);
                 // only add the resources for tested libraries.
                 mergeResourcesTask.testedLibrary = scope.getTestedArtifact(
                         AndroidArtifacts.TYPE_ANDROID_RES,
