@@ -20,6 +20,8 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LOCALE;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.BIN_FOLDER;
 import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JPEG;
@@ -1571,5 +1573,36 @@ public class LintUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the fully qualified class name for a manifest entry element that
+     * specifies a name attribute. Will also replace $ with dots for inner classes.
+     *
+     * @param element the element
+     * @return the fully qualified class name
+     */
+    @NonNull
+    public static String resolveManifestName(@NonNull Element element) {
+        String className = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+        className = className.replace('$', '.');
+        if (className.startsWith(".")) { //$NON-NLS-1$
+            // If the activity class name starts with a '.', it is shorthand for prepending the
+            // package name specified in the manifest.
+            String pkg = element.getOwnerDocument().getDocumentElement()
+                    .getAttribute(ATTR_PACKAGE);   // required to exist
+            return pkg + className;
+        } else if (className.indexOf('.') == -1) {
+            String pkg = element.getOwnerDocument().getDocumentElement()
+                    .getAttribute(ATTR_PACKAGE);   // required to exist
+
+            // According to the <activity> manifest element documentation, this is not
+            // valid ( http://developer.android.com/guide/topics/manifest/activity-element.html )
+            // but it appears in manifest files and appears to be supported by the runtime
+            // so handle this in code as well:
+            return pkg + '.' + className;
+        } // else: the class name is already a fully qualified class name
+
+        return className;
     }
 }

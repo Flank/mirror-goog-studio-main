@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.Lint;
 import com.android.builder.Version;
+import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
@@ -36,6 +37,7 @@ import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -43,15 +45,20 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.GradleException;
+import org.w3c.dom.Document;
 
 public class LintGradleClient extends LintCliClient {
     private final AndroidProject modelProject;
@@ -62,6 +69,7 @@ public class LintGradleClient extends LintCliClient {
     @NonNull private final Variant variant;
 
     private final org.gradle.api.Project gradleProject;
+    private final File manifestReportFile;
     /**
      * Note that as soon as we disable {@link Lint#MODEL_LIBRARIES} this is
      * unused and we can delete it and all the callers passing it recursively
@@ -77,7 +85,8 @@ public class LintGradleClient extends LintCliClient {
             @NonNull AndroidProject modelProject,
             @Nullable File sdkHome,
             @NonNull Variant variant,
-            @Nullable BuildToolInfo buildToolInfo) {
+            @Nullable BuildToolInfo buildToolInfo,
+            @Nullable File reportFile) {
         super(flags, CLIENT_GRADLE);
         this.gradleProject = gradleProject;
         this.modelProject = modelProject;
@@ -85,6 +94,7 @@ public class LintGradleClient extends LintCliClient {
         this.registry = registry;
         this.buildToolInfo = buildToolInfo;
         this.variant = variant;
+        this.manifestReportFile = reportFile;
     }
 
     @Nullable
@@ -303,5 +313,34 @@ public class LintGradleClient extends LintCliClient {
             return;
         }
         super.report(context, issue, severity, location, message, format, quickfixData);
+    }
+
+    @Nullable
+    @Override
+    public Document getMergedManifest(@NonNull Project project) {
+        Variant variant = project.getCurrentVariant();
+        if (variant != null) {
+            Collection<AndroidArtifactOutput> outputs = variant.getMainArtifact().getOutputs();
+            for (AndroidArtifactOutput output : outputs) {
+                File manifest = output.getGeneratedManifest();
+                if (manifest.exists()) {
+                    try {
+                        String xml = Files.toString(manifest, Charsets.UTF_8);
+                        Document document = XmlUtils.parseDocumentSilently(xml, true);
+                        if (document != null) {
+                            // Note for later that we'll need to resolve locations from
+                            // the merged manifest
+                            resolveMergeManifestSources(document, manifestReportFile);
+
+                            return document;
+                        }
+                    } catch (IOException ioe) {
+                        log(ioe, "Could not read %1$s", manifest);
+                    }
+                }
+            }
+        }
+
+        return super.getMergedManifest(project);
     }
 }

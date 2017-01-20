@@ -125,6 +125,8 @@ import org.w3c.dom.Element;
  */
 public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner {
 
+    // TODO: Use the new merged manifest model
+
     private static final boolean INCLUDE_LDPI;
     static {
         boolean includeLdpi = false;

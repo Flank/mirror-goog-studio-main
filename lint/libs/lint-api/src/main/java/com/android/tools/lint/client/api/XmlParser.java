@@ -21,10 +21,15 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.PositionXmlParser;
 import com.google.common.annotations.Beta;
+import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 /**
  * A wrapper for an XML parser. This allows tools integrating lint to map directly
@@ -35,6 +40,16 @@ import org.w3c.dom.Node;
  */
 @Beta
 public abstract class XmlParser {
+    /**
+     * Parse the given XML content and returns as a Document
+     *
+     * @param file the file to be parsed
+     * @return the parsed DOM document
+     */
+    @Nullable
+    public abstract Document parseXml(@NonNull File file)
+            throws IOException, SAXException, ParserConfigurationException;
+
     /**
      * Parse the file pointed to by the given context and return as a Document
      *

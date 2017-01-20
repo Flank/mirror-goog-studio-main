@@ -18,8 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
 
 import com.android.annotations.NonNull;
@@ -32,10 +32,13 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Collection;
@@ -44,6 +47,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -51,6 +55,14 @@ import org.w3c.dom.Element;
  */
 public class PreferenceActivityDetector extends Detector
         implements XmlScanner, JavaPsiScanner {
+
+    @SuppressWarnings("unchecked")
+    public static final Implementation IMPLEMENTATION = new Implementation(
+            PreferenceActivityDetector.class,
+            EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
+            Scope.MANIFEST_SCOPE,
+            Scope.JAVA_FILE_SCOPE);
+
     public static final Issue ISSUE = Issue.create(
             "ExportedPreferenceActivity",
             "PreferenceActivity should not be exported",
@@ -59,9 +71,7 @@ public class PreferenceActivityDetector extends Detector
             Category.SECURITY,
             8,
             Severity.WARNING,
-            new Implementation(
-                    PreferenceActivityDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)))
+            IMPLEMENTATION)
             .addMoreInfo("http://securityintelligence.com/"
                     + "new-vulnerability-android-framework-fragment-injection");
     private static final String PREFERENCE_ACTIVITY = "android.preference.PreferenceActivity";
@@ -80,38 +90,14 @@ public class PreferenceActivityDetector extends Detector
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (SecurityDetector.getExported(element)) {
-            String fqcn = getFqcn(element);
-            if (fqcn != null) {
-                if (fqcn.equals(PREFERENCE_ACTIVITY) &&
-                        !context.getDriver().isSuppressed(context, ISSUE, element)) {
-                    String message = "`PreferenceActivity` should not be exported";
-                    context.report(ISSUE, element, context.getLocation(element), message);
-                }
-                mExportedActivities.put(fqcn, context.createLocationHandle(element));
+            String fqcn = LintUtils.resolveManifestName(element);
+            if (fqcn.equals(PREFERENCE_ACTIVITY) &&
+                    !context.getDriver().isSuppressed(context, ISSUE, element)) {
+                String message = "`PreferenceActivity` should not be exported";
+                context.report(ISSUE, element, context.getLocation(element), message);
             }
+            mExportedActivities.put(fqcn, context.createLocationHandle(element));
         }
-    }
-
-    private static String getFqcn(@NonNull Element activityElement) {
-        String activityClassName = activityElement.getAttributeNS(ANDROID_URI, ATTR_NAME);
-
-        if (activityClassName == null || activityClassName.isEmpty()) {
-            return null;
-        }
-
-        // If the activity class name starts with a '.', it is shorthand for prepending the
-        // package name specified in the manifest.
-        if (activityClassName.startsWith(".")) {
-            String pkg = activityElement.getOwnerDocument().getDocumentElement()
-                    .getAttribute(ATTR_PACKAGE);
-            if (pkg != null) {
-                return pkg + activityClassName;
-            } else {
-                return null;
-            }
-        }
-
-        return activityClassName;
     }
 
     // ---- Implements JavaScanner ----
@@ -130,7 +116,7 @@ public class PreferenceActivityDetector extends Detector
         JavaEvaluator evaluator = context.getEvaluator();
         String className = declaration.getQualifiedName();
         if (evaluator.extendsClass(declaration, PREFERENCE_ACTIVITY, false)
-                && mExportedActivities.containsKey(className)) {
+                && isExported(context, className)) {
             // Ignore the issue if we target an API greater than 19 and the class in
             // question specifically overrides isValidFragment() and thus knowingly white-lists
             // valid fragments.
@@ -142,9 +128,53 @@ public class PreferenceActivityDetector extends Detector
             String message = String.format(
                     "`PreferenceActivity` subclass `%1$s` should not be exported",
                     className);
-            Location location = mExportedActivities.get(className).resolve();
+            Location location;
+            if (context.getScope().contains(Scope.MANIFEST)) {
+                location = mExportedActivities.get(className).resolve();
+            } else {
+                // When linting incrementally just in the Java class, place the error on
+                // the class itself rather than the export line in the manifest
+                location = context.getNameLocation(declaration);
+                message += " in the manifest";
+            }
             context.report(ISSUE, declaration, location, message);
         }
+    }
+
+    private boolean isExported(@NonNull JavaContext context, @Nullable String className) {
+        if (className == null) {
+            return false;
+        }
+
+        // If analyzing manifest files directly, we've already recorded the available
+        // activities
+        if (context.getScope().contains(Scope.MANIFEST)) {
+            return mExportedActivities.containsKey(className);
+        }
+        Project mainProject = context.getMainProject();
+
+        Document mergedManifest = mainProject.getMergedManifest();
+        if (mergedManifest == null ||
+                mergedManifest.getDocumentElement() == null) {
+            return false;
+        }
+        Element application = XmlUtils.getFirstSubTagTagByName(
+                mergedManifest.getDocumentElement(), TAG_APPLICATION);
+        if (application != null) {
+            for (Element element : XmlUtils.getSubTags(application)) {
+                if (TAG_ACTIVITY.equals(element.getTagName())) {
+                    String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                    if (className.endsWith(name)) {
+                        String fqn = LintUtils.resolveManifestName(element);
+                        if (fqn.equals(className)) {
+                            return SecurityDetector.getExported(element);
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private static boolean overridesIsValidFragment(

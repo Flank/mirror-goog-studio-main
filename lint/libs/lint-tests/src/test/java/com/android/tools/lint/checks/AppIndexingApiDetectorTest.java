@@ -1034,7 +1034,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
     private TestFile mActivity = java(""
             + "package android.app;\n"
             + "\n"
-            + "import android.content.Context\n"
+            + "import android.content.Context;\n"
             + "\n"
             + "// Stub class for testing.\n"
             + "public class Activity extends Context {}\n");

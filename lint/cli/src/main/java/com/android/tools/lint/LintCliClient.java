@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
@@ -27,6 +28,10 @@ import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
+import com.android.manifmerger.ManifestMerger2.MergeType;
+import com.android.manifmerger.MergingReport;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
@@ -39,6 +44,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.XmlParser;
+import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -47,14 +53,19 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.utils.StdLogger;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import org.w3c.dom.Document;
 
 /**
  * Lint client for command line usage. Supports the flags in {@link LintCliFlags},
@@ -249,7 +261,7 @@ public class LintCliClient extends LintClient {
 
     @Override
     public XmlParser getXmlParser() {
-        return new LintCliXmlParser();
+        return new LintCliXmlParser(this);
     }
 
     @NonNull
@@ -873,5 +885,63 @@ public class LintCliClient extends LintClient {
 
         projectDirs = Sets.newHashSet();
         dirToProject = null;
+    }
+
+    @Nullable
+    @Override
+    public Document getMergedManifest(@NonNull Project project) {
+        List<File> manifests = Lists.newArrayList();
+        for (Project dependency : project.getAllLibraries()) {
+            for (File manifest : dependency.getManifestFiles()) {
+                manifests.add(manifest);
+            }
+        }
+
+        List<File> projectManifests = project.getManifestFiles();
+        if (projectManifests.isEmpty()) {
+            return null;
+        }
+        File mainManifest = projectManifests.get(0);
+        for (int i = 1; i < projectManifests.size(); i++) {
+            manifests.add(projectManifests.get(i));
+        }
+
+        if (manifests.isEmpty()) {
+            // Only the main manifest: that's easy
+            return XmlUtils.parseDocumentSilently(readFile(mainManifest).toString(), true);
+        }
+
+        try {
+            StdLogger logger = new StdLogger(StdLogger.Level.INFO);
+            MergeType type = project.isLibrary() ? MergeType.LIBRARY : MergeType.APPLICATION;
+            MergingReport mergeReport = ManifestMerger2
+                    .newMerger(mainManifest, logger, type)
+                    .withFeatures(
+                            // TODO: How do we get the *opposite* of EXTRACT_FQCNS:
+                            // ensure that all names are made fully qualified?
+                            Feature.SKIP_BLAME,
+                            Feature.SKIP_XML_STRING,
+                            Feature.NO_PLACEHOLDER_REPLACEMENT)
+                    .addLibraryManifests(manifests.toArray(new File[manifests.size()]))
+                    .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
+                        @Override
+                        protected InputStream getInputStream(@NonNull File file) throws
+                                FileNotFoundException {
+                            CharSequence text = readFile(file);
+                            // TODO: Avoid having to convert back and forth
+                            return CharSequences.getInputStream(text);
+                        }
+                    })
+                    .merge();
+            String xml = mergeReport.getMergedDocument(MERGED);
+            if (xml != null) {
+                return XmlUtils.parseDocumentSilently(xml, true);
+            }
+        }
+        catch (ManifestMerger2.MergeFailureException e) {
+            log(Severity.ERROR, e, "Couldn't parse merged manifest");
+        }
+
+        return super.getMergedManifest(project);
     }
 }

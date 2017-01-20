@@ -60,6 +60,8 @@ import org.w3c.dom.Element;
 public class AndroidAutoDetector extends ResourceXmlDetector
         implements XmlScanner, JavaPsiScanner {
 
+    // TODO: Use the new merged manifest model
+
     @SuppressWarnings("unchecked")
     public static final Implementation IMPL = new Implementation(
             AndroidAutoDetector.class,
