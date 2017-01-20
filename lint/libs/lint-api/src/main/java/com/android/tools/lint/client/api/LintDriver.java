@@ -130,6 +130,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -2128,6 +2129,29 @@ public class LintDriver {
         public LintClientWrapper(@NonNull LintClient delegate) {
             super(getClientName());
             mDelegate = delegate;
+        }
+
+        @Nullable
+        @Override
+        public Document getMergedManifest(@NonNull Project project) {
+            return mDelegate.getMergedManifest(project);
+        }
+
+        @Override
+        public void resolveMergeManifestSources(@NonNull Document mergedManifest,
+                @NonNull File reportFile) {
+            mDelegate.resolveMergeManifestSources(mergedManifest, reportFile);
+        }
+
+        @Override
+        public boolean isMergeManifestNode(@NonNull org.w3c.dom.Node node) {
+            return mDelegate.isMergeManifestNode(node);
+        }
+
+        @Nullable
+        @Override
+        public org.w3c.dom.Node findManifestSourceNode(@NonNull org.w3c.dom.Node mergedNode) {
+            return mDelegate.findManifestSourceNode(mergedNode);
         }
 
         @Deprecated

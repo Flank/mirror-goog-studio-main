@@ -26,6 +26,7 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.SRC_FOLDER;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -51,6 +52,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,11 +68,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -1152,6 +1156,133 @@ public abstract class LintClient {
      */
     public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
         return new URLClassLoader(urls, parent);
+    }
+
+    /**
+     * Returns the merged manifest of the given project. This may return null
+     * if not called on the main project. Note that the file reference
+     * in the merged manifest isn't accurate; the merged manifest accumulates
+     * information from a wide variety of locations.
+     *
+     * @return The merged manifest, if available.
+     */
+    @Nullable
+    public Document getMergedManifest(@NonNull Project project) {
+        List<File> manifestFiles = project.getManifestFiles();
+        if (manifestFiles.size() == 1) {
+            File primary = manifestFiles.get(0);
+            try {
+                String xml = Files.toString(primary, UTF_8);
+                return XmlUtils.parseDocumentSilently(xml, true);
+            } catch (IOException e) {
+                log(Severity.ERROR, e, "Could not read manifest " + primary);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Key stashed as user data on merged manifest documents such that we
+     * can quickly determine if a node is originally from a merged manifest (this
+     * is used to automatically resolve reported errors on the merged manifest
+     * back to the corresponding source locations, when possible.)
+     */
+    private static final String MERGED_MANIFEST = "lint-merged-manifest";
+
+    /**
+     * Record that the given document corresponds to a merged manifest file;
+     * locations from this document should attempt to resolve back to the original
+     * source location
+     *
+     * @param mergedManifest the document for the merged manifest
+     * @param reportFile the manifest merger report file
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    public void resolveMergeManifestSources(@NonNull Document mergedManifest,
+            @NonNull File reportFile) {
+        mergedManifest.setUserData(MERGED_MANIFEST, reportFile, null);
+    }
+
+    /**
+     * Returns true if the given node is part of a merged manifest document
+     * (already configured via {@link #resolveMergeManifestSources(Document, File)})
+     *
+     * @param node the node to look up
+     * @return true if this node is part of a merged manifest document
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    public boolean isMergeManifestNode(@NonNull Node node) {
+        Document doc = node.getOwnerDocument();
+        return doc != null && doc.getUserData(MERGED_MANIFEST) != null;
+    }
+
+    /** Cache used by {@link #findManifestSourceNode(Node)} */
+    @Nullable private Map<File,BlameFile> reportFileCache;
+
+    /** Cache used by {@link #findManifestSourceNode(Node)} */
+    @Nullable protected IdentityHashMap<Node,Node> sourceNodeCache;
+
+    /**
+     * For the given node from a merged manifest, find the corresponding
+     * source manifest node, if possible
+     *
+     * @param mergedNode the node from the merged manifest
+     * @return the corresponding manifest node in one of the source files, if possible
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    @Nullable
+    public Node findManifestSourceNode(@NonNull Node mergedNode) {
+        if (sourceNodeCache != null) {
+            Node source = sourceNodeCache.get(mergedNode);
+            if (source != null) {
+                // document node is a place holder meaning "searched, not found". See
+                // code at the end of this method which populates cache.
+                if (source.getNodeType() == Node.DOCUMENT_NODE) {
+                    return null;
+                }
+                return source;
+            }
+        }
+
+        Document doc = mergedNode.getOwnerDocument();
+        if (doc == null) {
+            return null;
+        }
+        File reportFile = (File) doc.getUserData(MERGED_MANIFEST);
+        if (reportFile == null) {
+            return null;
+        }
+
+        BlameFile blameFile = null;
+        if (reportFileCache != null) {
+            blameFile = reportFileCache.get(reportFile);
+        } else {
+            reportFileCache = Maps.newHashMap();
+        }
+        if (blameFile == null) {
+            try {
+                blameFile = BlameFile.parse(reportFile);
+            } catch (IOException ignore) {
+                blameFile = BlameFile.NONE;
+            }
+            reportFileCache.put(reportFile, blameFile);
+        }
+
+        Node source = null;
+        if (blameFile != BlameFile.NONE) {
+            source = blameFile.findSourceNode(this, mergedNode);
+        }
+
+        // Cache for next time
+        // If not found, put doc node as place holder meaning "already searched, not found"
+        Node cacheValue = source != null ? source : doc;
+        if (sourceNodeCache == null) {
+            sourceNodeCache = Maps.newIdentityHashMap();
+        }
+        sourceNodeCache.put(mergedNode, cacheValue);
+
+        return source;
     }
 
     /**

@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.manifmerger.AttributeModel.Hexadecimal32BitsWithMinimumValue;
 import static com.android.manifmerger.AttributeModel.MultiValueValidator;
 
@@ -33,6 +34,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -124,6 +126,22 @@ class ManifestModel {
                 ? xmlElement.getAttribute(mAttributeName)
                 : xmlElement.getAttributeNS(mNamespaceUri, mAttributeName);
             if (Strings.isNullOrEmpty(key)) return null;
+
+            // Resolve unqualified names
+            if (key.startsWith(".") && ATTR_NAME.equals(mAttributeName) &&
+                    ANDROID_URI.equals(mNamespaceUri)) {
+                Document document = xmlElement.getOwnerDocument();
+                if (document != null) {
+                    Element root = document.getDocumentElement();
+                    if (root != null) {
+                        String pkg = root.getAttribute(ATTR_PACKAGE);
+                        if (!pkg.isEmpty()) {
+                            key = pkg + key;
+                        }
+                    }
+                }
+            }
+
             return key;
         }
 

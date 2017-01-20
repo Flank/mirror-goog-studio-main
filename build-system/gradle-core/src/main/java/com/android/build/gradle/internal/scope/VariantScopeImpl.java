@@ -1260,6 +1260,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getManifestReportFile() {
+        // If you change this, please also update Lint#getManifestReportFile
         return FileUtils.join(getGlobalScope().getOutputsDir(),
                 "logs", "manifest-merger-" + variantData.getVariantConfiguration().getBaseName()
                         + "-report.txt");
