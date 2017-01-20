@@ -121,6 +121,15 @@ public class TestLintClient extends LintCliClient {
         flags.getReporters().add(new TextReporter(this, flags, writer, false));
     }
 
+    void setLintTask(@Nullable TestLintTask task) {
+        if (task != null && task.optionSetter != null) {
+            task.optionSetter.set(flags);
+        }
+        // Client should not be used outside of the check process
+        //noinspection ConstantConditions
+        this.task = task;
+    }
+
     /**
      * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea
      * (because it enables some special support in lint for checking code in AOSP
@@ -295,7 +304,7 @@ public class TestLintClient extends LintCliClient {
     private StringBuilder output = null;
 
     public String analyze(List<File> files, List<Issue> issues) throws Exception {
-        driver = new LintDriver(new CustomIssueRegistry(issues), this);
+        driver = createDriver(new CustomIssueRegistry(issues));
 
         if (task.driverConfigurator != null) {
             task.driverConfigurator.configure(driver);

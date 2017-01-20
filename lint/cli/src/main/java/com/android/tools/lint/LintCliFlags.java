@@ -48,6 +48,7 @@ public class LintCliFlags {
     private final List<Reporter> reporters = Lists.newArrayList();
     private boolean quiet;
     private boolean warnAll;
+    private boolean checkTests;
     private boolean noWarnings;
     private boolean allErrors;
     private boolean fatalOnly;
@@ -211,6 +212,23 @@ public class LintCliFlags {
     /** Sets whether lint should treat all warnings as errors */
     public void setWarningsAsErrors(boolean allErrors) {
         this.allErrors = allErrors;
+    }
+
+    /**
+     * Returns whether lint should run all checks on test sources, instead of just the
+     * lint checks that have been specifically written to include tests (e.g. checks
+     * looking for specific test errors, or checks that need to consider testing code
+     * such as the unused resource detector)
+     *
+     * @return true to check tests, defaults to false
+     */
+    public boolean isCheckTestSources() {
+        return checkTests;
+    }
+
+    /** Sets whether lint should run all the normal checks on test sources */
+    public void setCheckTestSources(boolean warnAll) {
+        this.checkTests = warnAll;
     }
 
     /**

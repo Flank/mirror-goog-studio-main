@@ -210,4 +210,35 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "    String engineer() default \"/sdcard/this/is/wrong\";\n"
                         + "}\n")));
     }
+
+    public void testMatchInTestIfEnabled() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java("test/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"))
+                .configureOptions(flags -> flags.setCheckTestSources(true))
+                .run()
+                .expect(""
+                        + "test/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "               ~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n");
+    }
+
+    public void testNothingInTests() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java("test/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
 }

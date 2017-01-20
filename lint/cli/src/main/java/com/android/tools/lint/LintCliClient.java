@@ -116,20 +116,8 @@ public class LintCliClient extends LintClient {
     public int run(@NonNull IssueRegistry registry, @NonNull List<File> files) throws IOException {
         assert !flags.getReporters().isEmpty();
         this.registry = registry;
-        driver = new LintDriver(registry, this);
 
-        driver.setAbbreviating(!flags.isShowEverything());
-
-        File baselineFile = flags.getBaselineFile();
-        LintBaseline baseline = null;
-        if (baselineFile != null) {
-            baseline = new LintBaseline(this, baselineFile);
-            driver.setBaseline(baseline);
-            if (flags.isRemoveFixedBaselineIssues()) {
-                baseline.setWriteOnClose(true);
-                baseline.setRemoveFixed(true);
-            }
-        }
+        driver = createDriver(registry);
 
         addProgressPrinter();
         driver.addLintListener((driver, type, context) -> {
@@ -147,6 +135,8 @@ public class LintCliClient extends LintClient {
         int baselineErrorCount = 0;
         int baselineWarningCount = 0;
         int fixedCount = 0;
+
+        LintBaseline baseline = driver.getBaseline();
         if (baseline != null) {
             baselineErrorCount = baseline.getFoundErrorCount();
             baselineWarningCount = baseline.getFoundWarningCount();
@@ -176,6 +166,7 @@ public class LintCliClient extends LintClient {
             System.out.println();
         }
 
+        File baselineFile = flags.getBaselineFile();
         if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
             File dir = baselineFile.getParentFile();
             boolean ok = true;
@@ -203,6 +194,25 @@ public class LintCliClient extends LintClient {
         }
 
         return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
+    }
+
+    @NonNull
+    protected LintDriver createDriver(@NonNull IssueRegistry registry) {
+        driver = new LintDriver(registry, this);
+        driver.setAbbreviating(!flags.isShowEverything());
+        driver.setCheckTestSources(flags.isCheckTestSources());
+
+        File baselineFile = flags.getBaselineFile();
+        if (baselineFile != null) {
+            LintBaseline baseline = new LintBaseline(this, baselineFile);
+            driver.setBaseline(baseline);
+            if (flags.isRemoveFixedBaselineIssues()) {
+                baseline.setWriteOnClose(true);
+                baseline.setRemoveFixed(true);
+            }
+        }
+
+        return driver;
     }
 
     protected void addProgressPrinter() {
