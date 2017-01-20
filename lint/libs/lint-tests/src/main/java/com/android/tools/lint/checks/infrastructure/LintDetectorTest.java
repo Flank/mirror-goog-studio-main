@@ -1087,7 +1087,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         public String analyze(List<File> files) throws Exception {
-            driver = new LintDriver(new LintDetectorTest.CustomIssueRegistry(), this);
+            driver = createDriver(new LintDetectorTest.CustomIssueRegistry());
             configureDriver(driver);
 
             LintRequest request = new LintRequest(this, files);
