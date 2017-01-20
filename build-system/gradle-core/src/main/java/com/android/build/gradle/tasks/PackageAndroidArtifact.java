@@ -481,6 +481,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
         ImmutableMap<RelativeFile, FileStatus> allJavaResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJavaResourceFiles());
+        ImmutableMap<RelativeFile, FileStatus> allAssets =
+                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                        Collections.singleton(getAssets()));
         ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
         ImmutableMap<RelativeFile, FileStatus> allJniResources =
@@ -488,6 +491,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
         saveData.setInputSet(allDex.keySet(), InputSet.DEX);
         saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
+        saveData.setInputSet(allAssets.keySet(), InputSet.ASSET);
         saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
         saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
         saveData.saveCurrentData();
