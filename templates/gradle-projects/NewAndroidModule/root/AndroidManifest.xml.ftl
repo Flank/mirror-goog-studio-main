@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           <#if isInstantApp!false>xmlns:instant="http://schemas.android.com/instantapps"</#if>
-    package="${packageName}"
-    <#if isInstantApp!false>split="${splitName}"</#if>>
+    package="${manifestPackageName}"
+    <#if (isInstantApp!false) && !(isBaseAtom!false)>split="${splitName}"</#if>>
 
     <#if !(isInstantApp!false) || isLibraryProject>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>

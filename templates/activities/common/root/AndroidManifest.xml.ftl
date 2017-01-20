@@ -15,9 +15,6 @@
             </#if>
             <#if buildApi gte 16 && parentActivityClass != "">
                 android:parentActivityName="${parentActivityClass}"
-            </#if>
-            <#if isInstantApp!false>
-                instant:atom="${projectName}"
             </#if>>
             <#if parentActivityClass != "">
                 <meta-data android:name="android.support.PARENT_ACTIVITY"
@@ -30,7 +27,7 @@
                     <category android:name="android.intent.category.DEFAULT" />
                     <data
                         android:host="${supportedDomain!"instantapp.example.com"}"
-                        android:pathPattern="${atomRoute!".*"}"
+                        android:pathPattern="${atomRoute!"/.*"}"
                         android:scheme="http" />
                 </intent-filter>
             <#elseif isLauncher && !(isLibraryProject!false)>
