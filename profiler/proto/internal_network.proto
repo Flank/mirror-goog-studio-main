@@ -21,6 +21,7 @@ service InternalNetworkService {
   rpc RegisterHttpData(HttpDataRequest) returns (EmptyNetworkReply) {}
   rpc SendChunk(ChunkRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpEvent(HttpEventRequest) returns (EmptyNetworkReply) {}
+  rpc SendHttpRequest(HttpRequestRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpResponse(HttpResponseRequest) returns (EmptyNetworkReply) {}
 }
 
@@ -66,6 +67,15 @@ message HttpEventRequest {
   int64 conn_id = 1;
   int64 timestamp = 2;
   Event event = 3;
+}
+
+// Request data of HTTP connection.
+message HttpRequestRequest {
+  int64 conn_id = 1;
+  // Header fields associated with this request. See also:
+  // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
+  string fields = 2;
+  string method = 3;
 }
 
 // Response data of HTTP connection.
