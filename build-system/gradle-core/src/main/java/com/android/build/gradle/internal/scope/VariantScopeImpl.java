@@ -469,18 +469,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public Iterable<File> getJavaOutputs() {
-        return Iterables.concat(
-                getJavaClasspath(),
-                ImmutableList.of(
-                        getJavaOutputDir(),
-                        getJavaDependencyCache()));
-    }
-
-    @Override
-    @NonNull
-    public File getJavaDependencyCache() {
-        return new File(globalScope.getIntermediatesDir(), "/dependency-cache/" +
-                variantData.getVariantConfiguration().getDirName());
+        return Iterables.concat(getJavaClasspath(), ImmutableList.of(getJavaOutputDir()));
     }
 
     @Override

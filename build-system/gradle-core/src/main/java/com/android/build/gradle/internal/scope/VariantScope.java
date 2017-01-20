@@ -125,9 +125,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     Iterable<File> getJavaOutputs();
 
     @NonNull
-    File getJavaDependencyCache();
-
-    @NonNull
     File getPreDexOutputDir();
 
     @NonNull
