@@ -25,7 +25,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class NdkSourceSetTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         Files.append(
                 "apply plugin: 'com.android.model.application'\n"
                         + "model {\n"
@@ -58,7 +57,7 @@ public class NdkSourceSetTest {
     }
 
     @Test
-    public void testIncludeSpecificFile() throws IOException {
+    public void testIncludeSpecificFile() throws Exception {
         FileUtils.createFile(
                 project.file("src/main/jni/uncompilable.c"),
                 "Uncompilable source file.");
@@ -87,7 +86,7 @@ public class NdkSourceSetTest {
     }
 
     @Test
-    public void testCFilter() throws IOException {
+    public void testCFilter() throws Exception {
         FileUtils.createFile(
                 project.file("src/main/jni/uncompilable.c"),
                 "Uncompilable source file.");

@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.ddmlib.IDevice;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,7 +48,7 @@ public class ConnectedCheckTest {
 
     @Category(DeviceTests.class)
     @Test
-    public void connectedCheckOnAllDevices() throws IOException {
+    public void connectedCheckOnAllDevices() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
         GradleBuildResult result = project.executor().run("connectedCheck");
@@ -58,7 +57,7 @@ public class ConnectedCheckTest {
 
     @Category(DeviceTests.class)
     @Test
-    public void connectedCheckShardedOn1Device() throws IOException {
+    public void connectedCheckShardedOn1Device() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         IDevice device = adb.getDevice(AndroidVersionMatcher.anyAndroidVersion());
         // Provide a single device to check.
@@ -77,7 +76,7 @@ public class ConnectedCheckTest {
 
     @Category(DeviceTests.class)
     @Test
-    public void connectedCheckIn7Shards() throws IOException {
+    public void connectedCheckIn7Shards() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
         GradleBuildResult result = project.executor().withArguments(

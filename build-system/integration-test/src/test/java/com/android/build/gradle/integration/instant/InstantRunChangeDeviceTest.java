@@ -76,7 +76,7 @@ public class InstantRunChangeDeviceTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void checkEnvironment() {
+    public void checkEnvironment() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
     }

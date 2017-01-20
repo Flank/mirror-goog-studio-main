@@ -36,13 +36,11 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
@@ -61,7 +59,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(
@@ -92,7 +90,7 @@ public class AppWithCompileIndirectJavaProjectTest {
     }
 
     @Test
-    public void checkPackagedJar() throws IOException, ProcessException {
+    public void checkPackagedJar() throws Exception {
         project.execute("clean", ":app:assembleDebug");
 
         Apk apk = project.getSubproject("app").getApk("debug");
@@ -102,7 +100,7 @@ public class AppWithCompileIndirectJavaProjectTest {
     }
 
     @Test
-    public void checkLevel1Model() {
+    public void checkLevel1Model() throws Exception {
         ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
 
@@ -147,7 +145,7 @@ public class AppWithCompileIndirectJavaProjectTest {
     }
 
     @Test
-    public void checkLevel2Model() {
+    public void checkLevel2Model() throws Exception {
         ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_LATEST)
                 .withFeature(FULL_DEPENDENCIES)

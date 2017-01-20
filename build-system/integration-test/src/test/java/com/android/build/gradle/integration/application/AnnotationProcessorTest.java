@@ -38,7 +38,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Assume;
@@ -145,7 +144,7 @@ public class AnnotationProcessorTest {
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         String buildScript = new BuildScriptGenerator(
                 "\n"
                         + "apply from: \"../../commonHeader.gradle\"\n"
@@ -246,7 +245,7 @@ public class AnnotationProcessorTest {
     }
 
     @Test
-    public void checkWarningWhenAptAndAnnotationProcessor() throws IOException {
+    public void checkWarningWhenAptAndAnnotationProcessor() throws Exception {
         // this warning is shown only for the javac toolchain and non-component plugin
         Assume.assumeTrue(!forJack && !forComponentPlugin);
         TestFileUtils.appendToFile(

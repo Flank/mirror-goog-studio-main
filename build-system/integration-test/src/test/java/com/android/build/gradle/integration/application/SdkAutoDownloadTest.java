@@ -489,7 +489,7 @@ public class SdkAutoDownloadTest {
                 .contains("missing components");
     }
 
-    private void deleteLicense() throws IOException {
+    private void deleteLicense() throws Exception {
         FileUtils.delete(licenseFile);
     }
 
@@ -631,11 +631,11 @@ public class SdkAutoDownloadTest {
         return FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS, "android-" + PLATFORM_VERSION);
     }
 
-    private void deleteBuildTools() throws IOException {
+    private void deleteBuildTools() throws Exception {
         FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
     }
 
-    private void deletePlatforms() throws IOException {
+    private void deletePlatforms() throws Exception {
         FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
     }
 

@@ -20,10 +20,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -36,7 +34,7 @@ public class JavaResAtomPackagingTest {
             GradleTestProject.builder().fromTestProject("singleAtom").withoutNdk().create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         GradleTestProject atomProject = sProject.getSubproject(":atom");
         File atomAssetDir =
                 FileUtils.join(atomProject.getTestDir(), "src", "main", "resources", "com", "foo");
@@ -50,7 +48,7 @@ public class JavaResAtomPackagingTest {
     }
 
     @Test
-    public void javaResArePresent() throws IOException, ProcessException {
+    public void javaResArePresent() throws Exception {
         sProject.execute("clean", ":instantApp:assembleRelease");
 
         TruthHelper.assertThat(sProject.getSubproject(":atom").getAtomBundle("release"))

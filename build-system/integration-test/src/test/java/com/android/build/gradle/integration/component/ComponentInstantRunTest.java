@@ -15,7 +15,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -33,7 +32,7 @@ public class ComponentInstantRunTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
                         + "model {\n"
@@ -45,7 +44,7 @@ public class ComponentInstantRunTest {
     }
 
     @Test
-    public void basicAssemble() {
+    public void basicAssemble() throws Exception {
         project.executor().withInstantRun(21).run("assembleDebug");
         assertThat(project.getApk("debug")).exists();
     }

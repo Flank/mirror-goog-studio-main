@@ -40,7 +40,6 @@ import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,7 +82,7 @@ public class ConnectedColdSwapTest {
     ILogger iLogger;
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         createActivityClass("Logger.getLogger(\"coldswaptest\").warning(\"coldswaptest_before\");\n");
     }
 
@@ -166,7 +165,7 @@ public class ConnectedColdSwapTest {
         device.uninstallPackage(HelloWorldApp.APP_ID);
     }
 
-    private void makeColdSwapChange() throws IOException {
+    private void makeColdSwapChange() throws Exception {
         createActivityClass("newMethod();\n"
                 + "    }\n"
                 + "    public void newMethod() {\n"
@@ -174,8 +173,7 @@ public class ConnectedColdSwapTest {
                 + "");
     }
 
-    private void createActivityClass(@NonNull String newMethodBody)
-            throws IOException {
+    private void createActivityClass(@NonNull String newMethodBody) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "\n"
                 + "import java.util.logging.Logger;\n" +

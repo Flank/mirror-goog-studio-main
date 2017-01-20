@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.builder.model.AndroidProject;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +68,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void checkRunOnDevice() throws IOException {
+    public void checkRunOnDevice() throws Exception {
         adb.exclusiveAccess();
         project.execute(":test:connectedAndroidTest");
     }

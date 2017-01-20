@@ -34,7 +34,7 @@ public class FlavoredTest {
             .create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         project.execute("clean", "assembleDebug");
     }
 
@@ -50,7 +50,7 @@ public class FlavoredTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

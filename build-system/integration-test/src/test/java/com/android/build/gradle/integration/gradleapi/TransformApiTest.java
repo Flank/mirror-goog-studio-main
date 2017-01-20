@@ -29,11 +29,9 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,12 +47,12 @@ public class TransformApiTest {
             .create();
 
     @BeforeClass
-    public static void skipOnJack() throws IOException {
+    public static void skipOnJack() throws Exception {
         assumeFalse("Transform api cannot be used with jack.", GradleTestProject.USE_JACK);
     }
 
     @Before
-    public void moveLocalProperties() throws IOException {
+    public void moveLocalProperties() throws Exception {
         // Only one of the projects is an Android project, and there is no top-level
         // settings.gradle, so local.properties ends up not being picked up. Just move
         // it to the project that needs it.
@@ -66,7 +64,7 @@ public class TransformApiTest {
     }
 
     @Test
-    public void checkRepackagedGsonLibrary() throws IOException, ProcessException {
+    public void checkRepackagedGsonLibrary() throws Exception {
         wholeProject.getSubproject("plugin").execute("uploadArchives");
 
         AndroidProject model = wholeProject.getSubproject("androidproject")

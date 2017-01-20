@@ -32,7 +32,6 @@ import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -74,7 +73,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     }
 
     @Before
-    public void initializeProject() throws IOException {
+    public void initializeProject() throws Exception {
 
         //noinspection ConstantConditions
         TestFileUtils.searchAndReplace(

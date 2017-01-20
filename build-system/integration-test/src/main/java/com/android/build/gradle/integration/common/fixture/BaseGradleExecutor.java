@@ -29,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -158,7 +157,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    protected List<String> getCommonArguments() {
+    protected List<String> getCommonArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
 
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
@@ -184,11 +183,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                     propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_PREDEX_BUILD_CACHE, "false"));
         }
 
-        try {
-            Files.createDirectories(androidSdkHome);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        Files.createDirectories(androidSdkHome);
 
         arguments.add(
                 String.format(

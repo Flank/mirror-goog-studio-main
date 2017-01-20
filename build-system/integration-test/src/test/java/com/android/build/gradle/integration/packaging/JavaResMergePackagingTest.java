@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldAppWithJavaLibs;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.IOException;
@@ -71,7 +70,7 @@ public class JavaResMergePackagingTest {
     }
 
     @Test
-    public void checkMergeAppWithLibs() throws IOException, ProcessException {
+    public void checkMergeAppWithLibs() throws Exception {
         assembleDebug();
         Apk apk = project.getSubproject(":app").getApk("debug");
 
@@ -91,7 +90,7 @@ public class JavaResMergePackagingTest {
     }
 
     @Test
-    public void checkMergeOnlyLibs() throws IOException, ProcessException {
+    public void checkMergeOnlyLibs() throws Exception {
         GradleTestProject appProject = project.getSubproject(":app");
         TestFileUtils.appendToFile(appProject.getBuildFile(),
                 "\n" +
@@ -113,7 +112,7 @@ public class JavaResMergePackagingTest {
     }
 
     @Test
-    public void checkProjectPrecedenceForOtherPaths() throws IOException, ProcessException {
+    public void checkProjectPrecedenceForOtherPaths() throws Exception {
         String resPath = "my/data/file.txt";
 
         GradleTestProject appProject = project.getSubproject(":app");
@@ -129,7 +128,7 @@ public class JavaResMergePackagingTest {
     }
 
     @Test
-    public void checkProjectSelectedWhenPickFirst() throws IOException, ProcessException {
+    public void checkProjectSelectedWhenPickFirst() throws Exception {
         GradleTestProject appProject = project.getSubproject(":app");
 
         TestFileUtils.appendToFile(appProject.getBuildFile(),
@@ -147,7 +146,7 @@ public class JavaResMergePackagingTest {
     }
 
     @Test
-    public void checkNoNewlineAddedForOtherPaths() throws IOException, ProcessException {
+    public void checkNoNewlineAddedForOtherPaths() throws Exception {
         String resPath = "my/data/file.txt";
 
         GradleTestProject appProject = project.getSubproject(":app");
@@ -171,7 +170,7 @@ public class JavaResMergePackagingTest {
         assertThatApk(apk).containsFileWithMatch(resPath, "[^(\n)]");
     }
 
-    private void assembleDebug() {
+    private void assembleDebug() throws IOException, InterruptedException {
         project.executor().run("clean", ":app:assembleDebug");
     }
 }

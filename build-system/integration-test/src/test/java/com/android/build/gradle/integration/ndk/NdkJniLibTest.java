@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.ndk;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -36,7 +35,7 @@ public class NdkJniLibTest {
             .create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         project.execute("clean", "assembleDebug");
     }
 
@@ -46,12 +45,12 @@ public class NdkJniLibTest {
     }
 
     @Test
-    public void lint() {
+    public void lint() throws Exception {
         project.execute("lint");
     }
 
     @Test
-    public void checkVersionCode() throws ProcessException {
+    public void checkVersionCode() throws Exception {
         GradleTestProject app = project.getSubproject("app");
 
         TruthHelper.assertThat(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123);
@@ -66,7 +65,7 @@ public class NdkJniLibTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

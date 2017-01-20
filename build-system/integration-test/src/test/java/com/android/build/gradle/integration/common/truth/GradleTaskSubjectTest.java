@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
-import java.io.IOException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.gradle.tooling.events.OperationDescriptor;
@@ -41,7 +40,7 @@ public class GradleTaskSubjectTest {
     private FakeFailureStrategy failureStrategy;
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         String output = Resources.toString(
                 Resources.getResource(
                         "com/android/build/gradle/integration/common/truth/build-output.txt"),

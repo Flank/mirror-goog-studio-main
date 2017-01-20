@@ -33,7 +33,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,7 +58,7 @@ public class ConditionalApiUse {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void checkEnvironment() {
+    public void checkEnvironment() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
     }
@@ -123,7 +122,7 @@ public class ConditionalApiUse {
                 .hasMethod("toString");
     }
 
-    private void makeHotswapCompatibleChange() throws IOException {
+    private void makeHotswapCompatibleChange() throws Exception {
         String updatedClass = "package com.android.tests.conditionalApiUse;\n"
                 + "\n"
                 + "import android.hardware.camera2.CameraAccessException;\n"

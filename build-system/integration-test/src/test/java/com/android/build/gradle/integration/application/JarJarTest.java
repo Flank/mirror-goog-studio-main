@@ -21,10 +21,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,13 +46,13 @@ public class JarJarTest {
     }
 
     @Test
-    public void checkRepackagedGsonLibraryFormonodex() throws IOException, ProcessException {
+    public void checkRepackagedGsonLibraryFormonodex() throws Exception {
         project.executeAndReturnModel("clean", "assembleDebug");
         verifyApk();
     }
 
     @Test
-    public void checkRepackagedForNativeMultidex() throws IOException, ProcessException {
+    public void checkRepackagedForNativeMultidex() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "\n"
                         + "android.defaultConfig {\n"
@@ -67,7 +65,7 @@ public class JarJarTest {
     }
 
     @Test
-    public void checkRepackagedForLegacyMultidex() throws IOException, ProcessException {
+    public void checkRepackagedForLegacyMultidex() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "\n"
                         + "android.defaultConfig {\n"
@@ -79,7 +77,7 @@ public class JarJarTest {
         verifyApk();
     }
 
-    private void verifyApk() throws IOException, ProcessException {
+    private void verifyApk() throws Exception {
         // make sure the Gson library has been renamed and the original one is not present.
         Apk outputFile = project.getApk("debug");
         TruthHelper.assertThatApk(outputFile)

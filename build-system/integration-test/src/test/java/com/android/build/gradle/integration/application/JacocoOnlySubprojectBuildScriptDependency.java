@@ -33,7 +33,7 @@ public class JacocoOnlySubprojectBuildScriptDependency {
             .create();
 
     @Test
-    public void build() {
+    public void build() throws Exception {
         if (GradleTestProject.USE_JACK) {
             project.execute("transformJackWithJackForDebug");
         } else {

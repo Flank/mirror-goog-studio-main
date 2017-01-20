@@ -36,7 +36,6 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,7 +52,7 @@ public class AppWithResolutionStrategyForAarTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getBuildFile(),
@@ -110,7 +109,7 @@ public class AppWithResolutionStrategyForAarTest {
     }
 
     @Test
-    public void checkModelContainsCorrectDependencies() {
+    public void checkModelContainsCorrectDependencies() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         AndroidProject appProject = modelContainer.getModelMap().get(":app");

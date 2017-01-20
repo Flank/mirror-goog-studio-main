@@ -33,7 +33,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -57,7 +56,7 @@ public class CmakeInstantRunTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getBuildFile(),
                 new BuildScriptGenerator(

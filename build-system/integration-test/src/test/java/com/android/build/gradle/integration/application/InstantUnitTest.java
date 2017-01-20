@@ -41,13 +41,13 @@ public class InstantUnitTest {
             .create();
 
     @Test
-    public void checkInstantUnitTestsBuild() {
+    public void checkInstantUnitTestsBuild() throws Exception {
         sProject.execute("clean", "assembleDebugAndroidTest");
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void runTestsOnDevice() {
+    public void runTestsOnDevice() throws Exception {
         sProject.execute("clean");
         IDevice device = adb.getDevice(thatUsesArt());
         sProject.executeConnectedCheck(

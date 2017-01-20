@@ -31,7 +31,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-import java.io.IOException;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
@@ -76,7 +75,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     }
 
     @Before
-    public void initializeProject() throws IOException {
+    public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeWordpress(project);
         switch (projectScenario) {
             case NATIVE_MULTIDEX:
@@ -156,7 +155,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     }
 
     /** Removes the crashlytics plugin, and any dependencies on it. */
-    private void disableCrashlyticsForJack() throws IOException {
+    private void disableCrashlyticsForJack() throws Exception {
         TestFileUtils.searchAndReplace(
                 project.getSubproject("WordPress").getBuildFile(),
                 "apply plugin: 'io\\.fabric'",

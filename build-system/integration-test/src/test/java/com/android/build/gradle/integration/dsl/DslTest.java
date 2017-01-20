@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,7 +71,7 @@ public class DslTest {
     }
 
     @Test
-    public void extraPropTest() throws IOException {
+    public void extraPropTest() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -101,7 +100,7 @@ public class DslTest {
     }
 
     @Test
-    public void buildConfigEncoding() throws IOException {
+    public void buildConfigEncoding() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"

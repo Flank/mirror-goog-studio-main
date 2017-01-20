@@ -22,9 +22,7 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.truth.ZipFileSubject;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -47,7 +45,7 @@ public class SingleAtomTest {
     }
 
     @Test
-    public void build() throws IOException, ProcessException {
+    public void build() throws Exception {
         sProject.execute("clean");
         sProject.execute(":instantApp:assembleRelease");
 

@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,7 +59,7 @@ public class ProvidedSubclassTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void addProvidedLibrary() throws IOException {
+    public void addProvidedLibrary() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

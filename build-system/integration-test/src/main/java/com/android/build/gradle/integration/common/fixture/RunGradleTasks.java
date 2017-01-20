@@ -118,26 +118,24 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * <p>Uses deviceCheck in the background to support the device pool.
      */
-    public GradleBuildResult executeConnectedCheck() {
+    public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
         return run("deviceCheck");
     }
 
     /** Execute the specified tasks */
-    public GradleBuildResult run(@NonNull String... tasks) {
+    public GradleBuildResult run(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         return run(ImmutableList.copyOf(tasks));
     }
 
-    public GradleBuildResult run(@NonNull List<String> tasksList) {
+    public GradleBuildResult run(@NonNull List<String> tasksList)
+            throws IOException, InterruptedException {
         assertThat(tasksList).named("tasks list").isNotEmpty();
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        try {
-            TestUtils.waitForFileSystemTick();
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        TestUtils.waitForFileSystemTick();
 
         List<String> args = Lists.newArrayList();
         args.addAll(getCommonArguments());
@@ -204,8 +202,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
         if (isExpectingFailure && failure == null) {
             throw new AssertionError("Expecting build to fail");
@@ -268,12 +264,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
          * @return null if the build passed, the GradleConnectionException if the build failed.
          */
         @Nullable
-        private GradleConnectionException waitForResult() {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                throw new AssertionError(e);
-            }
+        private GradleConnectionException waitForResult() throws InterruptedException {
+            latch.await();
             return failure;
         }
     }

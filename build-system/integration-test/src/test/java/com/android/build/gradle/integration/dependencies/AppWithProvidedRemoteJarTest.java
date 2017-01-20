@@ -31,8 +31,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -46,7 +44,7 @@ public class AppWithProvidedRemoteJarTest {
             GradleTestProject.builder().fromTestProject("projectWithLocalDeps").create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -74,13 +72,13 @@ public class AppWithProvidedRemoteJarTest {
     }
 
     @Test
-    public void checkProvidedRemoteJarIsNotPackaged() throws IOException, ProcessException {
+    public void checkProvidedRemoteJarIsNotPackaged() throws Exception {
         assertThat(project.getApk("debug"))
                 .doesNotContainClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void checkProvidedRemoteJarIsInTheMainArtifactDependency() {
+    public void checkProvidedRemoteJarIsInTheMainArtifactDependency() throws Exception {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
                 project.model().withFeature(FULL_DEPENDENCIES).getSingle();
 

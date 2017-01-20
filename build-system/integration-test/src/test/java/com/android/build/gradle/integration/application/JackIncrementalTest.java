@@ -25,7 +25,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,14 +45,14 @@ public class JackIncrementalTest {
                     .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                 + "'\n");
     }
 
     @Test
-    public void assembleDebug() throws IOException {
+    public void assembleDebug() throws Exception {
         project.execute("clean", "assembleDebug");
         File classesDex =
                 FileUtils.find(
@@ -81,7 +80,7 @@ public class JackIncrementalTest {
     }
 
     @Test
-    public void checkDisablingIncrementalCompile() throws IOException {
+    public void checkDisablingIncrementalCompile() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.compileOptions.incremental false\n");
         project.execute("clean", "assembleDebug");

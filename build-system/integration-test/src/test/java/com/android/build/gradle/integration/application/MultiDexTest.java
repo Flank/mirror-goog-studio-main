@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,7 +66,7 @@ public class MultiDexTest {
     @Parameterized.Parameter public boolean dexInProcess;
 
     @Before
-    public void disableDexInProcess() throws IOException {
+    public void disableDexInProcess() throws Exception {
         if (!dexInProcess) {
             DexInProcessHelper.disableDexInProcess(project.getBuildFile());
         }
@@ -290,7 +289,7 @@ public class MultiDexTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException {
+    public void connectedCheck() throws Exception {
         project.execute(
                 "assembleIcsDebug",
                 "assembleIcsDebugAndroidTest",

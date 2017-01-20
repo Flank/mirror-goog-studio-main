@@ -33,11 +33,9 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -57,7 +55,7 @@ public class AppTestWithSkippedModuleDepTest {
     private static LibraryGraphHelper helper;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
@@ -79,7 +77,7 @@ public class AppTestWithSkippedModuleDepTest {
     }
 
     @Test
-    public void checkAppBuild() throws IOException, ProcessException {
+    public void checkAppBuild() throws Exception {
         Apk appApk = project.getSubproject(":app").getApk("debug");
         assertThat(appApk).exists();
         assertThat(appApk)
@@ -87,7 +85,7 @@ public class AppTestWithSkippedModuleDepTest {
     }
 
     @Test
-    public void checkTestBuild() throws IOException, ProcessException {
+    public void checkTestBuild() throws Exception {
         Apk testApk = project.getSubproject(":app").getApk("debug", "androidTest");
         assertThat(testApk).exists();
         assertThat(testApk)
@@ -95,7 +93,7 @@ public class AppTestWithSkippedModuleDepTest {
     }
 
     @Test
-    public void checkLevel2AppModel() {
+    public void checkLevel2AppModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         Map<String, AndroidProject> models = modelContainer.getModelMap();
@@ -145,7 +143,7 @@ public class AppTestWithSkippedModuleDepTest {
     }
 
     @Test
-    public void checkLevel2TestModel() {
+    public void checkLevel2TestModel() throws Exception {
 
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 

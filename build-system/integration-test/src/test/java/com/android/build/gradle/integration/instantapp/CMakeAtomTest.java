@@ -24,11 +24,9 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.AtomBundle;
 import java.io.File;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -45,7 +43,7 @@ public class CMakeAtomTest {
                     .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getSubproject(":atom").getBuildFile(),
                 "\n"
@@ -64,7 +62,7 @@ public class CMakeAtomTest {
     }
 
     @Test
-    public void nativeLibsArePresent() throws IOException, ProcessException, InterruptedException {
+    public void nativeLibsArePresent() throws Exception {
         sProject.execute("clean", ":instantApp:assembleRelease");
 
         AtomBundle atomBundle = sProject.getSubproject(":atom").getAtomBundle("release");

@@ -12,7 +12,6 @@ import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,7 +30,7 @@ public class NdkStlVersionTest {
             .useExperimentalGradleVersion(true).create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "apply plugin: 'com.android.model.application'\n"
@@ -49,7 +48,7 @@ public class NdkStlVersionTest {
     }
 
     @Test
-    public void checkDefaultStlVersion() {
+    public void checkDefaultStlVersion() throws Exception {
         project.execute("clean", "assembleDebug");
         File cppOptions =
                 project.file(
@@ -59,7 +58,7 @@ public class NdkStlVersionTest {
     }
 
     @Test
-    public void checkCustomStlVersion() throws IOException {
+    public void checkCustomStlVersion() throws Exception {
         File libstdc =
                 FileUtils.join(
                         GradleTestProject.ANDROID_NDK_HOME, "sources", "cxx-stl", "gnu-libstdc++");

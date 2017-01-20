@@ -39,7 +39,6 @@ import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.Before;
@@ -68,7 +67,7 @@ public class ResourcesSwapTest {
     public final Adb adb = new Adb();
 
     @Before
-    public void checkEnvironment() {
+    public void checkEnvironment() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
     }
@@ -205,7 +204,7 @@ public class ResourcesSwapTest {
                 });
     }
 
-    private void copyTestResourceToProjectFile(String resourceName) throws IOException {
+    private void copyTestResourceToProjectFile(String resourceName) throws Exception {
         File file = mProject.file("src/main/res/drawable/image.png");
         Files.createParentDirs(file);
 

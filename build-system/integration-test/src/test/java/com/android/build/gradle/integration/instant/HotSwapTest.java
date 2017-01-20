@@ -38,7 +38,6 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assume;
@@ -72,7 +71,7 @@ public class HotSwapTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass(ORIGINAL_MESSAGE);
     }
@@ -165,8 +164,7 @@ public class HotSwapTest {
                 changes);
     }
 
-    private void createActivityClass(String message)
-            throws IOException {
+    private void createActivityClass(String message) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "import android.app.Activity;\n"
                 + "import android.os.Bundle;\n"

@@ -48,7 +48,6 @@ import com.android.utils.StdLogger;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -68,7 +67,7 @@ public class VariantDependencyTest {
     private static LibraryGraphHelper helper;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -141,14 +140,14 @@ public class VariantDependencyTest {
     }
 
     @Test
-    public void buildVariantSpecificDependency() throws IOException {
+    public void buildVariantSpecificDependency() throws Exception {
         // check that the dependency was added by looking for a res file coming from the
         // dependency.
         checkApkForContent("freeLollipopDebug", "res/drawable/lb_background.xml");
     }
 
     @Test
-    public void buildMultiFlavorDependency() throws IOException {
+    public void buildMultiFlavorDependency() throws Exception {
         // check that the dependency was added by looking for a res file coming from the
         // dependency.
         checkApkForContent("paidIcsDebug", "res/anim/abc_fade_in.xml");
@@ -156,7 +155,7 @@ public class VariantDependencyTest {
     }
 
     @Test
-    public void buildDefaultDependency() throws IOException {
+    public void buildDefaultDependency() throws Exception {
         // make sure that the other variants do not include any file from the variant-specific
         // and multi-flavor dependencies.
         Set<String> paths = Sets.newHashSet(
@@ -243,8 +242,7 @@ public class VariantDependencyTest {
     }
 
     private static void checkApkForContent(
-            @NonNull String variantName,
-            @NonNull String checkFilePath) throws IOException {
+            @NonNull String variantName, @NonNull String checkFilePath) throws Exception {
         // use the model to get the output APK!
         File apk = ModelHelper.findOutputFileByVariantName(
                 model.getOnlyModel().getVariants(), variantName);
@@ -253,8 +251,7 @@ public class VariantDependencyTest {
     }
 
     private static void checkApkForMissingContent(
-            @NonNull String variantName,
-            @NonNull Set<String> checkFilePath) throws IOException {
+            @NonNull String variantName, @NonNull Set<String> checkFilePath) throws Exception {
         // use the model to get the output APK!
         File apk = ModelHelper.findOutputFileByVariantName(
                 model.getOnlyModel().getVariants(), variantName);

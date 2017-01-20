@@ -25,7 +25,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -200,7 +199,7 @@ public class JarContentsTest {
         checkGroup("com/android/databinding");
     }
 
-    private static void checkGroup(String groupPrefix) throws IOException {
+    private static void checkGroup(String groupPrefix) throws Exception {
         boolean foundAndroidRepo = false;
 
         for (Path repo : GradleTestProject.getLocalRepositories()) {
@@ -241,7 +240,7 @@ public class JarContentsTest {
                 || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
-    private static void checkJar(Path jar, Path repo) throws IOException {
+    private static void checkJar(Path jar, Path repo) throws Exception {
         String relativePath = repo.relativize(jar).toString();
 
         Collection<String> expected =
