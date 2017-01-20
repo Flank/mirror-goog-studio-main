@@ -29,7 +29,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -61,7 +60,7 @@ public class JackCompilationOutputTest {
                     .create();
 
     @Before
-    public void updateBuildFile() throws IOException {
+    public void updateBuildFile() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"

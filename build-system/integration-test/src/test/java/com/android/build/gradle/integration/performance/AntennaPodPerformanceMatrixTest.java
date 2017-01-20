@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -81,14 +80,14 @@ public class AntennaPodPerformanceMatrixTest {
         };
     }
 
-    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws IOException {
+    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws Exception {
         TestFileUtils.searchAndReplace(
                 buildGradleFile,
                 "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
                 "buildToolsVersion$1 \"25.0.0\"");
     }
 
-    private static void disableRetrolambda(@NonNull File buildGradleFile) throws IOException {
+    private static void disableRetrolambda(@NonNull File buildGradleFile) throws Exception {
         TestFileUtils.searchAndReplace(
                 buildGradleFile,
                 "apply plugin: \"me.tatarka.retrolambda\"",
@@ -96,7 +95,7 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @Before
-    public void initializeProject() throws IOException {
+    public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeAntennaPod(mainProject);
         project = mainProject.getSubproject("AntennaPod");
 
@@ -287,7 +286,7 @@ public class AntennaPodPerformanceMatrixTest {
             @NonNull PerformanceTestUtil.SubProjectType subProjectType,
             @NonNull PerformanceTestUtil.EditType editType,
             int nonce)
-            throws IOException {
+            throws Exception {
 
         if (subProjectType != PerformanceTestUtil.SubProjectType.MAIN_PROJECT) {
             throw new UnsupportedOperationException("TODO: Cannot edit non main project yet.");

@@ -24,10 +24,8 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +41,7 @@ public class WearVariantTest {
             .create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         project.execute("clean", ":main:assemble");
     }
 
@@ -53,7 +51,7 @@ public class WearVariantTest {
     }
 
     @Test
-    public void checkEmbedded() throws IOException, ProcessException {
+    public void checkEmbedded() throws Exception {
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
                 DOT_ANDROID_PACKAGE;
 

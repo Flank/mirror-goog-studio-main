@@ -27,8 +27,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -46,7 +44,7 @@ public class AppWithPackageLocalJarTest {
     static ModelContainer<AndroidProject> model;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.application\"\n" +
@@ -70,13 +68,13 @@ public class AppWithPackageLocalJarTest {
     }
 
     @Test
-    public void checkPackageLocalJarIsPackaged() throws IOException, ProcessException {
+    public void checkPackageLocalJarIsPackaged() throws Exception {
         assertThat(project.getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void checkPackagedLocalJarIsNotIntheModel() {
+    public void checkPackagedLocalJarIsNotIntheModel() throws Exception {
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
         LibraryGraphHelper helper = new LibraryGraphHelper(model);

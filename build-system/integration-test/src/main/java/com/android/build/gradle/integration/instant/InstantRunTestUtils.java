@@ -167,9 +167,8 @@ public final class InstantRunTestUtils {
     }
 
     @NonNull
-    static InstantRun doInitialBuild(
-            @NonNull GradleTestProject project,
-            int apiLevel) {
+    static InstantRun doInitialBuild(@NonNull GradleTestProject project, int apiLevel)
+            throws IOException, InterruptedException {
         project.execute("clean");
         InstantRun instantRunModel = getInstantRunModel(
                 Iterables.getOnlyElement(project.model().getSingle().getModelMap().values()));

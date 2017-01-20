@@ -32,7 +32,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.Variant;
-import java.io.IOException;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -58,7 +57,7 @@ public class BasicTest {
     public static AndroidProject model;
 
     @BeforeClass
-    public static void getModel() throws IOException {
+    public static void getModel() throws Exception {
         model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
@@ -69,7 +68,7 @@ public class BasicTest {
     }
 
     @Test
-    public void report() {
+    public void report() throws Exception {
         project.execute("androidDependencies");
     }
 
@@ -127,12 +126,12 @@ public class BasicTest {
     }
 
     @Test
-    public void checkDebugAndReleaseOutputHaveDifferentNames() {
+    public void checkDebugAndReleaseOutputHaveDifferentNames() throws Exception {
         ModelHelper.compareDebugAndReleaseOutput(model);
     }
 
     @Test
-    public void weDontFailOnLicenceDotTxtWhenPackagingDependencies() {
+    public void weDontFailOnLicenceDotTxtWhenPackagingDependencies() throws Exception {
         project.execute("assembleAndroidTest");
     }
 
@@ -145,14 +144,14 @@ public class BasicTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void install() throws IOException {
+    public void install() throws Exception {
         adb.exclusiveAccess();
         project.execute("installDebug", "uninstallAll");
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.File;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -42,7 +41,7 @@ public class AppWithCompileLocalAarTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.application\"\n" +
@@ -66,7 +65,7 @@ public class AppWithCompileLocalAarTest {
     }
 
     @Test
-    public void checkModelFailedToLoad() {
+    public void checkModelFailedToLoad() throws Exception {
         SyncIssue issue = assertThat(modelContainer.getOnlyModel()).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_LOCAL_DEP);

@@ -39,13 +39,12 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.Library;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -72,7 +71,7 @@ public class BasicTest2 {
     public static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void getModel() throws IOException {
+    public static void getModel() throws Exception {
         modelContainer = project.executeAndReturnModel("clean");
     }
 
@@ -356,7 +355,7 @@ public class BasicTest2 {
 
     @Test
     @Category(DeviceTests.class)
-    public void install() throws IOException {
+    public void install() throws Exception {
         project.execute("assembleDebug");
         adb.exclusiveAccess();
         project.execute("installDebug", "uninstallAll");
@@ -364,7 +363,7 @@ public class BasicTest2 {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

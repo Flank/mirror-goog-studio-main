@@ -30,10 +30,8 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -51,7 +49,7 @@ public class AppWithPackageDirectJarTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getSubproject("app").getBuildFile(),
@@ -70,13 +68,13 @@ public class AppWithPackageDirectJarTest {
     }
 
     @Test
-    public void checkPackageJarIsPackaged() throws IOException, ProcessException {
+    public void checkPackageJarIsPackaged() throws Exception {
         assertThat(project.getSubproject("app").getApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void checkPackagedJarIsNotInTheCompileModel() {
+    public void checkPackagedJarIsNotInTheCompileModel() throws Exception {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
@@ -91,7 +89,7 @@ public class AppWithPackageDirectJarTest {
     }
 
     @Test
-    public void checkPackagedJarIsInThePackageModel() {
+    public void checkPackagedJarIsInThePackageModel() throws Exception {
         Variant variant = ModelHelper.getVariant(
                 modelContainer.getModelMap().get(":app").getVariants(), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);

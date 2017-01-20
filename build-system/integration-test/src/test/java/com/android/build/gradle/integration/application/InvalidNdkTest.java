@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -44,7 +43,7 @@ public class InvalidNdkTest {
     private static File ndkDir;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         ndkDir = temporaryFolder.newFolder();
         TestFileUtils.appendToFile(
                 sProject.file("local.properties"),
@@ -52,13 +51,13 @@ public class InvalidNdkTest {
     }
 
     @Test
-    public void buildSuccessFullyWithEmptyNdk() throws IOException {
+    public void buildSuccessFullyWithEmptyNdk() throws Exception {
         FileUtils.cleanOutputDir(ndkDir);
         sProject.executor().run("help");
     }
 
     @Test
-    public void buildSuccessFullyWithPlatformDir() throws IOException {
+    public void buildSuccessFullyWithPlatformDir() throws Exception {
         FileUtils.cleanOutputDir(ndkDir);
         FileUtils.mkdirs(new File(ndkDir, "platforms"));
         sProject.executor().run("help");

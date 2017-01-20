@@ -19,10 +19,8 @@ package com.android.build.gradle.integration.packaging;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 /**
@@ -45,7 +43,7 @@ public class IncrementalCodeChangeTest {
             .create();
 
     @Test
-    public void checkNonMultiDex() throws IOException, ProcessException {
+    public void checkNonMultiDex() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"
@@ -72,7 +70,7 @@ public class IncrementalCodeChangeTest {
     }
 
     @Test
-    public void checkLegayMultiDex() throws IOException, ProcessException {
+    public void checkLegayMultiDex() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"
@@ -108,7 +106,7 @@ public class IncrementalCodeChangeTest {
     }
 
     @Test
-    public void checkNativeMultiDex() throws IOException, ProcessException {
+    public void checkNativeMultiDex() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"

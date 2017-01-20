@@ -37,7 +37,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
@@ -118,26 +117,24 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * <p>Uses deviceCheck in the background to support the device pool.
      */
-    public GradleBuildResult executeConnectedCheck() {
+    public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
         return run("deviceCheck");
     }
 
     /** Execute the specified tasks */
-    public GradleBuildResult run(@NonNull String... tasks) {
+    public GradleBuildResult run(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         return run(ImmutableList.copyOf(tasks));
     }
 
-    public GradleBuildResult run(@NonNull List<String> tasksList) {
+    public GradleBuildResult run(@NonNull List<String> tasksList)
+            throws IOException, InterruptedException {
         assertThat(tasksList).named("tasks list").isNotEmpty();
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        try {
-            TestUtils.waitForFileSystemTick();
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        TestUtils.waitForFileSystemTick();
 
         List<String> args = Lists.newArrayList();
         args.addAll(getCommonArguments());
@@ -188,8 +185,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         setJvmArguments(launcher);
 
-        launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
-        launcher.setStandardError(new TeeOutputStream(stderr, System.err));
+        launcher.setStandardOutput(stdout);
+        launcher.setStandardError(stderr);
 
         CollectingProgressListener progressListener = new CollectingProgressListener();
 
@@ -204,15 +201,17 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (isExpectingFailure && failure == null) {
+                throw new AssertionError("Expecting build to fail");
+            } else if (!isExpectingFailure && failure != null) {
+                throw failure;
+            }
+            return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+        } catch (Exception e) {
+            stderr.writeTo(System.err);
+            stdout.writeTo(System.out);
+            throw e;
         }
-        if (isExpectingFailure && failure == null) {
-            throw new AssertionError("Expecting build to fail");
-        } else if (!isExpectingFailure && failure != null) {
-            throw failure;
-        }
-        return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
     }
 
     private static class CollectingProgressListener implements ProgressListener {
@@ -268,12 +267,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
          * @return null if the build passed, the GradleConnectionException if the build failed.
          */
         @Nullable
-        private GradleConnectionException waitForResult() {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                throw new AssertionError(e);
-            }
+        private GradleConnectionException waitForResult() throws InterruptedException {
+            latch.await();
             return failure;
         }
     }

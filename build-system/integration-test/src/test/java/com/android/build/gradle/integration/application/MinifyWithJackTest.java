@@ -45,7 +45,7 @@ public class MinifyWithJackTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 

@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -66,7 +65,7 @@ public class NewMultiDexMainDexListTest {
     }
 
     @Before
-    public void initProject() throws IOException {
+    public void initProject() throws Exception {
         switch (testProject) {
             case ANTENNAPOD:
                 PerformanceTestProjects.initializeAntennaPod(outerProject);
@@ -112,7 +111,7 @@ public class NewMultiDexMainDexListTest {
         assertThat(mainDexList2).containsExactlyElementsIn(mainDexList);
     }
 
-    private Set<String> getMainDexList() throws IOException {
+    private Set<String> getMainDexList() throws Exception {
         Path listFile =
                 project.getSubproject(testProject.appProjectDirectory)
                         .getIntermediatesDir()

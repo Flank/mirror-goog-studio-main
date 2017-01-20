@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -59,8 +58,7 @@ public class MultiDexCacheTest {
                 .containsClass("Lcom/google/common/collect/Maps;");
     }
 
-    private void setMultiDexFlavors(
-            boolean isF1Multidex, boolean isF2Multidex) throws IOException {
+    private void setMultiDexFlavors(boolean isF1Multidex, boolean isF2Multidex) throws Exception {
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
                 "android {\n"

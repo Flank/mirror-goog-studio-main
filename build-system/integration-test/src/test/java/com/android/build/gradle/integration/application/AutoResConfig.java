@@ -31,7 +31,6 @@ import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,7 +50,7 @@ public class AutoResConfig {
                     .create();
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         AssumeUtil.assumeBuildToolsAtLeast(21);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

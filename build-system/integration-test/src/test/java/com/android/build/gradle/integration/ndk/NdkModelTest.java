@@ -60,7 +60,7 @@ public class NdkModelTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "apply plugin: 'com.android.application'\n"
                 + "\n"
@@ -77,7 +77,7 @@ public class NdkModelTest {
     }
 
     @Test
-    public void checkNativeLibrariesInModel() {
+    public void checkNativeLibrariesInModel() throws Exception {
         checkModel(ImmutableMap.of(
                 "debug", Lists.newArrayList(
                         ABI_ARMEABI, ABI_ARMEABI_V7A, ABI_ARM64_V8A,
@@ -86,7 +86,7 @@ public class NdkModelTest {
     }
 
     @Test
-    public void checkNativeLibrariesWithSplits() throws IOException {
+    public void checkNativeLibrariesWithSplits() throws Exception {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
@@ -106,7 +106,7 @@ public class NdkModelTest {
     }
 
     @Test
-    public void checkNativeLibrariesWithSplitsAndUniversalApk() throws IOException {
+    public void checkNativeLibrariesWithSplitsAndUniversalApk() throws Exception {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
@@ -130,7 +130,7 @@ public class NdkModelTest {
     }
 
     @Test
-    public void checkNativeLibrariesWithAbiFilters() throws IOException {
+    public void checkNativeLibrariesWithAbiFilters() throws Exception {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
@@ -162,7 +162,7 @@ public class NdkModelTest {
     }
 
     @Test
-    public void checkUsingAddOnStringForCompileSdkVersion() throws IOException {
+    public void checkUsingAddOnStringForCompileSdkVersion() throws Exception {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
@@ -196,7 +196,8 @@ public class NdkModelTest {
      *
      * @param variantToolchains map of variant name to array of expected toolchains.
      */
-    private void checkModel(Map<String, List<String>> variantToolchains) {
+    private void checkModel(Map<String, List<String>> variantToolchains)
+            throws IOException, InterruptedException {
 
         AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
 

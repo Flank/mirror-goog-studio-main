@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.tasks.annotations.Extractor;
 import com.android.testutils.apk.Zip;
 import java.io.File;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -45,7 +44,7 @@ public class ExtractAnnotationTest {
             GradleTestProject.builder().fromTestProject("extractAnnotations").create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         project.execute("clean", "assembleDebug");
     }
 
@@ -55,7 +54,7 @@ public class ExtractAnnotationTest {
     }
 
     @Test
-    public void checkExtractAnnotation() throws IOException {
+    public void checkExtractAnnotation() throws Exception {
         File debugFileOutput = project.file("build/intermediates/annotations/debug");
         Zip classesJar = new Zip(project.file("build/intermediates/bundles/debug/classes.jar"));
         Zip file = new Zip(new File(debugFileOutput, "annotations.zip"));

@@ -671,22 +671,18 @@ public final class GradleTestProject implements TestRule {
      * "unsigned", "aligned")
      */
     @NonNull
-    public Apk getApk(String... dimensions) {
+    public Apk getApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
         File apkFile =
                 getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
                         + SdkConstants.DOT_ANDROID_PACKAGE);
-        try {
-            return new Apk(apkFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return new Apk(apkFile);
     }
 
     @NonNull
-    public Apk getTestApk(String... dimensions) {
+    public Apk getTestApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayList(dimensions);
         dimensionList.add("androidTest");
         return getApk(Iterables.toArray(dimensionList, String.class));
@@ -698,16 +694,12 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public Aar getAar(String... dimensions) {
+    public Aar getAar(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        try {
             return new Aar(getOutputFile(
                     "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     /**
@@ -736,17 +728,13 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public Apk getAtom(String atomName, String... dimensions) {
-        try {
+    public Apk getAtom(String atomName, String... dimensions) throws IOException {
             return new Apk(
                     getIntermediateFile(
                             FileUtils.join(
                                     "atoms",
                                     Joiner.on("-").join(dimensions),
                                     atomName + SdkConstants.DOT_ANDROID_PACKAGE)));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     /**
@@ -799,24 +787,27 @@ public final class GradleTestProject implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(@NonNull String... tasks) {
+    public void execute(@NonNull String... tasks) throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
     }
 
-    public void execute(@NonNull List<String> arguments, @NonNull String... tasks) {
+    public void execute(@NonNull List<String> arguments, @NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().withArguments(arguments).run(tasks);
     }
 
-    public GradleConnectionException executeExpectingFailure(@NonNull String... tasks) {
+    public GradleConnectionException executeExpectingFailure(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().expectFailure().run(tasks);
         return lastBuildResult.getException();
     }
 
-    public void executeConnectedCheck() {
+    public void executeConnectedCheck() throws IOException, InterruptedException {
         lastBuildResult = executor().executeConnectedCheck();
     }
 
-    public void executeConnectedCheck(@NonNull List<String> arguments) {
+    public void executeConnectedCheck(@NonNull List<String> arguments)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().withArguments(arguments).executeConnectedCheck();
     }
 
@@ -827,7 +818,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getSingle();
     }
@@ -841,7 +833,8 @@ public final class GradleTestProject implements TestRule {
      * @return the model for the project with the specified type.
      */
     @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks) {
+    public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getSingle(modelClass);
     }
@@ -854,7 +847,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle();
     }
@@ -868,7 +862,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks) {
+    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle(modelClass);
     }
@@ -881,7 +876,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getMulti();
     }

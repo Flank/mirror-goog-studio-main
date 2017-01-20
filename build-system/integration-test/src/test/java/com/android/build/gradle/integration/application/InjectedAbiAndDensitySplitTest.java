@@ -25,7 +25,6 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class InjectedAbiAndDensitySplitTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         FileUtils.createFile(sProject.file("src/main/jniLibs/x86/libprebuilt.so"), "");
         FileUtils.createFile(sProject.file("src/main/jniLibs/armeabi-v7a/libprebuilt.so"), "");
 
@@ -66,7 +65,7 @@ public class InjectedAbiAndDensitySplitTest {
     }
 
     @Test
-    public void checkAbi() throws IOException {
+    public void checkAbi() throws Exception {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .run("clean", "assembleDebug");
@@ -81,7 +80,7 @@ public class InjectedAbiAndDensitySplitTest {
     }
 
     @Test
-    public void checkAbiAndDensity() throws IOException {
+    public void checkAbiAndDensity() throws Exception {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
@@ -104,11 +103,9 @@ public class InjectedAbiAndDensitySplitTest {
         assertThat(sProject.getApk("hdpiX86", "debug")).doesNotExist();
     }
 
-    /**
-     * All splits are built if only density is present.
-     */
+    /** All splits are built if only density is present. */
     @Test
-    public void checkOnlyDensity() throws IOException {
+    public void checkOnlyDensity() throws Exception {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
                 .run("clean", "assembleDebug");
@@ -122,7 +119,7 @@ public class InjectedAbiAndDensitySplitTest {
     }
 
     @Test
-    public void checkError() throws IOException {
+    public void checkError() throws Exception {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "mips")
                 .expectFailure()

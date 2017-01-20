@@ -34,7 +34,6 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import java.io.File;
-import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,7 +50,7 @@ public class LocalJarInAarInModelTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -78,7 +77,7 @@ public class LocalJarInAarInModelTest {
     }
 
     @Test
-    public void checkModelBeforeBuild() {
+    public void checkModelBeforeBuild() throws Exception {
         //clean the project and get the model. The aar won"t be exploded for this sync event.
         ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean");
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
@@ -105,7 +104,7 @@ public class LocalJarInAarInModelTest {
     }
 
     @Test
-    public void checkModelAfterBuild() {
+    public void checkModelAfterBuild() throws Exception {
         //build the project and get the model. The aar is exploded for this sync event.
         ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean",
                 "prepareDebugDependencies");

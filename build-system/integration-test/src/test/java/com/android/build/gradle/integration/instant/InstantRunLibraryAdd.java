@@ -26,7 +26,6 @@ import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -136,7 +135,7 @@ public class InstantRunLibraryAdd {
                         InstantRunArtifactType.SPLIT_MAIN));
     }
 
-    private void updateClass() throws IOException {
+    private void updateClass() throws Exception {
         String updatedClass = "package noapkrebuilt.tests.android.com.b220425;\n"
                 + "\n"
                 + "import android.content.Intent;\n"

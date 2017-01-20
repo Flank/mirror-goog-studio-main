@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public class BuildCacheTest {
                     .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         AssumeUtil.assumeNotUsingJack();
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
@@ -55,7 +54,7 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testBuildCacheEnabled() throws IOException {
+    public void testBuildCacheEnabled() throws Exception {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
@@ -113,7 +112,7 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testBuildCacheDisabled() throws IOException {
+    public void testBuildCacheDisabled() throws Exception {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 

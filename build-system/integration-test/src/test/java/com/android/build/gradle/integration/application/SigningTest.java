@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.io.Resources;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -114,7 +113,7 @@ public class SigningTest {
     }
 
     private static void createKeystoreFile(@NonNull String resourceName, @NonNull File keystore)
-            throws IOException {
+            throws Exception {
         byte[] keystoreBytes =
                 Resources.toByteArray(
                         Resources.getResource(SigningTest.class, "SigningTest/" + resourceName));
@@ -221,7 +220,7 @@ public class SigningTest {
 
     }
 
-    private void execute(String... tasks) {
+    private void execute(String... tasks) throws Exception {
         project.executor().run(tasks);
     }
 

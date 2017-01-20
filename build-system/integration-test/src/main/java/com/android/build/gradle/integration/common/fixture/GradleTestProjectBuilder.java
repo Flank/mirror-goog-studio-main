@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
-import static org.junit.Assert.fail;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
@@ -29,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -226,7 +225,7 @@ public final class GradleTestProjectBuilder {
                                 file.getName(),
                                 Files.toByteArray(new File(projectDir, filePath))));
             } catch (IOException e) {
-                fail(e.toString());
+                throw new UncheckedIOException(e);
             }
         }
     }

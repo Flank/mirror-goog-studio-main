@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.dependencies;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -32,12 +30,12 @@ public class TestLibraryWithDep {
             .create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         project.executeAndReturnMultiModel("clean", "assembleDebugAndroidTest");
     }
 
     @Test
-    public void checkLibDependencyJarIsPackaged() throws IOException, ProcessException {
+    public void checkLibDependencyJarIsPackaged() throws Exception {
         TruthHelper.assertThat(project.getTestApk("debug"))
                 .containsClass("Lcom/google/common/base/Splitter;");
     }

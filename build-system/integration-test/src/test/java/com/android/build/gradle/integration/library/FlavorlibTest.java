@@ -51,7 +51,7 @@ public class FlavorlibTest {
     public static GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         modelContainer = project.executeAndReturnMultiModel("clean", "assembleDebug");
     }
 
@@ -62,17 +62,17 @@ public class FlavorlibTest {
     }
 
     @Test
-    public void lint() {
+    public void lint() throws Exception {
         project.execute("lint");
     }
 
     @Test
-    public void report() {
+    public void report() throws Exception {
         project.execute("androidDependencies", "signingReport");
     }
 
     @Test
-    public void checkExplodedAar() {
+    public void checkExplodedAar() throws Exception {
         File intermediates = FileUtils.join(project.getTestDir(), "app", "build", "intermediates");
         assertThat(intermediates).isDirectory();
         assertThat(new File(intermediates, DependencyManager.EXPLODED_AAR)).doesNotExist();
@@ -117,7 +117,7 @@ public class FlavorlibTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

@@ -22,9 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +37,7 @@ public class IntegrationTestWithJackTest {
                     .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\nandroid.defaultConfig.minSdkVersion = "
@@ -49,7 +47,7 @@ public class IntegrationTestWithJackTest {
     }
 
     @Test
-    public void testAssembleAndroidTest() throws IOException, ProcessException {
+    public void testAssembleAndroidTest() throws Exception {
         project.executor().run("clean", "assembleAndroidTest");
 
         Apk androidTestApk = project.getTestApk("debug");
@@ -57,7 +55,7 @@ public class IntegrationTestWithJackTest {
     }
 
     @Test
-    public void testDependencyOnTestedApp() throws IOException, ProcessException {
+    public void testDependencyOnTestedApp() throws Exception {
         TestFileUtils.addMethod(
                 project.file("src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
                 "\nprivate void referTestedApp() {\n"
@@ -71,7 +69,7 @@ public class IntegrationTestWithJackTest {
     }
 
     @Test
-    public void testUsingTestedAppDependency() throws IOException, ProcessException {
+    public void testUsingTestedAppDependency() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(

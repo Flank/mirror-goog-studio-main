@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
-import java.io.IOException;
 import org.gradle.tooling.BuildException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -40,7 +39,7 @@ public class WearWithCustomApplicationIdTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         File mainAppBuildGradle = project.file("main/build.gradle");
 
         TestFileUtils.searchAndReplace(mainAppBuildGradle,
@@ -50,7 +49,7 @@ public class WearWithCustomApplicationIdTest {
     }
 
     @Test
-    public void buildShouldFailOnApplicationIdMismatch() {
+    public void buildShouldFailOnApplicationIdMismatch() throws Exception {
         try {
             project.execute("clean", ":main:assembleFlavor1Release");
             fail("Build should fail: applicationId of wear app does not match the main application");

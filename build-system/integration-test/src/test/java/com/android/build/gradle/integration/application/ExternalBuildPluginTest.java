@@ -46,7 +46,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -80,7 +79,7 @@ public class ExternalBuildPluginTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         IAndroidTarget target = SdkHelper.getTarget(23);
         TruthHelper.assertThat(target).isNotNull();
 
@@ -196,7 +195,7 @@ public class ExternalBuildPluginTest {
     }
 
     @NonNull
-    private InstantRunBuildInfo loadBuildInfo() throws IOException {
+    private InstantRunBuildInfo loadBuildInfo() throws Exception {
         File buildInfoFile =
                 new File(mProject.getTestDir(), "build/reload-dex/debug/build-info.xml");
         TruthHelper.assertThat(buildInfoFile).exists();
