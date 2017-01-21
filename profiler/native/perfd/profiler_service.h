@@ -28,9 +28,8 @@ namespace profiler {
 class ProfilerServiceImpl final
     : public profiler::proto::ProfilerService::Service {
  public:
-  // TODO: Fix this so we don't have to pass in a non-const Daemon
-  explicit ProfilerServiceImpl(Daemon& daemon)
-      : clock_(daemon.clock()), file_cache_(*daemon.file_cache()) {}
+  explicit ProfilerServiceImpl(Daemon::Utilities* utilities)
+      : clock_(utilities->clock()), file_cache_(*utilities->file_cache()) {}
 
   grpc::Status GetTimes(grpc::ServerContext* context,
                         const profiler::proto::TimesRequest* request,

@@ -24,9 +24,9 @@ namespace profiler {
 
 class EnergyProfilerComponent final : public ProfilerComponent {
  public:
-  explicit EnergyProfilerComponent(const Daemon& daemon)
+  explicit EnergyProfilerComponent(Daemon::Utilities* utilities)
       : energy_cache_(kSamplesCount),
-        public_service_(daemon.clock(), &energy_cache_),
+        public_service_(utilities->clock(), &energy_cache_),
         internal_service_(&energy_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).

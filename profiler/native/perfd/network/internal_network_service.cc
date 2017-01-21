@@ -23,8 +23,8 @@ using grpc::ServerContext;
 using grpc::Status;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    FileCache *file_cache, NetworkCache *network_cache)
-    : file_cache_(*file_cache), network_cache_(*network_cache) {}
+    Daemon::Utilities *utilities, NetworkCache *network_cache)
+    : file_cache_(*utilities->file_cache()), network_cache_(*network_cache) {}
 
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
