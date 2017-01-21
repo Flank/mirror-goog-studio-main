@@ -56,6 +56,9 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
     public final IterableSubject<
                     ? extends IterableSubject<?, String, List<String>>, String, List<String>>
             entries(@NonNull String conformingTo) throws IOException {
+        // validate file presence
+        exists();
+
         return check().that(
                         getSubject()
                                 .getEntries(Pattern.compile(conformingTo))
@@ -71,6 +74,9 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
      */
     public final void containsFileWithContent(@NonNull String path, @NonNull String content)
             throws IOException {
+        // validate file presence
+        exists();
+
         check().that(extractContentAsString(path).trim())
                 .named(internalCustomName() + ": " + path)
                 .isEqualTo(content.trim());
@@ -78,12 +84,18 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
 
     public final void containsFileWithMatch(@NonNull String path, @NonNull String pattern)
             throws IOException {
+        // validate file presence
+        exists();
+
         check().that(extractContentAsString(path)).containsMatch(pattern);
     }
 
     /** Asserts the zip file contains a file with the specified byte array content. */
     public final void containsFileWithContent(@NonNull String path, @NonNull byte[] content)
             throws IOException {
+        // validate file presence
+        exists();
+
         check().that(extractContentAsBytes(path))
                 .named(internalCustomName() + ": " + path)
                 .isEqualTo(content);
@@ -94,6 +106,9 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
      * <b>anywhere</b> in the file
      */
     public final void containsFileWithoutContent(@NonNull String path, @NonNull String sub) {
+        // validate file presence
+        exists();
+
         byte[] contents = extractContentAsBytes(path);
         if (contents == null) {
             failWithRawMessage("No entry with path " + path);

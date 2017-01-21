@@ -306,6 +306,24 @@ public class AssetPackagingTest {
         });
     }
 
+    @Test
+    public void testAppProjectWithAddedAndRemovedAsset() throws Exception {
+        execute("clean", "app:assembleDebug");
+
+        TemporaryProjectModification.doTest(
+                appProject,
+                it -> {
+                    it.addFile("src/main/assets/newFile.txt", "foo");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "newFile.txt", "foo");
+                });
+
+        // Asset file has been removed. Check it's removed from the APK after another inc build.
+        execute("app:assembleDebug");
+        checkApk(appProject, "newFile.txt", null);
+    }
+
     // ---- APP TEST ---
 
     @Test
