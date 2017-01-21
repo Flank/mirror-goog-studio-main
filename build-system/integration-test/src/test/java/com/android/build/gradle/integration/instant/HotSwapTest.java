@@ -92,7 +92,7 @@ public class HotSwapTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunService;");
+        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunContentProvider;");
 
         createActivityClass("CHANGE");
 
