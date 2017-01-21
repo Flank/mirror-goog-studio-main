@@ -674,9 +674,6 @@ public class ManifestMerger2SmallTest {
         assertEquals(ManifestMerger2.BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER,
                 attributes.getNamedItemNS(
                         SdkConstants.ANDROID_URI, SdkConstants.ATTR_NAME).getNodeValue());
-        assertEquals("true",
-                attributes.getNamedItemNS(
-                        SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED).getNodeValue());
     }
 
     @Test
