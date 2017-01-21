@@ -215,7 +215,7 @@ bool CpuUsageSampler::SampleAProcess(int32_t pid) {
                              data.mutable_cpu_usage()) &&
       CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
                               data.mutable_cpu_usage())) {
-    data.mutable_basic_info()->set_app_id(pid);
+    data.mutable_basic_info()->set_process_id(pid);
     data.mutable_basic_info()->set_end_timestamp(clock_.GetCurrentTime());
     cache_.Add(data);
     return true;

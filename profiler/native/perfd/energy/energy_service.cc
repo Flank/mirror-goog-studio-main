@@ -29,7 +29,7 @@ namespace profiler {
 grpc::Status EnergyServiceImpl::GetEnergyData(grpc::ServerContext* context,
                                         const EnergyDataRequest* request,
                                         EnergyDataResponse* response) {
-  response->set_app_id(request->app_id());
+  response->set_process_id(request->process_id());
   energy_cache_->LoadEnergyData(request->start_time_excl(),
                                request->end_time_incl(), response);
 
@@ -39,7 +39,7 @@ grpc::Status EnergyServiceImpl::GetEnergyData(grpc::ServerContext* context,
 grpc::Status EnergyServiceImpl::GetWakeLockData(grpc::ServerContext* context,
                                         const WakeLockDataRequest* request,
                                         WakeLockDataResponse* response) {
-  response->set_app_id(request->app_id());
+  response->set_process_id(request->process_id());
   energy_cache_->LoadWakeLockData(request->start_time_excl(),
                                request->end_time_incl(), response);
 
@@ -55,10 +55,10 @@ grpc::Status EnergyServiceImpl::StartCollection(
     // TODO error handling
   }
 
-  response->set_app_id(request->app_id());
+  response->set_process_id(request->process_id());
   response->set_timestamp(clock_.GetCurrentTime());
 
-  collector_.Start(UidFetcher::GetUid(request->app_id()));
+  collector_.Start(UidFetcher::GetUid(request->process_id()));
 
   return grpc::Status::OK;
 }
@@ -68,7 +68,7 @@ grpc::Status EnergyServiceImpl::StopCollection(
     const StopEnergyCollectionRequest* request,
     EnergyCollectionStatusResponse* response) {
   collector_.Stop();
-  response->set_app_id(request->app_id());
+  response->set_process_id(request->process_id());
   response->set_timestamp(clock_.GetCurrentTime());
 
   return grpc::Status::OK;

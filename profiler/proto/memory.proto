@@ -44,7 +44,8 @@ service MemoryService {
 }
 
 message MemoryStartRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  string device_serial = 2;
 }
 
 message MemoryStartResponse {
@@ -57,7 +58,8 @@ message MemoryStartResponse {
 }
 
 message MemoryStopRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  string device_serial = 2;
 }
 
 message MemoryStopResponse {
@@ -70,9 +72,10 @@ message MemoryStopResponse {
 }
 
 message MemoryRequest {
-  int32 app_id = 1;
-  int64 start_time = 2;  // exclusive
-  int64 end_time = 3;    // inclusive
+  int32 process_id = 1;
+  string device_serial = 2;
+  int64 start_time = 3;  // exclusive
+  int64 end_time = 4;    // inclusive
 }
 
 // A HeapDumpInfo is returned if either the start_time or end_time falls
@@ -128,9 +131,10 @@ message MemoryData {
 }
 
 message ListDumpInfosRequest {
-  int32 app_id = 1;
-  int64 start_time = 2;  // exclusive
-  int64 end_time = 3;    // inclusive
+  int32 process_id = 1;
+  string device_serial = 2;
+  int64 start_time = 3;  // exclusive
+  int64 end_time = 4;    // inclusive
 }
 
 message DumpDataResponse {
@@ -146,8 +150,9 @@ message DumpDataResponse {
 }
 
 message TriggerHeapDumpRequest {
-  int32 app_id = 1;
-  int64 request_time = 2;
+  int32 process_id = 1;
+  string device_serial = 2;
+  int64 request_time = 3;
 }
 
 message TriggerHeapDumpResponse {
@@ -164,8 +169,9 @@ message TriggerHeapDumpResponse {
 }
 
 message HeapDumpDataRequest {
-  int32 app_id = 1;
-  int32 dump_id = 2;
+  int32 process_id = 1;
+  string device_serial = 2;
+  int32 dump_id = 3;
 }
 
 message ListHeapDumpInfosResponse {
@@ -205,24 +211,26 @@ message TrackAllocationsResponse {
 }
 
 message TrackAllocationsRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  string device_serial = 2;
   // Requests whether an allocation tracking session is
   // to be enabled/disabled. If a session is already in
   // progress, re-enabling it does nothing, this is also
   // true for disabling a session when no tracking is in
   // progress.
-  bool enabled = 2;
+  bool enabled = 3;
   // A flag to indicate whether the request is initiated
   // via the legacy allocation tracking path. On pre-O 
   // setups, legacy tracking would simply mark the start
   // and end times of a session. On O+ setups, perfd +
   // perfa would perform allocation tracking.
-  bool legacy_tracking = 3;
+  bool legacy_tracking = 4;
 }
 
 message GetAllocationsInfoStatusRequest {
-  int32 app_id = 1;
-  int32 info_id = 2;
+  int32 process_id = 1;
+  string device_serial = 2;
+  int32 info_id = 3;
 }
 
 message GetAllocationsInfoStatusResponse {
@@ -231,9 +239,10 @@ message GetAllocationsInfoStatusResponse {
 }
 
 message AllocationContextsRequest {
-  int32 app_id = 1;
-  int64 start_time = 2; // exclusive
-  int64 end_time = 3;   // inclusive
+  int32 process_id = 1;
+  string device_serial = 2;
+  int64 start_time = 3; // exclusive
+  int64 end_time = 4;   // inclusive
 }
 
 message AllocationContextsResponse {

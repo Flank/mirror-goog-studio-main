@@ -234,7 +234,7 @@ bool ThreadMonitor::MonitorAProcess(int32_t pid) {
 
   // Don't insert an datum of empty activity.
   if (data.thread_activities().activities().size() > 0) {
-    data.mutable_basic_info()->set_app_id(pid);
+    data.mutable_basic_info()->set_process_id(pid);
     data.mutable_basic_info()->set_end_timestamp(timestamp);
     cache_.Add(data);
   }

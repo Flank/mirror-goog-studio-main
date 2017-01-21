@@ -57,13 +57,13 @@ void EventCache::GetActivityData(int app_id, int64_t start_time,
   lock_guard<std::mutex> lock(activity_cache_mutex_);
   for (auto it : activity_cache_map_) {
     ActivityData& data = it.second;
-    if (app_id != data.app_id()) {
+    if (app_id != data.process_id()) {
       continue;
     }
     ActivityData* out_data = response->add_data();
     out_data->set_name(data.name());
     out_data->set_hash(data.hash());
-    out_data->set_app_id(data.app_id());
+    out_data->set_process_id(data.process_id());
 
     const auto& states = data.state_changes();
     for (int i = 0; i < states.size(); i++) {
@@ -106,7 +106,7 @@ void EventCache::GetSystemData(int app_id, int64_t start_time, int64_t end_time,
     auto& data = it.second;
     int64_t event_start_time = data.start_timestamp();
     int64_t event_end_time = data.end_timestamp();
-    if (app_id != data.app_id()) {
+    if (app_id != data.process_id()) {
       continue;
     }
     // TODO: Make 0 a const NO_END_TIME meaning the event has not completed.
