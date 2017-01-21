@@ -15,23 +15,24 @@
  */
 package com.android.tools.profiler;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.android.annotations.NonNull;
+import com.google.common.collect.FluentIterable;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 public final class FileUtils {
 
     private FileUtils() {
     }
 
-    public static void mkdirs(File folder) {
+    public static void mkdirs(@NonNull File folder) {
         // attempt to create first.
         // if failure only throw if folder does not exist.
         // This makes this method able to create the same folder(s) from different thread
@@ -40,7 +41,7 @@ public final class FileUtils {
         }
     }
 
-    public static void delete(File file) throws IOException {
+    public static void delete(@NonNull File file) throws IOException {
         boolean result = file.delete();
         if (!result) {
             throw new IOException("Failed to delete " + file.getAbsolutePath());
@@ -57,7 +58,27 @@ public final class FileUtils {
      * the path comes appended with the file separator (see documentation on {@code relativize} on
      * java's {@code URI} class)
      */
-    public static String relativePath(File file, File dir) {
+    @NonNull
+    public static String relativePath(@NonNull File file, @NonNull File dir) {
+        checkArgument(file.isFile() || file.isDirectory(), "%s is not a file nor a directory.",
+                file.getPath());
+        checkArgument(dir.isDirectory(), "%s is not a directory.", dir.getPath());
+        return relativePossiblyNonExistingPath(file, dir);
+    }
+
+    /**
+     * Computes the relative of a file or directory with respect to a directory. For example, if the
+     * file's absolute path is {@code /a/b/c} and the directory is {@code /a}, this method returns
+     * {@code b/c}.
+     *
+     * @param file the path that may not correspond to any existing path in the filesystem
+     * @param dir  the directory to compute the path relative to
+     * @return the relative path from {@code dir} to {@code file}; if {@code file} is a directory
+     * the path comes appended with the file separator (see documentation on {@code relativize} on
+     * java's {@code URI} class)
+     */
+    @NonNull
+    public static String relativePossiblyNonExistingPath(@NonNull File file, @NonNull File dir) {
         String path = dir.toURI().relativize(file.toURI()).getPath();
         return toSystemDependentPath(path);
     }
@@ -68,38 +89,27 @@ public final class FileUtils {
      * @param path the system independent path to convert
      * @return the system dependent path
      */
-    public static String toSystemDependentPath(String path) {
+    @NonNull
+    public static String toSystemDependentPath(@NonNull String path) {
         if (File.separatorChar != '/') {
             path = path.replace('/', File.separatorChar);
         }
         return path;
     }
 
-    public static Iterable<File> getAllFiles(File dir) throws IOException {
-        Stream<File> stream = Files.walk(dir.toPath()).map(Path::toFile).filter(File::isFile);
-        return new Iterable<File>() {
-            @Override
-            public Iterator<File> iterator() {
-                return stream.iterator();
-            }
-        };
+
+    @NonNull
+    public static FluentIterable<File> getAllFiles(@NonNull File dir) {
+        return Files.fileTreeTraverser().preOrderTraversal(dir).filter(Files.isFile());
     }
 
-    public static void copyFile(File input, File output) throws
+    public static void copyFile(@NonNull File input, @NonNull File output) throws
     IOException {
-        Files.createDirectories(output.getParentFile().toPath());
+        Files.createParentDirs(output);
         FileInputStream fis = new FileInputStream(input);
         FileOutputStream fos = new FileOutputStream(output);
-        copyStreams(fis,fos);
+        ByteStreams.copy(fis,fos);
         fos.flush();
         fos.close();
-    }
-
-    static void copyStreams(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[4096];
-        int read;
-        while((read = is.read(buffer)) > -1) {
-            os.write(buffer, 0, read);
-        }
     }
 }
