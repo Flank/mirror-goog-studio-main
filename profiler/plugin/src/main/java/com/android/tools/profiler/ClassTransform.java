@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler;
 
+import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -24,6 +25,9 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,10 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -43,11 +43,12 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * An abstract transform that provides a simple API for transforming all the possible classes.
- * The only abstract method is {@link #transform(InputStream, OutputStream)} which will be run
+ * The only abstract method is {@link #transform(InputStream, OutputStream)}which will be run
  * for every class. This class takes care of all the incremental and jar vs class details.
  */
 abstract class ClassTransform extends Transform {
 
+    @NonNull
     private final String mName;
 
     private final String[] mJarFilesToSkip;
@@ -57,24 +58,28 @@ abstract class ClassTransform extends Transform {
         mJarFilesToSkip = jarFilesToSkip;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return mName;
     }
 
+    @NonNull
     @Override
     public Set<QualifiedContent.ContentType> getInputTypes() {
-        return Collections.singleton(QualifiedContent.DefaultContentType.CLASSES);
+        return ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
     }
 
+    @NonNull
     @Override
     public Set<QualifiedContent.Scope> getScopes() {
-        return new HashSet<>(Arrays.asList(new QualifiedContent.Scope[]{
+        return ImmutableSet.of(
                 QualifiedContent.Scope.PROJECT,
                 QualifiedContent.Scope.SUB_PROJECTS,
                 QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
                 QualifiedContent.Scope.EXTERNAL_LIBRARIES,
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS}));
+                QualifiedContent.Scope.PROJECT_LOCAL_DEPS
+        );
     }
 
     @Override
@@ -97,7 +102,7 @@ abstract class ClassTransform extends Transform {
     }
 
     @Override
-    public void transform(TransformInvocation invocation)
+    public void transform(@NonNull TransformInvocation invocation)
             throws InterruptedException, IOException {
         assert invocation.getOutputProvider() != null;
 
@@ -105,7 +110,8 @@ abstract class ClassTransform extends Transform {
         for (TransformInput ti : invocation.getInputs()) {
             for (JarInput jarInput : ti.getJarInputs()) {
                 File inputJar = jarInput.getFile();
-                String name = formatOutputName(outputNumber++, getNameWithoutExtension(inputJar.getName()));
+                String name = formatOutputName(outputNumber++,
+                        Files.getNameWithoutExtension(inputJar.getName()));
                 File outputJar = invocation.getOutputProvider().getContentLocation(
                         name, jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
 
@@ -166,13 +172,8 @@ abstract class ClassTransform extends Transform {
         }
     }
 
-    private String getNameWithoutExtension(String name) {
-        int i = name.lastIndexOf('.');
-        return i == -1 ? name : name.substring(0, i);
-    }
-
     private void transformJar(File inputJar, File outputJar) throws IOException {
-        Files.createDirectories(outputJar.getParentFile().toPath());
+        Files.createParentDirs(outputJar);
         try (FileInputStream fis = new FileInputStream(inputJar);
              ZipInputStream zis = new ZipInputStream(fis);
              FileOutputStream fos = new FileOutputStream(outputJar);
@@ -183,22 +184,22 @@ abstract class ClassTransform extends Transform {
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
                     transform(zis, zos);
                 } else {
-                    FileUtils.copyStreams(zis, zos);
+                    ByteStreams.copy(zis, zos);
                 }
                 entry = zis.getNextEntry();
             }
         }
     }
 
-
     private void transformFile(File inputFile, File outputFile) throws IOException {
-        Files.createDirectories(outputFile.getParentFile().toPath());
+        Files.createParentDirs(outputFile);
         try (FileInputStream fis = new FileInputStream(inputFile);
              FileOutputStream fos = new FileOutputStream(outputFile)) {
             transform(fis, fos);
         }
     }
 
+    @NonNull
     private static File toOutputFile(File outputDir, File inputDir, File inputFile) {
         return new File(outputDir, FileUtils.relativePath(inputFile, inputDir));
     }
