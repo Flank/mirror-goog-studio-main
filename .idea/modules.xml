@@ -25,6 +25,7 @@
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/ddmlib/ddmlib.iml" filepath="$PROJECT_DIR$/ddmlib/ddmlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/testing-infrastructure/device-pool/device-provider/device-provider.iml" filepath="$PROJECT_DIR$/testing-infrastructure/device-pool/device-provider/device-provider.iml" />
+      <module fileurl="file://$PROJECT_DIR$/devicelib/devicelib.iml" filepath="$PROJECT_DIR$/devicelib/devicelib.iml" />
       <module fileurl="file://$PROJECT_DIR$/draw9patch/draw9patch.iml" filepath="$PROJECT_DIR$/draw9patch/draw9patch.iml" />
       <module fileurl="file://$PROJECT_DIR$/device_validator/dvlib/dvlib.iml" filepath="$PROJECT_DIR$/device_validator/dvlib/dvlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk-common/generate-locale-data/generate-locale-data.iml" filepath="$PROJECT_DIR$/sdk-common/generate-locale-data/generate-locale-data.iml" />
