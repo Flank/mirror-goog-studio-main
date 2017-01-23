@@ -725,7 +725,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             fileCollection = configuration.getIncoming().getFiles(map, filter);
         }
 
-        fileCollection = addTestedCollection(fileCollection, map);
+        if (scope == ArtifactScope.MODULE) {
+            // we only add the tested scope if the query if for the MODULE.
+            // (the method will also only add it if it's the right variant)
+            fileCollection = addTestedCollection(fileCollection, map);
+        }
 
         if (minus != null) {
             fileCollection = fileCollection.minus(minus);
