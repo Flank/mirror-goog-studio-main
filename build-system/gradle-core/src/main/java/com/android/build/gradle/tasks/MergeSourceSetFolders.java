@@ -38,7 +38,10 @@ import com.android.ide.common.res2.MergingException;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
@@ -50,11 +53,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 @ParallelizableTask
 public class MergeSourceSetFolders extends IncrementalTask {
@@ -399,9 +397,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
                         AndroidArtifacts.ArtifactType.ASSETS);
 
                 // only add the assets for tested libraries.
-                mergeAssetsTask.testedLibrary = scope.getTestedArtifact(
-                        AndroidArtifacts.TYPE_ANDROID_RES,
-                        VariantType.LIBRARY);
+                mergeAssetsTask.testedLibrary =
+                        scope.getTestedArtifact(AndroidArtifacts.TYPE_ASSETS, VariantType.LIBRARY);
             }
 
             mergeAssetsTask.setOutputDir(scope.getMergeAssetsOutputDir());
