@@ -70,8 +70,10 @@ public class DexParserTest {
     @Test
     public void checkExplanationParsedCorrectly() {
         String stderr = "\n"
-                + "trouble writing output: Too many method references: 130016; max is 65536.\n"
-                + "You may try using --multi-dex option.\n"
+                + "trouble writing output: Too many method references to fit in one dex file: "
+                + "130016; max is 65536.\n"
+                + "You may try using multi-dex. If multi-dex is enabled then the list of classes "
+                + "for the main dex list is too large.\n"
                 + "References by package:\n"
                 + "     2 android.app\n"
                 + "130002 com.example\n"

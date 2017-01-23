@@ -74,7 +74,6 @@ public final class TableOfContents {
 
     private void readHeader(Dex.Section headerIn) throws UnsupportedEncodingException {
         byte[] magic = headerIn.readByteArray(8);
-        int apiTarget = DexFormat.magicToApi(magic);
 
         if (!DexFormat.isSupportedDexMagic(magic)) {
             throw new DexException("Unexpected magic: " + Arrays.toString(magic));

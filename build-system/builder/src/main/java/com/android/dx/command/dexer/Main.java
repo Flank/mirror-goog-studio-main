@@ -16,9 +16,6 @@
 
 package com.android.dx.command.dexer;
 
-import static java.lang.System.err;
-import static java.lang.System.out;
-
 import com.android.annotations.NonNull;
 import com.android.dex.Dex;
 import com.android.dex.DexException;
@@ -48,7 +45,6 @@ import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -249,9 +245,9 @@ public class Main {
     public static void main(String[] argArray) throws IOException {
         DxContext context = new DxContext();
         Arguments arguments = new Arguments();
-        arguments.parseCommandLine(argArray, context);
+        arguments.parse(argArray, context);
 
-        int result = new Main(context).run(arguments);
+        int result = new Main(context).runDx(arguments);
 
         if (result != 0) {
             System.exit(result);
@@ -268,7 +264,11 @@ public class Main {
      * @param arguments the data + parameters for the conversion
      * @return 0 if success &gt; 0 otherwise.
      */
-    public int run(Arguments arguments) throws IOException {
+    public static int run(Arguments arguments) throws IOException {
+        return new Main(new DxContext()).runDx(arguments);
+    }
+
+    public int runDx(Arguments arguments) throws IOException {
 
         // Reset the error count to start fresh.
         errors.set(0);
@@ -296,19 +296,12 @@ public class Main {
         }
     }
 
-    /**
-     * {@code non-null;} Error message for too many method/field/type ids.
-     */
-    public static String getTooManyIdsErrorMessage() {
-        return "Too many classes to fit in one dex file.";
-    }
-
     private int runMonoDex() throws IOException {
 
         File incrementalOutFile = null;
         if (args.incremental) {
             if (args.outName == null) {
-                err.println(
+                context.err.println(
                         "error: no incremental output name specified");
                 return -1;
             }
@@ -488,11 +481,7 @@ public class Main {
         } else if (dexB == null) {
             result = dexA;
         } else {
-            DexMerger dexMerger = new DexMerger(
-                    new Dex[]{dexA, dexB},
-                    CollisionPolicy.KEEP_FIRST,
-                    context);
-            result = dexMerger.merge();
+            result = new DexMerger(new Dex[] {dexA, dexB}, CollisionPolicy.KEEP_FIRST, context).merge();
         }
 
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -515,11 +504,7 @@ public class Main {
         if (dexes.isEmpty()) {
             return null;
         }
-        DexMerger dexMerger = new DexMerger(
-                dexes.toArray(new Dex[dexes.size()]),
-                CollisionPolicy.FAIL,
-                context);
-        Dex merged = dexMerger.merge();
+        Dex merged = new DexMerger(dexes.toArray(new Dex[dexes.size()]), CollisionPolicy.FAIL, context).merge();
         return merged.getBytes();
     }
 
@@ -632,7 +617,7 @@ public class Main {
         } catch (Exception e) {
             classTranslatorPool.shutdownNow();
             classDefItemConsumer.shutdownNow();
-            e.printStackTrace(out);
+            e.printStackTrace(context.out);
             throw new RuntimeException("Unexpected exception in translator thread.", e);
         }
 
@@ -771,6 +756,9 @@ public class Main {
         try {
             new DirectClassFileConsumer(name, bytes, null).call(
                     new ClassParserTask(name, bytes).call());
+        } catch (ParseException ex) {
+            // handled in FileBytesConsumer
+            throw ex;
         } catch(Exception ex) {
             throw new RuntimeException("Exception parsing classes", ex);
         }
@@ -996,10 +984,10 @@ public class Main {
      * @param name {@code non-null;} the file name
      * @return {@code non-null;} the opened file
      */
-    private static OutputStream openOutput(String name) throws IOException {
+    private OutputStream openOutput(String name) throws IOException {
         if (name.equals("-") ||
                 name.startsWith("-.")) {
-            return out;
+            return context.out;
         }
 
         return new FileOutputStream(name);
@@ -1013,14 +1001,14 @@ public class Main {
      *
      * @param stream {@code null-ok;} what to close
      */
-    private static void closeOutput(OutputStream stream) throws IOException {
+    private void closeOutput(OutputStream stream) throws IOException {
         if (stream == null) {
             return;
         }
 
         stream.flush();
 
-        if (stream != out) {
+        if (stream != context.out) {
             stream.close();
         }
     }
@@ -1322,7 +1310,7 @@ public class Main {
          *  to allow merges between dex files with many strings. */
         public boolean forceJumbo = false;
 
-        /** {@code non-null} after {@link #parseCommandLine}; file name arguments */
+        /** {@code non-null} after {@link #parse}; file name arguments */
         public String[] fileNames;
 
         /** whether to do SSA/register optimization */
@@ -1450,7 +1438,7 @@ public class Main {
                                 lastValue = current;
                                 return true;
                             } else {
-                                err.println("Missing value after parameter " + prefix);
+                                System.err.println("Missing value after parameter " + prefix);
                                 throw new UsageException();
                             }
                         }
@@ -1474,7 +1462,7 @@ public class Main {
          * @param args {@code non-null;} the arguments
          * @param context
          */
-        public void parseCommandLine(String[] args, DxContext context) {
+        public void parse(String[] args, DxContext context) {
             ArgumentsParser parser = new ArgumentsParser(args);
 
             OutputOptions outputOptions = parseFlags(parser);
@@ -1488,11 +1476,11 @@ public class Main {
 
             if (fileNames.length == 0) {
                 if (!emptyOk) {
-                    err.println("no input files specified");
+                    System.err.println("no input files specified");
                     throw new UsageException();
                 }
             } else if (emptyOk) {
-                out.println("ignoring input files");
+                System.out.println("ignoring input files");
             }
 
             if ((humanOutName == null) && (methodToDump != null)) {
@@ -1500,25 +1488,25 @@ public class Main {
             }
 
             if (mainDexListFile != null && !multiDex) {
-                err.println(MAIN_DEX_LIST_OPTION + " is only supported in combination with "
+                System.err.println(MAIN_DEX_LIST_OPTION + " is only supported in combination with "
                     + MULTI_DEX_OPTION);
                 throw new UsageException();
             }
 
             if (minimalMainDex && (mainDexListFile == null || !multiDex)) {
-                err.println(MINIMAL_MAIN_DEX_OPTION + " is only supported in combination with "
+                System.err.println(MINIMAL_MAIN_DEX_OPTION + " is only supported in combination with "
                     + MULTI_DEX_OPTION + " and " + MAIN_DEX_LIST_OPTION);
                 throw new UsageException();
             }
 
             if (multiDex && incremental) {
-                err.println(INCREMENTAL_OPTION + " is not supported with "
+                System.err.println(INCREMENTAL_OPTION + " is not supported with "
                     + MULTI_DEX_OPTION);
                 throw new UsageException();
             }
 
             if (multiDex && outputOptions.outputIsDirectDex) {
-                err.println("Unsupported output \"" + outName +"\". " + MULTI_DEX_OPTION +
+                System.err.println("Unsupported output \"" + outName +"\". " + MULTI_DEX_OPTION +
                         " supports only archive or directory output");
                 throw new UsageException();
             }
@@ -1559,7 +1547,7 @@ public class Main {
                     statistics = true;
                 } else if (parser.isArg("--optimize-list=")) {
                     if (dontOptimizeListFile != null) {
-                        err.println("--optimize-list and "
+                        System.err.println("--optimize-list and "
                                 + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
@@ -1567,7 +1555,7 @@ public class Main {
                     optimizeListFile = parser.getLastValue();
                 } else if (parser.isArg("--no-optimize-list=")) {
                     if (dontOptimizeListFile != null) {
-                        err.println("--optimize-list and "
+                        System.err.println("--optimize-list and "
                                 + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
@@ -1587,7 +1575,7 @@ public class Main {
                         jarOutput = false;
                         outputOptions.outputIsDirectDex = true;
                     } else {
-                        err.println("unknown output extension: " +
+                        System.err.println("unknown output extension: " +
                                            outName);
                         throw new UsageException();
                     }
@@ -1607,7 +1595,7 @@ public class Main {
                     } else if (pstr == "lines") {
                         positionInfo = PositionList.LINES;
                     } else {
-                        err.println("unknown positions option: " +
+                        System.err.println("unknown positions option: " +
                                            pstr);
                         throw new UsageException();
                     }
@@ -1633,13 +1621,13 @@ public class Main {
                         inputList = new ArrayList<String>();
                         readPathsFromFile(inputListFile.getAbsolutePath(), inputList);
                     } catch(IOException e) {
-                        err.println(
+                        System.err.println(
                             "Unable to read input list file: " + inputListFile.getName());
                         // problem reading the file so we should halt execution
                         throw new UsageException();
                     }
                 } else {
-                    err.println("unknown option: " + parser.getCurrent());
+                    System.err.println("unknown option: " + parser.getCurrent());
                     throw new UsageException();
                 }
             }
@@ -1691,6 +1679,14 @@ public class Main {
                 context.err.println("\nEXCEPTION FROM SIMULATION:");
                 context.err.println(ex.getMessage() + "\n");
                 context.err.println(((SimException) ex).getContext());
+            } else if (ex instanceof ParseException) {
+                context.err.println("\nPARSE ERROR:");
+                ParseException parseException = (ParseException) ex;
+                if (args.debug) {
+                    parseException.printStackTrace(context.err);
+                } else {
+                    parseException.printContext(context.err);
+                }
             } else {
                 context.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
                 ex.printStackTrace(context.err);
@@ -1706,7 +1702,7 @@ public class Main {
         }
     }
 
-    /** Callable helper class to parseCommandLine class bytes. */
+    /** Callable helper class to parse class bytes. */
     private class ClassParserTask implements Callable<DirectClassFile> {
 
         String name;

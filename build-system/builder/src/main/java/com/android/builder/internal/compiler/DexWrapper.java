@@ -51,7 +51,7 @@ public class DexWrapper {
         try {
             DxContext dxContext = new DxContext(output.getStandardOutput(), output.getErrorOutput());
             Main.Arguments args = buildArguments(processBuilder, dexOptions, dxContext);
-            res = new Main(dxContext).run(args);
+            res = new Main(dxContext).runDx(args);
         } finally {
             output.close();
         }
