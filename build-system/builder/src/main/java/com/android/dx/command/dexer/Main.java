@@ -701,12 +701,6 @@ public class Main {
         anyFilesProcessed |= res;
     }
 
-    private boolean isClassesDexFile(String name) {
-        File file = new File(name);
-
-        String fileName = file.getName();
-        return fileName.startsWith(DEX_PREFIX) && fileName.endsWith(DEX_EXTENSION);
-    }
 
     /**
      * Processes one file, which may be either a class or a resource.
@@ -718,7 +712,7 @@ public class Main {
     private boolean processFileBytes(String name, long lastModified, byte[] bytes) {
 
         boolean isClass = name.endsWith(".class");
-        boolean isClassesDex = isClassesDexFile(name);
+        boolean isClassesDex = name.equals(DexFormat.DEX_IN_JAR_NAME);
         boolean keepResources = (outputResources != null);
 
         if (!isClass && !isClassesDex && !keepResources) {
