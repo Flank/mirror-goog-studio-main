@@ -17,8 +17,9 @@
 package com.android.tools.profiler;
 
 import com.android.build.api.transform.Transform;
+import com.google.common.base.Charsets;
+import com.google.common.io.Closeables;
 
-import java.nio.charset.StandardCharsets;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -80,7 +81,11 @@ public class ProfilerPlugin implements Plugin<Project> {
                 Method registerTransform = android.getClass()
                         .getMethod("registerTransform", Transform.class, Object[].class);
                 registerTransform.invoke(android, new ProfilerTransform(), new Object[]{});
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -111,12 +116,18 @@ public class ProfilerPlugin implements Plugin<Project> {
 
         Object propertiesFile = projectProperties.get(PROPERTY_PROPERTIES_FILE);
         if (propertiesFile != null) {
-            try (FileInputStream fis = new FileInputStream(String.valueOf(propertiesFile));
-                 Reader reader = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+            Reader reader = null;
+            try {
+                reader = new InputStreamReader(new FileInputStream(String.valueOf(propertiesFile)),
+                        Charsets.UTF_8);
                 result.load(reader);
             } catch (IOException e) {
                 // Ignored.
                 e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    Closeables.closeQuietly(reader);
+                }
             }
         }
         return result;
