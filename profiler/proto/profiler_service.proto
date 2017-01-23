@@ -84,7 +84,7 @@ message GetDevicesResponse {
 }
 
 message GetProcessesRequest {
-  string serial = 1;
+  string device_serial = 1;
 }
 
 message GetProcessesResponse {

@@ -66,7 +66,7 @@ void NetworkCollector::Collect() {
       profiler::proto::NetworkProfilerData response;
       sampler->GetData(&response);
       int64_t time = clock.GetCurrentTime();
-      response.mutable_basic_info()->set_app_id(pid_);
+      response.mutable_basic_info()->set_process_id(pid_);
       response.mutable_basic_info()->set_end_timestamp(time);
       buffer_.Add(response, time);
     }

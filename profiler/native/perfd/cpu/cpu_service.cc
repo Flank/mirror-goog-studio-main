@@ -45,7 +45,7 @@ namespace profiler {
 Status CpuServiceImpl::GetData(ServerContext* context,
                                const CpuDataRequest* request,
                                CpuDataResponse* response) {
-  int64_t id_in_request = request->app_id();
+  int64_t id_in_request = request->process_id();
   int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? proto::AppId::ANY
                                                          : id_in_request);
   Trace trace("CPU:GetData");
@@ -60,9 +60,9 @@ Status CpuServiceImpl::GetData(ServerContext* context,
 grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
                                                 const CpuStartRequest* request,
                                                 CpuStartResponse* response) {
-  auto status = usage_sampler_.AddProcess(request->app_id());
+  auto status = usage_sampler_.AddProcess(request->process_id());
   if (status == CpuStartResponse::SUCCESS) {
-    status = thread_monitor_.AddProcess(request->app_id());
+    status = thread_monitor_.AddProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;
@@ -71,9 +71,9 @@ grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
 grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
                                                const CpuStopRequest* request,
                                                CpuStopResponse* response) {
-  auto status = usage_sampler_.RemoveProcess(request->app_id());
+  auto status = usage_sampler_.RemoveProcess(request->process_id());
   if (status == CpuStopResponse::SUCCESS) {
-    status = thread_monitor_.RemoveProcess(request->app_id());
+    status = thread_monitor_.RemoveProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;
