@@ -31,13 +31,10 @@ import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiConditionalExpression;
-import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
@@ -47,8 +44,6 @@ import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiStatement;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.EnumSet;
 
 /** Evaluates constant expressions */
@@ -215,42 +210,9 @@ public class ResourceEvaluator {
                 return null;
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(element, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return null;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            PsiDeclarationStatement prevStatement = (PsiDeclarationStatement) prev;
-                            for (PsiElement e : prevStatement.getDeclaredElements()) {
-                                if (variable.equals(e)) {
-                                    return getResource(variable.getInitializer());
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        return getResource(assign.getRExpression());
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = ConstantEvaluator.findLastAssignment(element, variable);
+                if (last != null) {
+                    return getResource(last);
                 }
             }
         }
@@ -332,42 +294,9 @@ public class ResourceEvaluator {
                 return getTypesFromAnnotations((PsiParameter)resolved);
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(element, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return null;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            PsiDeclarationStatement prevStatement = (PsiDeclarationStatement) prev;
-                            for (PsiElement e : prevStatement.getDeclaredElements()) {
-                                if (variable.equals(e)) {
-                                    return getResourceTypes(variable.getInitializer());
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        return getResourceTypes(assign.getRExpression());
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = ConstantEvaluator.findLastAssignment(element, variable);
+                if (last != null) {
+                    return getResourceTypes(last);
                 }
             }
         }

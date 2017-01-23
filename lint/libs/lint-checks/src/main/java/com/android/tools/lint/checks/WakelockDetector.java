@@ -24,12 +24,18 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
+import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.intellij.psi.JavaElementVisitor;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiMethodCallExpression;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -45,7 +51,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
  * Checks for problems with wakelocks (such as failing to release them)
  * which can lead to unnecessary battery usage.
  */
-public class WakelockDetector extends Detector implements ClassScanner {
+public class WakelockDetector extends Detector implements ClassScanner, JavaPsiScanner {
     public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";
 
     /** Problems using wakelocks */
@@ -71,6 +77,26 @@ public class WakelockDetector extends Detector implements ClassScanner {
             new Implementation(
                     WakelockDetector.class,
                     Scope.CLASS_FILE_SCOPE));
+
+    /** Using non-timeout version of wakelock acquire */
+    public static final Issue TIMEOUT = Issue.create(
+            "WakelockTimeout",
+            "Using wakeLock without timeout",
+
+            "Wakelocks have two acquire methods: one with a timeout, and one without. "
+                    + "You should generally always use the one with a timeout. A typical "
+                    + "timeout is 10 minutes. If the task takes longer than it is critical "
+                    + "that it happens (i.e. can't use `JobScheduler`) then maybe they "
+                    + "should consider a foreground service instead (which is a stronger "
+                    + "run guarantee and lets the user know something long/important is "
+                    + "happening.)",
+
+            Category.PERFORMANCE,
+            9,
+            Severity.WARNING,
+            new Implementation(
+                    WakelockDetector.class,
+                    Scope.JAVA_FILE_SCOPE));
 
     private static final String WAKELOCK_OWNER = "android/os/PowerManager$WakeLock";
     private static final String RELEASE_METHOD = "release";
@@ -422,5 +448,35 @@ public class WakelockDetector extends Detector implements ClassScanner {
         }
 
         return status;
+    }
+
+    // Check for the non-timeout version of wakelock acquire
+
+    @Nullable
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Collections.singletonList("acquire");
+    }
+
+    @Override
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @Nullable JavaElementVisitor visitor,
+            @NonNull PsiMethodCallExpression call,
+            @NonNull PsiMethod method) {
+        if (call.getArgumentList().getExpressions().length > 0) {
+            return;
+        }
+
+        if (!context.getEvaluator().isMemberInClass(method,
+                "android.os.PowerManager.WakeLock")) {
+            return;
+        }
+
+        context.report(TIMEOUT, call, context.getLocation(call), ""
+                + "Provide a timeout when requesting a wakelock with "
+                + "`PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will "
+                + "cleanup any wakelocks that last longer than you intend, and will save your "
+                + "user's battery.");
     }
 }

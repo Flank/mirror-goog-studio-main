@@ -892,42 +892,9 @@ public class ConstantEvaluator {
                 return null;
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return null;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                    .getDeclaredElements()) {
-                                if (variable.equals(element)) {
-                                    return evaluate(variable.getInitializer());
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        return evaluate(assign.getRExpression());
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = findLastAssignment(node, variable);
+                if (last != null) {
+                    return evaluate(last);
                 }
             }
         } else if (node instanceof PsiNewExpression) {
@@ -1159,42 +1126,9 @@ public class ConstantEvaluator {
                 }
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return false;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                    .getDeclaredElements()) {
-                                if (variable.equals(element)) {
-                                    return isArrayLiteral(variable.getInitializer());
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        return isArrayLiteral(assign.getRExpression());
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = findLastAssignment(node, variable);
+                if (last != null) {
+                    return isArrayLiteral(last);
                 }
             }
         } else if (node instanceof PsiNewExpression) {
@@ -1297,5 +1231,59 @@ public class ConstantEvaluator {
         }
         Object value = evaluator.evaluate(node);
         return value instanceof String ? (String) value : null;
+    }
+
+    /**
+     * Computes the last assignment to a given variabble counting backwards from
+     * the given context element
+     *
+     * @param usage    the usage site to search backwards from
+     * @param variable the variable
+     * @return the last assignment or null
+     */
+    @Nullable
+    public static PsiExpression findLastAssignment(@NonNull PsiElement usage,
+            @NonNull PsiVariable variable) {
+        // Walk backwards through assignments to find the most recent initialization
+        // of this variable
+        PsiStatement statement = PsiTreeUtil.getParentOfType(usage, PsiStatement.class,
+                false);
+        if (statement != null) {
+            PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
+                    PsiStatement.class);
+            String targetName = variable.getName();
+            if (targetName == null) {
+                return null;
+            }
+            while (prev != null) {
+                if (prev instanceof PsiDeclarationStatement) {
+                    for (PsiElement element : ((PsiDeclarationStatement) prev)
+                            .getDeclaredElements()) {
+                        if (variable.equals(element)) {
+                            return variable.getInitializer();
+                        }
+                    }
+                } else if (prev instanceof PsiExpressionStatement) {
+                    PsiExpression expression = ((PsiExpressionStatement) prev)
+                            .getExpression();
+                    if (expression instanceof PsiAssignmentExpression) {
+                        PsiAssignmentExpression assign
+                                = (PsiAssignmentExpression) expression;
+                        PsiExpression lhs = assign.getLExpression();
+                        if (lhs instanceof PsiReferenceExpression) {
+                            PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
+                            if (targetName.equals(reference.getReferenceName()) &&
+                                    reference.getQualifier() == null) {
+                                return assign.getRExpression();
+                            }
+                        }
+                    }
+                }
+                prev = PsiTreeUtil.getPrevSiblingOfType(prev,
+                        PsiStatement.class);
+            }
+        }
+
+        return null;
     }
 }
