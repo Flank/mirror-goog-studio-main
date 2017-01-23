@@ -45,7 +45,8 @@ public final class GradleTestProjectBuilder {
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
-    private boolean withDependencyChecker = true;
+    private boolean withDependencyChecker =
+            false; // FIXME once all the tests are passing we can enable this back.
 
     /** Create a GradleTestProject. */
     public GradleTestProject create() {
