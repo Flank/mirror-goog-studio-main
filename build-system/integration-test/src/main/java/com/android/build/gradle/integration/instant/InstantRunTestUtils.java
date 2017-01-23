@@ -253,18 +253,6 @@ public final class InstantRunTestUtils {
         }
     }
 
-    static void startService(@NonNull IDevice device, @NonNull String packageName)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
-        IShellOutputReceiver receiver = new CollectingOutputReceiver();
-        String startIrServiceCmd =
-                String.format(
-                        "am startservice %1$s/com.android.tools.fd.runtime.InstantRunService",
-                        packageName);
-        device.executeShellCommand(
-                startIrServiceCmd, receiver, DEFAULT_ADB_TIMEOUT_MSEC, MILLISECONDS);
-    }
-
     static void waitForAppStart(
             @NonNull InstantRunClient client, @NonNull IDevice device)
             throws InterruptedException, IOException {
