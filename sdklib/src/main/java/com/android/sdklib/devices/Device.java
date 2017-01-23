@@ -385,15 +385,7 @@ public final class Device {
             }
 
             if (mId == null) {
-                if ("android-wear".equals(mTagId)) {
-                    // b.android.com/200772
-                    // When api 21 wear images are removed (hopefully reasonably soon post-api-24),
-                    // this also should be, since it is obviously a horrible hack.
-                    mId = "wear_" + mName.substring(mName.lastIndexOf(' ') + 1).toLowerCase();
-                }
-                else {
-                    mId = mName;
-                }
+                mId = mName;
             }
 
             if (mMeta == null) {
