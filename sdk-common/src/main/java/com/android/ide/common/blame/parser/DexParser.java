@@ -98,7 +98,7 @@ public class DexParser implements PatternAwareOutputParser {
             return true;
         }
 
-        if (line.startsWith("trouble writing output: Too many method references:")) {
+        if (line.startsWith("trouble writing output: Too many method references")) {
             StringBuilder original1 = new StringBuilder(line).append('\n');
             String nextLine = reader.readLine();
             while (!Strings.isNullOrEmpty(nextLine)) {

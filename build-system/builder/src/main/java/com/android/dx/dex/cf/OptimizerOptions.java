@@ -46,8 +46,6 @@ public class OptimizerOptions {
     /** true if the above lists have been loaded */
     private boolean optimizeListsLoaded;
 
-    public OptimizerOptions() {
-    }
 
     /**
      * Loads the optimize/don't optimize lists from files.

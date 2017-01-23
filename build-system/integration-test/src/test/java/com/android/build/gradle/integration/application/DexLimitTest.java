@@ -72,7 +72,7 @@ public class DexLimitTest {
 
     @Before
     public void disableDexInProcess() throws Exception {
-        if (mDexInProcess) {
+        if (!mDexInProcess) {
             DexInProcessHelper.disableDexInProcess(mProject.getBuildFile());
         }
     }

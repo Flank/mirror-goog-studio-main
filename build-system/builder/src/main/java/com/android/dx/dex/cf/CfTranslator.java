@@ -81,7 +81,7 @@ public class CfTranslator {
      * Takes a {@code byte[]}, interprets it as a Java classfile, and
      * translates it into a {@link ClassDefItem}.
      *
-     * @param context
+     * @param context {@code non-null;} the state global to this invocation.
      * @param cf {@code non-null;} the class file
      * @param bytes {@code non-null;} contents of the file
      * @param cfOptions options for class translation
@@ -90,7 +90,7 @@ public class CfTranslator {
      * @return {@code non-null;} the translated class
      */
     public static ClassDefItem translate(DxContext context, DirectClassFile cf, byte[] bytes,
-                                         CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
+            CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
         try {
             return translate0(context, cf, bytes, cfOptions, dexOptions, dexFile);
         } catch (RuntimeException ex) {
@@ -105,7 +105,7 @@ public class CfTranslator {
      * terms of exception handling.
      *
      *
-     * @param context
+     * @param context {@code non-null;} the state global to this invocation.
      * @param cf {@code non-null;} the class file
      * @param bytes {@code non-null;} contents of the file
      * @param cfOptions options for class translation
@@ -114,7 +114,7 @@ public class CfTranslator {
      * @return {@code non-null;} the translated class
      */
     private static ClassDefItem translate0(DxContext context, DirectClassFile cf, byte[] bytes,
-                                           CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
+            CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
 
         context.optimizerOptions.loadOptimizeLists(cfOptions.optimizeListFile,
                 cfOptions.dontOptimizeListFile);
@@ -243,7 +243,7 @@ public class CfTranslator {
     /**
      * Processes the methods of the given class.
      *
-     * @param context
+     * @param context {@code non-null;} the state global to this invocation.
      * @param cf {@code non-null;} class being translated
      * @param cfOptions {@code non-null;} options for class translation
      * @param dexOptions {@code non-null;} options for dex output
@@ -380,8 +380,8 @@ public class CfTranslator {
      * Helper that updates the dex statistics.
      */
     private static void updateDexStatistics(DxContext context, CfOptions cfOptions, DexOptions dexOptions,
-                                            RopMethod optRmeth, RopMethod nonOptRmeth,
-                                            LocalVariableInfo locals, int paramSize, int originalByteCount) {
+            RopMethod optRmeth, RopMethod nonOptRmeth,
+            LocalVariableInfo locals, int paramSize, int originalByteCount) {
         /*
          * Run rop->dex again on optimized vs. non-optimized method to
          * collect statistics. We have to totally convert both ways,
