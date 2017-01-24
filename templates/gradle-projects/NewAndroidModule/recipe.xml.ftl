@@ -62,7 +62,7 @@
     <instantiate from="root/proguard-rules.txt.ftl"
                    to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
 </#if>
-<#if !(isLibraryProject!false) || (isBaseAtom!false)>
+<#if (!(isLibraryProject!false) && !(isInstantApp!false)) || (isBaseAtom!false)>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
     <#if buildApi gte 22>
