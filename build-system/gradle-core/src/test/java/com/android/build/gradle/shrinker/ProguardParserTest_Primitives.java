@@ -17,11 +17,9 @@
 package com.android.build.gradle.shrinker;
 
 import com.google.common.io.Files;
-
+import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 /**
  * Tests for {@link com.android.build.gradle.shrinker.parser.ProguardParser}, related to primitives.

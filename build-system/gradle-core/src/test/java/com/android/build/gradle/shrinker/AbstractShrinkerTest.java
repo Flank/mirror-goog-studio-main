@@ -40,7 +40,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,23 +62,10 @@ import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-/**
- * Common code for testing shrinker runs.
- */
+/** Common code for testing shrinker runs. */
 public abstract class AbstractShrinkerTest {
 
-    @Rule
-    public TemporaryFolder tmpDir = new TemporaryFolder();
+    @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
     protected File mTestPackageDir;
 
@@ -108,18 +103,20 @@ public abstract class AbstractShrinkerTest {
         // we probably want a better mock that than so that we can return different dir depending
         // on inputs.
         when(mOutput.getContentLocation(
-                Mockito.anyString(),
-                Mockito.anySetOf(ContentType.class),
-                Mockito.anySetOf(Scope.class),
-                Mockito.any(Format.class))).thenReturn(mOutDir);
+                        Mockito.anyString(),
+                        Mockito.anySetOf(ContentType.class),
+                        Mockito.anySetOf(Scope.class),
+                        Mockito.any(Format.class)))
+                .thenReturn(mOutDir);
 
         mInputs = ImmutableList.of(transformInput);
 
-        mFullRunShrinker = new FullRunShrinker<>(
-                WaitableExecutor.useGlobalSharedThreadPool(),
-                JavaSerializationShrinkerGraph.empty(mIncrementalDir),
-                getPlatformJars(),
-                mShrinkerLogger);
+        mFullRunShrinker =
+                new FullRunShrinker<>(
+                        WaitableExecutor.useGlobalSharedThreadPool(),
+                        JavaSerializationShrinkerGraph.empty(mIncrementalDir),
+                        getPlatformJars(),
+                        mShrinkerLogger);
     }
 
     @Before
@@ -143,7 +140,8 @@ public abstract class AbstractShrinkerTest {
         assertThat(getInterfaceNames(classFile)).contains(interfaceName);
     }
 
-    protected void assertDoesntImplement(String className, String interfaceName) throws IOException {
+    protected void assertDoesntImplement(String className, String interfaceName)
+            throws IOException {
         File classFile = getOutputClassFile(className);
         assertThat(getInterfaceNames(classFile)).doesNotContain(interfaceName);
     }
@@ -182,7 +180,8 @@ public abstract class AbstractShrinkerTest {
         assertThat(innerClasses).isEmpty();
     }
 
-    protected void assertMembersLeft(String className, String... expectedMembers) throws IOException {
+    protected void assertMembersLeft(String className, String... expectedMembers)
+            throws IOException {
         assertThat(getMembers(className)).containsExactlyElementsIn(Arrays.asList(expectedMembers));
     }
 
@@ -190,8 +189,7 @@ public abstract class AbstractShrinkerTest {
         File outFile = getOutputClassFile(className);
 
         assertTrue(
-                String.format("Class %s does not exist in output.", className),
-                outFile.exists());
+                String.format("Class %s does not exist in output.", className), outFile.exists());
 
         return getMembers(outFile);
     }
@@ -199,15 +197,14 @@ public abstract class AbstractShrinkerTest {
     @NonNull
     protected static Set<File> getPlatformJars() {
         File androidHome = TestUtils.getSdk();
-        File androidJar = FileUtils.join(
-                androidHome,
-                SdkConstants.FD_PLATFORMS,
-                "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
-                "android.jar");
+        File androidJar =
+                FileUtils.join(
+                        androidHome,
+                        SdkConstants.FD_PLATFORMS,
+                        "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
+                        "android.jar");
 
-        assertTrue(
-                androidJar.getAbsolutePath() + " does not exist.",
-                androidJar.exists());
+        assertTrue(androidJar.getAbsolutePath() + " does not exist.", androidJar.exists());
 
         return ImmutableSet.of(androidJar);
     }
@@ -217,10 +214,12 @@ public abstract class AbstractShrinkerTest {
 
         //noinspection unchecked - ASM API
         return Stream.concat(
-                ((List<MethodNode>) classNode.methods).stream()
-                        .map(methodNode -> methodNode.name + ":" + methodNode.desc),
-                ((List<FieldNode>) classNode.fields).stream()
-                        .map(fieldNode -> fieldNode.name + ":" + fieldNode.desc))
+                        ((List<MethodNode>) classNode.methods)
+                                .stream()
+                                .map(methodNode -> methodNode.name + ":" + methodNode.desc),
+                        ((List<FieldNode>) classNode.fields)
+                                .stream()
+                                .map(fieldNode -> fieldNode.name + ":" + fieldNode.desc))
                 .collect(Collectors.toSet());
     }
 
@@ -251,8 +250,7 @@ public abstract class AbstractShrinkerTest {
                 mInputs,
                 Collections.<TransformInput>emptyList(),
                 mOutput,
-                ImmutableMap.of(
-                        AbstractShrinker.CounterSet.SHRINK, keepRules),
+                ImmutableMap.of(AbstractShrinker.CounterSet.SHRINK, keepRules),
                 false);
     }
 }

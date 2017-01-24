@@ -18,13 +18,10 @@ package com.android.build.gradle.shrinker;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Simple {@link KeepRules} implementation for testing.
- */
+/** Simple {@link KeepRules} implementation for testing. */
 class TestKeepRules implements KeepRules {
     private final String mClassName;
     private final Set<String> mMethodNames;
@@ -40,7 +37,8 @@ class TestKeepRules implements KeepRules {
 
         if (graph.getClassName(klass).endsWith(mClassName)) {
             for (T method : graph.getMethods(klass)) {
-                String fullName = graph.getMemberName(method) + ":" + graph.getMemberDescriptor(method);
+                String fullName =
+                        graph.getMemberName(method) + ":" + graph.getMemberDescriptor(method);
                 for (String methodName : mMethodNames) {
                     if (fullName.equals(methodName)) {
                         symbols.put(method, DependencyType.REQUIRED_CLASS_STRUCTURE);
