@@ -231,7 +231,7 @@ public class ExternalNativeBuildTaskUtils {
             androidBuilder.executeProcess(process.createProcess(), handler)
                     .rethrowFailure().assertNormalExitValue();
 
-            return handler.getStatndardOutputString();
+            return handler.getStandardOutputString();
         } catch (ProcessException e) {
             // Also, add process output to the process exception so that it can be analyzed by
             // caller. Use combined stderr stdout instead of just stdout because compiler errors
@@ -266,7 +266,7 @@ public class ExternalNativeBuildTaskUtils {
         }
 
         @NonNull
-        String getStatndardOutputString() throws IOException {
+        String getStandardOutputString() throws IOException {
             return standardOutput.asByteSource().asCharSource(Charsets.UTF_8).read();
         }
 
