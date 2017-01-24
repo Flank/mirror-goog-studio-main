@@ -68,7 +68,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.CircularReferenceException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -960,19 +959,7 @@ public class DependencyManager {
                                 // of the app (which can be aars).
                                 // we know we're in that case if testedProjectPath is non null, so we
                                 // can detect this an accept it.
-                                if (isRootOfSeparateTestedApp) {
-                                    // for now we can only add them as out libraries for the current
-                                    // artifact (rather than the actual jar that is the tested code).
-                                    // TODO: find a way to add them as children of the jar instead.
-                                    // TODO: we should take the jar only (of the aars). The rest doesn't matter.
-
-                                    // get the android dependencies only, and add them to the
-                                    // out list.
-                                    outDependencies.addAll(transitiveDependencies.stream()
-                                            .filter(node -> node.getNodeType() == NodeType.ANDROID)
-                                            .collect(Collectors.toList()));
-
-                                } else {
+                                if (!isRootOfSeparateTestedApp) {
                                     configDependencies.getChecker()
                                             .handleIssue(
                                                     createMavenCoordinates(artifact).toString(),
@@ -1166,7 +1153,7 @@ public class DependencyManager {
                 }
             }
 
-            recursiveSkip(
+            recursiveProvided(
                     mutableDependencyDataMap,
                     node.getDependencies(),
                     dependencyMap,
