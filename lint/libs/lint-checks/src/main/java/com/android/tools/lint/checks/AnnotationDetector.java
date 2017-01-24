@@ -77,7 +77,6 @@ import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationOwner;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiArrayType;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCodeBlock;
@@ -85,7 +84,6 @@ import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
@@ -521,52 +519,10 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
                 if (resolved instanceof PsiLocalVariable) {
                     PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                    PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class,
-                            false);
-                    if (statement != null) {
-                        PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                                PsiStatement.class);
-                        String targetName = variable.getName();
-                        if (targetName == null) {
-                            return null;
-                        }
-                        while (prev != null) {
-                            if (prev instanceof PsiDeclarationStatement) {
-                                for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                        .getDeclaredElements()) {
-                                    if (variable.equals(element)) {
-                                        PsiExpression initializer = variable.getInitializer();
-                                        if (initializer != null) {
-                                            return findIntDef(initializer);
-                                        }
-                                        break;
-                                    }
-                                }
-                            } else if (prev instanceof PsiExpressionStatement) {
-                                PsiExpression expression = ((PsiExpressionStatement) prev)
-                                        .getExpression();
-                                if (expression instanceof PsiAssignmentExpression) {
-                                    PsiAssignmentExpression assign
-                                            = (PsiAssignmentExpression) expression;
-                                    PsiExpression lhs = assign.getLExpression();
-                                    if (lhs instanceof PsiReferenceExpression) {
-                                        PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                        if (targetName.equals(reference.getReferenceName()) &&
-                                                reference.getQualifier() == null) {
-                                            PsiExpression rExpression = assign.getRExpression();
-                                            if (rExpression != null) {
-                                                return findIntDef(rExpression);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                    PsiStatement.class);
-                        }
+                    PsiExpression last = ConstantEvaluator.findLastAssignment(node, variable);
+                    if (last != null) {
+                        return findIntDef(last);
                     }
-
                 }
             } else if (node instanceof PsiMethodCallExpression) {
                 PsiMethod method = ((PsiMethodCallExpression) node).resolveMethod();

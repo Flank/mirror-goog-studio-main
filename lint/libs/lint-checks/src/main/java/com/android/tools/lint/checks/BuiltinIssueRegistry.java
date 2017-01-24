@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 294;
+    static final int INITIAL_CAPACITY = 297;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -171,6 +171,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(LeakDetector.ISSUE);
         issues.add(LocaleDetector.STRING_LOCALE);
         issues.add(LocaleFolderDetector.DEPRECATED_CODE);
+        issues.add(LocaleFolderDetector.GET_LOCALES);
         issues.add(LocaleFolderDetector.INVALID_FOLDER);
         issues.add(LocaleFolderDetector.WRONG_REGION);
         issues.add(LocaleFolderDetector.USE_ALPHA_2);
@@ -227,6 +228,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(PluralsDetector.MISSING);
         issues.add(PluralsDetector.IMPLIED_QUANTITY);
         issues.add(PreferenceActivityDetector.ISSUE);
+        issues.add(PrivateApiDetector.ISSUE);
         issues.add(PrivateKeyDetector.ISSUE);
         issues.add(PrivateResourceDetector.ISSUE);
         issues.add(ProguardDetector.SPLIT_CONFIG);
@@ -318,6 +320,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ViewTagDetector.ISSUE);
         issues.add(ViewTypeDetector.ISSUE);
         issues.add(WakelockDetector.ISSUE);
+        issues.add(WakelockDetector.TIMEOUT);
         issues.add(WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE);
         issues.add(WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE);
         issues.add(WebViewDetector.ISSUE);
@@ -358,7 +361,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 90;
+                initialSize += 95;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
