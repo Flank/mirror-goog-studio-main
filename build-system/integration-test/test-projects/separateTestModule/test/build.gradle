@@ -1,3 +1,4 @@
+apply from: "../../commonLocalRepo.gradle"
 apply plugin: 'com.android.test'
 
 android {
