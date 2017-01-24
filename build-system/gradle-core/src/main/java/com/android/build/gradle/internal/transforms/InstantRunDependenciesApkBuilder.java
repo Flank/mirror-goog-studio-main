@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
@@ -31,16 +30,12 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.model.AaptOptions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 
@@ -55,17 +50,18 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
 
     private static final String APK_FILE_NAME = "dependencies";
 
-    public InstantRunDependenciesApkBuilder(@NonNull Logger logger,
+    public InstantRunDependenciesApkBuilder(
+            @NonNull Logger logger,
             @NonNull Project project,
             @NonNull InstantRunBuildContext instantRunBuildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
-            @NonNull AaptOptions aaptOptions, @NonNull File outputDirectory,
-            @NonNull File supportDirectory, @NonNull String applicationId,
-            @Nullable String versionName, int versionCode) {
-        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory, applicationId, versionName, versionCode);
+            @NonNull AaptOptions aaptOptions,
+            @NonNull File outputDirectory,
+            @NonNull File supportDirectory) {
+        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf,
+                aaptOptions, outputDirectory, supportDirectory);
     }
 
     @NonNull

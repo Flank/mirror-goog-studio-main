@@ -30,21 +30,19 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.model.AaptOptions;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 
 /**
  * Tasks to generate M+ style pure splits APKs with dex files.
@@ -59,11 +57,10 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
-            @NonNull com.android.builder.model.AaptOptions aaptOptions,
-            @NonNull File outputDirectory, @NonNull File supportDirectory,
-            @NonNull String applicationId, @Nullable String versionName, int versionCode) {
-        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory, applicationId, versionName, versionCode);
+            @NonNull AaptOptions aaptOptions,
+            @NonNull File outputDirectory, @NonNull File supportDirectory) {
+        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf,
+                aaptOptions, outputDirectory, supportDirectory);
     }
 
     @NonNull
