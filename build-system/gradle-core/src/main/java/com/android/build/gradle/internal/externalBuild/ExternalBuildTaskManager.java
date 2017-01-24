@@ -251,10 +251,7 @@ class ExternalBuildTaskManager {
                         packagingScope.getSigningConfig(),
                         packagingScope.getAaptOptions(),
                         packagingScope.getInstantRunSplitApkOutputFolder(),
-                        packagingScope.getInstantRunSupportDir(),
-                        packagingScope.getApplicationId(),
-                        packagingScope.getVersionName(),
-                        packagingScope.getVersionCode());
+                        packagingScope.getInstantRunSupportDir());
 
         Optional<AndroidTask<TransformTask>> transformTaskAndroidTask =
                 transformManager.addTransform(tasks, variantScope, slicesApkBuilder);

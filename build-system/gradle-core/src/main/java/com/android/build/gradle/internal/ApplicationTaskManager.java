@@ -336,10 +336,7 @@ public class ApplicationTaskManager extends TaskManager {
                             packagingScope.getSigningConfig(),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
-                            packagingScope.getInstantRunSupportDir(),
-                            packagingScope.getApplicationId(),
-                            packagingScope.getVersionName(),
-                            packagingScope.getVersionCode());
+                            packagingScope.getInstantRunSupportDir());
 
             Optional<AndroidTask<TransformTask>> dependenciesApkBuilderTask =
                     variantScope
@@ -360,10 +357,7 @@ public class ApplicationTaskManager extends TaskManager {
                             packagingScope.getSigningConfig(),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
-                            packagingScope.getInstantRunSupportDir(),
-                            packagingScope.getApplicationId(),
-                            packagingScope.getVersionName(),
-                            packagingScope.getVersionCode());
+                            packagingScope.getInstantRunSupportDir());
 
             Optional<AndroidTask<TransformTask>> transformTaskAndroidTask = variantScope
                     .getTransformManager().addTransform(tasks, variantScope, slicesApkBuilder);

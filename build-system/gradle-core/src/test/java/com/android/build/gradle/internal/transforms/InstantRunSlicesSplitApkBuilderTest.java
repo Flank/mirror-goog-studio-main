@@ -96,6 +96,9 @@ public class InstantRunSlicesSplitApkBuilderTest {
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn("/path/to/zip-align");
+        when(packagingScope.getApplicationId()).thenReturn("com.foo.test");
+        when(packagingScope.getVersionName()).thenReturn("test_version_name");
+        when(packagingScope.getVersionCode()).thenReturn(12345);
     }
 
     @Before
@@ -109,10 +112,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
                 coreSigningConfig,
                 aaptOptions,
                 outputDirectory.getRoot(),
-                supportDirectory.getRoot(),
-                "com.foo.test",
-                "test_version_name",
-                12345) {
+                supportDirectory.getRoot()
+        ) {
             @Override
             @NonNull
             protected File generateSplitApk(@NonNull DexFiles dexFiles)

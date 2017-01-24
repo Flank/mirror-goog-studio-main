@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.android.SdkConstants;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -76,12 +77,20 @@ public class InstantRunSplitApkBuilderTest {
 
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
 
+    private static final String PATH_TO_ZIP_ALIGN =
+            (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS)
+                    ? "C:\\path\\to\\zip-align"
+                    : "/path/to/zip-align";
+
     @Before
     public void setUpMock() {
         MockitoAnnotations.initMocks(this);
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
-        when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn("/path/to/zip-align");
+        when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn(PATH_TO_ZIP_ALIGN);
+        when(packagingScope.getApplicationId()).thenReturn("com.foo.test");
+        when(packagingScope.getVersionName()).thenReturn("test_version_name");
+        when(packagingScope.getVersionCode()).thenReturn(12345);
     }
 
     @Before
@@ -95,10 +104,7 @@ public class InstantRunSplitApkBuilderTest {
                 coreSigningConfig,
                 aaptOptions,
                 outputDirectory.getRoot(),
-                supportDirectory.getRoot(),
-                "com.foo.test",
-                "test_version_name",
-                12345) {
+                supportDirectory.getRoot()) {
             @Override
             protected Aapt getAapt() {
                 return aapt;
@@ -113,7 +119,7 @@ public class InstantRunSplitApkBuilderTest {
         assertThat(parameterInputs).containsEntry("applicationId", "com.foo.test");
         assertThat(parameterInputs).containsEntry("versionCode", 12345);
         assertThat(parameterInputs).containsEntry("versionName", "test_version_name");
-        assertThat(parameterInputs).containsEntry("zipAlignExe", "/path/to/zip-align");
+        assertThat(parameterInputs).containsEntry("zipAlignExe", PATH_TO_ZIP_ALIGN);
         assertThat(parameterInputs).hasSize(4);
     }
 
@@ -205,6 +211,9 @@ public class InstantRunSplitApkBuilderTest {
     public void testNoVersionGeneration()
             throws InterruptedException, KeytoolException, IOException, ProcessException,
             PackagerException, TransformException {
+        when(packagingScope.getVersionName()).thenReturn("-1");
+        when(packagingScope.getVersionCode()).thenReturn(-1);
+
         InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
                     logger,
@@ -215,10 +224,7 @@ public class InstantRunSplitApkBuilderTest {
                     coreSigningConfig,
                     aaptOptions,
                     outputDirectory.getRoot(),
-                    supportDirectory.getRoot(),
-                    "com.foo.test",
-                    "-1",
-                    -1 /* noVersion */) {
+                    supportDirectory.getRoot()) {
             @Override
             protected Aapt getAapt() {
                 return aapt;

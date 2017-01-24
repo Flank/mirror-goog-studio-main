@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -70,6 +71,19 @@ public class InstantRunFullBuildTest {
     @Test
     public void testMultiApk() throws Exception {
         doTest(24);
+    }
+
+    @Test
+    public void testVersionCode() throws Exception {
+        TestFileUtils.appendToFile(mProject.getBuildFile(),
+                "android.applicationVariants.all { v ->\n"
+                        + "    v.outputs.each { o ->\n"
+                        + "        o.versionCodeOverride = 42\n"
+                        + "    }\n"
+                        + "}\n");
+        doTest(24);
+        assertThat(mProject.file("build/intermediates/instant-run-support/debug/slice_0/AndroidManifest.xml"))
+                .contains("android:versionCode=\"42\"");
     }
 
     private void doTest(int featureLevel) throws Exception {

@@ -34,16 +34,14 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 
 /**
  * Tasks to generate M+ style pure splits APKs with dex files.
@@ -59,10 +57,10 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
             @NonNull com.android.builder.model.AaptOptions aaptOptions,
-            @NonNull File outputDirectory, @NonNull File supportDirectory,
-            @NonNull String applicationId, @Nullable String versionName, int versionCode) {
+            @NonNull File outputDirectory,
+            @NonNull File supportDirectory) {
         super(logger, project, buildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory, applicationId, versionName, versionCode);
+                outputDirectory, supportDirectory);
     }
 
     @NonNull

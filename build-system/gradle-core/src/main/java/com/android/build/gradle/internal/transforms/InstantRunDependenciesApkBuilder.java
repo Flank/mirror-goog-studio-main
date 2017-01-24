@@ -50,17 +50,18 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
 
     private static final String APK_FILE_NAME = "dependencies";
 
-    public InstantRunDependenciesApkBuilder(@NonNull Logger logger,
+    public InstantRunDependenciesApkBuilder(
+            @NonNull Logger logger,
             @NonNull Project project,
             @NonNull BuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
-            @NonNull AaptOptions aaptOptions, @NonNull File outputDirectory,
-            @NonNull File supportDirectory, @NonNull String applicationId,
-            @Nullable String versionName, int versionCode) {
+            @NonNull AaptOptions aaptOptions,
+            @NonNull File outputDirectory,
+            @NonNull File supportDirectory) {
         super(logger, project, buildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory, applicationId, versionName, versionCode);
+                outputDirectory, supportDirectory);
     }
 
     @NonNull
