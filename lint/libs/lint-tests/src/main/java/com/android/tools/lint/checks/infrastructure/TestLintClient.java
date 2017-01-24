@@ -100,8 +100,10 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -185,11 +187,10 @@ public class TestLintClient extends LintCliClient {
     }
 
     @Nullable
-    private static File findIncrementalProject(@NonNull List<File> files,
-            @Nullable String incrementalFileName) {
+    private File findIncrementalProject(@NonNull List<File> files) {
         // Multiple projects: assume the project names were included in the incremental
         // task names
-        if (incrementalFileName == null) {
+        if (task.incrementalFileName == null) {
             if (files.size() == 1) {
                 assert false : "Need to specify incremental file name if more than one project";
             } else {
@@ -200,7 +201,7 @@ public class TestLintClient extends LintCliClient {
             for (File dir : files) {
                 File root = dir.getParentFile(); // Allow the project name to be part of the name
                 File current = new File(root,
-                        incrementalFileName.replace('/', File.separatorChar));
+                        task.incrementalFileName.replace('/', File.separatorChar));
                 if (current.exists()) {
                     return dir;
                 }
@@ -209,9 +210,20 @@ public class TestLintClient extends LintCliClient {
 
         for (File dir : files) {
             File current = new File(dir,
-                    incrementalFileName.replace('/', File.separatorChar));
+                    task.incrementalFileName.replace('/', File.separatorChar));
             if (current.exists()) {
                 return dir;
+            }
+        }
+
+        // Just using basename? Search among all files
+        for (File root : files) {
+            for (File relative : getFilesRecursively(root)) {
+                if (relative.getName().equals(task.incrementalFileName)) {
+                    // Turn the basename into a full relative name
+                    task.incrementalFileName = relative.getPath();
+                    return root;
+                }
             }
         }
 
@@ -223,7 +235,7 @@ public class TestLintClient extends LintCliClient {
         if (task.incrementalFileName != null) {
             boolean found = false;
 
-            File dir = findIncrementalProject(files, task.incrementalFileName);
+            File dir = findIncrementalProject(files);
             if (dir != null) {
                 File current = new File(dir,
                         task.incrementalFileName.replace('/', File.separatorChar));
@@ -238,8 +250,14 @@ public class TestLintClient extends LintCliClient {
                 }
             }
             if (!found) {
+                List<File> allFiles = new ArrayList<>();
+                for (File file : files) {
+                    allFiles.addAll(getFilesRecursively(file));
+                }
+
+                String all = allFiles.toString();
                 fail("Could not find incremental file " + task.incrementalFileName
-                        + " in the project folders " + files);
+                        + " in the test project folders; did you mean one of " + all);
             }
         }
 
@@ -294,6 +312,39 @@ public class TestLintClient extends LintCliClient {
         }
 
         return Pair.of(result, warnings);
+    }
+
+    private static List<File> getFilesRecursively(File root) {
+        List<File> result = new ArrayList<>();
+        addFilesUnder(result, root, root.getPath());
+        return result;
+    }
+
+    private static void addFilesUnder(List<File> result, File file, String skipPrefix) {
+        if (file.isFile()) {
+            String path = file.getPath();
+            if (path.startsWith(skipPrefix)) {
+                int length = skipPrefix.length();
+                if (path.length() > length && path.charAt(length) == File.separatorChar) {
+                    length++;
+                }
+                path = path.substring(length);
+            }
+            result.add(new File(path));
+        } else if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                Arrays.sort(files, new Comparator<File>() {
+                    @Override
+                    public int compare(File o1, File o2) {
+                        return o1.getName().compareToIgnoreCase(o2.getName());
+                    }
+                });
+                for (File child : files) {
+                    addFilesUnder(result, child, skipPrefix);
+                }
+            }
+        }
     }
 
     private boolean runExtraTokenChecks() {
@@ -449,7 +500,7 @@ public class TestLintClient extends LintCliClient {
         }
 
         if (incrementalCheck != null) {
-            File projectDir = findIncrementalProject(files, task.incrementalFileName);
+            File projectDir = findIncrementalProject(files);
             assert projectDir != null;
             assertTrue(isProjectDirectory(projectDir));
             Project project = createProject(projectDir, projectDir);

@@ -27,10 +27,10 @@ public class CommentDetectorTest extends AbstractCheckTest {
 
     public void testJava() throws Exception {
         String expected = ""
-                + "src/test/pkg/Hidden.java:11: Warning: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                + "src/test/pkg/Hidden.java:11: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "    // STOPSHIP\n"
                 + "       ~~~~~~~~\n"
-                + "src/test/pkg/Hidden.java:12: Warning: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                + "src/test/pkg/Hidden.java:12: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "    /* We must STOPSHIP! */\n"
                 + "               ~~~~~~~~\n"
                 + "src/test/pkg/Hidden.java:5: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
@@ -39,7 +39,8 @@ public class CommentDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/Hidden.java:6: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
                 + "    /* \\u002A\\U002F static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */\n"
                 + "       ~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n";
+                + "2 errors, 2 warnings\n";
+
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -118,10 +119,10 @@ public class CommentDetectorTest extends AbstractCheckTest {
         // Regression test for https://code.google.com/p/android/issues/detail?id=207168
         // StopShip doesn't work in XML
         String expected = ""
-                + "res/layout/foo.xml:1: Warning: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                + "res/layout/foo.xml:1: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "<!-- STOPSHIP implement this first -->\n"
                 + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n";
+                + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/foo.xml", ""
@@ -137,5 +138,88 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "@@ -1 +1\n"
                         + "- <!-- STOPSHIP implement this first -->\n"
                         + "+ <!-- implement this first -->\n");
+    }
+
+    public void testNoStopShipInDebugVariant() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Hidden {\n"
+                        + "    /* We must STOPSHIP! */\n"
+                        + "    String x;\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "        }\n"
+                        + "        release {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .variant("debug")
+                .run()
+                .expectClean();
+    }
+
+    public void testDoWarnAboutStopShipInDebugVariantWhileEditing() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Hidden {\n"
+                        + "    /* We must STOPSHIP! */\n"
+                        + "    String x;\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "        }\n"
+                        + "        release {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .variant("debug")
+                .incremental("Hidden.java")
+                .run()
+                .expect(""
+                        + "src/main/java/test/pkg/Hidden.java:4: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                        + "    /* We must STOPSHIP! */\n"
+                        + "               ~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+    }
+
+    public void testStopShipInReleaseVariant() throws Exception {
+        String expected = ""
+                + "src/main/java/test/pkg/Hidden.java:4: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                + "    /* We must STOPSHIP! */\n"
+                + "               ~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Hidden {\n"
+                        + "    /* We must STOPSHIP! */\n"
+                        + "    String x;\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "        }\n"
+                        + "        release {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .variant("release")
+                .run()
+                .expect(expected);
     }
 }
