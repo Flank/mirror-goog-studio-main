@@ -15,12 +15,12 @@ def _form_jar_impl(ctx):
   args, option_files = create_java_compiler_args(ctx, class_jar.path,
                                                  all_deps)
 
-  cmd = ctx.executable._formc.path + " " + " ".join(args)
   ctx.action(
-      inputs = [ctx.executable._formc] + ctx.files.srcs + list(all_deps) + option_files,
+      inputs = ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "formc",
-      command = cmd
+      arguments = args,
+      executable = ctx.executable._formc,
   )
 
 _form_jar = rule(

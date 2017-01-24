@@ -16,70 +16,40 @@
 
 package com.android.tools.groovy;
 
-import com.android.tools.utils.Zipper;
-import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.tools.javac.JavaStubCompilationUnit;
-
+import com.android.tools.utils.JarOutputCompiler;
+import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-
-import groovy.lang.GroovyClassLoader;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.tools.javac.JavaStubCompilationUnit;
 
 /**
- * Generates .java stubs for all the given groovy files. The .java files are placed inside
- * a .jar file.
+ * Generates .java stubs for all the given groovy files. The .java files are placed inside a .jar
+ * file.
  */
-public class GroovyStubGenerator {
+public class GroovyStubGenerator extends JarOutputCompiler {
+
+    GroovyStubGenerator() {
+        super("groovy_stub_gen");
+    }
 
     public static void main(String[] args) throws IOException {
         System.exit(new GroovyStubGenerator().run(Arrays.asList(args)));
     }
 
-    private void usage(String message) {
-        System.err.println("Error: " + message);
-        System.err.println("Usage: groovy_stub_gen -o <out_file> <files>...");
-    }
-
-    private int run(List<String> args) throws IOException {
-        File file = null;
-        List<String> files = new LinkedList<>();
-        Iterator<String> it = args.iterator();
-        while (it.hasNext()) {
-            String arg = it.next();
-            if (arg.equals("-o") && it.hasNext()) {
-                file = new File(it.next());
-            } else {
-                files.add(arg);
-            }
-        }
-        if (file == null) {
-            usage("Output file name not specified.");
-            System.exit(1);
-        }
-        if (files.isEmpty()) {
-            usage("No input files specified.");
-            System.exit(1);
-        }
-        generateStubs(file, files);
-        return 0;
-    }
-
-    private void generateStubs(File file, List<String> files) throws IOException {
+    @Override
+    protected boolean compile(List<String> files, String classPath, File outDir)
+            throws IOException {
         CompilerConfiguration config = new CompilerConfiguration();
         ClassLoader parent = ClassLoader.getSystemClassLoader();
         GroovyClassLoader gcl = new GroovyClassLoader(parent, config);
-        File tmp = new File(file.getAbsolutePath() + ".dir");
-        JavaStubCompilationUnit cu = new JavaStubCompilationUnit(config, gcl, tmp);
-
+        JavaStubCompilationUnit cu = new JavaStubCompilationUnit(config, gcl, outDir);
         for (String name : files) {
             cu.addSource(new File(name));
         }
-        cu.compile();
-
-        new Zipper().directoryToZip(tmp, file);
+        cu.compile(); // Throws if there is an error.
+        return true;
     }
 }

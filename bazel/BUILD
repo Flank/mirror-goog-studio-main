@@ -136,6 +136,7 @@ java_library(
 
 java_binary(
     name = "pom_generator",
+    jvm_flags = ["-Xmx1g"],
     main_class = "com.android.tools.maven.PomGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [":maven"],
