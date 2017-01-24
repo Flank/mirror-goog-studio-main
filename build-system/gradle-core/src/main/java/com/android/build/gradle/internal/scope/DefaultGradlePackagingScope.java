@@ -219,7 +219,7 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @Override
     public int getVersionCode() {
-        return mVariantScope.getVariantConfiguration().getVersionCode();
+        return mVariantOutputScope.getVariantOutputData().getVersionCode();
     }
 
     @Nullable
