@@ -12,12 +12,12 @@ def _groovy_jar_impl(ctx):
   args, option_files = create_java_compiler_args(ctx, class_jar.path,
                                                  all_deps)
 
-  cmd = ctx.executable._groovy.path + " " + " ".join(args)
   ctx.action(
-      inputs = [ctx.executable._groovy] + ctx.files.srcs + list(all_deps) + option_files,
+      inputs = ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "groovyc",
-      command = cmd
+      arguments = args,
+      executable = ctx.executable._groovy
   )
 
 groovy_jar = rule(

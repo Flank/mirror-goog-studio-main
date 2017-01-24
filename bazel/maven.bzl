@@ -1,4 +1,4 @@
-load(":functions.bzl", "explicit_target")
+load(":functions.bzl", "explicit_target", "create_option_file")
 
 def _maven_pom_impl(ctx):
   # Contains both *.jar and *.aar files.
@@ -251,12 +251,15 @@ def _maven_repo_impl(ctx):
           seen += {pom: True}
 
   # Execute the command
+  option_file = create_option_file(ctx, ctx.outputs.repo.path + ".lst",
+    "\n".join([file.path for file in inputs]))
+
   ctx.action(
-    inputs = inputs,
+    inputs = inputs + [option_file],
     outputs = [ctx.outputs.repo],
     mnemonic = "mavenrepo",
     executable = ctx.executable._repo,
-    arguments = [ctx.outputs.repo.path] + [file.path for file in inputs],
+    arguments = [ctx.outputs.repo.path, "@" + option_file.path]
   )
 
 _maven_repo = rule(
