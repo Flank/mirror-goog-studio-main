@@ -21,8 +21,13 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipOutputStream;
 import org.apache.maven.model.Model;
@@ -46,7 +51,7 @@ public class RepoBuilder {
 
 
     public static void main(String[] args) throws Exception {
-        new RepoBuilder().run(args);
+        System.exit(new RepoBuilder().run(Arrays.asList(args)));
     }
 
     private final Map<String, Path> mResolved;
@@ -57,27 +62,39 @@ public class RepoBuilder {
         mRepo = new MavenRepository(Files.createTempDir().toPath(), new RepoResolver());
     }
 
-    public void run(String[] args) throws Exception {
-        File zip = new File(args[0]);
-        Zipper zipper = new Zipper();
+    private static void usage(String message) {
+        System.err.println("Error: " + message);
+        System.err.println("Usage: repo_builder <output-file> <files>...|@<file>");
+    }
 
-        try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip))) {
+    private int run(List<String> args) throws Exception {
+        Options options = parseOptions(args.iterator());
+        if (options.out == null) {
+            usage("Output file not specified.");
+            return 1;
+        }
+        if (!options.files.isEmpty()) {
+            if (!options.files.get(0).endsWith(".pom")) {
+                usage("First file to add must be a pom file.");
+                return 1;
+            }
+        }
+
+        try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(options.out))) {
+            Zipper zipper = new Zipper();
             Model model = null;
-            for (int i = 1; i < args.length; i++) {
-                File file = new File(args[i]);
-                if (args[i].endsWith(".pom")) {
-
-                    Path pomFile = Paths.get(args[i]);
+            for (String inputFile : options.files) {
+                File file = new File(inputFile);
+                if (inputFile.endsWith(".pom")) {
+                    Path pomFile = file.toPath();
                     model = mRepo.getPomEffectiveModel(pomFile);
                     mResolved.put(model.getId(), pomFile);
                     String path = mRepo.relativize(mRepo.getPomPath(model)).toString();
                     zipper.addFileToZip(file, out, path, false);
                 } else {
-                    if (i == 1) {
-                        throw new IllegalArgumentException("First file to add must be a pom file.");
-                    }
+                    assert model != null;
                     String path;
-                    if (args[i].endsWith("-src.jar") || args[i].endsWith("-sources.jar")) {
+                    if (inputFile.endsWith("-src.jar") || inputFile.endsWith("-sources.jar")) {
                         path = mRepo.relativize(mRepo.getSourceArtifactPath(model)).toString();
                     } else {
                         path = mRepo.relativize(mRepo.getArtifactPath(model)).toString();
@@ -86,7 +103,32 @@ public class RepoBuilder {
                     zipper.addFileToZip(file, out, path, false);
                 }
             }
+            out.flush();
         }
+
+        return 0;
+    }
+
+    private static Options parseOptions(Iterator<String> it) throws IOException {
+        Options options = new Options();
+        if (it.hasNext()) {
+            options.out = new File(it.next());
+        }
+
+        while (it.hasNext()) {
+            String arg = it.next();
+            if (arg.startsWith("@")) {
+                options.files.addAll(java.nio.file.Files.readAllLines(Paths.get(arg.substring(1))));
+            } else {
+                options.files.add(arg);
+            }
+        }
+        return options;
+    }
+
+    private static class Options {
+        public File out;
+        public List<String> files = new LinkedList<>();
     }
 
     class RepoResolver implements ModelResolver {
