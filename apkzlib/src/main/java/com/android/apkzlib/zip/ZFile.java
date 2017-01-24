@@ -19,6 +19,7 @@ package com.android.apkzlib.zip;
 import com.android.apkzlib.utils.CachedFileContents;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.apkzlib.utils.IOExceptionRunnable;
+import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
@@ -452,6 +453,8 @@ public class ZFile implements Closeable {
 
                 notify(ZFileExtension::open);
             }
+        } catch (Zip64NotSupportedException e) {
+            throw e;
         } catch (IOException e) {
             throw new IOException("Failed to read zip file '" + file.getAbsolutePath() + "'.", e);
         }
@@ -678,8 +681,8 @@ public class ZFile implements Closeable {
             directFullyRead(zip64LocatorStart, possibleZip64Locator);
             if (LittleEndianUtils.readUnsigned4Le(ByteBuffer.wrap(possibleZip64Locator)) ==
                     ZIP64_EOCD_LOCATOR_SIGNATURE) {
-                throw new IOException("Zip64 EOCD locator found but Zip64 format is not "
-                        + "supported.");
+                throw new Zip64NotSupportedException(
+                        "Zip64 EOCD locator found but Zip64 format is not supported.");
             }
         }
 
