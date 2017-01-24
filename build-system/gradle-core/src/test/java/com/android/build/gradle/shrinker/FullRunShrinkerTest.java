@@ -1388,6 +1388,29 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("Main", "<init>:()V", "bridgeMethod:()V");
     }
 
+    @Test
+    public void enums() throws Exception {
+        Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
+
+        KeepRules rules =
+                parseKeepRules(
+                        "-keep enum * { "
+                                + "public static **[] values(); "
+                                + "public static ** valueOf(java.lang.String);"
+                                + "}");
+        run(rules);
+
+        assertMembersLeft(
+                "MyEnum",
+                "<clinit>:()V",
+                "<init>:(Ljava/lang/String;I)V",
+                "values:()[Ltest/MyEnum;",
+                "valueOf:(Ljava/lang/String;)Ltest/MyEnum;",
+                "ONE:Ltest/MyEnum;",
+                "TWO:Ltest/MyEnum;",
+                "$VALUES:[Ltest/MyEnum;");
+    }
+
     private void run(String className, String... methods) throws IOException {
         run(new TestKeepRules(className, methods));
     }
