@@ -123,12 +123,15 @@ dependencies {
         DependencyGraphs compileGraph = artifact.getDependencyGraphs();
 
         // check the app project shows up as a project dependency
-        assertThat(helper.on(compileGraph).withType(MODULE).mapTo(GRADLE_PATH))
-                .containsExactly(":app")
+        Items items = helper.on(compileGraph).withType(MODULE)
+        assertThat(items.mapTo(GRADLE_PATH)).containsExactly(":app")
 
-        // check that the app dependencies show up too. In this case as direct dependencies, since
+        // get the children dependencies from the single app module.
+        Items children = items.getTransitiveFromSingleItem()
+
+        // check that the app dependencies show up too as the children of the app.. In this case as direct dependencies, since
         // we can't do better for now.
-        assertThat(helper.on(compileGraph).withType(ANDROID).mapTo(COORDINATES))
+        assertThat(children.withType(ANDROID).mapTo(COORDINATES))
                 .containsExactly( "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar")
     }
 
@@ -151,14 +154,8 @@ dependencies {
         // but that it is skipped
         assertThat(moduleItems.filter(SKIPPED).mapTo(GRADLE_PATH)).containsExactly(":app")
 
-        // check that the app dependencies show up too. In this case as direct dependencies, since
-        // we can't do better for now.
-        Items androidItems = packageItems.withType(ANDROID)
-        assertThat(androidItems.mapTo(COORDINATES))
-                .containsExactly( "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar")
-
-        assertThat(androidItems.filter(SKIPPED).mapTo(COORDINATES))
-                .containsExactly( "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar")
+        // check that the app dependencies don't show up since they are marked as skipped.
+        assertThat(packageItems.withType(ANDROID).asList()).isEmpty()
 
         // check the list of skipped items also contains all the transitive dependencies
         assertThat(dependencyGraph.getSkippedLibraries()).containsExactly(
