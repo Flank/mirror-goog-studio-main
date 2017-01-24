@@ -74,6 +74,7 @@ class BuildConfigTest {
                     }
                 }
 
+                flavorDimensions 'foo'
                 productFlavors {
                     flavor1 {
                         buildConfigField "int", "VALUE_DEBUG",   "10"

@@ -54,6 +54,8 @@ android {
             applicationIdSuffix ".debug"
         }
     }
+
+    flavorDimensions 'foo'
     productFlavors {
         f1 {
             applicationIdSuffix "f1"

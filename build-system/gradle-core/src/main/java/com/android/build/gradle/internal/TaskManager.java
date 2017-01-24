@@ -2649,6 +2649,12 @@ public abstract class TaskManager {
             bestOutput = outputFiles.get(0);
         }
 
+        // Because we can only publish a single apk to the intermediate artifact, we cannot
+        // publish all the multi-apk. In order to keep some of the tests working (especially
+        // the test for the separate test module) we do want to publish one.
+        // FIXME we need to fix publication of multi-apks.
+        boolean hasPublishedApk = false;
+
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
         for (final ApkVariantOutputData variantOutputData : outputDataList) {
@@ -2784,7 +2790,8 @@ public abstract class TaskManager {
             }
             variantOutputScope.getAssembleTask().dependsOn(tasks, appTask);
 
-            if (publishApk) {
+            if (publishApk && !hasPublishedApk) {
+                hasPublishedApk = true;
                 appTask.configure(tasks, packageTask -> {
                     FileSupplier apkSupplier = (FileSupplier) packageTask;
                     variantScope.publishIntermediateArtifact(

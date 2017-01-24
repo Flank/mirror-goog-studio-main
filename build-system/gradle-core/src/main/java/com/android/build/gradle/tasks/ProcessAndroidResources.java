@@ -85,6 +85,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File resDir;
 
+    @Nullable
     private File sourceOutputDir;
 
     private Supplier<File> textSymbolOutputDir = () -> null;
@@ -99,10 +100,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String preferredDensity;
 
+    @Nullable
     private ArtifactCollection manifests;
+    @Nullable
     private ArtifactCollection symbolFiles;
     // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
+    @Nullable
     private FileCollection testedManifest;
+    @Nullable
     private FileCollection testedSymbolFile;
 
     private String packageForR;
@@ -206,32 +211,36 @@ public class ProcessAndroidResources extends IncrementalTask {
     @NonNull
     public List<LibraryInfo> getLibraryInfoList() {
         if (computedLibraryInfo == null) {
-            // first build a map for the optional symbols.
-            Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
-            for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
-                symbolMap.put(artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
-            }
+            if (symbolFiles != null && manifests != null) {
+                // first build a map for the optional symbols.
+                Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
+                for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
+                    symbolMap.put(artifactResult.getId().getComponentIdentifier(),
+                            artifactResult.getFile());
+                }
 
-            // now loop through all the manifests and associate to a symbol file, if applicable.
-            Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
-            computedLibraryInfo = new ArrayList<>(manifestArtifacts.size());
-            for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
-                computedLibraryInfo.add(new LibraryInfo(
-                        artifactResult.getFile(),
-                        symbolMap.get(artifactResult.getId().getComponentIdentifier())));
-            }
+                // now loop through all the manifests and associate to a symbol file, if applicable.
+                Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
+                computedLibraryInfo = new ArrayList<>(manifestArtifacts.size());
+                for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
+                    computedLibraryInfo.add(new LibraryInfo(
+                            artifactResult.getFile(),
+                            symbolMap.get(artifactResult.getId().getComponentIdentifier())));
+                }
 
-            // add the tested library if present
-            if (testedManifest != null) {
-                File symbolFile = testedSymbolFile != null
-                        ? testedSymbolFile.getSingleFile()
-                        : null;
-                computedLibraryInfo.add(new LibraryInfo(
-                        testedManifest.getSingleFile(),
-                        symbolFile));
+                // add the tested library if present
+                if (testedManifest != null) {
+                    File symbolFile = testedSymbolFile != null
+                            ? testedSymbolFile.getSingleFile()
+                            : null;
+                    computedLibraryInfo.add(new LibraryInfo(
+                            testedManifest.getSingleFile(),
+                            symbolFile));
+                }
+                computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
+            } else {
+                computedLibraryInfo = ImmutableList.of();
             }
-
-            computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
         }
 
         return computedLibraryInfo;
@@ -363,7 +372,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             ConventionMappingHelper.map(
                     processResources,
                     "resDir",
-                    () -> variantScope.getFinalResourcesDir());
+                    variantScope::getFinalResourcesDir);
 
             processResources.setPackageOutputFile(packageOutputSupplier);
 
@@ -462,7 +471,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         return sourceOutputDir;
     }
 
-    public void setSourceOutputDir(File sourceOutputDir) {
+    public void setSourceOutputDir(@Nullable File sourceOutputDir) {
         this.sourceOutputDir = sourceOutputDir;
     }
 
@@ -535,12 +544,14 @@ public class ProcessAndroidResources extends IncrementalTask {
         return getBuildTools().getRevision().toString();
     }
 
+    @Nullable
     @InputFiles
     @Optional
     public FileCollection getTestedManifest() {
         return testedManifest;
     }
 
+    @Nullable
     @InputFiles
     @Optional
     public FileCollection getTestedSymbolFile() {
@@ -548,13 +559,15 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @InputFiles
+    @Optional
     public FileCollection getManifests() {
-        return manifests.getArtifactFiles();
+        return manifests == null ? null : manifests.getArtifactFiles();
     }
 
     @InputFiles
+    @Optional
     public FileCollection getSymbolFiles() {
-        return symbolFiles.getArtifactFiles();
+        return symbolFiles == null ? null : symbolFiles.getArtifactFiles();
     }
 
     @Input
