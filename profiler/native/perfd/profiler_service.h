@@ -21,24 +21,33 @@
 #include "perfd/daemon.h"
 #include "proto/profiler_service.grpc.pb.h"
 #include "utils/clock.h"
+#include "utils/file_cache.h"
 
 namespace profiler {
 
 class ProfilerServiceImpl final
     : public profiler::proto::ProfilerService::Service {
  public:
-  explicit ProfilerServiceImpl(const Daemon& daemon) : clock_(daemon.clock()) {}
+  // TODO: Fix this so we don't have to pass in a non-const Daemon
+  explicit ProfilerServiceImpl(Daemon& daemon)
+      : clock_(daemon.clock()), file_cache_(*daemon.file_cache()) {}
 
   grpc::Status GetTimes(grpc::ServerContext* context,
                         const profiler::proto::TimesRequest* request,
-                        profiler::proto::TimesResponse* reply) override;
+                        profiler::proto::TimesResponse* response) override;
 
   grpc::Status GetVersion(grpc::ServerContext* context,
                           const profiler::proto::VersionRequest* request,
-                          profiler::proto::VersionResponse* reply) override;
+                          profiler::proto::VersionResponse* response) override;
+
+  grpc::Status GetBytes(grpc::ServerContext* context,
+                        const profiler::proto::BytesRequest* request,
+                        profiler::proto::BytesResponse* response) override;
+
  private:
   // Clock knows about timestamps.
   const Clock& clock_;
+  FileCache& file_cache_;
 };
 
 }  // namespace profiler

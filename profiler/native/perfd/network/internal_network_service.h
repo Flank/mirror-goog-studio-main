@@ -27,7 +27,8 @@ namespace profiler {
 class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
-  explicit InternalNetworkServiceImpl(NetworkCache *network_cache);
+  InternalNetworkServiceImpl(FileCache *file_cache,
+                             NetworkCache *network_cache);
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,
                                 const proto::HttpDataRequest *httpData,
@@ -41,12 +42,12 @@ class InternalNetworkServiceImpl final
                              const proto::HttpEventRequest *httpEvent,
                              proto::EmptyNetworkReply *reply) override;
 
-  grpc::Status SendHttpResponse(
-      grpc::ServerContext *context,
-      const proto::HttpResponseRequest *httpResponse,
-      proto::EmptyNetworkReply *reply) override;
+  grpc::Status SendHttpResponse(grpc::ServerContext *context,
+                                const proto::HttpResponseRequest *httpResponse,
+                                proto::EmptyNetworkReply *reply) override;
 
  private:
+  FileCache &file_cache_;
   NetworkCache &network_cache_;
 };
 

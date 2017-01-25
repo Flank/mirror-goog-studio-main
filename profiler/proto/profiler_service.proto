@@ -53,6 +53,11 @@ service ProfilerService {
   // Will be removed once perfd is updated.
   rpc SetProcesses(SetProcessesRequest) returns (SetProcessesResponse) {
   }
+
+  // Query for cached byte data associated with some ID. Other services may
+  // return an ID which can be used to fetch data using this central cache.
+  rpc GetBytes(BytesRequest) returns (BytesResponse) {
+  }
 }
 
 message TimesRequest {
@@ -103,6 +108,19 @@ message DisconnectRequest {
 }
 
 message DisconnectResponse {
+}
+
+message BytesRequest {
+  // ID for fetching contents from a cache. The value will always be safe to use
+  // as a filename, if you want to cache the contents locally to disk for
+  // example.
+  string id = 1;
+}
+
+message BytesResponse {
+  // Byte contents from a cache, or "" if no data was found associated with the
+  // cache key used to fetch it, or if the data was removed after some timeout.
+  bytes contents = 1;
 }
 
 message DeviceProcesses {
