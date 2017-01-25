@@ -38,7 +38,7 @@ dependencies {
     compile libs.truth
     compile libs.google_api_client
     compile libs.google_storage_client
-    testCompile libs.mockito_all
+    testCompile libs.mockito_core
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.
