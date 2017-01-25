@@ -28,8 +28,6 @@ using profiler::proto::HttpDetailsResponse;
 using profiler::proto::HttpRangeRequest;
 using profiler::proto::HttpRangeResponse;
 using profiler::proto::NetworkDataRequest;
-using profiler::proto::NetworkPayloadRequest;
-using profiler::proto::NetworkPayloadResponse;
 using profiler::Log;
 using std::string;
 
@@ -172,16 +170,6 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
         break;
     }
   }
-
-  return Status::OK;
-}
-
-grpc::Status NetworkServiceImpl::GetPayload(
-    grpc::ServerContext *context, const NetworkPayloadRequest *request,
-    NetworkPayloadResponse *response) {
-  auto payload_file =
-      network_cache_.file_cache().GetFile(request->payload_id());
-  response->set_contents(payload_file->Contents());
 
   return Status::OK;
 }

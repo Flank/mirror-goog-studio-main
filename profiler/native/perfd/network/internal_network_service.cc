@@ -23,8 +23,8 @@ using grpc::ServerContext;
 using grpc::Status;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    NetworkCache *network_cache)
-    : network_cache_(*network_cache) {}
+    FileCache *file_cache, NetworkCache *network_cache)
+    : file_cache_(*file_cache), network_cache_(*network_cache) {}
 
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
@@ -42,7 +42,7 @@ Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
   std::stringstream filename;
   filename << chunk->conn_id();
 
-  network_cache_.file_cache().AddChunk(filename.str(), chunk->content());
+  file_cache_.AddChunk(filename.str(), chunk->content());
   return Status::OK;
 }
 
@@ -63,7 +63,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       // don't have a hash function, so just keep the name.
       std::stringstream filename;
       filename << httpEvent->conn_id();
-      auto payload_file = network_cache_.file_cache().Complete(filename.str());
+      auto payload_file = file_cache_.Complete(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->response.payload_id = payload_file->name();
@@ -76,7 +76,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       std::stringstream filename;
       filename << httpEvent->conn_id();
 
-      network_cache_.file_cache().Abort(filename.str());
+      file_cache_.Abort(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->end_timestamp = httpEvent->timestamp();

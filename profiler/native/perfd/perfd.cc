@@ -23,6 +23,7 @@
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
+#include "utils/file_cache.h"
 #include "utils/fs/path.h"
 #include "utils/trace.h"
 
