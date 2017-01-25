@@ -441,7 +441,7 @@ public abstract class TaskManager {
 
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
 
-        if (getGlobalScope().getBuildCache().isPresent()) {
+        if (getGlobalScope().getBuildCache() != null) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
 
@@ -2107,7 +2107,7 @@ public abstract class TaskManager {
         if (preDexEnabled) {
             FileCache buildCache;
             if (cachePreDex && AndroidGradleOptions.isPreDexBuildCacheEnabled(project)) {
-                buildCache = globalScope.getBuildCache().orElse(null);
+                buildCache = globalScope.getBuildCache();
             } else {
                 buildCache = null;
             }

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
@@ -35,7 +36,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
@@ -82,7 +82,7 @@ public class PrepareLibraryTaskTest {
         File explodedDir =
                 buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
         PrepareLibraryTask task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
+                projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
         task.execute();
 
         assertThat(buildCacheDir.list()).hasLength(2); // Including 1 lock file
@@ -96,7 +96,7 @@ public class PrepareLibraryTaskTest {
 
         // Rerun PrepareLibraryTask, expect that the exploded aar is reused and not recreated
         task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
+                projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
         task.execute();
         assertThat(buildCacheDir.list()).hasLength(2); // Including 1 lock file
         assertThat(explodedDir).wasModifiedAt(explodedDirTimestamp);
@@ -115,7 +115,7 @@ public class PrepareLibraryTaskTest {
         assertThat(explodedDir2).isNotEqualTo(explodedDir);
 
         task = createPrepareLibraryTask(
-                projectDir, aarFile2, explodedDir2, Optional.of(buildCache), mavenCoordinates2);
+                projectDir, aarFile2, explodedDir2, buildCache, mavenCoordinates2);
         task.execute();
         assertThat(buildCacheDir.list()).hasLength(4); // Including 2 lock files
         assertThat(FileUtils.join(explodedDir2, "jars", "classes.jar"))
@@ -135,7 +135,7 @@ public class PrepareLibraryTaskTest {
         assertThat(explodedDir3).isNotEqualTo(explodedDir2);
 
         task = createPrepareLibraryTask(
-                projectDir, aarFile3, explodedDir3, Optional.of(buildCache), mavenCoordinates3);
+                projectDir, aarFile3, explodedDir3, buildCache, mavenCoordinates3);
         task.execute();
         assertThat(buildCacheDir.list()).hasLength(6); // Including 3 lock files
         assertThat(FileUtils.join(explodedDir3, "jars", "classes.jar"))
@@ -148,7 +148,7 @@ public class PrepareLibraryTaskTest {
         // directory outside the build cache directory
         File explodedDir = testDir.newFolder("exploded-aar");
         PrepareLibraryTask task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, Optional.empty(), mavenCoordinates);
+                projectDir, aarFile, explodedDir, null, mavenCoordinates);
         task.execute();
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
                 .hasContents("Library content");
@@ -168,7 +168,7 @@ public class PrepareLibraryTaskTest {
         // directory outside the build cache directory (as if the build cache was disabled)
         File explodedDir = testDir.newFolder("exploded-aar");
         PrepareLibraryTask task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
+                projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
         task.execute();
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
                 .hasContents("Library content");
@@ -192,7 +192,7 @@ public class PrepareLibraryTaskTest {
         // created in the exploded directory
         File explodedDir = testDir.newFolder("exploded-aar");
         PrepareLibraryTask task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, Optional.empty(), mavenCoordinates);
+                projectDir, aarFile, explodedDir, null, mavenCoordinates);
         task.execute();
         assertThat(FileUtils.join(explodedDir, "no-classes.jar")).hasContents("Library content");
         assertThat(FileUtils.join(explodedDir, "jars", "classes.jar"))
@@ -213,7 +213,7 @@ public class PrepareLibraryTaskTest {
             File explodedDir =
                     buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
             PrepareLibraryTask task = createPrepareLibraryTask(
-                    projectDir, aarFile, explodedDir, Optional.of(buildCache), mavenCoordinates);
+                    projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
             task.execute();
             fail("Expected TaskExecutionException");
         } catch (TaskExecutionException exception) {
@@ -239,7 +239,7 @@ public class PrepareLibraryTaskTest {
             @NonNull File projectDir,
             @NonNull File bundle,
             @NonNull File explodedDir,
-            @NonNull Optional<FileCache> buildCache,
+            @Nullable FileCache buildCache,
             @NonNull MavenCoordinates mavenCoordinates) {
         Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
         PrepareLibraryTask task =

@@ -57,6 +57,7 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -481,9 +482,10 @@ public class VariantManager implements VariantModel {
                 transform -> {
                     final AarTransform aarTransform = (AarTransform) transform;
                     aarTransform.setProject(project);
-                    aarTransform.setFileCache(taskManager.getGlobalScope().getBuildCache()
-                            .orElseThrow(() -> new RuntimeException(
-                                    "aar transform can only work with the build cache")));
+                    aarTransform.setFileCache(
+                            Verify.verifyNotNull(
+                                    taskManager.getGlobalScope().getBuildCache(),
+                                    "aar transform can only work with the build cache"));
                 });
         project.getDependencies().registerTransform(JarTransform.class, transform -> {});
 
