@@ -35,13 +35,11 @@ import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-
+import java.io.File;
+import java.util.EnumSet;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import java.io.File;
-import java.util.EnumSet;
 
 /**
  * A scope containing data for the Android plugin.
@@ -66,18 +64,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     private ToolingModelBuilderRegistry toolingRegistry;
 
-    @NonNull
-    private final File intermediatesDir;
-
-    @NonNull
-    private final File generatedDir;
-
-    @NonNull
-    private final File reportsDir;
-
-    @NonNull
-    private final File outputsDir;
-
     @Nullable
     private File mockableAndroidJarFile;
 
@@ -97,19 +83,17 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+        // Attention: remember that this code runs early in the build lifecycle, project may not
+        // have been fully configured yet (e.g. buildDir can still change).
         this.project = project;
         this.androidBuilder = androidBuilder;
         this.extension = extension;
         this.sdkHandler = sdkHandler;
         this.ndkHandler = ndkHandler;
         this.toolingRegistry = toolingRegistry;
-        intermediatesDir = new File(getBuildDir(), FD_INTERMEDIATES);
-        generatedDir = new File(getBuildDir(), FD_GENERATED);
-        reportsDir = new File(getBuildDir(), FD_REPORTS);
-        outputsDir = new File(getBuildDir(), FD_OUTPUTS);
-        optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
-        androidGradleOptions = new AndroidGradleOptions(project);
-        buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+        this.optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
+        this.androidGradleOptions = new AndroidGradleOptions(project);
+        this.buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
         validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
     }
 
@@ -157,17 +141,17 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public File getIntermediatesDir() {
-        return intermediatesDir;
+        return new File(getBuildDir(), FD_INTERMEDIATES);
     }
 
     @NonNull
     public File getGeneratedDir() {
-        return generatedDir;
+        return new File(getBuildDir(), FD_GENERATED);
     }
 
     @NonNull
     public File getReportsDir() {
-        return reportsDir;
+        return new File(getBuildDir(), FD_REPORTS);
     }
 
     public File getTestResultsFolder() {
@@ -213,7 +197,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public File getOutputsDir() {
-        return outputsDir;
+        return new File(getBuildDir(), FD_OUTPUTS);
     }
 
     /**
