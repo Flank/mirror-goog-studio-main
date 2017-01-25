@@ -94,7 +94,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         "minSdkVersion( )* \\d+",
                         "minSdkVersion 21");
                 JackHelper.enableJack(project.file("WordPress/build.gradle"));
-                disableCrashlyticsForJack();
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -152,17 +151,5 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .disablePreDexBuildCache()
                 .disableAaptV2()
                 .withtUseDexArchive(projectScenario.useDexArchive());
-    }
-
-    /** Removes the crashlytics plugin, and any dependencies on it. */
-    private void disableCrashlyticsForJack() throws Exception {
-        TestFileUtils.searchAndReplace(
-                project.getSubproject("WordPress").getBuildFile(),
-                "apply plugin: 'io\\.fabric'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.getSubproject("WordPress").getBuildFile(),
-                "variant\\.generateBuildConfig\\.dependsOn\\(generateCrashlyticsConfig\\)",
-                "");
     }
 }
