@@ -33,6 +33,7 @@ cc_library(
         "-I$(GENDIR)/tools/base/profiler",
     ],
     deps = [
+        "//tools/base/profiler/native/perfd:perfd_internal_headers",
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
