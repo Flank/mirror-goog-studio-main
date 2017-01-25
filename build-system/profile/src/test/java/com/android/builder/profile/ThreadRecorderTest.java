@@ -33,11 +33,11 @@ import org.junit.Test;
 public class ThreadRecorderTest {
 
     Recorder threadRecorder;
-    
+
     @Before
     public void setUp() throws IOException {
         Path outputFile = Jimfs.newFileSystem().getPath("profile_proto");
-        ProcessProfileWriterFactory.initializeForTests(outputFile);
+        ProcessProfileWriterFactory.initializeForTests();
         threadRecorder = ThreadRecorder.get();
     }
 

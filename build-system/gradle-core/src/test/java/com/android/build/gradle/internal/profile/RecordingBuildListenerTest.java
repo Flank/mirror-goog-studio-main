@@ -28,7 +28,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.android.builder.profile.ProfileRecordWriter;
-import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -99,7 +98,7 @@ public class RecordingBuildListenerTest {
                 .thenThrow(new AssertionError("Nothing should be using task name"));
         when(secondTask.getProject()).thenReturn(project);
         mProfileProtoFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto.rawproto");
-        ProcessProfileWriterFactory.initializeForTests(mProfileProtoFile);
+        ProcessProfileWriterFactory.initializeForTests();
     }
 
     @Test
@@ -127,17 +126,12 @@ public class RecordingBuildListenerTest {
                         ExecutionType.SOME_RANDOM_PROCESSING,
                         ":projectName",
                         null,
-                        new Recorder.Block<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                Logger.getAnonymousLogger().finest("useless block");
-                                return null;
-                            }
+                        () -> {
+                            Logger.getAnonymousLogger().finest("useless block");
+                            return null;
                         });
-        {
-        }
         listener.afterExecute(task, taskState);
-        ProcessProfileWriterFactory.shutdown();
+        ProcessProfileWriterFactory.shutdownAndWrite(mProfileProtoFile);
 
         GradleBuildProfile profile = loadProfile();
         assertEquals("Span count", 2, profile.getSpanCount());
@@ -172,7 +166,7 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(task, taskState);
         listener.afterExecute(secondTask, taskState);
 
-        ProcessProfileWriterFactory.shutdown();
+        ProcessProfileWriterFactory.shutdownAndWrite(mProfileProtoFile);
         GradleBuildProfile profile = loadProfile();
 
         assertEquals(3, profile.getSpanCount());
