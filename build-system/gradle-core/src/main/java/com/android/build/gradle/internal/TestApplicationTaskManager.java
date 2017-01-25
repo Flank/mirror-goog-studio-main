@@ -18,9 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MAPPING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_METADATA;
-import static java.util.Collections.singletonMap;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -100,12 +98,12 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         File testingApk = baseVariantOutputData.getOutputFile();
 
         // create a FileCollection that will contain the APKs to be tested.
-        FileCollection testedApks = incoming
-                .getFiles(singletonMap(ARTIFACT_TYPE, TYPE_APK));
+        FileCollection testedApks = incoming.artifactView()
+                .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_APK)).getFiles();
 
         // same for the metadata
-        FileCollection testTargetMetadata = incoming
-                .getFiles(singletonMap(ARTIFACT_TYPE, TYPE_METADATA));
+        FileCollection testTargetMetadata = incoming.artifactView()
+                .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
 
         TestApplicationTestData testData = new TestApplicationTestData(
                 variantData.getVariantConfiguration(),
@@ -161,8 +159,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     private FileCollection getTestTargetMapping(@NonNull VariantScope variantScope){
         if (mTestTargetMapping == null){
             mTestTargetMapping = variantScope.getVariantData().getVariantDependency()
-                    .getCompileConfiguration().getIncoming()
-                    .getFiles(singletonMap(ARTIFACT_TYPE, TYPE_MAPPING));
+                    .getCompileConfiguration().getIncoming().artifactView()
+                    .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
         }
 
         if (mTestTargetMapping.getFiles().isEmpty()) {
@@ -178,9 +176,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     private FileCollection getTestTargetMetadata(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (mTargetManifestConfiguration == null){
-            mTargetManifestConfiguration = variantData
-                    .getVariantDependency().getCompileConfiguration()
-                    .getIncoming().getFiles(singletonMap(ARTIFACT_TYPE, TYPE_METADATA));
+            mTargetManifestConfiguration = variantData.getVariantDependency()
+                    .getCompileConfiguration().getIncoming().artifactView()
+                    .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
         }
 
         return mTargetManifestConfiguration;

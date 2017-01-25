@@ -19,23 +19,15 @@ package com.android.build.gradle.internal.publishing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
-import com.android.builder.model.AndroidArtifact;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
-import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
 import java.util.Set;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.ConfigurablePublishArtifact;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
@@ -45,7 +37,7 @@ import org.gradle.api.tasks.bundling.AbstractArchiveTask;
  * (to repositories).
  */
 public class AndroidArtifacts {
-    public static final String ARTIFACT_TYPE = "artifactType";
+    public static final Attribute<String> ARTIFACT_TYPE = Attribute.of("artifactType", String.class);
 
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
@@ -93,13 +85,13 @@ public class AndroidArtifacts {
         RESOURCES_PKG(TYPE_RESOURCES_PKG),
         ;
 
-        private final Map<String, String> map;
+        private final String type;
         ArtifactType(String type) {
-            map = ImmutableMap.of(ARTIFACT_TYPE, type);
+            this.type = type;
         }
 
-        public Map<String, String> getMap() {
-            return map;
+        public String getType() {
+            return type;
         }
     }
 

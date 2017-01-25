@@ -46,19 +46,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.model.ModelMap;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * An adaptor to convert a managed.AndroidConfig to an model.AndroidConfig.
@@ -243,7 +242,7 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
 
     @NonNull
     @Override
-    public Map<String, String> getFlavorMatchingStrategy() {
+    public Map<Attribute<String>, String> getFlavorMatchingStrategy() {
         return ImmutableMap.of();
     }
 
