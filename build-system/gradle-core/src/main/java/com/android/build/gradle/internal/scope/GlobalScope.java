@@ -36,7 +36,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 
-import java.util.Optional;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -88,8 +87,8 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     private final AndroidGradleOptions androidGradleOptions;
 
-    @NonNull
-    private final Optional<FileCache> buildCache;
+    @Nullable
+    private final FileCache buildCache;
 
     public GlobalScope(
             @NonNull Project project,
@@ -265,9 +264,9 @@ public class GlobalScope implements TransformGlobalScope {
         return androidGradleOptions;
     }
 
-    @NonNull
+    @Nullable
     @Override
-    public Optional<FileCache> getBuildCache() {
+    public FileCache getBuildCache() {
         return buildCache;
     }
 
@@ -276,10 +275,10 @@ public class GlobalScope implements TransformGlobalScope {
      */
     public static void validateAndroidGradleOptions(
             @NonNull Project project,
-            @NonNull AndroidGradleOptions andoiAndroidGradleOptions,
-            @NonNull Optional<FileCache> buildCache) {
+            @NonNull AndroidGradleOptions androidGradleOptions,
+            @Nullable FileCache buildCache) {
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                && !buildCache.isPresent()) {
+                && buildCache == null) {
             throw new InvalidUserDataException("Build cache must be enabled to use improved "
                     + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.  "
                     + "If enabling build cache is not possible, improved dependency resolution can "

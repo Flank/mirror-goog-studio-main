@@ -298,7 +298,7 @@ class ExternalBuildTaskManager {
                 new PreDexTransform(
                         new DefaultDexOptions(),
                         androidBuilder,
-                        variantScope.getGlobalScope().getBuildCache().orElse(null),
+                        variantScope.getGlobalScope().getBuildCache(),
                         dexingMode,
                         variantScope.getInstantRunBuildContext().isInInstantRunMode());
         transformManager.addTransform(tasks, variantScope, preDexTransform);

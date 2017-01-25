@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.builder.model.OptionalCompilationStep;
 
 import com.android.builder.utils.FileCache;
-import java.util.Optional;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -59,8 +59,9 @@ public interface TransformGlobalScope {
     AndroidGradleOptions getAndroidGradleOptions();
 
     /**
-     * Returns the (optional) build cache.
+     * Returns a {@link FileCache} instance representing the build cache if the build cache is
+     * enabled, or null if it is disabled.
      */
-    @NonNull
-    Optional<FileCache> getBuildCache();
+    @Nullable
+    FileCache getBuildCache();
 }
