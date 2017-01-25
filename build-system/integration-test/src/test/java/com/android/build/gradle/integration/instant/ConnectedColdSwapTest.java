@@ -35,7 +35,6 @@ import com.android.ddmlib.IDevice;
 import com.android.tools.fd.client.AppState;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
-import com.android.tools.fd.client.UpdateMode;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -113,7 +112,7 @@ public class ConnectedColdSwapTest {
                 .run("clean", "assembleDebug");
 
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
-        InstantRunTestUtils.doInstall(device, info.getArtifacts());
+        InstantRunTestUtils.doInstall(device, info);
         InstantRunTestUtils.unlockDevice(device);
         Logcat.MessageListener messageListener = logcat.listenForMessage("coldswaptest_before");
         InstantRunTestUtils.runApp(device, HelloWorldApp.APP_ID + "/.HelloWorld");
@@ -139,19 +138,7 @@ public class ConnectedColdSwapTest {
 
         InstantRunBuildInfo coldSwapContext = InstantRunTestUtils.loadContext(instantRunModel);
 
-        if (thatUsesDalvik().matches(device.getVersion())) {
-            InstantRunTestUtils.doInstall(device, info.getArtifacts());
-        } else {
-            UpdateMode updateMode = client
-                    .pushPatches(device, coldSwapContext,
-                            UpdateMode.HOT_SWAP,
-                            /* NB: Intentionally HOT_SWAP, pushPatches should automatically
-                               determine that the changes cannot be hot-swapped */
-                            false /*restartActivity*/,
-                            true /*showToast*/);
-
-            assertThat(updateMode).named("updateMode").isEqualTo(UpdateMode.COLD_SWAP);
-        }
+        InstantRunTestUtils.doInstall(device, info);
 
         Logcat.MessageListener afterMessageListener = logcat.listenForMessage("coldswaptest_after");
 
