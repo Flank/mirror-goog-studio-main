@@ -73,6 +73,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.Usage;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -495,6 +496,9 @@ public class VariantManager implements VariantModel {
         // default configure attribute resolution for the build type attribute
         project.getDependencies().attributesSchema(schema -> schema.attribute(
                 VariantDependencies.CONFIG_ATTR_BUILD_TYPE,
+                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
+        project.getDependencies().attributesSchema(schema -> schema.attribute(
+                Usage.USAGE_ATTRIBUTE,
                 strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
 
         // same for flavors, both for user-declared flavors and for attributes created from

@@ -175,6 +175,7 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
+import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -202,6 +203,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
@@ -505,6 +507,13 @@ public abstract class TaskManager {
                     if (consumable && config.isCanBeConsumed()) {
                         for (PublishArtifact artifact : config.getArtifacts()) {
                             System.out.println("\tArtifact: " + artifact.getName() + " (" + artifact.getFile().getName() + ")");
+                        }
+                        for (ConfigurationVariant cv : config.getOutgoing().getVariants()) {
+                            System.out.println("\tConfigurationVariant: " + cv.getName());
+                            for (PublishArtifact pa : cv.getArtifacts()) {
+                                System.out.println("\t\tArtifact: " + pa.getFile());
+                                System.out.println("\t\tType:" + pa.getType());
+                            }
                         }
                     }
                 }

@@ -37,6 +37,7 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.Usage;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -216,7 +217,9 @@ public class VariantDependencies {
             compile.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compile.setExtendsFrom(compileConfigs);
             compile.setCanBeConsumed(false);
-            applyAttributes(compile, buildType, flavorMap);
+            applyVariantAttributes(compile, buildType, flavorMap);
+            compile.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -242,13 +245,14 @@ public class VariantDependencies {
             apk.setVisible(false);
             apk.setDescription("Resolved configuration for runtime for variant: " + variantName);
             apk.setExtendsFrom(apkConfigs);
-            applyAttributes(apk, buildType, flavorMap);
+            applyVariantAttributes(apk, buildType, flavorMap);
+            apk.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             apk.setCanBeConsumed(false);
 
             Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
             wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
             wearApp.setExtendsFrom(wearAppConfigs);
-            applyAttributes(wearApp, buildType, flavorMap);
+            applyVariantAttributes(wearApp, buildType, flavorMap);
             wearApp.setCanBeConsumed(false);
 
             Configuration publish = null;
@@ -260,7 +264,7 @@ public class VariantDependencies {
                 publish.setDescription("Published Configuration for Variant " + variantName);
                 Map<Attribute<String>, String> flavorMap2 = getFlavorAttributes(null);
 
-                applyAttributes(publish, buildType, flavorMap2);
+                applyVariantAttributes(publish, buildType, flavorMap2);
                 publish.setCanBeResolved(false);
 
                 // if the variant is not a library, then the publishing configuration should
@@ -311,7 +315,7 @@ public class VariantDependencies {
             return map;
         }
 
-        private static void applyAttributes(
+        private static void applyVariantAttributes(
                 @NonNull Configuration configuration,
                 @NonNull String buildType,
                 @NonNull Map<Attribute<String>, String> flavorMap) {
