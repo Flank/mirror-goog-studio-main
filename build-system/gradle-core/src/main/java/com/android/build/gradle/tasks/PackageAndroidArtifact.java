@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.CachedFileContents;
 import com.android.apkzlib.utils.IOExceptionWrapper;
+import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.build.gradle.internal.annotations.PackageFile;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -53,6 +54,7 @@ import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
@@ -61,9 +63,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import java.io.BufferedInputStream;
 
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Input;
@@ -87,6 +91,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -98,6 +103,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -217,6 +223,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
      * Name of directory, inside the intermediate directory, where zip caches are kept.
      */
     private static final String ZIP_DIFF_CACHE_DIR = "zip-cache";
+    private static final String ZIP_64_COPY_DIR = "zip64-copy";
 
     /**
      * Zip caches to allow incremental updates.
@@ -318,8 +325,22 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
         ImmutableMap<RelativeFile, FileStatus> updatedDex =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
+        ImmutableMap.Builder<RelativeFile, FileStatus> updatedJavaResourcesBuilder =
+                ImmutableMap.builder();
+        for (File javaResourceFile : getJavaResourceFiles()) {
+            try {
+                updatedJavaResourcesBuilder.putAll(
+                        javaResourceFile.isFile()
+                                ? IncrementalRelativeFileSets.fromZip(javaResourceFile)
+                                : IncrementalRelativeFileSets.fromDirectory(javaResourceFile));
+            } catch (Zip64NotSupportedException e) {
+                updatedJavaResourcesBuilder.putAll(
+                        IncrementalRelativeFileSets.fromZip(
+                                copyJavaResourcesOnly(getIncrementalFolder(), javaResourceFile)));
+            }
+        }
         ImmutableMap<RelativeFile, FileStatus> updatedJavaResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(getJavaResourceFiles());
+                updatedJavaResourcesBuilder.build();
         ImmutableMap<RelativeFile, FileStatus> updatedAssets =
                     IncrementalRelativeFileSets.fromZipsAndDirectories(
                             Collections.singleton(getAssets()));
@@ -355,6 +376,44 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
         saveData.setInputSet(updatedAtomMetadata.keySet(), InputSet.ATOM_METADATA);
         saveData.saveCurrentData();
+    }
+
+    /**
+     * Copy the input zip file (probably a Zip64) content into a new Zip in the destination folder
+     * stripping out all .class files.
+     *
+     * @param destinationFolder the destination folder to use, the output jar will have the same
+     *     name as the input zip file.
+     * @param zip64File the input zip file.
+     * @return the path to the stripped Zip file.
+     * @throws IOException if the copying failed.
+     */
+    @VisibleForTesting
+    static File copyJavaResourcesOnly(File destinationFolder, File zip64File) throws IOException {
+        File cacheDir = new File(destinationFolder, ZIP_64_COPY_DIR);
+        File copiedZip = new File(cacheDir, zip64File.getName());
+        FileUtils.mkdirs(copiedZip.getParentFile());
+
+        try (ZipFile inFile = new ZipFile(zip64File);
+                ZipOutputStream outFile =
+                        new ZipOutputStream(
+                                new BufferedOutputStream(new FileOutputStream(copiedZip)))) {
+
+            Enumeration<? extends ZipEntry> entries = inFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                if (!zipEntry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                    outFile.putNextEntry(new ZipEntry(zipEntry.getName()));
+                    try {
+                        ByteStreams.copy(
+                                new BufferedInputStream(inFile.getInputStream(zipEntry)), outFile);
+                    } finally {
+                        outFile.closeEntry();
+                    }
+                }
+            }
+        }
+        return copiedZip;
     }
 
     /**
