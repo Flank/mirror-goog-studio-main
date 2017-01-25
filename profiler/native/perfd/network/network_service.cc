@@ -15,8 +15,8 @@
  */
 #include "network_service.h"
 
-#include "utils/trace.h"
 #include "utils/log.h"
+#include "utils/trace.h"
 
 namespace profiler {
 
@@ -179,7 +179,8 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
 grpc::Status NetworkServiceImpl::GetPayload(
     grpc::ServerContext *context, const NetworkPayloadRequest *request,
     NetworkPayloadResponse *response) {
-  auto payload_file = network_cache_.GetPayloadFile(request->payload_id());
+  auto payload_file =
+      network_cache_.file_cache().GetFile(request->payload_id());
   response->set_contents(payload_file->Contents());
 
   return Status::OK;
