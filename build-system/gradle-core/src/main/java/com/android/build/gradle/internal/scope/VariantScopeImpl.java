@@ -29,17 +29,8 @@ import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AIDL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
-import static java.util.Collections.singletonMap;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -57,7 +48,6 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType;
@@ -112,11 +102,13 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.Dependency;
@@ -125,9 +117,9 @@ import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -138,20 +130,6 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public class VariantScopeImpl extends GenericVariantScopeImpl implements VariantScope {
 
     private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
-
-    private static final Map<String, String> ARTIFACTS_CLASSES = singletonMap(ARTIFACT_TYPE,
-            JavaPlugin.CLASS_DIRECTORY);
-    private static final Map<String, String> ARTIFACTS_JAVA_RES = singletonMap(ARTIFACT_TYPE,
-            JavaPlugin.RESOURCES_DIRECTORY);
-    private static final Map<String, String> ARTIFACTS_AIDL = singletonMap(ARTIFACT_TYPE, TYPE_AIDL);
-    private static final Map<String, String> ARTIFACTS_RENDERSCRIPT = singletonMap(ARTIFACT_TYPE, TYPE_RENDERSCRIPT);
-    private static final Map<String, String> ARTIFACTS_MANIFEST = singletonMap(ARTIFACT_TYPE, TYPE_MANIFEST);
-    private static final Map<String, String> ARTIFACTS_SYMBOL = singletonMap(ARTIFACT_TYPE, TYPE_SYMBOL);
-    private static final Map<String, String> ARTIFACTS_DATA_BINDING = singletonMap(ARTIFACT_TYPE, TYPE_DATA_BINDING);
-    private static final Map<String, String> ARTIFACTS_RESOURCES = singletonMap(ARTIFACT_TYPE, TYPE_ANDROID_RES);
-    private static final Map<String, String> ARTIFACTS_ASSETS = singletonMap(ARTIFACT_TYPE, TYPE_ASSETS);
-    private static final Map<String, String> ARTIFACTS_JNI = singletonMap(ARTIFACT_TYPE, TYPE_JNI);
-    private static final Map<String, String> ARTIFACTS_RESOURCES_PKG = singletonMap(ARTIFACT_TYPE, AndroidArtifacts.TYPE_RESOURCES_PKG);
 
     @NonNull
     private GlobalScope globalScope;
@@ -686,7 +664,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 throw new RuntimeException("unknown ConfigType value");
         }
 
-        Map<String, String> map = artifactType.getMap();
+        Action<AttributeContainer> attributes =
+                container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
 
         Spec<ComponentIdentifier> filter = null;
         FileCollection minus = null;
@@ -710,7 +689,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 if (artifactType == ArtifactType.JAVA_RES
                         || artifactType == ArtifactType.CLASSES) {
                     // remove all file-based local jar in this case.
-                    minus = getAllFileBasedJars(map, configuration);
+                    minus = getAllFileBasedJars(attributes, configuration);
                 }
                 break;
             default:
@@ -719,16 +698,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         FileCollection fileCollection;
 
+        ArtifactView artifactView = configuration.getIncoming().artifactView().attributes(attributes);
         if (filter == null) {
-            fileCollection = configuration.getIncoming().getFiles(map);
+            fileCollection = artifactView.getFiles();
         } else {
-            fileCollection = configuration.getIncoming().getFiles(map, filter);
+            fileCollection = artifactView.componentFilter(filter).getFiles();
         }
 
         if (scope == ArtifactScope.MODULE) {
             // we only add the tested scope if the query if for the MODULE.
             // (the method will also only add it if it's the right variant)
-            fileCollection = addTestedCollection(fileCollection, map);
+            fileCollection = addTestedCollection(fileCollection, artifactType);
         }
 
         if (minus != null) {
@@ -772,11 +752,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 throw new RuntimeException("unknown ArtifactScope value");
         }
 
-        Map<String, String> map = artifactType.getMap();
+        ArtifactView artifactView = configuration.getIncoming().artifactView()
+                .attributes(container -> container.attribute(ARTIFACT_TYPE, artifactType.getType()));
         if (filter == null) {
-            return configuration.getIncoming().getArtifacts(map);
+            return artifactView.getArtifacts();
         } else {
-            return configuration.getIncoming().getArtifacts(map, filter);
+            return artifactView.componentFilter(filter).getArtifacts();
         }
     }
 
@@ -1759,7 +1740,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private FileCollection addTestedCollection(
             @NonNull FileCollection fileCollection,
-            @NonNull Map<String, String> map) {
+            @NonNull ArtifactType artifactType) {
         // get the matching file collection for the tested variant, if any.
         if (variantData instanceof TestVariantData) {
             TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
@@ -1767,7 +1748,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             if (tested instanceof BaseVariantData) {
                 final BaseVariantData testedVariantData = (BaseVariantData) tested;
                 ConfigurableFileCollection testedFC = testedVariantData.getScope()
-                        .getInternalArtifact(map.get(ARTIFACT_TYPE));
+                        .getInternalArtifact(artifactType.getType());
 
                 if (testedFC != null) {
                     fileCollection = testedFC.from(fileCollection);
@@ -1780,9 +1761,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private static FileCollection getAllFileBasedJars(
-            @NonNull Map<String, String> map,
+            @NonNull Action<AttributeContainer> attributes,
             @NonNull Configuration configuration) {
-        return configuration.getIncoming().getFiles(map, id -> false);
+        return configuration.getIncoming().artifactView()
+                .attributes(attributes)
+                .componentFilter(id -> false).getFiles();
     }
 
     @NonNull

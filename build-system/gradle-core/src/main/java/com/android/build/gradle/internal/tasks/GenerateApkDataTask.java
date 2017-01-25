@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -54,8 +55,6 @@ import org.gradle.api.tasks.TaskAction;
  */
 @ParallelizableTask
 public class GenerateApkDataTask extends BaseTask {
-
-    public static final Map<String, String> ARTIFACTS_APK = singletonMap(ARTIFACT_TYPE, TYPE_APK);
 
     @Nullable
     private FileCollection apkFile;

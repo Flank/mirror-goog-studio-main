@@ -69,6 +69,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.SourceSet;
@@ -150,7 +151,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
-    private Map<String, String> flavorMatchingStrategy;
+    private Map<Attribute<String>, String> flavorMatchingStrategy;
 
     private Action<VariantFilter> variantFilter;
 
@@ -647,7 +648,7 @@ public abstract class BaseExtension implements AndroidConfig {
             name = CONFIG_ATTR_FLAVOR_PREFIX + name;
         }
 
-        flavorMatchingStrategy.put(name, value);
+        flavorMatchingStrategy.put(Attribute.of(name, String.class), value);
     }
 
     /**
@@ -655,7 +656,7 @@ public abstract class BaseExtension implements AndroidConfig {
      */
     @Override
     @NonNull
-    public Map<String, String> getFlavorMatchingStrategy() {
+    public Map<Attribute<String>, String> getFlavorMatchingStrategy() {
         if (flavorMatchingStrategy == null) {
             return ImmutableMap.of();
         }

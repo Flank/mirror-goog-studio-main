@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -495,18 +494,18 @@ public class VariantManager implements VariantModel {
 
         // default configure attribute resolution for the build type attribute
         project.getDependencies().attributesSchema(schema -> schema.attribute(
-                Attribute.of(VariantDependencies.CONFIG_ATTR_BUILD_TYPE, String.class),
+                VariantDependencies.CONFIG_ATTR_BUILD_TYPE,
                 strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching
         // First gather the list of attributes
-        final Set<String> dimensionAttributes = new HashSet<>();
+        final Set<Attribute<String>> dimensionAttributes = new HashSet<>();
 
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
         if (flavorDimensionList != null) {
             for (String dimension : flavorDimensionList) {
-                dimensionAttributes.add(CONFIG_ATTR_FLAVOR_PREFIX + dimension);
+                dimensionAttributes.add(Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + dimension, String.class));
             }
         }
 
@@ -516,9 +515,9 @@ public class VariantManager implements VariantModel {
         // then set a default resolution strategy. It's fine if an attribute in the consumer is
         // missing from the producer
         project.getDependencies().attributesSchema(schema -> {
-            for (String dimensionAttribute : dimensionAttributes) {
+            for (Attribute<String> dimensionAttribute : dimensionAttributes) {
                 schema.attribute(
-                        Attribute.of(dimensionAttribute, String.class),
+                        dimensionAttribute,
                         strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
             }
         });
