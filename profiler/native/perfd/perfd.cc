@@ -35,22 +35,22 @@ int main(int argc, char** argv) {
   profiler::Trace::Init();
   profiler::Daemon daemon;
 
-  profiler::GenericComponent generic_component{daemon};
+  profiler::GenericComponent generic_component{&daemon.utilities()};
   daemon.RegisterComponent(&generic_component);
 
-  profiler::CpuProfilerComponent cpu_component{daemon};
+  profiler::CpuProfilerComponent cpu_component{&daemon.utilities()};
   daemon.RegisterComponent(&cpu_component);
 
-  profiler::MemoryProfilerComponent memory_component{daemon};
+  profiler::MemoryProfilerComponent memory_component{&daemon.utilities()};
   daemon.RegisterComponent(&memory_component);
 
   profiler::EventProfilerComponent event_component{};
   daemon.RegisterComponent(&event_component);
 
-  profiler::EnergyProfilerComponent energy_component{daemon};
+  profiler::EnergyProfilerComponent energy_component{&daemon.utilities()};
   daemon.RegisterComponent(&energy_component);
 
-  profiler::NetworkProfilerComponent network_component{daemon};
+  profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);
 
   daemon.RunServer(profiler::kServerAddress);

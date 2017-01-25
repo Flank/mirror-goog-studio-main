@@ -33,8 +33,8 @@ class CpuCache;
 class CpuUsageSampler {
  public:
   // Creates a CPU usage data collector that saves data to |cpu_cache|.
-  CpuUsageSampler(const Daemon& daemon, CpuCache* cpu_cache)
-      : clock_(daemon.clock()),
+  CpuUsageSampler(Daemon::Utilities* utilities, CpuCache* cpu_cache)
+      : clock_(utilities->clock()),
         cache_(*cpu_cache),
         usage_files_(new ProcfsFiles()) {}
 

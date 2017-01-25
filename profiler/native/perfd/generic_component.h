@@ -26,7 +26,8 @@ namespace profiler {
 class GenericComponent final : public ProfilerComponent {
  public:
   // TODO: Fix this so we don't have to pass in a non-const Daemon
-  explicit GenericComponent(Daemon& daemon) : generic_public_service_(daemon) {}
+  explicit GenericComponent(Daemon::Utilities* utilities)
+      : generic_public_service_(utilities) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override {

@@ -27,11 +27,10 @@ namespace profiler {
 
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
-  // TODO: Fix this so we don't have to pass in a non-const Daemon
-  explicit NetworkProfilerComponent(Daemon& daemon)
-      : network_cache_(daemon.clock()),
+  explicit NetworkProfilerComponent(Daemon::Utilities* utilities)
+      : network_cache_(utilities->clock()),
         public_service_(&network_cache_),
-        internal_service_(daemon.file_cache(), &network_cache_) {}
+        internal_service_(utilities, &network_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

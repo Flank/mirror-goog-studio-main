@@ -27,6 +27,7 @@
 
 using std::vector;
 using std::string;
+using std::unique_ptr;
 
 namespace profiler {
 
@@ -50,8 +51,8 @@ class CpuUsageSamplerToTest final : public CpuUsageSampler {
  public:
   // Replace the real procfs by a mock one for testing, making it possible
   // to run this test on systems that do not have /proc such as Mac.
-  CpuUsageSamplerToTest(const Daemon& daemon, CpuCache* cpu_cache)
-      : CpuUsageSampler(daemon, cpu_cache) {
+  CpuUsageSamplerToTest(Daemon::Utilities* utilities, CpuCache* cpu_cache)
+      : CpuUsageSampler(utilities, cpu_cache) {
     ResetUsageFiles(std::unique_ptr<ProcfsFiles>(new MockProcfsFiles()));
   }
 };
@@ -64,9 +65,9 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kSystemCpuTime = 25429780;
   const int64_t kElapsedTime = 1175801430;
 
-  Daemon daemon;
+  Daemon::Utilities utilities;
   CpuCache cache;
-  CpuUsageSamplerToTest sampler{daemon, &cache};
+  CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid);
   bool sample_result = sampler.Sample();
   ASSERT_TRUE(sample_result);
@@ -90,9 +91,9 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_1 = 13780;
   const int64_t kAppCpuTime_2 = 140;
 
-  Daemon daemon;
+  Daemon::Utilities utilities;
   CpuCache cache;
-  CpuUsageSamplerToTest sampler{daemon, &cache};
+  CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid_1);
   sampler.AddProcess(kMockAppPid_2);
   bool sample_result = sampler.Sample();

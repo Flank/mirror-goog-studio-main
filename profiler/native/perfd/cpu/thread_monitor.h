@@ -38,8 +38,8 @@ namespace profiler {
 class ThreadMonitor {
  public:
   // Creates a thread monitor that detects and saves activities to |cpu_cache|.
-  ThreadMonitor(const Daemon& daemon, CpuCache* cpu_cache)
-      : clock_(daemon.clock()), cache_(*cpu_cache) {}
+  ThreadMonitor(Daemon::Utilities* utilities, CpuCache* cpu_cache)
+      : clock_(utilities->clock()), cache_(*cpu_cache) {}
 
   // Starts collecting thread activity for process with ID of |pid|. Does
   // nothing if the process has been monitored.
