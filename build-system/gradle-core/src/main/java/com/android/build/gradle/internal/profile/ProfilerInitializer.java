@@ -22,7 +22,9 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
-import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import org.gradle.api.Project;
 import org.gradle.initialization.BuildCompletionListener;
 
@@ -34,7 +36,12 @@ import org.gradle.initialization.BuildCompletionListener;
  */
 public final class ProfilerInitializer {
 
-    private static final Object LOCK = new Object();
+    private static final String PROFILE_DIRECTORY = "android-profile";
+
+    private static final DateTimeFormatter PROFILE_FILE_NAME =
+            DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
+
+    private static final Object lock = new Object();
 
     @Nullable private static volatile RecordingBuildListener recordingBuildListener;
 
@@ -48,7 +55,7 @@ public final class ProfilerInitializer {
      * @param project the current Gradle {@link Project}.
      */
     public static void init(@NonNull Project project) {
-        synchronized (LOCK) {
+        synchronized (lock) {
             //noinspection VariableNotUsedInsideIf
             if (recordingBuildListener != null) {
                 return;
@@ -57,7 +64,6 @@ public final class ProfilerInitializer {
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
-                    new File(project.getRootProject().getBuildDir(), "android-profile"),
                     AndroidGradleOptions.isProfileJsonEnabled(project));
             recordingBuildListener = new RecordingBuildListener(ProcessProfileWriter.get());
             project.getGradle().addListener(recordingBuildListener);
@@ -77,11 +83,16 @@ public final class ProfilerInitializer {
         @Override
         public void completed() {
             try {
-                synchronized (LOCK) {
+                synchronized (lock) {
                     if (recordingBuildListener != null) {
                         project.getGradle().removeListener(recordingBuildListener);
                         recordingBuildListener = null;
-                        ProcessProfileWriterFactory.shutdown();
+                        ProcessProfileWriterFactory.shutdownAndWrite(
+                                project.getRootProject()
+                                        .getBuildDir()
+                                        .toPath()
+                                        .resolve(PROFILE_DIRECTORY)
+                                        .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
                     }
                 }
             } catch (InterruptedException e) {
