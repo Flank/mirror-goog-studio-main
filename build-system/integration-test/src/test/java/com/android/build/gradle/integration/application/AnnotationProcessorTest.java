@@ -243,30 +243,4 @@ public class AnnotationProcessorTest {
         // make sure we resolve used class to the 2.6 version
         project.execute("assembleDebug");
     }
-
-    @Test
-    public void checkWarningWhenAptAndAnnotationProcessor() throws Exception {
-        // this warning is shown only for the javac toolchain and non-component plugin
-        Assume.assumeTrue(!forJack && !forComponentPlugin);
-        TestFileUtils.appendToFile(
-                project.getSubproject("app").getBuildFile(),
-                "\n "
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "apply plugin: 'com.neenbedankt.android-apt'\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor 'com.google.dagger:dagger-compiler:2.6'\n"
-                        + "}");
-        AndroidProject model = project.model().ignoreSyncIssues().getMulti().getModelMap().get(":app");
-        assertThat(model)
-                .hasSingleIssue(
-                        SyncIssue.SEVERITY_WARNING,
-                        SyncIssue.TYPE_GENERIC,
-                        null,
-                        "Using incompatible plugins for the annotation processing: "
-                                + "android-apt. This may result in an unexpected behavior.");
-    }
 }
