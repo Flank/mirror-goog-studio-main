@@ -16,17 +16,14 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-/**
- * "extends" part of a ProGuard class specification.
- */
+/** "extends" part of a ProGuard class specification. */
 public class InheritanceSpecification {
 
     private final NameSpecification mNameSpec;
     private final AnnotationSpecification mAnnotationType;
 
     public InheritanceSpecification(
-            NameSpecification nameSpec,
-            AnnotationSpecification annotationType) {
+            NameSpecification nameSpec, AnnotationSpecification annotationType) {
         mNameSpec = nameSpec;
         mAnnotationType = annotationType;
     }

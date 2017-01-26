@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-/**
- * Represents the annotations part of a ProGuard. class specification.
- */
+/** Represents the annotations part of a ProGuard. class specification. */
 public class AnnotationSpecification {
 
     private final NameSpecification mName;

@@ -16,22 +16,19 @@
 
 package com.android.build.gradle.shrinker;
 
-import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-/** TODO: Document. */
+/** Test classes used by {@link IncrementalShrinkerTest}. */
 public class TestClassesForIncremental implements Opcodes {
 
     public static class Simple {
-        public static byte[] main1() throws Exception {
+        public static byte[] main1() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -65,12 +62,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] main2() throws Exception {
+        public static byte[] main2() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -103,12 +98,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] main_extraMethod() throws Exception {
+        public static byte[] main_extraMethod() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -154,12 +147,11 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] main_extraField() throws Exception {
+        public static byte[] main_extraField() {
 
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -202,12 +194,11 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] main_extraField_private() throws Exception {
+        public static byte[] main_extraField_private() {
 
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -250,12 +241,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] aaa() throws Exception {
+        public static byte[] aaa() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Aaa", null, "java/lang/Object", null);
 
@@ -287,12 +276,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] bbb() throws Exception {
+        public static byte[] bbb() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
@@ -310,12 +297,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] bbb_packagePrivateConstructor() throws Exception {
+        public static byte[] bbb_packagePrivateConstructor() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
@@ -333,12 +318,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] bbb_packagePrivate() throws Exception {
+        public static byte[] bbb_packagePrivate() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
@@ -356,12 +339,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] bbb_serializable() throws Exception {
+        public static byte[] bbb_serializable() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -385,12 +366,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] bbb_extendsAaa() throws Exception {
+        public static byte[] bbb_extendsAaa() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "test/Aaa", null);
 
@@ -410,12 +389,10 @@ public class TestClassesForIncremental implements Opcodes {
     }
 
     public static class Cycle {
-        public static byte[] main1() throws Exception {
+        public static byte[] main1() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -444,12 +421,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] main2() throws Exception {
+        public static byte[] main2() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -474,12 +449,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] cycleOne() throws Exception {
+        public static byte[] cycleOne() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleOne", null, "java/lang/Object", null);
 
@@ -501,12 +474,10 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
 
-        public static byte[] cycleTwo() throws Exception {
+        public static byte[] cycleTwo() {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleTwo", null, "java/lang/Object", null);
 

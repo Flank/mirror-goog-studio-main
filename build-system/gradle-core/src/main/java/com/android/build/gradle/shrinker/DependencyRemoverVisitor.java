@@ -36,15 +36,20 @@ public class DependencyRemoverVisitor<T> extends ClassVisitor {
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature, String superName,
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
             String[] interfaces) {
         mClassName = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-            String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, String name, String desc, String signature, String[] exceptions) {
         mGraph.removeAllCodeDependencies(mGraph.getMemberReference(mClassName, name, desc));
         return super.visitMethod(access, name, desc, signature, exceptions);
     }

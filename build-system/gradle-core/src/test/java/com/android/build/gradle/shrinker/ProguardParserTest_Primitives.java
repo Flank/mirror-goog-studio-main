@@ -50,7 +50,7 @@ public class ProguardParserTest_Primitives extends AbstractShrinkerTest {
 
     @Test
     public void argument() throws Exception {
-        run(parseKeepRules("-keep class test/Main { void *(%); }"));
+        fullRun(parseKeepRules("-keep class test/Main { void *(%); }"));
         assertMembersLeft(
                 "Main",
                 "<init>:()V",
@@ -66,37 +66,37 @@ public class ProguardParserTest_Primitives extends AbstractShrinkerTest {
 
     @Test
     public void arrayArgument() throws Exception {
-        run(parseKeepRules("-keep class test/Main { void *(%[]); }"));
+        fullRun(parseKeepRules("-keep class test/Main { void *(%[]); }"));
         assertMembersLeft("Main", "<init>:()V", "intArrayArgument:([I)V");
     }
 
     @Test
     public void arrayArgument_twoDimensions() throws Exception {
-        run(parseKeepRules("-keep class test/Main { void *(%[][]); }"));
+        fullRun(parseKeepRules("-keep class test/Main { void *(%[][]); }"));
         assertMembersLeft("Main", "<init>:()V", "intArray2Argument:([[I)V");
     }
 
     @Test
     public void returnPrimitive() throws Exception {
-        run(parseKeepRules("-keep class test/Main { % *(); }"));
+        fullRun(parseKeepRules("-keep class test/Main { % *(); }"));
         assertMembersLeft("Main", "<init>:()V", "intReturn:()I");
     }
 
     @Test
     public void returnArray() throws Exception {
-        run(parseKeepRules("-keep class test/Main { %[] *(); }"));
+        fullRun(parseKeepRules("-keep class test/Main { %[] *(); }"));
         assertMembersLeft("Main", "<init>:()V", "intArrayReturn:()[I");
     }
 
     @Test
     public void returnArray_twoDimensions() throws Exception {
-        run(parseKeepRules("-keep class test/Main { %[][] *(); }"));
+        fullRun(parseKeepRules("-keep class test/Main { %[][] *(); }"));
         assertMembersLeft("Main", "<init>:()V", "intArray2Return:()[[I");
     }
 
     @Test
     public void twoPrimitiveArguments() throws Exception {
-        run(parseKeepRules("-keep class test/Main { void *(%, %); }"));
+        fullRun(parseKeepRules("-keep class test/Main { void *(%, %); }"));
         assertMembersLeft("Main", "<init>:()V", "twoPrimitiveArguments:(IF)V");
     }
 }

@@ -19,30 +19,23 @@ package com.android.build.gradle.shrinker;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.gradle.shrinker.AbstractShrinker.CounterSet;
 import com.android.build.gradle.shrinker.IncrementalShrinker.IncrementalRunImpossibleException;
 import com.android.build.gradle.shrinker.TestClasses.Annotations;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClassesForIncremental.Cycle;
 import com.android.build.gradle.shrinker.TestClassesForIncremental.Simple;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /** Tests for {@link IncrementalShrinker}. */
+@SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
 public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
     @Rule public ExpectedException mException = ExpectedException.none();
@@ -444,33 +437,5 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         assertImplements("ImplementationFromSuperclass", "test/MyInterface");
 
         incrementalRun(ImmutableMap.of("ImplementationFromSuperclass", Status.CHANGED));
-    }
-
-    private void fullRun(String className, String... methods) throws IOException {
-        mFullRunShrinker.run(
-                mInputs,
-                Collections.<TransformInput>emptyList(),
-                mOutput,
-                ImmutableMap.<CounterSet, KeepRules>of(
-                        CounterSet.SHRINK, new TestKeepRules(className, methods)),
-                true);
-    }
-
-    private void incrementalRun(Map<String, Status> changes) throws Exception {
-        IncrementalShrinker<String> incrementalShrinker =
-                new IncrementalShrinker<>(
-                        WaitableExecutor.<Void>useGlobalSharedThreadPool(),
-                        JavaSerializationShrinkerGraph.readFromDir(
-                                mIncrementalDir, this.getClass().getClassLoader()),
-                        mShrinkerLogger);
-
-        Map<File, Status> files = Maps.newHashMap();
-        for (Map.Entry<String, Status> entry : changes.entrySet()) {
-            files.put(new File(mTestPackageDir, entry.getKey() + ".class"), entry.getValue());
-        }
-
-        when(mDirectoryInput.getChangedFiles()).thenReturn(files);
-
-        incrementalShrinker.incrementalRun(mInputs, mOutput);
     }
 }

@@ -46,19 +46,19 @@ public class ProguardParserTest_Interfaces extends AbstractShrinkerTest {
 
     @Test
     public void interfaces_keepRules_interfaceOnInterface() throws Exception {
-        run(parseKeepRules("-keep interface test/MyInterface"));
+        fullRun(parseKeepRules("-keep interface test/MyInterface"));
         assertMembersLeft("MyInterface");
     }
 
     @Test
     public void interfaces_keepRules_interfaceOnClass() throws Exception {
-        run(parseKeepRules("-keep interface test/Main"));
+        fullRun(parseKeepRules("-keep interface test/Main"));
         assertClassSkipped("Main");
     }
 
     @Test
     public void interfaces_keepRules_atInterfaceOnInterface() throws Exception {
-        run(parseKeepRules("-keep @interface test/MyInterface"));
+        fullRun(parseKeepRules("-keep @interface test/MyInterface"));
         assertClassSkipped("MyInterface");
     }
 }

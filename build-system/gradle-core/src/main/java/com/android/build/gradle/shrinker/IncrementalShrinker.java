@@ -25,38 +25,33 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.objectweb.asm.ClassReader;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
+import org.objectweb.asm.ClassReader;
 
-/**
- * Code for incremental shrinking.
- */
+/** Code for incremental shrinking. */
 public class IncrementalShrinker<T> extends AbstractShrinker<T> {
 
     /**
-     * Exception thrown when the incremental shrinker detects incompatible changes and requests
-     * a full run instead.
+     * Exception thrown when the incremental shrinker detects incompatible changes and requests a
+     * full run instead.
      */
     public static class IncrementalRunImpossibleException extends RuntimeException {
         IncrementalRunImpossibleException(String message) {
             super(message);
         }
 
-        IncrementalRunImpossibleException(String message, Throwable cause) {
-            super(message, cause);
+        IncrementalRunImpossibleException(Throwable cause) {
+            super("Failed to load incremental state.", cause);
         }
     }
 
@@ -71,9 +66,9 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * Perform incremental shrinking, in the supported cases (where only code in pre-existing
      * methods has been modified).
      *
-     * <p>The general idea is this: for every method in modified classes, remove all outgoing
-     * "code reference" edges, add them again based on the current code and then set the counters
-     * again (traverse the graph) using the new set of edges.
+     * <p>The general idea is this: for every method in modified classes, remove all outgoing "code
+     * reference" edges, add them again based on the current code and then set the counters again
+     * (traverse the graph) using the new set of edges.
      *
      * <p>The counters are re-calculated every time from scratch (starting from known entry points
      * from the config file) to avoid cycles being left in the output.
@@ -82,12 +77,12 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      *     run should be done instead.
      */
     public void incrementalRun(
-            @NonNull Iterable<TransformInput> inputs,
-            @NonNull TransformOutputProvider output)
+            @NonNull Iterable<TransformInput> inputs, @NonNull TransformOutputProvider output)
             throws IOException, IncrementalRunImpossibleException {
         final Set<T> classesToWrite = Sets.newConcurrentHashSet();
         final Set<File> classFilesToDelete = Sets.newConcurrentHashSet();
-        final Set<PostProcessingData.UnresolvedReference<T>> unresolvedReferences = Sets.newConcurrentHashSet();
+        final Set<PostProcessingData.UnresolvedReference<T>> unresolvedReferences =
+                Sets.newConcurrentHashSet();
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         SetMultimap<T, String> oldState = resetState();
@@ -126,7 +121,8 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             if (!oldState.containsKey(klass)) {
                 classesToWrite.add(klass);
             } else {
-                Set<String> newMembers = mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
+                Set<String> newMembers =
+                        mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
                 Set<String> oldMembers = oldState.get(klass);
 
                 // Reverse of the trick above, where we store one artificial member for empty
@@ -168,7 +164,8 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         SetMultimap<T, String> oldState = HashMultimap.create();
 
         for (T klass : mGraph.getReachableClasses(CounterSet.SHRINK)) {
-            Set<String> reachableMembers = mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
+            Set<String> reachableMembers =
+                    mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
             for (String member : reachableMembers) {
                 oldState.put(klass, member);
             }
@@ -184,7 +181,8 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         return oldState;
     }
 
-    private void finishGraph(@NonNull Iterable<PostProcessingData.UnresolvedReference<T>> unresolvedReferences) {
+    private void finishGraph(
+            @NonNull Iterable<PostProcessingData.UnresolvedReference<T>> unresolvedReferences) {
         resolveReferences(unresolvedReferences);
         waitForAllTasks();
     }
@@ -192,7 +190,9 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
     private void processInputs(
             @NonNull Iterable<TransformInput> inputs,
             @NonNull final Collection<T> classesToWrite,
-            @NonNull final Collection<PostProcessingData.UnresolvedReference<T>> unresolvedReferences)
+            @NonNull
+                    final Collection<PostProcessingData.UnresolvedReference<T>>
+                            unresolvedReferences)
             throws IncrementalRunImpossibleException {
         for (final TransformInput input : inputs) {
             for (JarInput jarInput : input.getJarInputs()) {
@@ -212,29 +212,28 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             }
 
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                for (final Map.Entry<File, Status> changedFile : directoryInput.getChangedFiles().entrySet()) {
-                    mExecutor.execute(new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            switch (changedFile.getValue()) {
-                                case ADDED:
-                                    throw new IncrementalRunImpossibleException(
-                                            String.format(
-                                                    "File %s added.", changedFile.getKey()));
-                                case REMOVED:
-                                    throw new IncrementalRunImpossibleException(
-                                            String.format(
-                                                    "File %s removed.", changedFile.getKey()));
-                                case CHANGED:
-                                    processChangedClassFile(
-                                            changedFile.getKey(),
-                                            unresolvedReferences,
-                                            classesToWrite);
-                                    break;
-                            }
-                            return null;
-                        }
-                    });
+                for (final Map.Entry<File, Status> changedFile :
+                        directoryInput.getChangedFiles().entrySet()) {
+                    mExecutor.execute(
+                            () -> {
+                                switch (changedFile.getValue()) {
+                                    case ADDED:
+                                        throw new IncrementalRunImpossibleException(
+                                                String.format(
+                                                        "File %s added.", changedFile.getKey()));
+                                    case REMOVED:
+                                        throw new IncrementalRunImpossibleException(
+                                                String.format(
+                                                        "File %s removed.", changedFile.getKey()));
+                                    case CHANGED:
+                                        processChangedClassFile(
+                                                changedFile.getKey(),
+                                                unresolvedReferences,
+                                                classesToWrite);
+                                        break;
+                                }
+                                return null;
+                            });
                 }
             }
         }
@@ -286,5 +285,4 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             }
         }
     }
-
 }

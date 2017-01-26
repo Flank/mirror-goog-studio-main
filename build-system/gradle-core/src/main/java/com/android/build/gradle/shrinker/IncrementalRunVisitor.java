@@ -21,19 +21,15 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
+import java.util.Collection;
+import java.util.Set;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.Collection;
-import java.util.Set;
-
-/**
- * Visitor for handling modified classes in an incremental run.
- */
+/** Visitor for handling modified classes in an incremental run. */
 class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
 
     private final ShrinkerGraph<T> mGraph;
@@ -61,8 +57,13 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature,
-            String superName, String[] interfaces) {
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
+            String[] interfaces) {
         T klass = mGraph.getClassReference(name);
         mClassName = name;
 
@@ -81,9 +82,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
         int oldModifiers = mGraph.getModifiers(klass);
         if (oldModifiers != modifiers) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "%s modifiers changed.",
-                            mClassName));
+                    String.format("%s modifiers changed.", mClassName));
         }
     }
 
@@ -98,9 +97,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
 
             if (!oldNames.equals(newNames)) {
                 throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                        String.format(
-                                "%s interfaces changed.",
-                                mClassName));
+                        String.format("%s interfaces changed.", mClassName));
             }
         } catch (ClassLookupException e) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
@@ -114,9 +111,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
             Verify.verifyNotNull(superclass);
             if (!mGraph.getClassName(superclass).equals(superName)) {
                 throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                        String.format(
-                                "%s superclass changed.",
-                                mClassName));
+                        String.format("%s superclass changed.", mClassName));
             }
         } catch (ClassLookupException e) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
@@ -125,25 +120,17 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
     }
 
     @Override
-    public FieldVisitor visitField(int access, final String name, String desc, String signature,
-            Object value) {
+    public FieldVisitor visitField(
+            int access, final String name, String desc, String signature, Object value) {
         T field = mGraph.getMemberReference(mClassName, name, desc);
         if (!mFields.remove(field)) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Field %s.%s:%s added.",
-                            mClassName,
-                            name,
-                            desc));
+                    String.format("Field %s.%s:%s added.", mClassName, name, desc));
         }
 
         if (mGraph.getModifiers(field) != access) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Field %s.%s:%s modifiers changed.",
-                            mClassName,
-                            name,
-                            desc));
+                    String.format("Field %s.%s:%s modifiers changed.", mClassName, name, desc));
         }
 
         final Set<String> memberAnnotations = Sets.newHashSet(mGraph.getAnnotations(field));
@@ -164,26 +151,18 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, final String name, String desc, String signature,
-            String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, final String name, String desc, String signature, String[] exceptions) {
         final T method = mGraph.getMemberReference(mClassName, name, desc);
 
         if (!mMethods.remove(method)) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Method %s.%s:%s added.",
-                            mClassName,
-                            name,
-                            desc));
+                    String.format("Method %s.%s:%s added.", mClassName, name, desc));
         }
 
         if (mGraph.getModifiers(method) != access) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Method %s.%s:%s modifiers changed.",
-                            mClassName,
-                            name,
-                            desc));
+                    String.format("Method %s.%s:%s modifiers changed.", mClassName, name, desc));
         }
 
         final Set<String> memberAnnotations = Sets.newHashSet(mGraph.getAnnotations(method));
@@ -258,14 +237,12 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
         checkForRemovedAnnotation(mAnnotations, mClassName);
     }
 
-    private static void checkForAddedAnnotation(String desc, Set<String> annotations, String target) {
+    private static void checkForAddedAnnotation(
+            String desc, Set<String> annotations, String target) {
         String name = Type.getType(desc).getInternalName();
         if (!annotations.remove(name)) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Annotation %s on %s added.",
-                            name,
-                            target));
+                    String.format("Annotation %s on %s added.", name, target));
         }
     }
 
@@ -273,10 +250,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
         String annotation = Iterables.getFirst(annotations, null);
         if (annotation != null) {
             throw new IncrementalShrinker.IncrementalRunImpossibleException(
-                    String.format(
-                            "Annotation %s on %s removed.",
-                            annotation,
-                            target));
+                    String.format("Annotation %s on %s removed.", annotation, target));
         }
     }
 }
