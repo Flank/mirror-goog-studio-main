@@ -21,12 +21,10 @@ import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import org.junit.Test;
 
 /**
  * Tests for {@link FullRunShrinker}.
@@ -1349,6 +1347,45 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Either 'a' or 'b'.
         Set<String> members = getMembers("Foo");
         Truth.assertThat(members).hasSize(1);
+    }
+
+    @Test
+    public void commasInKeepRules() throws Exception {
+        Files.write(
+                TestClasses.classWithEmptyMethods("Aaa", "a:()V"),
+                new File(mTestPackageDir, "Aaa.class"));
+        Files.write(
+                TestClasses.classWithEmptyMethods("Bbb", "b:()V"),
+                new File(mTestPackageDir, "Bbb.class"));
+        Files.write(
+                TestClasses.classWithEmptyMethods("Ccc", "c:()V"),
+                new File(mTestPackageDir, "Ccc.class"));
+
+        run(parseKeepRules("-keep class test.Aaa,**.Ccc"));
+
+        assertMembersLeft("Aaa", "<init>:()V");
+        assertMembersLeft("Ccc", "<init>:()V");
+        assertClassSkipped("Bbb");
+    }
+
+    @Test
+    public void modifiers_volatile() throws Exception {
+        Files.write(TestClasses.Modifiers.main(), new File(mTestPackageDir, "Main.class"));
+
+        // Volatile and bridge use the same bitmask.
+        run(parseKeepRules("-keep class test.Main { volatile *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "volatileField:I");
+    }
+
+    @Test
+    public void modifiers_bridge() throws Exception {
+        Files.write(TestClasses.Modifiers.main(), new File(mTestPackageDir, "Main.class"));
+
+        // Volatile and bridge use the same bitmask.
+        run(parseKeepRules("-keep class test.Main { bridge *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "bridgeMethod:()V");
     }
 
     private void run(String className, String... methods) throws IOException {

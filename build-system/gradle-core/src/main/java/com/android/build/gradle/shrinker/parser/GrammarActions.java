@@ -20,7 +20,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.antlr.runtime.ANTLRFileStream;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CharStream;
@@ -29,40 +32,48 @@ import org.antlr.runtime.RecognitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.regex.Pattern;
-
-/**
- * Grammar actions for the ProGuard config files parser, forked from Jack.
- */
+/** Grammar actions for the ProGuard config files parser, forked from Jack. */
 @SuppressWarnings("unused") // These methods are called by the ANTLR-generated parser.
 public class GrammarActions {
-
     private static Logger logger = LoggerFactory.getLogger(GrammarActions.class);
 
-    public static void parse(
-            @NonNull File proguardFile,
-            @NonNull Flags flags) throws RecognitionException {
+    enum FilterSeparator {
+        GENERAL(".", ".*"),
+        FILE("[^/]", "[^/]*"),
+        CLASS("[^/]", "[^/]*"), // Shrinker works on "internal" class names.
+        ATTRIBUTE(".", ".*");
+
+        /** Represents the pattern equivalent to Proguard's "?" */
+        @NonNull private final String singleCharWildcard;
+
+        /** Represents the pattern equivalent to Proguard's "*" */
+        @NonNull private final String multipleCharWildcard;
+
+        FilterSeparator(@NonNull String singleCharWildcard, @NonNull String multipleCharWildcard) {
+            this.singleCharWildcard = singleCharWildcard;
+            this.multipleCharWildcard = multipleCharWildcard;
+        }
+    }
+
+    public static void parse(@NonNull File proguardFile, @NonNull Flags flags)
+            throws RecognitionException {
         ProguardParser parser = createParserFromFile(proguardFile);
         parser.prog(flags, proguardFile.getParentFile().getPath());
     }
 
-    public static void parse(
-            @NonNull String input,
-            @NonNull Flags flags) throws RecognitionException {
+    public static void parse(@NonNull String input, @NonNull Flags flags)
+            throws RecognitionException {
         ProguardParser parser = createParserFromString(input);
         parser.prog(flags, null);
     }
 
     static void include(
-            @NonNull String fileName,
-            @NonNull String baseDirectory,
-            @NonNull Flags flags) throws RecognitionException {
+            @NonNull String fileName, @NonNull String baseDirectory, @NonNull Flags flags)
+            throws RecognitionException {
         parse(getFileFromBaseDir(baseDirectory, fileName), flags);
     }
 
-    static void dontWarn(@NonNull Flags flags, @NonNull FilterSpecification classSpec) {
+    static void dontWarn(@NonNull Flags flags, @NonNull List<FilterSpecification> classSpec) {
         flags.dontWarn(classSpec);
     }
 
@@ -73,10 +84,7 @@ public class GrammarActions {
     static void addKeepClassMembers(
             @NonNull Flags flags,
             @NonNull ClassSpecification classSpecification,
-            @Nullable KeepModifier keepModifier) {
-        if (keepModifier == null) {
-            keepModifier = KeepModifier.NONE;
-        }
+            @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
         flags.addKeepClassMembers(classSpecification);
     }
@@ -84,10 +92,7 @@ public class GrammarActions {
     static void addKeepClassSpecification(
             @NonNull Flags flags,
             @NonNull ClassSpecification classSpecification,
-            @Nullable KeepModifier keepModifier) {
-        if (keepModifier == null) {
-            keepModifier = KeepModifier.NONE;
-        }
+            @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
         flags.addKeepClassSpecification(classSpecification);
     }
@@ -95,47 +100,53 @@ public class GrammarActions {
     static void addKeepClassesWithMembers(
             @NonNull Flags flags,
             @NonNull ClassSpecification classSpecification,
-            @Nullable KeepModifier keepModifier) {
-        if (keepModifier == null) {
-            keepModifier = KeepModifier.NONE;
-        }
+            @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
         flags.addKeepClassesWithMembers(classSpecification);
     }
 
+    static void addAccessFlag(
+            @NonNull ModifierSpecification modSpec,
+            @NonNull ModifierSpecification.AccessFlag accessFlag,
+            boolean hasNegator) {
+        modSpec.addAccessFlag(accessFlag, hasNegator);
+    }
+
     static void addModifier(
             @NonNull ModifierSpecification modSpec,
-            int modifier,
+            @NonNull ModifierSpecification.Modifier modifier,
             boolean hasNegator) {
         modSpec.addModifier(modifier, hasNegator);
     }
 
     @NonNull
     static AnnotationSpecification annotation(
-            @NonNull String annotationName,
-            boolean hasNameNegator) {
-        NameSpecification name = name(annotationName);
+            @NonNull String annotationName, boolean hasNameNegator) {
+        NameSpecification name = name(annotationName, FilterSeparator.CLASS);
         name.setNegator(hasNameNegator);
         return new AnnotationSpecification(name);
     }
 
     @NonNull
     static ClassSpecification classSpec(
-            @NonNull String name,
-            boolean hasNameNegator,
+            @NonNull List<NameSpecification> classNames,
             @NonNull ClassTypeSpecification classType,
             @Nullable AnnotationSpecification annotation,
             @NonNull ModifierSpecification modifier) {
-        NameSpecification nameSpec;
-        if (name.equals("*")) {
-            nameSpec = name("**");
-        } else {
-            nameSpec = name(name);
-        }
-        nameSpec.setNegator(hasNameNegator);
-        ClassSpecification classSpec = new ClassSpecification(nameSpec, classType, annotation);
+        ClassSpecification classSpec = new ClassSpecification(classNames, classType, annotation);
         classSpec.setModifier(modifier);
         return classSpec;
+    }
+
+    static NameSpecification className(@NonNull String name, boolean hasNameNegator) {
+        NameSpecification nameSpec;
+        if (name.equals("*")) {
+            nameSpec = name("**", FilterSeparator.CLASS);
+        } else {
+            nameSpec = name(name, FilterSeparator.CLASS);
+        }
+        nameSpec.setNegator(hasNameNegator);
+        return nameSpec;
     }
 
     @NonNull
@@ -147,9 +158,10 @@ public class GrammarActions {
 
     @NonNull
     static InheritanceSpecification createInheritance(
-      /*@NonNull*/ String className, boolean hasNameNegator,
+            /*@NonNull*/ String className,
+            boolean hasNameNegator,
             @NonNull AnnotationSpecification annotationType) {
-        NameSpecification nameSpec = name(className);
+        NameSpecification nameSpec = name(className, FilterSeparator.CLASS);
         nameSpec.setNegator(hasNameNegator);
         return new InheritanceSpecification(nameSpec, annotationType);
     }
@@ -162,21 +174,31 @@ public class GrammarActions {
             @NonNull ModifierSpecification modifier) {
         NameSpecification typeSignatureSpec = null;
         if (typeSignature != null) {
-            typeSignatureSpec = name(typeSignature);
+            typeSignatureSpec = name(typeSignature, FilterSeparator.CLASS);
         } else {
             checkState(name.equals("*"), "No type signature, but name is not <fields> or *.");
             name = "*";
         }
-        classSpec.add(new FieldSpecification(name(name), modifier, typeSignatureSpec, annotationType));
+
+        classSpec.add(
+                new FieldSpecification(
+                        name(name, FilterSeparator.GENERAL),
+                        modifier,
+                        typeSignatureSpec,
+                        annotationType));
     }
 
-    static void fieldOrAnyMember(@NonNull ClassSpecification classSpec,
-            @Nullable AnnotationSpecification annotationType, @Nullable String typeSig,
-            @NonNull String name, @NonNull ModifierSpecification modifier) {
+    static void fieldOrAnyMember(
+            @NonNull ClassSpecification classSpec,
+            @Nullable AnnotationSpecification annotationType,
+            @Nullable String typeSig,
+            @NonNull String name,
+            @NonNull ModifierSpecification modifier) {
         if (typeSig == null) {
             assert name.equals("*");
             // This is the "any member" case, we have to handle methods as well.
-            method(classSpec,
+            method(
+                    classSpec,
                     annotationType,
                     getSignature("***", 0),
                     "*",
@@ -187,10 +209,11 @@ public class GrammarActions {
     }
 
     static void filter(
-            @NonNull FilterSpecification filter,
+            @NonNull List<FilterSpecification> filter,
             boolean negator,
-            @NonNull String filterName) {
-        filter.addElement(name(filterName), negator);
+            @NonNull String filterName,
+            @NonNull FilterSeparator separator) {
+        filter.add(new FilterSpecification(name(filterName, separator), negator));
     }
 
     @NonNull
@@ -241,7 +264,9 @@ public class GrammarActions {
                 sig.append("V");
                 break;
             default:
-                sig.append("L").append(convertNameToPattern(name)).append(";");
+                sig.append("L")
+                        .append(convertNameToPattern(name, FilterSeparator.CLASS))
+                        .append(";");
                 break;
         }
 
@@ -255,7 +280,7 @@ public class GrammarActions {
             @NonNull String name,
             @NonNull String signature,
             @Nullable ModifierSpecification modifier) {
-        String fullName = "^" + convertNameToPattern(name);
+        String fullName = "^" + convertNameToPattern(name, FilterSeparator.CLASS);
         fullName += ":";
         fullName += signature;
         if (typeSig != null) {
@@ -266,16 +291,12 @@ public class GrammarActions {
         fullName += "$";
         Pattern pattern = Pattern.compile(fullName);
         classSpec.add(
-                new MethodSpecification(
-                        new NameSpecification(pattern),
-                        modifier,
-                        annotationType));
+                new MethodSpecification(new NameSpecification(pattern), modifier, annotationType));
     }
 
     @NonNull
-    static NameSpecification name(@NonNull String name) {
-        String transformedName = "^" +
-                convertNameToPattern(name) + "$";
+    static NameSpecification name(@NonNull String name, @NonNull FilterSeparator filterSeparator) {
+        String transformedName = "^" + convertNameToPattern(name, filterSeparator) + "$";
 
         Pattern pattern = Pattern.compile(transformedName);
         return new NameSpecification(pattern);
@@ -283,9 +304,7 @@ public class GrammarActions {
 
     static void unsupportedFlag(String flag) {
         throw new IllegalArgumentException(
-                String.format(
-                        "Flag %s is not supported by the built-in shrinker.",
-                        flag));
+                String.format("Flag %s is not supported by the built-in shrinker.", flag));
     }
 
     static void ignoredFlag(String flag, boolean printWarning) {
@@ -295,18 +314,23 @@ public class GrammarActions {
     }
 
     @NonNull
-    private static String convertNameToPattern(@NonNull String name) {
+    private static String convertNameToPattern(
+            @NonNull String name, @NonNull FilterSeparator separator) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
             switch (c) {
                 case '.':
-                    sb.append('/');
+                    if (separator == FilterSeparator.CLASS) {
+                        sb.append('/');
+                    } else {
+                        sb.append('.');
+                    }
                     break;
                 case '?':
                     // ? matches any single character in a name
                     // but not the package separator
-                    sb.append("[^/]");
+                    sb.append(separator.singleCharWildcard);
                     break;
                 case '*':
                     int j = i + 1;
@@ -318,7 +342,7 @@ public class GrammarActions {
                     } else {
                         // * matches any part of a name not containing
                         // the package separator or directory separator
-                        sb.append("[^/]*");
+                        sb.append(separator.multipleCharWildcard);
                     }
                     break;
                 case '$':
