@@ -22,9 +22,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-/**
- * TODO: Document.
- */
+/** TODO: Document. */
 public class TestClassesForIncremental implements Opcodes {
 
     public static class Simple {
@@ -35,8 +33,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -52,15 +49,12 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Bbb");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>",
-                        "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -78,8 +72,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -95,15 +88,12 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Bbb");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>",
-                        "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m2", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m2", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -120,8 +110,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -137,15 +126,12 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Bbb");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>",
-                        "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -156,10 +142,8 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -177,8 +161,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -194,22 +177,24 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Bbb");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>",
-                        "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
             }
             {
-                fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "sString", "Ljava/lang/String;", null,
-                        null);
+                fv =
+                        cw.visitField(
+                                ACC_PUBLIC + ACC_STATIC,
+                                "sString",
+                                "Ljava/lang/String;",
+                                null,
+                                null);
                 fv.visitEnd();
             }
             cw.visitEnd();
@@ -224,8 +209,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -241,22 +225,24 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/Bbb");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>",
-                        "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Bbb", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitTypeInsn(NEW, "test/Aaa");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>",
-                        "()V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V",
-                        false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/Aaa", "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "test/Aaa", "m1", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
             }
             {
-                fv = cw.visitField(ACC_PRIVATE + ACC_STATIC, "sString", "Ljava/lang/String;", null,
-                        null);
+                fv =
+                        cw.visitField(
+                                ACC_PRIVATE + ACC_STATIC,
+                                "sString",
+                                "Ljava/lang/String;",
+                                null,
+                                null);
                 fv.visitEnd();
             }
             cw.visitEnd();
@@ -271,8 +257,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Aaa", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Aaa", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -309,8 +294,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -333,8 +317,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(0, "<init>", "()V", null, null);
@@ -357,8 +340,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_SUPER, "test/Bbb", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -381,8 +363,13 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null,
-                    "java/lang/Object", new String[] {"java/io/Serializable"});
+            cw.visit(
+                    V1_6,
+                    ACC_PUBLIC + ACC_SUPER,
+                    "test/Bbb",
+                    null,
+                    "java/lang/Object",
+                    new String[] {"java/io/Serializable"});
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -405,8 +392,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null,
-                    "test/Aaa", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "test/Aaa", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -422,7 +408,7 @@ public class TestClassesForIncremental implements Opcodes {
             return cw.toByteArray();
         }
     }
-    
+
     public static class Cycle {
         public static byte[] main1() throws Exception {
 
@@ -431,8 +417,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -448,8 +433,7 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitCode();
                 mv.visitTypeInsn(NEW, "test/CycleOne");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleOne",
-                        "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleOne", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
@@ -467,8 +451,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -498,8 +481,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleOne", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleOne", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -508,8 +490,7 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitTypeInsn(NEW, "test/CycleTwo");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleTwo",
-                        "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleTwo", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);
@@ -527,8 +508,7 @@ public class TestClassesForIncremental implements Opcodes {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleTwo", null,
-                    "java/lang/Object", null);
+            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/CycleTwo", null, "java/lang/Object", null);
 
             {
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -537,8 +517,7 @@ public class TestClassesForIncremental implements Opcodes {
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitTypeInsn(NEW, "test/CycleOne");
                 mv.visitInsn(DUP);
-                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleOne",
-                        "<init>", "()V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, "test/CycleOne", "<init>", "()V", false);
                 mv.visitInsn(POP);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1);

@@ -18,11 +18,9 @@ package com.android.build.gradle.shrinker;
 
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.google.common.io.Files;
-
+import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 /**
  * Tests for {@link com.android.build.gradle.shrinker.parser.ProguardParser}, related to interfaces
@@ -38,7 +36,8 @@ public class ProguardParserTest_Interfaces extends AbstractShrinkerTest {
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
         Files.write(
-                Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),

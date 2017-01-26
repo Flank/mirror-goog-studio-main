@@ -18,17 +18,19 @@ package com.android.build.gradle.shrinker;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.shrinker.parser.MethodSpecification;
 import com.android.build.gradle.shrinker.parser.AnnotationSpecification;
 import com.android.build.gradle.shrinker.parser.ClassSpecification;
 import com.android.build.gradle.shrinker.parser.FieldSpecification;
 import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.InheritanceSpecification;
 import com.android.build.gradle.shrinker.parser.Matcher;
+import com.android.build.gradle.shrinker.parser.MethodSpecification;
+import com.android.build.gradle.shrinker.parser.ModifierSpecification;
+import com.android.build.gradle.shrinker.parser.ModifierSpecification.ModifierTarget;
+import com.android.build.gradle.shrinker.parser.NameSpecification;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +153,7 @@ public class ProguardFlagsKeepRules implements KeepRules {
             FieldSpecification spec,
             ShrinkerGraph<T> graph) {
         return matches(spec.getName(), graph.getMemberName(field))
-                && matches(spec.getModifier(), graph.getModifiers(field))
+                && matches(spec.getModifier(), graph.getModifiers(field), ModifierTarget.FIELD)
                 && matches(spec.getTypeSignature(), graph.getMemberDescriptor(field))
                 && matchesAnnotations(field, spec.getAnnotations(), graph);
     }
@@ -163,7 +165,7 @@ public class ProguardFlagsKeepRules implements KeepRules {
         String nameAndDescriptor =
                 graph.getMemberName(method) + ":" + graph.getMemberDescriptor(method);
         return matches(spec.getName(), nameAndDescriptor)
-                && matches(spec.getModifiers(), graph.getModifiers(method))
+                && matches(spec.getModifiers(), graph.getModifiers(method), ModifierTarget.METHOD)
                 && matchesAnnotations(method, spec.getAnnotations(), graph);
     }
 
@@ -172,11 +174,21 @@ public class ProguardFlagsKeepRules implements KeepRules {
             ClassSpecification spec,
             ShrinkerGraph<T> graph) {
         int classModifiers = graph.getModifiers(klass);
-        return matches(spec.getName(), graph.getClassName(klass))
+        return matchesClassName(spec.getNames(), graph.getClassName(klass))
                 && matches(spec.getClassType(), classModifiers)
-                && matches(spec.getModifier(), classModifiers)
+                && matches(spec.getModifier(), classModifiers, ModifierTarget.CLASS)
                 && matchesAnnotations(klass, spec.getAnnotation(), graph)
                 && matchesInheritance(klass, spec.getInheritance(), graph);
+    }
+
+    private static boolean matchesClassName(List<NameSpecification> specs, String className) {
+        return specs.stream().anyMatch(s -> s.matches(className));
+    }
+
+    private static boolean matches(
+            @Nullable ModifierSpecification spec, int modifiers, @NonNull ModifierTarget target) {
+        return spec == null
+                || spec.matches(new ModifierSpecification.MemberModifier(target, modifiers));
     }
 
     private static <U> boolean matches(@Nullable Matcher<U> matcher, @NonNull U value) {
