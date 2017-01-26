@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -44,6 +44,8 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -52,7 +54,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -64,9 +65,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -79,149 +81,165 @@ public class PackageAtom extends IncrementalTask {
     /** Name of directory, inside the intermediate directory, where zip caches are kept. */
     private static final String ZIP_DIFF_CACHE_DIR = "zip-cache";
 
-    /** Zip caches to allow incremental updates. */
-    private FileCacheByPath cacheByPath;
-
     @Override
     protected boolean isIncremental() {
         return true;
     }
 
     @Override
-    protected void doFullTaskAction() throws IOException {
+    protected void doFullTaskAction()
+            throws IOException, InterruptedException, LoggedErrorException {
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         // Clear the cache to make sure we do not do an incremental build.
         cacheByPath.clear();
 
-        for (String atomName : getFlatAtomList()) {
-            // Also clear the intermediate build directory. We don't know if anything is in there and
-            // since this is a full build, we don't want to get any interference from previous state.
-            File incrementalFolder = new File(getIncrementalFolder(), atomName);
-            FileUtils.mkdirs(incrementalFolder);
-            FileUtils.deleteDirectoryContents(incrementalFolder);
+        for (AtomConfig.AtomInfo atomInfo : atomConfigTask.getAtomInfoCollection()) {
+            executor.execute(
+                    () -> {
+                        // Also clear the intermediate build directory. We don't know if anything is in there and
+                        // since this is a full build, we don't want to get any interference from previous state.
+                        File incrementalFolder =
+                                new File(getIncrementalFolder(), atomInfo.getName());
+                        FileUtils.mkdirs(incrementalFolder);
+                        FileUtils.deleteDirectoryContents(incrementalFolder);
 
-            // Additionally, make sure we have no previous package, if it exists.
-            getOutputFiles().get(atomName).delete();
+                        // Additionally, make sure we have no previous package, if it exists.
+                        atomInfo.getFinalOutputFile().delete();
 
-            ImmutableMap<RelativeFile, FileStatus> updatedDex =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getDexFolders().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> updatedJavaResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getJavaResourceFiles().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> updatedAssets =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getAssetFolders().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getResourceFiles().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getJniFolders().get(atomName)));
+                        ImmutableMap<RelativeFile, FileStatus> updatedDex =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getFinalDexDir()));
+                        ImmutableMap<RelativeFile, FileStatus> updatedJavaResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getJavaResourcesDir()));
+                        ImmutableMap<RelativeFile, FileStatus> updatedAssets =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getAssetDir()));
+                        ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getPackageOutputFile()));
+                        ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getJniDir()));
 
-            doTask(
-                    atomName,
-                    updatedDex,
-                    updatedJavaResources,
-                    updatedAssets,
-                    updatedAndroidResources,
-                    updatedJniResources);
+                        doTask(
+                                atomInfo,
+                                updatedDex,
+                                updatedJavaResources,
+                                updatedAssets,
+                                updatedAndroidResources,
+                                updatedJniResources);
 
-            // Update the known files.
-            KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalFolder);
-            saveData.setInputSet(updatedDex.keySet(), InputSet.DEX);
-            saveData.setInputSet(updatedJavaResources.keySet(), InputSet.JAVA_RESOURCE);
-            saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
-            saveData.setInputSet(updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
-            saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-            saveData.saveCurrentData();
+                        // Update the known files.
+                        KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalFolder);
+                        saveData.setInputSet(updatedDex.keySet(), InputSet.DEX);
+                        saveData.setInputSet(updatedJavaResources.keySet(), InputSet.JAVA_RESOURCE);
+                        saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
+                        saveData.setInputSet(
+                                updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
+                        saveData.setInputSet(
+                                updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
+                        saveData.saveCurrentData();
+                        return null;
+                    });
         }
+        executor.waitForTasksWithQuickFail(true);
     }
 
     @Override
-    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
+    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
+            throws InterruptedException, LoggedErrorException {
         checkNotNull(changedInputs, "changedInputs == null");
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-        for (String atomName : getFlatAtomList()) {
-            File incrementalFolder = new File(getIncrementalFolder(), atomName);
-            KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalFolder);
+        for (AtomConfig.AtomInfo atomInfo : atomConfigTask.getAtomInfoCollection()) {
+            executor.execute(
+                    () -> {
+                        String atomName = atomInfo.getName();
+                        File incrementalFolder = new File(getIncrementalFolder(), atomName);
+                        KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalFolder);
 
-            Set<Runnable> cacheUpdates = new HashSet<>();
-            ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.DEX,
-                            Collections.singleton(getDexFolders().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
+                        Set<Runnable> cacheUpdates = new HashSet<>();
+                        ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
+                                KnownFilesSaveData.getChangedInputs(
+                                        changedInputs,
+                                        saveData,
+                                        InputSet.DEX,
+                                        Collections.singleton(atomInfo.getFinalDexDir()),
+                                        cacheByPath,
+                                        cacheUpdates);
 
-            ImmutableMap<RelativeFile, FileStatus> changedJavaResources =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.JAVA_RESOURCE,
-                            Collections.singleton(getJavaResourceFiles().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
+                        ImmutableMap<RelativeFile, FileStatus> changedJavaResources =
+                                KnownFilesSaveData.getChangedInputs(
+                                        changedInputs,
+                                        saveData,
+                                        InputSet.JAVA_RESOURCE,
+                                        Collections.singleton(atomInfo.getJavaResourcesDir()),
+                                        cacheByPath,
+                                        cacheUpdates);
 
-            ImmutableMap<RelativeFile, FileStatus> changedAssets =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.ASSET,
-                            Collections.singleton(getAssetFolders().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
+                        ImmutableMap<RelativeFile, FileStatus> changedAssets =
+                                KnownFilesSaveData.getChangedInputs(
+                                        changedInputs,
+                                        saveData,
+                                        InputSet.ASSET,
+                                        Collections.singleton(atomInfo.getAssetDir()),
+                                        cacheByPath,
+                                        cacheUpdates);
 
-            ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.ANDROID_RESOURCE,
-                            Collections.singleton(getResourceFiles().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
+                        ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
+                                KnownFilesSaveData.getChangedInputs(
+                                        changedInputs,
+                                        saveData,
+                                        InputSet.ANDROID_RESOURCE,
+                                        Collections.singleton(atomInfo.getPackageOutputFile()),
+                                        cacheByPath,
+                                        cacheUpdates);
 
-            ImmutableMap<RelativeFile, FileStatus> changedNLibs =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.NATIVE_RESOURCE,
-                            Collections.singleton(getJniFolders().get(atomName)),
-                            cacheByPath,
-                            cacheUpdates);
+                        ImmutableMap<RelativeFile, FileStatus> changedNLibs =
+                                KnownFilesSaveData.getChangedInputs(
+                                        changedInputs,
+                                        saveData,
+                                        InputSet.NATIVE_RESOURCE,
+                                        Collections.singleton(atomInfo.getJniDir()),
+                                        cacheByPath,
+                                        cacheUpdates);
 
-            doTask(
-                    atomName,
-                    changedDexFiles,
-                    changedJavaResources,
-                    changedAssets,
-                    changedAndroidResources,
-                    changedNLibs);
+                        doTask(
+                                atomInfo,
+                                changedDexFiles,
+                                changedJavaResources,
+                                changedAssets,
+                                changedAndroidResources,
+                                changedNLibs);
 
-            // Update the cache
-            cacheUpdates.forEach(Runnable::run);
+                        // Update the cache
+                        cacheUpdates.forEach(Runnable::run);
 
-            // Update the save data keep files.
-            ImmutableMap<RelativeFile, FileStatus> allDex =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getDexFolders().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> allJavaResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getJavaResourceFiles().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getResourceFiles().get(atomName)));
-            ImmutableMap<RelativeFile, FileStatus> allJniResources =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getJniFolders().get(atomName)));
+                        // Update the save data keep files.
+                        ImmutableMap<RelativeFile, FileStatus> allDex =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getFinalDexDir()));
+                        ImmutableMap<RelativeFile, FileStatus> allJavaResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getJavaResourcesDir()));
+                        ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getPackageOutputFile()));
+                        ImmutableMap<RelativeFile, FileStatus> allJniResources =
+                                IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                        Collections.singleton(atomInfo.getJniDir()));
 
-            saveData.setInputSet(allDex.keySet(), InputSet.DEX);
-            saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
-            saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
-            saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-            saveData.saveCurrentData();
+                        saveData.setInputSet(allDex.keySet(), InputSet.DEX);
+                        saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
+                        saveData.setInputSet(
+                                allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
+                        saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
+                        saveData.saveCurrentData();
+                        return null;
+                    });
         }
+        executor.waitForTasksWithQuickFail(true);
     }
 
     /**
@@ -236,7 +254,7 @@ public class PackageAtom extends IncrementalTask {
      * @throws IOException failed to package the APK
      */
     private void doTask(
-            @NonNull String atomName,
+            @NonNull AtomConfig.AtomInfo atomInfo,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedDex,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
@@ -273,7 +291,7 @@ public class PackageAtom extends IncrementalTask {
 
             ApkCreatorFactory.CreationData creationData =
                     new ApkCreatorFactory.CreationData(
-                            getOutputFiles().get(atomName),
+                            atomInfo.getFinalOutputFile(),
                             key,
                             certificate,
                             v1SigningEnabled,
@@ -282,8 +300,8 @@ public class PackageAtom extends IncrementalTask {
                             getBuilder().getCreatedBy(),
                             getMinSdkVersion(),
                             PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                    getManifestFiles().get(atomName)),
-                            getNoCompressPredicate(atomName));
+                                    atomInfo.getManifestFile()),
+                            getNoCompressPredicate(atomInfo.getManifestFile()));
 
             getLogger()
                     .debug(
@@ -301,7 +319,7 @@ public class PackageAtom extends IncrementalTask {
             try (IncrementalPackager packager =
                     new IncrementalPackager(
                             creationData,
-                            new File(getIncrementalFolder(), atomName),
+                            new File(getIncrementalFolder(), atomInfo.getName()),
                             ApkCreatorFactories.fromProjectProperties(
                                     getProject(), getDebugBuild()),
                             ImmutableSet.of(),
@@ -337,122 +355,54 @@ public class PackageAtom extends IncrementalTask {
                         });
     }
 
-    private Predicate<String> getNoCompressPredicate(String atomName) {
-        return PackagingUtils.getNoCompressPredicate(aaptOptions, getManifestFiles().get(atomName));
+    private Predicate<String> getNoCompressPredicate(File manifestFile) {
+        return PackagingUtils.getNoCompressPredicate(aaptOptions, manifestFile);
     }
 
     @InputFiles
     @NonNull
-    public Collection<File> getResourceFileCollections() {
-        return getResourceFiles().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getResourceFiles() {
-        return resourceFiles;
-    }
-
-    public void setResourceFiles(@NonNull Map<String, File> resourceFiles) {
-        this.resourceFiles = resourceFiles;
+    public Collection<File> getPackageOutputFilesCollection() {
+        return atomConfigTask.getPackageOutputFilesCollection();
     }
 
     @OutputFiles
     @NonNull
-    public Collection<File> getOutputFileCollections() {
-        return getOutputFiles().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getOutputFiles() {
-        return outputFiles;
-    }
-
-    public void setOutputFiles(@NonNull Map<String, File> outputFiles) {
-        this.outputFiles = outputFiles;
+    public Collection<File> getFinalOutputFilesCollections() {
+        return atomConfigTask.getFinalOutputFilesCollection();
     }
 
     @InputFiles
     @Optional
     @NonNull
-    public Collection<File> getJavaResoruceFilesCollection() {
-        return getJavaResourceFiles().values();
-    }
-
-    @Input
-    @Optional
-    @NonNull
-    public Map<String, File> getJavaResourceFiles() {
-        return javaResourceFiles;
-    }
-
-    public void setJavaResourceFiles(@NonNull Map<String, File> javaResourceFiles) {
-        this.javaResourceFiles = javaResourceFiles;
+    public FileCollection getJavaResourceDirsCollection() {
+        return atomJavaResDirs.getArtifactFiles();
     }
 
     @InputFiles
     @Optional
     @NonNull
-    public Collection<File> getJniFoldersCollection() {
-        return getJniFolders().values();
-    }
-
-    @Input
-    @Optional
-    @NonNull
-    public Map<String, File> getJniFolders() {
-        return jniFolders;
-    }
-
-    public void setJniFolders(@NonNull Map<String, File> jniFolders) {
-        this.jniFolders = jniFolders;
+    public FileCollection getJniDirsCollection() {
+        return atomJniDirs.getArtifactFiles();
     }
 
     @InputFiles
     @Optional
     @NonNull
-    public Collection<File> getDexFoldersCollection() {
-        return getDexFolders().values();
-    }
-
-    @Input
-    @Optional
-    @NonNull
-    public Map<String, File> getDexFolders() {
-        return dexFolders;
-    }
-
-    public void setDexFolders(@NonNull Map<String, File> dexFolders) {
-        this.dexFolders = dexFolders;
+    public Collection<File> getFinalDexDirsCollection() {
+        return atomConfigTask.getFinalDexDirsCollection();
     }
 
     @InputFiles
     @Optional
     @NonNull
-    public Collection<File> getAssetFoldersCollection() {
-        return getAssetFolders().values();
+    public FileCollection getAssetDirsCollection() {
+        return atomAssetDirs.getArtifactFiles();
     }
 
-    @Input
-    @Optional
+    @InputFiles
     @NonNull
-    public Map<String, File> getAssetFolders() {
-        return assetFolders;
-    }
-
-    public void setAssetFolders(@NonNull Map<String, File> assetFolders) {
-        this.assetFolders = assetFolders;
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getManifestFiles() {
-        return manifestFiles;
-    }
-
-    public void setManifestFiles(Map<String, File> manifestFiles) {
-        this.manifestFiles = manifestFiles;
+    public FileCollection getManifestFiles() {
+        return atomManifests.getArtifactFiles();
     }
 
     public void setAaptOptions(AaptOptions aaptOptions) {
@@ -511,7 +461,7 @@ public class PackageAtom extends IncrementalTask {
     @Input
     public List<String> getNativeLibrariesPackagingModeName() {
         return getManifestFiles()
-                .values()
+                .getFiles()
                 .stream()
                 .map(
                         file ->
@@ -527,29 +477,20 @@ public class PackageAtom extends IncrementalTask {
                 Collections.<String>emptyList());
     }
 
-    @Input
-    public List<String> getFlatAtomList() {
-        return flatAtomList.get();
-    }
+    /** Zip caches to allow incremental updates. */
+    private FileCacheByPath cacheByPath;
 
-    public void setFlatAtomList(@NonNull Supplier<List<String>> flatAtomList) {
-        this.flatAtomList = flatAtomList;
-    }
-
-    private Map<String, File> resourceFiles;
-    private Map<String, File> outputFiles;
-    private Map<String, File> javaResourceFiles;
-    private Map<String, File> jniFolders;
-    private Map<String, File> dexFolders;
-    private Map<String, File> assetFolders;
-    private Map<String, File> manifestFiles;
     private boolean debugBuild;
     private boolean jniDebugBuild;
     private CoreSigningConfig signingConfig;
     private PackagingOptions packagingOptions;
     private ApiVersion minSdkVersion;
     private AaptOptions aaptOptions;
-    private Supplier<List<String>> flatAtomList;
+    private ArtifactCollection atomManifests;
+    private ArtifactCollection atomJavaResDirs;
+    private ArtifactCollection atomJniDirs;
+    private ArtifactCollection atomAssetDirs;
+    private AtomConfig atomConfigTask;
 
     public static class ConfigAction implements TaskConfigAction<PackageAtom> {
 
@@ -588,80 +529,6 @@ public class PackageAtom extends IncrementalTask {
             packageAtom.cacheByPath = new FileCacheByPath(cacheByPathDir);
 
             ConventionMappingHelper.map(
-                    packageAtom,
-                    "resourceFiles",
-                    () -> {
-                        Map<String, File> resourceFiles = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            resourceFiles.put(
-                                    atom.getAtomName(),
-                                    scope.getProcessResourcePackageOutputFile(atom));
-                        }
-                        return resourceFiles;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "outputFiles",
-                    () -> {
-                        Map<String, File> outputFiles = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            outputFiles.put(atom.getAtomName(), variantScope.getPackageAtom(atom));
-                        }
-                        return outputFiles;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "javaResourceFiles",
-                    () -> {
-                        Map<String, File> javaResourceFiles = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            javaResourceFiles.put(atom.getAtomName(), atom.getJavaResFolder());
-                        }
-                        return javaResourceFiles;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "jniFolders",
-                    () -> {
-                        Map<String, File> jniFolders = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            jniFolders.put(atom.getAtomName(), atom.getLibFolder());
-                        }
-                        return jniFolders;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "dexFolders",
-                    () -> {
-                        Map<String, File> dexFolders = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            dexFolders.put(
-                                    atom.getAtomName(), variantScope.getDexOutputFolder(atom));
-                        }
-                        return dexFolders;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "assetFolders",
-                    () -> {
-                        Map<String, File> assetFolders = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            assetFolders.put(atom.getAtomName(), atom.getAssetsFolder());
-                        }
-                        return assetFolders;
-                    });
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "manifestFiles",
-                    () -> {
-                        Map<String, File> manifestFiles = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            manifestFiles.put(atom.getAtomName(), atom.getManifest());
-                        }
-                        return manifestFiles;
-                    });
-
-            ConventionMappingHelper.map(
                     packageAtom, "debugBuild", config.getBuildType()::isDebuggable);
             ConventionMappingHelper.map(
                     packageAtom, "jniDebugBuild", config.getBuildType()::isJniDebuggable);
@@ -673,12 +540,27 @@ public class PackageAtom extends IncrementalTask {
             packageAtom.setMinSdkVersion(variantScope.getMinSdkVersion());
             packageAtom.aaptOptions = globalScope.getExtension().getAaptOptions();
 
-            packageAtom.setFlatAtomList(
-                    () ->
-                            config.getFlatAndroidAtomsDependencies()
-                                    .stream()
-                                    .map(AtomDependency::getAtomName)
-                                    .collect(Collectors.toList()));
+            packageAtom.atomManifests =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
+            packageAtom.atomJavaResDirs =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_JAVA_RES);
+            packageAtom.atomJniDirs =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_JNI);
+            packageAtom.atomAssetDirs =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_ASSETS);
+            packageAtom.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
         }
     }
 }

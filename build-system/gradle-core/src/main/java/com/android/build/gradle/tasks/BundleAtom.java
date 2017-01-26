@@ -66,10 +66,8 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
 
     @TaskAction
     public void taskAction() throws IOException {
-        File bundleFolder = getBundleFolder();
-
         // Copy all the native libs to be bundled.
-        File libBundleFolder = new File(bundleFolder, FD_NATIVE_LIBS);
+        File libBundleFolder = getLibBundleFolder();
         deleteDirectoryContents(libBundleFolder);
         for (File jniFolder : getJniFolders()) {
             for (File lib : FileUtils.find(jniFolder, Pattern.compile("\\.so$"))) {
@@ -83,7 +81,7 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
         }
 
         // Copy all the dex files to be bundled.
-        File dexBundleFolder = new File(bundleFolder, FD_DEX);
+        File dexBundleFolder = getDexBundleFolder();
         deleteDirectoryContents(dexBundleFolder);
         for (File dexFolder : getDexFolders()) {
             for (File dexFile : FileUtils.find(dexFolder, Pattern.compile("\\.dex$"))) {
@@ -93,7 +91,7 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
         }
 
         // Copy all the java resource files to be bundled.
-        File javaResBundleFolder = new File(bundleFolder, FD_JAVA_RES);
+        File javaResBundleFolder = getJavaResBundleFolder();
         deleteDirectoryContents(javaResBundleFolder);
         for (File javaResource : getJavaResources()) {
             if (javaResource.isDirectory()) {
@@ -160,6 +158,18 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
                 }
             }
         }
+    }
+
+    public File getLibBundleFolder() {
+        return new File(bundleFolder, FD_NATIVE_LIBS);
+    }
+
+    public File getDexBundleFolder() {
+        return new File(bundleFolder, FD_DEX);
+    }
+
+    public File getJavaResBundleFolder() {
+        return new File(bundleFolder, FD_JAVA_RES);
     }
 
     @InputDirectory

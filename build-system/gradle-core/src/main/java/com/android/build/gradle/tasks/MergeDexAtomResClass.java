@@ -20,16 +20,13 @@ import static com.android.SdkConstants.FN_APK_CLASSES_DEX;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.TransformException;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.dex.Dex;
 import com.android.dx.command.dexer.DxContext;
 import com.android.dx.merge.CollisionPolicy;
@@ -38,20 +35,17 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.internal.LoggedErrorException;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.TaskAction;
@@ -60,140 +54,97 @@ import org.gradle.api.tasks.TaskAction;
 public class MergeDexAtomResClass extends BaseTask {
 
     @TaskAction
-    public void TaskAction() throws TransformException, IOException {
-        for (String atomName : getFlatAtomList()) {
-            // Base atom or atom with no resources. Copy the dex over to the final location.
-            if (FileUtils.find(getResClassDirs().get(atomName), Pattern.compile("\\.class"))
-                    .isEmpty()) {
-                File atomDex = new File(getAtomDexDirs().get(atomName), FN_APK_CLASSES_DEX);
-                File outDex = new File(getOutputDirs().get(atomName), FN_APK_CLASSES_DEX);
-                FileUtils.copyFile(atomDex, outDex);
-                continue;
-            }
+    public void TaskAction() throws InterruptedException, LoggedErrorException {
+        DexOptions dexOptions =
+                DefaultDexOptions.copyOf(scope.getGlobalScope().getExtension().getDexOptions());
+        ProcessOutputHandler outputHandler =
+                new ParsingProcessOutputHandler(
+                        new ToolOutputParser(new DexParser(), Message.Kind.ERROR, getILogger()),
+                        new ToolOutputParser(new DexParser(), getILogger()),
+                        getBuilder().getErrorReporter());
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-            ProcessOutputHandler outputHandler =
-                    new ParsingProcessOutputHandler(
-                            new ToolOutputParser(new DexParser(), Message.Kind.ERROR, getILogger()),
-                            new ToolOutputParser(new DexParser(), getILogger()),
-                            getBuilder().getErrorReporter());
-            DexOptions dexOptions =
-                    DefaultDexOptions.copyOf(scope.getGlobalScope().getExtension().getDexOptions());
+        for (AtomConfig.AtomInfo atomInfo : atomConfigTask.getAtomInfoCollection()) {
+            executor.execute(
+                    () -> {
+                        // Base atom or atom with no resources. Copy the dex over to the final location.
+                        if (FileUtils.find(atomInfo.getJavaClassDir(), Pattern.compile("\\.class"))
+                                .isEmpty()) {
+                            File atomDex = new File(atomInfo.getAtomDexDir(), FN_APK_CLASSES_DEX);
+                            File outDex = new File(atomInfo.getFinalDexDir(), FN_APK_CLASSES_DEX);
+                            FileUtils.copyFile(atomDex, outDex);
+                            return null;
+                        }
 
-            // First dex the R.class file to the temporary directory.
-            try {
-                getBuilder()
-                        .getDexByteCodeConverter()
-                        .convertByteCode(
-                                ImmutableSet.of(getResClassDirs().get(atomName)),
-                                getTempDirs().get(atomName),
-                                false,
-                                null,
-                                dexOptions,
-                                outputHandler);
-            } catch (Exception e) {
-                throw new TransformException(e);
-            }
+                        // First dex the R.class file to the temporary directory.
+                        try {
+                            getBuilder()
+                                    .getDexByteCodeConverter()
+                                    .convertByteCode(
+                                            ImmutableSet.of(atomInfo.getJavaClassDir()),
+                                            atomInfo.getDexTempDir(),
+                                            false,
+                                            null,
+                                            dexOptions,
+                                            outputHandler);
+                        } catch (Exception e) {
+                            throw new TransformException(e);
+                        }
 
-            // Then merge the two dex files in the final location.
-            Dex[] input = new Dex[2];
-            input[0] = new Dex(new File(getTempDirs().get(atomName), FN_APK_CLASSES_DEX));
-            input[1] = new Dex(new File(getAtomDexDirs().get(atomName), FN_APK_CLASSES_DEX));
+                        // Then merge the two dex files in the final location.
+                        Dex[] input = new Dex[2];
+                        input[0] = new Dex(new File(atomInfo.getDexTempDir(), FN_APK_CLASSES_DEX));
+                        input[1] = new Dex(new File(atomInfo.getAtomDexDir(), FN_APK_CLASSES_DEX));
 
-            try (ProcessOutput output = outputHandler.createOutput()) {
-                DxContext dxContext =
-                        new DxContext(output.getStandardOutput(), output.getErrorOutput());
-                Dex merged = new DexMerger(input, CollisionPolicy.KEEP_FIRST, dxContext).merge();
-                merged.writeTo(new File(getOutputDirs().get(atomName), FN_APK_CLASSES_DEX));
-            }
+                        try (ProcessOutput output = outputHandler.createOutput()) {
+                            DxContext dxContext =
+                                    new DxContext(
+                                            output.getStandardOutput(), output.getErrorOutput());
+                            Dex merged =
+                                    new DexMerger(input, CollisionPolicy.KEEP_FIRST, dxContext)
+                                            .merge();
+                            merged.writeTo(new File(atomInfo.getFinalDexDir(), FN_APK_CLASSES_DEX));
+                        }
+
+                        return null;
+                    });
         }
+        executor.waitForTasksWithQuickFail(true);
     }
 
     @InputFiles
     @NonNull
-    public Collection<File> getResClassDirsCollection() {
-        return getResClassDirs().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getResClassDirs() {
-        return resClassDirs;
-    }
-
-    public void setResClassDirs(@NonNull Map<String, File> resClassDirs) {
-        this.resClassDirs = resClassDirs;
+    public Collection<File> getJavaClassDirsCollection() {
+        return atomConfigTask.getJavaClassDirsCollection();
     }
 
     @InputFiles
     @NonNull
-    public Collection<File> getAtomDexDirCollection() {
-        return getAtomDexDirs().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getAtomDexDirs() {
-        return atomDexDirs;
-    }
-
-    public void setAtomDexDirs(@NonNull Map<String, File> atomDexDirs) {
-        this.atomDexDirs = atomDexDirs;
+    public FileCollection getAtomDexDirCollection() {
+        return atomDexDirs.getArtifactFiles();
     }
 
     @OutputDirectories
     @NonNull
-    public Collection<File> getTempDirCollection() {
-        return getTempDirs().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getTempDirs() {
-        return tempDirs;
-    }
-
-    public void setTempDirs(@NonNull Map<String, File> tempDirs) {
-        this.tempDirs = tempDirs;
+    public Collection<File> getTempDirsCollection() {
+        return atomConfigTask.getDexTempDirsCollection();
     }
 
     @OutputDirectories
     @NonNull
-    public Collection<File> getOutputDirCollection() {
-        return getOutputDirs().values();
-    }
-
-    @Input
-    @NonNull
-    public Map<String, File> getOutputDirs() {
-        return outputDirs;
-    }
-
-    public void setOutputDirs(@NonNull Map<String, File> outputDirs) {
-        this.outputDirs = outputDirs;
-    }
-
-    @Input
-    @NonNull
-    public List<String> getFlatAtomList() {
-        return flatAtomList.get();
-    }
-
-    public void setFlatAtomList(@NonNull Supplier<List<String>> flatAtomList) {
-        this.flatAtomList = flatAtomList;
+    public Collection<File> getOutputDirsCollection() {
+        return atomConfigTask.getFinalDexDirsCollection();
     }
 
     private VariantScope scope;
-    private Map<String, File> atomDexDirs;
-    private Map<String, File> resClassDirs;
-    private Map<String, File> tempDirs;
-    private Map<String, File> outputDirs;
-    private Supplier<List<String>> flatAtomList;
+    private ArtifactCollection atomDexDirs;
+    private AtomConfig atomConfigTask;
 
     public static class ConfigAction implements TaskConfigAction<MergeDexAtomResClass> {
 
-        private final VariantScope scope;
+        private final VariantOutputScope scope;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public ConfigAction(@NonNull VariantOutputScope scope) {
             this.scope = scope;
         }
 
@@ -211,67 +162,18 @@ public class MergeDexAtomResClass extends BaseTask {
 
         @Override
         public void execute(@NonNull MergeDexAtomResClass task) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+            final VariantScope variantScope = scope.getVariantScope();
 
             task.setVariantName(scope.getFullVariantName());
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.scope = scope;
+            task.scope = variantScope;
 
-            task.setFlatAtomList(
-                    () ->
-                            config.getFlatAndroidAtomsDependencies()
-                                    .stream()
-                                    .map(AtomDependency::getAtomName)
-                                    .collect(Collectors.toList()));
-
-            ConventionMappingHelper.map(
-                    task,
-                    "atomDexDirs",
-                    () -> {
-                        Map<String, File> atomDexDirs = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            atomDexDirs.put(atom.getAtomName(), atom.getDexFolder());
-                        }
-                        return atomDexDirs;
-                    });
-
-            ConventionMappingHelper.map(
-                    task,
-                    "resClassDirs",
-                    () -> {
-                        Map<String, File> resClassDirs = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            resClassDirs.put(atom.getAtomName(), scope.getJavaOutputDir(atom));
-                        }
-                        return resClassDirs;
-                    });
-
-            ConventionMappingHelper.map(
-                    task,
-                    "tempDirs",
-                    () -> {
-                        Map<String, File> tempDirs = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            tempDirs.put(
-                                    atom.getAtomName(),
-                                    scope.getIncrementalDir(
-                                            atom.getAtomName() + "-" + scope.getFullVariantName()));
-                        }
-                        return tempDirs;
-                    });
-
-            ConventionMappingHelper.map(
-                    task,
-                    "outputDirs",
-                    () -> {
-                        Map<String, File> outputDirs = Maps.newHashMap();
-                        for (AtomDependency atom : config.getFlatAndroidAtomsDependencies()) {
-                            outputDirs.put(atom.getAtomName(), scope.getDexOutputFolder(atom));
-                        }
-                        return outputDirs;
-                    });
+            task.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
+            task.atomDexDirs =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_DEX);
         }
     }
 

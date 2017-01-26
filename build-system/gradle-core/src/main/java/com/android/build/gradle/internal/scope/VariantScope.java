@@ -43,7 +43,6 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
 import java.util.Collection;
@@ -240,7 +239,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getDexOutputFolder();
 
     @NonNull
-    File getDexOutputFolder(@NonNull AtomDependency androidAtom);
+    File getDexOutputFolder(@NonNull String atomName);
 
     @Nullable
     BaseVariantData getTestedVariantData();
@@ -255,7 +254,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaOutputDir();
 
     @NonNull
-    File getJavaOutputDir(@NonNull AtomDependency androidAtom);
+    File getJavaOutputDir(@NonNull String atomName);
 
     @NonNull
     FileCollection getJavaOutputs();
@@ -325,7 +324,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
-    File getResourceBlameLogDir(@NonNull AtomDependency androidAtom);
+    File getResourceBlameLogDir(@NonNull String atomName);
 
     @NonNull
     File getMergeAssetsOutputDir();
@@ -364,7 +363,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getRClassSourceOutputDir();
 
     @NonNull
-    File getRClassSourceOutputDir(@NonNull AtomDependency atomDependency);
+    File getRClassSourceOutputDir(@NonNull String atomName);
 
     @NonNull
     File getAidlSourceOutputDir();
@@ -444,7 +443,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getPackageSplitAbiOutputFiles();
 
     @NonNull
-    File getPackageAtom(@NonNull AtomDependency androidAtom);
+    File getPackageAtom(@NonNull String atomName);
 
     @NonNull
     File getAaptFriendlyManifestOutputFile();

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
-import static com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_FULL_JAR;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -33,7 +32,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -149,9 +147,9 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.build.gradle.tasks.SplitZipAlign;
+import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.ZipAlign;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.IncrementalSafeguard;
@@ -176,7 +174,6 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -185,7 +182,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import groovy.lang.Closure;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -220,7 +216,6 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -716,6 +711,58 @@ public abstract class TaskManager {
         }
 
         handleJacocoDependencies(tasks, variantScope);
+    }
+
+    public void createMergeAtomManifestsTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        AndroidArtifactVariantData<?> androidArtifactVariantData =
+                (AndroidArtifactVariantData) variantScope.getVariantData();
+        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
+
+        // Get the single output.
+        final BaseVariantOutputData variantOutputData =
+                androidArtifactVariantData.getOutputs().get(0);
+        VariantOutputScope variantOutputScope = variantOutputData.getScope();
+
+        AndroidTask<CompatibleScreensManifest> csmTask = null;
+        if (variantOutputData.getMainOutputFile().getFilter(DENSITY) != null) {
+            csmTask =
+                    androidTasks.create(
+                            tasks,
+                            new CompatibleScreensManifest.ConfigAction(
+                                    variantOutputScope, screenSizes));
+            variantOutputScope.setCompatibleScreensManifestTask(csmTask);
+        }
+
+        ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
+                ImmutableList.builder();
+        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
+        }
+        if (AndroidGradleOptions.getTestOnly(project)) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
+        }
+
+        AndroidTask<? extends ManifestProcessorTask> processManifestTask =
+                androidTasks.create(
+                        tasks,
+                        getMergeManifestConfig(variantOutputScope, optionalFeatures.build()));
+        variantOutputScope.setManifestProcessorTask(processManifestTask);
+
+        processManifestTask.dependsOn(tasks, variantScope.getCheckManifestTask());
+
+        if (variantScope.getMicroApkTask() != null) {
+            processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
+        }
+
+        if (csmTask != null) {
+            processManifestTask.dependsOn(tasks, csmTask);
+        }
+
+        variantScope.publishIntermediateArtifact(
+                variantOutputScope.getManifestOutputFile(),
+                processManifestTask.getName(),
+                AndroidArtifacts.TYPE_ATOM_MANIFEST);
     }
 
     public void createMergeAppManifestsTask(

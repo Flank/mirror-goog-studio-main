@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-
-
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
@@ -27,21 +25,20 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BundleInstantAppConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
+import com.android.build.gradle.tasks.AtomConfig;
+import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.build.gradle.tasks.JavaCompileAtomResClass;
 import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.PackageAtom;
 import com.android.build.gradle.tasks.ProcessAtomsResources;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.Set;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -82,12 +79,13 @@ public class InstantAppTaskManager extends TaskManager {
 
         final VariantScope variantScope = variantData.getScope();
 
-        ProcessProfileWriter.getProject(projectPath)
-                .setAtoms(
-                        variantData
-                                .getVariantConfiguration()
-                                .getFlatAndroidAtomsDependencies()
-                                .size());
+        // TODO: Re-enable later.
+        /*ProcessProfileWriter.getProject(projectPath)
+        .setAtoms(
+                variantData
+                        .getVariantConfiguration()
+                        .getFlatAndroidAtomsDependencies()
+                        .size());*/
 
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
@@ -120,11 +118,16 @@ public class InstantAppTaskManager extends TaskManager {
         final VariantOutputScope variantOutputScope =
                 variantScope.getVariantData().getOutputs().get(0).getScope();
 
-        // Generate the final resource packages first.
+        // Build the common configuration task.
+        AndroidTask<AtomConfig> atomConfigTask =
+                getAndroidTasks().create(tasks, new AtomConfig.ConfigAction(variantOutputScope));
+        atomConfigTask.dependsOn(tasks, variantScope.getPreBuildTask());
+
+        // Generate the final resource packages.
         AndroidTask<ProcessAtomsResources> processAtomsResources =
                 getAndroidTasks()
                         .create(tasks, new ProcessAtomsResources.ConfigAction(variantOutputScope));
-        processAtomsResources.dependsOn(tasks, variantScope.getPreBuildTask());
+        processAtomsResources.dependsOn(tasks, atomConfigTask);
 
         // Compile the final R classes.
         AndroidTask<JavaCompileAtomResClass> javaCompileAtomsResClasses =
@@ -137,7 +140,7 @@ public class InstantAppTaskManager extends TaskManager {
         // Merge the atoms dex with their final R classes.
         AndroidTask<MergeDexAtomResClass> dexAtoms =
                 getAndroidTasks()
-                        .create(tasks, new MergeDexAtomResClass.ConfigAction(variantScope));
+                        .create(tasks, new MergeDexAtomResClass.ConfigAction(variantOutputScope));
         dexAtoms.dependsOn(tasks, javaCompileAtomsResClasses);
 
         // Actually package the atoms.
@@ -156,9 +159,9 @@ public class InstantAppTaskManager extends TaskManager {
         final VariantOutputScope variantOutputScope =
                 variantScope.getVariantData().getOutputs().get(0).getScope();
 
-        AndroidTask<Zip> bundle =
+        AndroidTask<BundleInstantApp> bundle =
                 getAndroidTasks()
-                        .create(tasks, new BundleInstantAppConfigAction(variantOutputScope));
+                        .create(tasks, new BundleInstantApp.ConfigAction(variantOutputScope));
         bundle.dependsOn(tasks, packageAtoms);
         variantScope.getAssembleTask().dependsOn(tasks, bundle);
     }
