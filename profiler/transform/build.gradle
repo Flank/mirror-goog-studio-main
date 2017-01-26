@@ -3,7 +3,7 @@ apply plugin: 'org.anarres.jarjar'
 
 group = 'com.android.tools'
 
-archivesBaseName = 'studio-profilers'
+archivesBaseName = 'profilers-transform'
 
 buildscript {
     dependencies {
