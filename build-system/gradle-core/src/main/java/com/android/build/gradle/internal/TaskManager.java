@@ -3087,7 +3087,7 @@ public abstract class TaskManager {
 
                     if (testedVariantData != null) {
                         // We need the mapping file for the app code to exist by the time we run.
-                        t.dependsOn(taskFactory, testedVariantData.assembleVariantTask);
+                        t.dependsOn(taskFactory, testedVariantData.getScope().getAssembleTask());
                     }
                 });
     }
