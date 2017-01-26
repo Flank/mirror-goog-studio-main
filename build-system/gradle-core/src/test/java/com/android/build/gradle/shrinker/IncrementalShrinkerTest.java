@@ -34,23 +34,18 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-/**
- * Tests for {@link IncrementalShrinker}.
- */
+/** Tests for {@link IncrementalShrinker}. */
 public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
-    @Rule
-    public ExpectedException mException = ExpectedException.none();
+    @Rule public ExpectedException mException = ExpectedException.none();
 
     @Test
     public void simple_testIncrementalUpdate() throws Exception {
@@ -168,9 +163,10 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage(FileUtils.toSystemDependentPath("test/NotUsed.class") + " added");
-        incrementalRun(ImmutableMap.of(
-                "Main", Status.CHANGED,
-                "NotUsed", Status.ADDED));
+        incrementalRun(
+                ImmutableMap.of(
+                        "Main", Status.CHANGED,
+                        "NotUsed", Status.ADDED));
     }
 
     @Test
@@ -190,9 +186,10 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage(
                 FileUtils.toSystemDependentPath("test/NotUsed.class") + " removed");
-        incrementalRun(ImmutableMap.of(
-                "Main", Status.CHANGED,
-                "NotUsed", Status.REMOVED));
+        incrementalRun(
+                ImmutableMap.of(
+                        "Main", Status.CHANGED,
+                        "NotUsed", Status.REMOVED));
     }
 
     @Test
@@ -208,8 +205,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage("test/Bbb superclass changed");
-        incrementalRun(ImmutableMap.of(
-                "Bbb", Status.CHANGED));
+        incrementalRun(ImmutableMap.of("Bbb", Status.CHANGED));
     }
 
     @Test
@@ -225,8 +221,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage("test/Bbb interfaces changed");
-        incrementalRun(ImmutableMap.of(
-                "Bbb", Status.CHANGED));
+        incrementalRun(ImmutableMap.of("Bbb", Status.CHANGED));
     }
 
     @Test
@@ -242,8 +237,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage("test/Bbb.<init>:()V modifiers changed");
-        incrementalRun(ImmutableMap.of(
-                "Bbb", Status.CHANGED));
+        incrementalRun(ImmutableMap.of("Bbb", Status.CHANGED));
     }
 
     @Test
@@ -259,8 +253,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage("test/Main.sString:Ljava/lang/String; modifiers changed");
-        incrementalRun(ImmutableMap.of(
-                "Main", Status.CHANGED));
+        incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
     }
 
     @Test
@@ -276,19 +269,23 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         mException.expect(IncrementalRunImpossibleException.class);
         mException.expectMessage("test/Bbb modifiers changed");
-        incrementalRun(ImmutableMap.of(
-                "Bbb", Status.CHANGED));
+        incrementalRun(ImmutableMap.of("Bbb", Status.CHANGED));
     }
 
     @Test
     public void simple_testIncrementalUpdate_classAnnotationAdded() throws Exception {
         // Given:
         Files.write(Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         fullRun("Main", "main:()V");
 
@@ -303,11 +300,16 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
     public void simple_testIncrementalUpdate_classAnnotationRemoved() throws Exception {
         // Given:
         Files.write(Annotations.main_noAnnotations(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         fullRun("Main", "main:()V");
 
@@ -322,11 +324,16 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
     public void simple_testIncrementalUpdate_methodAnnotationAdded() throws Exception {
         // Given:
         Files.write(Annotations.main_noAnnotations(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         fullRun("Main", "main:()V");
 
@@ -341,11 +348,16 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
     public void simple_testIncrementalUpdate_methodAnnotationRemoved() throws Exception {
         // Given:
         Files.write(Annotations.main_annotatedMethod(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         fullRun("Main", "main:()V");
 
@@ -401,7 +413,9 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
@@ -419,17 +433,13 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
                 "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
                 "useMyInterface:(Ltest/MyInterface;)V");
         assertMembersLeft("ImplementationFromSuperclass");
-        assertMembersLeft(
-                "MyInterface",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
         assertClassSkipped("MyImpl");
         assertClassSkipped("MyCharSequence");
 
         // This is the tricky part: this method should be kept, because a subclass is using it to
         // implement an interface.
-        assertMembersLeft(
-                "DoesSomething",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("DoesSomething", "doSomething:(Ljava/lang/Object;)V");
 
         assertImplements("ImplementationFromSuperclass", "test/MyInterface");
 
@@ -447,18 +457,16 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
     }
 
     private void incrementalRun(Map<String, Status> changes) throws Exception {
-        IncrementalShrinker<String> incrementalShrinker = new IncrementalShrinker<>(
-                WaitableExecutor.<Void>useGlobalSharedThreadPool(),
-                JavaSerializationShrinkerGraph.readFromDir(
-                        mIncrementalDir,
-                        this.getClass().getClassLoader()),
-                mShrinkerLogger);
+        IncrementalShrinker<String> incrementalShrinker =
+                new IncrementalShrinker<>(
+                        WaitableExecutor.<Void>useGlobalSharedThreadPool(),
+                        JavaSerializationShrinkerGraph.readFromDir(
+                                mIncrementalDir, this.getClass().getClassLoader()),
+                        mShrinkerLogger);
 
         Map<File, Status> files = Maps.newHashMap();
         for (Map.Entry<String, Status> entry : changes.entrySet()) {
-            files.put(
-                    new File(mTestPackageDir, entry.getKey() + ".class"),
-                    entry.getValue());
+            files.put(new File(mTestPackageDir, entry.getKey() + ".class"), entry.getValue());
         }
 
         when(mDirectoryInput.getChangedFiles()).thenReturn(files);
