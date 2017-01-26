@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" >
 
+    <uses-feature android:name="android.hardware.type.watch" />
+
     <application>
+
+        <uses-library android:name="com.google.android.wearable" android:required="true" />
+
         <activity android:name="${relativePackage}.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
@@ -8,7 +13,7 @@
             android:label="@string/title_${activityToLayout(activityClass)}"
             </#if>
             >
-            <#if isLauncher>
+            <#if isLauncher && !(isLibraryProject!false)>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
