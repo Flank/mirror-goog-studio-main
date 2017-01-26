@@ -66,7 +66,7 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_ENABLE_PROFILE_JSON = "android.enableProfileJson";
 
-    public static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
+    public static final String ANDROID_CUSTOM_CLASS_TRANSFORMS = "android.custom.class.transforms";
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
@@ -473,8 +473,9 @@ public class AndroidGradleOptions {
         return project.hasProperty(PROPERTY_INCREMENTAL_JAVA_COMPILE);
     }
 
-    public static String[] getAdditionalPlugins(Project project) {
-        String string = getString(project, ANDROID_ADDITIONAL_PLUGINS);
+    @NonNull
+    public static String[] getCustomClassTransforms(@NonNull Project project) {
+        String string = getString(project, ANDROID_CUSTOM_CLASS_TRANSFORMS);
         return string == null ?  new String[]{} : string.split(",");
     }
 

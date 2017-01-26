@@ -1,4 +1,4 @@
-include 'plugin'
+include 'transform'
 include 'supportlib'
 include 'native'
 include 'grpc-java'

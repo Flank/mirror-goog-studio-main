@@ -261,11 +261,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 project.getPath(),
                 null,
                 this::createTasks);
-
-        // Apply additional plugins
-        for (String plugin : AndroidGradleOptions.getAdditionalPlugins(project)) {
-            project.apply(ImmutableMap.of("plugin", plugin));
-        }
     }
 
     private void configureProject() {

@@ -16,21 +16,20 @@
 
 package com.android.tools.profiler;
 
-import java.io.File;
+import com.android.tools.profiler.asm.ClassReader;
+import com.android.tools.profiler.asm.ClassVisitor;
+import com.android.tools.profiler.asm.ClassWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
+import java.io.UncheckedIOException;
+import java.util.function.BiConsumer;
 
-public final class ProfilerTransform extends ClassTransform {
-    public ProfilerTransform() {
-        super("profiler", new String[] { "com.android.tools" + File.separator + "studio-profiler-lib" });
-    }
+@SuppressWarnings("unused")
+public final class ProfilerTransform implements BiConsumer<InputStream, OutputStream> {
 
     @Override
-    protected void transform(InputStream in, OutputStream out) throws IOException {
+    public void accept(InputStream in, OutputStream out) {
         ClassWriter writer = new ClassWriter(0);
 
         ClassVisitor visitor = writer;
@@ -38,8 +37,12 @@ public final class ProfilerTransform extends ClassTransform {
         visitor = new NetworkingAdapter(visitor);
         visitor = new EventAdapter(visitor);
 
-        ClassReader cr = new ClassReader(in);
-        cr.accept(visitor, 0);
-        out.write(writer.toByteArray());
+        try {
+            ClassReader cr = new ClassReader(in);
+            cr.accept(visitor, 0);
+            out.write(writer.toByteArray());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
