@@ -472,10 +472,7 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    /**
-     * Create all variants.
-     */
-    public void populateVariantDataList() {
+    public void configureDependencies() {
         // register transforms.
         project.getDependencies().registerTransform(AarTransform.class,
                 transform -> {
@@ -521,6 +518,14 @@ public class VariantManager implements VariantModel {
                         strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
             }
         });
+    }
+
+    /**
+     * Create all variants.
+     */
+    public void populateVariantDataList() {
+        configureDependencies();
+        List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
         if (productFlavors.isEmpty()) {
             createVariantDataForProductFlavors(Collections.emptyList());

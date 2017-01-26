@@ -32,7 +32,9 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 
+import java.util.Map;
 import org.gradle.api.Action;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelMap;
@@ -162,4 +164,8 @@ public interface AndroidConfig {
     Set<String> getAidlPackageWhitelist();
 
     DataBindingOptions getDataBinding();
+
+    @Unmanaged
+    Map<String, String> getFlavorMatchingStrategy();
+    void setFlavorMatchingStrategy(Map<String, String> strategy);
 }

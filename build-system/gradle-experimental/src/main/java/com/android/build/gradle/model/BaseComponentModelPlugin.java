@@ -608,6 +608,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 TaskManager taskManager) {
             final VariantManager variantManager =
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
+            variantManager.configureDependencies();
             for (AndroidBinaryInternal binary : binaries) {
                 variantManager.createTasksForVariantData(
                         new TaskModelMapAdaptor(tasks),
