@@ -90,6 +90,21 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
   return Status::OK;
 }
 
+Status InternalNetworkServiceImpl::SendHttpRequest(
+    ServerContext *context,
+    const proto::HttpRequestRequest *httpRequest,
+    proto::EmptyNetworkReply *reply) {
+  ConnectionDetails* conn = network_cache_.GetDetails(httpRequest->conn_id());
+  if (conn != nullptr) {
+    conn->request.fields = httpRequest->fields();
+    conn->request.method = httpRequest->method();
+  }
+  else {
+    Log::V("Unhandled http request (%lld)", (long long) httpRequest->conn_id());
+  }
+  return Status::OK;
+}
+
 Status InternalNetworkServiceImpl::SendHttpResponse(
     ServerContext *context, const proto::HttpResponseRequest *httpResponse,
     proto::EmptyNetworkReply *reply) {
@@ -97,7 +112,7 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
   if (conn != nullptr) {
     conn->response.fields = httpResponse->fields();
   } else {
-    Log::V("Unhandled http response (%ld)", (long)httpResponse->conn_id());
+    Log::V("Unhandled http response (%lld)", (long long) httpResponse->conn_id());
   }
   return Status::OK;
 }
