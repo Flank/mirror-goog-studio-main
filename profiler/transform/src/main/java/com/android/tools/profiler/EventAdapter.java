@@ -16,9 +16,9 @@
 
 package com.android.tools.profiler;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import com.android.tools.profiler.asm.ClassVisitor;
+import com.android.tools.profiler.asm.MethodVisitor;
+import com.android.tools.profiler.asm.Opcodes;
 
 /**
  * Wraps all instances of window.getCallback/setCallback with our own version.

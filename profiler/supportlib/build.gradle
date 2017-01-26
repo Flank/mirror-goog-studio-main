@@ -15,11 +15,9 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'maven'
 
 group = 'com.android.tools'
 archivesBaseName = 'studio-profiler-lib'
-version = '1.0'// TODO: Pass in as an argument
 
 File androidJar = file('../../../../prebuilts/sdk/23/android.jar');
 if (!androidJar.exists()) {
@@ -55,41 +53,11 @@ sourceSets {
     main { compileClasspath += configurations.provided }
 }
 
-jar {
-    archiveName 'classes.jar'
-}
-
 // turn off strict javadoc
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
-
-task assembleAar(type:Zip, dependsOn: jar) {
-    archiveName "profilers-support-lib"
-
-    from "src/aar"
-    from jar
+jar {
     from configurations.jni
-
-    extension "aar"
 }
-
-artifacts {
-    aar assembleAar
-}
-
-//// Publishing this library goes directly to a directory seen by studio at development time,
-//// and forms part of the components bundled with studio at build time.
-def repo = "$rootDir/../../../out/studio/repo/"
-
-uploadAar {
-    repositories {
-        mavenDeployer {
-            repository(url: "file://$repo")
-        }
-    }
-    outputs.dir repo
-}
-
-build.dependsOn uploadAar

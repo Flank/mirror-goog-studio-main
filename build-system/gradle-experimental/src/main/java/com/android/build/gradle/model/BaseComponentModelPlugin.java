@@ -216,11 +216,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
         modelRegistry.register(ModelRegistrations.bridgedInstance(
                 ModelReference.of("createSdkHandler", SdkHandler.class),
                 sdkHandler).descriptor("SDK handler.").build());
-
-        // Apply additional plugins
-        for (String plugin : AndroidGradleOptions.getAdditionalPlugins(project)) {
-            project.apply(ImmutableMap.of("plugin", plugin));
-        }
     }
 
     private SdkHandler createSdkHandler(final Project project) {
