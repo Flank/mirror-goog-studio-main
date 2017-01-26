@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.shrinker;
 
+import com.android.build.api.transform.Status;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -309,6 +311,9 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("DoesSomething", "doSomething:(Ljava/lang/Object;)V");
 
         assertImplements("ImplementationFromSuperclass", "test/MyInterface");
+
+        // Make sure we don't crash. TODO: do this for every test case here.
+        incrementalRun(ImmutableMap.of("ImplementationFromSuperclass", Status.CHANGED));
     }
 
     @Test

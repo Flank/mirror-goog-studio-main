@@ -240,8 +240,8 @@ public abstract class AbstractShrinker<T> {
     }
 
     /**
-     * Rewrites the given class (read from file) to only include used methods and fields. Returns
-     * the new class bytecode as {@code byte[]}.
+     * Rewrites the given class (read from file) to only include used methods and fields and
+     * interfaces. Returns the new class bytecode as {@code byte[]}.
      */
     @NonNull
     protected static byte[] rewrite(

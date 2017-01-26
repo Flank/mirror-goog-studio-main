@@ -34,7 +34,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
 
     private final ShrinkerGraph<T> mGraph;
 
-    private final Collection<T> mClassesToWrite;
+    private final Collection<T> mModifiedClasses;
 
     private final Collection<PostProcessingData.UnresolvedReference<T>> mUnresolvedReferences;
 
@@ -48,11 +48,11 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
 
     public IncrementalRunVisitor(
             @NonNull ShrinkerGraph<T> graph,
-            @NonNull Collection<T> classesToWrite,
+            @NonNull Collection<T> modifiedClasses,
             @NonNull Collection<PostProcessingData.UnresolvedReference<T>> unresolvedReferences) {
         super(graph, null);
         mGraph = graph;
-        mClassesToWrite = classesToWrite;
+        mModifiedClasses = modifiedClasses;
         mUnresolvedReferences = unresolvedReferences;
     }
 
@@ -74,7 +74,7 @@ class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
         mMethods = mGraph.getMethods(klass);
         mFields = mGraph.getFields(klass);
         mAnnotations = Sets.newHashSet(mGraph.getAnnotations(klass));
-        mClassesToWrite.add(klass);
+        mModifiedClasses.add(klass);
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
