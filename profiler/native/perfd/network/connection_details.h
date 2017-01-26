@@ -34,11 +34,11 @@ struct ConnectionDetails final {
 
     // The HTTP request method (GET, UPDATE, POST, etc.)
     // Available immediately.
-    std::string method;  // TODO: Populate this
+    std::string method;
 
     // Key/value pairs sent with this request
     // Available immediately.
-    std::string fields;  // TODO: Populate this
+    std::string fields;
 
     // The code stacktrace where this connection was created
     // Available immediately.
