@@ -22,6 +22,7 @@ import com.android.build.gradle.shrinker.TestClasses.Reflection;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.util.Collections;
 import java.util.Set;
 import org.junit.Test;
 
@@ -225,6 +226,11 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
         assertMembersLeft("NamedRunnable");
         assertImplements("NamedRunnableImpl", "test/NamedRunnable");
+
+        // TODO: Write proper fixture code that will make sure all cases stay the same after
+        // an empty incremental run for all test cases.
+        forceEmptyIncrementalRun();
+        assertMembersLeft("NamedRunnable");
     }
 
     @Test
@@ -1490,5 +1496,9 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "ONE:Ltest/MyEnum;",
                 "TWO:Ltest/MyEnum;",
                 "$VALUES:[Ltest/MyEnum;");
+    }
+
+    private void forceEmptyIncrementalRun() throws Exception {
+        incrementalRun(Collections.emptyMap());
     }
 }

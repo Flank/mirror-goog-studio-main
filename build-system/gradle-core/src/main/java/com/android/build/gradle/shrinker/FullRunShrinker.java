@@ -182,9 +182,9 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
                                     // The superinterface is part of the SDK, so it's always kept. As
                                     // long as there's any class that implements this interface, it
                                     // needs to be kept.
-                                    mGraph.incrementAndCheck(
-                                            klass,
-                                            DependencyType.SUPERINTERFACE_KEPT,
+                                    mGraph.addRoots(
+                                            ImmutableMap.of(
+                                                    klass, DependencyType.SUPERINTERFACE_KEPT),
                                             CounterSet.SHRINK);
                                 }
                             }
