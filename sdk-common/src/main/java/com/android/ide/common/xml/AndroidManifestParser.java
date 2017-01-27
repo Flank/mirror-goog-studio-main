@@ -31,7 +31,13 @@ import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
 import com.android.xml.AndroidManifest;
 import com.google.common.io.Closeables;
-
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -40,15 +46,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
+/**
+ * Full Manifest parser that parses the manifest in details, including activities, instrumentations,
+ * support-screens, and uses-configuration.
+ */
 public class AndroidManifestParser {
 
     private static final int LEVEL_TOP = 0;
