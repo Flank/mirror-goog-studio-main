@@ -16,7 +16,7 @@
 
 package com.android.manifmerger;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,7 +32,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -44,16 +51,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link ManifestMergerTestUtil} class
@@ -410,6 +407,15 @@ public class ManifestMerger2SmallTest {
             Optional<Element> activityOne = getElementByTypeAndKey(document, "activity",
                     "bar.activityOne");
             assertTrue(activityOne.isPresent());
+            assertArrayEquals(
+                    new Object[] {"activity#bar.activityOne", "manifest"},
+                    mergingReport
+                            .getActions()
+                            .getNodeKeys()
+                            .stream()
+                            .map(XmlNode.NodeKey::toString)
+                            .sorted()
+                            .toArray());
         } finally {
             //noinspection ResultOfMethodCallIgnored
             inputFile.delete();
@@ -439,6 +445,15 @@ public class ManifestMerger2SmallTest {
             Optional<Element> activityOne = getElementByTypeAndKey(document, "activity",
                     "foo.activityOne");
             assertTrue(activityOne.isPresent());
+            assertArrayEquals(
+                    new Object[] {"activity#foo.activityOne", "manifest"},
+                    mergingReport
+                            .getActions()
+                            .getNodeKeys()
+                            .stream()
+                            .map(XmlNode.NodeKey::toString)
+                            .sorted()
+                            .toArray());
         } finally {
             //noinspection ResultOfMethodCallIgnored
             inputFile.delete();
