@@ -29,10 +29,8 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.LibraryRequest;
-import com.android.builder.testing.api.DeviceProvider;
-import com.android.builder.testing.api.TestServer;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -49,8 +47,8 @@ public class AndroidConfigHelper {
             @NonNull Instantiator instantiator) {
         model.setDefaultPublishConfig(BuilderConstants.RELEASE);
         model.setGeneratePureSplits(false);
-        model.setDeviceProviders(Lists.<DeviceProvider>newArrayList());
-        model.setTestServers(Lists.<TestServer>newArrayList());
+        model.setDeviceProviders(Lists.newArrayList());
+        model.setTestServers(Lists.newArrayList());
         model.setAaptOptions(instantiator.newInstance(AaptOptions.class));
         model.setDexOptions(instantiator.newInstance(DexOptions.class, extraModelInfo));
         model.setLintOptions(instantiator.newInstance(LintOptions.class));
@@ -60,7 +58,8 @@ public class AndroidConfigHelper {
         model.setJacoco(instantiator.newInstance(JacocoOptions.class));
         model.setAdbOptions(instantiator.newInstance(AdbOptions.class));
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
-        model.setLibraryRequests(Lists.<LibraryRequest>newArrayList());
+        model.setLibraryRequests(Lists.newArrayList());
+        model.setFlavorMatchingStrategy(Maps.newHashMap());
     }
 
 

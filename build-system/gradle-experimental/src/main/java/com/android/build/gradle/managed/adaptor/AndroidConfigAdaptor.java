@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.managed.adaptor;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
+
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
@@ -43,7 +45,6 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -51,6 +52,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.attributes.Attribute;
@@ -141,7 +143,12 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
 
     @Override
     public List<String> getFlavorDimensionList() {
-        return null;
+        return getProductFlavors().stream()
+                .filter(flavor -> flavor.getDimension() != null)
+                .map(CoreProductFlavor::getDimension)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -243,7 +250,17 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     @NonNull
     @Override
     public Map<Attribute<String>, String> getFlavorMatchingStrategy() {
-        return ImmutableMap.of();
+        return model.getFlavorMatchingStrategy().entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> {
+                            String name = entry.getKey();
+                            if (!name.startsWith(CONFIG_ATTR_FLAVOR_PREFIX)) {
+                                name = CONFIG_ATTR_FLAVOR_PREFIX + name;
+                            }
+                            return Attribute.of(name, String.class);
+                        },
+                        Map.Entry::getValue
+                ));
     }
 
     @Override
