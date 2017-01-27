@@ -75,6 +75,7 @@
       <w>cygpath</w>
       <w>cygwin</w>
       <w>dalvik</w>
+      <w>databinding</w>
       <w>ddmlib</w>
       <w>ddms</w>
       <w>debuggable</w>
@@ -82,6 +83,7 @@
       <w>defs</w>
       <w>densityless</w>
       <w>deps</w>
+      <w>deserializing</w>
       <w>designtime</w>
       <w>dest</w>
       <w>dexdump</w>
@@ -140,6 +142,8 @@
       <w>iaload</w>
       <w>iastore</w>
       <w>iconst</w>
+      <w>iface</w>
+      <w>incrementality</w>
       <w>inexistent</w>
       <w>inflater</w>
       <w>infos</w>
@@ -151,6 +155,8 @@
       <w>instrumentations</w>
       <w>interpolator</w>
       <w>ints</w>
+      <w>invokeinterface</w>
+      <w>invokenonvirtual</w>
       <w>invokespecial</w>
       <w>invokestatic</w>
       <w>invokevirtual</w>
@@ -287,6 +293,7 @@
       <w>serialnumber</w>
       <w>severities</w>
       <w>shaders</w>
+      <w>sharding</w>
       <w>shrinker</w>
       <w>sparsearray</w>
       <w>sqrt</w>
