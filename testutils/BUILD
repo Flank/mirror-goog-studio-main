@@ -16,6 +16,7 @@ iml_module(
         "//tools/idea/.idea/libraries:truth",
         "//tools/idea/.idea/libraries:dexlib2",
         "//tools/idea/.idea/libraries:jimfs",
+        "//tools/idea/.idea/libraries:asm-tools",
     ],
 )
 
@@ -31,6 +32,7 @@ java_library(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.smali_dexlib2",
     ],
 )

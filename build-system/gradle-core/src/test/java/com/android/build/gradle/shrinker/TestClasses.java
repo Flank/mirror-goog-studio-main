@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.shrinker;
 
+import com.android.testutils.TestClassesGenerator;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -3195,60 +3196,11 @@ class TestClasses implements Opcodes {
     }
 
     static byte[] emptyClass(String name) throws Exception {
-
-        ClassWriter cw = new ClassWriter(0);
-        MethodVisitor mv;
-
-        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/" + name, null, "java/lang/Object", null);
-
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitCode();
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-
-        return cw.toByteArray();
+        return TestClassesGenerator.emptyClass(name);
     }
 
     static byte[] classWithEmptyMethods(String className, String... namesAndDescriptors)
             throws Exception {
-
-        ClassWriter cw = new ClassWriter(0);
-        MethodVisitor mv;
-
-        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/" + className, null, "java/lang/Object", null);
-
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitCode();
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        for (String namesAndDescriptor : namesAndDescriptors) {
-            int colon = namesAndDescriptor.indexOf(':');
-            String methodName = namesAndDescriptor.substring(0, colon);
-            String descriptor =
-                    namesAndDescriptor.substring(colon + 1, namesAndDescriptor.length());
-            {
-                mv = cw.visitMethod(ACC_PUBLIC, methodName, descriptor, null, null);
-                mv.visitCode();
-                // This bytecode is only valid for some signatures (void methods). This class is used
-                // for testing the parser, we don't ever load these classes to a running VM anyway.
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(0, 1);
-                mv.visitEnd();
-            }
-        }
-        cw.visitEnd();
-
-        return cw.toByteArray();
+        return TestClassesGenerator.classWithEmptyMethods(className, namesAndDescriptors);
     }
 }
