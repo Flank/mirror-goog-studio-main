@@ -21,6 +21,7 @@
     <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="manifest-merger-base" />
+    <orderEntry type="module" module-name="repository" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />

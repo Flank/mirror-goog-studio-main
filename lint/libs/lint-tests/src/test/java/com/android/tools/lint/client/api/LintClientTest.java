@@ -36,22 +36,24 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import java.io.File;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class LintClientTest extends TestCase {
 
-    public void testApiLevel() throws Exception {
+    public void testApiLevel() {
         LintCliClient client = new LintCliClient();
         int max = client.getHighestKnownApiLevel();
         assertTrue(max >= 16);
     }
 
-    public void testFindCompilationTarget() throws Exception {
+    public void testFindCompilationTarget() {
         MockFileOp fop = new MockFileOp();
         LocalPackage platformPackage = getLocalPlatformPackage(fop, "23", 23);
         LocalPackage previewPlatform = getLocalPlatformPackage(fop, "O", 26);
@@ -149,5 +151,17 @@ public class LintClientTest extends TestCase {
 
     public void testClient() {
         assertTrue(!LintClient.isGradle() || !LintClient.isStudio());
+    }
+
+    public void testVersion() {
+        LintCliClient client = new LintCliClient() {
+            @Override
+            public File getSdkHome() {
+                return TestUtils.getSdk();
+            }
+        };
+        String revision = client.getClientRevision();
+        Truth.assertThat(revision).isNotNull();
+        Truth.assertThat(revision).isNotEmpty();
     }
 }

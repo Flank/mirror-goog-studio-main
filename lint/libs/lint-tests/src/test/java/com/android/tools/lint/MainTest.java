@@ -24,6 +24,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.client.api.LintDriver;
@@ -444,6 +445,8 @@ public class MainTest extends AbstractCheckTest {
                         "ContentDescription",
                         "--baseline",
                         baseline.getPath(),
+                        "--sdk-home", // SDK is needed to get version number for the baseline
+                        TestUtils.getSdk().getPath(),
                         "--disable",
                         "LintError",
                         getProjectDir(null, mAccessibility).getPath()

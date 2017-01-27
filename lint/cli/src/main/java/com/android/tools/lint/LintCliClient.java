@@ -18,6 +18,8 @@ package com.android.tools.lint;
 
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.FD_TOOLS;
+import static com.android.SdkConstants.FN_SOURCE_PROP;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
@@ -38,7 +40,10 @@ import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestMerger2.MergeType;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
+import com.android.repository.api.LocalPackage;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
@@ -66,6 +71,7 @@ import com.android.tools.lint.helpers.DefaultJavaEvaluator;
 import com.android.tools.lint.helpers.DefaultUastParser;
 import com.android.tools.lint.kotlin.LintKotlinUtils;
 import com.android.utils.CharSequences;
+import com.android.utils.NullLogger;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
@@ -1060,22 +1066,28 @@ public class LintCliClient extends LintClient {
     @Override
     @Nullable
     public String getClientRevision() {
-        try {
-            File file = findResource("tools" + File.separator +
-                    "source.properties");
-            if (file != null && file.exists()) {
-                try (FileInputStream input = new FileInputStream(file)) {
-                    Properties properties = new Properties();
-                    properties.load(input);
-
-                    String revision = properties.getProperty("Pkg.Revision");
-                    if (revision != null && !revision.isEmpty()) {
-                        return revision;
-                    }
-                }
+        AndroidSdkHandler sdk = getSdk();
+        if (sdk != null) {
+            NullLogger empty = new NullLogger();
+            LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(empty);
+            LocalPackage pkg = sdk.getLocalPackage(FD_TOOLS, progress);
+            if (pkg != null) {
+                return pkg.getVersion().toShortString();
             }
-        } catch (Throwable ignore) {
-            // dev builds, tests, etc: fall through to unknown
+        }
+
+        File file = findResource(FD_TOOLS + File.separator + FN_SOURCE_PROP);
+        if (file != null && file.exists()) {
+            try (FileInputStream input = new FileInputStream(file)) {
+                Properties properties = new Properties();
+                properties.load(input);
+                String revision = properties.getProperty("Pkg.Revision");
+                if (revision != null && !revision.isEmpty()) {
+                    return revision;
+                }
+            } catch (Throwable ignore) {
+                // dev builds, tests, etc: fall through to unknown
+            }
         }
 
         return "unknown";
