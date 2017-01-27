@@ -32,7 +32,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.List;
 
@@ -99,7 +98,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        return testVariantData.getOutputs().get(0).getOutputFile();
+        return testVariantData.getMainOutput().getOutputFile();
     }
 
     @NonNull

@@ -118,7 +118,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
         // Get the single output.
         final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getOutputs().get(0).getScope();
+                variantScope.getVariantData().getMainOutput().getScope();
 
         // Generate the final resource packages first.
         AndroidTask<ProcessAtomsResources> processAtomsResources =
@@ -154,7 +154,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull AndroidTask<PackageAtom> packageAtoms) {
         // Get the single output.
         final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getOutputs().get(0).getScope();
+                variantScope.getVariantData().getMainOutput().getScope();
 
         AndroidTask<Zip> bundle =
                 getAndroidTasks()
