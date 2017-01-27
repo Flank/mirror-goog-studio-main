@@ -36,8 +36,8 @@ using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
 using profiler::proto::AllocationsInfo;
-using profiler::proto::GetAllocationsInfoStatusRequest;
-using profiler::proto::GetAllocationsInfoStatusResponse;
+using profiler::proto::AllocationEventsRequest;
+using profiler::proto::AllocationEventsResponse;
 
 namespace profiler {
 
@@ -135,8 +135,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::GetAllocationDump(
     ::grpc::ServerContext* context, const DumpDataRequest* request,
     DumpDataResponse* response) {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                          "Not implemented on device");
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
 }
 
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
@@ -157,8 +157,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
       result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
   (result->second)
-      .TrackAllocations(request->enabled(), request->legacy_tracking(),
-                        response);
+      .TrackAllocations(request->enabled(), request->legacy(), response);
   switch (response->status()) {
     case TrackAllocationsResponse::SUCCESS:
     case TrackAllocationsResponse::IN_PROGRESS:
@@ -174,18 +173,15 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
 ::grpc::Status MemoryServiceImpl::ListAllocationContexts(
-    ::grpc::ServerContext* context,
-    const AllocationContextsRequest* request,
+    ::grpc::ServerContext* context, const AllocationContextsRequest* request,
     AllocationContextsResponse* response) {
-  return ::grpc::Status(
-      ::grpc::StatusCode::UNIMPLEMENTED,
-      "Listing allocation tracking environments is WIP.");
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Listing allocation tracking environments is WIP.");
 }
 
-::grpc::Status MemoryServiceImpl::GetAllocationsInfoStatus(
-    ::grpc::ServerContext* context,
-    const GetAllocationsInfoStatusRequest* request,
-    GetAllocationsInfoStatusResponse* response) {
+::grpc::Status MemoryServiceImpl::GetAllocationEvents(
+    ::grpc::ServerContext* context, const AllocationEventsRequest* request,
+    AllocationEventsResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");
 }
