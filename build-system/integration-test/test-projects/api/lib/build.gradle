@@ -19,6 +19,7 @@ android.libraryVariants.all { variant ->
 
     // now make the package task depend on it
     // only one output for libraries
+    assert variant.outputs.size() == 1 : "There must be exactly one output"
     variant.outputs.get(0).packageLibrary.dependsOn copyBlahTask
 }
 

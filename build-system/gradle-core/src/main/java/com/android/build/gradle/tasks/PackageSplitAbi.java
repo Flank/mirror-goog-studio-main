@@ -369,8 +369,7 @@ public class PackageSplitAbi extends SplitRelatedTask {
         @Override
         public void execute(@NonNull PackageSplitAbi packageSplitAbiTask) {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-            List<? extends BaseVariantOutputData> outputs = variantData.getOutputs();
-            BaseVariantOutputData variantOutputData = outputs.get(0);
+            BaseVariantOutputData variantOutputData = variantData.getMainOutput();
             VariantOutputScope variantOutputScope = variantOutputData.getScope();
             VariantConfiguration config = this.scope.getVariantConfiguration();
 

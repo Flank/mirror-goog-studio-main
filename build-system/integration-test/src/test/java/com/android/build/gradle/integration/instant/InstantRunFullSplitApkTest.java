@@ -50,7 +50,8 @@ public class InstantRunFullSplitApkTest {
     public void getModel() throws IOException {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
-        TestFileUtils.appendToFile(mProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                mProject.getBuildFile(),
                 "android {\n"
                         + "    splits {\n"
                         + "        abi {\n"
@@ -60,6 +61,16 @@ public class InstantRunFullSplitApkTest {
                         + "            universalApk false\n"
                         + "        }\n"
                         + "    }\n"
+                        + "}\n"
+                        + "ext.abiCodes = ['x86':1, 'armeabi-v7a':2]\n"
+                        + "android.applicationVariants.all { variant ->\n"
+                        + "  variant.outputs.each { output ->\n"
+                        + "    def baseAbiVersionCode =\n"
+                        + "        project.ext.abiCodes.get(\n"
+                        + "            output.getFilter(com.android.build.OutputFile.ABI), 0)\n"
+                        + "    output.versionCodeOverride =\n"
+                        + "        baseAbiVersionCode * 1000 + variant.versionCode\n"
+                        + "  }\n"
                         + "}");
 
 
@@ -85,5 +96,10 @@ public class InstantRunFullSplitApkTest {
                 .findFirst().orElseThrow(() -> new AssertionError("Main artifact not found"));
 
         assertThat(main.file).hasName("project-armeabi-v7a-debug.apk");
+        assertThat(
+                        mProject.file(
+                                "build/intermediates/instant-run-support/debug/slice_0"
+                                        + "/AndroidManifest.xml"))
+                .contains("android:versionCode=\"2001\"");
     }
 }

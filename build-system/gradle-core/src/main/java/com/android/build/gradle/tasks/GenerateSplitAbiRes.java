@@ -31,14 +31,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
-
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFiles;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +39,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK.
@@ -245,7 +243,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.setOutputBaseName(config.getBaseName());
             generateSplitAbiRes.setApplicationId(config.getApplicationId());
             generateSplitAbiRes.variantOutputData =
-                    (ApkVariantOutputData) scope.getVariantData().getOutputs().get(0);
+                    (ApkVariantOutputData) scope.getVariantData().getMainOutput();
             ConventionMappingHelper.map(generateSplitAbiRes, "debuggable", new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {

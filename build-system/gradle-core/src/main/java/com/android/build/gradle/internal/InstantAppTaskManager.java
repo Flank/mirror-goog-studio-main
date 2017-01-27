@@ -147,7 +147,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull VariantScope variantScope) {
         // Get the single output.
         final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getOutputs().get(0).getScope();
+                variantScope.getVariantData().getMainOutput().getScope();
 
         final DependencyContainer packageDependencies = variantScope.getVariantConfiguration()
                 .getPackageDependencies();
@@ -266,7 +266,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull AndroidTask<PackageAtom> lastPackageAtom) {
         // Get the single output.
         final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getOutputs().get(0).getScope();
+                variantScope.getVariantData().getMainOutput().getScope();
 
         AndroidTask<ProcessInstantAppResources> processInstantAppResourcesTask =
                 getAndroidTasks().create(tasks,

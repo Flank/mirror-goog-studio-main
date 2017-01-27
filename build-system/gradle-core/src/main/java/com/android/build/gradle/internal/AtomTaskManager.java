@@ -295,7 +295,7 @@ public class AtomTaskManager extends TaskManager {
         final TransformManager transformManager = variantScope.getTransformManager();
 
         // Get the single output.
-        final VariantOutputScope variantOutputScope = variantData.getOutputs().get(0).getScope();
+        final VariantOutputScope variantOutputScope = variantData.getMainOutput().getScope();
         variantOutputScope.setAssembleTask(variantScope.getAssembleTask());
 
         // Create the task to generate the atom metadata.

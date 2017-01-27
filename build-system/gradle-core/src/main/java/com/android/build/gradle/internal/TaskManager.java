@@ -29,7 +29,6 @@ import android.databinding.tool.DataBindingCompilerArgs;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
@@ -165,9 +164,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -180,7 +177,6 @@ import com.google.common.collect.Lists;
 import groovy.lang.Closure;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -626,8 +622,7 @@ public abstract class TaskManager {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (variantData.getVariantDependency().getManifestConfiguration() != null) {
             ManifestProcessorTask mergeManifestsTask =
-                    variantData.getOutputs().get(0).getScope().getManifestProcessorTask()
-                    .get(tasks);
+                    variantData.getMainOutput().getScope().getManifestProcessorTask().get(tasks);
             project.getArtifacts().add(
                     variantData.getVariantDependency().getManifestConfiguration().getName(),
                     AndroidArtifacts.buildManifestArtifact(globalScope.getProjectBaseName(),
@@ -655,7 +650,7 @@ public abstract class TaskManager {
 
         processManifest.dependsOn(tasks, scope.getPrepareDependenciesTask());
 
-        BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
+        BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
         variantOutputData.getScope().setManifestProcessorTask(processManifest);
     }
 
@@ -668,7 +663,7 @@ public abstract class TaskManager {
 
         processTestManifestTask.dependsOn(tasks, scope.getPrepareDependenciesTask());
 
-        BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
+        BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
         variantOutputData.getScope().setManifestProcessorTask(processTestManifestTask);
     }
 
@@ -682,7 +677,7 @@ public abstract class TaskManager {
         GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
         // get single output for now.
-        BaseVariantOutputData variantOutputData = variantData.getOutputs().get(0);
+        BaseVariantOutputData variantOutputData = variantData.getMainOutput();
 
         scope.getRenderscriptCompileTask().dependsOn(tasks, scope.getPrepareDependenciesTask());
         if (config.getType().isForTesting()) {
@@ -847,7 +842,7 @@ public abstract class TaskManager {
             // on its creation.
 
             // For test apps there should be a single output, so we get it.
-            BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
+            BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
 
             generateBuildConfigTask.dependsOn(
                     tasks, variantOutputData.getScope().getManifestProcessorTask());
@@ -934,7 +929,7 @@ public abstract class TaskManager {
                 "Can only create split resources tasks for pure splits.");
 
         List<? extends BaseVariantOutputData> outputs = variantData.getOutputs();
-        final BaseVariantOutputData variantOutputData = outputs.get(0);
+        final BaseVariantOutputData variantOutputData = variantData.getMainOutput();
         if (outputs.size() != 1) {
             throw new RuntimeException(
                     "In release 21 and later, there can be only one main APK, " +
@@ -977,7 +972,7 @@ public abstract class TaskManager {
                             "found " + outputs.size());
         }
 
-        BaseVariantOutputData variantOutputData = outputs.get(0);
+        BaseVariantOutputData variantOutputData = variantData.getMainOutput();
 
         // first create the split APK resources.
         AndroidTask<GenerateSplitAbiRes> generateSplitAbiRes =
@@ -1009,8 +1004,7 @@ public abstract class TaskManager {
     }
 
     public void createSplitTasks(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
-        VariantOutputScope outputScope =
-                variantScope.getVariantData().getOutputs().get(0).getScope();
+        VariantOutputScope outputScope = variantScope.getVariantData().getMainOutput().getScope();
         PackagingScope packagingScope = new DefaultGradlePackagingScope(outputScope);
 
         AndroidTask<PackageSplitRes> packageSplitResourcesTask =
@@ -1372,12 +1366,11 @@ public abstract class TaskManager {
         VariantScope variantScope = variantData.getScope();
 
         // get single output for now (though this may always be the case for tests).
-        final BaseVariantOutputData variantOutputData = variantData.getOutputs().get(0);
+        final BaseVariantOutputData variantOutputData = variantData.getMainOutput();
 
         final BaseVariantData<BaseVariantOutputData> testedVariantData =
                 (BaseVariantData<BaseVariantOutputData>) variantData.getTestedVariantData();
-        final BaseVariantOutputData testedVariantOutputData =
-                testedVariantData.getOutputs().get(0);
+        final BaseVariantOutputData testedVariantOutputData = testedVariantData.getMainOutput();
 
         createAnchorTasks(tasks, variantScope);
 
@@ -1656,8 +1649,8 @@ public abstract class TaskManager {
         final TestVariantData testVariantData = (TestVariantData) variantScope.getVariantData();
 
         // get single output for now
-        final BaseVariantOutputData variantOutputData = baseVariantData.getOutputs().get(0);
-        final BaseVariantOutputData testVariantOutputData = testVariantData.getOutputs().get(0);
+        final BaseVariantOutputData variantOutputData = baseVariantData.getMainOutput();
+        final BaseVariantOutputData testVariantOutputData = testVariantData.getMainOutput();
 
         TestDataImpl testData = new TestDataImpl(testVariantData);
         testData.setExtraInstrumentationTestRunnerArgs(
@@ -1667,9 +1660,10 @@ public abstract class TaskManager {
 
         // create the check tasks for this test
         // first the connected one.
-        ImmutableList<AndroidTask<DefaultTask>> artifactsTasks = ImmutableList.of(
-                testVariantData.getOutputs().get(0).getScope().getAssembleTask(),
-                baseVariantData.getScope().getAssembleTask());
+        ImmutableList<AndroidTask<DefaultTask>> artifactsTasks =
+                ImmutableList.of(
+                        testVariantData.getMainOutput().getScope().getAssembleTask(),
+                        baseVariantData.getScope().getAssembleTask());
 
         final AndroidTask<DeviceProviderInstrumentTestTask> connectedTask = androidTasks.create(
                 tasks,
@@ -1957,7 +1951,7 @@ public abstract class TaskManager {
                         getResMergingScopes(variantScope),
                         new SupplierTask<File>() {
                             private final VariantOutputScope variantOutputScope =
-                                    variantScope.getVariantData().getOutputs().get(0).getScope();
+                                    variantScope.getVariantData().getMainOutput().getScope();
 
                             @Nullable
                             @Override
@@ -1967,13 +1961,14 @@ public abstract class TaskManager {
 
                             @Override
                             public File get() {
-                                return variantOutputScope.getVariantScope()
+                                return variantOutputScope
+                                        .getVariantScope()
                                         .getInstantRunManifestOutputFile();
                             }
                         },
                         new SupplierTask<File>() {
                             private final VariantOutputScope variantOutputScope =
-                                    variantScope.getVariantData().getOutputs().get(0).getScope();
+                                    variantScope.getVariantData().getMainOutput().getScope();
 
                             @Nullable
                             @Override
@@ -2293,6 +2288,8 @@ public abstract class TaskManager {
 
         boolean signedApk = variantData.isSigned();
         boolean multiOutput = variantData.getOutputs().size() > 1;
+        boolean abiSpecified =
+                !Strings.isNullOrEmpty(AndroidGradleOptions.getBuildTargetAbi(project));
 
         GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
         /**
@@ -2307,22 +2304,6 @@ public abstract class TaskManager {
         IncrementalMode incrementalMode = getIncrementalMode(variantConfiguration);
 
         List<ApkVariantOutputData> outputDataList = variantData.getOutputs();
-
-        // When ABI is specified, determine the best output and build only one split.
-        String abiList = Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetAbi(project));
-        String density =
-                Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetDensity(project));
-        OutputFile bestOutput = null;
-        if (outputDataList.size() > 1 && !abiList.isEmpty()) {
-            List<String> abis = Arrays.asList(abiList.split(","));
-            Density densityEnum = Density.getEnum(density);
-            List<OutputFile> outputFiles = SplitOutputMatcher.computeBestOutput(
-                    outputDataList,
-                    variantConfiguration.getSupportedAbis(),
-                    densityEnum == null ? -1 : densityEnum.getDpiValue(),
-                    abis);
-            bestOutput = outputFiles.get(0);
-        }
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
@@ -2440,10 +2421,13 @@ public abstract class TaskManager {
                 // create a task for this output
                 variantOutputScope.setAssembleTask(createAssembleTask(tasks, variantOutputData));
 
-                // variant assemble task depends on each output assemble task.
-                if (bestOutput == null || variantOutputData.getMainOutputFile() == bestOutput) {
-                    variantScope.getAssembleTask().dependsOn(
-                            tasks, variantOutputScope.getAssembleTask());
+                // If ABI is specified, the variant assemble task depends on the output assemble
+                // task for the given ABI. Otherwise, it depends on all output assemble tasks.
+                if (!abiSpecified
+                        || abiSpecified && variantOutputData == variantData.getMainOutput()) {
+                    variantScope
+                            .getAssembleTask()
+                            .dependsOn(tasks, variantOutputScope.getAssembleTask());
                 }
             } else {
                 // single output
@@ -2847,19 +2831,23 @@ public abstract class TaskManager {
             ProguardConfigurable transform,
             final BaseVariantData<? extends BaseVariantOutputData> variantData) {
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-        transform.setConfigurationFiles(() -> {
-            Set<File> proguardFiles = variantConfig.getProguardFiles(
-                    true,
-                    Collections.singletonList(ProguardFiles.getDefaultProguardFile(
-                            TaskManager.DEFAULT_PROGUARD_CONFIG_FILE, project)));
+        transform.setConfigurationFiles(
+                () -> {
+                    Set<File> proguardFiles =
+                            variantConfig.getProguardFiles(
+                                    true,
+                                    Collections.singletonList(
+                                            ProguardFiles.getDefaultProguardFile(
+                                                    TaskManager.DEFAULT_PROGUARD_CONFIG_FILE,
+                                                    project)));
 
-            // use the first output when looking for the proguard rule output of
-            // the aapt task. The different outputs are not different in a way that
-            // makes this rule file different per output.
-            BaseVariantOutputData outputData = variantData.getOutputs().get(0);
-            proguardFiles.add(outputData.processResourcesTask.getProguardOutputFile());
-            return proguardFiles;
-        });
+                    // use the first output when looking for the proguard rule output of
+                    // the aapt task. The different outputs are not different in a way that
+                    // makes this rule file different per output.
+                    BaseVariantOutputData outputData = variantData.getMainOutput();
+                    proguardFiles.add(outputData.processResourcesTask.getProguardOutputFile());
+                    return proguardFiles;
+                });
 
         if (variantData.getType() == LIBRARY) {
             transform.keep("class **.R");

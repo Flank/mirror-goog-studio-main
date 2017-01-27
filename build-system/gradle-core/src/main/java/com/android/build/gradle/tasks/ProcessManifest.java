@@ -28,16 +28,14 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
-
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * a Task that only merge a single manifest with its overlays.
@@ -196,7 +194,7 @@ public class ProcessManifest extends ManifestProcessorTask {
             final AndroidBuilder androidBuilder = scope.getGlobalScope().getAndroidBuilder();
 
             // get single output for now.
-            BaseVariantOutputData variantOutputData = scope.getVariantData().getOutputs().get(0);
+            BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
 
             variantOutputData.manifestProcessorTask = processManifest;
             processManifest.setAndroidBuilder(androidBuilder);

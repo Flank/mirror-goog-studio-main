@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.publishing.FilterDataPersistence;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
@@ -34,12 +34,10 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.artifacts.Configuration;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -49,6 +47,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.artifacts.Configuration;
 
 /**
  * Implementation of {@link TestData} for separate test modules.
@@ -128,8 +127,9 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        return ((ApkVariantOutputData) testVariant.getOutputs().get(0))
-                .getOutputs().get(0).getOutputFile();
+        ImmutableList<ApkOutputFile> outputs = testVariant.getMainOutput().getOutputs();
+        Preconditions.checkState(outputs.size() == 1, "There must be exactly one output");
+        return outputs.get(0).getOutputFile();
     }
 
     @NonNull

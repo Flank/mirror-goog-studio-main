@@ -313,8 +313,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
 
-            BaseVariantOutputData outputData =
-                    variantScope.getVariantData().getOutputs().get(0);
+            BaseVariantOutputData outputData = variantScope.getVariantData().getMainOutput();
             PackagingScope packagingScope = new DefaultGradlePackagingScope(outputData.getScope());
 
             // create the transforms that will create the dependencies apk.
