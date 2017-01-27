@@ -21,10 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.testframework.MockFileOp;
-
-import org.junit.Test;
-
 import java.io.File;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+import org.junit.Test;
 
 /**
  * Tests for {@link License}
@@ -91,5 +91,22 @@ public class LicenseTest {
         fop.recordExistingFile(lic1File.getPath(), lic1FileContent);
         assertTrue(lic1.checkAccepted(root, fop));
         assertTrue(lic1a.checkAccepted(root, fop));
+    }
+
+    @Test
+    public void unexpectedDefaultCharset() throws Exception {
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        License lic1 = factory.createLicenseType("根源", "not ASCII");
+
+        Charset newValue = Charset.forName("windows-1252");
+        Field Charset_defaultCharset = Charset.class.getDeclaredField("defaultCharset");
+        Charset_defaultCharset.setAccessible(true);
+        Charset oldValue = (Charset) Charset_defaultCharset.get(null);
+        try {
+            Charset_defaultCharset.set(null, newValue);
+            assertEquals("53c2da7eee3322de5414c7aef59fb04881307a03", lic1.getLicenseHash());
+        } finally {
+            Charset_defaultCharset.set(null, oldValue);
+        }
     }
 }
