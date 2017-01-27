@@ -1,11 +1,12 @@
 # Bazel (https://bazel.io/) BUILD file for apkzlib library.
 load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:utils.bzl", "srcjar")
 
 licenses(["notice"])  # Apache License 2.0
 
-fileset(
-    name = "sources",
-    srcs = glob(["src/main/java/**/*.java"]),
+srcjar(
+    name = "srcjar",
+    java_library = ":apkzlib",
     visibility = ["//tools/base/build-system/builder:__pkg__"],
 )
 
@@ -14,7 +15,7 @@ java_library(
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
-    visibility = ["//visibility:public"],
+    visibility = ["//visibility:private"],  # These sources are compiled into builder.
     deps = [
         "//tools/base/build-system:tools.apksig",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -26,9 +27,7 @@ java_library(
 
 java_test(
     name = "apkzlib_tests",
-    srcs = glob([
-        "src/test/java/**/*.java",
-    ]),
+    srcs = glob(["src/test/java/**/*.java"]),
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
