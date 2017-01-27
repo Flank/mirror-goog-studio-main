@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
@@ -23,21 +24,20 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyContainer;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-
+import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -470,7 +470,11 @@ public class VariantDependencies {
                 return Collections.emptySet();
             }
         }
-        return getAnnotationProcessorConfiguration().getFiles();
+        return getAnnotationProcessorConfiguration()
+                .getFiles()
+                .stream()
+                .filter(file -> !file.getPath().endsWith(SdkConstants.DOT_AAR))
+                .collect(Collectors.toSet());
     }
 
     @NonNull
