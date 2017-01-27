@@ -152,13 +152,13 @@ public class OriginalStream extends TransformStream {
         }
 
         public Builder setDependencies(@NonNull List<? extends Object> dependencies) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(fileCollection == null, "Cannot set dependencies when using file collection");
             this.dependencies = ImmutableList.copyOf(dependencies);
             return this;
         }
 
         public Builder setDependency(@NonNull Object dependency) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(fileCollection == null, "Cannot set dependency when using file collection");
             this.dependencies = ImmutableList.of(dependency);
             return this;
         }

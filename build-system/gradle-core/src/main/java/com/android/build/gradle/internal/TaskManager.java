@@ -671,42 +671,14 @@ public abstract class TaskManager {
                                 .build());
             }
 
-            transformManager.addStream(OriginalStream.builder(project)
-                    .addContentTypes(DefaultContentType.CLASSES)
-                    .addScope(Scope.TESTED_CODE)
-                    .setJars(() -> variantScope.getGlobalScope().getAndroidBuilder()
-                            .getAllPackagedJars(testedVariantData.getVariantConfiguration()))
-                    .setDependency(ImmutableList.of(
-                            testedVariantScope.getPreBuildTask().getName(),
-                            testedVariantData.getVariantDependency().getPackageConfiguration()
-                                    .getBuildDependencies()))
-                    .build());
-
             transformManager.addStream(
                     OriginalStream.builder(project)
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setJars(
-                                    () ->
-                                            variantScope
-                                                    .getGlobalScope()
-                                                    .getAndroidBuilder()
-                                                    .getAllPackagedJars(
-                                                            testedVariantData
-                                                                    .getVariantConfiguration()))
-                            .setDependency(
-                                    ImmutableList.of(
-                                            // Removing PrepareDependenciesTask.
-                                            //testedVariantScope
-                                            //        .getPrepareDependenciesTask()
-                                            //        .getName(),
-                                            testedVariantData
-                                                    .getVariantDependency()
-                                                    .getCompileConfiguration()
-                                                    .getBuildDependencies(),
-                                            testedVariantData
-                                                    .getVariantDependency()
-                                                    .getPackageConfiguration()))
+                            .setFileCollection(testedVariantScope.getArtifactFileCollection(
+                                    AndroidArtifacts.ConfigType.PACKAGE,
+                                    AndroidArtifacts.ArtifactScope.ALL,
+                                    AndroidArtifacts.ArtifactType.CLASSES))
                             .build());
         }
 
