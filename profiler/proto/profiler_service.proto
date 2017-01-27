@@ -50,7 +50,7 @@ service ProfilerService {
 }
 
 message TimeRequest {
-  string device_serial = 1;
+  Session session = 1;
 }
 
 message TimeResponse {
@@ -65,6 +65,7 @@ message TimeResponse {
 }
 
 message VersionRequest {
+  Session session = 1;
 }
 
 message VersionResponse {
