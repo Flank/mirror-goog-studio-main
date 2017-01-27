@@ -19,7 +19,6 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.HeapSegment.HeapSegmentElement;
-
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -582,22 +581,14 @@ public class ClientData {
      */
     void setClientDescription(String description) {
         /*
-         * The instant apps runtime initially returns a placeholder name for the process which can
-         * be identified by the following prefix. If the runtime can be updated to return the
-         * correct name from the beginning then this check can be removed.
+         * The application VM is first named <pre-initialized> before being assigned
+         * its real name.
+         * Depending on the timing, we can get an APNM chunk setting this name before
+         * another one setting the final actual name. So if we get a SetClientDescription
+         * with this value we ignore it.
          */
-        final String placeholderNamePrefix = "com.google.android.instantapps.supervisor.isolated";
-        if (mClientDescription == null || mClientDescription.startsWith(placeholderNamePrefix)) {
-            /*
-             * The application VM is first named <pre-initialized> before being assigned
-             * its real name.
-             * Depending on the timing, we can get an APNM chunk setting this name before
-             * another one setting the final actual name. So if we get a SetClientDescription
-             * with this value we ignore it.
-             */
-            if (!description.isEmpty() && !PRE_INITIALIZED.equals(description)) {
-                mClientDescription = description;
-            }
+        if (!description.isEmpty() && !PRE_INITIALIZED.equals(description)) {
+            mClientDescription = description;
         }
     }
 
