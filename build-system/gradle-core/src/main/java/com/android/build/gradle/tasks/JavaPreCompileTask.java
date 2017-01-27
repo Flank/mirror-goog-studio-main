@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -28,10 +28,10 @@ import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -67,7 +67,12 @@ public class JavaPreCompileTask extends BaseTask {
         if (resolvedConfiguration.hasError()) {
             resolvedConfiguration.rethrowFailure();
         }
-        Collection<File> processorPath = annotationProcessorConfiguration.getFiles();
+        Collection<File> processorPath =
+                annotationProcessorConfiguration
+                        .getFiles()
+                        .stream()
+                        .filter(file -> !file.getPath().endsWith(SdkConstants.DOT_AAR))
+                        .collect(Collectors.toSet());
 
         AndroidJavaCompile javacTask =
                 (AndroidJavaCompile) getProject().getTasks().getByName(javacTaskName);
