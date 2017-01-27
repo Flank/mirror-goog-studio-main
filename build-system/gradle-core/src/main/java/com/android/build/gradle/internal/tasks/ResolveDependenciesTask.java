@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -50,8 +49,7 @@ public class ResolveDependenciesTask extends BaseTask {
     @Nullable private FileCache buildCache;
 
     @TaskAction
-    public void resolveDependencies() throws LoggedErrorException, InterruptedException,
-            IOException {
+    public void resolveDependencies() throws InterruptedException, IOException {
         // Resolve variant dependencies.
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
@@ -69,7 +67,7 @@ public class ResolveDependenciesTask extends BaseTask {
             @NonNull Project project,
             @NonNull GradleVariantConfiguration config,
             @Nullable FileCache buildCache)
-            throws LoggedErrorException, InterruptedException, IOException {
+            throws InterruptedException, IOException {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         Set<AndroidDependency> dependencies =

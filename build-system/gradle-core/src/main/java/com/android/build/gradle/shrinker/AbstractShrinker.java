@@ -26,7 +26,6 @@ import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Stopwatch;
@@ -337,7 +336,7 @@ public abstract class AbstractShrinker<T> {
     protected void waitForAllTasks() {
         try {
             mExecutor.waitForTasksWithQuickFail(true);
-        } catch (InterruptedException | LoggedErrorException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
