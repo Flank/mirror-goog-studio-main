@@ -71,10 +71,10 @@ public class BazelIntegrationTestsSuite {
      * couple of levels higher in the file system than "runfiles".
      */
     @BeforeClass
-    public static void copyNdkToTmp() throws Exception {
+    public static void symlinkNdkToTmp() throws Exception {
         assertThat(NDK_IN_TMP).doesNotExist();
-        FileUtils.copyDirectory(
-                new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK), NDK_IN_TMP.toFile());
+        Files.createSymbolicLink(
+                NDK_IN_TMP, new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK).toPath());
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
