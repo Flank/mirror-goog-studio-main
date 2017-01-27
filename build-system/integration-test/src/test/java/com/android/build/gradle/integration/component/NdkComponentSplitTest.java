@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.SigningHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
@@ -35,6 +36,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
 /** Integration test of the native plugin with multiple variants. */
 public class NdkComponentSplitTest {
 
@@ -103,21 +105,25 @@ public class NdkComponentSplitTest {
         assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so");
+        SigningHelper.assertApkSignaturesVerify(apk);
 
         Apk armApk = project.getApk("debug_armeabi-v7a");
         assertThat(armApk).contains("lib/armeabi-v7a/libhello-jni.so");
         assertThat(armApk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(armApk).doesNotContain("lib/x86/libhello-jni.so");
+        SigningHelper.assertApkSignaturesVerify(armApk);
 
         Apk mipsApk = project.getApk("debug_mips");
         assertThat(mipsApk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(mipsApk).contains("lib/mips/libhello-jni.so");
         assertThat(mipsApk).doesNotContain("lib/x86/libhello-jni.so");
+        SigningHelper.assertApkSignaturesVerify(mipsApk);
 
         Apk x86Apk = project.getApk("debug_x86");
         assertThat(x86Apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(x86Apk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(x86Apk).contains("lib/x86/libhello-jni.so");
+        SigningHelper.assertApkSignaturesVerify(x86Apk);
     }
 
     @Test

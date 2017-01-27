@@ -10,6 +10,7 @@ java_library(
     ],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
+        "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
         "//tools/base/build-system:tools.builder-test-api",
