@@ -846,6 +846,7 @@ public final class SdkConstants {
     public static final String INSTANT_APP_URI = "http://schemas.android.com/instantapps";              //$NON-NLS-1$
 
     // Tags: Manifest
+    public static final String TAG_MANIFEST = "manifest";
     public static final String TAG_SERVICE = "service";                //$NON-NLS-1$
     public static final String TAG_PERMISSION = "permission";          //$NON-NLS-1$
     public static final String TAG_USES_FEATURE = "uses-feature";      //$NON-NLS-1$
@@ -863,6 +864,7 @@ public final class SdkConstants {
     public static final String TAG_GRANT_PERMISSION = "grant-uri-permission"; //$NON-NLS-1$
     public static final String TAG_PATH_PERMISSION = "path-permission"; //$NON-NLS-1$
     public static final String TAG_ACTION = "action";                   //$NON-NLS-1$
+    public static final String TAG_INSTRUMENTATION = "instrumentation";
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources";            //$NON-NLS-1$
@@ -1025,6 +1027,11 @@ public final class SdkConstants {
     public static final String ATTR_HAS_CODE = "hasCode";              //$NON-NLS-1$
     public static final String ATTR_AUTHORITIES = "authorities";       //$NON-NLS-1$
     public static final String ATTR_MULTIPROCESS = "multiprocess";     //$NON-NLS-1$
+    public static final String ATTR_SPLIT = "split";
+    public static final String ATTR_FUNCTIONAL_TEST = "functionalTest";
+    public static final String ATTR_HANDLE_PROFILING = "handleProfiling";
+    public static final String ATTR_TARGET_PACKAGE = "targetPackage";
+    public static final String ATTR_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";

@@ -23,18 +23,18 @@ import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.google.common.io.Closeables;
-
-import org.xml.sax.InputSource;
-
 import java.io.InputStream;
-
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
+import org.xml.sax.InputSource;
 
 /**
  * Helper and Constants for the AndroidManifest.xml file.
  *
+ * @deprecated Don't use the static method to parse manifests, they use XPath which is not
+ *     efficient.
  */
+@Deprecated
 public final class AndroidManifest {
 
     public static final String NODE_MANIFEST = "manifest";

@@ -137,6 +137,7 @@ public class VariantConfigurationTest extends TestCase {
                 new VariantConfiguration<>(
                         mDefaultConfig,
                         new MockSourceProvider("main"),
+                        null,
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,
@@ -153,6 +154,7 @@ public class VariantConfigurationTest extends TestCase {
                         DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
                         mDefaultConfig,
                         new MockSourceProvider("main"),
+                        null,
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,
@@ -174,6 +176,7 @@ public class VariantConfigurationTest extends TestCase {
                         DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
                         mDefaultConfig,
                         new MockSourceProvider("main"),
+                        null,
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,

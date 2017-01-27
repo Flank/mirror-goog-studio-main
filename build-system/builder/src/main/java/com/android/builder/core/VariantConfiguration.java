@@ -242,10 +242,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     private final SigningConfig mSigningConfigOverride;
 
-    /**
-     * For reading the attributes from the main manifest file in the default source set.
-     */
-    private ManifestAttributeSupplier mManifestAttributeSupplier = null;
+    /** For reading the attributes from the main manifest file in the default source set. */
+    @NonNull private final ManifestAttributeSupplier mManifestAttributeSupplier;
 
     /**
      * Creates the configuration with the base source sets for a given {@link VariantType}. Meant
@@ -261,14 +259,20 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public VariantConfiguration(
             @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable SigningConfig signingConfigOverride) {
         this(
-                defaultConfig, defaultSourceProvider,
-                buildType, buildTypeSourceProvider,
-                type, null /*testedConfig*/, signingConfigOverride);
+                defaultConfig,
+                defaultSourceProvider,
+                mainManifestAttributeSupplier,
+                buildType,
+                buildTypeSourceProvider,
+                type,
+                null /*testedConfig*/,
+                signingConfigOverride);
     }
 
     /**
@@ -279,12 +283,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @param buildType the build type for this variant. Required.
      * @param buildTypeSourceProvider the source provider for the build type.
      * @param type the type of the project.
-     * @param testedConfig the reference to the tested project. Required if type is Type.ANDROID_TEST
+     * @param testedConfig the reference to the tested project. Required if type is
+     *     Type.ANDROID_TEST
      * @param signingConfigOverride an optional Signing override to be used for signing.
      */
     public VariantConfiguration(
             @NonNull D defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
+            @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
@@ -303,6 +309,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         mDefaultConfig = checkNotNull(defaultConfig);
         mDefaultSourceProvider = checkNotNull(defaultSourceProvider);
+        mManifestAttributeSupplier =
+                mainManifestAttributeSupplier != null
+                        ? mainManifestAttributeSupplier
+                        : new DefaultManifestParser(mDefaultSourceProvider.getManifestFile());
         mBuildType = checkNotNull(buildType);
         mBuildTypeSourceProvider = buildTypeSourceProvider;
         mType = checkNotNull(type);
@@ -2314,10 +2324,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     private ManifestAttributeSupplier getManifestAttributeSupplier(){
-        if (mManifestAttributeSupplier == null){
-            mManifestAttributeSupplier =
-                    new DefaultManifestParser(mDefaultSourceProvider.getManifestFile());
-        }
         return mManifestAttributeSupplier;
     }
 }
