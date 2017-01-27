@@ -367,7 +367,7 @@ public class SigningTest {
      * <p>To cover different scenarios, for every signature algorithm we need to build APKs with
      * three different minimum SDK versions and run each one against three different system images.
      *
-     * <p>This method covers 25 and 19 devices. The test for a 17 device is a separate test method
+     * <p>This method covers 24 and 19 devices. The test for a 17 device is a separate test method
      * that will report as skipped if the device is not available.
      */
     @Test
@@ -380,8 +380,8 @@ public class SigningTest {
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
 
-        IDevice device25 = adb.getDevice(25);
-        checkOnDevice(device25);
+        IDevice device24 = adb.getDevice(24);
+        checkOnDevice(device24);
 
         // Check APK with minimum SDK 18.
         // Don't run on the oldest device, it's not compatible with the APK.
@@ -389,7 +389,7 @@ public class SigningTest {
                 project.getBuildFile(),
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
-        checkOnDevice(device25);
+        checkOnDevice(device24);
         IDevice device19 = adb.getDevice(19);
         checkOnDevice(device19);
 
@@ -399,7 +399,7 @@ public class SigningTest {
                     project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion " + minSdkVersion);
 
             checkOnDevice(device19);
-            checkOnDevice(device25);
+            checkOnDevice(device24);
         }
     }
 
