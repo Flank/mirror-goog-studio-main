@@ -30,13 +30,10 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.Variant;
 import com.android.builder.testing.api.DeviceException;
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.TimeoutException;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
@@ -105,18 +102,29 @@ public final class InstantRunTestUtils {
         throw new AssertionError("Could not find debug variant.");
     }
 
-    static void doInstall(
-            @NonNull IDevice device,
-            @NonNull List<InstantRunArtifact> artifacts) throws DeviceException,
-            InstallException {
-        if (artifacts.size() == 1 && artifacts.get(0).type == InstantRunArtifactType.MAIN) {
-            device.installPackage(artifacts.get(0).file.getAbsolutePath(), true /*reinstall*/);
+
+    /** This performs the same work as the SplitApkDeployTask in studio. */
+    static void doInstall(@NonNull IDevice device, @NonNull InstantRunBuildInfo info)
+            throws DeviceException, InstallException {
+
+        if (info.canHotswap()) {
+            throw new AssertionError("Tried to install a hot swap build");
+        }
+        if (info.hasNoChanges()) {
+            throw new AssertionError("Tried to deploy with no changes");
+        }
+
+        if (info.getFeatureLevel() <= 19) {
+            assertThat(info.getArtifacts()).hasSize(1);
+            InstantRunArtifact artifact = info.getArtifacts().get(0);
+            assertThat(artifact.type).isEqualTo(InstantRunArtifactType.MAIN);
+            device.installPackage(artifact.file.getAbsolutePath(), true /*reinstall*/);
             return;
         }
 
         assertThat(device.getVersion()).isAtLeast(AndroidVersion.ART_RUNTIME);
         List<File> apkFiles = Lists.newArrayList();
-        for (InstantRunArtifact artifact : artifacts) {
+        for (InstantRunArtifact artifact : info.getArtifacts()) {
             switch (artifact.type) {
                 case SPLIT_MAIN:
                     apkFiles.add(0, artifact.file);
@@ -131,7 +139,7 @@ public final class InstantRunTestUtils {
         device.installPackages(
                 apkFiles,
                 true /*reinstall*/,
-                ImmutableList.of(),
+                info.isPatchBuild() ? ImmutableList.of("-p") : ImmutableList.of(),
                 DEFAULT_ADB_TIMEOUT_MSEC,
                 MILLISECONDS);
     }

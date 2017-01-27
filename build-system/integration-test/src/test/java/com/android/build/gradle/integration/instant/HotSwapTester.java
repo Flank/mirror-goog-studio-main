@@ -111,7 +111,7 @@ public class HotSwapTester {
 
             // Deploy to device
             InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
-            InstantRunTestUtils.doInstall(device, info.getArtifacts());
+            InstantRunTestUtils.doInstall(device, info);
 
             logcat.clearFiltered();
 

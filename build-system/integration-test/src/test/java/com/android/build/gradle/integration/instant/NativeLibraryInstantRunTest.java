@@ -85,7 +85,7 @@ public class NativeLibraryInstantRunTest {
                 .run("assembleDebug");
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
         device.uninstallPackage("com.example.hellojni");
-        InstantRunTestUtils.doInstall(device, info.getArtifacts());
+        InstantRunTestUtils.doInstall(device, info);
 
         // Run app
         InstantRunTestUtils.unlockDevice(device);
