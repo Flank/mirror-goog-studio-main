@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,6 +44,7 @@ public class MinifyWithJackTest {
                 .run("clean", "assembleMinified", "assembleDebugAndroidTest");
     }
 
+    @Ignore("http://b.android.com/233020")
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
