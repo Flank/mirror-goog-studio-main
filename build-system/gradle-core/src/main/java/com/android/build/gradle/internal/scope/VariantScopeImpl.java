@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
+import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
@@ -90,6 +91,7 @@ import com.android.utils.StringHelper;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -113,10 +115,13 @@ import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.component.Artifact;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.Spec;
@@ -690,6 +695,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     // remove all file-based local jar in this case.
                     minus = getAllFileBasedJars(attributes, configuration);
                 }
+
                 break;
             default:
                 throw new RuntimeException("unknown ArtifactScope value");
@@ -704,11 +710,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             fileCollection = artifactView.componentFilter(filter).getFiles();
         }
 
-        if (scope == ArtifactScope.MODULE) {
-            // we only add the tested scope if the query if for the MODULE.
-            // (the method will also only add it if it's the right variant)
-            fileCollection = addTestedCollection(fileCollection, artifactType);
-        }
+        fileCollection = handleTestedComponent(fileCollection,
+                configType,
+                scope,
+                artifactType);
 
         if (minus != null) {
             fileCollection = fileCollection.minus(minus);
@@ -753,6 +758,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         ArtifactView artifactView = configuration.getIncoming().artifactView()
                 .attributes(container -> container.attribute(ARTIFACT_TYPE, artifactType.getType()));
+
         if (filter == null) {
             return artifactView.getArtifacts();
         } else {
@@ -1736,20 +1742,59 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return this;
     }
 
-    private FileCollection addTestedCollection(
+    /**
+     * adds the tested artifact if the tested artifact is an AAR.
+     *
+     * @param fileCollection the file collection to add the new artifact to
+     * @param artifactType the type of the artifact to add
+     * @return a new file collection containing the result
+     */
+    @NonNull
+    private FileCollection handleTestedComponent(
             @NonNull FileCollection fileCollection,
+            @NonNull ConfigType configType,
+            @NonNull ArtifactScope artifactScope,
             @NonNull ArtifactType artifactType) {
         // get the matching file collection for the tested variant, if any.
         if (variantData instanceof TestVariantData) {
             TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
 
-            if (tested instanceof BaseVariantData) {
-                final BaseVariantData testedVariantData = (BaseVariantData) tested;
-                ConfigurableFileCollection testedFC = testedVariantData.getScope()
-                        .getInternalArtifact(artifactType.getType());
+            if (tested instanceof LibraryVariantData) {
+                // we only add the tested component to the MODULE scope.
+                if (artifactScope == ArtifactScope.MODULE || artifactScope == ArtifactScope.ALL) {
+                    // for the library, always add the tested scope no matter the
+                    // configuration type (package or compile)
+                    final LibraryVariantData testedVariantData = (LibraryVariantData) tested;
+                    ConfigurableFileCollection testedFC = testedVariantData.getScope()
+                            .getInternalArtifact(artifactType.getType());
 
-                if (testedFC != null) {
-                    fileCollection = testedFC.from(fileCollection);
+                    if (testedFC != null) {
+                        fileCollection = testedFC.plus(fileCollection);
+                    }
+                }
+
+            } else if (tested instanceof ApplicationVariantData) {
+                final ApplicationVariantData testedVariantData = (ApplicationVariantData) tested;
+
+                // for tested application, first we add the tested component as provided (so
+                // only for the compile version), and only for the java compilation
+                if (configType == ConfigType.COMPILE &&
+                        (artifactScope == ArtifactScope.MODULE || artifactScope == ArtifactScope.ALL) &&
+                        artifactType == ArtifactType.CLASSES) {
+                    ConfigurableFileCollection testedFC = testedVariantData.getScope()
+                            .getInternalArtifact(ArtifactType.CLASSES.getType());
+
+                    if (testedFC != null) {
+                        fileCollection = testedFC.plus(fileCollection);
+                    }
+                } else if (configType == ConfigType.PACKAGE) {
+                    // however we also always remove the transitive dependencies coming from the
+                    // tested app to avoid having the same artifact on each app and tested app.
+                    // This applies only to the package scope since we do want these in the compile
+                    // scope in order to compile
+                    fileCollection = fileCollection.minus(testedVariantData.getScope()
+                            .getArtifactFileCollection(configType, ArtifactScope.ALL,
+                                    artifactType));
                 }
             }
         }
