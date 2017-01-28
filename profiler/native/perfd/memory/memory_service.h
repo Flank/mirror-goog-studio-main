@@ -54,7 +54,7 @@ class MemoryServiceImpl final
 
   ::grpc::Status GetHeapDump(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::HeapDumpDataRequest* request,
+      const ::profiler::proto::DumpDataRequest* request,
       ::profiler::proto::DumpDataResponse* response) override;
 
   ::grpc::Status ListHeapDumpInfos(
@@ -77,6 +77,11 @@ class MemoryServiceImpl final
       const ::profiler::proto::AllocationContextsRequest* request,
       ::profiler::proto::AllocationContextsResponse* response)
       override;
+
+  ::grpc::Status GetAllocationDump(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::DumpDataRequest* request,
+      ::profiler::proto::DumpDataResponse* response) override;
 
  private:
   MemoryCollector* GetCollector(int32_t app_id);
