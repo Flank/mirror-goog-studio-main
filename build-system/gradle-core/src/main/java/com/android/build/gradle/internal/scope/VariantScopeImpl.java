@@ -664,6 +664,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             case PACKAGE:
                 configuration = getVariantData().getVariantDependency().getPackageConfiguration();
                 break;
+            case ANNOTATION_PROCESSOR:
+                configuration = getVariantData()
+                        .getVariantDependency()
+                        .getAnnotationProcessorConfiguration();
+                break;
             default:
                 throw new RuntimeException("unknown ConfigType value");
         }
