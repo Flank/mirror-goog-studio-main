@@ -48,4 +48,15 @@ class CompositeIssueRegistry extends IssueRegistry {
 
         return issues;
     }
+
+    @Override
+    public boolean isUpToDate() {
+        for (IssueRegistry registry : registries) {
+            if (!registry.isUpToDate()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
