@@ -1,18 +1,19 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:jasmin.bzl", "jasmin_library")
+load("//tools/base/bazel:utils.bzl", "srcjar")
 load(":instrumenter.bzl", "compile_and_instrument_base")
 load(":instrumenter.bzl", "compile_and_instrument_patch")
-load("//tools/base/bazel:bazel.bzl", "fileset")
 
-fileset(
-    name = "sources",
-    srcs = glob(["src/main/java/**/*.java"]),
+srcjar(
+    name = "srcjar",
+    java_library = ":instant-run-instrumentation",
     visibility = ["//tools/base/build-system/gradle-core:__pkg__"],
 )
 
 java_library(
     name = "instant-run-instrumentation",
-    srcs = [":sources"],
-    visibility = ["//visibility:public"],
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//visibility:private"],  # These sources are compiled into gradle-core
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
@@ -27,9 +28,7 @@ java_library(
 
 java_library(
     name = "instant-run-test-instrumenter",
-    srcs = glob([
-        "src/instrumenter/java/**/*.java",
-    ]),
+    srcs = glob(["src/instrumenter/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         ":instant-run-instrumentation",
