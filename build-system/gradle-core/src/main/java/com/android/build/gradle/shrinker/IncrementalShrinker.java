@@ -28,7 +28,6 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -135,7 +134,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
 
                     Set<String> newMembers =
                             mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
-                    Set<T> newInterfaces = getReachableInterfaces(klass);
+                    Set<T> newInterfaces = getReachableImplementedInterfaces(klass);
 
                     // Update the class file if the user modified it or we "modified it" by adding or
                     // removing class members or implemented interfaces.
@@ -168,17 +167,23 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         return new Changes<>(classesToWrite, classFilesToDelete);
     }
 
-    private Set<T> getReachableInterfaces(T klass) throws ClassLookupException {
+    /**
+     * Returns the set of interfaces a given class implements, filtered to only include interfaces
+     * that are otherwise used in the program.
+     *
+     * <p>In other words, the shrunk bytecode for {@code klass} should use these in the class
+     * definition.
+     */
+    private Set<T> getReachableImplementedInterfaces(T klass) throws ClassLookupException {
         return Stream.of(mGraph.getInterfaces(klass))
                 .filter(iface -> mGraph.isReachable(iface, CounterSet.SHRINK))
                 .collect(Collectors.toSet());
     }
 
     /**
-     * Saves all reachable classes and members in a {@link SetMultimap} and clears all counters, so
-     * that the graph can be traversed again, using the new edges.
+     * Returns a {@link State} instance for every reachable class in the graph.
      *
-     * <p>Returns a multimap that contains names of all reachable members for every reachable class.
+     * @see State
      */
     @NonNull
     private Map<T, State<T>> saveState() {
@@ -189,7 +194,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             try {
                 Set<String> reachableMembers =
                         mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
-                Set<T> interfaces = getReachableInterfaces(klass);
+                Set<T> interfaces = getReachableImplementedInterfaces(klass);
 
                 oldState.put(klass, new State<>(reachableMembers, interfaces));
             } catch (ClassLookupException e) {
@@ -316,7 +321,10 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * <p>If any of this has changed, the classfile needs to be updated.
      */
     private static final class State<T> {
+        /** Members (fields and methods) that were kept in the shrunk bytecode. */
         @NonNull final ImmutableSet<String> members;
+
+        /** Interfaces that were used in the shrunk class definition. */
         @NonNull final ImmutableSet<T> interfaces;
 
         public State(@NonNull Iterable<String> members, @NonNull Iterable<T> interfaces) {
