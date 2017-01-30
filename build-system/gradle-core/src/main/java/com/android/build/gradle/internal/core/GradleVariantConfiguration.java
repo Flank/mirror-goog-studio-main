@@ -317,23 +317,26 @@ public class GradleVariantConfiguration
     @Override
     public ApiVersions getApiVersionsNonTestVariant() {
         ApiVersions apiVersions = super.getApiVersionsNonTestVariant();
-        if (project.hasProperty(AndroidProject.PROPERTY_BUILD_API)
-                && getBuildType().isDebuggable()) {
-            // Consider runtime API passed from the IDE only if the app is debuggable.
-            Integer targetAPILevel =
-                    Integer.parseInt(
-                            project.property(AndroidProject.PROPERTY_BUILD_API).toString());
-
-            int minVersion =
-                    apiVersions.targetSdkVersion.getApiLevel() > 0
-                            ? Integer.min(
-                                    apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
-                            : targetAPILevel;
-
-            return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
-        } else {
+        if (!project.hasProperty(AndroidProject.PROPERTY_BUILD_API)
+                || !getBuildType().isDebuggable()) {
             return apiVersions;
         }
+
+        // Consider runtime API passed from the IDE only if the app is debuggable.
+        Integer targetAPILevel =
+                Integer.parseInt(project.property(AndroidProject.PROPERTY_BUILD_API).toString());
+
+        if (targetAPILevel < 23) {
+            // max 100 DEX files in native multidex for L - see http://b.android.com/233093
+            return apiVersions;
+        }
+
+        int minVersion =
+                apiVersions.targetSdkVersion.getApiLevel() > 0
+                        ? Integer.min(apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
+                        : targetAPILevel;
+
+        return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
     }
 
     @NonNull

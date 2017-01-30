@@ -28,7 +28,7 @@ import org.junit.Test;
 
 /**
  * Test to ensure that a build targeted to < 21 will still use native multidex when invoked
- * by the IDE with a build API > 21.
+ * by the IDE with a build API >= 23.
  */
 public class DeploymentApiOverrideTest {
 
@@ -57,17 +57,24 @@ public class DeploymentApiOverrideTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_API, 21)
                 .run("clean", "assembleIcsDebug");
         assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
+        assertThat(lastBuild.getStdout()).contains("Multidexlist");
+    }
 
+    @Test
+    public void testMultiDexOnPost23Build() throws Exception {
+        GradleBuildResult lastBuild = project.executor()
+                .withProperty(AndroidProject.PROPERTY_BUILD_API, 23)
+                .run("clean", "assembleIcsDebug");
+        assertThat(lastBuild).isNotNull();
+        assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
     }
 
     @Test
     public void testMultiDexOnReleaseBuild() throws Exception {
         GradleBuildResult lastBuild = project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_API, 21)
+                .withProperty(AndroidProject.PROPERTY_BUILD_API, 23)
                 .run("clean", "assembleIcsRelease");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).contains("Multidexlist");
-
     }
 }
