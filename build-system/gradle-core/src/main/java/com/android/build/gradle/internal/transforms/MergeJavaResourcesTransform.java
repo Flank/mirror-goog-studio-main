@@ -43,6 +43,7 @@ import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.android.builder.packaging.PackagingUtils;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
@@ -52,7 +53,6 @@ import com.google.common.io.Files;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
@@ -76,11 +76,9 @@ public class MergeJavaResourcesTransform extends Transform {
 
     private interface FileValidator {
         boolean validateJarPath(@NonNull String path);
-        boolean validateFolderPath(@NonNull String path);
+        boolean validateFolderPath(@NonNull String path, boolean isSubProject);
         @NonNull
-        String folderPathToKey(@NonNull String path);
-        @NonNull
-        String keyToFolderPath(@NonNull String path);
+        String folderPathToKey(@NonNull String path, boolean isSubProject);
     }
 
     @NonNull
@@ -116,7 +114,7 @@ public class MergeJavaResourcesTransform extends Transform {
                 }
 
                 @Override
-                public boolean validateFolderPath(@NonNull String path) {
+                public boolean validateFolderPath(@NonNull String path, boolean isSubProject) {
                     return !path.endsWith(SdkConstants.DOT_CLASS) &&
                             !path.endsWith(SdkConstants.DOT_NATIVE_LIBS);
 
@@ -124,13 +122,7 @@ public class MergeJavaResourcesTransform extends Transform {
 
                 @NonNull
                 @Override
-                public String folderPathToKey(@NonNull String path) {
-                    return path;
-                }
-
-                @NonNull
-                @Override
-                public String keyToFolderPath(@NonNull String path) {
+                public String folderPathToKey(@NonNull String path, boolean isSubProject) {
                     return path;
                 }
             };
@@ -168,7 +160,12 @@ public class MergeJavaResourcesTransform extends Transform {
         }
 
         @Override
-        public boolean validateFolderPath(@NonNull String path) {
+        public boolean validateFolderPath(@NonNull String path, boolean isSubProject) {
+            if (isSubProject) {
+                // sub project publish their jni with lib/ so we use the jar validation instead.
+                return validateJarPath(path);
+            }
+
             // extract abi from path, checking the general path structure (<abi>/<filename>)
             Matcher m = folderAbiPattern.matcher(path);
 
@@ -187,14 +184,11 @@ public class MergeJavaResourcesTransform extends Transform {
 
         @NonNull
         @Override
-        public String folderPathToKey(@NonNull String path) {
+        public String folderPathToKey(@NonNull String path, boolean isSubProject) {
+            if (isSubProject) {
+                return path;
+            }
             return FD_APK_NATIVE_LIBS + "/" + path;
-        }
-
-        @NonNull
-        @Override
-        public String keyToFolderPath(@NonNull String path) {
-            return path.substring(FD_APK_NATIVE_LIBS.length() + 1);
         }
     }
 
@@ -231,6 +225,35 @@ public class MergeJavaResourcesTransform extends Transform {
         return false;
     }
 
+    private static final class MergeSource {
+        @NonNull
+        private final QualifiedContent sourceInput;
+        @NonNull
+        private final String sourcePath;
+
+        public MergeSource(
+                @NonNull QualifiedContent sourceInput,
+                @NonNull String sourcePath) {
+            this.sourceInput = sourceInput;
+            this.sourcePath = sourcePath;
+        }
+
+        static MergeSource of(@NonNull QualifiedContent sourceInput,
+                @NonNull String path) {
+            return new MergeSource(sourceInput, path);
+        }
+
+        @NonNull
+        public String getSourcePath() {
+            return sourcePath;
+        }
+
+        @NonNull
+        public QualifiedContent getSourceInput() {
+            return sourceInput;
+        }
+    }
+
     @Override
     public void transform(@NonNull TransformInvocation invocation) throws IOException, TransformException {
 
@@ -249,7 +272,7 @@ public class MergeJavaResourcesTransform extends Transform {
             outputProvider.deleteAll();
 
             // gather all the inputs.
-            ListMultimap<String, QualifiedContent> sourceFileList = ArrayListMultimap.create();
+            ListMultimap<String, MergeSource> sourceFileList = ArrayListMultimap.create();
             for (TransformInput input : invocation.getInputs()) {
                 for (JarInput jarInput : input.getJarInputs()) {
                     gatherListFromJar(jarInput, sourceFileList);
@@ -264,7 +287,7 @@ public class MergeJavaResourcesTransform extends Transform {
 
             // we're recording all the files that must be merged.
             // this is a map of (archive path -> source folder/jar)
-            ListMultimap<String, File> mergedFiles = ArrayListMultimap.create();
+            ListMultimap<String, MergeSource> mergedFiles = ArrayListMultimap.create();
 
             // we're also going to record for each jar which files comes from it.
             ListMultimap<File, String> jarSources = ArrayListMultimap.create();
@@ -278,9 +301,9 @@ public class MergeJavaResourcesTransform extends Transform {
                     continue;
                 }
 
-                List<QualifiedContent> contentSourceList = sourceFileList.get(key);
+                List<MergeSource> contentSourceList = sourceFileList.get(key);
 
-                QualifiedContent selectedContent;
+                MergeSource selectedContent;
                 if (packagingAction == PackagingFileAction.MERGE){
                     // if merge is specified, project files have no precedence
                     selectedContent = null;
@@ -298,14 +321,14 @@ public class MergeJavaResourcesTransform extends Transform {
                     } else if (packagingAction == PackagingFileAction.MERGE) {
                         // if it's selected for merging, we need to record this for later where
                         // we'll merge all the files we've found.
-                        for (QualifiedContent content : contentSourceList) {
-                            mergedFiles.put(key, content.getFile());
+                        for (MergeSource content : contentSourceList) {
+                            mergedFiles.put(key, content);
                         }
                     } else {
                         // finally if it's not excluded, then this is an error.
                         // collect the sources.
                         List<File> sources = contentSourceList.stream()
-                                .map(QualifiedContent::getFile)
+                                .map(mergeSource -> mergeSource.getSourceInput().getFile())
                                 .collect(Collectors.toList());
                         throw new TransformException(new DuplicateFileException(key, sources));
                     }
@@ -313,11 +336,12 @@ public class MergeJavaResourcesTransform extends Transform {
 
                 // if a file was selected, write it here.
                 if (selectedContent != null) {
-                    if (selectedContent instanceof JarInput) {
+                    QualifiedContent input = selectedContent.getSourceInput();
+                    if (input instanceof JarInput) {
                         // or just record it for now if it's coming from a jar.
                         // This will allow to open these source jars just once to copy
                         // all their content out.
-                        jarSources.put(selectedContent.getFile(), key);
+                        jarSources.put(input.getFile(), key);
                     } else {
                         if (outFolder == null) {
                             outFolder = outputProvider.getContentLocation(
@@ -326,7 +350,7 @@ public class MergeJavaResourcesTransform extends Transform {
                                     Format.DIRECTORY);
                             mkdirs(outFolder);
                         }
-                        copyFromFolder(selectedContent.getFile(), outFolder, key);
+                        copyFromFolder(selectedContent, outFolder, key);
                     }
                 }
             }
@@ -343,12 +367,12 @@ public class MergeJavaResourcesTransform extends Transform {
             // then handle the merged files.
             if (!mergedFiles.isEmpty()) {
                 for (String key : mergedFiles.keySet()) {
-                    List<File> sourceFiles = mergedFiles.get(key);
+                    List<MergeSource> mergeSources = mergedFiles.get(key);
 
                     // first check if we have a jar source
                     boolean hasJarSource = false;
-                    for (File sourceFile : sourceFiles) {
-                        if (sourceFile.isDirectory()) {
+                    for (MergeSource source : mergeSources) {
+                        if (source.getSourceInput() instanceof JarInput) {
                             hasJarSource = true;
                             break;
                         }
@@ -356,14 +380,17 @@ public class MergeJavaResourcesTransform extends Transform {
 
                     // merge the content into a ByteArrayOutputStream.
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    for (File sourceFile : sourceFiles) {
+                    for (MergeSource source : mergeSources) {
+                        File sourceFile = source.getSourceInput().getFile();
+                        final String sourcePath = source.getSourcePath();
+
                         if (sourceFile.isDirectory()) {
-                            File actualFile = computeFile(sourceFile, validator.keyToFolderPath(key));
+                            File actualFile = computeFile(sourceFile, sourcePath);
                             baos.write(Files.toByteArray(actualFile));
                         } else {
                             try (ZipFile zipFile = new ZipFile(sourceFile)) {
                                 ByteStreams.copy(
-                                        zipFile.getInputStream(zipFile.getEntry(key)), baos);
+                                        zipFile.getInputStream(zipFile.getEntry(sourcePath)), baos);
                             }
                         }
 
@@ -405,14 +432,14 @@ public class MergeJavaResourcesTransform extends Transform {
     }
 
     @Nullable
-    private static QualifiedContent findUniqueOrProjectContent(
-            @NonNull List<QualifiedContent> contentSourceList) {
+    private static MergeSource findUniqueOrProjectContent(
+            @NonNull List<MergeSource> contentSourceList) {
         if (contentSourceList.size() == 1) {
             return contentSourceList.get(0);
         }
 
-        for (QualifiedContent content : contentSourceList) {
-            if (content.getScopes().contains(Scope.PROJECT)) {
+        for (MergeSource content : contentSourceList) {
+            if (content.getSourceInput().getScopes().contains(Scope.PROJECT)) {
                 return content;
             }
         }
@@ -420,12 +447,12 @@ public class MergeJavaResourcesTransform extends Transform {
         return null;
     }
 
-    private void copyFromFolder(
-            @NonNull File fromFolder,
+    private static void copyFromFolder(
+            @NonNull MergeSource fromFolder,
             @NonNull File toFolder,
             @NonNull String path)
             throws IOException {
-        File from = computeFile(fromFolder, validator.keyToFolderPath(path));
+        File from = computeFile(fromFolder.getSourceInput().getFile(), fromFolder.getSourcePath());
         File to = computeFile(toFolder, path);
         mkdirs(to.getParentFile());
         Files.copy(from, to);
@@ -477,7 +504,7 @@ public class MergeJavaResourcesTransform extends Transform {
 
     private void gatherListFromJar(
             @NonNull JarInput jarInput,
-            @NonNull ListMultimap<String, QualifiedContent> content) throws IOException {
+            @NonNull ListMultimap<String, MergeSource> content) throws IOException {
 
         try (ZipFile zipFile = new ZipFile(jarInput.getFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -489,7 +516,7 @@ public class MergeJavaResourcesTransform extends Transform {
                     continue;
                 }
 
-                content.put(path, jarInput);
+                content.put(path, MergeSource.of(jarInput, path));
             }
 
         }
@@ -517,22 +544,19 @@ public class MergeJavaResourcesTransform extends Transform {
 
     private void gatherListFromFolder(
             @NonNull DirectoryInput directoryInput,
-            @NonNull ListMultimap<String, QualifiedContent> content) {
-        gatherListFromFolder(directoryInput.getFile(), "", directoryInput, content);
+            @NonNull ListMultimap<String, MergeSource> content) {
+        boolean subProject = directoryInput.getScopes().containsAll(ImmutableList.of(Scope.SUB_PROJECTS));
+        gatherListFromFolder(directoryInput.getFile(), "", directoryInput, subProject, content);
     }
 
     private void gatherListFromFolder(
             @NonNull File file,
             @NonNull String path,
             @NonNull DirectoryInput directoryInput,
-            @NonNull ListMultimap<String, QualifiedContent> content) {
-        File[] children = file.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File file, String name) {
-
-                return file.isDirectory() || !name.endsWith(SdkConstants.DOT_CLASS);
-            }
-        });
+            boolean isSubProject,
+            @NonNull ListMultimap<String, MergeSource> content) {
+        File[] children = file.listFiles(
+                (childFile, childName) -> childFile.isDirectory() || !childName.endsWith(SdkConstants.DOT_CLASS));
 
         if (children != null) {
             for (File child : children) {
@@ -542,9 +566,12 @@ public class MergeJavaResourcesTransform extends Transform {
                             child,
                             newPath,
                             directoryInput,
+                            isSubProject,
                             content);
-                } else if (child.isFile() && validator.validateFolderPath(newPath)) {
-                    content.put(validator.folderPathToKey(newPath), directoryInput);
+                } else if (child.isFile() && validator.validateFolderPath(newPath, isSubProject)) {
+                    content.put(
+                            validator.folderPathToKey(newPath, isSubProject),
+                            new MergeSource(directoryInput, newPath));
                 }
             }
         }
@@ -556,7 +583,7 @@ public class MergeJavaResourcesTransform extends Transform {
      * @param data the data
      * @return does it end with a UNIX newline character?
      */
-    private boolean endsWithUnixNewline(@NonNull byte[] data) {
+    private static boolean endsWithUnixNewline(@NonNull byte[] data) {
         return data.length > 0 && data[data.length - 1] == '\n';
     }
 }

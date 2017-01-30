@@ -1537,7 +1537,8 @@ public abstract class TaskManager {
                 new StripDebugSymbolTransform(
                         globalScope.getProject(),
                         globalScope.getNdkHandler(),
-                        globalScope.getExtension().getPackagingOptions().getDoNotStrip()));
+                        globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
+                        scope.getVariantConfiguration().getType() == VariantType.LIBRARY));
     }
 
     /**
