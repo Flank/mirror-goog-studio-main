@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Range;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -130,7 +129,7 @@ public class NdkComponentSplitTest {
     @Category(DeviceTests.class)
     public void connectedAndroidTest() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
-        IDevice device = adb.getDevice(AndroidVersionMatcher.forRange(Range.singleton(21)));
+        IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
         project.executeConnectedCheck(
                 ImmutableList.of(Adb.getInjectToDeviceProviderProperty(device)));
     }
