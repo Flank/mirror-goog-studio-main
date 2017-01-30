@@ -28,7 +28,7 @@ service MemoryService {
   }
   rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
   }
-  rpc GetHeapDump(HeapDumpDataRequest) returns (DumpDataResponse) {
+  rpc GetHeapDump(DumpDataRequest) returns (DumpDataResponse) {
   }
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
@@ -36,6 +36,8 @@ service MemoryService {
       returns (TrackAllocationsResponse) {}
   rpc ListAllocationContexts(AllocationContextsRequest)
       returns (AllocationContextsResponse) {}
+  rpc GetAllocationDump(DumpDataRequest) returns (DumpDataResponse) {
+  }
 
   // Used by perfd-host only for legacy allocation
   // tracking support.
@@ -137,6 +139,12 @@ message ListDumpInfosRequest {
   int64 end_time = 4;    // inclusive
 }
 
+message DumpDataRequest {
+  int32 process_id = 1;
+  string device_serial = 2;
+  int32 dump_id = 3;
+}
+
 message DumpDataResponse {
   enum Status {
     UNSPECIFIED = 0;
@@ -166,12 +174,6 @@ message TriggerHeapDumpResponse {
   // Returns the HeapDumpInfo immediately so the caller can
   // optionally track its completion
   HeapDumpInfo info = 2;
-}
-
-message HeapDumpDataRequest {
-  int32 process_id = 1;
-  string device_serial = 2;
-  int32 dump_id = 3;
 }
 
 message ListHeapDumpInfosResponse {

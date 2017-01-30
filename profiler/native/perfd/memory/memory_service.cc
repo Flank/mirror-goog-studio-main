@@ -24,7 +24,7 @@ using profiler::proto::AllocationContextsResponse;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::DumpDataResponse;
-using profiler::proto::HeapDumpDataRequest;
+using profiler::proto::DumpDataRequest;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
 using profiler::proto::ListHeapDumpInfosResponse;
@@ -107,7 +107,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 }
 
 ::grpc::Status MemoryServiceImpl::GetHeapDump(
-    ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
+    ::grpc::ServerContext* context, const DumpDataRequest* request,
     DumpDataResponse* response) {
   Trace trace("MEM:GetHeapDump");
   int32_t app_id = request->process_id();
@@ -130,6 +130,13 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
           ::grpc::StatusCode::UNKNOWN,
           "Unknown issue when attempting to retrieve file.");
   }
+}
+
+::grpc::Status MemoryServiceImpl::GetAllocationDump(
+    ::grpc::ServerContext* context, const DumpDataRequest* request,
+    DumpDataResponse* response) {
+    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                          "Not implemented on device");
 }
 
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
