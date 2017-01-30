@@ -137,7 +137,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private List<ConfigurableFileTree> javaSources;
 
     private List<File> extraGeneratedSourceFolders;
-    private ConfigurableFileCollection extraGeneratedResFolders;
+    private final ConfigurableFileCollection extraGeneratedResFolders;
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
 
@@ -195,6 +195,10 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                                 recorder),
                         this);
         taskManager.configureScopeForNdk(scope);
+
+        // this must be created immediately since the variant API happens after the task that
+        // depends on this are created.
+        extraGeneratedResFolders = scope.getGlobalScope().getProject().files();
     }
 
     @NonNull
@@ -352,10 +356,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     }
 
     public void registerGeneratedResFolders(@NonNull FileCollection folders) {
-        if (extraGeneratedResFolders == null) {
-            extraGeneratedResFolders = scope.getGlobalScope().getProject().files();
-        }
-
         extraGeneratedResFolders.from(folders);
     }
 
@@ -369,13 +369,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         System.out.println("registerResGeneratingTask is deprecated, use registerGeneratedFolders(FileCollection)");
 
         final Project project = scope.getGlobalScope().getProject();
-        registerGeneratedResFolders(project.files(generatedResFolders,
-                new Closure(project) {
-                    public Object doCall(ConfigurableFileCollection fileCollection) {
-                        fileCollection.builtBy(task);
-                        return null;
-                    }
-                }));
+        registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));
     }
 
     /**
