@@ -18,15 +18,13 @@ package com.android.build.gradle.shrinker;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * {@link ClassVisitor} that skips class members which are not reachable. It also filters the list
@@ -36,14 +34,20 @@ public class FilterMembersVisitor extends ClassVisitor {
     private final Set<String> mMembers;
     private final Predicate<String> mClassKeptPredicate;
 
-    public FilterMembersVisitor(Set<String> members, Predicate<String> classKeptPredicate, ClassVisitor cv) {
+    public FilterMembersVisitor(
+            Set<String> members, Predicate<String> classKeptPredicate, ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
         mMembers = members;
         mClassKeptPredicate = classKeptPredicate;
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature, String superName,
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
             String[] interfaces) {
         List<String> interfacesToKeep = Lists.newArrayList();
         for (String iface : interfaces) {
@@ -52,12 +56,18 @@ public class FilterMembersVisitor extends ClassVisitor {
             }
         }
 
-        super.visit(version, access, name, signature, superName, Iterables.toArray(interfacesToKeep, String.class));
+        super.visit(
+                version,
+                access,
+                name,
+                signature,
+                superName,
+                Iterables.toArray(interfacesToKeep, String.class));
     }
 
     @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature,
-            Object value) {
+    public FieldVisitor visitField(
+            int access, String name, String desc, String signature, Object value) {
         if (mMembers.contains(name + ":" + desc)) {
             return super.visitField(access, name, desc, signature, value);
         } else {
@@ -66,8 +76,8 @@ public class FilterMembersVisitor extends ClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-            String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, String name, String desc, String signature, String[] exceptions) {
         if (mMembers.contains(name + ":" + desc)) {
             return super.visitMethod(access, name, desc, signature, exceptions);
         } else {

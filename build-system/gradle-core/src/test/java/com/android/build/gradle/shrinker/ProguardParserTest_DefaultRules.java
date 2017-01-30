@@ -39,7 +39,7 @@ public class ProguardParserTest_DefaultRules extends AbstractShrinkerTest {
         for (String name : ProguardFiles.DEFAULT_PROGUARD_WHITELIST) {
             File rulesFile = tmpDir.newFile(name);
             ProguardFiles.extractBundledProguardFile(name, rulesFile);
-            run(parseKeepRules(Files.toString(rulesFile, StandardCharsets.UTF_8)));
+            fullRun(parseKeepRules(Files.toString(rulesFile, StandardCharsets.UTF_8)));
             assertClassSkipped("Main");
         }
     }

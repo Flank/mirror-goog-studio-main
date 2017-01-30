@@ -19,20 +19,15 @@ package com.android.build.gradle.shrinker;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.GrammarActions;
-
+import java.io.File;
 import org.antlr.runtime.RecognitionException;
 
-import java.io.File;
-import java.io.IOException;
-
-/**
- * Stub of a real parser. Only checks the most simple rules produced by AAPT.
- */
+/** Stub of a real parser. Only checks the most simple rules produced by AAPT. */
 public class ProguardConfig {
 
     private final Flags mFlags = new Flags();
 
-    public void parse(@NonNull File configFile) throws IOException {
+    public void parse(@NonNull File configFile) {
         try {
             GrammarActions.parse(configFile, mFlags);
         } catch (RecognitionException e) {
@@ -40,7 +35,7 @@ public class ProguardConfig {
         }
     }
 
-    public void parse(@NonNull String input) throws IOException {
+    public void parse(@NonNull String input) {
         try {
             GrammarActions.parse(input, mFlags);
         } catch (RecognitionException e) {

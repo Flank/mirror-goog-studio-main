@@ -18,7 +18,7 @@ package com.android.build.gradle.shrinker;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import java.io.File;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -26,38 +26,38 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.io.File;
-
 /**
  * {@link ClassVisitor} that adds visited classes, methods and fields to a {@link ShrinkerGraph}.
  */
 public class ClassStructureVisitor<T> extends ClassVisitor {
 
-    @Nullable
-    private final File mClassFile;
+    @Nullable private final File mClassFile;
     private final ShrinkerGraph<T> mGraph;
 
     private T mClass;
 
     public ClassStructureVisitor(
-            @NonNull ShrinkerGraph<T> graph,
-            @Nullable File classFile,
-            @Nullable ClassVisitor cv) {
+            @NonNull ShrinkerGraph<T> graph, @Nullable File classFile, @Nullable ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
         mClassFile = classFile;
         mGraph = graph;
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature, String superName,
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
             String[] interfaces) {
         mClass = mGraph.addClass(name, superName, interfaces, access, mClassFile);
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-            String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, String name, String desc, String signature, String[] exceptions) {
         final T method = mGraph.addMember(mClass, name, desc, access);
 
         MethodVisitor superVisitor = super.visitMethod(access, name, desc, signature, exceptions);
@@ -71,8 +71,8 @@ public class ClassStructureVisitor<T> extends ClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature,
-            Object value) {
+    public FieldVisitor visitField(
+            int access, String name, String desc, String signature, Object value) {
         final T field = mGraph.addMember(mClass, name, desc, access);
 
         FieldVisitor superVisitor = super.visitField(access, name, desc, signature, value);

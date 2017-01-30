@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-/**
- * {@link Matcher} that can be negated (e.g. by prepending "!" to a class name).
- */
+/** {@link Matcher} that can be negated (e.g. by prepending "!" to a class name). */
 public abstract class MatcherWithNegator<T> implements Matcher<T> {
     private boolean negator = false;
 
