@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 import static com.google.common.base.Charsets.UTF_8;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -32,6 +33,7 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -505,7 +507,7 @@ public class VectorDrawableTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.productFlavors { "
-                        + "pngs;\n"
+                        + "pngs\n"
                         + "vectors { vectorDrawables.useSupportLibrary = true }\n"
                         + "hdpiOnly { vectorDrawables.generatedDensities = ['hdpi'] }\n"
                         + "}");
@@ -540,6 +542,26 @@ public class VectorDrawableTest {
 
         assertThat(hdpiOnlyDebug.getUseSupportLibrary()).isFalse();
         assertThat(hdpiOnlyDebug.getGeneratedDensities()).containsExactly("hdpi");
+    }
+
+    @Test
+    public void resourceReferences() throws Exception {
+        Files.write(
+                "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        android:width=\"24dp\"\n"
+                        + "        android:height=\"24dp\"\n"
+                        + "        android:viewportWidth=\"24.0\"\n"
+                        + "        android:viewportHeight=\"24.0\">\n"
+                        + "    <path\n"
+                        + "            android:fillColor=\"#FF000000\"\n"
+                        + "            android:pathData=\"@string/pathDataAsString\"/>\n"
+                        + "</vector>\n",
+                new File(project.getTestDir(), "src/main/res/drawable/heart.xml"),
+                StandardCharsets.UTF_8);
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+        // Make sure we print out something useful.
+        assertThat(result.getFailureMessage()).contains("vector-asset-studio.html");
     }
 
     private static void assertPngGenerationDisabled(Apk apk) throws Exception {

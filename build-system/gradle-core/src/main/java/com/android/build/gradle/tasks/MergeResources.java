@@ -41,14 +41,23 @@ import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
+import com.android.ide.common.vectordrawable.ResourcesNotSupportedException;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -59,15 +68,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ParallelizableTask
 public class MergeResources extends IncrementalTask {
@@ -271,10 +271,24 @@ public class MergeResources extends IncrementalTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new VectorDrawableRenderer(
-                getMinSdk(),
-                getGeneratedPngsOutputDir(),
-                densities,
-                getILogger());
+                getMinSdk(), getGeneratedPngsOutputDir(), densities, getILogger()) {
+            @Override
+            public void generateFile(File toBeGenerated, File original) throws IOException {
+                try {
+                    super.generateFile(toBeGenerated, original);
+                } catch (ResourcesNotSupportedException e) {
+                    // Add gradle-specific error message.
+                    throw new GradleException(
+                            String.format(
+                                    "Can't process attribute %1$s=\"%2$s\": "
+                                            + "references to other resources are not supported by "
+                                            + "build-time PNG generation. "
+                                            + "See http://developer.android.com/tools/help/vector-asset-studio.html "
+                                            + "for details.",
+                                    e.getName(), e.getValue()));
+                }
+            }
+        };
     }
 
     @NonNull
