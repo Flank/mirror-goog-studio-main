@@ -25,17 +25,21 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.objectweb.asm.ClassReader;
 
 /** Code for incremental shrinking. */
@@ -79,17 +83,20 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
     public void incrementalRun(
             @NonNull Iterable<TransformInput> inputs, @NonNull TransformOutputProvider output)
             throws IOException, IncrementalRunImpossibleException {
-        final Set<T> classesToWrite = Sets.newConcurrentHashSet();
-        final Set<File> classFilesToDelete = Sets.newConcurrentHashSet();
-        final Set<PostProcessingData.UnresolvedReference<T>> unresolvedReferences =
+        Set<T> modifiedClasses = Sets.newConcurrentHashSet();
+        Set<PostProcessingData.UnresolvedReference<T>> unresolvedReferences =
                 Sets.newConcurrentHashSet();
 
         Stopwatch stopwatch = Stopwatch.createStarted();
-        SetMultimap<T, String> oldState = resetState();
-        logTime("resetState()", stopwatch);
 
-        processInputs(inputs, classesToWrite, unresolvedReferences);
-        logTime("processInputs", stopwatch);
+        Map<T, State<T>> oldState = saveState();
+        logTime("save state", stopwatch);
+
+        clearCounters();
+        logTime("clear counters", stopwatch);
+
+        processInputs(inputs, modifiedClasses, unresolvedReferences);
+        logTime("process inputs", stopwatch);
 
         finishGraph(unresolvedReferences);
         logTime("finish graph", stopwatch);
@@ -97,10 +104,10 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         setCounters(CounterSet.SHRINK);
         logTime("set counters", stopwatch);
 
-        chooseClassesToWrite(inputs, output, classesToWrite, classFilesToDelete, oldState);
+        Changes<T> changes = calculateChanges(inputs, output, oldState, modifiedClasses);
         logTime("choose classes", stopwatch);
 
-        updateClassFiles(classesToWrite, classFilesToDelete, inputs, output);
+        updateClassFiles(changes.classesToWrite, changes.classFilesToDelete, inputs, output);
         logTime("update class files", stopwatch);
 
         mGraph.saveState();
@@ -111,36 +118,42 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * Decides which classes need to be updated on disk and which need to be deleted. It puts
      * appropriate entries in the lists passed as arguments.
      */
-    private void chooseClassesToWrite(
+    private Changes<T> calculateChanges(
             @NonNull Iterable<TransformInput> inputs,
             @NonNull TransformOutputProvider output,
-            @NonNull Collection<T> classesToWrite,
-            @NonNull Collection<File> classFilesToDelete,
-            @NonNull SetMultimap<T, String> oldState) {
+            @NonNull Map<T, State<T>> oldStates,
+            @NonNull Set<T> modifiedClasses) {
+        Set<T> classesToWrite = Sets.newConcurrentHashSet();
+        Set<File> classFilesToDelete = Sets.newConcurrentHashSet();
+
         for (T klass : mGraph.getReachableClasses(CounterSet.SHRINK)) {
-            if (!oldState.containsKey(klass)) {
+            if (!oldStates.containsKey(klass)) {
                 classesToWrite.add(klass);
             } else {
-                Set<String> newMembers =
-                        mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
-                Set<String> oldMembers = oldState.get(klass);
+                try {
+                    State<T> oldState = oldStates.get(klass);
 
-                // Reverse of the trick above, where we store one artificial member for empty
-                // classes.
-                if (oldMembers.size() == 1) {
-                    oldMembers.remove(mGraph.getClassName(klass));
-                }
+                    Set<String> newMembers =
+                            mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
+                    Set<T> newInterfaces = getReachableInterfaces(klass);
 
-                if (!newMembers.equals(oldMembers)) {
-                    classesToWrite.add(klass);
+                    // Update the class file if the user modified it or we "modified it" by adding or
+                    // removing class members or implemented interfaces.
+                    if (modifiedClasses.contains(klass)
+                            || !newMembers.equals(oldState.members)
+                            || !newInterfaces.equals(oldState.interfaces)) {
+                        classesToWrite.add(klass);
+                    }
+                } catch (ClassLookupException e) {
+                    throw new AssertionError("Reachable class not found in graph.", e);
                 }
             }
 
-            oldState.removeAll(klass);
+            oldStates.remove(klass);
         }
 
-        // All keys that remained in oldState should be deleted.
-        for (T klass : oldState.keySet()) {
+        // All keys that remained in oldStates should be deleted.
+        for (T klass : oldStates.keySet()) {
             File sourceFile = mGraph.getSourceFile(klass);
             checkState(sourceFile != null, "One of the inputs has no source file.");
 
@@ -151,6 +164,14 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             }
             classFilesToDelete.add(outputFile.get());
         }
+
+        return new Changes<>(classesToWrite, classFilesToDelete);
+    }
+
+    private Set<T> getReachableInterfaces(T klass) throws ClassLookupException {
+        return Stream.of(mGraph.getInterfaces(klass))
+                .filter(iface -> mGraph.isReachable(iface, CounterSet.SHRINK))
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -160,25 +181,28 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * <p>Returns a multimap that contains names of all reachable members for every reachable class.
      */
     @NonNull
-    private SetMultimap<T, String> resetState() {
-        SetMultimap<T, String> oldState = HashMultimap.create();
+    private Map<T, State<T>> saveState() {
+        Map<T, State<T>> oldState = new HashMap<>();
 
+        // TODO: do it in parallel?
         for (T klass : mGraph.getReachableClasses(CounterSet.SHRINK)) {
-            Set<String> reachableMembers =
-                    mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
-            for (String member : reachableMembers) {
-                oldState.put(klass, member);
-            }
+            try {
+                Set<String> reachableMembers =
+                        mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
+                Set<T> interfaces = getReachableInterfaces(klass);
 
-            // Make sure the key is in the map.
-            if (reachableMembers.isEmpty()) {
-                oldState.put(klass, mGraph.getClassName(klass));
+                oldState.put(klass, new State<>(reachableMembers, interfaces));
+            } catch (ClassLookupException e) {
+                throw new AssertionError("Reachable class not found in graph.", e);
             }
         }
 
+        return oldState;
+    }
+
+    private void clearCounters() {
         mGraph.clearCounters(mExecutor);
         waitForAllTasks();
-        return oldState;
     }
 
     private void finishGraph(
@@ -189,7 +213,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
 
     private void processInputs(
             @NonNull Iterable<TransformInput> inputs,
-            @NonNull final Collection<T> classesToWrite,
+            @NonNull final Collection<T> modifiedClasses,
             @NonNull
                     final Collection<PostProcessingData.UnresolvedReference<T>>
                             unresolvedReferences)
@@ -229,7 +253,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
                                         processChangedClassFile(
                                                 changedFile.getKey(),
                                                 unresolvedReferences,
-                                                classesToWrite);
+                                                modifiedClasses);
                                         break;
                                 }
                                 return null;
@@ -256,12 +280,12 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
     private void processChangedClassFile(
             @NonNull File file,
             @NonNull Collection<PostProcessingData.UnresolvedReference<T>> unresolvedReferences,
-            @NonNull Collection<T> classesToWrite)
+            @NonNull Collection<T> modifiedClasses)
             throws IncrementalRunImpossibleException {
         try {
             ClassReader classReader = new ClassReader(Files.toByteArray(file));
             IncrementalRunVisitor<T> visitor =
-                    new IncrementalRunVisitor<>(mGraph, classesToWrite, unresolvedReferences);
+                    new IncrementalRunVisitor<>(mGraph, modifiedClasses, unresolvedReferences);
 
             DependencyRemoverVisitor<T> remover = new DependencyRemoverVisitor<>(mGraph, visitor);
 
@@ -283,6 +307,50 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             } else {
                 throw e;
             }
+        }
+    }
+
+    /**
+     * Holds data computed about a class in the previous run of the shrinker.
+     *
+     * <p>If any of this has changed, the classfile needs to be updated.
+     */
+    private static final class State<T> {
+        @NonNull final ImmutableSet<String> members;
+        @NonNull final ImmutableSet<T> interfaces;
+
+        public State(@NonNull Iterable<String> members, @NonNull Iterable<T> interfaces) {
+            this.members = ImmutableSet.copyOf(members);
+            this.interfaces = ImmutableSet.copyOf(interfaces);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            State<?> state = (State<?>) o;
+            return Objects.equal(members, state.members)
+                    && Objects.equal(interfaces, state.interfaces);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(members, interfaces);
+        }
+    }
+
+    /** Describes changes that should be applied to the output directory. */
+    private static final class Changes<T> {
+        @NonNull final Set<T> classesToWrite;
+        @NonNull final Set<File> classFilesToDelete;
+
+        private Changes(@NonNull Set<T> classesToWrite, @NonNull Set<File> classFilesToDelete) {
+            this.classesToWrite = classesToWrite;
+            this.classFilesToDelete = classFilesToDelete;
         }
     }
 }

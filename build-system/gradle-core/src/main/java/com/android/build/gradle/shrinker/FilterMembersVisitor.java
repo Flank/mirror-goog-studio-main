@@ -37,6 +37,9 @@ public class FilterMembersVisitor extends ClassVisitor {
     public FilterMembersVisitor(
             Set<String> members, Predicate<String> classKeptPredicate, ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
+
+        // Make sure all the information here (i.e. all changes we make to bytecode) are reflected
+        // in IncrementalShrinker.State.
         mMembers = members;
         mClassKeptPredicate = classKeptPredicate;
     }
