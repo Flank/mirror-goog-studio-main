@@ -13,8 +13,8 @@ fileset(
 maven_java_library(
     name = "builder",
     srcs = glob(["src/main/java/**/*.java"]) + [
-        "//tools/base/apkzlib:sources",
-        "//tools/base/build-system/profile:sources",  # TODO: Implement this properly.
+        "//tools/base/apkzlib:srcjar",
+        "//tools/base/build-system/profile:srcjar",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
@@ -70,7 +70,6 @@ java_test(
     deps = [
         ":builder",
         "//tools/base/annotations",
-        "//tools/base/apkzlib",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",

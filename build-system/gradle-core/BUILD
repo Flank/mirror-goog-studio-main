@@ -32,7 +32,7 @@ maven_java_library(
     ]) + [
         ":proguard-parser",
         "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
-        "//tools/base/build-system/instant-run-instrumentation:sources",
+        "//tools/base/build-system/instant-run-instrumentation:srcjar",
     ],
     exclusions = {
         "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
@@ -102,14 +102,12 @@ java_test(
         ":gradle-core",
         "//tools/analytics-library/protos:analytics-protos",
         "//tools/base/annotations",
-        "//tools/base/apkzlib",
         "//tools/base/build-system:gradle-api",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
         "//tools/base/build-system/gradle-core/src/main/proto",  # TODO: move this to this package?
-        "//tools/base/build-system/profile",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-checks",
