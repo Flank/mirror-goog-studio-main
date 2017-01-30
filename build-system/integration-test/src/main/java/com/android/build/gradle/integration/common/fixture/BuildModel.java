@@ -29,6 +29,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -244,13 +245,19 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
         setJvmArguments(executor);
 
-        executor.setStandardOutput(System.out);
-        executor.setStandardError(System.err);
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        executor.setStandardOutput(stdout);
+        executor.setStandardError(stderr);
 
         // See ProfileCapturer javadoc for explanation.
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
             return executor.withArguments(arguments).run();
+        } catch (Exception e) {
+            stderr.writeTo(System.err);
+            stdout.writeTo(System.out);
+            throw e;
         }
     }
 
