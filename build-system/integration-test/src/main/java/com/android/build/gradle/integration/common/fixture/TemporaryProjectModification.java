@@ -19,17 +19,16 @@ package com.android.build.gradle.integration.common.fixture;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-
-import org.junit.runners.model.InitializationError;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
+import org.junit.runners.model.InitializationError;
 
 /**
  * Allows project files to be modified, but stores their original content, so it can be restored for
@@ -127,20 +126,21 @@ public class TemporaryProjectModification {
         void runTest(TemporaryProjectModification modifiedProject) throws Exception;
     }
 
-    public void replaceFile(
-            @NonNull String relativePath,
-            @NonNull final String content) throws IOException {
+    @SuppressWarnings("SameParameterValue") // Helper function for future tests.
+    public void replaceFile(@NonNull String relativePath, @NonNull final String content)
+            throws IOException, InterruptedException {
         modifyFile(relativePath, input -> content);
     }
 
     public void replaceInFile(
             @NonNull String relativePath,
             @NonNull final String search,
-            @NonNull final String replace) throws IOException {
+            @NonNull final String replace)
+            throws IOException, InterruptedException {
         modifyFile(relativePath, input -> input.replaceAll(search, replace));
     }
 
-    public void removeFile(@NonNull String relativePath) throws IOException {
+    public void removeFile(@NonNull String relativePath) throws IOException, InterruptedException {
         File file = getFile(relativePath);
 
         String currentContent = Files.toString(file, Charsets.UTF_8);
@@ -151,11 +151,11 @@ public class TemporaryProjectModification {
         }
 
         FileUtils.delete(file);
+        TestUtils.waitForFileSystemTick();
     }
 
-    public void addFile(
-            @NonNull String relativePath,
-            @NonNull String content) throws IOException {
+    public void addFile(@NonNull String relativePath, @NonNull String content)
+            throws IOException, InterruptedException {
         File file = getFile(relativePath);
 
         if (file.exists()) {
@@ -167,11 +167,12 @@ public class TemporaryProjectModification {
         mFileEvents.put(relativePath, FileEvent.added());
 
         Files.write(content, file, Charsets.UTF_8);
+        TestUtils.waitForFileSystemTick();
     }
 
     public void modifyFile(
-            @NonNull String relativePath,
-            @NonNull Function<String, String> modification) throws IOException {
+            @NonNull String relativePath, @NonNull Function<String, String> modification)
+            throws IOException, InterruptedException {
         File file = getFile(relativePath);
 
         String currentContent = Files.toString(file, Charsets.UTF_8);
@@ -188,12 +189,11 @@ public class TemporaryProjectModification {
         } else {
             Files.write(newContent, file, Charsets.UTF_8);
         }
+        TestUtils.waitForFileSystemTick();
     }
 
-    /**
-     * Returns the project back to its original state.
-     */
-    private void close() throws IOException {
+    /** Returns the project back to its original state. */
+    private void close() throws IOException, InterruptedException {
         for (Map.Entry<String, FileEvent> entry : mFileEvents.entrySet()) {
             FileEvent fileEvent = entry.getValue();
             switch (fileEvent.getType()) {
@@ -209,6 +209,7 @@ public class TemporaryProjectModification {
         }
 
         mFileEvents.clear();
+        TestUtils.waitForFileSystemTick();
     }
 
     private File getFile(@NonNull String relativePath) {
