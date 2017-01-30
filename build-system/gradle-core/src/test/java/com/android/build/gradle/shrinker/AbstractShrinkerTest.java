@@ -29,9 +29,9 @@ import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.shrinker.parser.FilterSpecification;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.TestUtils;
@@ -39,6 +39,7 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,10 +81,8 @@ public abstract class AbstractShrinkerTest {
 
     protected DirectoryInput mDirectoryInput;
 
-    protected ShrinkerLogger mShrinkerLogger =
-            new ShrinkerLogger(
-                    Collections.<FilterSpecification>emptyList(),
-                    LoggerFactory.getLogger(getClass()));
+    protected final ShrinkerLogger mShrinkerLogger =
+            new ShrinkerLogger(Collections.emptyList(), LoggerFactory.getLogger(getClass()));
 
     protected int mExpectedWarnings;
 
@@ -140,7 +140,7 @@ public abstract class AbstractShrinkerTest {
         assertThat(getInterfaceNames(classFile)).contains(interfaceName);
     }
 
-    protected void assertDoesntImplement(String className, String interfaceName)
+    protected void assertDoesNotImplement(String className, String interfaceName)
             throws IOException {
         File classFile = getOutputClassFile(className);
         assertThat(getInterfaceNames(classFile)).doesNotContain(interfaceName);
@@ -239,18 +239,40 @@ public abstract class AbstractShrinkerTest {
     }
 
     @NonNull
-    protected KeepRules parseKeepRules(String rules) throws IOException {
+    protected KeepRules parseKeepRules(String rules) {
         ProguardConfig config = new ProguardConfig();
         config.parse(rules);
         return new ProguardFlagsKeepRules(config.getFlags(), mShrinkerLogger);
     }
 
-    protected void run(KeepRules keepRules) throws IOException {
+    protected void fullRun(KeepRules keepRules) throws IOException {
         mFullRunShrinker.run(
                 mInputs,
-                Collections.<TransformInput>emptyList(),
+                Collections.emptyList(),
                 mOutput,
                 ImmutableMap.of(AbstractShrinker.CounterSet.SHRINK, keepRules),
-                false);
+                true);
+    }
+
+    protected void fullRun(String className, String... methods) throws IOException {
+        fullRun(new TestKeepRules(className, methods));
+    }
+
+    protected void incrementalRun(Map<String, Status> changes) throws Exception {
+        IncrementalShrinker<String> incrementalShrinker =
+                new IncrementalShrinker<>(
+                        WaitableExecutor.useGlobalSharedThreadPool(),
+                        JavaSerializationShrinkerGraph.readFromDir(
+                                mIncrementalDir, this.getClass().getClassLoader()),
+                        mShrinkerLogger);
+
+        Map<File, Status> files = Maps.newHashMap();
+        for (Map.Entry<String, Status> entry : changes.entrySet()) {
+            files.put(new File(mTestPackageDir, entry.getKey() + ".class"), entry.getValue());
+        }
+
+        when(mDirectoryInput.getChangedFiles()).thenReturn(files);
+
+        incrementalShrinker.incrementalRun(mInputs, mOutput);
     }
 }

@@ -20,11 +20,12 @@ package com.android.build.gradle.shrinker;
  * Type of the dependency (edge) between two nodes in the shrinker graph.
  *
  * <p>A node is considered "reachable" if:
+ *
  * <ul>
- * <li>it can be reached with a required edge, or
- * <li>at least one {@link #IF_CLASS_KEPT} and at least one {@link #CLASS_IS_KEPT} edge, or
- * <li>at least one {@link #SUPERINTERFACE_KEPT} and at least one {@link #INTERFACE_IMPLEMENTED}
- *     edge.
+ *   <li>it can be reached with a required edge, or
+ *   <li>at least one {@link #IF_CLASS_KEPT} and at least one {@link #CLASS_IS_KEPT} edge, or
+ *   <li>at least one {@link #SUPERINTERFACE_KEPT} and at least one {@link #INTERFACE_IMPLEMENTED}
+ *       edge.
  * </ul>
  *
  * <p>The second case models the situation where a method implements an interface method. The only
@@ -37,8 +38,7 @@ public enum DependencyType {
     REQUIRED_CODE_REFERENCE,
 
     /**
-     *  Target is referenced by name in reflection code. Same as above, but doesn't trigger
-     *  warnings.
+     * Target is referenced by name in reflection code. Same as above, but doesn't trigger warnings.
      */
     REQUIRED_CODE_REFERENCE_REFLECTION,
 
@@ -47,12 +47,14 @@ public enum DependencyType {
 
     /**
      * Target member should be kept, assuming its owner class is kept.
+     *
      * @see #CLASS_IS_KEPT
      */
     IF_CLASS_KEPT,
 
     /**
      * Target member's owner class is kept.
+     *
      * @see #IF_CLASS_KEPT
      */
     CLASS_IS_KEPT,

@@ -19,9 +19,7 @@ package com.android.build.gradle.shrinker.parser;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
-/**
- * Method part of a ProGuard class specification.
- */
+/** Method part of a ProGuard class specification. */
 public class MethodSpecification {
 
     @NonNull private final NameSpecification mNameSpecification;

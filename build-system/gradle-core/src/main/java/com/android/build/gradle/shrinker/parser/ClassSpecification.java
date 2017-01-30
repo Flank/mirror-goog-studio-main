@@ -21,9 +21,7 @@ import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import java.util.List;
 
-/**
- * Represents a ProGuard class specification.
- */
+/** Represents a ProGuard class specification. */
 public class ClassSpecification {
 
     @NonNull private final List<NameSpecification> nameSpecs;

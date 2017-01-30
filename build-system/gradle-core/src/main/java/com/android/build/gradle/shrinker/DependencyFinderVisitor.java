@@ -24,7 +24,8 @@ import com.android.build.gradle.internal.incremental.ByteCodeUtils;
 import com.android.build.gradle.shrinker.PostProcessingData.UnresolvedReference;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.ArrayDeque;
+import java.util.Deque;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -35,9 +36,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
-
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 /**
  * {@link ClassVisitor} that finds all dependencies that should be added to the shrinker graph.
@@ -51,15 +49,18 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
     private boolean mIsAnnotation;
     private T mKlass;
 
-    DependencyFinderVisitor(
-            ShrinkerGraph<T> graph,
-            ClassVisitor cv) {
+    DependencyFinderVisitor(ShrinkerGraph<T> graph, ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
         mGraph = graph;
     }
 
     @Override
-    public void visit(int version, int access, String name, String signature, String superName,
+    public void visit(
+            int version,
+            int access,
+            String name,
+            String signature,
+            String superName,
             String[] interfaces) {
         if (interfaces == null) {
             interfaces = new String[0];
@@ -95,8 +96,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-            String[] exceptions) {
+    public MethodVisitor visitMethod(
+            int access, String name, String desc, String signature, String[] exceptions) {
         T method = mGraph.getMemberReference(mClassName, name, desc);
 
         if ((access & Opcodes.ACC_STATIC) == 0 && !name.equals(ByteCodeUtils.CONSTRUCTOR)) {
@@ -123,13 +124,12 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         }
 
         return new DependencyFinderMethodVisitor(
-                method,
-                super.visitMethod(access, name, desc, signature, exceptions));
+                method, super.visitMethod(access, name, desc, signature, exceptions));
     }
 
     @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature,
-            Object value) {
+    public FieldVisitor visitField(
+            int access, String name, String desc, String signature, Object value) {
         T field = mGraph.getMemberReference(mClassName, name, desc);
         Type fieldType = Type.getType(desc);
         handleDeclarationType(field, fieldType);
@@ -151,9 +151,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             Type type = Type.getType(desc);
             handleDeclarationType(mKlass, type);
             return new DependencyFinderAnnotationVisitor(
-                    type.getInternalName(),
-                    mKlass,
-                    super.visitAnnotation(desc, true));
+                    type.getInternalName(), mKlass, super.visitAnnotation(desc, true));
         }
     }
 
@@ -212,9 +210,13 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
     }
 
     protected abstract void handleDependency(T source, T target, DependencyType type);
+
     protected abstract void handleMultipleInheritance(T klass);
+
     protected abstract void handleVirtualMethod(T method);
+
     protected abstract void handleInterfaceInheritance(T klass);
+
     protected abstract void handleUnresolvedReference(UnresolvedReference<T> reference);
 
     private class DependencyFinderMethodVisitor extends MethodVisitor {
@@ -224,7 +226,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         /*
          * We want to detect calls to AtomicFieldUpdaters to figure out dependencies in this
          * common case that uses reflection. We detect the method call and, if both instructions
-         * that preceed it are two LDCs. In that case the first one should be a type and the
+         * that precede it are two LDCs. In that case the first one should be a type and the
          * second one should be a field name.
          */
         private final Deque<Object> mLastLdcs;
@@ -243,15 +245,14 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                 Type type = Type.getType(desc);
                 handleDeclarationType(mMethod, type);
                 return new DependencyFinderAnnotationVisitor(
-                        type.getInternalName(),
-                        mMethod,
-                        super.visitAnnotation(desc, true));
+                        type.getInternalName(), mMethod, super.visitAnnotation(desc, true));
             }
         }
 
         @Override
         public AnnotationVisitor visitAnnotationDefault() {
-            return new DependencyFinderAnnotationVisitor(null, mMethod, super.visitAnnotationDefault());
+            return new DependencyFinderAnnotationVisitor(
+                    null, mMethod, super.visitAnnotationDefault());
         }
 
         @Override
@@ -278,7 +279,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                         new UnresolvedReference<>(
                                 mMethod,
                                 target,
-                                opcode == Opcodes.INVOKESPECIAL));
+                                opcode == Opcodes.INVOKESPECIAL,
+                                DependencyType.REQUIRED_CODE_REFERENCE));
             }
 
             mLastLdcs.clear();
@@ -293,9 +295,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                 if (className != null && !isSdkPackage(className)) {
                     T classReference = mGraph.getClassReference(className);
                     handleDependency(
-                            mMethod,
-                            classReference,
-                            DependencyType.REQUIRED_CODE_REFERENCE);
+                            mMethod, classReference, DependencyType.REQUIRED_CODE_REFERENCE);
                 }
             }
 
@@ -330,7 +330,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                             new UnresolvedReference<>(
                                     mMethod,
                                     target,
-                                    opcode == Opcodes.INVOKESPECIAL));
+                                    opcode == Opcodes.INVOKESPECIAL,
+                                    DependencyType.REQUIRED_CODE_REFERENCE));
                 }
             }
 
@@ -344,9 +345,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                     if (reflectionMethod == ReflectionMethod.CLASS_FOR_NAME) {
                         // 'target' is a class, create a direct dependency.
                         handleDependency(
-                                mMethod,
-                                target,
-                                DependencyType.REQUIRED_CODE_REFERENCE_REFLECTION);
+                                mMethod, target, DependencyType.REQUIRED_CODE_REFERENCE_REFLECTION);
                     } else {
                         // Resolve the exact dependency.
                         handleUnresolvedReference(
@@ -409,8 +408,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         }
 
         @Override
-        public void visitInvokeDynamicInsn(String name, String desc, Handle bsm,
-                Object... bsmArgs) {
+        public void visitInvokeDynamicInsn(
+                String name, String desc, Handle bsm, Object... bsmArgs) {
             mLastLdcs.clear();
             super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
         }
@@ -473,17 +472,13 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                         DependencyType.REQUIRED_CLASS_STRUCTURE);
             }
             return new DependencyFinderAnnotationVisitor(
-                    mAnnotationName,
-                    mSource,
-                    super.visitAnnotation(name, desc));
+                    mAnnotationName, mSource, super.visitAnnotation(name, desc));
         }
 
         @Override
         public AnnotationVisitor visitArray(String name) {
             return new DependencyFinderAnnotationVisitor(
-                    mAnnotationName,
-                    mSource,
-                    super.visitArray(name));
+                    mAnnotationName, mSource, super.visitArray(name));
         }
     }
 
@@ -540,9 +535,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         }
     }
 
-    /**
-     * Represents reflection APIs that we recognize and understand.
-     */
+    /** Represents reflection APIs that we recognize and understand. */
     private enum ReflectionMethod {
         CLASS_FOR_NAME("java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;") {
             @Override
@@ -597,9 +590,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                 Type klass = (Type) stack.pop();
 
                 return graph.getMemberReference(
-                        klass.getInternalName(),
-                        fieldName,
-                        fieldType.getDescriptor());
+                        klass.getInternalName(), fieldName, fieldType.getDescriptor());
             }
         },
         ;
@@ -645,16 +636,16 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
          *
          * @param graph {@link ShrinkerGraph} in use
          * @param stack read-only copy of the constant values that have been pushed on the stack
-         *              just before invoking the method in question
+         *     just before invoking the method in question
          * @return target of the "indirect" reference, or null if it cannot be determined from the
-         *         constant arguments
+         *     constant arguments
          */
         @Nullable
         public abstract <T> T getMember(ShrinkerGraph<T> graph, Deque<Object> stack);
 
         /**
-         * Common code for handling {@code AtomicIntegerFieldUpdater} and
-         * {@code AtomicLongFieldUpdater}.
+         * Common code for handling {@code AtomicIntegerFieldUpdater} and {@code
+         * AtomicLongFieldUpdater}.
          *
          * @see #getMember(ShrinkerGraph, Deque)
          */

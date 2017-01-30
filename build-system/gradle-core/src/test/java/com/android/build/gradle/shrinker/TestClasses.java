@@ -28,16 +28,14 @@ import org.objectweb.asm.Type;
  * Code for generating test classes for the {@link FullRunShrinker}. This were created using the ASM
  * bytecode outliner plugin for IJ.
  */
-@SuppressWarnings({"unused", "UnusedAssignment"}) // Outliner plugin generates some unused visitors.
+@SuppressWarnings({"SpellCheckingInspection"}) // Generated code, with type descriptors.
 class TestClasses implements Opcodes {
 
     /** Simple scenario with two related classes and one unused class. */
     static class SimpleScenario {
         static byte[] aaa() {
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Aaa", null, "java/lang/Object", null);
 
@@ -81,9 +79,7 @@ class TestClasses implements Opcodes {
         static byte[] bbb() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "java/lang/Object", null);
 
@@ -113,9 +109,7 @@ class TestClasses implements Opcodes {
         static byte[] ccc() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Ccc", null, "java/lang/Object", null);
 
@@ -148,9 +142,7 @@ class TestClasses implements Opcodes {
         static byte[] abstractClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -181,9 +173,7 @@ class TestClasses implements Opcodes {
         static byte[] impl(int i) throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -217,9 +207,7 @@ class TestClasses implements Opcodes {
         static byte[] main_concreteType() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -263,9 +251,7 @@ class TestClasses implements Opcodes {
         static byte[] main_abstractType() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -310,9 +296,7 @@ class TestClasses implements Opcodes {
         static byte[] main_parentChild() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -348,9 +332,7 @@ class TestClasses implements Opcodes {
         static byte[] parent() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Parent", null, "java/lang/Object", null);
 
@@ -380,9 +362,7 @@ class TestClasses implements Opcodes {
         static byte[] child() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Child", null, "test/Parent", null);
 
@@ -408,9 +388,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -452,9 +430,7 @@ class TestClasses implements Opcodes {
         static byte[] myException() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -507,9 +483,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -696,9 +670,7 @@ class TestClasses implements Opcodes {
         static byte[] myCharSequence() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -756,9 +728,7 @@ class TestClasses implements Opcodes {
         static byte[] namedRunnable() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -786,9 +756,7 @@ class TestClasses implements Opcodes {
         static byte[] namedRunnableImpl() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -830,9 +798,7 @@ class TestClasses implements Opcodes {
         static byte[] myInterface() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -860,9 +826,7 @@ class TestClasses implements Opcodes {
         static byte[] mySubInterface() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -884,9 +848,7 @@ class TestClasses implements Opcodes {
         static byte[] myImpl() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -931,9 +893,7 @@ class TestClasses implements Opcodes {
         static byte[] doesSomething() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -973,9 +933,7 @@ class TestClasses implements Opcodes {
         static byte[] implementationFromSuperclass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1008,9 +966,7 @@ class TestClasses implements Opcodes {
         static byte[] implementationFromSuperclass_subInterface() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1050,9 +1006,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -1111,7 +1065,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/MyFields", null, "java/lang/Object", null);
 
@@ -1187,9 +1140,7 @@ class TestClasses implements Opcodes {
         static byte[] myFieldsSubclass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1219,9 +1170,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -1280,9 +1229,7 @@ class TestClasses implements Opcodes {
         static byte[] interfaceOne() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1304,9 +1251,7 @@ class TestClasses implements Opcodes {
         static byte[] interfaceTwo() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1328,9 +1273,7 @@ class TestClasses implements Opcodes {
         static byte[] implementation() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1367,7 +1310,6 @@ class TestClasses implements Opcodes {
         static byte[] myAnnotation() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
 
@@ -1449,7 +1391,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1578,9 +1519,7 @@ class TestClasses implements Opcodes {
         static byte[] main_noAnnotations() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -1615,7 +1554,6 @@ class TestClasses implements Opcodes {
         static byte[] main_annotatedClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
 
@@ -1667,7 +1605,6 @@ class TestClasses implements Opcodes {
         static byte[] main_annotatedMethod() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
 
@@ -1719,9 +1656,7 @@ class TestClasses implements Opcodes {
         static byte[] nested() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1752,9 +1687,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -1811,7 +1744,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1855,9 +1787,7 @@ class TestClasses implements Opcodes {
         static byte[] named() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1886,9 +1816,7 @@ class TestClasses implements Opcodes {
         static byte[] hasAge() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -1913,9 +1841,7 @@ class TestClasses implements Opcodes {
         static byte[] aaa() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Aaa", null, "java/lang/Object", null);
 
@@ -1952,9 +1878,7 @@ class TestClasses implements Opcodes {
         static byte[] bbb() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Bbb", null, "test/Aaa", null);
 
@@ -1991,9 +1915,7 @@ class TestClasses implements Opcodes {
         static byte[] ccc() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Ccc", null, "test/Bbb", null);
 
@@ -2045,9 +1967,7 @@ class TestClasses implements Opcodes {
         static byte[] main_useOuterClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2079,9 +1999,7 @@ class TestClasses implements Opcodes {
         static byte[] main_useOuterClass_makeAnonymousClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2113,9 +2031,7 @@ class TestClasses implements Opcodes {
         static byte[] main_useStaticInnerClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2151,9 +2067,7 @@ class TestClasses implements Opcodes {
         static byte[] main_useInnerClass() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2199,9 +2113,7 @@ class TestClasses implements Opcodes {
         static byte[] main_empty() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2229,9 +2141,7 @@ class TestClasses implements Opcodes {
         static byte[] outer() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Outer", null, "java/lang/Object", null);
 
@@ -2281,7 +2191,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -2324,9 +2233,7 @@ class TestClasses implements Opcodes {
         static byte[] staticInner() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -2365,7 +2272,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -2420,9 +2326,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2464,7 +2368,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Utils", null, "java/lang/Object", null);
 
@@ -2516,9 +2419,7 @@ class TestClasses implements Opcodes {
         static byte[] main_instanceOf() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2550,9 +2451,7 @@ class TestClasses implements Opcodes {
         static byte[] main_classLiteral() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2583,9 +2482,7 @@ class TestClasses implements Opcodes {
         static byte[] main_classForName() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2627,9 +2524,7 @@ class TestClasses implements Opcodes {
         static byte[] main_classForName_dynamic() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2698,9 +2593,7 @@ class TestClasses implements Opcodes {
         static byte[] main_atomicIntegerFieldUpdater() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2744,9 +2637,7 @@ class TestClasses implements Opcodes {
         static byte[] main_atomicLongFieldUpdater() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2790,9 +2681,7 @@ class TestClasses implements Opcodes {
         static byte[] main_atomicReferenceFieldUpdater() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2833,57 +2722,11 @@ class TestClasses implements Opcodes {
             return cw.toByteArray();
         }
 
-        static byte[] main_getField() throws Exception {
-
-            ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
-            MethodVisitor mv;
-            AnnotationVisitor av0;
-
-            cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
-
-            {
-                mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-                mv.visitCode();
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(1, 1);
-                mv.visitEnd();
-            }
-            {
-                mv =
-                        cw.visitMethod(
-                                ACC_PUBLIC,
-                                "main",
-                                "()V",
-                                null,
-                                new String[] {"java/lang/Exception"});
-                mv.visitCode();
-                mv.visitLdcInsn(Type.getType("Ltest/ClassWithFields;"));
-                mv.visitLdcInsn("intField");
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL,
-                        "java/lang/Class",
-                        "getField",
-                        "(Ljava/lang/String;)Ljava/lang/reflect/Field;",
-                        false);
-                mv.visitInsn(POP);
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(2, 1);
-                mv.visitEnd();
-            }
-            cw.visitEnd();
-
-            return cw.toByteArray();
-        }
-
         static byte[] classWithFields() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -2930,9 +2773,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -2981,9 +2822,7 @@ class TestClasses implements Opcodes {
         static byte[] customException() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -3011,9 +2850,7 @@ class TestClasses implements Opcodes {
         static byte[] main_tryFinally() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -3072,9 +2909,7 @@ class TestClasses implements Opcodes {
         static byte[] myInterface() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -3098,9 +2933,7 @@ class TestClasses implements Opcodes {
         static byte[] abstractImpl() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -3138,9 +2971,7 @@ class TestClasses implements Opcodes {
         static byte[] realImpl() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6, ACC_PUBLIC + ACC_SUPER, "test/RealImpl", null, "test/AbstractImpl", null);
@@ -3182,9 +3013,7 @@ class TestClasses implements Opcodes {
         static byte[] main() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -3227,9 +3056,7 @@ class TestClasses implements Opcodes {
         static byte[] main_sunMiscUnsafe() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -3265,9 +3092,7 @@ class TestClasses implements Opcodes {
         static byte[] main_javaInstrumentation() throws Exception {
 
             ClassWriter cw = new ClassWriter(0);
-            FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(
                     V1_6,
@@ -3340,7 +3165,6 @@ class TestClasses implements Opcodes {
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
             MethodVisitor mv;
-            AnnotationVisitor av0;
 
             cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/Main", null, "java/lang/Object", null);
 
@@ -3373,9 +3197,7 @@ class TestClasses implements Opcodes {
     static byte[] emptyClass(String name) throws Exception {
 
         ClassWriter cw = new ClassWriter(0);
-        FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
 
         cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/" + name, null, "java/lang/Object", null);
 
@@ -3397,9 +3219,7 @@ class TestClasses implements Opcodes {
             throws Exception {
 
         ClassWriter cw = new ClassWriter(0);
-        FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
 
         cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/" + className, null, "java/lang/Object", null);
 

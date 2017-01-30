@@ -18,9 +18,7 @@ package com.android.build.gradle.shrinker;
 
 import java.util.Map;
 
-/**
- * Represents the -keep* flags from a ProGuard config file.
- */
+/** Represents the -keep* flags from a ProGuard config file. */
 public interface KeepRules {
 
     /**

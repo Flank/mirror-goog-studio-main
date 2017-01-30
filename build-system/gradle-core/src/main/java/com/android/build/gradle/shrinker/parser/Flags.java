@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -28,17 +27,14 @@ import java.util.List;
  */
 public class Flags {
 
-    @NonNull
-    private final List<ClassSpecification> keepClassSpecs = Lists.newArrayList();
+    @NonNull private final List<ClassSpecification> keepClassSpecs = Lists.newArrayList();
 
     @NonNull
     private final List<ClassSpecification> keepClassesWithMembersSpecs = Lists.newArrayList();
 
-    @NonNull
-    private final List<ClassSpecification> keepClassMembersSpecs = Lists.newArrayList();
+    @NonNull private final List<ClassSpecification> keepClassMembersSpecs = Lists.newArrayList();
 
-    @NonNull
-    private final List<FilterSpecification> dontWarnSpecs = Lists.newArrayList();
+    @NonNull private final List<FilterSpecification> dontWarnSpecs = Lists.newArrayList();
 
     private boolean ignoreWarnings;
 
@@ -86,4 +82,3 @@ public class Flags {
         return ignoreWarnings;
     }
 }
-

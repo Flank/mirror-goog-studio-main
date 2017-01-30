@@ -19,30 +19,24 @@ package com.android.build.gradle.shrinker;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.gradle.shrinker.AbstractShrinker.CounterSet;
 import com.android.build.gradle.shrinker.IncrementalShrinker.IncrementalRunImpossibleException;
 import com.android.build.gradle.shrinker.TestClasses.Annotations;
-import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClassesForIncremental.Cycle;
+import com.android.build.gradle.shrinker.TestClassesForIncremental.Interfaces;
 import com.android.build.gradle.shrinker.TestClassesForIncremental.Simple;
-import com.android.ide.common.internal.WaitableExecutor;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /** Tests for {@link IncrementalShrinker}. */
+@SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
 public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
     @Rule public ExpectedException mException = ExpectedException.none();
@@ -65,9 +59,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         long timestampBbb = getOutputClassFile("Bbb").lastModified();
         long timestampMain = getOutputClassFile("Main").lastModified();
-
-        // Give file timestamps time to tick.
-        Thread.sleep(1000);
+        TestUtils.waitForFileSystemTick(timestampMain);
 
         Files.write(Simple.main2(), new File(mTestPackageDir, "Main.class"));
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
@@ -79,6 +71,34 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         assertClassSkipped("NotUsed");
 
         assertTrue(timestampMain < getOutputClassFile("Main").lastModified());
+        assertEquals(timestampBbb, getOutputClassFile("Bbb").lastModified());
+    }
+
+    @Test
+    public void simple_unusedClassModified() throws Exception {
+        // Given:
+        Files.write(Simple.aaa(), new File(mTestPackageDir, "Aaa.class"));
+        Files.write(Simple.bbb(), new File(mTestPackageDir, "Bbb.class"));
+        Files.write(Simple.main1(), new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClassesForIncremental.classWhichReturnsInt("NotUsed", 1),
+                new File(mTestPackageDir, "NotUsed.class"));
+
+        fullRun("Main", "main:()V");
+        long timestampBbb = getOutputClassFile("Bbb").lastModified();
+        TestUtils.waitForFileSystemTick(timestampBbb);
+
+        Files.write(
+                TestClassesForIncremental.classWhichReturnsInt("NotUsed", 2),
+                new File(mTestPackageDir, "NotUsed.class"));
+        incrementalRun(ImmutableMap.of("NotUsed", Status.CHANGED));
+
+        // Then:
+        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Aaa", "<init>:()V", "m1:()V");
+        assertMembersLeft("Bbb", "<init>:()V");
+        assertClassSkipped("NotUsed");
+
         assertEquals(timestampBbb, getOutputClassFile("Bbb").lastModified());
     }
 
@@ -406,71 +426,47 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
     }
 
     @Test
-    public void interfaces_implementationFromSuperclass() throws Exception {
-        // Given:
-        Files.write(Interfaces.main(), new File(mTestPackageDir, "Main.class"));
+    public void interfaces_stopUsing() throws Exception {
+        Files.write(Interfaces.main(true), new File(mTestPackageDir, "Main.class"));
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
-        Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
-        Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(
-                Interfaces.namedRunnableImpl(),
-                new File(mTestPackageDir, "NamedRunnableImpl.class"));
-        Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
-        Files.write(
-                Interfaces.implementationFromSuperclass(),
-                new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
-        // When:
-        fullRun(
-                "Main",
-                "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
-                "useMyInterface:(Ltest/MyInterface;)V");
+        fullRun("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
 
-        // Then:
-        assertMembersLeft(
-                "Main",
-                "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
-                "useMyInterface:(Ltest/MyInterface;)V");
-        assertMembersLeft("ImplementationFromSuperclass");
+        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
-        assertClassSkipped("MyImpl");
-        assertClassSkipped("MyCharSequence");
+        assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
+        assertImplements("MyImpl", "test/MyInterface");
 
-        // This is the tricky part: this method should be kept, because a subclass is using it to
-        // implement an interface.
-        assertMembersLeft("DoesSomething", "doSomething:(Ljava/lang/Object;)V");
+        Files.write(Interfaces.main(false), new File(mTestPackageDir, "Main.class"));
+        incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
-        assertImplements("ImplementationFromSuperclass", "test/MyInterface");
-
-        incrementalRun(ImmutableMap.of("ImplementationFromSuperclass", Status.CHANGED));
+        assertClassSkipped("MyInterface");
+        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
+        assertDoesNotImplement("MyImpl", "test/MyInterface");
     }
 
-    private void fullRun(String className, String... methods) throws IOException {
-        mFullRunShrinker.run(
-                mInputs,
-                Collections.<TransformInput>emptyList(),
-                mOutput,
-                ImmutableMap.<CounterSet, KeepRules>of(
-                        CounterSet.SHRINK, new TestKeepRules(className, methods)),
-                true);
-    }
+    @Test
+    public void interfaces_startUsing() throws Exception {
+        Files.write(Interfaces.main(false), new File(mTestPackageDir, "Main.class"));
+        Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
+        Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
 
-    private void incrementalRun(Map<String, Status> changes) throws Exception {
-        IncrementalShrinker<String> incrementalShrinker =
-                new IncrementalShrinker<>(
-                        WaitableExecutor.<Void>useGlobalSharedThreadPool(),
-                        JavaSerializationShrinkerGraph.readFromDir(
-                                mIncrementalDir, this.getClass().getClassLoader()),
-                        mShrinkerLogger);
+        fullRun("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
 
-        Map<File, Status> files = Maps.newHashMap();
-        for (Map.Entry<String, Status> entry : changes.entrySet()) {
-            files.put(new File(mTestPackageDir, entry.getKey() + ".class"), entry.getValue());
-        }
+        incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
+        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
+        assertDoesNotImplement("MyImpl", "test/MyInterface");
+        assertClassSkipped("MyInterface");
 
-        when(mDirectoryInput.getChangedFiles()).thenReturn(files);
+        Files.write(Interfaces.main(true), new File(mTestPackageDir, "Main.class"));
+        incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
-        incrementalShrinker.incrementalRun(mInputs, mOutput);
+        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
+        assertImplements("MyImpl", "test/MyInterface");
     }
 }
