@@ -32,10 +32,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +42,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 /**
  * merges android manifest files, idempotent.
@@ -583,12 +581,11 @@ public class ManifestMerger2 {
                 ? mergingReportBuilder
                 : new MergingReport.Builder(mergingReportBuilder.getLogger());
 
-        builder.getActionRecorder().recordDefaultNodeAction(
-            xmlDocument.getRootNode());
-
         // perform place holder substitution, this is necessary to do so early in case placeholders
         // are used in key attributes.
         performPlaceHolderSubstitution(manifestInfo, xmlDocument, builder, mMergeType);
+
+        builder.getActionRecorder().recordDefaultNodeAction(xmlDocument.getRootNode());
 
         return new LoadedManifestInfo(manifestInfo,
                 Optional.fromNullable(originalPackageName), xmlDocument);
