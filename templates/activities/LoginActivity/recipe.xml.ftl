@@ -8,6 +8,8 @@
         <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
     </#if>
 
+    <#include "../common/recipe_theme.xml.ftl" />
+
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 

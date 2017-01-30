@@ -6,7 +6,6 @@
         description="Creates a new activity with bottom navigation"
         minApi="9"
         minBuildApi="9"
-        requireAppTheme="true"
         category="Activity">
 
     <dependency name="android-support-v4" revision="8"/>

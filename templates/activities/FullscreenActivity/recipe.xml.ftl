@@ -2,6 +2,8 @@
 <recipe>
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
 
+    <#include "../common/recipe_theme.xml.ftl" />
+
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 

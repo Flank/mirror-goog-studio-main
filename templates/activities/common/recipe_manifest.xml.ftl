@@ -1,5 +1,9 @@
 <recipe folder="root://activities/common">
 
+    <#if requireTheme!false>
+    <#include "recipe_theme.xml.ftl" />
+    </#if>
+
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
     <merge from="root/res/values/manifest_strings.xml.ftl"
