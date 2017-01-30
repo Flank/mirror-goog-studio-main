@@ -26,7 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile.FilterType;
 import com.android.build.OutputFile.OutputType;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
@@ -37,11 +36,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.sdk.TargetInfo;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Callables;
 
-import org.gradle.api.Action;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -50,10 +49,10 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.process.ExecSpec;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -63,6 +62,8 @@ import java.util.regex.Pattern;
 
 /**
  * Task to zip align all the splits
+ *
+ * <p>TODO : this is now a no-op, pending deletion.
  */
 @ParallelizableTask
 public class SplitZipAlign extends SplitRelatedTask {
@@ -296,22 +297,18 @@ public class SplitZipAlign extends SplitRelatedTask {
     public void splitZipAlign() throws IOException {
         final String archivesBaseName = (String)getProject().getProperties().get("archivesBaseName");
 
-        InputProcessor zipAlignIt = new InputProcessor() {
-            @Override
-            public void process(final String split, final File file) {
-                final File out = new File(getOutputDirectory(),
-                        archivesBaseName + "-" + outputBaseName + "_" + split + ".apk");
-                getProject().exec(new Action<ExecSpec>() {
-                    @Override
-                    public void execute(ExecSpec execSpec) {
-                        execSpec.setExecutable(getZipAlignExe());
-                        execSpec.args("-f", "4");
-                        execSpec.args(file.getAbsolutePath());
-                        execSpec.args(out);
+        InputProcessor zipAlignIt =
+                (split, file) -> {
+                    final File out =
+                            new File(
+                                    getOutputDirectory(),
+                                    archivesBaseName + "-" + outputBaseName + "_" + split + ".apk");
+                    try {
+                        FileUtils.copyFile(file, out);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
                     }
-                });
-            }
-        };
+                };
         forEachUnalignedInput(zipAlignIt);
         forEachUnsignedInput(zipAlignIt);
         saveApkMetadataFile();
