@@ -17,6 +17,7 @@
 package com.android.testutils.truth;
 
 import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,6 +45,11 @@ public class MoreTruth {
     @NonNull
     public static PathSubject assertThat(@Nullable Path path) {
         return assert_().about(PathSubject.FACTORY).that(path);
+    }
+
+    @NonNull
+    public static PathSubject assumeThat(@NonNull Path path) {
+        return assume().about(PathSubject.FACTORY).that(path);
     }
 
     public static FileRecordSubject assertThat(@NonNull FileRecord fileRecord) {
