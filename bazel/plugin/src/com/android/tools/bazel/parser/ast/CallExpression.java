@@ -74,7 +74,11 @@ public class CallExpression extends Expression {
                     writer.append(", ");
                 }
             } else {
-                writer.append(",\n");
+                writer.append(",");
+                if (argument.hasPostComment()) {
+                    writer.append("  ").append(argument.getPostComment());
+                }
+                writer.append("\n");
             }
             i++;
         }
