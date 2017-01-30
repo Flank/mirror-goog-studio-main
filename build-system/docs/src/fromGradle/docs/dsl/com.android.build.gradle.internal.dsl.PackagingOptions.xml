@@ -5,6 +5,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>doNotStrip</td></tr>
             <tr><td>excludes</td></tr>
             <tr><td>merges</td></tr>
             <tr><td>pickFirsts</td></tr>
