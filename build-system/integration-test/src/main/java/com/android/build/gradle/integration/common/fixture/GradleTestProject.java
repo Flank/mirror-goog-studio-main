@@ -135,8 +135,12 @@ public final class GradleTestProject implements TestRule {
             assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
             BUILD_DIR = new File(buildDirPath);
             OUT_DIR = new File(BUILD_DIR, "tests");
-            GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
+
+            // Use a temporary directory, so that shards don't share daemons.
+            GRADLE_USER_HOME =
+                    java.nio.file.Files.createTempDirectory(BUILD_DIR.toPath(), "GRADLE_USER_HOME")
+                            .toFile();
 
             boolean useNightly =
                     Boolean.parseBoolean(
@@ -200,7 +204,7 @@ public final class GradleTestProject implements TestRule {
         } catch (Throwable t) {
             // Print something to stdout, to give us a chance to debug initialization problems.
             System.out.println(Throwables.getStackTraceAsString(t));
-            throw t;
+            throw Throwables.propagate(t);
         }
     }
 

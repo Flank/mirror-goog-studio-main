@@ -174,11 +174,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         args.addAll(arguments);
 
-        System.out.println(
+        String message =
                 "[GradleTestProject] Executing tasks: gradle "
                         + Joiner.on(' ').join(args)
                         + " "
-                        + Joiner.on(' ').join(tasksList));
+                        + Joiner.on(' ').join(tasksList);
+        stdout.write(message.getBytes());
 
         BuildLauncher launcher =
                 projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
