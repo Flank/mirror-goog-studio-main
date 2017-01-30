@@ -130,6 +130,7 @@ public class AssetPackagingTest {
         createOriginalAsset(projectFolder, dimension, filename, content.getBytes(Charsets.UTF_8));
     }
 
+    @SuppressWarnings("SameParameterValue") // Helper function, ready for future tests.
     private static void createOriginalGzippedAsset(
             @NonNull File projectFolder,
             @NonNull String dimension,
@@ -601,7 +602,7 @@ public class AssetPackagingTest {
      * @param filename the filename
      * @param content the content
      */
-    private void checkTestApk(
+    private static void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
         check(TruthHelper.assertThat(project.getTestApk("debug")), filename, content);
