@@ -62,7 +62,7 @@ public class BazelIntegrationTestsSuite {
     public static void deleteData() throws Exception {
         FileUtils.deletePath(OFFLINE_REPO.toFile());
         FileUtils.deletePath(PREBUILTS_REPO.toFile());
-        // Don't try to delete the NDK, as it's just a symlink.
+        Files.delete(NDK_IN_TMP);
     }
 
     /**
