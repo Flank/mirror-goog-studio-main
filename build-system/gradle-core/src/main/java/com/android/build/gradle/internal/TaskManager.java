@@ -552,6 +552,16 @@ public abstract class TaskManager {
                         AndroidArtifacts.ArtifactType.JAVA_RES))
                 .build());
 
+        // and the android AAR also have a specific jni folder
+        transformManager.addStream(OriginalStream.builder(project)
+                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                .addScope(Scope.EXTERNAL_LIBRARIES)
+                .setFileCollection(variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ArtifactScope.EXTERNAL,
+                        AndroidArtifacts.ArtifactType.JNI))
+                .build());
+
         if (variantScope.isJackEnabled()) {
             // add project sources for the Jack pipeline
             Callable<List<File>> javaSources =
