@@ -38,6 +38,7 @@ import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
+import com.android.ide.common.vectordrawable.ResourcesNotSupportedException;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -261,10 +263,24 @@ public class MergeResources extends IncrementalTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new VectorDrawableRenderer(
-                getMinSdk(),
-                getGeneratedPngsOutputDir(),
-                densities,
-                getILogger());
+                getMinSdk(), getGeneratedPngsOutputDir(), densities, getILogger()) {
+            @Override
+            public void generateFile(File toBeGenerated, File original) throws IOException {
+                try {
+                    super.generateFile(toBeGenerated, original);
+                } catch (ResourcesNotSupportedException e) {
+                    // Add gradle-specific error message.
+                    throw new GradleException(
+                            String.format(
+                                    "Can't process attribute %1$s=\"%2$s\": "
+                                            + "references to other resources are not supported by "
+                                            + "build-time PNG generation. "
+                                            + "See http://developer.android.com/tools/help/vector-asset-studio.html "
+                                            + "for details.",
+                                    e.getName(), e.getValue()));
+                }
+            }
+        };
     }
 
     @NonNull

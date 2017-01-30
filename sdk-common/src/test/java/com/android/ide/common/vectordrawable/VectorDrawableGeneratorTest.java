@@ -21,11 +21,11 @@ import com.android.ide.common.util.GeneratorTester;
 import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import junit.framework.TestCase;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import javax.imageio.ImageIO;
+import junit.framework.TestCase;
+import org.junit.Assert;
 
 @SuppressWarnings("javadoc")
 public class VectorDrawableGeneratorTest extends TestCase {
@@ -491,5 +491,15 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testXmlStroke3() throws Exception {
         checkXmlConversion("test_xml_stroke_3");
+    }
+
+    public void testPathDataInStringResource() throws Exception {
+        try {
+            checkXmlConversion("test_pathData_in_string_resource");
+            fail("Expecting exception.");
+        } catch (ResourcesNotSupportedException e) {
+            Assert.assertEquals("@string/pathDataAsString", e.getValue());
+            Assert.assertEquals("android:pathData", e.getName());
+        }
     }
 }
