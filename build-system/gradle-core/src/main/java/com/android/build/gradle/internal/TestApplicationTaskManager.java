@@ -119,7 +119,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         });
 
         AndroidTask manifestProcessorTask =
-                variantData.getOutputs().get(0).getScope().getManifestProcessorTask();
+                variantData.getMainOutput().getScope().getManifestProcessorTask();
         manifestProcessorTask.dependsOn(tasks, getTargetManifestConfiguration());
 
         // assemble of the test module depends on getting the configurations

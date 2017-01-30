@@ -335,8 +335,7 @@ public class SplitZipAlign extends SplitRelatedTask {
         @Override
         public void execute(@NonNull SplitZipAlign zipAlign) {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-            List<? extends BaseVariantOutputData> outputs = variantData.getOutputs();
-            final BaseVariantOutputData variantOutputData = outputs.get(0);
+            final BaseVariantOutputData variantOutputData = variantData.getMainOutput();
 
             final VariantConfiguration config = scope.getVariantConfiguration();
             Set<String> densityFilters = variantData.getFilters(DENSITY);

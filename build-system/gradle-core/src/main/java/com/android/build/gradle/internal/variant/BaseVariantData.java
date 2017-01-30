@@ -141,6 +141,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     private FileCollection extraGeneratedResFolders;
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
+    private T mainOutput;
 
     private Set<String> densityFilters;
     private Set<String> languageFilters;
@@ -245,6 +246,27 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @NonNull
     public List<T> getOutputs() {
         return outputs;
+    }
+
+    /** Sets the main output among the multiple outputs returned by {@link #getOutputs()}. */
+    public void setMainOutput(@NonNull T mainOutput) {
+        Preconditions.checkState(outputs.contains(mainOutput));
+        this.mainOutput = mainOutput;
+    }
+
+    /**
+     * Returns the main output among the multiple outputs returned by {@link #getOutputs()}. If the
+     * main output has not been set by {@link #setMainOutput(BaseVariantOutputData)}, this method
+     * returns the first output.
+     */
+    @NonNull
+    public T getMainOutput() {
+        if (mainOutput != null) {
+            return mainOutput;
+        } else {
+            Preconditions.checkState(!outputs.isEmpty());
+            return outputs.get(0);
+        }
     }
 
     @NonNull

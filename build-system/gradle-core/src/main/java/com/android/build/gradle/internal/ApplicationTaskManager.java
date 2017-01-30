@@ -43,7 +43,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -308,8 +307,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
 
-            BaseVariantOutputData outputData =
-                    variantScope.getVariantData().getOutputs().get(0);
+            BaseVariantOutputData outputData = variantScope.getVariantData().getMainOutput();
             PackagingScope packagingScope = new DefaultGradlePackagingScope(outputData.getScope());
 
             // create the transforms that will create the dependencies apk.

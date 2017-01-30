@@ -27,11 +27,9 @@ import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
-
-import org.gradle.api.plugins.JavaBasePlugin;
-
 import java.io.File;
 import java.util.concurrent.Callable;
+import org.gradle.api.plugins.JavaBasePlugin;
 
 /**
  * Configuration Action for a TestServerTask.
@@ -67,8 +65,8 @@ public class TestServerTaskConfigAction implements TaskConfigAction<TestServerTa
         final TestVariantData testVariantData = (TestVariantData) scope.getVariantData();
 
         // get single output for now
-        final BaseVariantOutputData variantOutputData = baseVariantData.getOutputs().get(0);
-        final BaseVariantOutputData testVariantOutputData = testVariantData.getOutputs().get(0);
+        final BaseVariantOutputData variantOutputData = baseVariantData.getMainOutput();
+        final BaseVariantOutputData testVariantOutputData = testVariantData.getMainOutput();
 
         final String variantName = scope.getVariantConfiguration().getFullName();
         serverTask.setDescription(
