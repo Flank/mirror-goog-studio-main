@@ -24,6 +24,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -41,6 +42,8 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.Project;
@@ -94,8 +97,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         // TODO: replace hack below with a FileCollection that will contain the testing APK,
         // obtained from the scope anchor types.
-        BaseVariantOutputData baseVariantOutputData = variantData.getOutputs().get(0);
-        File testingApk = baseVariantOutputData.getOutputFile();
+        ImmutableList<ApkOutputFile> outputs = variantData.getMainOutput().getOutputs();
+        Preconditions.checkState(outputs.size() == 1, "There must be exactly one output");
+        File testingApk = outputs.get(0).getOutputFile();
 
         // create a FileCollection that will contain the APKs to be tested.
         FileCollection testedApks = incoming.artifactView()

@@ -340,13 +340,11 @@ public class PackageSplitRes extends SplitRelatedTask {
         @Override
         public void execute(@NonNull PackageSplitRes packageSplitResourcesTask) {
             BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-            List<? extends BaseVariantOutputData> outputs = variantData.getOutputs();
-
             final VariantConfiguration config = variantData.getVariantConfiguration();
             Set<String> densityFilters = variantData.getFilters(OutputFile.FilterType.DENSITY);
             Set<String> languageFilters = variantData.getFilters(OutputFile.FilterType.LANGUAGE);
 
-            final BaseVariantOutputData variantOutputData = outputs.get(0);
+            final BaseVariantOutputData variantOutputData = variantData.getMainOutput();
             variantOutputData.packageSplitResourcesTask = packageSplitResourcesTask;
             VariantOutputScope variantOutputScope = variantOutputData.getScope();
             packageSplitResourcesTask.setInputDirectory(

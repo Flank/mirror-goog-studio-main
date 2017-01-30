@@ -560,7 +560,7 @@ public class LibraryTaskManager extends TaskManager {
                 // needed explicitly, as bundle no longer depends on compileJava
                 variantScope.getAidlCompileTask().getName(),
                 variantScope.getMergeAssetsTask().getName(),
-                variantData.getOutputs().get(0).getScope().getManifestProcessorTask().getName());
+                variantData.getMainOutput().getScope().getManifestProcessorTask().getName());
         bundle.dependsOn(variantScope.getNdkBuildable());
 
         bundle.setDescription("Assembles a bundle containing the library in " +
@@ -575,7 +575,7 @@ public class LibraryTaskManager extends TaskManager {
                         StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
 
         // get the single output for now, though that may always be the case for a library.
-        LibVariantOutputData variantOutputData = libVariantData.getOutputs().get(0);
+        LibVariantOutputData variantOutputData = libVariantData.getMainOutput();
         variantOutputData.packageLibTask = bundle;
 
         AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = getAndroidTasks().create(
