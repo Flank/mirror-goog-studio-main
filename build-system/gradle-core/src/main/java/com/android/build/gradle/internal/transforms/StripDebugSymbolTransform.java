@@ -70,15 +70,18 @@ public class StripDebugSymbolTransform extends Transform {
 
     @NonNull
     private final Set<PathMatcher> excludeMatchers;
+    private final boolean isLibrary;
 
     public StripDebugSymbolTransform(
             @NonNull Project project,
             @NonNull NdkHandler ndkHandler,
-            @NonNull Set<String> excludePattern) {
+            @NonNull Set<String> excludePattern,
+            boolean isLibrary) {
 
         this.excludeMatchers = excludePattern.stream()
                 .map(StripDebugSymbolTransform::compileGlob)
                 .collect(ImmutableCollectors.toImmutableSet());
+        this.isLibrary = isLibrary;
         checkArgument(ndkHandler.isConfigured());
 
         for(Abi abi : ndkHandler.getSupportedAbis()) {
@@ -102,6 +105,9 @@ public class StripDebugSymbolTransform extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.Scope> getScopes() {
+        if (isLibrary) {
+            return TransformManager.SCOPE_FULL_LIBRARY;
+        }
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
