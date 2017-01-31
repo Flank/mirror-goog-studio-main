@@ -23,8 +23,10 @@
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <instantiate from="root/build.gradle.ftl"
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+</#if>
 
 <#if !(isInstantApp!false) || (isBaseAtom!false)>
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
