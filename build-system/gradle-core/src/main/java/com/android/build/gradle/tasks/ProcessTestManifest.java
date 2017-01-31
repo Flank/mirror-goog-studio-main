@@ -307,8 +307,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     scope.getDirName()));
 
             // get single output for now.
-            final BaseVariantOutputData variantOutputData =
-                    scope.getVariantData().getOutputs().get(0);
+            final BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
 
             variantOutputData.manifestProcessorTask = processTestManifestTask;
 
