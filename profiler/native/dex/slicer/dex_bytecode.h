@@ -359,7 +359,7 @@ struct Instruction {
 struct PackedSwitch {
   u2 ident;
   u2 size;
-  s4 firstKey;
+  s4 first_key;
   s4 targets[];
 };
 
@@ -373,7 +373,7 @@ struct SparseSwitch {
 // "fill-array-data-payload" format
 struct ArrayData {
   u2 ident;
-  u2 elementWidth;
+  u2 element_width;
   u4 size;
   u1 data[];
 };

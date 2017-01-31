@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-#include "dex_format.h"
+#include "common.h"
 
-#include <zlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-namespace dex {
+namespace slicer {
 
-// Compute the DEX file checksum for a memory-mapped DEX file
-u4 ComputeChecksum(const Header* header) {
-  const u1* start = reinterpret_cast<const u1*>(header);
-
-  uLong adler = adler32(0L, Z_NULL, 0);
-  const int nonSum = sizeof(header->magic) + sizeof(header->checksum);
-
-  return static_cast<u4>(
-      adler32(adler, start + nonSum, header->file_size - nonSum));
+// Helper for the default CHECK() policy
+void _checkFailed(const char* expr, int line, const char* file) {
+  printf("\nCHECK failed [%s] at %s:%d\n\n", expr, file, line);
+  abort();
 }
 
-}  // namespace dex
+} // namespace slicer
+
