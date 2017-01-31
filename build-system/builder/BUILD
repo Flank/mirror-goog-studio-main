@@ -3,9 +3,21 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 fileset(
     name = "resources",
-    srcs = ["//tools/buildSrc/base:version.properties"] + glob(["src/main/resources/**"]),
+    srcs = glob(["src/main/resources/**"]) + [
+        # TODO: figure out how to include all resources from aaptjlib automatically.
+        "//tools/base/aaptjlib:src/main/resources/linux32/libaapt2_jni.so",
+        "//tools/base/aaptjlib:src/main/resources/linux64/libaapt2_jni.so",
+        "//tools/base/aaptjlib:src/main/resources/linux64/libc++.so",
+        "//tools/base/aaptjlib:src/main/resources/mac64/libaapt2_jni.dylib",
+        "//tools/base/aaptjlib:src/main/resources/mac64/libc++.dylib",
+        "//tools/base/aaptjlib:src/main/resources/win32/libaapt2_jni.dll",
+        "//tools/base/aaptjlib:src/main/resources/win64/libaapt2_jni.dll",
+        "//tools/base/aaptjlib:src/main/resources/win64/libwinpthread-1.dll",
+        "//tools/buildSrc/base:version.properties",
+    ],
     mappings = {
         "//tools/buildSrc/base:": "com/android/builder/",
+        "//tools/base/aaptjlib:src/main/resources/": "",
         "src/main/resources/": "",
     },
 )
@@ -15,6 +27,7 @@ maven_java_library(
     srcs = glob(["src/main/java/**/*.java"]) + [
         "//tools/base/apkzlib:srcjar",
         "//tools/base/build-system/profile:srcjar",
+        "//tools/base/aaptjlib:sources",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",

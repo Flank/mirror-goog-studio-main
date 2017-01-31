@@ -66,7 +66,15 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/tools/build/builder/",
                 "com/android/builder/version.properties",
-                "com/android/builder/internal/AndroidManifest.template");
+                "com/android/builder/internal/AndroidManifest.template",
+                "linux32/libaapt2_jni.so",
+                "linux64/libaapt2_jni.so",
+                "linux64/libc++.so",
+                "mac64/libaapt2_jni.dylib",
+                "mac64/libc++.dylib",
+                "win32/libaapt2_jni.dll",
+                "win64/libaapt2_jni.dll",
+                "win64/libwinpthread-1.dll");
         expected.putAll(
                 "com/android/tools/build/builder-model/",
                 "com/android/builder/model/version.properties");
