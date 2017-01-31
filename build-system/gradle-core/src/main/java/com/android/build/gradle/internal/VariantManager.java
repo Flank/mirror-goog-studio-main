@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
@@ -34,7 +33,9 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
+import com.android.build.gradle.internal.dependency.BuildTypeAttr;
 import com.android.build.gradle.internal.dependency.JarTransform;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -75,7 +76,9 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.internal.reflect.Instantiator;
 
@@ -479,8 +482,10 @@ public class VariantManager implements VariantModel {
     }
 
     public void configureDependencies() {
+        final DependencyHandler dependencies = project.getDependencies();
+
         // register transforms.
-        project.getDependencies().registerTransform(AarTransform.class,
+        dependencies.registerTransform(AarTransform.class,
                 transform -> {
                     final AarTransform aarTransform = (AarTransform) transform;
                     aarTransform.setProject(project);
@@ -489,29 +494,27 @@ public class VariantManager implements VariantModel {
                                     taskManager.getGlobalScope().getBuildCache(),
                                     "aar transform can only work with the build cache"));
                 });
-        project.getDependencies().registerTransform(JarTransform.class, transform -> {});
+        dependencies.registerTransform(JarTransform.class, transform -> {});
 
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
         //project.getConfigurations().getByName("default").setCanBeConsumed(false);
 
+        AttributesSchema schema = dependencies.getAttributesSchema();
         // default configure attribute resolution for the build type attribute
-        project.getDependencies().attributesSchema(schema -> schema.attribute(
-                VariantDependencies.CONFIG_ATTR_BUILD_TYPE,
-                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
-        project.getDependencies().attributesSchema(schema -> schema.attribute(
-                Usage.USAGE_ATTRIBUTE,
-                strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing()));
+        schema.attribute(BuildTypeAttr.ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
+        // and for the Usage attribute
+        schema.attribute(Usage.USAGE_ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching
         // First gather the list of attributes
-        final Set<Attribute<String>> dimensionAttributes = new HashSet<>();
+        final Set<Attribute<ProductFlavorAttr>> dimensionAttributes = new HashSet<>();
 
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
         if (flavorDimensionList != null) {
             for (String dimension : flavorDimensionList) {
-                dimensionAttributes.add(Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + dimension, String.class));
+                dimensionAttributes.add(Attribute.of(dimension, ProductFlavorAttr.class));
             }
         }
 
@@ -520,13 +523,9 @@ public class VariantManager implements VariantModel {
 
         // then set a default resolution strategy. It's fine if an attribute in the consumer is
         // missing from the producer
-        project.getDependencies().attributesSchema(schema -> {
-            for (Attribute<String> dimensionAttribute : dimensionAttributes) {
-                schema.attribute(
-                        dimensionAttribute,
-                        strategy -> strategy.getCompatibilityRules().assumeCompatibleWhenMissing());
-            }
-        });
+        for (Attribute<ProductFlavorAttr> dimensionAttribute : dimensionAttributes) {
+            schema.attribute(dimensionAttribute).getCompatibilityRules().assumeCompatibleWhenMissing();
+        }
     }
 
     /**

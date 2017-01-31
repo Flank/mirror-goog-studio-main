@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.managed.adaptor;
 
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
-
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
@@ -26,6 +24,7 @@ import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -52,6 +51,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -249,17 +249,11 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
 
     @NonNull
     @Override
-    public Map<Attribute<String>, String> getFlavorMatchingStrategy() {
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy() {
         return model.getFlavorMatchingStrategy().entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> {
-                            String name = entry.getKey();
-                            if (!name.startsWith(CONFIG_ATTR_FLAVOR_PREFIX)) {
-                                name = CONFIG_ATTR_FLAVOR_PREFIX + name;
-                            }
-                            return Attribute.of(name, String.class);
-                        },
-                        Map.Entry::getValue
+                        entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
+                        entry -> ProductFlavorAttr.of(entry.getValue())
                 ));
     }
 

@@ -22,6 +22,7 @@ import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -151,5 +152,5 @@ public interface AndroidConfig {
     DataBindingOptions getDataBinding();
 
     @NonNull
-    Map<Attribute<String>, String> getFlavorMatchingStrategy();
+    Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy();
 }

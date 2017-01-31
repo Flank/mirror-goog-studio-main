@@ -15,8 +15,6 @@
  */
 package com.android.build.gradle;
 
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
@@ -29,7 +27,7 @@ import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
@@ -151,7 +149,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
-    private Map<Attribute<String>, String> flavorMatchingStrategy;
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatchingStrategy;
 
     private Action<VariantFilter> variantFilter;
 
@@ -644,11 +642,9 @@ public abstract class BaseExtension implements AndroidConfig {
             flavorMatchingStrategy = Maps.newHashMap();
         }
 
-        if (!name.startsWith(VariantDependencies.CONFIG_ATTR_FLAVOR_PREFIX)) {
-            name = CONFIG_ATTR_FLAVOR_PREFIX + name;
-        }
-
-        flavorMatchingStrategy.put(Attribute.of(name, String.class), value);
+        flavorMatchingStrategy.put(
+                Attribute.of(name, ProductFlavorAttr.class),
+                ProductFlavorAttr.of(value));
     }
 
     /**
@@ -656,7 +652,7 @@ public abstract class BaseExtension implements AndroidConfig {
      */
     @Override
     @NonNull
-    public Map<Attribute<String>, String> getFlavorMatchingStrategy() {
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy() {
         if (flavorMatchingStrategy == null) {
             return ImmutableMap.of();
         }

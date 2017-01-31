@@ -51,10 +51,6 @@ import org.gradle.api.artifacts.ResolutionStrategy;
  */
 public class VariantDependencies {
 
-    public static final Attribute<String> CONFIG_ATTR_BUILD_TYPE =
-            Attribute.of("android.buildType", String.class);
-    public static final String CONFIG_ATTR_FLAVOR_PREFIX = "android.flavor.";
-
     @NonNull
     private final String variantName;
 
@@ -100,7 +96,7 @@ public class VariantDependencies {
         private VariantType testedVariantType = null;
         private VariantDependencies testedVariantDependencies = null;
         private AndroidDependency testedVariantOutput = null;
-        private Map<Attribute<String>, String> flavorMatching;
+        private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching;
 
         // default size should be enough. It's going to be rare for a variant to include
         // more than a few configurations (main, build-type, flavors...)
@@ -164,7 +160,8 @@ public class VariantDependencies {
             return this;
         }
 
-        public Builder setFlavorMatching(Map<Attribute<String>,String> flavorMatching) {
+        public Builder setFlavorMatching(
+                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching) {
             this.flavorMatching = flavorMatching;
             return this;
         }
@@ -211,7 +208,8 @@ public class VariantDependencies {
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
             String buildType = variantConfiguration.getBuildType().getName();
-            Map<Attribute<String>, String> flavorMap = getFlavorAttributes(flavorMatching);
+            Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap =
+                    getFlavorAttributes(flavorMatching);
 
             Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
             compile.setVisible(false);
@@ -266,7 +264,8 @@ public class VariantDependencies {
                 publish.setDescription("Published Configuration for Variant " + variantName);
                 publish.setCanBeResolved(false);
 
-                Map<Attribute<String>, String> flavorMap2 = getFlavorAttributes(null);
+                Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap2 =
+                        getFlavorAttributes(null);
                 applyVariantAttributes(publish, buildType, flavorMap2);
 
                 // if the variant is not a library, then the publishing configuration should
@@ -299,14 +298,15 @@ public class VariantDependencies {
          * Returns a map of Configuration attributes containing all the flavor values.
          * @param flavorMatching a list of override for flavor matching or for new attributes.
          */
-        private Map<Attribute<String>, String> getFlavorAttributes(
-                @Nullable Map<Attribute<String>, String> flavorMatching) {
+        @NonNull
+        private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
+                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching) {
             List<CoreProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
-            Map<Attribute<String>, String> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
+            Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
             // first go through the product flavors and add matching attributes
             for (CoreProductFlavor f : productFlavors) {
-                map.put(Attribute.of(CONFIG_ATTR_FLAVOR_PREFIX + f.getDimension(), String.class), f.getName());
+                map.put(Attribute.of(f.getDimension(), ProductFlavorAttr.class), ProductFlavorAttr.of(f.getName()));
             }
 
             // then go through the override or new attributes.
@@ -320,9 +320,9 @@ public class VariantDependencies {
         private static void applyVariantAttributes(
                 @NonNull Configuration configuration,
                 @NonNull String buildType,
-                @NonNull Map<Attribute<String>, String> flavorMap) {
-            configuration.getAttributes().attribute(CONFIG_ATTR_BUILD_TYPE, buildType);
-            for (Map.Entry<Attribute<String>, String> entry : flavorMap.entrySet()) {
+                @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
+            configuration.getAttributes().attribute(BuildTypeAttr.ATTRIBUTE, BuildTypeAttr.of(buildType));
+            for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
                 configuration.getAttributes().attribute(entry.getKey(), entry.getValue());
             }
         }
