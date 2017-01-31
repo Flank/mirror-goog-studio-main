@@ -1,8 +1,6 @@
-# Bazel (https://bazel.io/) BUILD file for apkzlib library.
-load("//tools/base/bazel:bazel.bzl", "fileset")
-load("//tools/base/bazel:utils.bzl", "srcjar")
-
 licenses(["notice"])  # Apache License 2.0
+
+load("//tools/base/bazel:utils.bzl", "srcjar")
 
 srcjar(
     name = "srcjar",

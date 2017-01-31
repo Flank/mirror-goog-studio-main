@@ -1,4 +1,3 @@
-load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:utils.bzl", "srcjar")
 
 srcjar(

@@ -1,8 +1,4 @@
-load("//tools/base/bazel:bazel.bzl", "fileset")
-load("//tools/base/bazel:jasmin.bzl", "jasmin_library")
 load("//tools/base/bazel:utils.bzl", "srcjar")
-load(":instrumenter.bzl", "compile_and_instrument_base")
-load(":instrumenter.bzl", "compile_and_instrument_patch")
 
 srcjar(
     name = "srcjar",
@@ -54,7 +50,11 @@ java_binary(
     runtime_deps = [":instant-run-test-instrumenter"],
 )
 
+load(":instrumenter.bzl", "compile_and_instrument_base")
+
 compile_and_instrument_base("incremental-support-visitor")
+
+load(":instrumenter.bzl", "compile_and_instrument_patch")
 
 compile_and_instrument_patch("changeBaseClass", "incremental-change-visitor")
 
