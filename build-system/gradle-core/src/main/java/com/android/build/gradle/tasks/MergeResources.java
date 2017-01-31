@@ -493,6 +493,7 @@ public class MergeResources extends IncrementalTask {
                 ResourceSet resourceSet = new ResourceSet(
                         MergeManifests.getArtifactName(artifact),
                         validateEnabled);
+                resourceSet.setFromDependency(true);
                 resourceSet.addSource(artifact.getFile());
 
                 // add at the beginning since the libraries are less important than the folder based
