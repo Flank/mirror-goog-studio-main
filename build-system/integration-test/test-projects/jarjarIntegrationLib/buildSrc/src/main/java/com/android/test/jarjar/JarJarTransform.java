@@ -64,7 +64,8 @@ public class JarJarTransform extends Transform {
                     Scope.EXTERNAL_LIBRARIES);
         }
 
-        return EnumSet.of(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
+        // TODO: need to determine whether custom transform runs on local jars.
+        return EnumSet.of(Scope.PROJECT/*,  Scope.PROJECT_LOCAL_DEPS */);
     }
 
     @Override
