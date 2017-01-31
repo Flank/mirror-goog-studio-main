@@ -49,7 +49,7 @@ public final class DexArchiveEntry {
         String filePath = dexEntryPath.toString();
         int lastDot = filePath.lastIndexOf('.');
         String noExtensionPath = filePath.substring(0, lastDot);
-        return Paths.get(noExtensionPath + SdkConstants.DOT_DEX);
+        return Paths.get(noExtensionPath + SdkConstants.DOT_CLASS);
     }
 
     /** Returns content of this DEX file. */

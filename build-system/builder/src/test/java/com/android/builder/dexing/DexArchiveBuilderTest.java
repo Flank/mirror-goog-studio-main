@@ -16,23 +16,20 @@
 
 package com.android.builder.dexing;
 
+import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
-import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -149,7 +146,7 @@ public class DexArchiveBuilderTest {
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(Paths.get("test/B.dex"));
+            dexArchive.removeFile(Paths.get(PACKAGE + "/B.dex"));
         }
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -166,9 +163,9 @@ public class DexArchiveBuilderTest {
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(Paths.get("test/A.dex"));
-            dexArchive.removeFile(Paths.get("test/B.dex"));
-            dexArchive.removeFile(Paths.get("test/C.dex"));
+            dexArchive.removeFile(Paths.get(PACKAGE + "/A.dex"));
+            dexArchive.removeFile(Paths.get(PACKAGE + "/B.dex"));
+            dexArchive.removeFile(Paths.get(PACKAGE + "/C.dex"));
         }
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -205,42 +202,36 @@ public class DexArchiveBuilderTest {
         }
     }
 
+    @Test
+    public void checkDexEntriesRenaming() {
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("A.dex")))
+                .isEqualTo(Paths.get("A.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("A$a.dex")))
+                .isEqualTo(Paths.get("A$a.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("/A.dex")))
+                .isEqualTo(Paths.get("/A.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a/A.dex")))
+                .isEqualTo(Paths.get("a/A.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a/.dex/A.dex")))
+                .isEqualTo(Paths.get("a/.dex/A.class"));
+
+        try {
+            DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
+        } catch (IllegalStateException e) {
+            // should throw
+        }
+    }
+
     @NonNull
     private Path writeToInput(@NonNull Collection<String> classesInInput) throws Exception {
         Path input;
         if (inputFormat == ClassesInputFormat.JAR) {
             input = temporaryFolder.getRoot().toPath().resolve("input.jar");
-            writeClassesToJar(input, classesInInput);
         } else {
             input = temporaryFolder.getRoot().toPath().resolve("input");
-            writeClassesToDir(input, classesInInput);
         }
+        DexArchiveTestUtil.createClasses(input, classesInInput);
         return input;
-    }
-
-    private void writeClassesToJar(@NonNull Path jarPath, @NonNull Collection<String> classes)
-            throws Exception {
-        try (ZFile jar = new ZFile(jarPath.toFile())) {
-            for (String klass : classes) {
-                byte[] classContent = TestClassesGenerator.emptyClass(klass);
-                jar.add(
-                        "test/" + klass + SdkConstants.DOT_CLASS,
-                        new ByteArrayInputStream(classContent));
-            }
-        }
-    }
-
-    private void writeClassesToDir(@NonNull Path dirPath, @NonNull Collection<String> classes)
-            throws Exception {
-        if (!Files.isDirectory(dirPath)) {
-            Files.createDirectory(dirPath);
-        }
-        for (String klass : classes) {
-            byte[] classContent = TestClassesGenerator.emptyClass(klass);
-            Path classPath = dirPath.resolve("test/" + klass + SdkConstants.DOT_CLASS);
-            Files.createDirectories(classPath.getParent());
-            Files.copy(new ByteArrayInputStream(classContent), classPath);
-        }
     }
 
     private Path createOutput() {
@@ -261,31 +252,30 @@ public class DexArchiveBuilderTest {
                         jarFile.entries()
                                 .stream()
                                 .map(e -> e.getCentralDirectoryHeader().getName())
-                                .map(path -> path.replaceAll("test/(.*)\\.dex", "$1"))
+                                .map(DexArchiveBuilderTest::getClassNameWithoutPackage)
                                 .collect(Collectors.toSet());
             }
         } else {
             classesInArchive =
                     Files.walk(dexArchive.getRootPath())
                             .filter(Files::isRegularFile)
-                            .map(path -> path.toString().replaceAll(".*test/(.*)\\.dex", "$1"))
+                            .map(Path::toString)
+                            .map(DexArchiveBuilderTest::getClassNameWithoutPackage)
                             .collect(Collectors.toSet());
         }
         Truth.assertThat(classesInArchive).containsExactlyElementsIn(classNames);
 
         for (DexArchiveEntry entry : dexArchive.getFiles()) {
             byte[] dexClass = entry.getDexFileContent();
-            Path tmpFile = temporaryFolder.newFile().toPath();
-            Files.copy(
-                    new ByteArrayInputStream(dexClass),
-                    tmpFile,
-                    StandardCopyOption.REPLACE_EXISTING);
+            Dex dex = new Dex(dexClass, entry.getRelativePathInArchive().toString());
 
             String className =
-                    "L"
-                            + entry.getRelativePathInArchive().toString().replaceAll("\\.dex", "")
-                            + ";";
-            assertThat(new Dex(tmpFile)).containsClasses(className);
+                    getClassNameWithoutPackage(entry.getRelativePathInArchive().toString());
+            assertThat(dex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses(className));
         }
+    }
+
+    private static String getClassNameWithoutPackage(@NonNull String dexEntryPath) {
+        return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
     }
 }
