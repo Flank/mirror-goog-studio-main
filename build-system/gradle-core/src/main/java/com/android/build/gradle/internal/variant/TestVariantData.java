@@ -16,8 +16,6 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -25,7 +23,6 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,8 +46,7 @@ public class TestVariantData extends ApkVariantData {
         this.testedVariantData = testedVariantData;
 
         // create default output
-        createOutput(OutputFile.OutputType.MAIN,
-                Collections.<FilterData>emptyList());
+        getSplitFactory().addMainApk();
     }
 
     @NonNull

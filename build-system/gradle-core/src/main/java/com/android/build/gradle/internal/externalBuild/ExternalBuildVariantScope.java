@@ -22,10 +22,13 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.model.AaptOptions;
+import com.android.ide.common.build.Split;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -47,18 +50,27 @@ import org.gradle.api.Project;
     private final BuildContext mBuildContext = new BuildContext();
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
+    private final SplitScope splitScope;
 
     ExternalBuildVariantScope(
             @NonNull TransformGlobalScope globalScope,
             @NonNull File outputRootFolder,
             @NonNull ExternalBuildContext externalBuildContext,
             @NonNull AaptOptions aaptOptions,
-            @NonNull ManifestAttributeSupplier manifestAttributeSupplier) {
+            @NonNull ManifestAttributeSupplier manifestAttributeSupplier,
+            @NonNull Collection<Split> splits) {
         this.globalScope = globalScope;
         this.outputRootFolder = outputRootFolder;
         this.externalBuildContext = externalBuildContext;
         this.aaptOptions = aaptOptions;
         this.manifestAttributeSupplier = manifestAttributeSupplier;
+        this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, splits);
+    }
+
+    @NonNull
+    @Override
+    public SplitScope getSplitScope() {
+        return splitScope;
     }
 
     @NonNull
@@ -145,6 +157,7 @@ import org.gradle.api.Project;
         return new File(outputRootFolder, "/incremental-verifier/debug");
     }
 
+    @Override
     @NonNull
     public BuildContext getBuildContext() {
         return mBuildContext;
@@ -192,15 +205,8 @@ import org.gradle.api.Project;
         return new ApkOutputFile(
                 OutputFile.OutputType.MAIN,
                 Collections.emptySet(),
-                () -> new File(outputRootFolder, "/outputs/apk/debug.apk"));
-    }
-
-    public File getIntermediateApk() {
-        return new File(outputRootFolder, "/outputs/apk/debug-unaligned.apk");
-    }
-
-    public File getPreDexOutputDir() {
-        return FileUtils.join(outputRootFolder, "intermediates", "pre-dexed");
+                () -> new File(outputRootFolder, "/outputs/apk/debug.apk"),
+                getVersionCode());
     }
 
     public File getIncrementalDir(String name) {
@@ -225,9 +231,5 @@ import org.gradle.api.Project;
 
     public String getVersionName() {
         return manifestAttributeSupplier.getVersionName();
-    }
-
-    public File getAssetsDir() {
-        return new File(outputRootFolder, "assets");
     }
 }

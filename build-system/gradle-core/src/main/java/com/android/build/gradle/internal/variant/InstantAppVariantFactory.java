@@ -20,8 +20,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstantAppVariant;
@@ -38,7 +36,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
-import java.util.Collections;
 import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -80,8 +77,7 @@ public class InstantAppVariantFactory implements VariantFactory {
                         variantConfiguration,
                         androidBuilder.getErrorReporter(),
                         recorder);
-        variant.createOutput(OutputFile.OutputType.MAIN,
-                Collections.<FilterData>emptyList());
+        variant.getSplitFactory().addMainApk();
         return variant;
     }
 

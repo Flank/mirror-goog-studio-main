@@ -171,8 +171,9 @@ public class AtomConfig extends BaseTask {
                                         .getVariantData()
                                         .getVariantConfiguration()
                                         .getDirName());
-                File packageOutputFile =
-                        variantOutputScope.getProcessResourcePackageOutputFile(atomName);
+                // FIX ME : can we use splits here ?
+                File packageOutputFile = null;
+                //variantOutputScope.getProcessResourcePackageOutputFile(atomName);
                 File mergeBlameLogDir = variantScope.getResourceBlameLogDir(atomName);
                 File javaClassDir = variantScope.getJavaOutputDir(atomName);
                 File dexTempDir =

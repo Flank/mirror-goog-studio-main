@@ -19,6 +19,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -26,13 +27,15 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
+import com.android.ide.common.build.Split;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -86,6 +89,12 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     @Nullable
     private String testLabel;
 
+    private SplitScope splitScope;
+
+    public SplitScope getSplitScope() {
+        return splitScope;
+    }
+
     @Override
     protected void doFullTaskAction() throws IOException {
         if (testApplicationId == null && testTargetMetadata == null) {
@@ -103,21 +112,39 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             }
             testedApplicationId = buildContext.getPackageId();
         }
+        List<Split> splits = splitScope.getSplits();
+        if (splits.isEmpty()) {
+            throw new RuntimeException("No output defined for test module, please file a bug");
+        }
+        if (splits.size() > 1) {
+            throw new RuntimeException(
+                    "Test modules only support a single split, this one defines"
+                            + Joiner.on(",").join(splits));
+        }
+        Split mainSplit = splits.get(0);
 
-        getBuilder().mergeManifestsForTestVariant(
-                getTestApplicationId(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
-                testedApplicationId,
-                getInstrumentationRunner(),
-                getHandleProfiling(),
-                getFunctionalTest(),
-                getTestLabel(),
-                getTestManifestFile(),
-                computeProviders(),
-                getPlaceholdersValues(),
-                getManifestOutputFile(),
-                getTmpDir());
+        File manifestOutputFolder = new File(getManifestOutputDirectory(), mainSplit.getDirName());
+        FileUtils.mkdirs(manifestOutputFolder);
+        File manifestOutputFile = new File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML);
+
+        getBuilder()
+                .mergeManifestsForTestVariant(
+                        getTestApplicationId(),
+                        getMinSdkVersion(),
+                        getTargetSdkVersion(),
+                        testedApplicationId,
+                        getInstrumentationRunner(),
+                        getHandleProfiling(),
+                        getFunctionalTest(),
+                        getTestLabel(),
+                        getTestManifestFile(),
+                        computeProviders(),
+                        getPlaceholdersValues(),
+                        manifestOutputFile,
+                        getTmpDir());
+        splitScope.addOutputForSplit(
+                VariantScope.TaskOutputType.MERGED_MANIFESTS, mainSplit, manifestOutputFile);
+        splitScope.save(VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
     }
 
     @InputFile
@@ -293,17 +320,13 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     scope.getVariantConfiguration();
 
             processTestManifestTask.setTestManifestFile(config.getMainManifest());
+            processTestManifestTask.splitScope = scope.getSplitScope();
 
             processTestManifestTask.setTmpDir(FileUtils.join(
                     scope.getGlobalScope().getIntermediatesDir(),
                     "tmp",
                     "manifest",
                     scope.getDirName()));
-
-            // get single output for now.
-            final BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
-
-            variantOutputData.manifestProcessorTask = processTestManifestTask;
 
             processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processTestManifestTask.setVariantName(config.getFullName());
@@ -347,8 +370,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.manifests = scope.getArtifactCollection(
                     RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            processTestManifestTask.setManifestOutputFile(
-                    variantOutputData.getScope().getManifestOutputFile());
+            processTestManifestTask.setManifestOutputDirectory(scope.getManifestOutputDirectory());
 
             ConventionMappingHelper.map(
                     processTestManifestTask, "placeholdersValues", config::getManifestPlaceholders);

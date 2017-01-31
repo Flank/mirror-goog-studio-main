@@ -15,19 +15,25 @@
  */
 package com.android.build.gradle.internal.variant;
 
+import static com.android.SdkConstants.FN_SPLIT_LIST;
+
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.api.CustomizableSplit;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.SplitList;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -40,9 +46,13 @@ import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
+import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import com.android.build.gradle.tasks.PackageSplitAbi;
+import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
@@ -65,6 +75,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -74,6 +85,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
@@ -100,6 +112,13 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     public Task resourceGenTask;
     public Task assetGenTask;
     public CheckManifest checkManifestTask;
+    public AndroidTask<PackageSplitRes> packageSplitResourcesTask;
+    public AndroidTask<PackageSplitAbi> packageSplitAbiTask;
+    public AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
+    public AndroidTask<? extends PackageAndroidArtifact> packageAndroidArtifactTask;
+
+    // FIX ME : should this really be here ?
+    public Zip packageLibTask;
 
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
@@ -157,7 +176,11 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      */
     public boolean outputsAreSigned = false;
 
-    private SplitHandlingPolicy mSplitHandlingPolicy;
+    @NonNull private final SplitScope splitScope;
+
+    @NonNull private final SplitList splitList;
+
+    @NonNull private final SplitFactory splitFactory;
 
     public BaseVariantData(
             @NonNull AndroidConfig androidConfig,
@@ -169,15 +192,15 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         this.taskManager = taskManager;
 
         // eventually, this will require a more open ended comparison.
-        mSplitHandlingPolicy =
+        SplitHandlingPolicy splitHandlingPolicy =
                 androidConfig.getGeneratePureSplits()
-                        && variantConfiguration.getMinSdkVersion().getApiLevel() >= 21
+                                && variantConfiguration.getMinSdkVersion().getApiLevel() >= 21
                         ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                         : SplitHandlingPolicy.PRE_21_POLICY;
 
         // warn the user in case we are forced to ignore the generatePureSplits flag.
         if (androidConfig.getGeneratePureSplits()
-                && mSplitHandlingPolicy != SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
+                && splitHandlingPolicy != SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
             Logging.getLogger(BaseVariantData.class).warn(
                     String.format("Variant %s, MinSdkVersion %s is too low (<21) "
                                     + "to support pure splits, reverting to full APKs",
@@ -194,6 +217,13 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                                 errorReporter,
                                 recorder),
                         this);
+        File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
+        ConfigurableFileCollection splitListInput =
+                globalScope.getProject().files(splitListOutputFile);
+        splitScope = new SplitScope(splitHandlingPolicy);
+        splitList = new SplitList(splitListInput);
+        splitFactory = new SplitFactory(globalScope, variantConfiguration, splitScope);
+
         taskManager.configureScopeForNdk(scope);
 
         // this must be created immediately since the variant API happens after the task that
@@ -222,31 +252,14 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return layoutXmlProcessor;
     }
 
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return mSplitHandlingPolicy;
+    @NonNull
+    public SplitScope getSplitScope() {
+        return splitScope;
     }
 
     @NonNull
-    protected abstract T doCreateOutput(
-            OutputFile.OutputType outputType,
-            Collection<FilterData> filters);
-
-    @NonNull
-    public T createOutput(OutputFile.OutputType outputType,
-            Collection<FilterData> filters) {
-        T data = doCreateOutput(outputType, filters);
-
-        // if it's the first time we add an output, mark previous output as part of a multi-output
-        // setup.
-        if (outputs.size() == 1) {
-            outputs.get(0).setMultiOutput(true);
-            data.setMultiOutput(true);
-        } else if (outputs.size() > 1) {
-            data.setMultiOutput(true);
-        }
-
-        outputs.add(data);
-        return data;
+    public SplitFactory getSplitFactory() {
+        return splitFactory;
     }
 
     @NonNull
@@ -464,14 +477,19 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return resFoldersOnDisk;
     }
 
+    List<Action<CustomizableSplit>> splitCustomizers = new ArrayList<>();
+
+    public void registerSplitCustomizer(Action<CustomizableSplit> customizer) {
+        splitCustomizers.add(customizer);
+    }
+
+    public void customizeApk(CustomizableSplit split) {
+        splitCustomizers.forEach(customizer -> customizer.execute(split));
+    }
+
     @NonNull
-    public List<String> discoverListOfResourceConfigsNotDensities() {
-        List<String> resFoldersOnDisk = new ArrayList<String>();
-        Set<File> resourceFolders = variantConfiguration.getResourceFolders();
-        resFoldersOnDisk.addAll(getAllFilters(
-                resourceFolders,
-                DiscoverableFilterType.LANGUAGE.folderPrefix));
-        return resFoldersOnDisk;
+    public SplitList getSplitList() {
+        return splitList;
     }
 
     /**
@@ -646,7 +664,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
         // then all the generated src folders.
-        if (scope.getGenerateRClassTask() != null) {
+        if (scope.getProcessResourcesTask() != null) {
             sourceSets.add(project.fileTree(scope.getRClassSourceOutputDir()));
         }
 

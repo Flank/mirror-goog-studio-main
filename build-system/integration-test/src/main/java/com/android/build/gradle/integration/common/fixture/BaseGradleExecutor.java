@@ -203,7 +203,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (!Strings.isNullOrEmpty(heapSize)) {
             jvmArguments.add("-Xmx" + heapSize);
         }
-
         jvmArguments.add("-XX:MaxPermSize=1024m");
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");

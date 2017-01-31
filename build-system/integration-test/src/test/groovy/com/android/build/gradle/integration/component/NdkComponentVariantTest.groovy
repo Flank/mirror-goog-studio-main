@@ -112,7 +112,7 @@ model {
         project.execute("assembleX86Debug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("x86", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.DefaultApkType.DEBUG,"x86")
         assertThat(apk).contains("lib/x86/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
@@ -124,7 +124,7 @@ model {
         project.execute("assembleArmDebug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("arm", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.DefaultApkType.DEBUG, "arm")
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
         assertThat(apk).contains("lib/armeabi/libhello-jni.so")
@@ -136,7 +136,7 @@ model {
         project.execute("assembleMipsDebug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("mips", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.DefaultApkType.DEBUG, "mips")
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
         assertThat(apk).contains("lib/mips/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
@@ -147,7 +147,7 @@ model {
     public void "check release build"() {
         project.execute("assembleArmRelease")
 
-        Apk apk = project.getApk("arm", "release", "unsigned")
+        Apk apk = project.getApk("arm",  GradleTestProject.DefaultApkType.RELEASE)
         assertThat(apk).contains("lib/armeabi/libhello-jni.so")
         assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
     }
@@ -175,7 +175,7 @@ model {
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("assembleDebug")
 
-        Apk apk = project.getApk("x86", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.DefaultApkType.DEBUG, "x86")
         assertThat(apk).contains("lib/x86/libhello-jni.so")
     }
 }

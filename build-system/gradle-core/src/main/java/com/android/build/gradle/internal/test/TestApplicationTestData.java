@@ -21,6 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
@@ -28,9 +31,11 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -46,14 +51,14 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
 
     private final String testApplicationId;
     private final BuildContext testedBuildContext;
-    private final File testApk;
+    private final FileCollection testApk;
     private final FileCollection testedApks;
     private final GradleVariantConfiguration variantConfiguration;
 
     public TestApplicationTestData(
             GradleVariantConfiguration variantConfiguration,
             String testApplicationId,
-            File testApk,
+            FileCollection testApk,
             FileCollection testedApks) {
         super(variantConfiguration);
         this.variantConfiguration = variantConfiguration;
@@ -126,7 +131,18 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        return testApk;
+        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
+        splitScope.load(VariantScope.TaskOutputType.APK, testApk);
+        Collection<SplitScope.SplitOutput> mainOutputs =
+                splitScope.getOutputs(VariantScope.TaskOutputType.APK);
+        if (mainOutputs.size() != 1) {
+            throw new RuntimeException(
+                    "Unexpected number of main APKs, expected 1, got  "
+                            + mainOutputs.size()
+                            + ":"
+                            + Joiner.on(",").join(mainOutputs));
+        }
+        return mainOutputs.iterator().next().getOutputFile();
     }
 
     @NonNull

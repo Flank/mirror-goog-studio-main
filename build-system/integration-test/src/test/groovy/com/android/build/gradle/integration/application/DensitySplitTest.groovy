@@ -76,30 +76,30 @@ class DensitySplitTest {
             }
             assertEquals(5, mainArtifact.getOutputs().size())
 
-            Apk mdpiApk = project.getApk("mdpi", "debug")
+            Apk mdpiApk = project.getApk("mdpi", GradleTestProject.DefaultApkType.DEBUG)
             assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png")
         }
     }
 
     @Test
     void "check version code in apk"() {
-        Apk universalApk = project.getApk("universal", "debug")
+        Apk universalApk = project.getApk("universal", GradleTestProject.DefaultApkType.DEBUG)
         assertThat(universalApk).hasVersionCode(112)
         assertThat(universalApk).hasVersionName("version 112")
 
-        Apk mdpiApk = project.getApk("mdpi", "debug")
+        Apk mdpiApk = project.getApk("mdpi", GradleTestProject.DefaultApkType.DEBUG)
         assertThat(mdpiApk).hasVersionCode(212)
         assertThat(mdpiApk).hasVersionName("version 212")
 
-        Apk hdpiApk = project.getApk("hdpi", "debug")
+        Apk hdpiApk = project.getApk("hdpi",  GradleTestProject.DefaultApkType.DEBUG)
         assertThat(hdpiApk).hasVersionCode(312)
         assertThat(hdpiApk).hasVersionName("version 312")
 
-        Apk xhdpiApk = project.getApk("xhdpi", "debug")
+        Apk xhdpiApk = project.getApk("xhdpi",  GradleTestProject.DefaultApkType.DEBUG)
         assertThat(xhdpiApk).hasVersionCode(412)
         assertThat(xhdpiApk).hasVersionName("version 412")
 
-        Apk xxhdiApk = project.getApk("xxhdpi", "debug")
+        Apk xxhdiApk = project.getApk("xxhdpi",  GradleTestProject.DefaultApkType.DEBUG)
         assertThat(xxhdiApk).hasVersionCode(512)
         assertThat(xxhdiApk).hasVersionName("version 512")
     }

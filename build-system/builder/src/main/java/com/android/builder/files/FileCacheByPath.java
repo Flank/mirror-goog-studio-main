@@ -59,7 +59,8 @@ public class FileCacheByPath {
      * @param directory the directory where the cache is stored
      */
     public FileCacheByPath(@NonNull File directory) {
-        Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
+        Preconditions.checkArgument(
+                directory.isDirectory(), directory.getAbsolutePath() + "!.isDirectory()");
 
         this.directory = directory;
     }

@@ -62,12 +62,12 @@ public class InstantRunFullSplitApkTest {
                         + "}\n"
                         + "ext.abiCodes = ['x86':1, 'armeabi-v7a':2]\n"
                         + "android.applicationVariants.all { variant ->\n"
-                        + "  variant.outputs.each { output ->\n"
+                        + " variant.registerSplitCustomizer { split ->\n"
                         + "    def baseAbiVersionCode =\n"
                         + "        project.ext.abiCodes.get(\n"
-                        + "            output.getFilter(com.android.build.OutputFile.ABI), 0)\n"
-                        + "    output.versionCodeOverride =\n"
-                        + "        baseAbiVersionCode * 1000 + variant.versionCode\n"
+                        + "            split.getFilter(com.android.build.OutputFile.ABI), 0)\n"
+                        + "         split.versionCode=\n"
+                        + "             baseAbiVersionCode * 1000 + variant.versionCode\n"
                         + "  }\n"
                         + "}");
 

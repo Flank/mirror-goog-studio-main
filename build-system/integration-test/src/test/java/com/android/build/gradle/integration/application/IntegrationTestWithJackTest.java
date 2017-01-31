@@ -50,7 +50,7 @@ public class IntegrationTestWithJackTest {
     public void testAssembleAndroidTest() throws Exception {
         project.executor().run("clean", "assembleAndroidTest");
 
-        Apk androidTestApk = project.getTestApk("debug");
+        Apk androidTestApk = project.getTestApk();
         assertThat(androidTestApk).containsClass("Lcom/example/helloworld/HelloWorldTest;");
     }
 
@@ -64,7 +64,7 @@ public class IntegrationTestWithJackTest {
 
         project.executor().run("clean", "assembleAndroidTest");
 
-        Apk androidTestApk = project.getTestApk("debug");
+        Apk androidTestApk = project.getTestApk();
         assertThat(androidTestApk).containsClass("Lcom/example/helloworld/HelloWorldTest;");
     }
 
@@ -86,7 +86,7 @@ public class IntegrationTestWithJackTest {
 
         project.executor().run("clean", "assembleAndroidTest");
 
-        Apk androidTestApk = project.getTestApk("debug");
+        Apk androidTestApk = project.getTestApk();
         assertThat(androidTestApk).containsClass("Lcom/example/helloworld/HelloWorldTest;");
     }
 }

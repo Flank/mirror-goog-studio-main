@@ -72,7 +72,7 @@ public class LibWithCompileLocalJarTest {
     public void testLibraryTestContainsLocalJarClasses() throws Exception {
         project.execute("assembleDebugAndroidTest");
 
-        TruthHelper.assertThat(project.getTestApk("debug")).containsClass(
-                "Lcom/example/android/multiproject/person/People;");
+        TruthHelper.assertThat(project.getTestApk())
+                .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 }

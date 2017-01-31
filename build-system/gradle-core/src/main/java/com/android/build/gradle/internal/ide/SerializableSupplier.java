@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope;
+package com.android.build.gradle.internal.ide;
 
-import com.android.annotations.Nullable;
+import java.io.Serializable;
 import java.util.function.Supplier;
 
-/**
- * Decorated {@link Supplier} that contains the reference to the supplier's task.
- */
-public interface SupplierTask<T> extends Supplier<T> {
+/** Specia; */
+public interface SerializableSupplier<T> extends Supplier<T>, Serializable {
 
-    /**
-     * Returns the task that produced the supplied element. It can be null which mean
-     * no task was associated with providing the element.
-     * @return the supplied element task or null if none.
-     */
-    @Nullable
-    AndroidTask<?> getBuilderTask();
+    class Default<U> implements SerializableSupplier<U> {
+        private final U value;
+
+        public Default(U value) {
+            this.value = value;
+        }
+
+        @Override
+        public U get() {
+            return value;
+        }
+    }
 }

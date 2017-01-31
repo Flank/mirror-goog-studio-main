@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,8 +42,7 @@ public class SplitListTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Mock
-    FileCollection fileCollection;
+    @Mock ConfigurableFileCollection fileCollection;
 
     @Before
     public void setUp() {
@@ -54,68 +53,86 @@ public class SplitListTest {
     public void testDensityPersistence() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of("hdpi", "xxhdpi"),
+                ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
-        assertThat(outputFile).contains("[{\"splitType\":\""
-                + "DENSITY\",\"values\":[\"hdpi\",\"xxhdpi\"]},{\"splitType\":\""
-                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
-                + "ABI\",\"values\":[]}]");
+        assertThat(outputFile)
+                .contains(
+                        "[{\"splitType\":\""
+                                + "DENSITY\",\"values\":[\"hdpi\",\"xxhdpi\"]},{\"splitType\":\""
+                                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
+                                + "ABI\",\"values\":[]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
     }
 
     @Test
     public void testLanguagePersistence() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of("fr", "fr_BE"),
+                ImmutableSet.of(),
                 ImmutableSet.of());
 
-        assertThat(outputFile).contains("[{\"splitType\":\""
-                + "DENSITY\",\"values\":[]},{\"splitType\":\""
-                + "LANGUAGE\",\"values\":[\"fr\",\"fr_BE\"]},{\"splitType\":\""
-                + "ABI\",\"values\":[]}]");
+        assertThat(outputFile)
+                .contains(
+                        "[{\"splitType\":\""
+                                + "DENSITY\",\"values\":[]},{\"splitType\":\""
+                                + "LANGUAGE\",\"values\":[\"fr\",\"fr_BE\"]},{\"splitType\":\""
+                                + "ABI\",\"values\":[]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
     }
 
     @Test
     public void testAbiPersistence() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                ImmutableSet.of("arm", "x86"));
+                ImmutableSet.of("arm", "x86"),
+                ImmutableSet.of());
 
-        assertThat(outputFile).contains("[{\"splitType\":\""
-                + "DENSITY\",\"values\":[]},{\"splitType\":\""
-                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
-                + "ABI\",\"values\":[\"arm\",\"x86\"]}]");
+        assertThat(outputFile)
+                .contains(
+                        "[{\"splitType\":\""
+                                + "DENSITY\",\"values\":[]},{\"splitType\":\""
+                                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
+                                + "ABI\",\"values\":[\"arm\",\"x86\"]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
     }
 
     @Test
     public void testAllPersistence() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of("xhdpi", "xxhdpi"),
                 ImmutableSet.of("de", "it"),
-                ImmutableSet.of("arm", "x86"));
+                ImmutableSet.of("arm", "x86"),
+                ImmutableSet.of());
 
-        assertThat(outputFile).contains("[{\"splitType\":\""
-                + "DENSITY\",\"values\":[\"xhdpi\",\"xxhdpi\"]},{\"splitType\":\""
-                + "LANGUAGE\",\"values\":[\"de\",\"it\"]},{\"splitType\":\""
-                + "ABI\",\"values\":[\"arm\",\"x86\"]}]");
+        assertThat(outputFile)
+                .contains(
+                        "[{\"splitType\":\""
+                                + "DENSITY\",\"values\":[\"xhdpi\",\"xxhdpi\"]},{\"splitType\":\""
+                                + "LANGUAGE\",\"values\":[\"de\",\"it\"]},{\"splitType\":\""
+                                + "ABI\",\"values\":[\"arm\",\"x86\"]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
     }
 
     @Test
     public void testDensityLoading() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of("hdpi", "xxhdpi"),
+                ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
@@ -132,9 +149,11 @@ public class SplitListTest {
     public void testLanguageLoading() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of("fr", "fr_CA"),
+                ImmutableSet.of(),
                 ImmutableSet.of());
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
@@ -151,10 +170,12 @@ public class SplitListTest {
     public void testAbiLoading() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                ImmutableSet.of("arm", "x86"));
+                ImmutableSet.of("arm", "x86"),
+                ImmutableSet.of());
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
@@ -169,10 +190,12 @@ public class SplitListTest {
     public void testAllLoading() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of("xhdpi", "xxxhdpi"),
                 ImmutableSet.of("es", "it"),
-                ImmutableSet.of("arm", "x86"));
+                ImmutableSet.of("arm", "x86"),
+                ImmutableSet.of());
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
@@ -191,10 +214,12 @@ public class SplitListTest {
     public void testCachingAfterSave() throws IOException {
         SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(outputFile,
+        splitList.save(
+                outputFile,
                 ImmutableSet.of("xhdpi", "xxxhdpi"),
                 ImmutableSet.of("es", "it"),
-                ImmutableSet.of("arm", "x86"));
+                ImmutableSet.of("arm", "x86"),
+                ImmutableSet.of());
 
         Truth.assertThat(splitList.getFilters(OutputFile.FilterType.DENSITY))
                 .containsExactly("xhdpi", "xxxhdpi");

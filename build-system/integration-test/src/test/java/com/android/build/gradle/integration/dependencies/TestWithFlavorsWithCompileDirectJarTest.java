@@ -78,7 +78,7 @@ public class TestWithFlavorsWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsPackaged() throws Exception {
-        assertThat(project.getSubproject("app").getTestApk("free", "debug"))
+        assertThat(project.getSubproject("app").getTestApk("free"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 

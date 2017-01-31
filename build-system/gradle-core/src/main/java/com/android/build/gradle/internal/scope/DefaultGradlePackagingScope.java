@@ -16,18 +16,22 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
+import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.Split;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -40,13 +44,11 @@ import org.gradle.api.file.FileCollection;
  */
 public class DefaultGradlePackagingScope implements PackagingScope {
 
-    private final VariantOutputScope mVariantOutputScope;
     private final VariantScope mVariantScope;
     private final GlobalScope mGlobalScope;
 
-    public DefaultGradlePackagingScope(@NonNull VariantOutputScope variantOutputScope) {
-        mVariantOutputScope = variantOutputScope;
-        mVariantScope = mVariantOutputScope.getVariantScope();
+    public DefaultGradlePackagingScope(@NonNull VariantScope variantScope) {
+        mVariantScope = variantScope;
         mGlobalScope = mVariantScope.getGlobalScope();
     }
 
@@ -54,12 +56,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @Override
     public AndroidBuilder getAndroidBuilder() {
         return mGlobalScope.getAndroidBuilder();
-    }
-
-    @NonNull
-    @Override
-    public File getFinalResourcesFile() {
-        return mVariantOutputScope.getFinalResourcesFile();
     }
 
     @NonNull
@@ -118,19 +114,13 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @NonNull
     @Override
     public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return mVariantScope.getVariantData().getSplitHandlingPolicy();
+        return mVariantScope.getVariantData().getSplitScope().getSplitHandlingPolicy();
     }
 
     @NonNull
     @Override
     public Set<String> getAbiFilters() {
         return mGlobalScope.getExtension().getSplits().getAbiFilters();
-    }
-
-    @NonNull
-    @Override
-    public ApkOutputFile getMainOutputFile() {
-        return mVariantOutputScope.getMainOutputFile();
     }
 
     @Nullable
@@ -164,13 +154,13 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @NonNull
     @Override
     public String getTaskName(@NonNull String name) {
-        return mVariantOutputScope.getTaskName(name);
+        return mVariantScope.getTaskName(name);
     }
 
     @NonNull
     @Override
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return mVariantOutputScope.getTaskName(prefix, suffix);
+        return mVariantScope.getTaskName(prefix, suffix);
     }
 
     @NonNull
@@ -181,14 +171,28 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputPackage() {
-        return mVariantOutputScope.getFinalPackage();
+    public File getOutputPackageFile(File destinationDir, String projectBaseName, Split split) {
+        if (mVariantScope.getVariantData().getType() == VariantType.INSTANTAPP) {
+            return buildPackagePath(destinationDir, projectBaseName, split, SdkConstants.DOT_ZIP);
+        } else {
+            ApkVariantData apkVariantData = (ApkVariantData) mVariantScope.getVariantData();
+            return buildPackagePath(
+                    destinationDir,
+                    projectBaseName,
+                    split,
+                    apkVariantData.isSigned() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
+        }
     }
 
     @NonNull
+    private File buildPackagePath(
+            File destinationDir, String projectBaseName, Split split, String suffix) {
+        return new File(destinationDir, projectBaseName + "-" + split.getBaseName() + suffix);
+    }
+
     @Override
-    public File getIntermediateApk() {
-        return mVariantOutputScope.getIntermediateApk();
+    public String getProjectBaseName() {
+        return mGlobalScope.getProjectBaseName();
     }
 
     @NonNull
@@ -205,7 +209,12 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @Override
     public int getVersionCode() {
-        return mVariantOutputScope.getVariantOutputData().getVersionCode();
+        // FIX ME : DELETE this API and have everyone use the concept of mainSplit.
+        Split mainSplit = mVariantScope.getSplitScope().getMainSplit();
+        if (mainSplit != null) {
+            return mainSplit.getVersionCode();
+        }
+        return mVariantScope.getVariantConfiguration().getVersionCode();
     }
 
     @Nullable
@@ -220,16 +229,9 @@ public class DefaultGradlePackagingScope implements PackagingScope {
         return mGlobalScope.getExtension().getAaptOptions();
     }
 
-    @NonNull
     @Override
-    public VariantType getVariantType() {
-        return mVariantScope.getVariantConfiguration().getType();
-    }
-
-    @NonNull
-    @Override
-    public File getManifestFile() {
-        return mVariantOutputScope.getManifestOutputFile();
+    public SplitScope getSplitScope() {
+        return mVariantScope.getSplitScope();
     }
 
     // TaskOutputHolder

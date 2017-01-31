@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
@@ -58,7 +58,6 @@ import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTrans
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.LibVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.ProjectOptions;
@@ -221,16 +220,14 @@ public class LibraryTaskManager extends TaskManager {
                             tasks,
                             variantScope,
                             () -> variantBundleDir,
-                            (vod) -> null /*packageOutputSupplier*/);
-
-                    // Find the first variant output so that we can get its tasks.
-                    BaseVariantOutputData vod = variantData.getOutputs().get(0);
-                    final VariantOutputScope variantOutputScope = vod.getScope();
+                            variantScope.getProcessResourcePackageOutputDirectory(),
+                            MergeType.PACKAGE,
+                            globalScope.getProjectBaseName());
 
                     // publish the intermediates symbol file
                     variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FN_RESOURCE_TEXT),
-                            variantOutputScope.getProcessResourcesTask().getName(),
+                            variantScope.getProcessResourcesTask().getName(),
                             AndroidArtifacts.ArtifactType.SYMBOL_LIST);
 
                     // process java resources only, the merge is setup after
@@ -564,7 +561,7 @@ public class LibraryTaskManager extends TaskManager {
                 // needed explicitly, as bundle no longer depends on compileJava
                 variantScope.getAidlCompileTask().getName(),
                 variantScope.getMergeAssetsTask().getName(),
-                variantData.getMainOutput().getScope().getManifestProcessorTask().getName());
+                variantScope.getManifestProcessorTask().getName());
         bundle.dependsOn(variantScope.getNdkBuildable());
 
         bundle.setDescription("Assembles a bundle containing the library in " +
@@ -578,9 +575,12 @@ public class LibraryTaskManager extends TaskManager {
                         intermediatesDir,
                         StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
 
-        // get the single output for now, though that may always be the case for a library.
-        LibVariantOutputData variantOutputData = libVariantData.getMainOutput();
-        variantOutputData.packageLibTask = bundle;
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.AAR,
+                variantScope.getOutputBundleFile(),
+                bundle.getName());
+
+        variantData.packageLibTask = bundle;
 
         AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = getAndroidTasks().create(
                 tasks, new BuildInfoWriterTask.ConfigAction(variantScope, getLogger()));
@@ -594,8 +594,6 @@ public class LibraryTaskManager extends TaskManager {
 
         variantScope.getBuildContext().addChangedFile(FileType.AAR, bundle.getArchivePath());
         variantScope.getAssembleTask().dependsOn(tasks, bundle, buildInfoWriterTask);
-        variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
-        variantOutputData.assembleTask = variantData.assembleVariantTask;
 
         variantScope.publishIntermediateArtifact(
                 variantBundleDir, bundle.getName(), AndroidArtifacts.ArtifactType.EXPLODED_AAR);

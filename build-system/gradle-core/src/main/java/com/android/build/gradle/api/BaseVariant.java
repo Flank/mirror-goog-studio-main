@@ -31,6 +31,7 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
@@ -333,4 +334,6 @@ public interface BaseVariant {
      * @see #setOutputsAreSigned(boolean)
      */
     boolean getOutputsAreSigned();
+
+    void registerSplitCustomizer(Action<CustomizableSplit> customizer);
 }

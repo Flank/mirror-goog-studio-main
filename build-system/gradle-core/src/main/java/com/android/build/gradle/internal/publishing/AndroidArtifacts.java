@@ -142,7 +142,7 @@ public class AndroidArtifacts {
         LINT(TYPE_LINT_JAR, API_AND_RUNTIME_ELEMENTS),
 
         // create a duplication of CLASSES because we don't want to publish
-        // the classes of an APK to the runtime configuration as it's meant to be
+        // the classes of an FULL_APK to the runtime configuration as it's meant to be
         // used only for compilation, not runtime.
         APK_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY),
         APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),

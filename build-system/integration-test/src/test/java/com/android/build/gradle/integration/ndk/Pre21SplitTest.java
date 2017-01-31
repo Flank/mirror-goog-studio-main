@@ -92,10 +92,10 @@ public class Pre21SplitTest {
 
     @Test
     public void checkSplitsDslWorksWithApiLevelLessThan21() throws Exception {
-        project.execute("assembleX86Debug");
+        project.execute("assembleDebug");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("x86", "debug");
+        Apk apk = project.getApk("x86", GradleTestProject.DefaultApkType.DEBUG);
         MoreTruth.assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         MoreTruth.assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
         MoreTruth.assertThat(apk).contains("lib/x86/libhello-jni.so");

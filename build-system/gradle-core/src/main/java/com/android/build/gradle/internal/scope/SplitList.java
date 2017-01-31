@@ -29,42 +29,65 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ConfigurableFileCollection;
 
 /**
  * Singleton object per variant that holds the list of splits declared by the DSL or discovered.
  */
 public class SplitList {
 
-    /**
-     * FileCollection for a single file with the persisted split list
-     */
-    private final FileCollection persistedList;
+    public static final String RESOURCE_CONFIGS = "ResConfigs";
+
+    /** FileCollection for a single file with the persisted split list */
+    private final ConfigurableFileCollection persistedList;
 
     /**
      * Split list cache, valid only during this build.
      */
     private ImmutableList<Record> records;
 
-    public SplitList(FileCollection persistedList) {
+    public SplitList(ConfigurableFileCollection persistedList) {
         this.persistedList = persistedList;
     }
 
-    public FileCollection getFileCollection() {
+    public ConfigurableFileCollection getFileCollection() {
         return persistedList;
     }
 
-    public synchronized Set<String> getFilters(OutputFile.FilterType splitType) throws IOException {
+    public Set<String> getFilters(OutputFile.FilterType splitType) throws IOException {
+        return getFilters(splitType.name());
+    }
+
+    private synchronized Stream<Record> stream() throws IOException {
         if (records == null) {
             String gson = FileUtils.readFileToString(persistedList.getSingleFile());
             load(gson);
         }
-        Optional<Record> record = records.stream()
-                .filter(r -> r.splitType.equals(splitType.name())).findFirst();
+        return records.stream();
+    }
+
+    public synchronized Set<String> getFilters(String filterType) throws IOException {
+        Optional<Record> record = stream().filter(r -> r.splitType.equals(filterType)).findFirst();
         return record.isPresent()
                 ? record.get().values
                 : ImmutableSet.of();
+    }
+
+    public interface SplitAction {
+        void apply(OutputFile.FilterType filterType, Set<String> value);
+    }
+
+    public void forEach(SplitAction action) throws IOException {
+        stream().forEach(
+                        record -> {
+                            if (record.isConfigSplit() && !record.values.isEmpty()) {
+                                action.apply(
+                                        OutputFile.FilterType.valueOf(record.splitType),
+                                        record.values);
+                            }
+                        });
     }
 
     public Set<String> getResourcesSplit() throws IOException {
@@ -78,12 +101,16 @@ public class SplitList {
             @NonNull File outputFile,
             @NonNull Set<String> densityFilters,
             @NonNull Set<String> languageFilters,
-            @NonNull Set<String> abiFilters) throws IOException {
+            @NonNull Set<String> abiFilters,
+            @NonNull Collection<String> resourceConfigs)
+            throws IOException {
 
-        records = ImmutableList.of(
-                new Record(OutputFile.FilterType.DENSITY, densityFilters),
-                new Record(OutputFile.FilterType.LANGUAGE, languageFilters),
-                new Record(OutputFile.FilterType.ABI, abiFilters));
+        records =
+                ImmutableList.of(
+                        new Record(OutputFile.FilterType.DENSITY.name(), densityFilters),
+                        new Record(OutputFile.FilterType.LANGUAGE.name(), languageFilters),
+                        new Record(OutputFile.FilterType.ABI.name(), abiFilters),
+                        new Record(RESOURCE_CONFIGS, ImmutableSet.copyOf(resourceConfigs)));
 
         Gson gson = new Gson();
         String listOfFilters = gson.toJson(records);
@@ -105,9 +132,13 @@ public class SplitList {
         private final String splitType;
         private final Set<String> values;
 
-        private Record(OutputFile.FilterType splitType, Set<String> values) {
-            this.splitType = splitType.name();
+        private Record(String splitType, Set<String> values) {
+            this.splitType = splitType;
             this.values = values;
+        }
+
+        private boolean isConfigSplit() {
+            return !splitType.equals(RESOURCE_CONFIGS);
         }
     }
 }

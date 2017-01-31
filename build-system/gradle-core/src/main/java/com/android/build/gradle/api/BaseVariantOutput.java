@@ -31,27 +31,10 @@ import org.gradle.api.Task;
 public interface BaseVariantOutput extends VariantOutput {
 
     /**
-     * Returns the output file for this build variants. Depending on the configuration, this could
-     * be an apk (regular and test project) or a bundled library (library project).
-     *
-     * If it's an apk, it could be signed, or not; zip-aligned, or not.
-     */
-    @NonNull
-    File getOutputFile();
-
-    void setOutputFile(@NonNull File outputFile);
-
-    /**
      * Returns the Android Resources processing task.
      */
     @NonNull
     ProcessAndroidResources getProcessResources();
-
-    /**
-     * Returns the Manifest processing task.
-     */
-    @NonNull
-    ManifestProcessorTask getProcessManifest();
 
     /**
      * Returns the assemble task for this particular output

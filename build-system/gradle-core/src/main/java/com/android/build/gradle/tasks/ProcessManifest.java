@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -23,7 +24,6 @@ import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
@@ -59,26 +59,31 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        File aaptManifestFile = getAaptFriendlyManifestOutputFile();
-        String aaptFriendlyManifestOutputFilePath =
-                aaptManifestFile == null ? null : aaptManifestFile.getAbsolutePath();
-        MergingReport mergingReport = getBuilder().mergeManifestsForApplication(
-                getMainManifest(),
-                getManifestOverlays(),
-                Collections.emptyList(),
-                getPackageOverride(),
-                getVersionCode(),
-                getVersionName(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
-                getMaxSdkVersion(),
-                getManifestOutputFile().getAbsolutePath(),
-                aaptFriendlyManifestOutputFilePath,
-                null /* outInstantRunManifestLocation */,
-                ManifestMerger2.MergeType.LIBRARY,
-                variantConfiguration.getManifestPlaceholders(),
-                Collections.emptyList(),
-                getReportFile());
+        File outputManifestFile =
+                new File(getManifestOutputDirectory(), SdkConstants.ANDROID_MANIFEST_XML);
+        File aaptFriendlyManifestOutputFile =
+                new File(
+                        getAaptFriendlyManifestOutputDirectory(),
+                        SdkConstants.ANDROID_MANIFEST_XML);
+        MergingReport mergingReport =
+                getBuilder()
+                        .mergeManifestsForApplication(
+                                getMainManifest(),
+                                getManifestOverlays(),
+                                Collections.emptyList(),
+                                getPackageOverride(),
+                                getVersionCode(),
+                                getVersionName(),
+                                getMinSdkVersion(),
+                                getTargetSdkVersion(),
+                                getMaxSdkVersion(),
+                                outputManifestFile.getAbsolutePath(),
+                                aaptFriendlyManifestOutputFile.getAbsolutePath(),
+                                null /* outInstantRunManifestLocation */,
+                                ManifestMerger2.MergeType.LIBRARY,
+                                variantConfiguration.getManifestPlaceholders(),
+                                Collections.emptyList(),
+                                getReportFile());
         buildContext.setPackageId(mergingReport.getPackageName());
     }
 
@@ -184,10 +189,6 @@ public class ProcessManifest extends ManifestProcessorTask {
                     scope.getVariantConfiguration();
             final AndroidBuilder androidBuilder = scope.getGlobalScope().getAndroidBuilder();
 
-            // get single output for now.
-            BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
-
-            variantOutputData.manifestProcessorTask = processManifest;
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
             processManifest.buildContext = scope.getBuildContext();
@@ -232,11 +233,10 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 }
                             });
 
-            processManifest.setManifestOutputFile(
-                    variantOutputData.getScope().getManifestOutputFile());
+            processManifest.setManifestOutputDirectory(scope.getManifestOutputDirectory());
 
-            processManifest.setAaptFriendlyManifestOutputFile(
-                    scope.getAaptFriendlyManifestOutputFile());
+            processManifest.setAaptFriendlyManifestOutputDirectory(
+                    scope.getAaptFriendlyManifestOutputDirectory());
 
         }
     }

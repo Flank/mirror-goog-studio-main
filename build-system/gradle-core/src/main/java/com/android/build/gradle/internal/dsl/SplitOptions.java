@@ -23,9 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
-/**
- * Base data representing how an APK should be split for a given dimension (density, abi).
- */
+/** Base data representing how an FULL_APK should be split for a given dimension (density, abi). */
 public abstract class SplitOptions {
 
     @NonNull

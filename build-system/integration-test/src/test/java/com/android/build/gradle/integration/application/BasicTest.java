@@ -60,7 +60,7 @@ public class BasicTest {
 
     @BeforeClass
     public static void getModel() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
     }
 
     @AfterClass

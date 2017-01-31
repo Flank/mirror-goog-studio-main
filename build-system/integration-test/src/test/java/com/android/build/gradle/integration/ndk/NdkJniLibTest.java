@@ -52,14 +52,42 @@ public class NdkJniLibTest {
     public void checkVersionCode() throws Exception {
         GradleTestProject app = project.getSubproject("app");
 
-        TruthHelper.assertThat(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123);
-        TruthHelper.assertThat(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123);
-        TruthHelper.assertThat(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123);
-        TruthHelper.assertThat(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123);
-        TruthHelper.assertThat(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123);
-        TruthHelper.assertThat(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123);
-        TruthHelper.assertThat(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123);
-        TruthHelper.assertThat(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "universal", GradleTestProject.DefaultApkType.DEBUG, "gingerbread"))
+                .hasVersionCode(1000123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "armeabi-v7a",
+                                GradleTestProject.DefaultApkType.DEBUG,
+                                "gingerbread"))
+                .hasVersionCode(1100123);
+        TruthHelper.assertThat(
+                        app.getApk("mips", GradleTestProject.DefaultApkType.DEBUG, "gingerbread"))
+                .hasVersionCode(1200123);
+        TruthHelper.assertThat(
+                        app.getApk("x86", GradleTestProject.DefaultApkType.DEBUG, "gingerbread"))
+                .hasVersionCode(1300123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "universal",
+                                GradleTestProject.DefaultApkType.DEBUG,
+                                "icecreamSandwich"))
+                .hasVersionCode(2000123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "armeabi-v7a",
+                                GradleTestProject.DefaultApkType.DEBUG,
+                                "icecreamSandwich"))
+                .hasVersionCode(2100123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "mips", GradleTestProject.DefaultApkType.DEBUG, "icecreamSandwich"))
+                .hasVersionCode(2200123);
+        TruthHelper.assertThat(
+                        app.getApk(
+                                "x86", GradleTestProject.DefaultApkType.DEBUG, "icecreamSandwich"))
+                .hasVersionCode(2300123);
     }
 
     @Test

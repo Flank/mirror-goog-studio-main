@@ -87,9 +87,9 @@ class ShrinkResourcesTest {
         // The proguardNoShrink target has proguard but no shrinking enabled.
         // The debug target has neither proguard nor shrinking enabled.
 
-        Apk apkRelease = project.getApk("release", "unsigned");
+        Apk apkRelease = project.getApk(GradleTestProject.DefaultApkType.RELEASE);
         Apk apkDebug = project.getApk("debug");
-        Apk apkProguardOnly = project.getApk("proguardNoShrink", "unsigned");
+        Apk apkProguardOnly = project.getApk(new GradleTestProject.CustomApk("proguardNoShrink", false));
 
         assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
         assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));

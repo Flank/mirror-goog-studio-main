@@ -67,7 +67,7 @@ public class MinifyWithJackTest {
 
     @Test
     public void checkTestApkNotMinified() throws Exception {
-        ApkSubject apkSubject = assertThat(project.getTestApk("debug"));
+        ApkSubject apkSubject = assertThat(project.getTestApk());
 
         apkSubject.containsClass("Lcom/android/tests/basic/MainTest;");
         apkSubject.containsClass("Lcom/android/tests/basic/UnusedTestClass;");

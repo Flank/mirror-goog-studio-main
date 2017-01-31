@@ -23,8 +23,7 @@ import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
-import com.android.build.gradle.tasks.ZipAlign;
-import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * Implementation of variant output for apk-generating variants.
@@ -54,15 +53,8 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Nullable
     @Override
-    public ZipAlign getZipAlign() {
-        return variantOutputData.zipAlignTask;
-    }
-
-    @NonNull
-    @Override
-    public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
-            @NonNull File outputFile) {
-        return variantOutputData.createZipAlignTask(taskName, inputFile, outputFile);
+    public Task getZipAlign() {
+        return null;
     }
 
     @Override

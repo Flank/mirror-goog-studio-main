@@ -21,14 +21,9 @@ import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.tasks.CompatibleScreensManifest;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.SplitZipAlign;
 import com.android.builder.core.VariantType;
 import com.android.utils.StringHelper;
 import java.io.File;
@@ -48,21 +43,17 @@ public class VariantOutputScope implements TransformVariantScope {
     // Tasks
     private AndroidTask<DefaultTask> assembleTask;
 
-    private AndroidTask<CompatibleScreensManifest> compatibleScreensManifestTask;
-
-    private AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
-
-    private AndroidTask<ProcessAndroidResources> processResourcesTask;
-
-    private AndroidTask<?> shrinkResourcesTask;
-
-    private AndroidTask<SplitZipAlign> splitZipAlignTask;
-
     public VariantOutputScope(
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantOutputData variantOutputData) {
         this.variantScope = variantScope;
         this.variantOutputData = variantOutputData;
+    }
+
+    @NonNull
+    @Override
+    public SplitScope getSplitScope() {
+        return variantScope.getSplitScope();
     }
 
     @Override
@@ -129,13 +120,6 @@ public class VariantOutputScope implements TransformVariantScope {
         }
     }
 
-    /**
-     * Path to the intermediate APK, created by old packaging and optionally consumed by zipalign.
-     */
-    @NonNull
-    public File getIntermediateApk() {
-        return buildPackagePath(isSignedApk() ? "-unaligned.apk" : "-unsigned.apk");
-    }
 
     @NonNull
     private File buildPackagePath(String suffix) {
@@ -152,10 +136,6 @@ public class VariantOutputScope implements TransformVariantScope {
         return apkVariantData.isSigned();
     }
 
-    private boolean isZipAlignApk() {
-        ApkVariantData apkVariantData = (ApkVariantData) variantScope.getVariantData();
-        return apkVariantData.getZipAlignEnabled();
-    }
 
     @NonNull
     public File getManifestOutputFile() {
@@ -178,36 +158,6 @@ public class VariantOutputScope implements TransformVariantScope {
         }
     }
 
-    @NonNull
-    public File getCompatibleScreensManifestFile() {
-        return new File(getGlobalScope().getIntermediatesDir(),
-                "/manifests/density/" + variantOutputData.getDirName() + "/AndroidManifest.xml");
-
-    }
-
-    @NonNull
-    public File getProcessResourcePackageOutputFile() {
-        return variantOutputData.getProcessResourcePackageOutputFile();
-    }
-
-    @NonNull
-    public File getProcessResourcePackageOutputFile(@NonNull String atomName) {
-        return variantOutputData.getProcessResourcePackageOutputFile(atomName);
-    }
-
-    @NonNull
-    public File getShrinkedResourcesFile() {
-        return new File(getGlobalScope().getIntermediatesDir(), "/res/" +
-                "resources-" + variantOutputData.getBaseName() + "-stripped.ap_");
-    }
-
-    @NonNull
-    public File getFinalResourcesFile() {
-        return variantScope.useResourceShrinker()
-                ? getShrinkedResourcesFile()
-                : getProcessResourcePackageOutputFile();
-    }
-
     // Tasks
     public AndroidTask<DefaultTask> getAssembleTask() {
         return assembleTask;
@@ -215,52 +165,6 @@ public class VariantOutputScope implements TransformVariantScope {
 
     public void setAssembleTask(@NonNull AndroidTask<DefaultTask> assembleTask) {
         this.assembleTask = assembleTask;
-    }
-
-    @Nullable
-    public AndroidTask<CompatibleScreensManifest> getCompatibleScreensManifestTask() {
-        return compatibleScreensManifestTask;
-    }
-
-    public void setCompatibleScreensManifestTask(
-            @Nullable AndroidTask<CompatibleScreensManifest> compatibleScreensManifestTask) {
-        this.compatibleScreensManifestTask = compatibleScreensManifestTask;
-    }
-
-    public AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask() {
-        return manifestProcessorTask;
-    }
-
-    public void setManifestProcessorTask(
-            AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask) {
-        this.manifestProcessorTask = manifestProcessorTask;
-    }
-
-    public AndroidTask<ProcessAndroidResources> getProcessResourcesTask() {
-        return processResourcesTask;
-    }
-
-    public void setProcessResourcesTask(
-            AndroidTask<ProcessAndroidResources> processResourcesTask) {
-        this.processResourcesTask = processResourcesTask;
-    }
-
-    public AndroidTask<?> getShrinkResourcesTask() {
-        return shrinkResourcesTask;
-    }
-
-    public void setShrinkResourcesTask(
-            AndroidTask<?> shrinkResourcesTask) {
-        this.shrinkResourcesTask = shrinkResourcesTask;
-    }
-
-    public AndroidTask<SplitZipAlign> getSplitZipAlignTask() {
-        return splitZipAlignTask;
-    }
-
-    public void setSplitZipAlignTask(
-            AndroidTask<SplitZipAlign> splitZipAlignTask) {
-        this.splitZipAlignTask = splitZipAlignTask;
     }
 
     @NonNull

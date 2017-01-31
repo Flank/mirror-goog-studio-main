@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.SdkConstants.FN_RES_BASE;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
@@ -24,19 +26,24 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import android.databinding.tool.util.StringUtils;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggingUtil;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitList;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -44,6 +51,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -53,62 +61,67 @@ import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
+import com.android.ide.common.build.Split;
+import com.android.ide.common.build.SplitOutputMatcher;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.resources.Density;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.tooling.BuildException;
 
 @ParallelizableTask
 public class ProcessAndroidResources extends IncrementalTask {
 
     private static final Logger LOG = Logging.getLogger(ProcessAndroidResources.class);
 
-    private File manifestFile;
-
-    private File instantRunManifestFile;
-
     private File resDir;
+
+    private String buildTargetAbi;
+    private Set<String> supportedAbis;
 
     @Nullable
     private File sourceOutputDir;
 
     private Supplier<File> textSymbolOutputDir = () -> null;
 
-    private Supplier<File> packageOutputFile = () -> null;
-
     private File proguardOutputFile;
 
     private File mainDexListProguardOutputFile;
-
-    private Collection<String> resourceConfigs;
-
-    private String preferredDensity;
 
     @Nullable
     private ArtifactCollection manifests;
@@ -143,7 +156,39 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private List<LibraryInfo> computedLibraryInfo;
 
+    private String originalApplicationId;
+
+    private String buildTargetDensity;
+
+    private File resPackageOutputFolder;
+    private FileCollection outputProcessedResources;
+
+    private String projectBaseName;
+
+    @Input
+    public String getProjectBaseName() {
+        return projectBaseName;
+    }
+
     private File libInfoFile;
+
+    @NonNull
+    @InputDirectory
+    public File getResDir() {
+        return resDir;
+    }
+
+    @Input
+    @Optional
+    public String getBuildTargetAbi() {
+        return buildTargetAbi;
+    }
+
+    @Input
+    @Optional
+    Set<String> getSupportedAbis() {
+        return supportedAbis;
+    }
 
     public Set<String> getSplits() throws IOException {
         return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
@@ -151,13 +196,172 @@ public class ProcessAndroidResources extends IncrementalTask {
                 : ImmutableSet.of();
     }
 
+    private SplitScope splitScope;
+    private SplitFactory splitFactory;
+
+    // FIX-ME : make me incremental !
     @Override
     protected void doFullTaskAction() throws IOException {
-        // we have to clean the source folder output in case the package name changed.
-        File srcOut = getSourceOutputDir();
-        if (srcOut != null) {
-            FileUtils.cleanOutputDir(srcOut);
+
+        VariantScope.TaskOutputType taskOutputType =
+                buildContext.isInInstantRunMode()
+                        ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
+                        : VariantScope.TaskOutputType.MERGED_MANIFESTS;
+
+        File mergedManifestsOutput = splitScope.getOutputFile(manifestFiles);
+        if (mergedManifestsOutput != null) {
+            splitScope.load(taskOutputType, new FileReader(mergedManifestsOutput));
         }
+
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        AtomicBoolean codeGenNecessary = new AtomicBoolean(true);
+
+        if (buildTargetAbi != null
+                && supportedAbis != null
+                && !supportedAbis.isEmpty()
+                && !supportedAbis.contains(buildTargetAbi)) {
+            getLogger()
+                    .debug(
+                            "Cannot build for "
+                                    + buildTargetAbi
+                                    + " when supportedAbis are "
+                                    + Joiner.on(",").join(supportedAbis));
+            return;
+        }
+
+        // FIX ME : the code below should move to the SplitsDiscoveryTask that should persist
+        // the list of splits and their enabled/disabled state.
+
+        // comply when the IDE restricts the full splits we should produce
+        Density density = Density.getEnum(buildTargetDensity);
+
+        List<Split> splitsToGenerate =
+                buildTargetAbi == null
+                        ? splitScope.getSplits()
+                        : SplitOutputMatcher.computeBestOutput(
+                                splitScope.getSplits(),
+                                supportedAbis,
+                                density == null ? -1 : density.getDpiValue(),
+                                Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
+
+        if (splitsToGenerate.isEmpty()) {
+            throw new RuntimeException(
+                    "Cannot build for ABI \'"
+                            + buildTargetAbi
+                            + "\'"
+                            + ", no suitable splits configured : "
+                            + Joiner.on(", ")
+                                    .join(
+                                            splitScope
+                                                    .getSplits()
+                                                    .stream()
+                                                    .map(Split::getFilterName)
+                                                    .collect(Collectors.toList())));
+        }
+
+        for (Split split : splitScope.getSplits()) {
+            if (!splitsToGenerate.contains(split)) {
+                getLogger()
+                        .log(LogLevel.DEBUG, "With ABI " + buildTargetAbi + ", disabled " + split);
+                split.disable();
+            }
+        }
+
+        for (Split split : splitsToGenerate) {
+            if (split.requiresAapt()) {
+                executor.execute(
+                        () -> {
+                            boolean codeGen =
+                                    codeGenNecessary.get()
+                                            && (split.getType() == OutputFile.OutputType.MAIN
+                                                    || split.getFilter(
+                                                                    OutputFile.FilterType.DENSITY)
+                                                            == null);
+                            if (codeGen) {
+                                codeGenNecessary.set(false);
+                            }
+                            File splitOutputFile =
+                                    invokeAaptForSplit(taskOutputType, split, codeGen);
+                            splitScope.addOutputForSplit(
+                                    VariantScope.TaskOutputType.PROCESSED_RES,
+                                    split,
+                                    splitOutputFile);
+                            outputProcessedResources.plus(getProject().files(splitOutputFile));
+                            return null;
+                        });
+            }
+        }
+        try {
+            List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
+            taskResults.forEach(
+                    taskResult -> {
+                        if (taskResult.exception != null) {
+                            throw new BuildException(
+                                    taskResult.exception.getMessage(), taskResult.exception);
+                        }
+                    });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+
+        if (splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
+            // now populate the pure splits list in the SplitScope (this should eventually move
+            // to the SplitDiscoveryTask.
+            splitScope.deleteAllEntries(
+                    VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES);
+            splitList.forEach(
+                    (filterType, filterValues) -> {
+                        // only for densities and languages.
+                        if (filterType != VariantOutput.FilterType.DENSITY
+                                && filterType != VariantOutput.FilterType.LANGUAGE) {
+                            return;
+                        }
+                        filterValues.forEach(
+                                filterValue -> {
+                                    Split configurationSplit =
+                                            splitFactory.addConfigurationSplit(
+                                                    filterType, filterValue);
+                                    // in case we generated pure splits, we may have more than one resource AP_ in
+                                    // the output directory. reconcile with the splits list and save it for downstream
+                                    // tasks.
+                                    File packagedResForSplit =
+                                            findPackagedResForSplit(
+                                                    resPackageOutputFolder, configurationSplit);
+                                    if (packagedResForSplit != null) {
+                                        splitScope.addOutputForSplit(
+                                                VariantScope.TaskOutputType
+                                                        .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                                                configurationSplit,
+                                                packagedResForSplit);
+                                    } else {
+                                        getLogger()
+                                                .warn(
+                                                        "Cannot find output for "
+                                                                + configurationSplit);
+                                    }
+                                });
+                    });
+        }
+
+        // and save the metadata file.
+        splitScope.save(
+                ImmutableList.of(
+                        VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                        VariantScope.TaskOutputType.PROCESSED_RES),
+                resPackageOutputFolder);
+    }
+
+    @Nullable
+    File invokeAaptForSplit(
+            VariantScope.TaskOutputType manifestType, Split split, boolean generateCode)
+            throws IOException {
+        AndroidBuilder builder = getBuilder();
+        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+        ProcessOutputHandler processOutputHandler =
+                new ParsingProcessOutputHandler(
+                        new ToolOutputParser(new AaptOutputParser(), getILogger()),
+                        new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
 
         // Find the base atom package, if it exists.
         @Nullable File baseAtomPackage = null;
@@ -171,26 +375,62 @@ public class ProcessAndroidResources extends IncrementalTask {
         // For atoms, the output package must only be set for the base atom.
         @Nullable File resOutBaseNameFile = null;
         if (getType() != VariantType.ATOM || baseAtomPackage == null) {
-            resOutBaseNameFile = getPackageOutputFile();
+            resOutBaseNameFile =
+                    new File(
+                            resPackageOutputFolder,
+                            FN_RES_BASE
+                                    + RES_QUALIFIER_SEP
+                                    + split.getBaseName()
+                                    + SdkConstants.DOT_RES);
         }
 
-        // If are in instant run mode and we have an instant run enabled manifest
-        File instantRunManifest = getInstantRunManifestFile();
-        File manifestFileToPackage = buildContext.isInInstantRunMode() &&
-                instantRunManifest != null && instantRunManifest.exists()
-                    ? instantRunManifest
-                    : getManifestFile();
+        // FIX ME : there should be a better way to always get the manifest file to merge.
+        // for instance, should the library task also output the .gson ?
+        SplitScope.SplitOutput manifestOutput = splitScope.getOutput(manifestType, split);
+        File manifestFile = null;
+        if (manifestOutput == null) {
+            for (File file : manifestFiles.getAsFileTree()) {
+                if (file.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
+                    manifestFile = file;
+                }
+            }
+        } else {
+            manifestFile = manifestOutput.getOutputFile();
+        }
+        if (manifestFile == null) {
+            throw new RuntimeException("Cannot find manifest file to merge");
+        }
 
-        AndroidBuilder builder = getBuilder();
-        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
-        ProcessOutputHandler processOutputHandler = new ParsingProcessOutputHandler(
-                new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+        String packageForR = null;
+        File srcOut = null;
+        if (generateCode) {
 
+            // FIX ME : use split scope to get the package from.
+            String splitName = null;
+            if (manifestOutput != null) {
+                splitName = new DefaultManifestParser(manifestOutput.getOutputFile()).getSplit();
+            }
+            packageForR =
+                    splitName == null
+                            ? originalApplicationId
+                            : originalApplicationId + "." + splitName;
+
+            // we have to clean the source folder output in case the package name changed.
+            srcOut = getSourceOutputDir();
+            if (srcOut != null) {
+                FileUtils.cleanOutputDir(srcOut);
+            }
+        }
+
+        String splitFilter = split.getFilter(OutputFile.FilterType.DENSITY);
         String preferredDensity =
-                getResourceConfigs().isEmpty()
-                        ? getPreferredDensity()
-                        : null; /* when resConfigs are set, we should respect it */
+                splitFilter != null
+                        ? splitFilter
+                        // if resConfigs is set, we should not use our preferredDensity.
+                        : splitList.getFilters(SplitList.RESOURCE_CONFIGS).isEmpty()
+                                ? buildTargetDensity
+                                : null;
+
         try {
             Aapt aapt =
                     AaptGradleFactory.make(
@@ -203,11 +443,11 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             AaptPackageConfig.Builder config =
                     new AaptPackageConfig.Builder()
-                            .setManifestFile(manifestFileToPackage)
+                            .setManifestFile(manifestFile)
                             .setOptions(getAaptOptions())
                             .setResourceDir(getResDir())
-                            .setLibraries(getLibraryInfoList())
-                            .setCustomPackageForR(getPackageForR())
+                            .setLibraries(generateCode ? getLibraryInfoList() : ImmutableList.of())
+                            .setCustomPackageForR(packageForR)
                             .setSymbolOutputDir(getTextSymbolOutputDir())
                             .setSourceOutputDir(srcOut)
                             .setResourceOutputApk(resOutBaseNameFile)
@@ -216,12 +456,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                             .setVariantType(getType())
                             .setDebuggable(getDebuggable())
                             .setPseudoLocalize(getPseudoLocalesEnabled())
-                            .setResourceConfigs(getResourceConfigs())
+                            .setResourceConfigs(splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                             .setSplits(getSplits())
-                            .setPreferredDensity(preferredDensity)                   
+                            .setPreferredDensity(preferredDensity)
                             .setBaseFeature(baseAtomPackage);
 
-            builder.processResources(aapt, config, getEnforceUniquePackageName());
+            builder.processResources(aapt, config, generateCode && getEnforceUniquePackageName());
 
             if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
                 LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
@@ -238,9 +478,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                         continue;
                     }
 
-                    File manifestFile = libraryInfo.getManifest();
+                    File libraryManifest = libraryInfo.getManifest();
                     buffer +=
-                            manifestFile.getPath()
+                            libraryManifest.getPath()
                                     + File.pathSeparator
                                     + symbolFile.getPath()
                                     + StringUtils.LINE_SEPARATOR;
@@ -254,10 +494,76 @@ public class ProcessAndroidResources extends IncrementalTask {
                 }
             }
 
+            return resOutBaseNameFile;
+
         } catch (IOException | InterruptedException | ProcessException e) {
-            throw new RuntimeException(e);
+            getLogger().error(e.getMessage(), e);
+            throw new BuildException(e.getMessage(), e);
         }
     }
+
+    @Nullable
+    private static File findPackagedResForSplit(@Nullable File outputFolder, Split split) {
+        Pattern resourcePattern =
+                Pattern.compile(
+                        FN_RES_BASE + RES_QUALIFIER_SEP + split.getFullName() + ".ap__(.*)");
+
+        if (outputFolder == null) {
+            return null;
+        }
+        File[] files = outputFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                Matcher match = resourcePattern.matcher(file.getName());
+                // each time we match, we remove the associated filter from our copies.
+                if (match.matches()
+                        && !match.group(1).isEmpty()
+                        && isValidSplit(split, match.group(1))) {
+                    return file;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if the passed split identifier is a valid identifier (valid mean it is a
+     * requested split for this task). A density split identifier can be suffixed with characters
+     * added by aapt.
+     */
+    private static boolean isValidSplit(Split split, @NonNull String splitWithOptionalSuffix) {
+
+        String splitFilter = split.getFilter(OutputFile.FilterType.DENSITY);
+        if (splitFilter != null) {
+            if (splitWithOptionalSuffix.startsWith(splitFilter)) {
+                return true;
+            }
+        }
+        String mangledName = unMangleSplitName(splitWithOptionalSuffix);
+        splitFilter = split.getFilter(OutputFile.FilterType.LANGUAGE);
+        if (mangledName.equals(splitFilter)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Un-mangle a split name as created by the aapt tool to retrieve a split name as configured in
+     * the project's build.gradle.
+     *
+     * <p>when dealing with several split language in a single split, each language (+ optional
+     * region) will be separated by an underscore.
+     *
+     * <p>note that there is currently an aapt bug, remove the 'r' in the region so for instance,
+     * fr-rCA becomes fr-CA, temporarily put it back until it is fixed.
+     *
+     * @param splitWithOptionalSuffix the mangled split name.
+     */
+    public static String unMangleSplitName(String splitWithOptionalSuffix) {
+        String mangledName = splitWithOptionalSuffix.replaceAll("_", ",");
+        return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
+    }
+
 
     @NonNull
     public List<LibraryInfo> getLibraryInfoList() {
@@ -299,26 +605,35 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
 
-        protected final VariantOutputScope scope;
+        protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
-        private final Supplier<File> packageOutputSupplier;
+        @NonNull private final File resPackageOutputFolder;
+        @NonNull private final FileCollection outputProcessedResources;
         private final boolean generateLegacyMultidexMainDexProguardRules;
+        private final TaskManager.MergeType mergeType;
+        private final String baseName;
 
         public ConfigAction(
-                @NonNull VariantOutputScope scope,
+                @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
-                @NonNull Supplier<File> packageOutputSupplier,
-                boolean generateLegacyMultidexMainDexProguardRules) {
-            this.scope = scope;
+                @NonNull File resPackageOutputFolder,
+                @NonNull FileCollection outputProcessedResources,
+                boolean generateLegacyMultidexMainDexProguardRules,
+                @NonNull TaskManager.MergeType mergeType,
+                @NonNull String baseName) {
+            this.variantScope = scope;
             this.symbolLocation = symbolLocation;
-            this.packageOutputSupplier = packageOutputSupplier;
+            this.resPackageOutputFolder = resPackageOutputFolder;
             this.generateLegacyMultidexMainDexProguardRules = generateLegacyMultidexMainDexProguardRules;
+            this.baseName = baseName;
+            this.outputProcessedResources = outputProcessedResources;
+            this.mergeType = mergeType;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("process", "Resources");
+            return variantScope.getTaskName("process", "Resources");
         }
 
         @NonNull
@@ -329,31 +644,26 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull ProcessAndroidResources processResources) {
-            final BaseVariantOutputData variantOutputData = scope.getVariantOutputData();
-            final VariantScope variantScope = scope.getVariantScope();
+
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
                     variantScope.getVariantData();
 
-            variantOutputData.processResourcesTask = processResources;
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-            processResources.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
-            processResources.setIncrementalFolder(
-                    variantScope.getIncrementalDir(getName()));
+            processResources.resPackageOutputFolder = resPackageOutputFolder;
+            processResources.outputProcessedResources = outputProcessedResources;
 
-            processResources.splitList = scope.getVariantScope().getSplitList();
-            processResources.splitHandlingPolicy = variantData.getSplitHandlingPolicy();
+            // per exec
+            processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
 
-            // only generate code if the density filter is null, and if we haven't generated
-            // it yet (if you have abi + density splits, then several abi output will have no
-            // densityFilter)
-            if (variantOutputData.getMainOutputFile()
-                    .getFilter(OutputFile.DENSITY) == null
-                    && variantData.generateRClassTask == null) {
-                variantData.generateRClassTask = processResources;
-                processResources.enforceUniquePackageName = scope.getGlobalScope().getExtension()
-                        .getEnforceUniquePackageName();
+            processResources.splitList = variantData.getSplitList();
+            processResources.splitHandlingPolicy =
+                    variantData.getSplitScope().getSplitHandlingPolicy();
+
+            processResources.enforceUniquePackageName =
+                    variantScope.getGlobalScope().getExtension().getEnforceUniquePackageName();
 
                 processResources.manifests = variantScope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, MANIFEST);
@@ -382,77 +692,63 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
-                if (config.getBuildType().isMinifyEnabled()) {
-                    if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
-                        LoggingUtil.displayWarning(Logging.getLogger(getClass()),
-                                scope.getGlobalScope().getProject(),
-                                "shrinkResources does not yet work with useJack=true");
-                    }
-                    processResources.setProguardOutputFile(
-                            variantScope.getProcessAndroidResourcesProguardOutputFile());
-
-                } else if (config.getBuildType().isShrinkResources()) {
-                    LoggingUtil.displayWarning(Logging.getLogger(getClass()),
-                            scope.getGlobalScope().getProject(),
-                            "To shrink resources you must also enable ProGuard");
+            Project project = variantScope.getGlobalScope().getProject();
+            if (config.getBuildType().isMinifyEnabled()) {
+                if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
+                    LoggingUtil.displayWarning(
+                            Logging.getLogger(getClass()),
+                            variantScope.getGlobalScope().getProject(),
+                            "shrinkResources does not yet work with useJack=true");
                 }
+                processResources.setProguardOutputFile(
+                        variantScope.getProcessAndroidResourcesProguardOutputFile());
 
-                if (generateLegacyMultidexMainDexProguardRules) {
-                    processResources.setAaptMainDexListProguardOutputFile(
-                            variantScope.getManifestKeepListProguardFile());
-                }
+            } else if (config.getBuildType().isShrinkResources()) {
+                LoggingUtil.displayWarning(
+                        Logging.getLogger(getClass()),
+                        variantScope.getGlobalScope().getProject(),
+                        "To shrink resources you must also enable ProGuard");
             }
 
-            ConventionMappingHelper.map(
-                    processResources,
-                    "manifestFile",
-                    () -> variantOutputData.manifestProcessorTask.getOutputFile());
+            if (generateLegacyMultidexMainDexProguardRules) {
+                processResources.setAaptMainDexListProguardOutputFile(
+                        variantScope.getManifestKeepListProguardFile());
+            }
 
-            ConventionMappingHelper.map(
-                    processResources,
-                    "instantRunManifestFile",
-                    () ->
-                            variantOutputData.manifestProcessorTask
-                                    .getInstantRunManifestOutputFile());
+            processResources.splitScope = variantData.getSplitScope();
+            processResources.splitFactory = variantData.getSplitFactory();
+            processResources.originalApplicationId =
+                    variantScope.getVariantConfiguration().getOriginalApplicationId();
 
+            boolean aaptFriendlyManifestsFilePresent =
+                    variantScope.hasOutput(
+                            TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+            processResources.setManifestFiles(
+                    variantScope.getOutputs(
+                            aaptFriendlyManifestsFilePresent
+                                    ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
+                                    : variantScope.getBuildContext().isInInstantRunMode()
+                                            ? VariantScope.TaskOutputType
+                                                    .INSTANT_RUN_MERGED_MANIFESTS
+                                            : VariantScope.TaskOutputType.MERGED_MANIFESTS));
+
+            // FIX ME : we should not have both a file collection and a resDir plus, we should
+            // express the dependency on the databinding task through a file collection.
+            processResources.mergedResources = variantScope.getOutputs(mergeType.getOutputType());
             ConventionMappingHelper.map(
                     processResources,
                     "resDir",
                     variantScope::getFinalResourcesDir);
 
-            processResources.setPackageOutputFile(packageOutputSupplier);
-
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
-            processResources.setAaptOptions(scope.getGlobalScope().getExtension().getAaptOptions());
+            processResources.setAaptOptions(
+                    variantScope.getGlobalScope().getExtension().getAaptOptions());
             processResources
                     .setPseudoLocalesEnabled(config.getBuildType().isPseudoLocalesEnabled());
 
-            ConventionMappingHelper.map(
-                    processResources,
-                    "resourceConfigs",
-                    () -> {
-                        Collection<String> resConfigs =
-                                config.getMergedFlavor().getResourceConfigurations();
-                        if (resConfigs.size() == 1
-                                && Iterators.getOnlyElement(resConfigs.iterator()).equals("auto")) {
-                            return variantData.discoverListOfResourceConfigsNotDensities();
-                        }
-                        return config.getMergedFlavor().getResourceConfigurations();
-                    });
-
-            ConventionMappingHelper.map(
-                    processResources,
-                    "preferredDensity",
-                    () -> {
-                        String variantFilter =
-                                variantOutputData.getMainOutputFile().getFilter(OutputFile.DENSITY);
-                        if (variantFilter != null) {
-                            return variantFilter;
-                        }
-                        return AndroidGradleOptions.getBuildTargetDensity(
-                                scope.getGlobalScope().getProject());
-                    });
+            processResources.buildTargetDensity =
+                    AndroidGradleOptions.getBuildTargetDensity(project);
 
             processResources.setMergeBlameLogFolder(
                     variantScope.getResourceBlameLogDir());
@@ -465,29 +761,21 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             ConventionMappingHelper.map(
                     processResources, "libInfoFile", variantScope::getLibInfoFile);
+            processResources.projectBaseName = baseName;
+            processResources.buildTargetAbi = AndroidGradleOptions.getBuildTargetAbi(project);
+            processResources.supportedAbis = config.getSupportedAbis();
         }
     }
 
-    @InputFile
-    public File getManifestFile() {
-        return manifestFile;
+    FileCollection manifestFiles;
+
+    @InputFiles
+    public FileCollection getManifestFiles() {
+        return manifestFiles;
     }
 
-    public void setManifestFile(File manifestFile) {
-        this.manifestFile = manifestFile;
-    }
-
-    /**
-     * Not an input, it's optional and should never change independently of the main manifest file.
-     * <p>
-     * The change is handled by {@link #isInstantRunMode()}.
-     */
-    public File getInstantRunManifestFile() {
-        return instantRunManifestFile;
-    }
-
-    public void setInstantRunManifestFile(File manifestFile) {
-        this.instantRunManifestFile = manifestFile;
+    public void setManifestFiles(FileCollection manifestFiles) {
+        this.manifestFiles = manifestFiles;
     }
 
     /**
@@ -500,14 +788,12 @@ public class ProcessAndroidResources extends IncrementalTask {
         return this.buildContext.isInInstantRunMode();
     }
 
-    @NonNull
-    @InputDirectory
-    public File getResDir() {
-        return resDir;
-    }
+    private FileCollection mergedResources;
 
-    public void setResDir(@NonNull File resDir) {
-        this.resDir = resDir;
+    @NonNull
+    @InputFiles
+    public FileCollection getMergedResources() {
+        return mergedResources;
     }
 
     @OutputDirectory
@@ -535,17 +821,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
-    public File getPackageOutputFile() {
-        return packageOutputFile.get();
-    }
-
-    public void setPackageOutputFile(Supplier<File> packageOutputFile) {
-        this.packageOutputFile = packageOutputFile;
-    }
-
-    @org.gradle.api.tasks.OutputFile
-    @Optional
-    @Nullable
     public File getProguardOutputFile() {
         return proguardOutputFile;
     }
@@ -563,26 +838,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setAaptMainDexListProguardOutputFile(File mainDexListProguardOutputFile) {
         this.mainDexListProguardOutputFile = mainDexListProguardOutputFile;
-    }
-
-    @Input
-    public Collection<String> getResourceConfigs() {
-        return resourceConfigs;
-    }
-
-    public void setResourceConfigs(Collection<String> resourceConfigs) {
-        this.resourceConfigs = resourceConfigs;
-    }
-
-    @Input
-    @Optional
-    @Nullable
-    public String getPreferredDensity() {
-        return preferredDensity;
-    }
-
-    public void setPreferredDensity(String preferredDensity) {
-        this.preferredDensity = preferredDensity;
     }
 
     @Input
@@ -697,8 +952,26 @@ public class ProcessAndroidResources extends IncrementalTask {
         return splitHandlingPolicy;
     }
 
-    public void setSplitHandlingPolicy(SplitHandlingPolicy splitHandlingPolicy) {
-        this.splitHandlingPolicy = splitHandlingPolicy;
+    @Input
+    public String getOriginalApplicationId() {
+        return originalApplicationId;
+    }
+
+    @InputFiles
+    FileCollection getSplitList() {
+        return splitList.getFileCollection();
+    }
+
+    @Input
+    @Optional
+    String getBuildTargetDensity() {
+        return buildTargetDensity;
+    }
+
+    @OutputDirectory
+    @NonNull
+    File getResPackageOutputFolder() {
+        return resPackageOutputFolder;
     }
 
     @org.gradle.api.tasks.OutputFile

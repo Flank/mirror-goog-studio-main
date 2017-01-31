@@ -16,11 +16,6 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.SdkConstants.DOT_RES;
-import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FN_RES_BASE;
-import static com.android.SdkConstants.RES_QUALIFIER_SEP;
-
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
@@ -29,16 +24,14 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BundleAtom;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
-import com.android.build.gradle.tasks.PackageSplitAbi;
-import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.utils.FileUtils;
+import com.android.ide.common.build.Split;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.bundling.Zip;
 
@@ -57,13 +50,7 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     private boolean multiOutput = false;
 
-    public ManifestProcessorTask manifestProcessorTask;
-
     public ProcessAndroidResources processResourcesTask;
-
-    public PackageSplitRes packageSplitResourcesTask;
-
-    public PackageSplitAbi packageSplitAbiTask;
 
     public PackageAndroidArtifact packageAndroidArtifactTask;
 
@@ -83,8 +70,37 @@ public abstract class BaseVariantOutputData implements VariantOutput {
             @NonNull Collection<FilterData> filters,
             @NonNull BaseVariantData<?> variantData) {
         this.variantData = variantData;
-        this.mainApkOutputFile = new ApkOutputFile(outputType, filters, this::getOutputFile);
+        Split mainSplit = variantData.getSplitScope().getMainSplit();
+        this.mainApkOutputFile =
+                new ApkOutputFile(
+                        outputType,
+                        filters,
+                        this::getOutputFile,
+                        mainSplit != null ? mainSplit.getVersionCode() : -1);
+
         scope = new VariantOutputScope(variantData.getScope(), this);
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return mainApkOutputFile.getFilters();
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        return mainApkOutputFile
+                .getFilters()
+                .stream()
+                .map(FilterData::getFilterType)
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    @Override
+    public String getOutputType() {
+        return mainApkOutputFile.getType().name();
     }
 
     @NonNull
@@ -93,8 +109,6 @@ public abstract class BaseVariantOutputData implements VariantOutput {
         return mainApkOutputFile;
     }
 
-
-    public abstract void setOutputFile(@NonNull File file);
 
     @NonNull
     public abstract File getOutputFile();
@@ -150,36 +164,6 @@ public abstract class BaseVariantOutputData implements VariantOutput {
         }
 
         return sb.toString();
-    }
-
-    @NonNull
-    @Override
-    public File getSplitFolder() {
-        return getOutputFile().getParentFile();
-    }
-
-    void setMultiOutput(boolean multiOutput) {
-        this.multiOutput = multiOutput;
-    }
-
-    @NonNull
-    public File getProcessResourcePackageOutputFile() {
-        return FileUtils.join(getScope().getGlobalScope().getIntermediatesDir(),
-                FD_RES, FN_RES_BASE + RES_QUALIFIER_SEP + getBaseName() + DOT_RES);
-
-    }
-
-    @NonNull
-    public File getProcessResourcePackageOutputFile(@NonNull String atomName) {
-        return FileUtils.join(
-                getScope().getGlobalScope().getIntermediatesDir(),
-                FD_RES,
-                FN_RES_BASE
-                        + RES_QUALIFIER_SEP
-                        + atomName
-                        + RES_QUALIFIER_SEP
-                        + getBaseName()
-                        + DOT_RES);
     }
 
     @NonNull

@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.OutputFile;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
@@ -27,7 +29,10 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.ide.common.build.Split;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.Serializable;
@@ -36,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of AndroidArtifact that is serializable
@@ -44,8 +50,6 @@ import java.util.Set;
 final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NonNull
-    private final Collection<AndroidArtifactOutput> outputs;
     private final boolean isSigned;
     @Nullable
     private final String signingConfigName;
@@ -66,10 +70,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     private final Map<String, ClassField> resValues;
     @NonNull
     private final InstantRun instantRun;
+    @NonNull
+    private final SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier;
+
+    @NonNull
+    private final SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier;
 
     AndroidArtifactImpl(
             @NonNull String name,
-            @NonNull Collection<AndroidArtifactOutput> outputs,
             @NonNull String assembleTaskName,
             boolean isSigned,
             @Nullable String signingConfigName,
@@ -86,16 +94,17 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable SourceProvider multiFlavorSourceProviders,
             @Nullable Set<String> abiFilters,
             @NonNull Collection<NativeLibrary> nativeLibraries,
-            @NonNull Map<String,ClassField> buildConfigFields,
-            @NonNull Map<String,ClassField> resValues,
-            @NonNull InstantRun instantRun) {
+            @NonNull Map<String, ClassField> buildConfigFields,
+            @NonNull Map<String, ClassField> resValues,
+            @NonNull InstantRun instantRun,
+            @NonNull SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier,
+            @NonNull SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier) {
         super(name, assembleTaskName, compileTaskName,
                 classesFolder, javaResourcesFolder,
                 compileDependencies, dependencyGraphs,
                 variantSourceProvider, multiFlavorSourceProviders,
                 generatedSourceFolders);
 
-        this.outputs = outputs;
         this.isSigned = isSigned;
         this.signingConfigName = signingConfigName;
         this.applicationId = applicationId;
@@ -106,13 +115,67 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.buildConfigFields = buildConfigFields;
         this.resValues = resValues;
         this.instantRun = instantRun;
+        this.splitOutputsSupplier = splitOutputsSupplier;
+        this.manifestSupplier = manifestSupplier;
     }
 
     @NonNull
     @Override
     public Collection<AndroidArtifactOutput> getOutputs() {
-        return outputs;
+        Collection<SplitScope.SplitOutput> outputs = splitOutputsSupplier.get();
+        if (outputs.isEmpty()) {
+            return ImmutableList.of();
+        }
+        Collection<SplitScope.SplitOutput> manifests = manifestSupplier.get();
+        System.out.println("for " + getName());
+        System.out.println("splitsOutput " + Joiner.on(",").join(outputs));
+        System.out.println("Manifests " + Joiner.on(",").join(manifests));
+        List<SplitScope.SplitOutput> splitApksOutput =
+                outputs.stream()
+                        .filter(
+                                splitOutput ->
+                                        splitOutput.getSplit().getType()
+                                                == OutputFile.OutputType.SPLIT)
+                        .collect(Collectors.toList());
+        if (splitApksOutput.isEmpty()) {
+            // we don't have split APKs so each output is mapped to a different AndroidArtifactOutput
+            return outputs.stream()
+                    .map(
+                            splitOutput ->
+                                    new AndroidArtifactOutputImpl(
+                                            splitOutput,
+                                            getOutput(manifests, splitOutput.getSplit())))
+                    .collect(Collectors.toList());
+        } else {
+            List<SplitScope.SplitOutput> mainApks =
+                    outputs.stream()
+                            .filter(
+                                    splitOutput ->
+                                            splitOutput.getSplit().getType()
+                                                    == OutputFile.OutputType.MAIN)
+                            .collect(Collectors.toList());
+            if (mainApks.size() != 1) {
+                throw new RuntimeException(
+                        "Invalid main APK outputs : " + Joiner.on(",").join(mainApks));
+            }
+            return ImmutableList.of(
+                    new AndroidArtifactOutputImpl(
+                            mainApks.get(0),
+                            getOutput(manifests, mainApks.get(0).getSplit()),
+                            splitApksOutput));
+        }
     }
+
+    private static SplitScope.SplitOutput getOutput(
+            Collection<SplitScope.SplitOutput> splitOutputs, Split split) {
+        for (SplitScope.SplitOutput splitOutput : splitOutputs) {
+            if (splitOutput.getSplit().equals(split)) {
+                return splitOutput;
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public boolean isSigned() {
@@ -191,31 +254,43 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             return false;
         }
         AndroidArtifactImpl that = (AndroidArtifactImpl) o;
-        return isSigned == that.isSigned &&
-                Objects.equals(outputs, that.outputs) &&
-                Objects.equals(signingConfigName, that.signingConfigName) &&
-                Objects.equals(applicationId, that.applicationId) &&
-                Objects.equals(sourceGenTaskName, that.sourceGenTaskName) &&
-                Objects.equals(generatedResourceFolders, that.generatedResourceFolders) &&
-                Objects.equals(abiFilters, that.abiFilters) &&
-                Objects.equals(nativeLibraries, that.nativeLibraries) &&
-                Objects.equals(buildConfigFields, that.buildConfigFields) &&
-                Objects.equals(resValues, that.resValues) &&
-                Objects.equals(instantRun, that.instantRun);
+        return isSigned == that.isSigned
+                && Objects.equals(signingConfigName, that.signingConfigName)
+                && Objects.equals(applicationId, that.applicationId)
+                && Objects.equals(sourceGenTaskName, that.sourceGenTaskName)
+                && Objects.equals(generatedResourceFolders, that.generatedResourceFolders)
+                && Objects.equals(abiFilters, that.abiFilters)
+                && Objects.equals(nativeLibraries, that.nativeLibraries)
+                && Objects.equals(buildConfigFields, that.buildConfigFields)
+                && Objects.equals(resValues, that.resValues)
+                && Objects.equals(manifestSupplier, that.manifestSupplier)
+                && Objects.equals(splitOutputsSupplier, that.splitOutputsSupplier)
+                && Objects.equals(instantRun, that.instantRun);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(super.hashCode(), outputs, isSigned, signingConfigName, applicationId,
-                        sourceGenTaskName, generatedResourceFolders, abiFilters, nativeLibraries,
-                        buildConfigFields, resValues, instantRun);
+        return Objects.hash(
+                super.hashCode(),
+                splitOutputsSupplier,
+                manifestSupplier,
+                isSigned,
+                signingConfigName,
+                applicationId,
+                sourceGenTaskName,
+                generatedResourceFolders,
+                abiFilters,
+                nativeLibraries,
+                buildConfigFields,
+                resValues,
+                instantRun);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("outputs", outputs)
+                .add("manifestProxy", manifestSupplier)
+                .add("splitOutputsSupplier", splitOutputsSupplier)
                 .add("isSigned", isSigned)
                 .add("signingConfigName", signingConfigName)
                 .add("applicationId", applicationId)

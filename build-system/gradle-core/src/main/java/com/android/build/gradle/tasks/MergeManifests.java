@@ -19,25 +19,34 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.Split;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.MergingReport;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -75,28 +84,68 @@ public class MergeManifests extends ManifestProcessorTask {
     private FileCollection microApkManifest;
     private FileCollection compatibleScreensManifest;
     private List<Feature> optionalFeatures;
+    private SplitScope splitScope;
 
     @Override
-    protected void doFullTaskAction() {
-        MergingReport mergingReport = getBuilder().mergeManifestsForApplication(
-                getMainManifest(),
-                getManifestOverlays(),
-                computeFullProviderList(),
-                getPackageOverride(),
-                getVersionCode(),
-                getVersionName(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
-                getMaxSdkVersion(),
-                getManifestOutputFile().getAbsolutePath(),
-                // no aapt friendly merged manifest file necessary for applications.
-                null /* aaptFriendlyManifestOutputFile */,
-                getInstantRunManifestOutputFile().getAbsolutePath(),
-                ManifestMerger2.MergeType.APPLICATION,
-                variantConfiguration.getManifestPlaceholders(),
-                getOptionalFeatures(),
-                getReportFile());
-        buildContext.setPackageId(mergingReport.getPackageName());
+    protected void doFullTaskAction() throws IOException {
+        // read the output of the compatible screen manifest.
+        File compatibleScreenOutput = splitScope.getOutputFile(compatibleScreensManifest);
+        if (compatibleScreenOutput != null) {
+            splitScope.load(
+                    VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
+                    new FileReader(compatibleScreenOutput));
+        }
+        @Nullable SplitScope.SplitOutput compatibleScreenManifestForSplit;
+        // FIX ME : multi threading.
+        for (Split split : splitScope.getSplits()) {
+            compatibleScreenManifestForSplit =
+                    splitScope.getOutput(
+                            VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST, split);
+            File manifestOutputFile =
+                    FileUtils.join(
+                            getManifestOutputDirectory(),
+                            split.getDirName(),
+                            SdkConstants.ANDROID_MANIFEST_XML);
+            File instantRunManifestOutputFile =
+                    FileUtils.join(
+                            getInstantRunManifestOutputDirectory(),
+                            split.getDirName(),
+                            SdkConstants.ANDROID_MANIFEST_XML);
+            MergingReport mergingReport =
+                    getBuilder()
+                            .mergeManifestsForApplication(
+                                    getMainManifest(),
+                                    getManifestOverlays(),
+                                    computeFullProviderList(compatibleScreenManifestForSplit),
+                                    getPackageOverride(),
+                                    split.getVersionCode(),
+                                    split.getVersionName(),
+                                    getMinSdkVersion(),
+                                    getTargetSdkVersion(),
+                                    getMaxSdkVersion(),
+                                    manifestOutputFile.getAbsolutePath(),
+                                    // no aapt friendly merged manifest file necessary for applications.
+                                    null /* aaptFriendlyManifestOutputFile */,
+                                    instantRunManifestOutputFile.getAbsolutePath(),
+                                    ManifestMerger2.MergeType.APPLICATION,
+                                    variantConfiguration.getManifestPlaceholders(),
+                                    getOptionalFeatures(),
+                                    getReportFile());
+
+            splitScope.addOutputForSplit(
+                    VariantScope.TaskOutputType.MERGED_MANIFESTS, split, manifestOutputFile);
+            splitScope.addOutputForSplit(
+                    VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                    split,
+                    instantRunManifestOutputFile);
+            buildContext.setPackageId(mergingReport.getPackageName());
+        }
+        splitScope.save(
+                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                getManifestOutputDirectory());
+        splitScope.save(
+                ImmutableList.of(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
+                getInstantRunManifestOutputDirectory());
     }
 
     @Optional
@@ -148,9 +197,11 @@ public class MergeManifests extends ManifestProcessorTask {
     /**
      * Compute the final list of providers based on the manifest file collection and the other
      * providers.
+     *
      * @return the list of providers.
      */
-    private List<ManifestProvider> computeFullProviderList() {
+    private List<ManifestProvider> computeFullProviderList(
+            @Nullable SplitScope.SplitOutput compatibleScreenManifestForSplit) {
         final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size() + 2);
 
@@ -172,10 +223,11 @@ public class MergeManifests extends ManifestProcessorTask {
             }
         }
 
-        if (compatibleScreensManifest != null) {
-            providers.add(new ConfigAction.ManifestProviderImpl(
-                    compatibleScreensManifest.getSingleFile(),
-                    "Compatible-Screens sub-manifest"));
+        if (compatibleScreenManifestForSplit != null) {
+            providers.add(
+                    new ConfigAction.ManifestProviderImpl(
+                            compatibleScreenManifestForSplit.getOutputFile(),
+                            "Compatible-Screens sub-manifest"));
 
         }
 
@@ -280,18 +332,18 @@ public class MergeManifests extends ManifestProcessorTask {
 
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
 
-        private final VariantOutputScope scope;
+        private final VariantScope variantScope;
         private final List<Feature> optionalFeatures;
 
-        public ConfigAction(VariantOutputScope scope, List<Feature> optionalFeatures) {
-            this.scope = scope;
+        public ConfigAction(@NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
+            this.variantScope = scope;
             this.optionalFeatures = optionalFeatures;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("process", "Manifest");
+            return variantScope.getTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -302,27 +354,21 @@ public class MergeManifests extends ManifestProcessorTask {
 
         @Override
         public void execute(@NonNull MergeManifests processManifestTask) {
-            BaseVariantOutputData variantOutputData = scope.getVariantOutputData();
-
-            final VariantScope variantScope = scope.getVariantScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
                     variantScope.getVariantData();
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     variantData.getVariantConfiguration();
+            GlobalScope globalScope = variantScope.getGlobalScope();
+            AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
 
-            variantOutputData.manifestProcessorTask = processManifestTask;
-
-            processManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            processManifestTask.setAndroidBuilder(androidBuilder);
             processManifestTask.setVariantName(config.getFullName());
-            processManifestTask.buildContext = scope.getVariantScope().getBuildContext();
+            processManifestTask.buildContext = variantScope.getBuildContext();
+            processManifestTask.splitScope = variantData.getSplitScope();
 
             processManifestTask.setVariantConfiguration(config);
-            if (variantOutputData instanceof ApkVariantOutputData) {
-                processManifestTask.variantOutputData =
-                        (ApkVariantOutputData) variantOutputData;
-            }
 
-            Project project = scope.getGlobalScope().getProject();
+            Project project = globalScope.getProject();
 
             // this includes the libraries and the atoms.
             processManifestTask.manifests = variantScope.getArtifactCollection(
@@ -334,18 +380,14 @@ public class MergeManifests extends ManifestProcessorTask {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
-            if (scope.getCompatibleScreensManifestTask() != null) {
-                processManifestTask.compatibleScreensManifest = project.files(
-                        scope.getCompatibleScreensManifestFile());
-            }
+            processManifestTask.compatibleScreensManifest =
+                    variantScope.getOutputs(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                                    return scope.getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getTargetCodename();
+                                if (androidBuilder.isPreviewTarget()) {
+                                    return androidBuilder.getTargetCodename();
                                 }
 
                                 ApiVersion minSdk = config.getMergedFlavor().getMinSdkVersion();
@@ -355,10 +397,8 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.targetSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                                    return scope.getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getTargetCodename();
+                                if (androidBuilder.isPreviewTarget()) {
+                                    return androidBuilder.getTargetCodename();
                                 }
                                 ApiVersion targetSdk =
                                         config.getMergedFlavor().getTargetSdkVersion();
@@ -368,15 +408,17 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.maxSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
+                                if (androidBuilder.isPreviewTarget()) {
                                     return null;
                                 }
                                 return config.getMergedFlavor().getMaxSdkVersion();
                             });
 
-            processManifestTask.setManifestOutputFile(scope.getManifestOutputFile());
-            processManifestTask.setInstantRunManifestOutputFile(
-                    variantScope.getInstantRunManifestOutputFile());
+            processManifestTask.setManifestOutputDirectory(
+                    variantScope.getManifestOutputDirectory());
+
+            processManifestTask.setInstantRunManifestOutputDirectory(
+                    variantScope.getInstantRunManifestOutputDirectory());
 
             processManifestTask.setReportFile(variantScope.getManifestReportFile());
             processManifestTask.optionalFeatures = optionalFeatures;

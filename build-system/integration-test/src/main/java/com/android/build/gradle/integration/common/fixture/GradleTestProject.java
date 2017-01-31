@@ -50,7 +50,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -66,9 +65,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -703,17 +705,161 @@ public final class GradleTestProject implements TestRule {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
+        // FIX ME : "debug" should be an explicit variant name rather than mixed in dimensions.
+        List<String> flavorDimensionList =
+                Arrays.stream(dimensions)
+                        .filter(dimension -> !dimension.equals("unsigned"))
+                        .collect(Collectors.toList());
         File apkFile =
-                getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
-                        + SdkConstants.DOT_ANDROID_PACKAGE);
+                getOutputFile(
+                        "apk/"
+                                + Joiner.on("/").join(flavorDimensionList)
+                                + "/"
+                                + Joiner.on("-").join(dimensionList)
+                                + SdkConstants.DOT_ANDROID_PACKAGE);
         return new Apk(apkFile);
+    }
+
+    public interface ApkType {
+        String getName();
+
+        boolean isSigned();
+    }
+
+    public enum DefaultApkType implements ApkType {
+        DEBUG(true),
+        RELEASE(false);
+
+        private final boolean isSigned;
+
+        DefaultApkType(boolean isSigned) {
+            this.isSigned = isSigned;
+        }
+
+        @Override
+        public String getName() {
+            return name().toLowerCase(Locale.ENGLISH);
+        }
+
+        @Override
+        public boolean isSigned() {
+            return isSigned;
+        }
+    }
+
+    public static class CustomApk implements ApkType {
+
+        private final String name;
+        private final boolean isSigned;
+
+        public CustomApk(String name, boolean isSigned) {
+            this.name = name;
+            this.isSigned = isSigned;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public boolean isSigned() {
+            return isSigned;
+        }
+    }
+
+    /**
+     * Return the output apk File from the application plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getApk(ApkType apk, String... dimensions) throws IOException {
+        return getApk(null /* filterName */, apk, dimensions);
+    }
+
+    /**
+     * Return the output full split apk File from the application plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
+            throws IOException {
+        return new Apk(
+                getOutputFile(
+                        "apk/"
+                                + mangleDimensions(dimensions)
+                                + "/"
+                                + apkType.getName()
+                                + "/"
+                                + mangleApkName(
+                                        apkType.getName(),
+                                        filterName,
+                                        ImmutableList.copyOf(dimensions))
+                                + (apkType.isSigned()
+                                        ? SdkConstants.DOT_ANDROID_PACKAGE
+                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
+    }
+
+    private String mangleApkName(
+            @Nullable String buildType, @Nullable String filterName, List<String> dimensions) {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
+        dimensionList.add(getName());
+        dimensionList.addAll(dimensions);
+        if (!Strings.isNullOrEmpty(filterName)) {
+            dimensionList.add(filterName);
+        }
+        if (!Strings.isNullOrEmpty(buildType)) {
+            dimensionList.add(buildType);
+        }
+        return Joiner.on("-").join(dimensionList);
+    }
+
+    private static String mangleDimensions(String... dimensions) {
+        StringBuilder sb = new StringBuilder();
+        Arrays.stream(dimensions)
+                .forEach(
+                        dimension -> {
+                            sb.append(
+                                    sb.length() == 0
+                                            ? dimension
+                                            : StringUtils.capitalise(dimension));
+                        });
+        return sb.toString();
+    }
+
+    @NonNull
+    public Apk getTestApk() throws IOException {
+        return getTestApk_("debug", null, ImmutableList.of());
     }
 
     @NonNull
     public Apk getTestApk(String... dimensions) throws IOException {
-        List<String> dimensionList = Lists.newArrayList(dimensions);
-        dimensionList.add("androidTest");
-        return getApk(Iterables.toArray(dimensionList, String.class));
+        return getTestApk_(
+                "debug" /* buildType */, Arrays.stream(dimensions).collect(Collectors.toList()));
+    }
+
+    @NonNull
+    public Apk getTestApk_(String buildType, List<String> dimensions) throws IOException {
+        return getTestApk_(buildType, null /* filterName */, dimensions);
+    }
+
+    @NonNull
+    public Apk getTestApk_(String buildType, @Nullable String filterName, List<String> dimensions)
+            throws IOException {
+        return new Apk(
+                getOutputFile(
+                        "apk/androidTest/"
+                                + mangleDimensions(
+                                        dimensions.toArray(new String[dimensions.size()]))
+                                + "/"
+                                + buildType
+                                + "/"
+                                + "/"
+                                + mangleApkName(buildType, filterName, dimensions)
+                                + "-androidTest"
+                                + SdkConstants.DOT_ANDROID_PACKAGE));
     }
 
     /**

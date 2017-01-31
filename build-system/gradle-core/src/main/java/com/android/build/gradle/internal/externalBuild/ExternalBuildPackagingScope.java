@@ -26,12 +26,13 @@ import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.Split;
 import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import java.io.File;
@@ -81,10 +82,14 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getFinalResourcesFile() {
-        return new File(
-                mExternalBuildContext.getExecutionRoot(),
-                mBuildManifest.getResourceApk().getExecRootPath());
+    public File getOutputPackageFile(File destinationDir, String projectBaseName, Split split) {
+        return getMainOutputFile().getOutputFile();
+    }
+
+    @Override
+    public String getProjectBaseName() {
+        // FIX ME !
+        return mExternalBuildContext.getExecutionRoot().getName();
     }
 
     @NonNull
@@ -149,8 +154,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     }
 
     @NonNull
-    @Override
-    public ApkOutputFile getMainOutputFile() {
+    private ApkOutputFile getMainOutputFile() {
         return mVariantScope.getMainOutputFile();
     }
 
@@ -202,18 +206,6 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputPackage() {
-        return getMainOutputFile().getOutputFile();
-    }
-
-    @NonNull
-    @Override
-    public File getIntermediateApk() {
-        return mVariantScope.getIntermediateApk();
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
     }
@@ -241,18 +233,9 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return mVariantScope.getAaptOptions();
     }
 
-    @NonNull
     @Override
-    public VariantType getVariantType() {
-        return VariantType.DEFAULT;
-    }
-
-    @NonNull
-    @Override
-    public File getManifestFile() {
-        return new File(
-                mExternalBuildContext.getExecutionRoot(),
-                mBuildManifest.getAndroidManifest().getExecRootPath());
+    public SplitScope getSplitScope() {
+        return mVariantScope.getSplitScope();
     }
 
     // TaskOutputHolder

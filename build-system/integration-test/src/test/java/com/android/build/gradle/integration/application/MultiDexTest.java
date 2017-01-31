@@ -144,14 +144,14 @@ public class MultiDexTest {
 
         commonApkChecks("debug");
 
-        assertThat(project.getTestApk("ics", "debug"))
+        assertThat(project.getTestApk("ics"))
                 .doesNotContainClass("Landroid/support/multidex/MultiDexApplication;");
-        assertThat(project.getTestApk("lollipop", "debug"))
+        assertThat(project.getTestApk("lollipop"))
                 .doesNotContainClass("Landroid/support/multidex/MultiDexApplication;");
 
         // Both test APKs should contain a class from Junit.
-        assertThat(project.getTestApk("ics", "debug")).containsClass("Lorg/junit/Assert;");
-        assertThat(project.getTestApk("lollipop", "debug")).containsClass("Lorg/junit/Assert;");
+        assertThat(project.getTestApk("ics")).containsClass("Lorg/junit/Assert;");
+        assertThat(project.getTestApk("lollipop")).containsClass("Lorg/junit/Assert;");
 
         assertThat(project.getApk("ics", "debug"))
                 .containsClass("Lcom/android/tests/basic/NotUsed;");
@@ -173,9 +173,9 @@ public class MultiDexTest {
 
         commonApkChecks("minified");
 
-        assertThat(project.getApk("ics", "minified"))
+        assertThat(project.getApk(new GradleTestProject.CustomApk("minified", true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/NotUsed;");
-        assertThat(project.getApk("ics", "minified"))
+        assertThat(project.getApk(new GradleTestProject.CustomApk("minified", true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/DeadCode;");
     }
 
@@ -202,14 +202,15 @@ public class MultiDexTest {
 
         project.execute("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
-        assertThat(project.getApk("ics", "debug"))
-                .containsClass("Lcom/android/tests/basic/NotUsed;");
-        assertThat(project.getApk("ics", "debug"))
+        assertThat(
+                project.getApk(GradleTestProject.DefaultApkType.DEBUG, "ics")
+                        .containsClass("Lcom/android/tests/basic/NotUsed;"));
+        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "ics"))
                 .doesNotContainMainClass("Lcom/android/tests/basic/NotUsed;");
 
         // Make sure --minimal-main-dex was not used for the test APK.
-        assertThat(project.getTestApk("ics", "debug")).contains("classes.dex");
-        assertThat(project.getTestApk("ics", "debug")).doesNotContain("classes2.dex");
+        assertThat(project.getTestApk("ics")).contains("classes.dex");
+        assertThat(project.getTestApk("ics")).doesNotContain("classes2.dex");
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -223,17 +224,17 @@ public class MultiDexTest {
     }
 
     private void commonApkChecks(String buildType) throws Exception {
-        assertThat(project.getApk("ics", buildType))
+        assertThat(project.getApk(new GradleTestProject.CustomApk(buildType, true), "ics"))
                 .containsClass("Landroid/support/multidex/MultiDexApplication;");
-        assertThat(project.getApk("lollipop", buildType))
+        assertThat(project.getApk(new GradleTestProject.CustomApk(buildType, true), "lollipop"))
                 .doesNotContainClass("Landroid/support/multidex/MultiDexApplication;");
 
         for (String flavor : ImmutableList.of("ics", "lollipop")) {
-            assertThat(project.getApk(flavor, buildType))
+            assertThat(project.getApk(new GradleTestProject.CustomApk(buildType, true), flavor))
                     .containsClass("Lcom/android/tests/basic/Main;");
-            assertThat(project.getApk(flavor, buildType))
+            assertThat(project.getApk(new GradleTestProject.CustomApk(buildType, true), flavor))
                     .containsClass("Lcom/android/tests/basic/Used;");
-            assertThat(project.getApk(flavor, buildType))
+            assertThat(project.getApk(new GradleTestProject.CustomApk(buildType, true), flavor))
                     .containsClass("Lcom/android/tests/basic/Kept;");
         }
     }

@@ -128,12 +128,14 @@ public class MergeResourcesTest {
                 "debug",
                 "raw",
                 "me.raw");
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "res",
+                        "debug",
+                        "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
         assertThatZip(apUnderscore)
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
@@ -173,12 +175,14 @@ public class MergeResourcesTest {
                 "debug",
                 "raw",
                 "me.raw");
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "res",
+                        "debug",
+                        "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
         assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
@@ -219,12 +223,14 @@ public class MergeResourcesTest {
                 "debug",
                 "raw",
                 "me.raw");
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "res",
+                        "debug",
+                        "resources-debug.ap_");
         assertThat(inIntermediate).contains(new byte[] { 0, 1, 2 });
         assertThat(new Apk(apUnderscore))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });

@@ -338,6 +338,7 @@ public class ProcessAtomsResources extends IncrementalTask {
             processAtomsResources.atomLibInfos =
                     variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
 
+            // FIX ME : use SplitDiscovery task.
             ConventionMappingHelper.map(
                     processAtomsResources,
                     "resourceConfigs",

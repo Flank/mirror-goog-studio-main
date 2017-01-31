@@ -45,7 +45,8 @@ public class ApkLocationTest {
                         mTemporaryFolder.getRoot().getAbsolutePath())
                 .run("assembleDebug");
 
-        File[] files = mTemporaryFolder.getRoot().listFiles();
+        File debugApkLocation = new File(mTemporaryFolder.getRoot(), "debug");
+        File[] files = debugApkLocation.listFiles();
         assertNotNull(files);
 
         // There can be one or two APKs in the directory, depending on whether we use old or new

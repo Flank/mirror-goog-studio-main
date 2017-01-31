@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.SupplierTask;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.transforms.InstantRunDex;
 import com.android.build.gradle.internal.transforms.InstantRunSlicer;
@@ -50,13 +49,13 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionAdapter;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskState;
 
@@ -107,8 +106,8 @@ public class InstantRunTaskManager {
             @Nullable AndroidTask<?> preTask,
             AndroidTask<?> anchorTask,
             Set<QualifiedContent.Scope> resMergingScopes,
-            SupplierTask<File> instantRunMergedManifest,
-            SupplierTask<File> processedResourcesOutputFile,
+            FileCollection instantRunMergedManifests,
+            FileCollection processedResources,
             boolean addDependencyChangeChecker) {
         final Project project = variantScope.getGlobalScope().getProject();
 
@@ -152,13 +151,13 @@ public class InstantRunTaskManager {
         // that the processAndroidResources task ran in a previous non InstantRun enabled
         // invocation.
         AndroidTask<CheckManifestInInstantRunMode> checkManifestTask =
-                androidTasks.create(tasks,
-                        new CheckManifestInInstantRunMode.ConfigAction(transformVariantScope,
+                androidTasks.create(
+                        tasks,
+                        new CheckManifestInInstantRunMode.ConfigAction(
+                                transformVariantScope,
                                 variantScope,
-                                instantRunMergedManifest,
-                                processedResourcesOutputFile));
-        checkManifestTask.optionalDependsOn(tasks, instantRunMergedManifest.getBuilderTask(),
-                processedResourcesOutputFile.getBuilderTask());
+                                instantRunMergedManifests,
+                                processedResources));
 
         instantRunTask.ifPresent(t ->
                 t.dependsOn(
@@ -200,9 +199,11 @@ public class InstantRunTaskManager {
                 .setDependency(extractorTask.get(tasks))
                 .build());
 
-        AndroidTask<GenerateInstantRunAppInfoTask> generateAppInfoAndroidTask = androidTasks
-                .create(tasks, new GenerateInstantRunAppInfoTask.ConfigAction(
-                        transformVariantScope, variantScope, instantRunMergedManifest));
+        AndroidTask<GenerateInstantRunAppInfoTask> generateAppInfoAndroidTask =
+                androidTasks.create(
+                        tasks,
+                        new GenerateInstantRunAppInfoTask.ConfigAction(
+                                transformVariantScope, variantScope, instantRunMergedManifests));
 
         // create the AppInfo.class for this variant.
         // TODO: remove this get() as it forces task creation.
@@ -216,12 +217,6 @@ public class InstantRunTaskManager {
                 .setJar(generateInstantRunAppInfoTask.getOutputFile())
                 .setDependency(generateInstantRunAppInfoTask)
                 .build());
-
-        // add a dependency on the manifest merger for the appInfo generation as it uses its output
-        // the manifest merger task may be null depending if an external build system or Gradle
-        // is used.
-        generateAppInfoAndroidTask.optionalDependsOn(
-                tasks, instantRunMergedManifest.getBuilderTask());
 
         anchorTask.optionalDependsOn(tasks, instantRunTask.orElse(null));
 

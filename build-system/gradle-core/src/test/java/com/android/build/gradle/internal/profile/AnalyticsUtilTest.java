@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.tasks.CopyOutputs;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
@@ -40,7 +41,8 @@ public class AnalyticsUtilTest {
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
                 AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                "com.android.build.gradle.tasks.GenerateTestConfig");
+                "com.android.build.gradle.tasks.GenerateTestConfig",
+                CopyOutputs.class.getName());
     }
 
     @Test

@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -84,18 +85,22 @@ public class InstantRunChangeDeviceTest {
     @Test
     public void switchScenario() throws Exception {
         AndroidProject model = mProject.model().getSingle().getOnlyModel();
-        File apk = model.getVariants().stream()
-                .filter(variant -> variant.getName().equals("debug")).iterator().next()
-                .getMainArtifact()
-                .getOutputs().iterator().next()
-                .getOutputs().iterator().next()
-                .getOutputFile();
+
+        AndroidArtifact debug =
+                model.getVariants()
+                        .stream()
+                        .filter(variant -> variant.getName().equals("debug"))
+                        .iterator()
+                        .next()
+                        .getMainArtifact();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         String startBuildId;
         mProject.execute("clean");
 
         if (firstBuild == BuildTarget.NO_INSTANT_RUN) {
             mProject.executor().run("assembleDebug");
+            File apk = (debug.getOutputs().iterator().next()).getMainOutputFile().getOutputFile();
+
             checkNormalApk(apk);
             startBuildId = null;
         } else {
@@ -112,6 +117,7 @@ public class InstantRunChangeDeviceTest {
 
         if (secondBuild == BuildTarget.NO_INSTANT_RUN) {
             mProject.executor().run("assembleDebug");
+            File apk = debug.getOutputs().iterator().next().getMainOutputFile().getOutputFile();
             checkNormalApk(apk);
         } else {
             mProject.executor()

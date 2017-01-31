@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
-import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.DOT_RES;
 import static com.android.SdkConstants.FD_CLASSES_OUTPUT;
 import static com.android.SdkConstants.FD_DEX;
 import static com.android.SdkConstants.FD_MERGED;
@@ -25,6 +25,8 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_CLASS;
 import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.FN_RES_BASE;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
@@ -49,7 +51,6 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -76,6 +77,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -86,6 +88,7 @@ import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.Split;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -106,10 +109,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -184,6 +185,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private AndroidTask<Sync> processJavaResourcesTask;
     private AndroidTask<TransformTask> mergeJavaResourcesTask;
+    private AndroidTask<?> shrinkResourcesTask;
 
     private AndroidTask<MergeSourceSetFolders> mergeJniLibsFolderTask;
 
@@ -1125,59 +1127,59 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getGenerateSplitAbiResOutputDirectory() {
-        return new File(globalScope.getIntermediatesDir(),
-                "abi/" + getVariantConfiguration().getDirName());
+        return new File(
+                globalScope.getIntermediatesDir(),
+                FileUtils.join("splits", "res", "abi", getVariantConfiguration().getDirName()));
+    }
+
+    @NonNull
+    @Override
+    public File getGenerateSplitDensityOrLanguagesResOutputDirectory() {
+        return new File(
+                globalScope.getIntermediatesDir(),
+                FileUtils.join(
+                        "splits",
+                        "res",
+                        "densityLanguage",
+                        getVariantConfiguration().getDirName()));
     }
 
     @Override
     @NonNull
     public File getSplitSupportDirectory() {
-        return new File(globalScope.getIntermediatesDir(),
+        return new File(
+                globalScope.getIntermediatesDir(),
                 "splits-support/" + getVariantConfiguration().getDirName());
     }
 
-    @Override
     @NonNull
-    public File getSplitOutputDirectory() {
-        return new File(globalScope.getIntermediatesDir(),
-                "splits/" + getVariantConfiguration().getDirName());
-    }
-
-
     @Override
+    public File getSplitDensityOrLanguagesPackagesOutputDirectory() {
+        return new File(
+                globalScope.getBuildDir(),
+                FileUtils.join(
+                        FD_OUTPUTS,
+                        "splits",
+                        "densityLanguage",
+                        getVariantConfiguration().getDirName()));
+    }
+
     @NonNull
-    public List<File> getSplitAbiResOutputFiles() {
-        Set<String> filters = AbiSplitOptions.getAbiFilters(
-                globalScope.getExtension().getSplits().getAbiFilters());
-        return filters.stream()
-                .map(this::getOutputFileForSplit)
-                .collect(Collectors.toList());
-    }
-
-    private File getOutputFileForSplit(final String split) {
-        return new File(getGenerateSplitAbiResOutputDirectory(),
-                "resources-" + getVariantConfiguration().getBaseName() + "-" + split + ".ap_");
-    }
-
     @Override
-    @NonNull
-    public List<File> getPackageSplitAbiOutputFiles() {
-        ImmutableList.Builder<File> builder = ImmutableList.builder();
-        for (String split : globalScope.getExtension().getSplits().getAbiFilters()) {
-            String apkName = getApkName(split);
-            builder.add(new File(getSplitOutputDirectory(), apkName));
-        }
-        return builder.build();
+    public File getSplitAbiPackagesOutputDirectory() {
+        return new File(
+                globalScope.getBuildDir(),
+                FileUtils.join(
+                        FD_OUTPUTS, "splits", "abi", getVariantConfiguration().getDirName()));
     }
 
-    private String getApkName(final String split) {
-        String archivesBaseName = globalScope.getArchivesBaseName();
-        String apkName =
-                archivesBaseName + "-" + getVariantConfiguration().getBaseName() + "_" + split;
-        return apkName
-                + (getVariantConfiguration().getSigningConfig() == null
-                        ? "-unsigned.apk"
-                        : "-unaligned.apk");
+    @NonNull
+    @Override
+    public File getFullApkPackagesOutputDirectory() {
+        return new File(
+                globalScope.getBuildDir(),
+                FileUtils.join(
+                        FD_OUTPUTS, "splits", "full", getVariantConfiguration().getDirName()));
     }
 
     @NonNull
@@ -1192,24 +1194,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getAaptFriendlyManifestOutputFile() {
+    public File getAaptFriendlyManifestOutputDirectory() {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 "manifests",
                 "aapt",
-                getVariantConfiguration().getDirName(),
-                "AndroidManifest.xml");
+                getVariantConfiguration().getDirName());
     }
 
     @NonNull
     @Override
-    public File getInstantRunManifestOutputFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "instant-run",
-                getVariantConfiguration().getDirName(),
-                "AndroidManifest.xml");
+    public File getInstantRunManifestOutputDirectory() {
+        return FileUtils.join(globalScope.getIntermediatesDir(), "manifests", "instant-run");
     }
 
     @NonNull
@@ -1240,6 +1236,57 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "res",
                 "microapk",
                 getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
+    public File getCompatibleScreensManifestDirectory() {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "manifests",
+                "density",
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
+    public File getManifestOutputDirectory() {
+        switch (getVariantConfiguration().getType()) {
+            case DEFAULT:
+                return FileUtils.join(getGlobalScope().getIntermediatesDir(), "manifests", "full");
+            case INSTANTAPP:
+                return FileUtils.join(
+                        getGlobalScope().getIntermediatesDir(),
+                        "manifests",
+                        "full",
+                        getVariantConfiguration().getDirName());
+            case LIBRARY:
+                // FIX ME : this does not seem right.
+                return getBaseBundleDir();
+            case ATOM:
+                return new File(getBaseBundleDir(), "AndroidManifest.xml");
+            case ANDROID_TEST:
+                return FileUtils.join(
+                        getGlobalScope().getIntermediatesDir(),
+                        "manifest",
+                        getVariantConfiguration().getDirName());
+            default:
+                throw new RuntimeException(
+                        "getManifestOutputFile called for an unexpected variant.");
+        }
+    }
+
+    private AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
+
+    @Override
+    public AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask() {
+        return manifestProcessorTask;
+    }
+
+    @Override
+    public void setManifestProcessorTask(
+            AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask) {
+        this.manifestProcessorTask = manifestProcessorTask;
     }
 
     @NonNull
@@ -1336,17 +1383,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setResolveDependenciesTask(
             AndroidTask<ResolveDependenciesTask> resolveDependenciesTask) {
         this.resolveDependenciesTask = resolveDependenciesTask;
-    }
-
-    @Override
-    public AndroidTask<ProcessAndroidResources> getGenerateRClassTask() {
-        return generateRClassTask;
-    }
-
-    @Override
-    public void setGenerateRClassTask(
-            AndroidTask<ProcessAndroidResources> generateRClassTask) {
-        this.generateRClassTask = generateRClassTask;
     }
 
     @Override
@@ -1804,18 +1840,51 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         };
     }
 
-
-    @Nullable
-    private SplitList splitList;
-
-    @Nullable
+    @NonNull
     @Override
-    public SplitList getSplitList() {
-        return splitList;
+    public File getProcessResourcePackageOutputDirectory() {
+        return FileUtils.join(getGlobalScope().getIntermediatesDir(), FD_RES, getDirName());
+    }
+
+    AndroidTask<ProcessAndroidResources> processAndroidResourcesTask;
+
+    @Override
+    public void setProcessResourcesTask(
+            AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask) {
+        this.processAndroidResourcesTask = processAndroidResourcesAndroidTask;
     }
 
     @Override
-    public void setSplitList(@NonNull SplitList splitList) {
-        this.splitList = splitList;
+    public AndroidTask<ProcessAndroidResources> getProcessResourcesTask() {
+        return processAndroidResourcesTask;
+    }
+
+    @Override
+    @NonNull
+    public SplitScope getSplitScope() {
+        return variantData.getSplitScope();
+    }
+
+    public AndroidTask<?> getShrinkResourcesTask() {
+        return shrinkResourcesTask;
+    }
+
+    @Override
+    public void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask) {
+        this.shrinkResourcesTask = shrinkResourcesTask;
+    }
+
+    @NonNull
+    public File getProcessResourcePackageOutputFile(
+            @NonNull Split split, @NonNull String atomName) {
+        return FileUtils.join(
+                getGlobalScope().getIntermediatesDir(),
+                FD_RES,
+                FN_RES_BASE
+                        + RES_QUALIFIER_SEP
+                        + atomName
+                        + RES_QUALIFIER_SEP
+                        + split.getDirName()
+                        + DOT_RES);
     }
 }
