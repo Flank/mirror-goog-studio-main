@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraph;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
+import static org.gradle.internal.impldep.com.amazonaws.auth.policy.Statement.Effect.Allow;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -156,10 +157,13 @@ public class ModelBuilder implements ToolingModelBuilder {
             final String testedProjectPath = config instanceof TestAndroidConfig
                     ? ((TestAndroidConfig) config).getTargetProjectPath()
                     : null;
-            taskManager.getDependencyManager().resolveDependencies(
-                    variantData.getVariantDependency(),
-                    testedProjectPath,
-                    taskManager.getGlobalScope().getBuildCache());
+            taskManager
+                    .getDependencyManager()
+                    .resolveDependencies(
+                            variantData.getVariantDependency(),
+                            testedProjectPath,
+                            taskManager.getGlobalScope().getBuildCache(),
+                            taskManager.getGlobalScope().getProjectLevelCache());
             variantData
                     .getVariantConfiguration()
                     .setResolvedDependencies(
@@ -192,7 +196,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 ResolveDependenciesTask.extractAarInParallel(
                         project,
                         variantData.getVariantConfiguration(),
-                        taskManager.getGlobalScope().getBuildCache());
+                        taskManager.getGlobalScope().getBuildCache(),
+                        taskManager.getGlobalScope().getProjectLevelCache());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

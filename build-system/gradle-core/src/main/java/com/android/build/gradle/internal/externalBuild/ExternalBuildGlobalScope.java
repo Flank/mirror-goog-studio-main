@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.externalBuild;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.BuildCacheUtils;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -50,7 +49,6 @@ public class ExternalBuildGlobalScope implements TransformGlobalScope {
         buildCache =
                 BuildCacheUtils.createBuildCacheIfEnabled(
                         project.getRootProject()::file, projectOptions);
-        GlobalScope.validateAndroidGradleOptions(projectOptions, buildCache);
     }
 
     @Override

@@ -76,7 +76,7 @@ class RepoTest {
         baseLibrary.execute("clean", "uploadArchives")
         library.execute("clean", "uploadArchives")
         app.execute("clean", "assembleDebug")
-        File explodedSnapshot = app.getIntermediateFile("exploded-aar/snapshots");
+        File explodedSnapshot = app.getIntermediateFile("project-cache");
         assertThat(explodedSnapshot).isDirectory();
         assertThat(explodedSnapshot.list().toList()).hasSize(1)
 
