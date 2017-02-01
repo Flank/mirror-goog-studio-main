@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
-import java.util.regex.Pattern;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -4244,33 +4243,27 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testHigherCompileSdkVersionThanPlatformTools() throws Exception {
         // Warn if the platform tools are too old on the system
-        assertTrue(Pattern.matches(""
-                + "ApiDetectorTest_testHigherCompileSdkVersionThanPlatformTools: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProject(
-                        manifest().minSdk(14),
-                        projectProperties().compileSdk(400), // in the future
-                        mApiCallTest12,
-                        mApiCallTest12_class
-                )));
+        lint().files(
+                manifest().minSdk(14),
+                projectProperties().compileSdk(400), // in the future
+                mApiCallTest12,
+                mApiCallTest12_class)
+                .run()
+                .expectMatches(""
+                        + "Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
     public void testHigherCompileSdkVersionThanPlatformToolsInEditor() throws Exception {
         // When editing a file we place the error on the first line of the file instead
-        assertTrue(Pattern.matches(""
-                + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
-                + "package test.pkg;\n"
-                + "~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally(
-                        "src/test/pkg/ApiCallTest12.java",
-                        manifest().minSdk(14),
-                        projectProperties().compileSdk(400), // in the future
-                        mApiCallTest12,
-                        mApiCallTest12_class
-                )));
+        lint().files(
+                manifest().minSdk(14),
+                projectProperties().compileSdk(400), // in the future
+                mApiCallTest12,
+                mApiCallTest12_class)
+                .incremental("src/test/pkg/ApiCallTest12.java")
+                .run()
+                .expectMatches(""
+                        + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
     @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})

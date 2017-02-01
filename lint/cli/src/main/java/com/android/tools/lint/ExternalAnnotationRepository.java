@@ -98,12 +98,12 @@ import org.w3c.dom.NodeList;
  * including its parameters.
  */
 public class ExternalAnnotationRepository {
-    public static final String SDK_ANNOTATIONS_PATH = "platform-tools/api/annotations.zip";
+    public static final String SDK_ANNOTATIONS_PATH = "annotations.zip";
     public static final String FN_ANNOTATIONS_XML = "annotations.xml";
 
     private static final boolean DEBUG = false;
 
-    private static ExternalAnnotationRepository sSingleton;
+    private static ExternalAnnotationRepository singleton;
 
     private final List<AnnotationsDatabase> databases;
 
@@ -113,14 +113,14 @@ public class ExternalAnnotationRepository {
 
     @NonNull
     public static synchronized ExternalAnnotationRepository get(@NonNull LintClient client) {
-        if (sSingleton == null) {
+        if (singleton == null) {
             Collection<Project> projects = client.getKnownProjects();
             if (Project.isAospBuildEnvironment()) {
                 for (Project project : projects) {
                     // If we are dealing with the AOSP frameworks project, we explicitly
                     // set the ExternalAnnotationRepository to a no-op.
                     if (Project.isAospFrameworksProject(project.getDir())) {
-                        return sSingleton = new ExternalAnnotationRepository(
+                        return singleton = new ExternalAnnotationRepository(
                                 Collections.emptyList());
                     }
                 }
@@ -141,25 +141,14 @@ public class ExternalAnnotationRepository {
             }
 
             File sdkAnnotations = client.findResource(SDK_ANNOTATIONS_PATH);
-            if (sdkAnnotations == null) {
-                // Until the SDK annotations are bundled in platform tools, provide
-                // a fallback for Gradle builds to point to a locally installed version
-                String path = System.getenv("SDK_ANNOTATIONS");
-                if (path != null) {
-                    sdkAnnotations = new File(path);
-                    if (!sdkAnnotations.exists()) {
-                        sdkAnnotations = null;
-                    }
-                }
-            }
             if (sdkAnnotations != null) {
                 files.add(sdkAnnotations);
             }
 
-            sSingleton = create(client, files);
+            singleton = create(client, files);
         }
 
-        return sSingleton;
+        return singleton;
     }
 
     @VisibleForTesting
@@ -1539,6 +1528,6 @@ public class ExternalAnnotationRepository {
     /** For test usage only */
     @VisibleForTesting
     static synchronized void set(ExternalAnnotationRepository singleton) {
-        sSingleton = singleton;
+        ExternalAnnotationRepository.singleton = singleton;
     }
 }

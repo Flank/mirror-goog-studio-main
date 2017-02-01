@@ -430,6 +430,15 @@ public abstract class LintClient {
     }
 
     /**
+     * Database moved from platform-tools to SDK in API level 26.
+     *
+     * This duplicates the constant in {@link LintClient} but that
+     * constant is not public (because it's in the API package and I don't
+     * want this part of the API surface; it's an implementation optimization.)
+     */
+    private static final int SDK_DATABASE_MIN_VERSION = 26;
+
+    /**
      * Locates an SDK resource (relative to the SDK root directory).
      * <p>
      * TODO: Consider switching to a {@link URL} return type instead.
@@ -444,7 +453,56 @@ public abstract class LintClient {
         File top = getSdkHome();
         if (top == null) {
             throw new IllegalArgumentException("Lint must be invoked with the System property "
-                   + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
+                    + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
+        }
+
+        // Files looked up by ExternalAnnotationRepository and ApiLookup, respectively
+        boolean isAnnotationZip = "annotations.zip".equals(relativePath);
+        boolean isApiDatabase = "api-versions.xml".equals(relativePath);
+        if (isAnnotationZip || isApiDatabase) {
+            if (isAnnotationZip) {
+                // Allow Gradle builds etc to point to a specific location
+                String path = System.getenv("SDK_ANNOTATIONS");
+                if (path != null) {
+                    File file = new File(path);
+                    if (file.exists()) {
+                        return file;
+                    }
+                }
+            }
+
+            // Look for annotations.zip or api-versions.xml: these used to ship with the
+            // platform-tools, but were (in API 26) moved over to the API platform.
+            // Look for the most recent version, falling back to platform-tools if necessary.
+            IAndroidTarget[] targets = getTargets();
+            for (int i = targets.length - 1; i >= 0; i--) {
+                IAndroidTarget target = targets[i];
+                if (target.isPlatform() &&
+                        target.getVersion().getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
+                    File file = new File(target.getFile(IAndroidTarget.DATA), relativePath);
+                    if (file.isFile()) {
+                        return file;
+                    }
+                }
+            }
+
+            // Fallback to looking in the old location: platform-tools/api/<name> under the SDK
+            File file = new File(top, "platform-tools" + File.separator + "api" +
+                    File.separator + relativePath);
+            if (file.exists()) {
+                return file;
+            }
+
+            if (isApiDatabase) {
+                // AOSP build environment?
+                String build = System.getenv("ANDROID_BUILD_TOP");
+                if (build != null) {
+                    file = new File(build, "development/sdk/api-versions.xml"
+                            .replace('/', File.separatorChar));
+                }
+            }
+
+            return null;
         }
 
         File file = new File(top, relativePath);

@@ -168,7 +168,8 @@ public class PrivateApiDetector extends Detector implements Detector.JavaPsiScan
                 return;
             }
             String owner = ClassContext.getInternalName(cls);
-            ApiLookup apiLookup = ApiLookup.get(context.getClient());
+            ApiLookup apiLookup = ApiLookup.get(context.getClient(),
+                    context.getMainProject().getBuildTarget());
             if (apiLookup == null) {
                 return;
             }
