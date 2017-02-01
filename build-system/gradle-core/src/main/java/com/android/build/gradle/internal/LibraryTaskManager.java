@@ -311,6 +311,7 @@ public class LibraryTaskManager extends TaskManager {
         createStripNativeLibraryTask(tasks, variantScope);
 
         // package the renderscript header files files into the bundle folder
+        File rsFolder = new File(variantScope.getBaseBundleDir(), SdkConstants.FD_RENDERSCRIPT);
         AndroidTask<Sync> packageRenderscriptTask =
                 recorder.record(
                         ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
@@ -320,11 +321,11 @@ public class LibraryTaskManager extends TaskManager {
                                 getAndroidTasks()
                                         .create(
                                                 tasks,
-                                                new PackageRenderscriptConfigAction(variantScope)));
+                                                new PackageRenderscriptConfigAction(variantScope, rsFolder)));
 
         // publish the renderscript intermediate files
         variantScope.publishIntermediateArtifact(
-                new File(variantBundleDir, FN_RENDERSCRIPT),
+                rsFolder,
                 packageRenderscriptTask.getName(),
                 AndroidArtifacts.TYPE_RENDERSCRIPT);
 
