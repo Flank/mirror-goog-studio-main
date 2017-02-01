@@ -2310,7 +2310,8 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // expect an exception at runtime.
         exception.expect(RuntimeException.class);
-        exception.expectMessage("error");
+        exception.expectMessage(
+                "Unexpected scopes found. Required: PROJECT. Found: PROJECT, EXTERNAL_LIBRARIES");
         transformTask.transform(inputBuilder().build());
     }
 

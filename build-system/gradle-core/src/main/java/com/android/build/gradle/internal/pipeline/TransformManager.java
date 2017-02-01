@@ -342,14 +342,22 @@ public class TransformManager extends FilterableStreamCollection {
                     // first the stream that gets consumed. It consumes only the common types/scopes
                     inputStreams.add(stream.makeRestrictedCopy(commonTypes, commonScopes));
 
-                    // now we'll have a second stream, that's left for consumption later on.
+                    // Now we could have two more streams. One with the requestedScope but the remainingTypes, and the other one with the remaining scopes and all the types.
                     // compute remaining scopes/types.
-                    Sets.SetView<ContentType> remainingTypes = Sets.difference(availableTypes, commonTypes);
+                    Sets.SetView<ContentType> remainingTypes =
+                            Sets.difference(availableTypes, commonTypes);
                     Sets.SetView<? super Scope> remainingScopes = Sets.difference(availableScopes, commonScopes);
 
-                    oldStreams.add(stream.makeRestrictedCopy(
-                            remainingTypes.isEmpty() ? availableTypes : remainingTypes.immutableCopy(),
-                            remainingScopes.isEmpty() ? availableScopes : remainingScopes.immutableCopy()));
+                    if (!remainingTypes.isEmpty()) {
+                        oldStreams.add(
+                                stream.makeRestrictedCopy(
+                                        remainingTypes.immutableCopy(), availableScopes));
+                    }
+                    if (!remainingScopes.isEmpty()) {
+                        oldStreams.add(
+                                stream.makeRestrictedCopy(
+                                        availableTypes, remainingScopes.immutableCopy()));
+                    }
                 } else {
                     // stream is an exact match (or at least subset) for the request,
                     // so we add it as it.

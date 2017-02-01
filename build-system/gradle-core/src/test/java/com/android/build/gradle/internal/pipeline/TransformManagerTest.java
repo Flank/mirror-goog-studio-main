@@ -244,6 +244,84 @@ public class TransformManagerTest extends TaskTestUtils {
     }
 
     @Test
+    public void splitStreamByScopesAndTypes() throws Exception {
+        // test the case where the input stream has more types than gets consumed,
+        // and more scopes than they get consumed.
+        // and we need to create two new stream with the unused types and scopes.
+        // (project+libs@classes+resources) -[project@classes] ->
+        // 1. (project@classes, transformed)
+        // 2. (libs@classes+resources, untouched)
+        // 3. (project+libs@resources, untouched)
+        project.getTasks().create(MY_FAKE_DEPENDENCY_TASK_NAME, DefaultTask.class);
+
+        // create streams and add them to the pipeline
+        IntermediateStream projectAndLibsClasses =
+                IntermediateStream.builder(project)
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                        .setRootLocation(temporaryFolder.newFolder("folder"))
+                        .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
+
+        transformManager.addStream(projectAndLibsClasses);
+
+        // add a new transform
+        Transform t =
+                TestTransform.builder()
+                        .setInputTypes(DefaultContentType.CLASSES)
+                        .setScopes(Scope.PROJECT)
+                        .build();
+
+        // add the transform
+        AndroidTask<TransformTask> task =
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
+
+        // get the new streams
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(3);
+
+        // check the class stream was consumed.
+        assertThat(streams).doesNotContain(projectAndLibsClasses);
+
+        // check we now have 3 streams, one for classes and one for resources.
+        // the one for resources should match projectClassAndResources for location and dependency.
+        streamTester()
+                .withContentTypes(DefaultContentType.CLASSES)
+                .withScopes(Scope.PROJECT)
+                .withDependency(TASK_NAME)
+                .test();
+        streamTester()
+                .withContentTypes(DefaultContentType.RESOURCES)
+                .withScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
+                .test();
+        streamTester()
+                .withContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                .withScopes(Scope.EXTERNAL_LIBRARIES)
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
+                .test();
+
+        // we also check that the stream used by the transform only has the requested scopes.
+
+        // check the task contains the stream
+        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        assertThat(transformTask).isNotNull();
+        streamTester(transformTask.consumedInputStreams)
+                .withContentTypes(DefaultContentType.CLASSES)
+                .withScopes(Scope.PROJECT)
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
+                .test();
+    }
+
+    @Test
     public void splitReferencedStreamByTypes() throws IOException {
         // transform processes classes.
         // There's a (class, res) stream in a scope that's referenced. This stream should not
