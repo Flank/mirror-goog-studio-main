@@ -32,8 +32,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.utils.PerformanceUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -260,7 +260,7 @@ public class JackOptionsUtils {
             return false;
         }
         final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
-        long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
+        long maxMemory = PerformanceUtils.getUserDefinedHeapSize();
 
         if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
             if (logWarning) {
