@@ -278,6 +278,7 @@ public class MergeResourcesTest {
             // create a resource set that must match the one returned by the computation
             ResourceSet set = new ResourceSet(path, false);
             set.addSource(file);
+            set.setFromDependency(true);
             resourceSets.add(set);
         }
 
