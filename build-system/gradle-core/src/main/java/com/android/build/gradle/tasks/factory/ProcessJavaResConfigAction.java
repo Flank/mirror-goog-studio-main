@@ -5,17 +5,13 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SourceProvider;
 import com.android.utils.FileUtils;
-import com.google.common.util.concurrent.Callables;
-
-import org.gradle.api.tasks.Sync;
-
 import java.io.IOException;
 import java.util.List;
+import org.gradle.api.tasks.Sync;
 
 /**
  * Configuration Action for a process*JavaRes tasks.
@@ -41,7 +37,6 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
 
     @Override
     public void execute(@NonNull Sync processResources) {
-        scope.getVariantData().processJavaResourcesTask = processResources;
         GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
         AndroidSourceSet defaultSourceSet =
@@ -79,6 +74,10 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
             processResources.from(variantSourceSet.getResources().getSourceFiles());
         }
 
+        processResources.from(scope.getGeneratedJavaResourcesDir());
+
+        processResources.setDestinationDir(scope.getSourceFoldersJavaResDestinationDir());
+
         if (processResources.getInputs().getFiles().getFiles().isEmpty()) {
             try {
                 FileUtils.deletePath(scope.getSourceFoldersJavaResDestinationDir());
@@ -86,9 +85,5 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
                 throw new RuntimeException("Cannot delete merged source resource folder", e);
             }
         }
-        ConventionMappingHelper.map(
-                processResources,
-                "destinationDir",
-                Callables.returning(scope.getSourceFoldersJavaResDestinationDir()));
     }
 }

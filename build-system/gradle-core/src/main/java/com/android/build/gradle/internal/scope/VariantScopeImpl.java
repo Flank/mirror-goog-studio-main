@@ -705,6 +705,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "javaResources/" + getVariantConfiguration().getDirName());
     }
 
+    @NonNull
+    @Override
+    public File getGeneratedJavaResourcesDir() {
+        return new File(
+                globalScope.getGeneratedDir(),
+                "javaResources/" + getVariantConfiguration().getDirName());
+    }
+
     @Override
     @NonNull
     public File getRClassSourceOutputDir() {

@@ -18,18 +18,16 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import groovy.lang.Closure;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.internal.reflect.Instantiator;
 import org.gradle.util.ConfigureUtil;
 
-import groovy.lang.Closure;
-
-/**
- * Options for running tests.
- */
+/** Options for running tests. */
+@SuppressWarnings("unused") // Exposed in the DSL.
 public class TestOptions {
     @Nullable
     private String resultsDir;
@@ -44,8 +42,11 @@ public class TestOptions {
      *
      * @since 1.1
      */
-    @NonNull
-    private final UnitTestOptions unitTests = new UnitTestOptions();
+    @NonNull private final UnitTestOptions unitTests;
+
+    public TestOptions(Instantiator instantiator) {
+        this.unitTests = instantiator.newInstance(UnitTestOptions.class);
+    }
 
     /**
      * Configures unit test options.
@@ -97,8 +98,12 @@ public class TestOptions {
      * Options for controlling unit tests execution.
      */
     public static class UnitTestOptions {
+        // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
+        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "Convert2Diamond"})
         private DomainObjectSet<Test> testTasks = new DefaultDomainObjectSet<Test>(Test.class);
+
         private boolean returnDefaultValues;
+        private boolean includeAndroidResources;
 
         /**
          * Whether unmocked methods from android.jar should throw exceptions or return default
@@ -114,6 +119,31 @@ public class TestOptions {
 
         public void setReturnDefaultValues(boolean returnDefaultValues) {
             this.returnDefaultValues = returnDefaultValues;
+        }
+
+        /**
+         * Whether Android resources, assets and manifests are used by unit tests.
+         *
+         * <p>If set, Android resources, assets and manifest merging will be done before unit tests
+         * are run. When enabled, tests can look for a file called {@code
+         * com/android/tools/test_config.properties} on the classpath. This will be a java
+         * properties file, with the following keys:
+         *
+         * <ul>
+         *   <li>{@code android_merged_assets} - absolute path to the merged assets directory.
+         *   <li>{@code android_merged_manifest} - absolute path to the merged manifest file.
+         *   <li>{@code android_merged_resources} - absolute path to the merged resources directory.
+         *   <li>{@code android_sdk_resources} - absolute path to the resources of the compile SDK.
+         * </ul>
+         *
+         * @since 2.4
+         */
+        public boolean isIncludeAndroidResources() {
+            return includeAndroidResources;
+        }
+
+        public void setIncludeAndroidResources(boolean includeAndroidResources) {
+            this.includeAndroidResources = includeAndroidResources;
         }
 
         /**
@@ -139,12 +169,14 @@ public class TestOptions {
          * @since 1.2
          */
         public void all(final Closure<Test> configClosure) {
-            testTasks.all(new Action<Test>() {
-                @Override
-                public void execute(Test testTask) {
-                    ConfigureUtil.configure(configClosure, testTask);
-                }
-            });
+            //noinspection Convert2Lambda - DSL docs generator can't handle lambdas.
+            testTasks.all(
+                    new Action<Test>() {
+                        @Override
+                        public void execute(Test testTask) {
+                            ConfigureUtil.configure(configClosure, testTask);
+                        }
+                    });
         }
 
 
