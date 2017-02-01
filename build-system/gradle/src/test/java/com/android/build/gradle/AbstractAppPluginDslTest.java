@@ -582,7 +582,7 @@ public abstract class AbstractAppPluginDslTest<
                     Set<File> proguardFiles =
                             variantMap
                                     .get(variantName)
-                                    .getProguardFiles(false, Collections.emptyList());
+                                    .getProguardFiles(Collections.emptyList());
                     Set<File> expectedFiles =
                             expectedFileNames
                                     .stream()

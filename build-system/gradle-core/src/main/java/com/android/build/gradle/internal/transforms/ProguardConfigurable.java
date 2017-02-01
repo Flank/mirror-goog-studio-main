@@ -30,6 +30,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Base class for transforms that consume ProGuard configuration files.
@@ -38,25 +40,21 @@ import java.util.function.Supplier;
  * code.
  */
 public abstract class ProguardConfigurable extends Transform {
-    private final List<Supplier<Collection<File>>> configurationFiles =
-            Lists.newArrayListWithExpectedSize(3);
+    private final ConfigurableFileCollection configurationFiles;
 
     private final VariantType variantType;
 
     ProguardConfigurable(@NonNull VariantScope scope) {
+        configurationFiles = scope.getGlobalScope().getProject().files();
         this.variantType = scope.getVariantData().getType();
     }
 
-    public void setConfigurationFiles(Supplier<Collection<File>> configFiles) {
-        configurationFiles.add(configFiles);
+    public void setConfigurationFiles(FileCollection configFiles) {
+        configurationFiles.from(configFiles);
     }
 
-    List<File> getAllConfigurationFiles() {
-        List<File> files = Lists.newArrayList();
-        for (Supplier<Collection<File>> supplier : configurationFiles) {
-            files.addAll(supplier.get());
-        }
-        return files;
+    FileCollection getAllConfigurationFiles() {
+        return configurationFiles;
     }
 
     @NonNull

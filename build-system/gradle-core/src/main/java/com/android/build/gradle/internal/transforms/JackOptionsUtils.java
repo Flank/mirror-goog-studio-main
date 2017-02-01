@@ -189,8 +189,7 @@ public class JackOptionsUtils {
                             TaskManager.DEFAULT_PROGUARD_CONFIG_FILE, project);
 
             Set<File> proguardFiles =
-                    config.getProguardFiles(
-                            true /*includeLibs*/, ImmutableList.of(defaultProguardFile));
+                    config.getProguardFiles(ImmutableList.of(defaultProguardFile));
             File proguardResFile = scope.getProcessAndroidResourcesProguardOutputFile();
             proguardFiles.add(proguardResFile);
             // for tested app, we only care about their aapt config since the base
