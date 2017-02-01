@@ -64,6 +64,7 @@ android {
       }
     }
 
+    flavorDimensions "androidVersion"
     productFlavors {
         gingerbread {
             minSdkVersion 10
