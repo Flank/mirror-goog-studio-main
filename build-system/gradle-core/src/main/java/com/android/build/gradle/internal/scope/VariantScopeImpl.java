@@ -576,7 +576,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         if (variantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
             File renderScriptSupportJar = globalScope.getAndroidBuilder().getRenderScriptSupportJar();
-            classpath.add(globalScope.getProject().files(renderScriptSupportJar));
+            classpath = classpath.plus(globalScope.getProject().files(renderScriptSupportJar));
         }
 
         return classpath;
