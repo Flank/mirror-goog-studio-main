@@ -120,6 +120,12 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public int getResponseCode() throws IOException {
+        // Internally, HttpURLConnection#getResponseCode() calls HttpURLConnection#getInputStream(),
+        // but since we don't have hooks inside that class, we need to call it ourselves here, to
+        // ensure the event is tracked.
+        if (!myConnectTracked) {
+            getInputStream();
+        }
         return myWrapped.getResponseCode();
     }
 
