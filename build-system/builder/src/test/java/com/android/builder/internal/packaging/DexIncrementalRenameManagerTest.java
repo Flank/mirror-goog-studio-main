@@ -16,28 +16,25 @@
 
 package com.android.builder.internal.packaging;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
-import com.android.ddmlib.SyncService;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
-
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link DexIncrementalRenameManager}.
@@ -126,18 +123,21 @@ public class DexIncrementalRenameManagerTest {
         ImmutableMap<RelativeFile, FileStatus> set = makeNew("a/b", "b/c");
 
         Set<PackagedFileUpdate> updates = mgr.update(set);
-        assertEquals(2, updates.size());
         if (updates.contains(packaged("a/b", "classes.dex", FileStatus.NEW))) {
-            assertTrue(updates.contains(packaged("b/c", "classes2.dex", FileStatus.NEW)));
+            assertThat(updates)
+                    .containsExactly(
+                            packaged("a/b", "classes.dex", FileStatus.NEW),
+                            packaged("b/c", "classes2.dex", FileStatus.NEW));
         } else {
-            assertTrue(updates.contains(packaged("a/b", "classes2.dex", FileStatus.NEW)));
-            assertTrue(updates.contains(packaged("b/c", "classes.dex", FileStatus.NEW)));
+            assertThat(updates)
+                    .containsExactly(
+                            packaged("a/b", "classes2.dex", FileStatus.NEW),
+                            packaged("b/c", "classes.dex", FileStatus.NEW));
         }
 
         set = makeNew("a/d");
         updates = mgr.update(set);
-        assertEquals(1, updates.size());
-        assertTrue(updates.contains(packaged("a/d", "classes3.dex", FileStatus.NEW)));
+        assertThat(updates).containsExactly(packaged("a/d", "classes3.dex", FileStatus.NEW));
     }
 
     @Test
@@ -149,8 +149,7 @@ public class DexIncrementalRenameManagerTest {
 
         set = ImmutableMap.of(makeRelative("a/b"), FileStatus.CHANGED);
         Set<PackagedFileUpdate> updates = mgr.update(set);
-        assertEquals(1, updates.size());
-        assertTrue(updates.contains(packaged("a/b", "classes.dex", FileStatus.CHANGED)));
+        assertThat(updates).containsExactly(packaged("a/b", "classes.dex", FileStatus.CHANGED));
     }
 
     @Test
@@ -164,13 +163,13 @@ public class DexIncrementalRenameManagerTest {
 
         Set<PackagedFileUpdate> updates = mgr.update(
                 ImmutableMap.of(makeRelative("x/d"), FileStatus.REMOVED));
-        assertEquals(1, updates.size());
-        assertTrue(updates.contains(packaged("x/d", "classes4.dex", FileStatus.REMOVED)));
+        assertThat(updates).containsExactly(packaged("x/d", "classes4.dex", FileStatus.REMOVED));
 
         updates = mgr.update(ImmutableMap.of(makeRelative("x/b"), FileStatus.REMOVED));
-        assertEquals(2, updates.size());
-        assertTrue(updates.contains(packaged("x/c", "classes3.dex", FileStatus.REMOVED)));
-        assertTrue(updates.contains(packaged("x/c", "classes2.dex", FileStatus.CHANGED)));
+        assertThat(updates)
+                .containsExactly(
+                        packaged("x/c", "classes3.dex", FileStatus.REMOVED),
+                        packaged("x/c", "classes2.dex", FileStatus.CHANGED));
     }
 
     @Test
@@ -188,10 +187,15 @@ public class DexIncrementalRenameManagerTest {
                 makeRelative("x/b"), FileStatus.REMOVED));
         assertEquals(2, updates.size());
         if (updates.contains(packaged("x/e", "classes2.dex", FileStatus.CHANGED))) {
-            assertTrue(updates.contains(packaged("x/f", "classes5.dex", FileStatus.NEW)));
+            assertThat(updates)
+                    .containsExactly(
+                            packaged("x/e", "classes2.dex", FileStatus.CHANGED),
+                            packaged("x/f", "classes5.dex", FileStatus.NEW));
         } else {
-            assertTrue(updates.contains(packaged("x/e", "classes5.dex", FileStatus.NEW)));
-            assertTrue(updates.contains(packaged("x/f", "classes2.dex", FileStatus.CHANGED)));
+            assertThat(updates)
+                    .containsExactly(
+                            packaged("x/e", "classes5.dex", FileStatus.NEW),
+                            packaged("x/f", "classes2.dex", FileStatus.CHANGED));
         }
     }
 
@@ -208,10 +212,55 @@ public class DexIncrementalRenameManagerTest {
                 makeRelative("x/e"), FileStatus.NEW,
                 makeRelative("x/a"), FileStatus.REMOVED,
                 makeRelative("x/b"), FileStatus.REMOVED));
-        assertEquals(3, updates.size());
-        assertTrue(updates.contains(packaged("x/e", "classes.dex", FileStatus.CHANGED)));
-        assertTrue(updates.contains(packaged("x/d", "classes2.dex", FileStatus.CHANGED)));
-        assertTrue(updates.contains(packaged("x/d", "classes4.dex", FileStatus.REMOVED)));
+        assertThat(updates)
+                .containsExactly(
+                        packaged("x/e", "classes.dex", FileStatus.CHANGED),
+                        packaged("x/d", "classes2.dex", FileStatus.CHANGED),
+                        packaged("x/d", "classes4.dex", FileStatus.REMOVED));
+    }
+
+    @Test
+    public void reverseOrderOfFilesInUpdate() throws Exception {
+        DexIncrementalRenameManager mgr = make();
+
+        assertEquals(1, mgr.update(makeNew("x/a")).size());
+        assertEquals(1, mgr.update(makeNew("x/b")).size());
+        assertEquals(1, mgr.update(makeNew("x/c")).size());
+
+        Set<PackagedFileUpdate> updates =
+                mgr.update(
+                        ImmutableMap.of(
+                                makeRelative("x/c"), FileStatus.REMOVED,
+                                makeRelative("x/b"), FileStatus.REMOVED,
+                                makeRelative("x/a"), FileStatus.CHANGED));
+        assertThat(updates)
+                .containsExactly(
+                        packaged("x/a", "classes.dex", FileStatus.CHANGED),
+                        packaged("x/b", "classes2.dex", FileStatus.REMOVED),
+                        packaged("x/c", "classes3.dex", FileStatus.REMOVED));
+    }
+
+    @Test
+    public void multipleClassesDexAdded() throws Exception {
+        DexIncrementalRenameManager mgr = make();
+
+        assertEquals(1, mgr.update(makeNew("x/a")).size());
+
+        Set<PackagedFileUpdate> updates =
+                mgr.update(
+                        ImmutableMap.of(
+                                makeRelative("x/classes.dex"), FileStatus.NEW,
+                                makeRelative("y/classes.dex"), FileStatus.NEW));
+
+        // one of the new files should be now classes.dex
+        if (updates.contains(packaged("x/classes.dex", "classes.dex", FileStatus.CHANGED))) {
+            assertThat(updates)
+                    .contains(packaged("x/classes.dex", "classes.dex", FileStatus.CHANGED));
+        } else {
+            assertThat(updates)
+                    .contains(packaged("y/classes.dex", "classes.dex", FileStatus.CHANGED));
+        }
+
     }
 
     @Test
@@ -225,8 +274,7 @@ public class DexIncrementalRenameManagerTest {
 
         mgr = make();
         Set<PackagedFileUpdate> updates = mgr.update(makeNew("x/c"));
-        assertEquals(1, updates.size());
-        assertTrue(updates.contains(packaged("x/c", "classes3.dex", FileStatus.NEW)));
+        assertThat(updates).containsExactly(packaged("x/c", "classes3.dex", FileStatus.NEW));
     }
 
     @Test
