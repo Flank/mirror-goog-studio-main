@@ -15,6 +15,10 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -637,13 +641,10 @@ public class MergeResources extends IncrementalTask {
 
             if (includeDependencies) {
                 mergeResourcesTask.libraries = scope.getArtifactCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.ANDROID_RES);
+                        RUNTIME, ALL, ANDROID_RES);
                 // only add the resources for tested libraries.
                 mergeResourcesTask.testedLibrary = scope.getTestedArtifact(
-                        AndroidArtifacts.TYPE_ANDROID_RES,
-                        VariantType.LIBRARY);
+                        ANDROID_RES, VariantType.LIBRARY);
             }
 
             mergeResourcesTask.sourceFolderInputs = TaskInputHelper.memoize(

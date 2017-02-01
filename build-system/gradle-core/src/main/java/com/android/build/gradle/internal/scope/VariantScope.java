@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
@@ -179,14 +180,14 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void publishIntermediateArtifact(
             @NonNull File file,
             @NonNull String builtBy,
-            @NonNull String type);
+            @NonNull ArtifactType artifactType);
 
     @Nullable
-    ConfigurableFileCollection getInternalArtifact(@NonNull String type);
+    ConfigurableFileCollection getInternalArtifact(@NonNull ArtifactType type);
 
     @Nullable
     ConfigurableFileCollection getTestedArtifact(
-            @NonNull String type,
+            @NonNull ArtifactType type,
             @NonNull VariantType testedVariantType);
 
     @Override
@@ -263,13 +264,13 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     FileCollection getArtifactFileCollection(
             @NonNull AndroidArtifacts.ConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull AndroidArtifacts.ArtifactType artifactType);
+            @NonNull ArtifactType artifactType);
 
     @NonNull
     ArtifactCollection getArtifactCollection(
             @NonNull AndroidArtifacts.ConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull AndroidArtifacts.ArtifactType artifactType);
+            @NonNull ArtifactType artifactType);
 
     @NonNull
     Supplier<Collection<File>> getLocalPackagedJars();

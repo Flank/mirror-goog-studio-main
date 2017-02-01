@@ -31,25 +31,12 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AIDL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_ASSETS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_DATA_BINDING;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_EXT_ANNOTATIONS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_JNI;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_LINT_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_PUBLIC_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_SYMBOL;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
-import static org.gradle.api.plugins.JavaPlugin.CLASS_DIRECTORY;
-import static org.gradle.api.plugins.JavaPlugin.RESOURCES_DIRECTORY;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -68,20 +55,20 @@ public class AarTransform extends ExtractTransform {
     public void configure(AttributeContainer from, ArtifactTransformTargets targets) {
         from.attribute(ARTIFACT_FORMAT, TYPE_AAR);
 
-        targets.newTarget().attribute(ARTIFACT_FORMAT, CLASS_DIRECTORY);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, RESOURCES_DIRECTORY);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_MANIFEST);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ANDROID_RES);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_ASSETS);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_JNI);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_AIDL);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_RENDERSCRIPT);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_PROGUARD_RULES);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_LINT_JAR);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_EXT_ANNOTATIONS);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_PUBLIC_RES);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_SYMBOL);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, TYPE_DATA_BINDING);
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JAVA_RES.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.MANIFEST.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANDROID_RES.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ASSETS.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JNI.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.AIDL.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.RENDERSCRIPT.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.PROGUARD_RULES.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.LINT.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANNOTATIONS.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.PUBLIC_RES.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.SYMBOL_LIST.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.DATA_BINDING.getType());
     }
 
     @Override
@@ -102,47 +89,47 @@ public class AarTransform extends ExtractTransform {
         // single file case return
         File file;
 
-        switch (target.getAttribute(ARTIFACT_FORMAT)) {
-            case CLASS_DIRECTORY:
-            case RESOURCES_DIRECTORY:
+        switch (ArtifactType.byType(target.getAttribute(ARTIFACT_FORMAT))) {
+            case CLASSES:
+            case JAVA_RES:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessairy enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.
                 return getJars(explodedAar);
-            case TYPE_LINT_JAR:
+            case LINT:
                 file = FileUtils.join(explodedAar, FD_JARS, FN_LINT_JAR);
                 break;
-            case TYPE_MANIFEST:
+            case MANIFEST:
                 file = new File(explodedAar, FN_ANDROID_MANIFEST_XML);
                 break;
-            case TYPE_ANDROID_RES:
+            case ANDROID_RES:
                 file = new File(explodedAar, FD_RES);
                 break;
-            case TYPE_ASSETS:
+            case ASSETS:
                 file = new File(explodedAar, FD_ASSETS);
                 break;
-            case TYPE_JNI:
+            case JNI:
                 file = new File(explodedAar, FD_JNI);
                 break;
-            case TYPE_AIDL:
+            case AIDL:
                 file = new File(explodedAar, FD_AIDL);
                 break;
-            case TYPE_RENDERSCRIPT:
+            case RENDERSCRIPT:
                 file = new File(explodedAar, FD_RENDERSCRIPT);
                 break;
-            case TYPE_PROGUARD_RULES:
+            case PROGUARD_RULES:
                 file = new File(explodedAar, FN_PROGUARD_TXT);
                 break;
-            case TYPE_EXT_ANNOTATIONS:
+            case ANNOTATIONS:
                 file = new File(explodedAar, FN_ANNOTATIONS_ZIP);
                 break;
-            case TYPE_PUBLIC_RES:
+            case PUBLIC_RES:
                 file = new File(explodedAar, FN_PUBLIC_TXT);
                 break;
-            case TYPE_SYMBOL:
+            case SYMBOL_LIST:
                 file = new File(explodedAar, FN_RESOURCE_TEXT);
                 break;
-            case TYPE_DATA_BINDING:
+            case DATA_BINDING:
                 file = new File(explodedAar, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
                 break;
             default:

@@ -15,6 +15,12 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.COMPILE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
@@ -313,21 +319,15 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .getEnforceUniquePackageName();
 
                 processResources.manifests = variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.MANIFEST);
+                        RUNTIME, ALL, MANIFEST);
 
                 processResources.symbolFiles = variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.SYMBOL_LIST);
+                        RUNTIME, ALL, SYMBOL_LIST);
 
                 processResources.testedManifest = variantScope.getTestedArtifact(
-                        AndroidArtifacts.TYPE_MANIFEST,
-                        VariantType.LIBRARY);
+                        MANIFEST, VariantType.LIBRARY);
                 processResources.testedSymbolFile = variantScope.getTestedArtifact(
-                        AndroidArtifacts.TYPE_SYMBOL,
-                        VariantType.LIBRARY);
+                        SYMBOL_LIST, VariantType.LIBRARY);
 
                 ConventionMappingHelper.map(processResources, "packageForR",
                         () -> {
@@ -424,8 +424,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.setAtomResourcePackages(
                     variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConfigType.PACKAGE,
-                            AndroidArtifacts.ArtifactScope.ALL,
+                            COMPILE,
+                            ALL,
                             AndroidArtifacts.ArtifactType.RESOURCES_PKG));
         }
     }

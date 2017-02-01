@@ -15,6 +15,10 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -318,8 +322,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             // only add the resources for tested libraries.
             processTestManifestTask.testedManifest = scope.getTestedArtifact(
-                    AndroidArtifacts.TYPE_MANIFEST,
-                    VariantType.LIBRARY);
+                    MANIFEST, VariantType.LIBRARY);
 
 
             ConventionMappingHelper.map(processTestManifestTask, "minSdkVersion", () -> {
@@ -352,9 +355,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     processTestManifestTask, "testLabel", config::getTestLabel);
 
             processTestManifestTask.manifests = scope.getArtifactCollection(
-                    AndroidArtifacts.ConfigType.PACKAGE,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.MANIFEST);
+                    RUNTIME, ALL, MANIFEST);
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());

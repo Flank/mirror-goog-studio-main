@@ -408,24 +408,24 @@ public class VariantManager implements VariantModel {
 
             // Add the container of dependencies, the order of the libraries is important.
             // In descending order: build type (only for unit test), flavors, defaultConfig.
-            List<ConfigurationProvider> testVariantProviders = Lists.newArrayListWithExpectedSize(
+            List<DefaultAndroidSourceSet> testVariantSourceSets = Lists.newArrayListWithExpectedSize(
                     2 + testVariantConfig.getProductFlavors().size());
 
-            ConfigurationProvider buildTypeConfigurationProvider =
+            DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypes.get(testVariantConfig.getBuildType().getName())
-                            .getTestConfigurationProvider(variantType);
+                            .getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
-                testVariantProviders.add(buildTypeConfigurationProvider);
+                testVariantSourceSets.add(buildTypeConfigurationProvider);
             }
 
             for (CoreProductFlavor productFlavor : testVariantConfig.getProductFlavors()) {
                 ProductFlavorData<CoreProductFlavor> data =
                         productFlavors.get(productFlavor.getName());
-                testVariantProviders.add(data.getTestConfigurationProvider(variantType));
+                testVariantSourceSets.add(data.getTestSourceSet(variantType));
             }
 
             // now add the default config
-            testVariantProviders.add(defaultConfigData.getTestConfigurationProvider(variantType));
+            testVariantSourceSets.add(defaultConfigData.getTestSourceSet(variantType));
 
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
@@ -437,7 +437,7 @@ public class VariantManager implements VariantModel {
                             testVariantConfig)
                     .setPublishVariant(false)
                     .setTestedVariantType(testedVariantType)
-                    .addProviders(testVariantProviders)
+                    .addSourceSets(testVariantSourceSets)
                     .setFlavorMatching(extension.getFlavorMatchingStrategy())
                     .addTestedVariant(testedVariantData.getVariantConfiguration(),
                             testedVariantData.getVariantDependency());
@@ -448,9 +448,9 @@ public class VariantManager implements VariantModel {
             if (variantType == VariantType.ANDROID_TEST &&
                     testVariantConfig.isLegacyMultiDexMode()) {
                 project.getDependencies().add(
-                        variantDep.getCompileConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                        variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
                 project.getDependencies().add(
-                        variantDep.getPackageConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                        variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
             }
 
             if (!AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
@@ -498,7 +498,8 @@ public class VariantManager implements VariantModel {
 
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
-        //project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        project.getConfigurations().getByName("archives").setCanBeConsumed(false);
 
         AttributesSchema schema = dependencies.getAttributesSchema();
         // default configure attribute resolution for the build type attribute
@@ -632,35 +633,29 @@ public class VariantManager implements VariantModel {
         // variant-specific, build type, multi-flavor, flavor1, flavor2, ..., defaultConfig.
         // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
         // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
-        final List<ConfigurationProvider> variantProviders =
+        final List<DefaultAndroidSourceSet> variantSourceSets =
                 Lists.newArrayListWithExpectedSize(productFlavorList.size() + 4);
 
         // 1. add the variant-specific if applicable.
         if (!productFlavorList.isEmpty()) {
-            variantProviders.add(
-                    new ConfigurationProviderImpl(
-                            project,
-                            (DefaultAndroidSourceSet) variantConfig.getVariantSourceProvider()));
+            variantSourceSets.add((DefaultAndroidSourceSet) variantConfig.getVariantSourceProvider());
         }
 
         // 2. the build type.
-        variantProviders.add(buildTypeData.getMainProvider());
+        variantSourceSets.add(buildTypeData.getSourceSet());
 
         // 3. the multi-flavor combination
         if (productFlavorList.size() > 1) {
-            variantProviders.add(
-                    new ConfigurationProviderImpl(
-                            project,
-                            (DefaultAndroidSourceSet) variantConfig.getMultiFlavorSourceProvider()));
+            variantSourceSets.add((DefaultAndroidSourceSet) variantConfig.getMultiFlavorSourceProvider());
         }
 
         // 4. the flavors.
         for (ProductFlavor productFlavor : productFlavorList) {
-            variantProviders.add(productFlavors.get(productFlavor.getName()).getMainProvider());
+            variantSourceSets.add(productFlavors.get(productFlavor.getName()).getSourceSet());
         }
 
         // 5. The defaultConfig
-        variantProviders.add(defaultConfigData.getMainProvider());
+        variantSourceSets.add(defaultConfigData.getSourceSet());
 
         // Done. Create the variant and get its internal storage object.
         BaseVariantData<?> variantData =
@@ -673,16 +668,16 @@ public class VariantManager implements VariantModel {
                         variantConfig)
                 .setPublishVariant(true)
                 .setFlavorMatching(extension.getFlavorMatchingStrategy())
-                .addProviders(variantProviders);
+                .addSourceSets(variantSourceSets);
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);
 
         if (variantConfig.isLegacyMultiDexMode()) {
             project.getDependencies().add(
-                    variantDep.getCompileConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
+                    variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
             project.getDependencies().add(
-                    variantDep.getPackageConfiguration().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
+                    variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
         }
 
         final String testedProjectPath = extension instanceof TestAndroidConfig ?

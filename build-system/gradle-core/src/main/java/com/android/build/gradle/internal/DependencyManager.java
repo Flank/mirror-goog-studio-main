@@ -244,8 +244,8 @@ public class DependencyManager {
             }
         }
 
-        Configuration compileClasspath = variantDeps.getCompileConfiguration();
-        Configuration packageClasspath = variantDeps.getPackageConfiguration();
+        Configuration compileClasspath = variantDeps.getCompileClasspath();
+        Configuration packageClasspath = variantDeps.getRuntimeClasspath();
 
         if (DEBUG_DEPENDENCY) {
             System.out.println(">>>>>>>>>>");
@@ -406,7 +406,7 @@ public class DependencyManager {
         // create a container for all the dependency related mutable data, only when creating
         // the package dependencies for a test project.
         MutableDependencyDataMap mutableDependencyContainer = MutableDependencyDataMap.newInstance();
-                //scopeType == ScopeType.PACKAGE
+                //scopeType == ScopeType.RUNTIME
                 //    ? MutableDependencyDataMap.newInstance()
                 //    : MutableDependencyDataMap.EMPTY;
 

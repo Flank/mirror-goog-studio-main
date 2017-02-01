@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
+
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -399,9 +402,7 @@ public class ApplicationTaskManager extends TaskManager {
                         tasks,
                         scope,
                         wearApp.getIncoming().artifactView().attributes(
-                                container -> container.attribute(
-                                        AndroidArtifacts.ARTIFACT_TYPE,
-                                        AndroidArtifacts.TYPE_APK))
+                                container -> container.attribute(ARTIFACT_TYPE, APK.getType()))
                                 .getFiles());
             }
         } else {

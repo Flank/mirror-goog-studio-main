@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.ConfigurationProvider;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.core.ErrorReporter;
@@ -36,13 +36,13 @@ import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.Usage;
 
 /**
- * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
- * type and flavors.
+ * Object that represents the dependencies of variant.
  *
  * <p>The dependencies are expressed as composite Gradle configuration objects that extends
  * all the configuration objects of the "configs".</p>
@@ -51,15 +51,41 @@ import org.gradle.api.attributes.Usage;
  */
 public class VariantDependencies {
 
+    public static final String CONFIG_NAME_COMPILE = "compile";
+    public static final String CONFIG_NAME_S_COMPILE = "%sCompile";
+    public static final String CONFIG_NAME_PUBLISH = "publish";
+    public static final String CONFIG_NAME_S_PUBLISH = "%sPublish";
+    public static final String CONFIG_NAME_APK = "apk";
+    public static final String CONFIG_NAME_S_APK = "%sApk";
+    public static final String CONFIG_NAME_PROVIDED = "provided";
+    public static final String CONFIG_NAME_S_PROVIDED = "%sProvided";
+    public static final String CONFIG_NAME_WEAR_APP = "wearApp";
+    public static final String CONFIG_NAME_ANNOTATION_PROCESSOR = "annotationProcessor";
+    public static final String CONFIG_NAME_S_WEAR_APP = "%sWearApp";
+    public static final String CONFIG_NAME_S_ANNOTATION_PROCESSOR = "%sAnnotationProcessor";
+    public static final String CONFIG_NAME_JACK_PLUGIN = "jackPlugin";
+    public static final String CONFIG_NAME_S_JACK_PLUGIN = "%sJackPlugin";
+
+    public static final String CONFIG_NAME_API = "api";
+    public static final String CONFIG_NAME_S_API = "%sApi";
+    public static final String CONFIG_NAME_COMPILE_ONLY = "compileOnly";
+    public static final String CONFIG_NAME_S_COMPILE_ONLY = "%sCompileOnly";
+    public static final String CONFIG_NAME_IMPLEMENTATION = "implementation";
+    public static final String CONFIG_NAME_S_IMPLEMENTATION = "%sImplementation";
+    public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
+    public static final String CONFIG_NAME_S_RUNTIME_ONLY = "%sRuntimeOnly";
+
     @NonNull
     private final String variantName;
 
     @NonNull
-    private final Configuration compileConfiguration;
+    private final Configuration compileClasspath;
     @NonNull
-    private final Configuration packageConfiguration;
+    private final Configuration runtimeClasspath;
     @Nullable
-    private final Configuration publishConfiguration;
+    private final Configuration apiElements;
+    @Nullable
+    private final Configuration runtimeElements;
     @NonNull
     private final Configuration annotationProcessorConfiguration;
     @NonNull
@@ -103,8 +129,9 @@ public class VariantDependencies {
         // At most it's going to be flavor dimension count + 5:
         // variant-specific, build type, multi-flavor, flavor1, ..., flavorN, defaultConfig, test.
         // Default hash-map size of 16 (w/ load factor of .75) should be enough.
-        private final Set<Configuration> compileConfigs = Sets.newHashSet();
-        private final Set<Configuration> apkConfigs = Sets.newHashSet();
+        private final Set<Configuration> compileClasspaths = Sets.newHashSet();
+        private final Set<Configuration> apiClasspaths = Sets.newHashSet();
+        private final Set<Configuration> runtimeClasspaths = Sets.newHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newHashSet();
         private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
@@ -129,32 +156,40 @@ public class VariantDependencies {
             return this;
         }
 
-        public Builder addProviders(@NonNull ConfigurationProvider... providers) {
-            for (ConfigurationProvider provider : providers) {
-                addProvider(provider);
+        public Builder addSourceSets(@NonNull DefaultAndroidSourceSet... sourceSets) {
+            for (DefaultAndroidSourceSet sourceSet : sourceSets) {
+                addSourceSet(sourceSet);
             }
             return this;
         }
 
-        public Builder addProviders(@NonNull Collection<ConfigurationProvider> providers) {
-            for (ConfigurationProvider provider : providers) {
-                addProvider(provider);
+        public Builder addSourceSets(@NonNull Collection<DefaultAndroidSourceSet> sourceSets) {
+            for (DefaultAndroidSourceSet sourceSet : sourceSets) {
+                addSourceSet(sourceSet);
             }
             return this;
         }
 
-        public Builder addProvider(@Nullable ConfigurationProvider provider) {
-            if (provider != null) {
-                compileConfigs.add(provider.getCompileConfiguration());
-                if (provider.getProvidedConfiguration() != null) {
-                    compileConfigs.add(provider.getProvidedConfiguration());
+        public Builder addSourceSet(@Nullable DefaultAndroidSourceSet sourceSet) {
+            if (sourceSet != null) {
+
+                final ConfigurationContainer configs = project.getConfigurations();
+
+                compileClasspaths.add(configs.getByName(sourceSet.getCompileOnlyConfigurationName()));
+                runtimeClasspaths.add(configs.getByName(sourceSet.getRuntimeOnlyConfigurationName()));
+
+                final Configuration implementationConfig = configs.getByName(sourceSet.getImplementationConfigurationName());
+                compileClasspaths.add(implementationConfig);
+                runtimeClasspaths.add(implementationConfig);
+
+                String apiConfigName = sourceSet.getApiConfigurationName();
+                if (apiConfigName != null) {
+                    apiClasspaths.add(configs.getByName(apiConfigName));
                 }
 
-                apkConfigs.add(provider.getCompileConfiguration());
-                apkConfigs.add(provider.getPackageConfiguration());
-                annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
-                jackPluginConfigs.add(provider.getJackPluginConfiguration());
-                wearAppConfigs.add(provider.getWearAppConfiguration());
+                annotationConfigs.add(configs.getByName(sourceSet.getAnnotationProcessorConfigurationName()));
+                jackPluginConfigs.add(configs.getByName(sourceSet.getJackPluginConfigurationName()));
+                wearAppConfigs.add(configs.getByName(sourceSet.getWearAppConfigurationName()));
             }
 
             return this;
@@ -186,14 +221,7 @@ public class VariantDependencies {
             Preconditions.checkNotNull(testedVariantType,
                     "cannot call addTestedVariant before setTestedVariantType");
 
-            // if the tested variant is a library, then we include its configurations to the
-            // variant config
             if (testedVariantType == VariantType.LIBRARY) {
-                compileConfigs.add(testedVariant.getCompileConfiguration());
-                apkConfigs.add(testedVariant.getPackageConfiguration());
-                annotationConfigs.add(testedVariant.getAnnotationProcessorConfiguration());
-                jackPluginConfigs.add(testedVariant.getJackPluginConfiguration());
-
                 // also record this so that we can resolve local jar conflict during flattening
                 testedVariantOutput = testedConfig.getOutput();
             }
@@ -211,14 +239,14 @@ public class VariantDependencies {
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap =
                     getFlavorAttributes(flavorMatching);
 
-            Configuration compile = project.getConfigurations().maybeCreate("_" + variantName + "Compile");
-            compile.setVisible(false);
-            compile.setDescription("Resolved configuration for compilation for variant: " + variantName);
-            compile.setExtendsFrom(compileConfigs);
-            compile.setCanBeConsumed(false);
-            applyVariantAttributes(compile, buildType, flavorMap);
-            compile.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
-            compile.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
+            Configuration compileClasspath = project.getConfigurations().maybeCreate(variantName + "CompileClasspath");
+            compileClasspath.setVisible(false);
+            compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
+            compileClasspath.setExtendsFrom(compileClasspaths);
+            compileClasspath.setCanBeConsumed(false);
+            applyVariantAttributes(compileClasspath, buildType, flavorMap);
+            compileClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+            compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -235,20 +263,15 @@ public class VariantDependencies {
             jackPlugin.setExtendsFrom(jackPluginConfigs);
             jackPlugin.setCanBeConsumed(false);
 
-            Configuration apk =
-                    project.getConfigurations()
-                            .maybeCreate(
-                                    variantType == VariantType.LIBRARY
-                                            ? "_" + variantName + "Publish"
-                                            : "_" + variantName + "Apk");
+            Configuration runtimeClasspath = project.getConfigurations().maybeCreate(variantName + "RuntimeClasspath");
 
-            apk.setVisible(false);
-            apk.setDescription("Resolved configuration for runtime for variant: " + variantName);
-            apk.setExtendsFrom(apkConfigs);
-            apk.setCanBeConsumed(false);
-            applyVariantAttributes(apk, buildType, flavorMap);
-            apk.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
-            apk.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
+            runtimeClasspath.setVisible(false);
+            runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
+            runtimeClasspath.setExtendsFrom(runtimeClasspaths);
+            runtimeClasspath.setCanBeConsumed(false);
+            applyVariantAttributes(runtimeClasspath, buildType, flavorMap);
+            runtimeClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
 
             Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
             wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
@@ -256,23 +279,35 @@ public class VariantDependencies {
             wearApp.setCanBeConsumed(false);
             applyVariantAttributes(wearApp, buildType, flavorMap);
 
-            Configuration publish = null;
+            Configuration apiElements = null;
+            Configuration runtimeElements = null;
 
             if (publishVariant) {
                 // this is the configuration that contains the artifacts for inter-module
-                // dependencies and building.
-                publish = project.getConfigurations().maybeCreate(variantName);
-                publish.setDescription("Published Configuration for Variant " + variantName);
-                publish.setCanBeResolved(false);
+                // dependencies.
+                runtimeElements = project.getConfigurations().maybeCreate(variantName + "RuntimeElements");
+                runtimeElements.setDescription("Runtime elements for " + variantName);
+                runtimeElements.setCanBeResolved(false);
 
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap2 =
                         getFlavorAttributes(null);
-                applyVariantAttributes(publish, buildType, flavorMap2);
+                applyVariantAttributes(runtimeElements, buildType, flavorMap2);
+                runtimeElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
                 // if the variant is not a library, then the publishing configuration should
-                // not extend from the apkConfigs. It's mostly there to access the artifact from
+                // not extend from anything. It's mostly there to access the artifacts from
                 // another project but it shouldn't bring any dependencies with it.
-                publish.setExtendsFrom(apkConfigs);
+                if (variantType == VariantType.LIBRARY) {
+                    runtimeElements.setExtendsFrom(runtimeClasspaths);
+                }
+
+                apiElements = project.getConfigurations().maybeCreate(variantName + "ApiElements");
+                apiElements.setDescription("API elements for " + variantName);
+                apiElements.setCanBeResolved(false);
+                applyVariantAttributes(apiElements, buildType, flavorMap2);
+                apiElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+                // apiElements only extends the api classpaths.
+                apiElements.setExtendsFrom(apiClasspaths);
             }
 
             DependencyChecker checker = new DependencyChecker(
@@ -285,9 +320,10 @@ public class VariantDependencies {
             return new VariantDependencies(
                     variantName,
                     checker,
-                    compile,
-                    apk,
-                    publish,
+                    compileClasspath,
+                    runtimeClasspath,
+                    apiElements,
+                    runtimeElements,
                     annotationProcessor,
                     jackPlugin,
                     wearApp,
@@ -342,9 +378,10 @@ public class VariantDependencies {
     private VariantDependencies(
             @NonNull String variantName,
             @NonNull DependencyChecker dependencyChecker,
-            @NonNull Configuration compileConfiguration,
-            @NonNull Configuration packageConfiguration,
-            @Nullable Configuration publishConfiguration,
+            @NonNull Configuration compileClasspath,
+            @NonNull Configuration runtimeClasspath,
+            @Nullable Configuration apiElements,
+            @Nullable Configuration runtimeElements,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
             @NonNull Configuration wearAppConfiguration,
@@ -352,9 +389,10 @@ public class VariantDependencies {
             @Nullable AndroidDependency testedVariantOutput) {
         this.variantName = variantName;
         this.checker = dependencyChecker;
-        this.compileConfiguration = compileConfiguration;
-        this.packageConfiguration = packageConfiguration;
-        this.publishConfiguration = publishConfiguration;
+        this.compileClasspath = compileClasspath;
+        this.runtimeClasspath = runtimeClasspath;
+        this.apiElements = apiElements;
+        this.runtimeElements = runtimeElements;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
@@ -367,18 +405,23 @@ public class VariantDependencies {
     }
 
     @NonNull
-    public Configuration getCompileConfiguration() {
-        return compileConfiguration;
+    public Configuration getCompileClasspath() {
+        return compileClasspath;
     }
 
     @NonNull
-    public Configuration getPackageConfiguration() {
-        return packageConfiguration;
+    public Configuration getRuntimeClasspath() {
+        return runtimeClasspath;
     }
 
     @Nullable
-    public Configuration getPublishConfiguration() {
-        return publishConfiguration;
+    public Configuration getApiElements() {
+        return apiElements;
+    }
+
+    @Nullable
+    public Configuration getRuntimeElements() {
+        return runtimeElements;
     }
 
     @NonNull

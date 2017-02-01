@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ApiVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
@@ -336,7 +335,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             // this includes the libraries and the atoms.
             processManifestTask.manifests = variantScope.getArtifactCollection(
-                    AndroidArtifacts.ConfigType.PACKAGE,
+                    AndroidArtifacts.ConfigType.RUNTIME,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.MANIFEST);
 

@@ -328,17 +328,17 @@ public class ProcessAtomsResources extends IncrementalTask {
 
             processAtomsResources.atomManifests =
                     variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.PACKAGE,
+                            AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
             processAtomsResources.atomResourcePackages =
                     variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.PACKAGE,
+                            AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.RESOURCES_PKG);
             processAtomsResources.atomResDirs =
                     variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.PACKAGE,
+                            AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES);
 

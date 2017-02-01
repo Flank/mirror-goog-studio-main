@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -535,16 +536,16 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        AndroidArtifacts.ArtifactType.CLASSES))
+                        CLASSES))
                 .build());
 
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.EXTERNAL,
                         AndroidArtifacts.ArtifactType.JAVA_RES))
                 .build());
@@ -554,7 +555,7 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.EXTERNAL,
                         AndroidArtifacts.ArtifactType.JNI))
                 .build());
@@ -585,7 +586,7 @@ public abstract class TaskManager {
                     };
 
             FileCollection sourcesCollection = project.files(javaSources).builtBy(
-                    variantData.getVariantDependency().getPackageConfiguration());
+                    variantData.getVariantDependency().getCompileClasspath());
 
             transformManager.addStream(
                     OriginalStream.builder(project)
@@ -622,9 +623,9 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.MODULE,
-                        AndroidArtifacts.ArtifactType.CLASSES))
+                        CLASSES))
                 .build());
 
         // same for the resources which can be java-res or jni
@@ -632,7 +633,7 @@ public abstract class TaskManager {
                 .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.MODULE,
                         AndroidArtifacts.ArtifactType.JAVA_RES))
                 .build());
@@ -642,7 +643,7 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.PACKAGE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.MODULE,
                         AndroidArtifacts.ArtifactType.JNI))
                 .build());
@@ -683,9 +684,9 @@ public abstract class TaskManager {
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
                             .setFileCollection(testedVariantScope.getArtifactFileCollection(
-                                    AndroidArtifacts.ConfigType.PACKAGE,
+                                    AndroidArtifacts.ConfigType.RUNTIME,
                                     AndroidArtifacts.ArtifactScope.ALL,
-                                    AndroidArtifacts.ArtifactType.CLASSES))
+                                    CLASSES))
                             .build());
         }
 
@@ -741,7 +742,7 @@ public abstract class TaskManager {
         variantScope.publishIntermediateArtifact(
                 variantOutputScope.getManifestOutputFile(),
                 processManifestTask.getName(),
-                AndroidArtifacts.TYPE_ATOM_MANIFEST);
+                AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
     }
 
     public void createMergeAppManifestsTask(
@@ -1362,7 +1363,7 @@ public abstract class TaskManager {
             scope.publishIntermediateArtifact(
                     scope.getJavaOutputDir(),
                     javacTask.getName(),
-                    JavaPlugin.CLASS_DIRECTORY);
+                    CLASSES);
         }
 
         return javacTask;
@@ -1394,7 +1395,7 @@ public abstract class TaskManager {
                 tasks,
                 scope.getVariantData()
                         .getVariantDependency()
-                        .getCompileConfiguration());
+                        .getCompileClasspath());
         compileTask.dependsOn(
                 tasks,
                 scope.getVariantData()
@@ -2557,7 +2558,7 @@ public abstract class TaskManager {
                 variantScope.publishIntermediateArtifact(
                         variantScope.getBundleFolderForDataBinding(),
                         task.getName(),
-                        AndroidArtifacts.TYPE_DATA_BINDING);
+                        AndroidArtifacts.ArtifactType.DATA_BINDING);
             }
         }
     }
@@ -2853,7 +2854,7 @@ public abstract class TaskManager {
                     variantScope.publishIntermediateArtifact(
                             apkSupplier.get(),
                             apkSupplier.getTask().getName(),
-                            AndroidArtifacts.TYPE_APK);
+                            AndroidArtifacts.ArtifactType.APK);
                 });
 
                 // FIXME need to support split, by publishing the splits folder instead of the files like the local jars from an AAR.
@@ -2874,7 +2875,7 @@ public abstract class TaskManager {
                             .stream()
                                 .map(Task::getName)
                                 .collect(Collectors.joining(",")),
-                        AndroidArtifacts.TYPE_METADATA);
+                        AndroidArtifacts.ArtifactType.APK_METADATA);
 
                 final FileSupplier mappingFileProvider = variantData.getMappingFileProvider();
                 if (mappingFileProvider != null) {
@@ -2883,7 +2884,7 @@ public abstract class TaskManager {
                         variantScope.publishIntermediateArtifact(
                                 mappingFile,
                                 mappingFileProvider.getTask().getName(),
-                                AndroidArtifacts.TYPE_MAPPING);
+                                AndroidArtifacts.ArtifactType.APK_MAPPING);
                     }
                 }
             }

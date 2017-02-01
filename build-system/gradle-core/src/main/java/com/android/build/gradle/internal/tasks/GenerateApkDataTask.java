@@ -18,10 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES_RAW;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
-import static java.util.Collections.singletonMap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,10 +34,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;

@@ -67,6 +67,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -91,6 +92,7 @@ import org.gradle.internal.reflect.Instantiator;
 // them.
 @SuppressWarnings({"UnnecessaryInheritDoc", "WeakerAccess", "unused", "Convert2Lambda"})
 public abstract class BaseExtension implements AndroidConfig {
+
     /** Secondary dependencies for the custom transform. */
     private final List<List<Object>> transformDependencies = Lists.newArrayList();
 
@@ -159,6 +161,34 @@ public abstract class BaseExtension implements AndroidConfig {
 
     protected Project project;
 
+    private static final String CONFIG_DESC = "%s dependencies for '%s' sources.";
+    private static final String CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead).";
+    private static final String DEPRECATED_CONFIG_WARNING = "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.";
+
+    private final class DeprecationAction implements Action<Dependency> {
+
+        private final Configuration configuration;
+        private final String replacement;
+        private boolean warningPrintedAlready = false;
+
+        public DeprecationAction(Configuration configuration, String replacement) {
+            this.configuration = configuration;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public void execute(Dependency dependency) {
+            if (!warningPrintedAlready) {
+                warningPrintedAlready = true;
+                System.out.println(String.format(
+                        DEPRECATED_CONFIG_WARNING,
+                        configuration.getName(),
+                        project.getPath(),
+                        replacement));
+            }
+        }
+    }
+
     BaseExtension(
             @NonNull final Project project,
             @NonNull Instantiator instantiator,
@@ -173,7 +203,7 @@ public abstract class BaseExtension implements AndroidConfig {
         this.sdkHandler = sdkHandler;
         this.buildTypes = buildTypes;
         //noinspection unchecked
-        this.productFlavors = (NamedDomainObjectContainer) productFlavors;
+        this.productFlavors = productFlavors;
         this.signingConfigs = signingConfigs;
         this.extraModelInfo = extraModelInfo;
         this.project = project;
@@ -207,65 +237,97 @@ public abstract class BaseExtension implements AndroidConfig {
                     public void execute(AndroidSourceSet sourceSet) {
                         ConfigurationContainer configurations = project.getConfigurations();
 
+                        final String implementationName = sourceSet.getImplementationConfigurationName();
+                        final String runtimeOnlyName = sourceSet.getRuntimeOnlyConfigurationName();
+                        final String compileOnlyName = sourceSet.getCompileOnlyConfigurationName();
+
+                        // deprecated configurations first.
                         final String compileName = sourceSet.getCompileConfigurationName();
                         // due to compatibility with other plugins and with Gradle sync,
                         // we have to keep 'compile' as resolvable.
                         // TODO Fix this in gradle sync.
-                        createConfiguration(
+                        Configuration compile = createConfiguration(
                                 configurations,
                                 compileName,
-                                "Classpath for compiling the " + sourceSet.getName() + " sources.",
+                                String.format(CONFIG_DESC_OLD, "Compile", sourceSet.getName(), implementationName),
                                 "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
+                        compile.getAllDependencies().whenObjectAdded(
+                                new DeprecationAction(compile, implementationName));
 
                         String packageConfigDescription;
                         if (publishPackage) {
-                            packageConfigDescription =
-                                    "Classpath only used when publishing '"
-                                            + sourceSet.getName()
-                                            + "'.";
+                            packageConfigDescription = String.format(CONFIG_DESC_OLD, "Publish", sourceSet.getName(), runtimeOnlyName);
                         } else {
-                            packageConfigDescription =
-                                    "Classpath packaged with the compiled '"
-                                            + sourceSet.getName()
-                                            + "' classes.";
+                            packageConfigDescription = String.format(CONFIG_DESC_OLD, "Apk", sourceSet.getName(), runtimeOnlyName);
                         }
-                        createConfiguration(
+
+                        final String packageName;
+                        Configuration apk = createConfiguration(
                                 configurations,
                                 sourceSet.getPackageConfigurationName(),
-                                packageConfigDescription,
-                                false /*canBeResolved*/);
+                                packageConfigDescription);
+                        apk.getAllDependencies().whenObjectAdded(
+                                new DeprecationAction(apk, runtimeOnlyName));
 
-                        createConfiguration(
+                        Configuration provided = createConfiguration(
                                 configurations,
                                 sourceSet.getProvidedConfigurationName(),
-                                "Classpath for only compiling the "
-                                        + sourceSet.getName()
-                                        + " sources.",
-                                false /*canBeResolved*/);
+                                String.format(CONFIG_DESC_OLD, "Provided", sourceSet.getName(), compileOnlyName));
+                        provided.getAllDependencies().whenObjectAdded(
+                                new DeprecationAction(provided, compileOnlyName));
 
+                        // then the new configurations.
+                        String apiName = sourceSet.getApiConfigurationName();
+                        Configuration api = null;
+                        if (apiName != null) {
+                            api = createConfiguration(
+                                    configurations,
+                                    apiName,
+                                    String.format(CONFIG_DESC, "API", sourceSet.getName()));
+                            api.extendsFrom(compile);
+                        }
+
+                        Configuration implementation = createConfiguration(
+                                configurations,
+                                implementationName,
+                                String.format(CONFIG_DESC, "Implementation only", sourceSet.getName()));
+                        if (api != null) {
+                            implementation.extendsFrom(api);
+                        }
+
+                        Configuration runtimeOnly = createConfiguration(
+                                configurations,
+                                runtimeOnlyName,
+                                String.format(CONFIG_DESC, "Runtime only", sourceSet.getName()));
+                        runtimeOnly.extendsFrom(apk);
+
+                        Configuration compileOnly = createConfiguration(
+                                configurations,
+                                compileOnlyName,
+                                String.format(CONFIG_DESC, "Compile only", sourceSet.getName()));
+                        compileOnly.extendsFrom(provided);
+
+                        // then the secondary configurations.
                         Configuration wearConfig = createConfiguration(
                                 configurations,
                                 sourceSet.getWearAppConfigurationName(),
                                 "Link to a wear app to embed for object '"
                                         + sourceSet.getName()
-                                        + "'.",
-                                false /*canBeResolved*/);
+                                        + "'.");
 
                         createConfiguration(
                                 configurations,
                                 sourceSet.getAnnotationProcessorConfigurationName(),
                                 "Classpath for the annotation processor for '"
                                         + sourceSet.getName()
-                                        + "'.",
-                                false /*canBeResolved*/);
+                                        + "'.");
 
                         createConfiguration(
                                 configurations,
                                 sourceSet.getJackPluginConfigurationName(),
                                 String.format(
                                         "Classpath for the '%s' Jack plugins.",
-                                        sourceSet.getName()),
-                                false /*canBeResolved*/);
+                                        sourceSet.getName()));
 
                         sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
                     }
@@ -307,9 +369,28 @@ public abstract class BaseExtension implements AndroidConfig {
     /**
      * Creates a Configuration for a given source set.
      *
+     * The configuration cannot be resolved
+     *
      * @param configurations the configuration container to create the new configuration
-     * @param configurationName the name of the configuration to create.
-     * @param configurationDescription the configuration description.
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private Configuration createConfiguration(
+            @NonNull ConfigurationContainer configurations,
+            @NonNull String name,
+            @NonNull String description) {
+        return createConfiguration(configurations, name, description, false);
+    }
+
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
      * @param canBeResolved Whether the configuration can be resolved directly.
      * @return the configuration
      *
@@ -317,17 +398,17 @@ public abstract class BaseExtension implements AndroidConfig {
      */
     private Configuration createConfiguration(
             @NonNull ConfigurationContainer configurations,
-            @NonNull String configurationName,
-            @NonNull String configurationDescription,
+            @NonNull String name,
+            @NonNull String description,
             boolean canBeResolved) {
-        logger.info("Creating configuration {}", configurationName);
+        logger.info("Creating configuration {}", name);
 
-        Configuration configuration = configurations.findByName(configurationName);
+        Configuration configuration = configurations.findByName(name);
         if (configuration == null) {
-            configuration = configurations.create(configurationName);
+            configuration = configurations.create(name);
         }
         configuration.setVisible(false);
-        configuration.setDescription(configurationDescription);
+        configuration.setDescription(description);
         configuration.setCanBeConsumed(false);
         configuration.setCanBeResolved(canBeResolved);
 

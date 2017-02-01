@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_METADATA;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_METADATA;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -91,9 +91,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         super.createTasksForVariantData(tasks, variantData);
 
-        Configuration compileConfiguration =
-                variantData.getVariantDependency().getCompileConfiguration();
-        final ResolvableDependencies incoming = compileConfiguration.getIncoming();
+        final Configuration compileClasspath =
+                variantData.getVariantDependency().getCompileClasspath();
+        final ResolvableDependencies incomingCompileClasspaht = compileClasspath.getIncoming();
+
+        final Configuration runtimeClasspath =
+                variantData.getVariantDependency().getCompileClasspath();
+        final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
         // TODO: replace hack below with a FileCollection that will contain the testing APK,
         // obtained from the scope anchor types.
@@ -102,12 +106,14 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         File testingApk = outputs.get(0).getOutputFile();
 
         // create a FileCollection that will contain the APKs to be tested.
-        FileCollection testedApks = incoming.artifactView()
-                .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_APK)).getFiles();
+        FileCollection testedApks = incomingRuntimeClasspath.artifactView()
+                .attributes(container -> container.attribute(ARTIFACT_TYPE,
+                        APK.getType())).getFiles();
 
         // same for the metadata
-        FileCollection testTargetMetadata = incoming.artifactView()
-                .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
+        FileCollection testTargetMetadata = incomingCompileClasspaht.artifactView()
+                .attributes(container -> container.attribute(
+                        ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
 
         TestApplicationTestData testData = new TestApplicationTestData(
                 variantData.getVariantConfiguration(),
@@ -163,8 +169,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     private FileCollection getTestTargetMapping(@NonNull VariantScope variantScope){
         if (mTestTargetMapping == null){
             mTestTargetMapping = variantScope.getVariantData().getVariantDependency()
-                    .getCompileConfiguration().getIncoming().artifactView()
-                    .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
+                    .getCompileClasspath().getIncoming().artifactView()
+                    .attributes(container -> container.attribute(
+                            ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
         }
 
         if (mTestTargetMapping.getFiles().isEmpty()) {
@@ -181,8 +188,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (mTargetManifestConfiguration == null){
             mTargetManifestConfiguration = variantData.getVariantDependency()
-                    .getCompileConfiguration().getIncoming().artifactView()
-                    .attributes(container -> container.attribute(ARTIFACT_TYPE, TYPE_METADATA)).getFiles();
+                    .getRuntimeClasspath().getIncoming().artifactView()
+                    .attributes(container -> container.attribute(
+                            ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
         }
 
         return mTargetManifestConfiguration;

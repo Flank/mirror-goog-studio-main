@@ -142,10 +142,6 @@ public class LibraryTaskManager extends TaskManager {
         final String projectPath = project.getPath();
         final String variantName = variantData.getName();
 
-        final Configuration publishConfiguration = variantData.getVariantDependency()
-                .getPublishConfiguration();
-        final String publishConfigName = publishConfiguration.getName();
-
         createAnchorTasks(tasks, variantScope);
 
         // Create all current streams (dependencies mostly at this point)
@@ -173,7 +169,7 @@ public class LibraryTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FN_ANDROID_MANIFEST_XML),
                             task.getName(),
-                            AndroidArtifacts.TYPE_MANIFEST);
+                            AndroidArtifacts.ArtifactType.MANIFEST);
                 });
 
         // Add a task to compile renderscript files.
@@ -207,7 +203,7 @@ public class LibraryTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FD_ASSETS),
                             task.getName(),
-                            AndroidArtifacts.TYPE_ASSETS);
+                            AndroidArtifacts.ArtifactType.ASSETS);
 
                 });
 
@@ -239,7 +235,7 @@ public class LibraryTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FN_RESOURCE_TEXT),
                             variantOutputScope.getProcessResourcesTask().getName(),
-                            AndroidArtifacts.TYPE_SYMBOL);
+                            AndroidArtifacts.ArtifactType.SYMBOL_LIST);
 
                     // process java resources only, the merge is setup after
                     // the task to generate intermediate jars for project to project publishing.
@@ -257,7 +253,7 @@ public class LibraryTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             new File(variantBundleDir, FD_AIDL),
                             task.getName(),
-                            AndroidArtifacts.TYPE_AIDL);
+                            AndroidArtifacts.ArtifactType.AIDL);
 
                 });
 
@@ -327,7 +323,7 @@ public class LibraryTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 rsFolder,
                 packageRenderscriptTask.getName(),
-                AndroidArtifacts.TYPE_RENDERSCRIPT);
+                AndroidArtifacts.ArtifactType.RENDERSCRIPT);
 
         // merge consumer proguard files from different build types and flavors
         AndroidTask<MergeFileTask> mergeProguardFilesTask =
@@ -341,7 +337,7 @@ public class LibraryTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 new File(variantBundleDir, FN_PROGUARD_TXT),
                 mergeProguardFilesTask.getName(),
-                AndroidArtifacts.TYPE_PROGUARD_RULES);
+                AndroidArtifacts.ArtifactType.PROGUARD_RULES);
 
         // copy lint.jar into the bundle folder
         AndroidTask<Copy> copyLintTask =
@@ -352,7 +348,7 @@ public class LibraryTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 FileUtils.join(variantBundleDir, FD_RES),
                 copyLintTask.getName(),
-                AndroidArtifacts.TYPE_LINT_JAR);
+                AndroidArtifacts.ArtifactType.LINT);
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
 
@@ -370,7 +366,7 @@ public class LibraryTaskManager extends TaskManager {
             variantScope.publishIntermediateArtifact(
                     new File(variantBundleDir, FN_ANNOTATIONS_ZIP),
                     extractAnnotationsTask.getName(),
-                    AndroidArtifacts.TYPE_EXT_ANNOTATIONS);
+                    AndroidArtifacts.ArtifactType.ANNOTATIONS);
 
             bundle.dependsOn(extractAnnotationsTask.getName());
         } else {
@@ -469,12 +465,12 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope.publishIntermediateArtifact(
                                     mainClassJar,
                                     t.getName(),
-                                    JavaPlugin.CLASS_DIRECTORY);
+                                    AndroidArtifacts.ArtifactType.CLASSES);
                             // publish the res jar
                             variantScope.publishIntermediateArtifact(
                                     mainResJar,
                                     t.getName(),
-                                    JavaPlugin.RESOURCES_DIRECTORY);
+                                    AndroidArtifacts.ArtifactType.JAVA_RES);
                         });
 
                         // now add a transform that will take all the native libs and package
@@ -495,7 +491,7 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope.publishIntermediateArtifact(
                                     intermediateJniLibsFolder,
                                     t.getName(),
-                                    AndroidArtifacts.TYPE_JNI);
+                                    AndroidArtifacts.ArtifactType.JNI);
                         });
 
 
@@ -598,15 +594,12 @@ public class LibraryTaskManager extends TaskManager {
         variantOutputData.getScope().setAssembleTask(variantScope.getAssembleTask());
         variantOutputData.assembleTask = variantData.assembleVariantTask;
 
-        // add the artifact to the matching published-archives configuration
-        project.getArtifacts().add(
-                publishConfigName,
-                AndroidArtifacts.getAarArtifact(bundle, publishConfigName));
-
-        // if the variant is the default published, also add a default artifact to the
-        // archives config to have a default one.
+        // if the variant is the default published, then publish the aar
+        // FIXME: only generate the tasks if this is the default published variant?
         if (getExtension().getDefaultPublishConfig().equals(variantConfig.getFullName())) {
-            VariantHelper.setupArchivesConfig(project, publishConfiguration);
+            VariantHelper.setupArchivesConfig(
+                    project,
+                    variantData.getVariantDependency().getRuntimeClasspath());
 
             // add the artifact that will be published
             project.getArtifacts().add("archives", bundle);
@@ -658,7 +651,7 @@ public class LibraryTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 resFolder,
                 mergeResourceTask.getName(),
-                AndroidArtifacts.TYPE_ANDROID_RES);
+                AndroidArtifacts.ArtifactType.ANDROID_RES);
 
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
                 || variantData.getVariantDependency().hasNonOptionalLibraries()) {
@@ -677,7 +670,7 @@ public class LibraryTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 publicTxt,
                 mergeResourceTask.getName(),
-                AndroidArtifacts.TYPE_PUBLIC_RES);
+                AndroidArtifacts.ArtifactType.PUBLIC_RES);
         return mergeResourceTask;
     }
 

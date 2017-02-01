@@ -21,9 +21,13 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.PublishArtifact;
@@ -41,38 +45,38 @@ public class AndroidArtifacts {
 
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
-    public static final String TYPE_APK = "apk";
-    public static final String TYPE_ATOM_BUNDLE = "atombundle";
+    private static final String TYPE_APK = "apk";
+    private static final String TYPE_ATOM_BUNDLE = "atombundle";
 
     // types for AAR/ATOM content
-    public static final String TYPE_MANIFEST = "android-manifest";
-    public static final String TYPE_ANDROID_RES = "android-res";
-    public static final String TYPE_ASSETS = "android-assets";
-    public static final String TYPE_JNI = "android-jni";
-    public static final String TYPE_AIDL = "android-aidl";
-    public static final String TYPE_RENDERSCRIPT = "android-renderscript";
-    public static final String TYPE_LINT_JAR = "android-lint";
-    public static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
-    public static final String TYPE_PUBLIC_RES = "android-public-res";
-    public static final String TYPE_SYMBOL = "android-symbol";
-    public static final String TYPE_PROGUARD_RULES = "android-proguad";
-    public static final String TYPE_DATA_BINDING = "android-databinding";
+    private static final String TYPE_MANIFEST = "android-manifest";
+    private static final String TYPE_ANDROID_RES = "android-res";
+    private static final String TYPE_ASSETS = "android-assets";
+    private static final String TYPE_JNI = "android-jni";
+    private static final String TYPE_AIDL = "android-aidl";
+    private static final String TYPE_RENDERSCRIPT = "android-renderscript";
+    private static final String TYPE_LINT_JAR = "android-lint";
+    private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
+    private static final String TYPE_PUBLIC_RES = "android-public-res";
+    private static final String TYPE_SYMBOL = "android-symbol";
+    private static final String TYPE_PROGUARD_RULES = "android-proguad";
+    private static final String TYPE_DATA_BINDING = "android-databinding";
 
     // types for ATOM content.
-    public static final String TYPE_RESOURCES_PKG = "android-res-ap_";
-    public static final String TYPE_ATOM_MANIFEST = "android-atom-manifest";
-    public static final String TYPE_ATOM_ANDROID_RES = "android-atom-res";
-    public static final String TYPE_ATOM_DEX = "android-atom-dex";
-    public static final String TYPE_ATOM_JAVA_RES = "android-atom-java-res";
-    public static final String TYPE_ATOM_JNI = "android-atom-jni";
-    public static final String TYPE_ATOM_ASSETS = "android-atom-assets";
+    private static final String TYPE_RESOURCES_PKG = "android-res-ap_";
+    private static final String TYPE_ATOM_MANIFEST = "android-atom-manifest";
+    private static final String TYPE_ATOM_ANDROID_RES = "android-atom-res";
+    private static final String TYPE_ATOM_DEX = "android-atom-dex";
+    private static final String TYPE_ATOM_JAVA_RES = "android-atom-java-res";
+    private static final String TYPE_ATOM_JNI = "android-atom-jni";
+    private static final String TYPE_ATOM_ASSETS = "android-atom-assets";
 
     // types for additional artifacts to go with APK
-    public static final String TYPE_MAPPING = "android-mapping";
-    public static final String TYPE_METADATA = "android-metadata";
+    private static final String TYPE_MAPPING = "android-mapping";
+    private static final String TYPE_METADATA = "android-metadata";
 
     public enum ConfigType {
-        COMPILE, PACKAGE, ANNOTATION_PROCESSOR
+        COMPILE, RUNTIME, ANNOTATION_PROCESSOR
     }
 
     public enum ArtifactScope {
@@ -80,17 +84,28 @@ public class AndroidArtifacts {
     }
 
     public enum ArtifactType {
-        CLASSES(JavaPlugin.CLASS_DIRECTORY),
-        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY),
-        MANIFEST(TYPE_MANIFEST),
-        ANDROID_RES(TYPE_ANDROID_RES),
-        ASSETS(TYPE_ASSETS),
-        AIDL(TYPE_AIDL),
-        RENDERSCRIPT(TYPE_RENDERSCRIPT),
-        SYMBOL_LIST(TYPE_SYMBOL),
-        PROGUARD_RULES(TYPE_PROGUARD_RULES),
-        DATA_BINDING(TYPE_DATA_BINDING),
-        JNI(TYPE_JNI),
+        CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE, ConfigType.RUNTIME),
+
+        AIDL(TYPE_AIDL, ConfigType.COMPILE),
+        RENDERSCRIPT(TYPE_RENDERSCRIPT, ConfigType.COMPILE),
+        DATA_BINDING(TYPE_DATA_BINDING, ConfigType.COMPILE),
+
+        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY, ConfigType.RUNTIME),
+        MANIFEST(TYPE_MANIFEST, ConfigType.RUNTIME),
+        ANDROID_RES(TYPE_ANDROID_RES, ConfigType.RUNTIME),
+        ASSETS(TYPE_ASSETS, ConfigType.RUNTIME),
+        SYMBOL_LIST(TYPE_SYMBOL, ConfigType.RUNTIME),
+        JNI(TYPE_JNI, ConfigType.RUNTIME),
+        ANNOTATIONS(TYPE_EXT_ANNOTATIONS, ConfigType.RUNTIME),
+        PUBLIC_RES(TYPE_PUBLIC_RES, ConfigType.RUNTIME),
+        PROGUARD_RULES(TYPE_PROGUARD_RULES, ConfigType.RUNTIME),
+
+        LINT(TYPE_LINT_JAR),
+
+        APK_MAPPING(TYPE_MAPPING),
+        APK_METADATA(TYPE_METADATA),
+        APK(TYPE_APK),
+
         RESOURCES_PKG(TYPE_RESOURCES_PKG),
         ATOM_MANIFEST(TYPE_ATOM_MANIFEST),
         ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES),
@@ -101,12 +116,32 @@ public class AndroidArtifacts {
         METADATA(TYPE_METADATA);
 
         private final String type;
-        ArtifactType(String type) {
+        private final Collection<ConfigType> configTypes;
+        ArtifactType(@NonNull String type, @NonNull ConfigType... configTypes) {
             this.type = type;
+            this.configTypes = ImmutableList.copyOf(configTypes);
         }
 
+        @NonNull
         public String getType() {
             return type;
+        }
+
+        @NonNull
+        public Collection<ConfigType> getPublishingConfigurations() {
+            return configTypes;
+        }
+
+        private static final Map<String, ArtifactType> reverseMap = new HashMap<>();
+
+        static {
+            for (ArtifactType type : values()) {
+                reverseMap.put(type.getType(), type);
+            }
+        }
+
+        public static ArtifactType byType(@NonNull String typeValue) {
+            return reverseMap.get(typeValue);
         }
     }
 

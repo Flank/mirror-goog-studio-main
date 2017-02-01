@@ -123,7 +123,7 @@ public class AtomTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             variantScope.getMergeResourcesOutputDir(),
                             mergeResourcesTask.getName(),
-                            AndroidArtifacts.TYPE_ATOM_ANDROID_RES);
+                            AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES);
                 });
 
         // Add a task to merge the assets folders
@@ -139,7 +139,7 @@ public class AtomTaskManager extends TaskManager {
                     variantScope.publishIntermediateArtifact(
                             variantScope.getMergeAssetsOutputDir(),
                             mergeAssetsTask.getName(),
-                            AndroidArtifacts.TYPE_ATOM_ASSETS);
+                            AndroidArtifacts.ArtifactType.ATOM_ASSETS);
                 });
 
         // Add a task to create the BuildConfig class
@@ -173,7 +173,7 @@ public class AtomTaskManager extends TaskManager {
                                     .getVariantOutputData()
                                     .getProcessResourcePackageOutputFile(),
                             variantOutputScope.getProcessResourcesTask().getName(),
-                            AndroidArtifacts.TYPE_RESOURCES_PKG);
+                            AndroidArtifacts.ArtifactType.RESOURCES_PKG);
                 });
 
         recorder.record(
@@ -334,8 +334,9 @@ public class AtomTaskManager extends TaskManager {
 
         variantScope.getAssembleTask().dependsOn(tasks, bundleAtom);
 
+        // FIXME: we shouldn't need this anymore?
         String classifier =
-                variantData.getVariantDependency().getPublishConfiguration().getName();
+                variantData.getVariantDependency().getApiElements().getName();
         bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
                 AndroidArtifacts.buildAtomArtifact(
                         getGlobalScope().getProjectBaseName(),
@@ -345,15 +346,15 @@ public class AtomTaskManager extends TaskManager {
         variantScope.publishIntermediateArtifact(
                 bundleAtom.get(tasks).getDexBundleFolder(),
                 bundleAtom.getName(),
-                AndroidArtifacts.TYPE_ATOM_DEX);
+                AndroidArtifacts.ArtifactType.ATOM_DEX);
         variantScope.publishIntermediateArtifact(
                 bundleAtom.get(tasks).getLibBundleFolder(),
                 bundleAtom.getName(),
-                AndroidArtifacts.TYPE_ATOM_JNI);
+                AndroidArtifacts.ArtifactType.ATOM_JNI);
         variantScope.publishIntermediateArtifact(
                 bundleAtom.get(tasks).getJavaResBundleFolder(),
                 bundleAtom.getName(),
-                AndroidArtifacts.TYPE_ATOM_JAVA_RES);
+                AndroidArtifacts.ArtifactType.ATOM_JAVA_RES);
     }
 
     @NonNull

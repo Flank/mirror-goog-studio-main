@@ -36,7 +36,7 @@ public class VariantHelper {
     public static void setupArchivesConfig(
             @NonNull final Project project,
             @NonNull Configuration configuration) {
-        // The library artifact is published (inter-project( for the "default" configuration so
+        // The library artifact is published (inter-project) for the "default" configuration so
         // we make sure "default" extends from the actual configuration used for building.
         Configuration archivesConfig = project.getConfigurations().getAt("archives");
         archivesConfig.setExtendsFrom(Collections.singleton(configuration));
