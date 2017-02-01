@@ -1,7 +1,27 @@
 <root>
-  <item name='com.google.common.base.Verify T verifyNotNull(T)'>
+  <item name='com.google.common.base.Strings boolean isNullOrEmpty(java.lang.String)'>
     <annotation name='org.jetbrains.annotations.Contract'>
-      <val val="&quot;null -&gt; fail&quot;"/>
+      <val val="&quot;null-&gt;true&quot;"/>
     </annotation>
   </item>
+    <item name='com.google.common.base.Verify T verifyNotNull(T)'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val val="&quot;null -&gt; fail&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.google.common.base.Verify T verifyNotNull(T, java.lang.String, java.lang.Object...)'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val val="&quot;null, _, _ -&gt; fail&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.google.common.base.Verify void verify(boolean)'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val val="&quot;false -&gt; fail&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.google.common.base.Verify void verify(boolean, java.lang.String, java.lang.Object...)'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val val="&quot;false, _ ,_ -&gt; fail&quot;"/>
+        </annotation>
+    </item>
 </root>
