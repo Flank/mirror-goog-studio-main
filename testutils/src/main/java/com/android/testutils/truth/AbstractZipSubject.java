@@ -127,7 +127,7 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
 
     public final void doesNotExist() {
         if (getSubject().exists()) {
-            failWithRawMessage("does not exist");
+            fail("does not exist");
         }
     }
 

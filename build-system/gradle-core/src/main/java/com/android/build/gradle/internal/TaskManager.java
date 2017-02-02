@@ -2778,7 +2778,6 @@ public abstract class TaskManager {
             if (fullBuildInfoGeneratorTask != null) {
                 AndroidTask<PackageApplication> finalPackageInstantRunResources =
                         packageInstantRunResources;
-                fullBuildInfoGeneratorTask.dependsOn(tasks, appTask);
                 fullBuildInfoGeneratorTask.configure(tasks, task -> {
                     task.mustRunAfter(appTask.getName());
                     if (finalPackageInstantRunResources != null) {
