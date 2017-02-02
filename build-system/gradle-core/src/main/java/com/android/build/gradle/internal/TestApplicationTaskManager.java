@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.builder.core.AndroidBuilder;
@@ -61,6 +62,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     public TestApplicationTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -71,6 +73,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,

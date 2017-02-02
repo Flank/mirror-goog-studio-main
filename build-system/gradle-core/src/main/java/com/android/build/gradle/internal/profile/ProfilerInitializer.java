@@ -18,8 +18,9 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import java.time.LocalDateTime;
@@ -53,8 +54,9 @@ public final class ProfilerInitializer {
      * Initialize the {@link ProcessProfileWriterFactory}. Idempotent.
      *
      * @param project the current Gradle {@link Project}.
+     * @param projectOptions the options
      */
-    public static void init(@NonNull Project project) {
+    public static void init(@NonNull Project project, @NonNull ProjectOptions projectOptions) {
         synchronized (lock) {
             //noinspection VariableNotUsedInsideIf
             if (recordingBuildListener != null) {
@@ -64,7 +66,7 @@ public final class ProfilerInitializer {
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
-                    AndroidGradleOptions.isProfileJsonEnabled(project));
+                    projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON));
             recordingBuildListener = new RecordingBuildListener(ProcessProfileWriter.get());
             project.getGradle().addListener(recordingBuildListener);
         }

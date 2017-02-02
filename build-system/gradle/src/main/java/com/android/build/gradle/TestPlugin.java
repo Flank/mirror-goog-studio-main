@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
@@ -89,6 +90,7 @@ public class TestPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     protected TaskManager createTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
@@ -99,6 +101,7 @@ public class TestPlugin extends BasePlugin implements Plugin<Project> {
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 androidConfig,

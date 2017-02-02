@@ -18,8 +18,6 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.BuildCacheUtils;
-import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
@@ -40,12 +38,6 @@ public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_AAPT2 = false;
 
-    private static final boolean DEFAULT_ENABLE_BUILD_CACHE = true;
-
-    private static final boolean DEFAULT_USE_MAIN_DEX_LIST_2 = false;
-
-    private static final boolean DEFAULT_ENABLE_PROFILE_JSON = true;
-
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
@@ -64,8 +56,6 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
-    public static final String PROPERTY_ENABLE_PROFILE_JSON = "android.enableProfileJson";
-
     public static final String ANDROID_CUSTOM_CLASS_TRANSFORMS = "android.custom.class.transforms";
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
@@ -81,8 +71,6 @@ public class AndroidGradleOptions {
             "android.androidTest.numShards";
     public static  final String PROPERTY_USE_SDK_DOWNLOAD =
             "android.builder.sdkDownload";
-
-    public static final String PROPERTY_ENABLE_BUILD_CACHE = "android.enableBuildCache";
 
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
 
@@ -112,51 +100,6 @@ public class AndroidGradleOptions {
 
     public static final String OLD_OVERRIDE_PATH_CHECK_PROPERTY =
             "com.android.build.gradle.overridePathCheck";
-
-    public static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
-
-    private final boolean buildCacheEnabled;
-
-    @Nullable private final File buildCacheDir;
-
-    private final boolean useDexArchive;
-
-    public AndroidGradleOptions(@NonNull Project project) {
-        buildCacheEnabled =
-                getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
-
-        String buildCacheDirString = getString(project, PROPERTY_BUILD_CACHE_DIR);
-        buildCacheDir =
-                buildCacheDirString != null
-                        ? project.getRootProject().file(buildCacheDirString)
-                        : null;
-
-        useDexArchive = getBoolean(project, PROPERTY_USE_DEX_ARCHIVE);
-    }
-
-    /**
-     * Returns {@code true} if {@link #PROPERTY_ENABLE_BUILD_CACHE} is set to {@code true}, and
-     * {@code false} otherwise.
-     *
-     * <p>Note: This method is not meant to be called directly, it is made public for use only by
-     * the {@link BuildCacheUtils} class. Use {@code
-     * TransformGlobalScope.getBuildCache().isPresent()} instead.
-     */
-    public boolean isBuildCacheEnabled() {
-        return buildCacheEnabled;
-    }
-
-    /**
-     * Returns the file specified by {@link #PROPERTY_BUILD_CACHE_DIR}.
-     *
-     * <p>Note: This method is not meant to be called directly, it is made public for use only by
-     * the {@link BuildCacheUtils} class. Use {@code
-     * TransformGlobalScope.getBuildCache().getCacheDirectory()} instead.
-     */
-    @Nullable
-    public File getBuildCacheDir() {
-        return buildCacheDir;
-    }
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
@@ -216,15 +159,6 @@ public class AndroidGradleOptions {
 
     public static boolean getTestOnly(@NonNull Project project) {
         return getBoolean(project, AndroidProject.PROPERTY_TEST_ONLY);
-    }
-
-    public boolean useDexArchive() {
-        return useDexArchive;
-    }
-
-    public static boolean isProfileJsonEnabled(@NonNull Project project) {
-        return getBoolean(
-                project, PROPERTY_ENABLE_PROFILE_JSON, DEFAULT_ENABLE_PROFILE_JSON);
     }
 
     /**
@@ -320,11 +254,6 @@ public class AndroidGradleOptions {
         }
     }
 
-    @Nullable
-    public static String getColdswapMode(@NonNull Project project) {
-        return getString(project, AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE);
-    }
-
     public static boolean useDeprecatedNdk(@NonNull Project project) {
         return getBoolean(project, USE_DEPRECATED_NDK);
     }
@@ -398,20 +327,6 @@ public class AndroidGradleOptions {
     @Nullable
     public static String getVersionNameOverride(@NonNull Project project) {
         return getString(project, AndroidProject.PROPERTY_VERSION_NAME);
-    }
-
-    @NonNull
-    public static InstantRunApiLevelMode getInstantRunApiLevelMode(@NonNull Project project) {
-        String valueName = getString(project, INSTANT_RUN_API_LEVEL_PROPERTY);
-        if (valueName != null) {
-            try {
-                return InstantRunApiLevelMode.valueOf(valueName);
-            } catch (IllegalArgumentException ignored) {
-                // Return the default value below.
-            }
-        }
-
-        return InstantRunApiLevelMode.COMPILE_SDK;
     }
 
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {

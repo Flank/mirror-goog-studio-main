@@ -122,6 +122,7 @@ java_test(
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.jsoup_jsoup",
         "//tools/base/third_party:org.mockito_mockito-all",

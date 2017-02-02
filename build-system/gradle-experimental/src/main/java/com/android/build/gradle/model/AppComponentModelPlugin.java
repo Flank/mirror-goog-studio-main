@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -49,7 +50,8 @@ public class AppComponentModelPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        ProfilerInitializer.init(project);
+        ProjectOptions projectOptions = new ProjectOptions(project);
+        ProfilerInitializer.init(project, projectOptions);
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(GradleBuildProject.PluginType.APPLICATION)

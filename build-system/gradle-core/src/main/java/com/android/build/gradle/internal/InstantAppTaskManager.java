@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.tasks.BundleInstantAppConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.JavaCompileAtomResClass;
 import com.android.build.gradle.tasks.MergeDexAtomResClass;
 import com.android.build.gradle.tasks.PackageAtom;
@@ -51,6 +52,7 @@ public class InstantAppTaskManager extends TaskManager {
 
     public InstantAppTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -61,6 +63,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull Recorder threadRecorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,

@@ -120,6 +120,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -287,6 +289,7 @@ public abstract class TaskManager {
 
     public TaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -305,13 +308,15 @@ public abstract class TaskManager {
         this.recorder = recorder;
         logger = Logging.getLogger(this.getClass());
 
-        globalScope = new GlobalScope(
-                project,
-                androidBuilder,
-                extension,
-                sdkHandler,
-                ndkHandler,
-                toolingRegistry);
+        globalScope =
+                new GlobalScope(
+                        project,
+                        projectOptions,
+                        androidBuilder,
+                        extension,
+                        sdkHandler,
+                        ndkHandler,
+                        toolingRegistry);
     }
 
     private boolean isDebugLog() {
@@ -1941,7 +1946,7 @@ public abstract class TaskManager {
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
             Transform multiDexTransform;
-            if (globalScope.getAndroidGradleOptions().useDexArchive()) {
+            if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
                 multiDexTransform = new MainDexListTransform(
                         variantScope,
                         extension.getDexOptions());
