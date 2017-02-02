@@ -155,10 +155,9 @@ public class ExtractAnnotationTest {
 
         assertThat(result.getNotUpToDateTasks())
                 .containsExactly(
-                        ":resolveDebugDependencies",
-                        ":preDebugBuild",
                         ":checkDebugManifest",
-                        ":prepareDebugDependencies",
-                        ":javaPreCompileDebug");
+                        ":buildInfoGeneratorDebug",
+                        ":javaPreCompileDebug",
+                        ":assembleDebug");
     }
 }
