@@ -1865,6 +1865,7 @@ public final class SdkConstants {
     }
 
     public static class TextStyle {
+        public static final String VALUE_NORMAL = "normal"; //$NON-NLS-1$
         public static final String VALUE_BOLD = "bold"; //$NON-NLS-1$
         public static final String VALUE_ITALIC = "italic"; //$NON-NLS-1$
     }
