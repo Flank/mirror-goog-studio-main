@@ -68,6 +68,7 @@ public class NoSplitNdkVariantsTest {
                 + "            jniDebuggable true\n"
                 + "        }\n"
                 + "    }\n"
+                + "    flavorDimensions 'abi'\n"
                 + "    productFlavors {\n"
                 + "        x86 {\n"
                 + "            ndk {\n"
