@@ -1439,7 +1439,7 @@ public abstract class TaskManager {
     public void createGenerateMicroApkDataTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
-            @Nullable Configuration config) {
+            @Nullable FileCollection config) {
         AndroidTask<GenerateApkDataTask> generateMicroApkTask = androidTasks.create(tasks,
                 new GenerateApkDataTask.ConfigAction(scope, config));
         scope.setMicroApkTask(generateMicroApkTask);
