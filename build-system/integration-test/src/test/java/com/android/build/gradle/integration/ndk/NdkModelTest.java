@@ -136,6 +136,7 @@ public class NdkModelTest {
 
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android {\n"
+                + "    flavorDimensions 'abi'\n"
                 + "    productFlavors {\n"
                 + "        x86 {\n"
                 + "            ndk {\n"
