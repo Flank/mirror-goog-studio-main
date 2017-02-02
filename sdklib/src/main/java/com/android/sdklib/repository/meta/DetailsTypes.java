@@ -263,18 +263,16 @@ public final class DetailsTypes {
         }
     }
 
-    /**
-     * Gets the path/unique id for the platform of the given {@link AndroidVersion}.
-     */
-    public static String getPlatformPath(AndroidVersion version) {
+    /** Gets the path/unique id for the platform of the given {@link AndroidVersion}. */
+    @NonNull
+    public static String getPlatformPath(@NonNull AndroidVersion version) {
         return SdkConstants.FD_PLATFORMS + RepoPackage.PATH_SEPARATOR + "android-" +
                 version.getApiString();
     }
 
-    /**
-     * Gets the path/unique id for the sources of the given {@link AndroidVersion}.
-     */
-    public static String getSourcesPath(AndroidVersion version) {
+    /** Gets the path/unique id for the sources of the given {@link AndroidVersion}. */
+    @NonNull
+    public static String getSourcesPath(@NonNull AndroidVersion version) {
         return SdkConstants.FD_PKG_SOURCES + RepoPackage.PATH_SEPARATOR + "android-" +
                 version.getApiString();
     }
@@ -282,9 +280,10 @@ public final class DetailsTypes {
     /**
      * Gets the path/unique id for the LLDB of the given {@link Revision}.
      *
-     * TODO: consider moving to an LLDB-specific place.
+     * <p>TODO: consider moving to an LLDB-specific place.
      */
-    public static String getLldbPath(Revision revision) {
+    @NonNull
+    public static String getLldbPath(@NonNull Revision revision) {
         return SdkConstants.FD_LLDB + RepoPackage.PATH_SEPARATOR + revision.getMajor() + "."
                + revision.getMinor();
     }

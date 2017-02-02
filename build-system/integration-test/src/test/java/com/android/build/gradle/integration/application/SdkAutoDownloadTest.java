@@ -175,6 +175,51 @@ public class SdkAutoDownloadTest {
         assertThat(androidJarFile).exists();
     }
 
+    /**
+     * Tests that the compile SDK target was automatically downloaded in the case that the target
+     * was an addon target. It also checks that the platform that the addon is dependent on was
+     * downloaded.
+     */
+    @Test
+    public void checkCompileSdkAddonDownloading() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion \"Google Inc.:Google APIs:23\""
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\"");
+
+        getExecutor().run("assembleDebug");
+
+        File platformBase = getPlatformFolder();
+        assertThat(platformBase).isDirectory();
+
+        File addonTarget =
+                FileUtils.join(mSdkHome, SdkConstants.FD_ADDONS, "addon-google_apis-google-23");
+        assertThat(addonTarget).isDirectory();
+    }
+
+    /** Tests that we don't crash when a codename is used for the compile SDK level. */
+    @Test
+    public void checkCompileSdkCodename() throws Exception {
+        deletePlatforms();
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion 'MadeUp'"
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\"");
+
+        GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
+        assertThat(result.getFailureMessage())
+                .contains("Failed to find target with hash string 'MadeUp'");
+    }
+
     /** Tests that calling getBootClasspath() doesn't break auto-download. */
     @Test
     public void checkGetBootClasspath() throws Exception {
@@ -227,32 +272,6 @@ public class SdkAutoDownloadTest {
         File dxFile =
                 FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION, "dx");
         assertThat(dxFile).exists();
-    }
-
-    /**
-     * Tests that the compile SDK target was automatically downloaded in the case that the target
-     * was an addon target. It also checks that the platform that the addon is dependent on was
-     * downloaded.
-     */
-    @Test
-    public void checkCompileSdkAddonDownloading() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion \"Google Inc.:Google APIs:23\""
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\"");
-
-        getExecutor().run("assembleDebug");
-
-        File platformBase = getPlatformFolder();
-        assertThat(platformBase).isDirectory();
-
-        File addonTarget =
-                FileUtils.join(mSdkHome, SdkConstants.FD_ADDONS, "addon-google_apis-google-23");
-        assertThat(addonTarget).isDirectory();
     }
 
     /**
