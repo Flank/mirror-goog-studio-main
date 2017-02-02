@@ -72,9 +72,15 @@ model {
             moduleName "hello-jni"
         }
         productFlavors {
-            create("flavor1")
-            create("flavor2")
-            create("flavor3")
+            create("flavor1") {
+                dimension "foo"
+            }
+            create("flavor2") {
+                dimension "foo"
+            }
+            create("flavor3") {
+                dimension "foo"
+            }
         }
         sources {
             main {

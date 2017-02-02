@@ -69,6 +69,7 @@ model {
         }
         productFlavors {
             create("f1") {
+                dimension "foo"
                 proguardFiles.add(file("proguard.txt"))
                 buildConfigFields.create {
                     type "String"
@@ -76,7 +77,9 @@ model {
                     value "\\"bar\\""
                 }
             }
-            create("f2")
+            create("f2") {
+                dimension "foo"
+            }
         }
     }
 }

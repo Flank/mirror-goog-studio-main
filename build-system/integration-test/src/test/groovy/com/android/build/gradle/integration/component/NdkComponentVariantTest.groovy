@@ -64,13 +64,16 @@ model {
         productFlavors {
             create("x86") {
                 ndk.abiFilters.add("x86")
+                dimension "abi"
             }
             create("arm") {
                 ndk.abiFilters.add("armeabi-v7a")
                 ndk.abiFilters.add("armeabi")
+                dimension "abi"
             }
             create("mips") {
                 ndk.abiFilters.add("mips")
+                dimension "abi"
             }
         }
         abis {
