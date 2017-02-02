@@ -96,7 +96,8 @@ public class AndroidArtifacts {
         ATOM_DEX(TYPE_ATOM_DEX),
         ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES),
         ATOM_JNI(TYPE_ATOM_JNI),
-        ATOM_ASSETS(TYPE_ATOM_ASSETS);
+        ATOM_ASSETS(TYPE_ATOM_ASSETS),
+        METADATA(TYPE_METADATA);
 
         private final String type;
         ArtifactType(String type) {

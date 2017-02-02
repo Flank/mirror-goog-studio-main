@@ -103,7 +103,9 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         FileUtils.cleanOutputDir(coverageOutDir);
 
         // populate the TestData from the tested variant build output.
-        testData.loadFromMetadataFile(testTargetMetadata.getSingleFile());
+        if (!testTargetMetadata.isEmpty()) {
+            testData.loadFromMetadataFile(testTargetMetadata.getSingleFile());
+        }
 
         boolean success = false;
         // If there are tests to run, and the test runner returns with no results, we fail (since

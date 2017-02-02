@@ -1904,7 +1904,8 @@ public abstract class TaskManager {
                         testVariantData.getScope(),
                         new ConnectedDeviceProvider(sdkHandler.getSdkInfo().getAdb(),
                                 globalScope.getExtension().getAdbOptions().getTimeOutInMs(),
-                                new LoggerWrapper(logger)), testData, null /* testTargetMetadata */));
+                                new LoggerWrapper(logger)), testData,
+                        project.files() /* testTargetMetadata */));
 
         connectedTask.dependsOn(tasks, artifactsTasks.toArray());
 
@@ -1942,7 +1943,7 @@ public abstract class TaskManager {
             final AndroidTask<DeviceProviderInstrumentTestTask> providerTask = androidTasks
                     .create(tasks, new DeviceProviderInstrumentTestTask.ConfigAction(
                             testVariantData.getScope(), deviceProvider, testData,
-                            null /* testTargetMetadata */));
+                            project.files() /* testTargetMetadata */));
 
             providerTask.dependsOn(tasks, artifactsTasks.toArray());
             tasks.named(DEVICE_ANDROID_TEST,
