@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
+import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -27,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -142,6 +144,26 @@ public class ClassFileInputTest {
         }
 
         validateJarEntries(jarFile, ImmutableList.of("A$InnerClass.class"));
+    }
+
+    @Test
+    public void checkClassFileRenaming() {
+        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("A.class")))
+                .isEqualTo(Paths.get("A.dex"));
+        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("A$a.class")))
+                .isEqualTo(Paths.get("A$a.dex"));
+        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("/A.class")))
+                .isEqualTo(Paths.get("/A.dex"));
+        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("a/A.class")))
+                .isEqualTo(Paths.get("a/A.dex"));
+        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("a/.class/A.class")))
+                .isEqualTo(Paths.get("a/.class/A.dex"));
+
+        try {
+            DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
+        } catch (IllegalStateException e) {
+            // should throw
+        }
     }
 
     private void validateDirectoryEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
