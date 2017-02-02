@@ -60,6 +60,7 @@ public class BuildCacheTest {
 
         RunGradleTasks executor =
                 project.executor()
+                        .disableDexArchive()
                         .withProperty("android.enableBuildCache", "true")
                         .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");

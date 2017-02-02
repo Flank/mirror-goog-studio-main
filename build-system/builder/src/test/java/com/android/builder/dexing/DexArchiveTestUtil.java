@@ -18,14 +18,13 @@ package com.android.builder.dexing;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zip.ZFile;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.TestClassesGenerator;
+import com.android.testutils.TestInputsGenerator;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -125,35 +124,12 @@ public final class DexArchiveTestUtil {
     /** Writes empty classes to the specified output. */
     public static void createClasses(
             @NonNull Path classesOutput, @NonNull Collection<String> classNames) throws Exception {
+        List<String> classWithPackage =
+                classNames.stream().map(e -> PACKAGE + "/" + e).collect(Collectors.toList());
         if (classesOutput.toString().endsWith(SdkConstants.DOT_JAR)) {
-            createClassesInJar(classesOutput, classNames);
+            TestInputsGenerator.jarWithEmptyClasses(classesOutput, classWithPackage);
         } else {
-            createClassesInDir(classesOutput, classNames);
-        }
-    }
-
-    private static void createClassesInJar(
-            @NonNull Path jarPath, @NonNull Collection<String> classes) throws Exception {
-        try (ZFile jar = new ZFile(jarPath.toFile())) {
-            for (String klass : classes) {
-                byte[] classContent = TestClassesGenerator.emptyClass(klass);
-                jar.add(
-                        PACKAGE + "/" + klass + SdkConstants.DOT_CLASS,
-                        new ByteArrayInputStream(classContent));
-            }
-        }
-    }
-
-    private static void createClassesInDir(
-            @NonNull Path dirPath, @NonNull Collection<String> classes) throws Exception {
-        if (!Files.isDirectory(dirPath)) {
-            Files.createDirectory(dirPath);
-        }
-        for (String klass : classes) {
-            byte[] classContent = TestClassesGenerator.emptyClass(klass);
-            Path classPath = dirPath.resolve(PACKAGE + "/" + klass + SdkConstants.DOT_CLASS);
-            Files.createDirectories(classPath.getParent());
-            Files.copy(new ByteArrayInputStream(classContent), classPath);
+            TestInputsGenerator.dirWithEmptyClasses(classesOutput, classWithPackage);
         }
     }
 

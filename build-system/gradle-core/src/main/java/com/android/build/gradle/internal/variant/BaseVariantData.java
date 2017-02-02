@@ -301,6 +301,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return StringHelper.capitalize(variantConfiguration.getFlavorName());
     }
 
+    @NonNull
     public VariantType getType() {
         return variantConfiguration.getType();
     }

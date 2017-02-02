@@ -53,7 +53,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
-    private Boolean useDexArchive = false;
+    private Boolean useDexArchive = true;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,

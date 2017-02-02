@@ -944,6 +944,9 @@ public class FileCache {
 
         /** Mockable jars used for unit testing. */
         GENERATE_MOCKABLE_JAR,
+
+        /** Pre-dexing library to a dex archive. */
+        PREDEX_LIBRARY_TO_DEX_ARCHIVE,
     }
 
     /**

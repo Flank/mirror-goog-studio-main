@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -208,7 +209,7 @@ public class DexTransform extends Transform {
             dexByteCodeConverter.convertByteCode(
                     transformInputs,
                     outputDir,
-                    dexingMode.isMultiDex,
+                    dexingMode.isMultiDex(),
                     mainDexList,
                     dexOptions,
                     outputHandler);

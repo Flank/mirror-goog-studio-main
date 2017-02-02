@@ -18,12 +18,16 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.blame.parser.DexParser;
+import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Converts specified class file inputs to a {@link DexArchive}. To do so, configure the builder in
@@ -34,10 +38,6 @@ public class DexArchiveBuilder {
 
     /** Exception thrown if something goes wrong when building a dex archive. */
     public static class DexBuilderException extends RuntimeException {
-
-        public DexBuilderException(String message) {
-            super(message);
-        }
 
         public DexBuilderException(String message, Throwable cause) {
             super(message, cause);
@@ -68,49 +68,41 @@ public class DexArchiveBuilder {
      * files are read from the specified class file input object, while the output is written to the
      * specified dex archive.
      */
-    public void convert(@NonNull ClassFileInput input, @NonNull DexArchive output) {
-        try {
-            ensureOutputArchiveExists(output);
-        } catch (IOException e) {
-            throw new DexBuilderException("Unable to create dex archive output", e);
-        }
+    public void convert(@NonNull ClassFileInput input, @NonNull DexArchive output)
+            throws IOException {
+        ensureOutputArchiveExists(output);
 
         for (ClassFileEntry entry : input) {
-            try {
-                processClassFile(entry.relativePath, entry.classFileContent);
-            } catch (IOException e) {
-                throw new DexBuilderException(
-                        String.format(
-                                "Unable to process %s from %s",
-                                entry.relativePath, input.getRootPath().toString()));
-            }
+            processClassFile(entry.relativePath, entry.classFileContent);
         }
-
-        processOutputs(output);
+        try {
+            processOutputs(output);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            config.getDxContext().err.println(DexParser.DX_UNEXPECTED_EXCEPTION);
+            config.getDxContext().err.println(Throwables.getRootCause(e).getMessage());
+            config.getDxContext().err.print(Throwables.getStackTraceAsString(e));
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new DexArchiveMerger.DexArchiveMergerException(
+                    "Unable to merge dex", e.getCause());
+        }
     }
 
     /** Waits for all inputs to be processed, and writes the outputs to the dex archive. */
-    private void processOutputs(@NonNull DexArchive output) {
-        try {
-            for (WaitableExecutor.TaskResult<DexArchiveEntry> result : executor.waitForAllTasks()) {
-                DexArchiveEntry dexEntry = result.value;
-                Verify.verifyNotNull(dexEntry);
-                try (ByteArrayInputStream bufferedInputStream =
-                        new ByteArrayInputStream(dexEntry.getDexFileContent())) {
-                    Path dexFilePath =
-                            ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
-                    output.addFile(dexFilePath, bufferedInputStream);
-                } catch (IOException e) {
-                    throw new DexBuilderException(
-                            String.format(
-                                    "Unable to add dex entry %s to a dex archive %s",
-                                    dexEntry.getRelativePathInArchive(), output.getRootPath()),
-                            e);
-                }
+    private void processOutputs(@NonNull DexArchive output)
+            throws IOException, LoggedErrorException, InterruptedException {
+        List<DexArchiveEntry> entries = executor.waitForTasksWithQuickFail(true);
+        for (DexArchiveEntry dexEntry : entries) {
+            Verify.verifyNotNull(dexEntry);
+            try (ByteArrayInputStream dexContent =
+                    new ByteArrayInputStream(dexEntry.getDexFileContent())) {
+                Path dexFilePath =
+                        ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
+                output.addFile(dexFilePath, dexContent);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new DexBuilderException("Dex conversion interrupted.", e);
         }
     }
 
