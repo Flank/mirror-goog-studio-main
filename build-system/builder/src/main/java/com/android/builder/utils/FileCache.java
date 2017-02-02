@@ -94,18 +94,17 @@ public class FileCache {
         EXCLUSIVE
     }
 
-    @NonNull private final File mCacheDirectory;
+    @NonNull private final File cacheDirectory;
 
-    @NonNull private final LockingScope mLockingScope;
+    @NonNull private final LockingScope lockingScope;
 
     // Additional fields used for testing only
-    @NonNull private final AtomicInteger mMisses = new AtomicInteger(0);
-    @NonNull private final AtomicInteger mHits = new AtomicInteger(0);
+    @NonNull private final AtomicInteger missCount = new AtomicInteger(0);
+    @NonNull private final AtomicInteger hitCount = new AtomicInteger(0);
 
-    private FileCache(@NonNull File cacheDirectory, @NonNull LockingScope lockingScope)
-            throws IOException {
-        mCacheDirectory = cacheDirectory.getCanonicalFile();
-        mLockingScope = lockingScope;
+    private FileCache(@NonNull File cacheDirectory, @NonNull LockingScope lockingScope) {
+        this.cacheDirectory = cacheDirectory;
+        this.lockingScope = lockingScope;
     }
 
     /**
@@ -128,8 +127,7 @@ public class FileCache {
      * @see #getInstanceWithSingleProcessLocking(File)
      */
     @NonNull
-    public static FileCache getInstanceWithInterProcessLocking(@NonNull File cacheDirectory)
-            throws IOException {
+    public static FileCache getInstanceWithInterProcessLocking(@NonNull File cacheDirectory) {
         return new FileCache(cacheDirectory, LockingScope.INTER_PROCESS);
     }
 
@@ -155,14 +153,13 @@ public class FileCache {
      * @see #getInstanceWithInterProcessLocking(File)
      */
     @NonNull
-    public static FileCache getInstanceWithSingleProcessLocking(@NonNull File cacheDirectory)
-            throws IOException {
+    public static FileCache getInstanceWithSingleProcessLocking(@NonNull File cacheDirectory) {
         return new FileCache(cacheDirectory, LockingScope.SINGLE_PROCESS);
     }
 
     @NonNull
     public File getCacheDirectory() {
-        return mCacheDirectory;
+        return cacheDirectory;
     }
 
     /**
@@ -210,21 +207,21 @@ public class FileCache {
             @NonNull Callable<Void> fileCreator)
             throws ExecutionException, IOException {
         Preconditions.checkArgument(
-                !FileUtils.isFileInDirectory(outputFile, mCacheDirectory),
+                !FileUtils.isFileInDirectory(outputFile, cacheDirectory),
                 String.format(
                         "Output file/directory '%1$s' must not be located"
                                 + " in the cache directory '%2$s'",
-                        outputFile.getAbsolutePath(), mCacheDirectory.getAbsolutePath()));
+                        outputFile.getAbsolutePath(), cacheDirectory.getAbsolutePath()));
         Preconditions.checkArgument(
-                !FileUtils.isFileInDirectory(mCacheDirectory, outputFile),
+                !FileUtils.isFileInDirectory(cacheDirectory, outputFile),
                 String.format(
                         "Output directory '%1$s' must not contain the cache directory '%2$s'",
-                        outputFile.getAbsolutePath(), mCacheDirectory.getAbsolutePath()));
+                        outputFile.getAbsolutePath(), cacheDirectory.getAbsolutePath()));
         Preconditions.checkArgument(
-                !outputFile.getCanonicalFile().equals(mCacheDirectory.getCanonicalFile()),
+                !outputFile.getCanonicalFile().equals(cacheDirectory.getCanonicalFile()),
                 String.format(
                         "Output directory must not be the same as the cache directory '%1$s'",
-                        mCacheDirectory.getAbsolutePath()));
+                        cacheDirectory.getAbsolutePath()));
 
         File cacheEntryDir = getCacheEntryDir(inputs);
         File cachedFile = getCachedFile(cacheEntryDir);
@@ -392,11 +389,11 @@ public class FileCache {
             // read/written to. (Further locking within the cache will make sure multiple
             // threads/processes can read but cannot write to the same cache entry at the same
             // time.)
-            return doLocked(mCacheDirectory, LockingType.SHARED, () -> {
+            return doLocked(cacheDirectory, LockingType.SHARED, () -> {
                 // Create (or recreate) the cache directory since it may not exist or might have
                 // been deleted. The following method is thread-safe so it's okay to call it from
                 // multiple threads (and processes).
-                FileUtils.mkdirs(mCacheDirectory);
+                FileUtils.mkdirs(cacheDirectory);
 
                 // Guard the cache entry directory with a SHARED lock so that multiple
                 // threads/processes can read it at the same time
@@ -404,7 +401,7 @@ public class FileCache {
                     QueryResult result = checkCacheEntry(inputs, cacheEntryDir);
                     // If the cache entry is HIT, run the given action
                     if (result.getQueryEvent().equals(QueryEvent.HIT)) {
-                        mHits.incrementAndGet();
+                        hitCount.incrementAndGet();
                         actionIfCacheHit.call();
                     }
                     return result;
@@ -423,7 +420,7 @@ public class FileCache {
 
                     // If the cache entry is HIT, run the given action and return immediately
                     if (result.getQueryEvent().equals(QueryEvent.HIT)) {
-                        mHits.incrementAndGet();
+                        hitCount.incrementAndGet();
                         actionIfCacheHit.call();
                         return result;
                     }
@@ -434,7 +431,7 @@ public class FileCache {
                     }
 
                     // If the cache entry is MISSED or CORRUPTED, create or recreate the cache entry
-                    mMisses.incrementAndGet();
+                    missCount.incrementAndGet();
                     FileUtils.mkdirs(cacheEntryDir);
 
                     actionIfCacheMissedOrCorrupted.call();
@@ -538,7 +535,7 @@ public class FileCache {
      */
     @NonNull
     private File getCacheEntryDir(@NonNull Inputs inputs) {
-        return new File(mCacheDirectory, inputs.getKey());
+        return new File(cacheDirectory, inputs.getKey());
     }
 
     /**
@@ -591,10 +588,10 @@ public class FileCache {
     public void delete() throws IOException {
         try {
             doLocked(
-                    mCacheDirectory,
+                    cacheDirectory,
                     LockingType.EXCLUSIVE,
                     () -> {
-                        FileUtils.deletePath(mCacheDirectory);
+                        FileUtils.deletePath(cacheDirectory);
                         return null;
                     });
         } catch (ExecutionException exception) {
@@ -635,7 +632,7 @@ public class FileCache {
             @NonNull LockingType lockingType,
             @NonNull Callable<V> action)
             throws ExecutionException, IOException {
-        if (mLockingScope == LockingScope.INTER_PROCESS) {
+        if (lockingScope == LockingScope.INTER_PROCESS) {
             return doInterProcessLocked(accessedFile, lockingType, action);
         } else {
             return doSingleProcessLocked(accessedFile, lockingType, action);
@@ -662,9 +659,9 @@ public class FileCache {
         // If the file/directory being accessed is the cache directory itself, we use a lock file
         // within the tmpdir directory; otherwise we use a lock file within the cache directory
         File lockFile =
-                accessedFile.getCanonicalFile().equals(mCacheDirectory.getCanonicalFile())
+                accessedFile.getCanonicalFile().equals(cacheDirectory.getCanonicalFile())
                         ? new File(System.getProperty("java.io.tmpdir"), lockFileName)
-                        : new File(mCacheDirectory, lockFileName);
+                        : new File(cacheDirectory, lockFileName);
 
         // ReadWriteProcessLock will normalize the lock file's path so that the paths can be
         // correctly compared by equals(), we don't need to normalize it here.
@@ -708,19 +705,19 @@ public class FileCache {
 
     @VisibleForTesting
     int getMisses() {
-        return mMisses.get();
+        return missCount.get();
     }
 
     @VisibleForTesting
     int getHits() {
-        return mHits.get();
+        return hitCount.get();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("cacheDirectory", mCacheDirectory)
-                .add("lockingScope", mLockingScope)
+                .add("cacheDirectory", cacheDirectory)
+                .add("lockingScope", lockingScope)
                 .toString();
     }
 

@@ -347,14 +347,24 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testInvalidCacheDirectory() {
-        // Use an invalid character in the directory name
-        File cacheDirectory = new File("\0");
+    public void testInvalidCacheDirectory() throws ExecutionException {
+        // Use an invalid cache directory, expect that an exception is thrown not when the cache is
+        // created but when it is used
+        File invalidCacheDirectory = new File("\0");
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(invalidCacheDirectory);
+
+        FileCache.Inputs inputs =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input")).build();
+        File outputFile = new File(outputDir, "output");
         try {
-            FileCache.getInstanceWithSingleProcessLocking(cacheDirectory);
-            fail("expected IOException");
-        } catch (IOException exception) {
-            // Expected
+            fileCache.createFile(outputFile, inputs, () -> {
+                Files.write("Some text", outputFile, StandardCharsets.UTF_8);
+                return null;
+            });
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e).hasMessage("Invalid file path");
         }
     }
 

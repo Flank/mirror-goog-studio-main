@@ -64,24 +64,13 @@ public final class BuildCacheUtils {
     static FileCache doCreateBuildCacheIfEnabled(
             @NonNull AndroidGradleOptions androidGradleOptions,
             @NonNull Supplier<File> defaultBuildCacheDirSupplier) {
-        if (!androidGradleOptions.isBuildCacheEnabled()) {
+        if (androidGradleOptions.isBuildCacheEnabled()) {
+            return FileCache.getInstanceWithInterProcessLocking(
+                    androidGradleOptions.getBuildCacheDir() != null
+                            ? androidGradleOptions.getBuildCacheDir()
+                            : defaultBuildCacheDirSupplier.get());
+        } else {
             return null;
-        }
-
-        File buildCacheDir =
-                androidGradleOptions.getBuildCacheDir() != null
-                        ? androidGradleOptions.getBuildCacheDir()
-                        : defaultBuildCacheDirSupplier.get();
-        try {
-            return FileCache.getInstanceWithInterProcessLocking(buildCacheDir);
-        } catch (Exception exception) {
-            throw new RuntimeException(
-                    String.format(
-                            "Unable to create the build cache at '%1$s'.\n"
-                                    + "%2$s",
-                            buildCacheDir.getAbsolutePath(),
-                            BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
-                    exception);
         }
     }
 }
