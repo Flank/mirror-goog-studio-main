@@ -28,6 +28,7 @@ import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -169,13 +170,14 @@ class PreDexCallable implements Callable<Void> {
                         exception);
             }
             if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                Verify.verifyNotNull(result.getCauseOfCorruption());
                 logger.verbose(
                         "The build cache at '%1$s' contained an invalid cache entry.\n"
                                 + "Cause: %2$s\n"
                                 + "We have recreated the cache entry.\n"
                                 + "%3$s",
                         buildCache.getCacheDirectory().getAbsolutePath(),
-                        Throwables.getStackTraceAsString(result.getCauseOfCorruption().get()),
+                        Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
                         BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
             }
         } else {
