@@ -365,6 +365,15 @@ public abstract class IssueRegistry {
     }
 
     /**
+     * Whether this issue registry is up to date. Normally true but for example
+     * for custom rules loaded from disk, may return false if the underliny file is updated
+     * or deleted.
+     */
+    public boolean isUpToDate() {
+        return true;
+    }
+
+    /**
      * Reset the registry such that it recomputes its available issues.
      */
     protected static void reset() {

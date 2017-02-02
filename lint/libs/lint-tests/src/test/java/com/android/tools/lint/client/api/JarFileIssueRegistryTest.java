@@ -16,6 +16,7 @@
 package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.client.api.CustomRuleTest.LINT_JAR_BASE64_GZIP;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -24,9 +25,11 @@ import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -79,6 +82,21 @@ public class JarFileIssueRegistryTest extends AbstractCheckTest {
                         + "registry manifest key (Lint-Registry-v2).\n"
                         + "Either the custom jar is invalid, or it uses an outdated API not "
                         + "supported this lint client", mLoggedWarnings.toString());
+
+        // Make sure we handle up to date checks properly too
+        CompositeIssueRegistry composite = new CompositeIssueRegistry(
+                Arrays.asList(registry1, registry3));
+        assertThat(composite.isUpToDate()).isTrue();
+
+        assertThat(registry1.isUpToDate()).isTrue();
+        file1.setLastModified(file1.lastModified() + 2000);
+        assertThat(registry1.isUpToDate()).isFalse();
+        assertThat(composite.isUpToDate()).isFalse();
+
+        assertThat(registry3.isUpToDate()).isTrue();
+        file2.delete();
+        assertThat(registry3.isUpToDate()).isFalse();
+        assertThat(composite.isUpToDate()).isFalse();
     }
 
     @Override

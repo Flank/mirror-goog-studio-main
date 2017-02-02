@@ -60,6 +60,8 @@ public class JarFileIssueRegistry extends IssueRegistry {
     private static Map<File, SoftReference<JarFileIssueRegistry>> cache;
 
     private final List<Issue> issues;
+    private long timestamp;
+    private File jarFile;
 
     private boolean hasLegacyDetectors;
 
@@ -78,7 +80,7 @@ public class JarFileIssueRegistry extends IssueRegistry {
             SoftReference<JarFileIssueRegistry> reference = cache.get(jarFile);
             if (reference != null) {
                 JarFileIssueRegistry registry = reference.get();
-                if (registry != null) {
+                if (registry != null && registry.isUpToDate()) {
                     return registry;
                 }
             }
@@ -90,6 +92,11 @@ public class JarFileIssueRegistry extends IssueRegistry {
         JarFileIssueRegistry registry = new JarFileIssueRegistry(client, jarFile);
         cache.put(jarFile, new SoftReference<>(registry));
         return registry;
+    }
+
+    @Override
+    public boolean isUpToDate() {
+        return timestamp == jarFile.lastModified();
     }
 
     private JarFileIssueRegistry(@NonNull LintClient client, @NonNull File file)
@@ -148,6 +155,8 @@ public class JarFileIssueRegistry extends IssueRegistry {
                     "this lint client", file.getPath(), MF_LINT_REGISTRY);
             }
         } finally {
+            this.jarFile = file;
+            timestamp = file.lastModified();
             if (jarFile != null) {
                 jarFile.close();
             }
@@ -197,7 +206,10 @@ public class JarFileIssueRegistry extends IssueRegistry {
                                         name.length() - DOT_CLASS.length());
                                 name = name.replace('/', '.');
                                 try {
-                                    Class.forName(name, true, loader);
+                                    Class<?> aClass = Class.forName(name, true, loader);
+                                    // Actually, initialize them too to make sure basic classes
+                                    // needed by the detector are available
+                                    aClass.newInstance();
                                 } catch (Throwable e) {
                                     client.log(Severity.ERROR, e,
                                             "Failed to prefetch " + name + " from " + file);
