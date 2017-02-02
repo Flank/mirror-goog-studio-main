@@ -166,9 +166,9 @@ public class GenerateApkDataTask extends BaseTask {
         VariantScope scope;
 
         @Nullable
-        Configuration config;
+        FileCollection config;
 
-        public ConfigAction(@NonNull VariantScope scope, @Nullable Configuration config) {
+        public ConfigAction(@NonNull VariantScope scope, @Nullable FileCollection config) {
             this.scope = scope;
             this.config = config;
         }

@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -394,7 +395,14 @@ public class ApplicationTaskManager extends TaskManager {
                 && variantConfiguration.getBuildType().isEmbedMicroApp()) {
             Configuration wearApp = variantData.getVariantDependency().getWearAppConfiguration();
             if (!wearApp.getAllDependencies().isEmpty()) {
-                createGenerateMicroApkDataTask(tasks, scope, wearApp);
+                createGenerateMicroApkDataTask(
+                        tasks,
+                        scope,
+                        wearApp.getIncoming().artifactView().attributes(
+                                container -> container.attribute(
+                                        AndroidArtifacts.ARTIFACT_TYPE,
+                                        AndroidArtifacts.TYPE_APK))
+                                .getFiles());
             }
         } else {
             createGenerateMicroApkDataTask(tasks, scope, null);
