@@ -38,6 +38,7 @@ public class ResourceTypeTest extends TestCase {
     assertEquals(ResourceType.ANIM, ResourceType.getEnum("anim"));
     assertEquals(ResourceType.ANIMATOR, ResourceType.getEnum("animator"));
     assertEquals(ResourceType.DECLARE_STYLEABLE, ResourceType.getEnum("declare-styleable"));
+    assertEquals(ResourceType.FONT, ResourceType.getEnum("font"));
     assertEquals(ResourceType.MIPMAP, ResourceType.getEnum("mipmap"));
     assertEquals(ResourceType.STRING, ResourceType.getEnum("string"));
     assertEquals(ResourceType.STYLE, ResourceType.getEnum("style"));
