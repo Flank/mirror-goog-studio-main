@@ -43,6 +43,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.resources.Density;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -137,24 +138,31 @@ public class ApplicationVariantFactory implements VariantFactory {
                 }
             }
 
-            // If ABI is specified, set the main output as the one corresponding to the given ABI
+            // If ABI is specified (and there are more than one output), set the main output as the
+            // one corresponding to the given ABI
+            List<ApkVariantOutputData> outputDataList = variant.getOutputs();
             Project project = variant.getScope().getGlobalScope().getProject();
             String abiString = Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetAbi(project));
-            if (!abiString.isEmpty()) {
+            if (!abiString.isEmpty() && outputDataList.size() > 1) {
                 List<String> abiList = Arrays.asList(abiString.split(","));
                 String densityString =
                         Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetDensity(project));
                 Density density = Density.getEnum(densityString);
+
                 List<OutputFile> outputFiles =
                         SplitOutputMatcher.computeBestOutput(
-                                variant.getOutputs(),
+                                outputDataList,
                                 variantConfiguration.getSupportedAbis(),
                                 density == null ? -1 : density.getDpiValue(),
                                 abiList);
+
+                Preconditions.checkState(
+                        !outputFiles.isEmpty(),
+                        "Unable to find a suitable output for ABI(s) '" + abiString + "'");
                 OutputFile bestOutput = outputFiles.get(0);
 
                 ApkVariantOutputData mainOutput = null;
-                for (ApkVariantOutputData outputData : variant.getOutputs()) {
+                for (ApkVariantOutputData outputData : outputDataList) {
                     if (outputData.getMainOutputFile() == bestOutput) {
                         mainOutput = outputData;
                         break;
