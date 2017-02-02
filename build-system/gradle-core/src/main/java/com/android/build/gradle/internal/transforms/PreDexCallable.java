@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
+import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
@@ -127,7 +128,7 @@ class PreDexCallable implements Callable<Void> {
             hashes.add(hash);
         }
 
-        Callable<Void> preDexLibraryAction =
+        ExceptionRunnable preDexLibraryAction =
                 () -> {
                     FileUtils.deletePath(to);
                     Files.createParentDirs(to);
@@ -136,7 +137,6 @@ class PreDexCallable implements Callable<Void> {
                     }
                     androidBuilder.preDexLibrary(
                             from, to, dexingMode.isMultiDex, dexOptions, outputHandler);
-                    return null;
                 };
 
         // If the build cache is used, run pre-dexing using the cache
@@ -181,7 +181,7 @@ class PreDexCallable implements Callable<Void> {
                         BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
             }
         } else {
-            preDexLibraryAction.call();
+            preDexLibraryAction.run();
         }
         return null;
     }
@@ -191,7 +191,7 @@ class PreDexCallable implements Callable<Void> {
      * predex-library task to use the build cache.
      */
     @NonNull
-    private FileCache.Inputs getBuildCacheInputs(
+    private static FileCache.Inputs getBuildCacheInputs(
             @NonNull File inputFile,
             @NonNull Revision buildToolsRevision,
             @NonNull DexOptions dexOptions,
