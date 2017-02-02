@@ -57,7 +57,9 @@ public class PerformanceTestProjects {
 
 
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "jcenter\\(\\)", generateLocalRepositoriesSnippet());
+                project.getBuildFile(),
+                "jcenter\\(\\)",
+                generateLocalRepositoriesSnippet().replace("\\", "\\\\"));
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
@@ -132,7 +134,8 @@ public class PerformanceTestProjects {
                                 + "        classpath 'com.android.tools.build:gradle:%2$s'\n"
                                 + "    }\n"
                                 + "}\n",
-                        localRepositoriesSnippet, GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
+                        localRepositoriesSnippet,
+                        GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
 
         List<Path> buildGradleFiles =
                 Stream.of(
@@ -149,6 +152,12 @@ public class PerformanceTestProjects {
                 project.file("WordPress/build.gradle"),
                 "maven \\{ url (('.*')|(\".*\")) \\}",
                 "");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                "productFlavors \\{",
+                "flavorDimensions 'version'\n"
+                        + "productFlavors {");
+
 
         for (Path file : buildGradleFiles) {
             TestFileUtils.searchAndReplace(
@@ -157,7 +166,7 @@ public class PerformanceTestProjects {
             TestFileUtils.searchAndReplace(
                     file,
                     "jcenter\\(\\)",
-                    localRepositoriesSnippet);
+                    localRepositoriesSnippet.replace("\\", "\\\\"));
 
             TestFileUtils.searchAndReplace(
                     file,
