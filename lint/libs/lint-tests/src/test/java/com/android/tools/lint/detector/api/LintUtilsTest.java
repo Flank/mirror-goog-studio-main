@@ -44,6 +44,7 @@ import static com.android.tools.lint.detector.api.LintUtils.getFormattedParamete
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 import static com.android.tools.lint.detector.api.LintUtils.getPrimitiveType;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
+import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
 import static com.android.tools.lint.detector.api.LintUtils.resolveManifestName;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 import static com.android.utils.SdkUtils.escapePropertyValue;
@@ -712,6 +713,14 @@ public class LintUtilsTest extends TestCase {
                 + "        <activity android:name=\"test.pkg.TestActivity$Bar\" />\n"
                 + "    </application>\n"
                 + "</manifest>\n", "test.pkg.TestActivity$Bar")));
+    }
+
+    public void testJavaKeyword() {
+        assertThat(isJavaKeyword("")).isFalse();
+        assertThat(isJavaKeyword("iff")).isFalse();
+        assertThat(isJavaKeyword("if")).isTrue();
+        assertThat(isJavaKeyword("true")).isTrue();
+        assertThat(isJavaKeyword("false")).isTrue();
     }
 
     private static class TestContext extends JavaContext {
