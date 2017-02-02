@@ -23,6 +23,7 @@ public class ResourceFolderTypeTest extends TestCase {
     assertEquals(ResourceFolderType.LAYOUT, ResourceFolderType.getFolderType("layout-port"));
     assertEquals(ResourceFolderType.LAYOUT, ResourceFolderType.getFolderType("layout-port-sw600"));
     assertEquals(ResourceFolderType.VALUES, ResourceFolderType.getFolderType("values"));
+    assertEquals(ResourceFolderType.FONT, ResourceFolderType.getFolderType("font"));
 
     assertNull(ResourceFolderType.getFolderType(""));
     assertNull(ResourceFolderType.getFolderType("foo"));
