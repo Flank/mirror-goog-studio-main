@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LibraryCache;
+import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.builder.utils.FileCache;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
@@ -72,7 +73,7 @@ public abstract class ExtractTransform extends ArtifactTransform {
 
         // If the build cache is enabled, we create and cache the exploded aar using the cache's
         // API; otherwise, we explode the aar without using the cache.
-        FileCache.Inputs buildCacheInputs = getBuildCacheInputs(aarFile);
+        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getBuildCacheInputs(aarFile);
         File explodedLocation = fileCache.getFileInCache(buildCacheInputs);
         try {
             fileCache.createFileInCacheIfAbsent(
@@ -102,17 +103,5 @@ public abstract class ExtractTransform extends ArtifactTransform {
         }
 
         return explodedLocation;
-    }
-
-    /**
-     * Returns a {@link FileCache.Inputs} object computed from the given Maven coordinates of a
-     * library for the prepare-library task to use the build cache.
-     */
-    @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(@NonNull File aarFile) throws IOException {
-        return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
-                //.putFileHash("hash", aarFile)
-                .putFilePath("path", aarFile)
-                .build();
     }
 }
