@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
@@ -131,6 +132,7 @@ public class GradleBuildResult {
 
     @NonNull
     public TaskStateList.TaskInfo getTask(String name) {
+        Preconditions.checkArgument(name.startsWith(":"), "Task name must start with :");
         return initTaskStates().getTask(name);
     }
 
