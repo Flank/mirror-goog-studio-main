@@ -109,7 +109,7 @@ message NetworkDataRequest {
     CONNECTIONS = 3;
   }
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_timestamp = 3;
   int64 end_timestamp = 4;
   Type type = 5;
@@ -121,7 +121,7 @@ message NetworkDataResponse {
 
 message NetworkStartRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 // TODO: Dig more about network collector start response.
@@ -130,7 +130,7 @@ message NetworkStartResponse {
 
 message NetworkStopRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 // TODO: Dig more about network collector stop response.
@@ -156,7 +156,7 @@ message NetworkStopResponse {
 // requests starting on time |end| will be included in the results.
 message HttpRangeRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_timestamp = 3;
   int64 end_timestamp = 4;
 }

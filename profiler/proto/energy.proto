@@ -19,6 +19,8 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "EnergyProfiler";
 
+import "profiler.proto";
+
 service EnergyService {
   // Requests energy data sampled between |start_time_excl| and |end_time_incl|
   // for app specified by |process_id|. Note it is possible for the returned
@@ -49,14 +51,14 @@ service EnergyService {
 
 message EnergyDataRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_time_excl = 3;
   int64 end_time_incl = 4;
 }
 
 message EnergyDataResponse {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   repeated EnergySample energy_samples = 3;
 }
 
@@ -72,14 +74,14 @@ message EnergySample {
 
 message WakeLockDataRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_time_excl = 3;
   int64 end_time_incl = 4;
 }
 
 message WakeLockDataResponse {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   repeated WakeLockEvent wake_lock_events = 3;
 }
 
@@ -107,16 +109,16 @@ message WakeLockEvent {
 
 message StartEnergyCollectionRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message StopEnergyCollectionRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message EnergyCollectionStatusResponse {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 timestamp = 3;
 }

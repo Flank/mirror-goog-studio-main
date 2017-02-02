@@ -40,7 +40,7 @@ service EventService {
 
 message EventStartRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message EventStartResponse {
@@ -54,7 +54,7 @@ message EventStartResponse {
 
 message EventStopRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message EventStopResponse {
@@ -159,7 +159,7 @@ message EventDataRequest {
     FRAGMENT_EVENTS = 4;
   }
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_timestamp = 3;
   int64 end_timestamp = 4;
   EventType data_type = 5;

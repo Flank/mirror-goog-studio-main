@@ -31,9 +31,9 @@ class ProfilerServiceImpl final
   explicit ProfilerServiceImpl(Daemon::Utilities* utilities)
       : clock_(utilities->clock()), file_cache_(*utilities->file_cache()) {}
 
-  grpc::Status GetTimes(grpc::ServerContext* context,
-                        const profiler::proto::TimesRequest* request,
-                        profiler::proto::TimesResponse* response) override;
+  grpc::Status GetCurrentTime(grpc::ServerContext* context,
+                        const profiler::proto::TimeRequest* request,
+                        profiler::proto::TimeResponse* response) override;
 
   grpc::Status GetVersion(grpc::ServerContext* context,
                           const profiler::proto::VersionRequest* request,
