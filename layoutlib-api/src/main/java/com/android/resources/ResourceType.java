@@ -33,6 +33,7 @@ public enum ResourceType {
     DECLARE_STYLEABLE("declare-styleable", "Declare Styleable"), //$NON-NLS-1$
     DIMEN("dimen", "Dimension"), //$NON-NLS-1$
     DRAWABLE("drawable", "Drawable"), //$NON-NLS-1$
+    FONT("font", "Font"), //$NON-NLS-1$
     FRACTION("fraction", "Fraction"), //$NON-NLS-1$
     ID("id", "ID"), //$NON-NLS-1$
     INTEGER("integer", "Integer"), //$NON-NLS-1$
@@ -68,15 +69,16 @@ public enum ResourceType {
     private static final Map<String, ResourceType> sNameToType;
 
     static {
+        ResourceType[] values = ResourceType.values();
         int size = 0;
-        for (ResourceType type : ResourceType.values()) {
+        for (ResourceType type : values) {
             ++size;
             if (type.mAlternateXmlNames != null) {
                 size += (type.mAlternateXmlNames.length);
             }
         }
-        sNameToType = new HashMap<String, ResourceType>(2 * size);
-        for (ResourceType type : ResourceType.values()) {
+        sNameToType = new HashMap<>(2 * size);
+        for (ResourceType type : values) {
             sNameToType.put(type.getName(), type);
             if (type.mAlternateXmlNames != null) {
                 for (String alternateName : type.mAlternateXmlNames) {
