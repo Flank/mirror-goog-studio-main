@@ -1946,9 +1946,7 @@ public abstract class TaskManager {
                         variantScope,
                         extension.getDexOptions());
             } else {
-                multiDexTransform = new MultiDexTransform(
-                        variantScope,
-                        extension.getDexOptions());
+                multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
             }
             multiDexClassListTask =
                     transformManager.addTransform(tasks, variantScope, multiDexTransform);

@@ -32,18 +32,17 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.incremental.InputFileDetails;
-
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.incremental.InputFileDetails;
 
 /**
  * Helper to handle the folder structure in the output of transforms.
@@ -443,7 +442,11 @@ public class IntermediateFolderUtils {
                     }
                     if (!limitedScopes.isEmpty()) {
                         if (foundUnwanted) {
-                            throw new RuntimeException("error");
+                            throw new RuntimeException(
+                                    "Unexpected scopes found. Required: "
+                                            + Joiner.on(", ").join(requiredScopes)
+                                            + ". Found: "
+                                            + Joiner.on(", ").join(scopes));
                         }
                         parseContentLevelFolders(file, types, limitedScopes,
                                 generator);
