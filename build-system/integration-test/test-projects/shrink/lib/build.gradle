@@ -9,4 +9,7 @@ android {
     minSdkVersion 16
     targetSdkVersion 20
   }
+  buildTypes {
+    proguardNoShrink.initWith(debug)
+  }
 }
