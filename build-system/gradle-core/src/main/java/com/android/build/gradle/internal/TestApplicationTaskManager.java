@@ -93,7 +93,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         final Configuration compileClasspath =
                 variantData.getVariantDependency().getCompileClasspath();
-        final ResolvableDependencies incomingCompileClasspaht = compileClasspath.getIncoming();
+        final ResolvableDependencies incomingCompileClasspath = compileClasspath.getIncoming();
 
         final Configuration runtimeClasspath =
                 variantData.getVariantDependency().getCompileClasspath();
@@ -106,12 +106,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         File testingApk = outputs.get(0).getOutputFile();
 
         // create a FileCollection that will contain the APKs to be tested.
+        // APK is published only to the runtime configuration
         FileCollection testedApks = incomingRuntimeClasspath.artifactView()
                 .attributes(container -> container.attribute(ARTIFACT_TYPE,
                         APK.getType())).getFiles();
 
         // same for the metadata
-        FileCollection testTargetMetadata = incomingCompileClasspaht.artifactView()
+        FileCollection testTargetMetadata = incomingCompileClasspath.artifactView()
                 .attributes(container -> container.attribute(
                         ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
 
@@ -188,7 +189,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (mTargetManifestConfiguration == null){
             mTargetManifestConfiguration = variantData.getVariantDependency()
-                    .getRuntimeClasspath().getIncoming().artifactView()
+                    .getCompileClasspath().getIncoming().artifactView()
                     .attributes(container -> container.attribute(
                             ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
         }

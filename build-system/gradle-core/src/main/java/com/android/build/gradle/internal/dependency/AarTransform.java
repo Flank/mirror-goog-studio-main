@@ -90,6 +90,9 @@ public class AarTransform extends ExtractTransform {
         File file;
 
         switch (ArtifactType.byType(target.getAttribute(ARTIFACT_FORMAT))) {
+            // because both APK_CLASSES and CLASSES resolve to JavaPlugin.CLASS_DIRECTORY, we check for both
+            // depending on what the map will contain
+            case APK_CLASSES:
             case CLASSES:
             case JAVA_RES:
                 // even though resources are supposed to only be in the main jar of the AAR, this

@@ -86,7 +86,6 @@ public class JavaResPackagingTest {
         appendToFile(testProject.getBuildFile(),
                 "android {\n"
                 + "    targetProjectPath ':app'\n"
-                + "    targetVariant 'debug'\n"
                 + "}\n");
 
         // put some default files in the 4 projects, to check non incremental packaging as well,

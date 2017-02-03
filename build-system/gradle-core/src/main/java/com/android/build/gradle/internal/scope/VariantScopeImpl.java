@@ -680,9 +680,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         switch (configType) {
             case COMPILE:
                 configuration = getVariantData().getVariantDependency().getCompileClasspath();
+                checkConfigType(artifactType, configType);
                 break;
             case RUNTIME:
                 configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
+                checkConfigType(artifactType, configType);
                 break;
             case ANNOTATION_PROCESSOR:
                 configuration = getVariantData()
@@ -745,6 +747,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return fileCollection;
+    }
+
+    private static void checkConfigType(
+            @NonNull ArtifactType artifactType,
+            @NonNull ConfigType configType) {
+        // check if the queried configuration matches where this artifact has been published.
+        // this is mostly a check against typo'ed configuration.
+        Collection<ConfigType> publishedConfigs = artifactType.getPublishingConfigurations();
+        // if empty, means it was published to all configs.
+        if (!publishedConfigs.isEmpty() && !publishedConfigs.contains(configType)) {
+            throw new RuntimeException(
+                    "Querying '"
+                            + configType.name()
+                            + "' for artifact published to: "
+                            + publishedConfigs);
+        }
     }
 
     @Override

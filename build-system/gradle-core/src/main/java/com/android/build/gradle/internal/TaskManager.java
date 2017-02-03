@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
@@ -1358,12 +1359,12 @@ public abstract class TaskManager {
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
-        // Create the classes artifact for uses by external modules.
+        // Create the classes artifact for uses by external test modules.
         if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
             scope.publishIntermediateArtifact(
                     scope.getJavaOutputDir(),
                     javacTask.getName(),
-                    CLASSES);
+                    APK_CLASSES);
         }
 
         return javacTask;

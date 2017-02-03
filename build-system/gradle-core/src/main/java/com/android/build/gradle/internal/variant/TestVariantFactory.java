@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.variant;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
@@ -67,7 +69,9 @@ public class TestVariantFactory extends ApplicationVariantFactory {
         // Adding this to provided so that it's part of the compile but not part of the packaging.
         DependencyHandler handler = project.getDependencies();
         Map<String, String> projectNotation = ImmutableMap.of("path", path);
-        handler.add("provided", handler.project(projectNotation));
+        // adding it to compileOnly, but it doesn't really matter since we only publish it
+        // to apiElements anyway.
+        handler.add(CONFIG_NAME_COMPILE_ONLY, handler.project(projectNotation));
     }
 
     @Override

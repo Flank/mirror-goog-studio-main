@@ -254,6 +254,9 @@ public class VariantDependencies {
             annotationProcessor.setDescription("Resolved configuration for annotation-processor for variant: " + variantName);
             annotationProcessor.setExtendsFrom(annotationConfigs);
             annotationProcessor.setCanBeConsumed(false);
+            // the annotation processor is using its dependencies for running the processor, so we need
+            // all the runtime graph.
+            annotationProcessor.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             applyVariantAttributes(annotationProcessor, buildType, flavorMap);
 
             Configuration jackPlugin =
@@ -262,9 +265,11 @@ public class VariantDependencies {
             jackPlugin.setDescription("Resolved configuration for jack plugins for variant: " + variantName);
             jackPlugin.setExtendsFrom(jackPluginConfigs);
             jackPlugin.setCanBeConsumed(false);
+            // the jack plugin is using its dependencies for running the plugins, so we need
+            // all the runtime graph.
+            jackPlugin.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
             Configuration runtimeClasspath = project.getConfigurations().maybeCreate(variantName + "RuntimeClasspath");
-
             runtimeClasspath.setVisible(false);
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
@@ -278,6 +283,8 @@ public class VariantDependencies {
             wearApp.setExtendsFrom(wearAppConfigs);
             wearApp.setCanBeConsumed(false);
             applyVariantAttributes(wearApp, buildType, flavorMap);
+            // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
+            wearApp.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
             Configuration apiElements = null;
             Configuration runtimeElements = null;
