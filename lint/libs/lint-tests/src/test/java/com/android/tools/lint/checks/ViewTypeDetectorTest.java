@@ -177,6 +177,50 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                         mWrongCastActivity
                 ));
     }
+
+    public void test34968488() throws Exception {
+        // Regression test for 34968488:
+        // Casting to ProgressBar is valid for a SeekBar: it's an ancestor class
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.widget.ProgressBar;\n"
+                        + "\n"
+                        + "public class CastTest extends Activity {\n"
+                        + "    private ProgressBar progressBar;\n"
+                        + "\n"
+                        + "    private void test() {\n"
+                        + "        progressBar = (ProgressBar) findViewById(R.id.seekBar);\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "public final class R {\n"
+                        + "    public static final class id {\n"
+                        + "        public static final int seekBar = 0x7f0a0000;\n"
+                        + "    }\n"
+                        + "}\n"
+                        + ""),
+                xml("res/layout/my_layout.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:orientation=\"vertical\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\">\n"
+                        + "\n"
+                        + "    <SeekBar\n"
+                        + "        android:id=\"@+id/seekBar\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\" />\n"
+                        + "\n"
+                        + "</LinearLayout>"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mCasts = xml("res/layout/casts.xml", ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
