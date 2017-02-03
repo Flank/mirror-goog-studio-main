@@ -57,6 +57,7 @@ public class TestWithFlavorsWithCompileDirectJarTest {
         appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n" +
                         "android {\n" +
+                        "    flavorDimensions 'foo'\n" +
                         "    productFlavors {\n" +
                         "      pro { }\n" +
                         "      free { }\n" +
