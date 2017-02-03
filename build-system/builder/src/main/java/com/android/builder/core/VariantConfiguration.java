@@ -27,7 +27,6 @@ import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
-import com.android.builder.dependency.level2.EmptyContainer;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidLibrary;
@@ -2126,16 +2125,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the proguard config files coming from the project but also from the dependencies.
+     * Returns the proguard config files coming from the project.
      *
-     * Note that if the method is set to include config files coming from libraries, they will
-     * only be included if the aars have already been unzipped.
+     * Does not include proguard config from dependencies.
      *
-     * @param includeLibraries whether to include the library dependencies.
      * @return a non null list of proguard files.
      */
     @NonNull
-    public Set<File> getProguardFiles(boolean includeLibraries, List<File> defaultProguardConfig) {
+    public Set<File> getProguardFiles(List<File> defaultProguardConfig) {
         Set<File> fullList = Sets.newLinkedHashSet();
 
         // add the config files from the build type, main config and flavors
@@ -2148,16 +2145,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         if (fullList.isEmpty()) {
             fullList.addAll(defaultProguardConfig);
-        }
-
-        // now add the one coming from the library dependencies
-        if (includeLibraries && isDependenciesResolved) {
-            for (AndroidDependency androidDependency : packageDependencies.getAllAndroidDependencies()) {
-                File proguardRules = androidDependency.getProguardRules();
-                if (proguardRules.isFile()) {
-                    fullList.add(proguardRules);
-                }
-            }
         }
 
         return fullList;

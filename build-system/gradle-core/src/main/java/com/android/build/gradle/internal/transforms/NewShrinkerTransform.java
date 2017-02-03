@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -92,8 +93,8 @@ public class NewShrinkerTransform extends ProguardConfigurable {
 
     @NonNull
     @Override
-    public Collection<File> getSecondaryFileInputs() {
-        return getAllConfigurationFiles();
+    public Collection<SecondaryFile> getSecondaryFiles() {
+        return ImmutableList.of(SecondaryFile.nonIncremental(getAllConfigurationFiles()));
     }
 
     @NonNull

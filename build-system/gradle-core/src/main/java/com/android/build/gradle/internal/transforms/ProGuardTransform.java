@@ -127,9 +127,7 @@ public class ProGuardTransform extends BaseProguardAction {
         }
 
         // the config files
-        files.addAll(getAllConfigurationFiles().stream()
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList()));
+        files.add(SecondaryFile.nonIncremental(getAllConfigurationFiles()));
 
         return files;
     }

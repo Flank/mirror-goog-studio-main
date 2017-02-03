@@ -85,7 +85,7 @@ public class JackGenerateDexTransformTest {
     @Mock TransformOutputProvider transformOutputProvider;
     @Mock DefaultConfigurableFileTree sourceFiles;
     @Mock AndroidTask<? extends TransformTask> task;
-    @Mock FileCollection emptyJackPluginsClassPath;
+    @Mock FileCollection emptyFileCollection;
 
     private static Context context;
     private static JavaProcessExecutor noOpJavaExecutor;
@@ -189,7 +189,7 @@ public class JackGenerateDexTransformTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(emptyJackPluginsClassPath.getFiles()).thenReturn(ImmutableSet.of());
+        when(emptyFileCollection.getFiles()).thenReturn(ImmutableSet.of());
     }
 
     @Test
@@ -380,7 +380,8 @@ public class JackGenerateDexTransformTest {
                         () -> buildToolInfo,
                         errorReporter,
                         noOpJavaExecutor,
-                        emptyJackPluginsClassPath);
+                        emptyFileCollection,
+                        emptyFileCollection);
 
         ImmutableList.Builder<TransformInput> inputs = ImmutableList.builder();
         for (int i = 1; i < otherJackInputs.length; i++) {

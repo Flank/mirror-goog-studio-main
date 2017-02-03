@@ -31,7 +31,6 @@ import android.databinding.tool.DataBindingCompilerArgs;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -86,6 +85,7 @@ import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -170,9 +170,7 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -182,7 +180,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import groovy.lang.Closure;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -2489,6 +2486,10 @@ public abstract class TaskManager {
                         androidBuilder::getBuildToolInfo,
                         androidBuilder.getErrorReporter(),
                         androidBuilder.getJavaProcessExecutor(),
+                        scope.getArtifactFileCollection(
+                                AndroidArtifacts.ConfigType.COMPILE,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.PROGUARD_RULES),
                         variantDependency.getJackPluginConfiguration());
         TransformTask.ConfigActionCallback<JackGenerateDexTransform> jackDexTransformCallback =
                 (transform, task) -> {
@@ -3036,7 +3037,7 @@ public abstract class TaskManager {
 
     private void createNewShrinkerTransform(VariantScope scope, TaskFactory taskFactory) {
         NewShrinkerTransform transform = new NewShrinkerTransform(scope);
-        applyProguardConfig(transform, scope.getVariantData());
+        applyProguardConfig(transform, scope);
 
         if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
             //TODO: This is currently overly broad, as finding the actual application class
@@ -3073,7 +3074,10 @@ public abstract class TaskManager {
             applyProguardDefaultsForTest(transform);
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
-                    testedVariantData.getVariantConfiguration()::getTestProguardFiles);
+                    project.files(
+                            TaskInputHelper.bypassFileCallable(
+                                    testedVariantData.getVariantConfiguration()
+                                            ::getTestProguardFiles)));
 
             // register the mapping file which may or may not exists (only exist if obfuscation)
             // is enabled.
@@ -3081,10 +3085,13 @@ public abstract class TaskManager {
         } else if (isTestedAppMinified(variantScope)) {
             applyProguardDefaultsForTest(transform);
             // All -dontwarn rules for test dependencies should go in here:
-            transform.setConfigurationFiles(variantConfig::getTestProguardFiles);
+            transform.setConfigurationFiles(
+                    project.files(
+                            TaskInputHelper.bypassFileCallable(
+                                    variantConfig::getTestProguardFiles)));
             transform.applyTestedMapping(mappingFileCollection);
         } else {
-            applyProguardConfig(transform, variantData);
+            applyProguardConfig(transform, variantScope);
 
             if (mappingFileCollection != null) {
                 transform.applyTestedMapping(mappingFileCollection);
@@ -3212,13 +3219,13 @@ public abstract class TaskManager {
 
     private void applyProguardConfig(
             ProguardConfigurable transform,
-            final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-        transform.setConfigurationFiles(
-                () -> {
+            VariantScope scope) {
+        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        final GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
+        transform.setConfigurationFiles(project.files(
+                TaskInputHelper.bypassFileCallable(() -> {
                     Set<File> proguardFiles =
                             variantConfig.getProguardFiles(
-                                    true,
                                     Collections.singletonList(
                                             ProguardFiles.getDefaultProguardFile(
                                                     TaskManager.DEFAULT_PROGUARD_CONFIG_FILE,
@@ -3230,7 +3237,11 @@ public abstract class TaskManager {
                     BaseVariantOutputData outputData = variantData.getMainOutput();
                     proguardFiles.add(outputData.processResourcesTask.getProguardOutputFile());
                     return proguardFiles;
-                });
+                }),
+                scope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.COMPILE,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.PROGUARD_RULES)));
 
         if (variantData.getType() == LIBRARY) {
             transform.keep("class **.R");
