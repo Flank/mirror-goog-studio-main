@@ -2487,7 +2487,7 @@ public abstract class TaskManager {
                         androidBuilder.getErrorReporter(),
                         androidBuilder.getJavaProcessExecutor(),
                         scope.getArtifactFileCollection(
-                                AndroidArtifacts.ConfigType.COMPILE,
+                                AndroidArtifacts.ConfigType.RUNTIME,
                                 AndroidArtifacts.ArtifactScope.ALL,
                                 AndroidArtifacts.ArtifactType.PROGUARD_RULES),
                         variantDependency.getJackPluginConfiguration());
@@ -3239,7 +3239,7 @@ public abstract class TaskManager {
                     return proguardFiles;
                 }),
                 scope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.COMPILE,
+                        AndroidArtifacts.ConfigType.RUNTIME,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.PROGUARD_RULES)));
 

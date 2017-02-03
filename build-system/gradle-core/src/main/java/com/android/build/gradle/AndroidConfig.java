@@ -44,12 +44,19 @@ import java.util.List;
 import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.attributes.Attribute;
 
 /**
  * User configuration settings for all android plugins.
  */
 public interface AndroidConfig {
+
+    String CONFIG_DESC = "%s dependencies for '%s' sources.";
+    String CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead).";
+    String DEPRECATED_CONFIG_WARNING = "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.";
 
     /** Build tools version. */
     String getBuildToolsVersion();
@@ -153,4 +160,36 @@ public interface AndroidConfig {
 
     @NonNull
     Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy();
+
+    final class DeprecatedConfigurationAction implements Action<Dependency> {
+
+        @NonNull
+        private final Project project;
+        @NonNull
+        private final Configuration configuration;
+        @NonNull
+        private final String replacement;
+        private boolean warningPrintedAlready = false;
+
+        public DeprecatedConfigurationAction(
+                @NonNull Project project,
+                @NonNull Configuration configuration,
+                @NonNull String replacement) {
+            this.project = project;
+            this.configuration = configuration;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public void execute(Dependency dependency) {
+            if (!warningPrintedAlready) {
+                warningPrintedAlready = true;
+                System.out.println(String.format(
+                        DEPRECATED_CONFIG_WARNING,
+                        configuration.getName(),
+                        project.getPath(),
+                        replacement));
+            }
+        }
+    }
 }

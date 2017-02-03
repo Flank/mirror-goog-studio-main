@@ -67,7 +67,6 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -161,34 +160,6 @@ public abstract class BaseExtension implements AndroidConfig {
 
     protected Project project;
 
-    private static final String CONFIG_DESC = "%s dependencies for '%s' sources.";
-    private static final String CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead).";
-    private static final String DEPRECATED_CONFIG_WARNING = "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.";
-
-    private final class DeprecationAction implements Action<Dependency> {
-
-        private final Configuration configuration;
-        private final String replacement;
-        private boolean warningPrintedAlready = false;
-
-        public DeprecationAction(Configuration configuration, String replacement) {
-            this.configuration = configuration;
-            this.replacement = replacement;
-        }
-
-        @Override
-        public void execute(Dependency dependency) {
-            if (!warningPrintedAlready) {
-                warningPrintedAlready = true;
-                System.out.println(String.format(
-                        DEPRECATED_CONFIG_WARNING,
-                        configuration.getName(),
-                        project.getPath(),
-                        replacement));
-            }
-        }
-    }
-
     BaseExtension(
             @NonNull final Project project,
             @NonNull Instantiator instantiator,
@@ -252,7 +223,7 @@ public abstract class BaseExtension implements AndroidConfig {
                                 String.format(CONFIG_DESC_OLD, "Compile", sourceSet.getName(), implementationName),
                                 "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
                         compile.getAllDependencies().whenObjectAdded(
-                                new DeprecationAction(compile, implementationName));
+                                new DeprecatedConfigurationAction(project, compile, implementationName));
 
                         String packageConfigDescription;
                         if (publishPackage) {
@@ -261,20 +232,19 @@ public abstract class BaseExtension implements AndroidConfig {
                             packageConfigDescription = String.format(CONFIG_DESC_OLD, "Apk", sourceSet.getName(), runtimeOnlyName);
                         }
 
-                        final String packageName;
                         Configuration apk = createConfiguration(
                                 configurations,
                                 sourceSet.getPackageConfigurationName(),
                                 packageConfigDescription);
                         apk.getAllDependencies().whenObjectAdded(
-                                new DeprecationAction(apk, runtimeOnlyName));
+                                new DeprecatedConfigurationAction(project, apk, runtimeOnlyName));
 
                         Configuration provided = createConfiguration(
                                 configurations,
                                 sourceSet.getProvidedConfigurationName(),
                                 String.format(CONFIG_DESC_OLD, "Provided", sourceSet.getName(), compileOnlyName));
                         provided.getAllDependencies().whenObjectAdded(
-                                new DeprecationAction(provided, compileOnlyName));
+                                new DeprecatedConfigurationAction(project, provided, compileOnlyName));
 
                         // then the new configurations.
                         String apiName = sourceSet.getApiConfigurationName();

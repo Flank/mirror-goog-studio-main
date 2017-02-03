@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_METADATA;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -172,7 +173,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             mTestTargetMapping = variantScope.getVariantData().getVariantDependency()
                     .getCompileClasspath().getIncoming().artifactView()
                     .attributes(container -> container.attribute(
-                            ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
+                            ARTIFACT_TYPE, APK_MAPPING.getType())).getFiles();
         }
 
         if (mTestTargetMapping.getFiles().isEmpty()) {

@@ -758,7 +758,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // if empty, means it was published to all configs.
         if (!publishedConfigs.isEmpty() && !publishedConfigs.contains(configType)) {
             throw new RuntimeException(
-                    "Querying '"
+                    "Querying Artifact '"
+                            + artifactType.name()
+                            + "' with config '"
                             + configType.name()
                             + "' for artifact published to: "
                             + publishedConfigs);
