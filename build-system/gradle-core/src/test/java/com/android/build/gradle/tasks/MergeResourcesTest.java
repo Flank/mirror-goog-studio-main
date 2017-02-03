@@ -193,6 +193,10 @@ public class MergeResourcesTest {
 
         File libFile = new File("foo/bar/1.0");
         File libFile2 = new File("foo/bar/2.0");
+
+        // the order returned by the dependency is meant to be in the wrong order (consumer first,
+        // when we want dependent first for the merger), so the order in the res set should be
+        // the opposite order.
         List<ResourceSet> librarySets = setupLibraryDependencies(
                 libFile, ":path1",
                 libFile2, ":path2");
@@ -214,7 +218,7 @@ public class MergeResourcesTest {
         assertThat(task.getSourceFolderInputs()).containsExactly(file, file2, debugFile);
         assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
         assertThat(task.computeResourceSetList())
-                .containsExactly(librarySet, librarySet2, mainSet, debugSet)
+                .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles())

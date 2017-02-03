@@ -2044,7 +2044,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2106,7 +2106,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2156,7 +2156,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
