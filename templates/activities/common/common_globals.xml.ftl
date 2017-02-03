@@ -9,6 +9,7 @@
     <#assign testSupportLib=espresso && supportRunner>
 
     <global id="themeName" type="string" value="${themeName}" />
+    <global id="themeExists" type="boolean" value="${(theme.exists!false)?string}" />
     <global id="implicitParentTheme" type="boolean" value="${(themeNameNoActionBar?starts_with(themeName+'.'))?string}" />
     <global id="themeNameNoActionBar" type="string" value="${themeNameNoActionBar}" />
     <global id="themeExistsNoActionBar" type="boolean" value="${(theme.existsNoActionBar!false)?string}" />
