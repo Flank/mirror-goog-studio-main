@@ -156,6 +156,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                 new ToolOutputParser(new AaptOutputParser(), getILogger()),
                 new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
 
+        String preferredDensity =
+                getResourceConfigs().isEmpty()
+                        ? getPreferredDensity()
+                        : null; /* when resConfigs are set, we should respect it */
         try {
             Aapt aapt = AaptGradleFactory.make(
                     getBuilder(),
@@ -166,25 +170,26 @@ public class ProcessAndroidResources extends IncrementalTask {
                     FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                     aaptOptions.getCruncherProcesses());
 
-            AaptPackageConfig.Builder config = new AaptPackageConfig.Builder()
-                    .setManifestFile(manifestFileToPackage)
-                    .setOptions(getAaptOptions())
-                    .setResourceDir(getResDir())
-                    .setLibraries(getAndroidDependencies())
-                    .setCustomPackageForR(getPackageForR())
-                    .setSymbolOutputDir(getTextSymbolOutputDir())
-                    .setSourceOutputDir(srcOut)
-                    .setResourceOutputApk(resOutBaseNameFile)
-                    .setProguardOutputFile(getProguardOutputFile())
-                    .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
-                    .setVariantType(getType())
-                    .setDebuggable(getDebuggable())
-                    .setPseudoLocalize(getPseudoLocalesEnabled())
-                    .setResourceConfigs(getResourceConfigs())
-                    .setSplits(getSplits())
-                    .setPreferredDensity(getPreferredDensity())
-                    .setBaseFeature(getBaseFeature())
-                    .setPreviousFeatures(getPreviousFeatures());
+            AaptPackageConfig.Builder config =
+                    new AaptPackageConfig.Builder()
+                            .setManifestFile(manifestFileToPackage)
+                            .setOptions(getAaptOptions())
+                            .setResourceDir(getResDir())
+                            .setLibraries(getAndroidDependencies())
+                            .setCustomPackageForR(getPackageForR())
+                            .setSymbolOutputDir(getTextSymbolOutputDir())
+                            .setSourceOutputDir(srcOut)
+                            .setResourceOutputApk(resOutBaseNameFile)
+                            .setProguardOutputFile(getProguardOutputFile())
+                            .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
+                            .setVariantType(getType())
+                            .setDebuggable(getDebuggable())
+                            .setPseudoLocalize(getPseudoLocalesEnabled())
+                            .setResourceConfigs(getResourceConfigs())
+                            .setSplits(getSplits())
+                            .setPreferredDensity(preferredDensity)
+                            .setBaseFeature(getBaseFeature())
+                            .setPreviousFeatures(getPreviousFeatures());
 
             builder.processResources(aapt, config, getEnforceUniquePackageName());
 
