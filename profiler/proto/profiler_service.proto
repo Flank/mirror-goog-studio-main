@@ -19,12 +19,14 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Profiler";
 
+import "profiler.proto";
+
 service ProfilerService {
   // Gets current timestamp that used in the device's profiling data.
   // A client may use this API to relate profiling data' timestamps to other
   // clocks such as the desktop's calendar time.
   // TODO(b/29223899): Add device's calendar time.
-  rpc GetTimes(TimesRequest) returns (TimesResponse) {
+  rpc GetCurrentTime(TimeRequest) returns (TimeResponse) {
   }
 
   // Gets version.
@@ -47,10 +49,11 @@ service ProfilerService {
   }
 }
 
-message TimesRequest {
+message TimeRequest {
+  string device_serial = 1;
 }
 
-message TimesResponse {
+message TimeResponse {
 
   // What's used as timestamps in all profiler data (unless otherwise specified).
   // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
@@ -76,7 +79,7 @@ message GetDevicesResponse {
 }
 
 message GetProcessesRequest {
-  string device_serial = 1;
+  Session session = 1;
 }
 
 message GetProcessesResponse {
@@ -88,6 +91,7 @@ message BytesRequest {
   // as a filename, if you want to cache the contents locally to disk for
   // example.
   string id = 1;
+  Session session = 2;
 }
 
 message BytesResponse {
@@ -107,6 +111,7 @@ message Device {
   string serial = 3;
   string version = 4;
   string api = 5;
+  string boot_id = 6;
 }
 
 message Process {

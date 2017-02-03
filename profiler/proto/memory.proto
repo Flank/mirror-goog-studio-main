@@ -19,6 +19,8 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "MemoryProfiler";
 
+import "profiler.proto";
+
 service MemoryService {
   rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
   }
@@ -47,7 +49,7 @@ service MemoryService {
 
 message MemoryStartRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message MemoryStartResponse {
@@ -61,7 +63,7 @@ message MemoryStartResponse {
 
 message MemoryStopRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
 }
 
 message MemoryStopResponse {
@@ -75,7 +77,7 @@ message MemoryStopResponse {
 
 message MemoryRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_time = 3;  // exclusive
   int64 end_time = 4;    // inclusive
 }
@@ -134,14 +136,14 @@ message MemoryData {
 
 message ListDumpInfosRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_time = 3;  // exclusive
   int64 end_time = 4;    // inclusive
 }
 
 message DumpDataRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int32 dump_id = 3;
 }
 
@@ -159,7 +161,7 @@ message DumpDataResponse {
 
 message TriggerHeapDumpRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 request_time = 3;
 }
 
@@ -214,7 +216,7 @@ message TrackAllocationsResponse {
 
 message TrackAllocationsRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   // Requests whether an allocation tracking session is
   // to be enabled/disabled. If a session is already in
   // progress, re-enabling it does nothing, this is also
@@ -231,7 +233,7 @@ message TrackAllocationsRequest {
 
 message GetAllocationsInfoStatusRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int32 info_id = 3;
 }
 
@@ -242,7 +244,7 @@ message GetAllocationsInfoStatusResponse {
 
 message AllocationContextsRequest {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 start_time = 3; // exclusive
   int64 end_time = 4;   // inclusive
 }
