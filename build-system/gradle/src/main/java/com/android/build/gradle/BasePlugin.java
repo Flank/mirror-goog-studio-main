@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -69,7 +70,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -88,7 +88,6 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
@@ -133,6 +132,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private TaskManager taskManager;
 
     private Project project;
+
+    private ProjectOptions projectOptions;
 
     private SdkHandler sdkHandler;
 
@@ -193,6 +194,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     @NonNull
     protected abstract TaskManager createTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
@@ -232,11 +234,12 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         TaskInputHelper.enableBypass();
 
         this.project = project;
+        this.projectOptions = new ProjectOptions(project);
         ExecutionConfigurationUtil.setThreadPoolSize(project);
         checkPathForErrors();
         checkModulesForErrors();
 
-        ProfilerInitializer.init(project);
+        ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 
         ProcessProfileWriter.getProject(project.getPath())
@@ -423,6 +426,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         taskManager =
                 createTaskManager(
                         project,
+                        projectOptions,
                         androidBuilder,
                         dataBindingBuilder,
                         extension,

@@ -27,7 +27,6 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.SdkConstants.FN_RENDERSCRIPT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
 
@@ -63,6 +62,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.VariantHelper;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
@@ -84,8 +84,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Zip;
@@ -104,6 +102,7 @@ public class LibraryTaskManager extends TaskManager {
 
     public LibraryTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -114,6 +113,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,

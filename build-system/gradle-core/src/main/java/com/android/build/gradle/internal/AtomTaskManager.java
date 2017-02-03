@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.VariantHelper;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.MergeResources;
@@ -53,6 +55,7 @@ public class AtomTaskManager extends TaskManager {
 
     public AtomTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -63,6 +66,7 @@ public class AtomTaskManager extends TaskManager {
             @NonNull Recorder threadRecorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,

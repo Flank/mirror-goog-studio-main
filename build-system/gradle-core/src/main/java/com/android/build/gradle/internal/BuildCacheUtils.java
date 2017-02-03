@@ -19,10 +19,13 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.utils.FileCache;
 import com.android.prefs.AndroidLocation;
 import java.io.File;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -42,11 +45,12 @@ public final class BuildCacheUtils {
      * user-defined directory, or a default directory if the user-defined directory is not provided.
      *
      * @throws RuntimeException if the ".android" directory does not exist or the build cache cannot
-     * be created
+     *     be created
      */
     @Nullable
     public static FileCache createBuildCacheIfEnabled(
-            @NonNull AndroidGradleOptions androidGradleOptions) {
+            @NonNull Function<Object, File> rootProjectFile,
+            @NonNull ProjectOptions projectOptions) {
         // Use a default directory if the user-defined directory is not provided
         Supplier<File> defaultBuildCacheDirSupplier = () -> {
             try {
@@ -56,18 +60,21 @@ public final class BuildCacheUtils {
             }
         };
 
-        return doCreateBuildCacheIfEnabled(androidGradleOptions, defaultBuildCacheDirSupplier);
+        return doCreateBuildCacheIfEnabled(
+                rootProjectFile, projectOptions, defaultBuildCacheDirSupplier);
     }
 
     @VisibleForTesting
     @Nullable
     static FileCache doCreateBuildCacheIfEnabled(
-            @NonNull AndroidGradleOptions androidGradleOptions,
+            @NonNull Function<Object, File> rootProjectFile,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Supplier<File> defaultBuildCacheDirSupplier) {
-        if (androidGradleOptions.isBuildCacheEnabled()) {
+        if (projectOptions.get(BooleanOption.ENABLE_BUILD_CACHE)) {
+            String buildCacheDirOverride = projectOptions.get(StringOption.BUILD_CACHE_DIR);
             return FileCache.getInstanceWithInterProcessLocking(
-                    androidGradleOptions.getBuildCacheDir() != null
-                            ? androidGradleOptions.getBuildCacheDir()
+                    buildCacheDirOverride != null
+                            ? rootProjectFile.apply(buildCacheDirOverride)
                             : defaultBuildCacheDirSupplier.get());
         } else {
             return null;

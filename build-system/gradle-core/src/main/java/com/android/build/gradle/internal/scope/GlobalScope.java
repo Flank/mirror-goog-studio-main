@@ -28,6 +28,8 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -36,7 +38,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import java.io.File;
-import java.util.EnumSet;
+import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -67,17 +69,16 @@ public class GlobalScope implements TransformGlobalScope {
     @Nullable
     private File mockableAndroidJarFile;
 
-    @NonNull
-    private final EnumSet<OptionalCompilationStep> optionalCompilationSteps;
+    @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
 
-    @NonNull
-    private final AndroidGradleOptions androidGradleOptions;
+    @NonNull private final ProjectOptions projectOptions;
 
     @Nullable
     private final FileCache buildCache;
 
     public GlobalScope(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
@@ -91,10 +92,12 @@ public class GlobalScope implements TransformGlobalScope {
         this.sdkHandler = sdkHandler;
         this.ndkHandler = ndkHandler;
         this.toolingRegistry = toolingRegistry;
-        this.optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
-        this.androidGradleOptions = new AndroidGradleOptions(project);
-        this.buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
-        validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
+        this.optionalCompilationSteps = projectOptions.getOptionalCompilationSteps();
+        this.projectOptions = projectOptions;
+        this.buildCache =
+                BuildCacheUtils.createBuildCacheIfEnabled(
+                        project.getRootProject()::file, projectOptions);
+        validateAndroidGradleOptions(projectOptions, buildCache);
     }
 
     @NonNull
@@ -244,8 +247,8 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     @Override
-    public AndroidGradleOptions getAndroidGradleOptions() {
-        return androidGradleOptions;
+    public ProjectOptions getProjectOptions() {
+        return projectOptions;
     }
 
     @Nullable
@@ -254,14 +257,10 @@ public class GlobalScope implements TransformGlobalScope {
         return buildCache;
     }
 
-    /**
-     * Validate flag options.
-     */
+    /** Validate flag options. */
     public static void validateAndroidGradleOptions(
-            @NonNull Project project,
-            @NonNull AndroidGradleOptions androidGradleOptions,
-            @Nullable FileCache buildCache) {
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+            @NonNull ProjectOptions projectOptions, @Nullable FileCache buildCache) {
+        if (projectOptions.get(BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION)
                 && buildCache == null) {
             throw new InvalidUserDataException("Build cache must be enabled to use improved "
                     + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.  "

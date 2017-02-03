@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
@@ -49,6 +50,7 @@ public class LibraryComponentTaskManager extends LibraryTaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
+                new ProjectOptions(project),
                 androidBuilder,
                 dataBindingBuilder,
                 extension,

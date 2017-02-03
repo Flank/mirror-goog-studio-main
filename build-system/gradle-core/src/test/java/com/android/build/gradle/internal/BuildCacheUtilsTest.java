@@ -18,18 +18,17 @@ package com.android.build.gradle.internal;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.utils.FileCache;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
 
 /**
  * Unit tests for {@link BuildCacheUtils}.
@@ -38,20 +37,20 @@ public class BuildCacheUtilsTest {
 
     @Rule public TemporaryFolder testDir = new TemporaryFolder();
 
-    @Mock private AndroidGradleOptions androidGradleOptions;
-
-    @Before
-    public void setUp() {
-        initMocks(this);
-    }
-
     @Test
     public void testCreateBuildCache_Enabled_DirectorySet() throws IOException {
         File buildCacheDirectory = testDir.newFolder();
 
-        when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
-        when(androidGradleOptions.getBuildCacheDir()).thenReturn(buildCacheDirectory);
-        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+        ProjectOptions options =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                BooleanOption.ENABLE_BUILD_CACHE.getPropertyName(),
+                                Boolean.TRUE,
+                                StringOption.BUILD_CACHE_DIR.getPropertyName(),
+                                buildCacheDirectory.toString()));
+
+        FileCache buildCache =
+                BuildCacheUtils.createBuildCacheIfEnabled(BuildCacheUtilsTest::file, options);
 
         assertThat(buildCache).isNotNull();
         assertThat(buildCache.getCacheDirectory()).isEqualTo(buildCacheDirectory);
@@ -61,11 +60,14 @@ public class BuildCacheUtilsTest {
     public void testCreateBuildCache_Enabled_DirectoryNotSet() throws IOException {
         File defaultBuildCacheDir = testDir.newFolder();
 
-        when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(true);
-        when(androidGradleOptions.getBuildCacheDir()).thenReturn(null);
+        ProjectOptions options =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                BooleanOption.ENABLE_BUILD_CACHE.getPropertyName(), Boolean.TRUE));
+
         FileCache buildCache =
                 BuildCacheUtils.doCreateBuildCacheIfEnabled(
-                        androidGradleOptions, () -> defaultBuildCacheDir);
+                        BuildCacheUtilsTest::file, options, () -> defaultBuildCacheDir);
 
         assertThat(buildCache).isNotNull();
         assertThat(buildCache.getCacheDirectory()).isEqualTo(defaultBuildCacheDir);
@@ -73,9 +75,17 @@ public class BuildCacheUtilsTest {
 
     @Test
     public void testCreateBuildCache_Disabled() {
-        when(androidGradleOptions.isBuildCacheEnabled()).thenReturn(false);
-        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(androidGradleOptions);
+        ProjectOptions options =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                BooleanOption.ENABLE_BUILD_CACHE.getPropertyName(), Boolean.FALSE));
+        FileCache buildCache =
+                BuildCacheUtils.createBuildCacheIfEnabled(BuildCacheUtilsTest::file, options);
 
         assertThat(buildCache).isNull();
+    }
+
+    private static File file(Object object) {
+        return new File(object.toString());
     }
 }

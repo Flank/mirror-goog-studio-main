@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
@@ -60,6 +61,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     public ApplicationTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -70,6 +72,7 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
