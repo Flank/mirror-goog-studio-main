@@ -36,9 +36,9 @@ import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.Usage;
-import org.gradle.api.artifacts.ResolutionStrategy;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -226,6 +226,7 @@ public class VariantDependencies {
             annotationProcessor.setDescription("Resolved configuration for annotation-processor for variant: " + variantName);
             annotationProcessor.setExtendsFrom(annotationConfigs);
             annotationProcessor.setCanBeConsumed(false);
+            applyVariantAttributes(annotationProcessor, buildType, flavorMap);
 
             Configuration jackPlugin =
                     project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");

@@ -168,11 +168,7 @@ public class AnnotationProcessorTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n"
-                        + "${model_end}\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
-                        + "}\n")
+                        + "${model_end}\n")
                 .addPattern(
                         "argument",
                         "argument \"value\", \"Hello\"",
@@ -183,6 +179,13 @@ public class AnnotationProcessorTest {
 
     @Test
     public void normalBuild() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "dependencies {\n"
+                        + "    compile project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "}\n");
+
         project.execute("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
         assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
@@ -200,12 +203,37 @@ public class AnnotationProcessorTest {
         File emptyJar = project.getSubproject("app").file("empty.jar");
         assertThat(emptyJar.createNewFile()).isTrue();
 
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                new BuildScriptGenerator(
+                        "${model_start}\n"
+                                + "    android {\n"
+                                + "        defaultConfig {\n"
+                                + "            javaCompileOptions {\n"
+                                + "                annotationProcessorOptions {\n"
+                                + "                    includeCompileClasspath = true\n"
+                                + "                }\n"
+                                + "            }\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "${model_end}\n"
+                                + "dependencies {\n"
+                                + "    compile project(':lib-compiler')\n"
+                                + "    annotationProcessor files('empty.jar')\n"
+                                + "}\n").build(forComponentPlugin));
+
         project.execute("assembleDebug");
     }
 
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "dependencies {\n"
+                        + "    compile project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "}\n");
         project.executeConnectedCheck();
     }
 
@@ -213,6 +241,13 @@ public class AnnotationProcessorTest {
     public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
         // check for jack and non-component plugin
         Assume.assumeTrue(forJack && !forComponentPlugin);
+
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "dependencies {\n"
+                        + "    compile project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "}\n");
 
         GradleTestProject proc = project.getSubproject("lib-compiler");
         TestFileUtils.appendToFile(

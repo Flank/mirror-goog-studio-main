@@ -2404,13 +2404,29 @@ public abstract class TaskManager {
     /** Creates the transform that will compile the sources with Jack. */
     private JackCompileTransform createSourcesJackTransform(@NonNull VariantScope scope) {
         VariantDependencies variantDependency = scope.getVariantData().getVariantDependency();
+        Boolean includeCompileClasspaths = scope.getVariantConfiguration()
+                .getJavaCompileOptions()
+                .getAnnotationProcessorOptions()
+                .getIncludeCompileClasspath();
+        checkNotNull(includeCompileClasspaths);
+        FileCollection processorPaths = includeCompileClasspaths
+                ? scope.getArtifactFileCollection(
+                AndroidArtifacts.ConfigType.COMPILE,
+                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.CLASSES)
+                : project.files();
+        processorPaths = processorPaths.plus(
+                scope.getArtifactFileCollection(
+                        AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.CLASSES));
         JackCompileTransform jackCompileTransform =
                 new JackCompileTransform(
                         JackOptionsUtils.forSourceCompilation(scope),
                         androidBuilder::getBuildToolInfo,
                         androidBuilder.getErrorReporter(),
                         androidBuilder.getJavaProcessExecutor(),
-                        variantDependency.getAnnotationProcessorConfiguration(),
+                        processorPaths,
                         variantDependency.getJackPluginConfiguration());
         scope.getVariantData().jackCompileTransform = jackCompileTransform;
         return jackCompileTransform;

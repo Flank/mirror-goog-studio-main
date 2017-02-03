@@ -7,6 +7,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -15,8 +16,10 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -140,7 +143,22 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         Configuration annotationProcessorConfiguration =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
-        javacTask.getOptions().setAnnotationProcessorPath(annotationProcessorConfiguration);
+
+
+        Boolean includeCompileClasspath =
+                scope.getVariantConfiguration()
+                        .getJavaCompileOptions()
+                        .getAnnotationProcessorOptions()
+                        .getIncludeCompileClasspath();
+        Preconditions.checkNotNull(includeCompileClasspath);
+        FileCollection processorPath = includeCompileClasspath
+                ? javacTask.getClasspath()
+                : project.files();
+        processorPath = processorPath.plus(scope.getArtifactFileCollection(
+                AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
+                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.CLASSES));
+        javacTask.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental = AbstractCompilesUtil.isIncremental(
                 project,

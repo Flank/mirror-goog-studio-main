@@ -72,7 +72,7 @@ public class AndroidArtifacts {
     public static final String TYPE_METADATA = "android-metadata";
 
     public enum ConfigType {
-        COMPILE, PACKAGE
+        COMPILE, PACKAGE, ANNOTATION_PROCESSOR
     }
 
     public enum ArtifactScope {

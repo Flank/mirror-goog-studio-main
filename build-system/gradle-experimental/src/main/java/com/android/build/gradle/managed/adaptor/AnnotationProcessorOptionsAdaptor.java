@@ -22,8 +22,6 @@ import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.managed.AnnotationProcessorOptions;
 import com.android.build.gradle.managed.KeyValuePair;
 
-import org.gradle.api.Named;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,7 +47,7 @@ public class AnnotationProcessorOptionsAdaptor implements CoreAnnotationProcesso
 
     @Nullable
     public Boolean getIncludeCompileClasspath() {
-        return annotationProcessorOptions.getIncludeClasspath();
+        return annotationProcessorOptions.getIncludeCompileClasspath();
     }
 
     @Override
