@@ -48,15 +48,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -128,7 +126,7 @@ public class ProcessAtomsResources extends IncrementalTask {
                                 .setManifestFile(atomInfo.getManifestFile())
                                 .setOptions(getAaptOptions())
                                 .setResourceDir(atomInfo.getResourceDir())
-                                .setLibraries(getLibraryInfoList())
+                                .setLibraries(getLibraryInfoList(atomInfo.getLibInfoFile()))
                                 .setCustomPackageForR(packageForR)
                                 .setSymbolOutputDir(atomInfo.getTextSymbolOutputDir())
                                 .setSourceOutputDir(srcOut)
@@ -156,31 +154,27 @@ public class ProcessAtomsResources extends IncrementalTask {
     }
 
     @NonNull
-    private List<AaptPackageConfig.LibraryInfo> getLibraryInfoList() {
-        // TODO: This is inefficient because all the dependent libraries get parsed for every atom.
-        // TODO: Set each atom to output its own library set in a file and parse it here.
-        if (computedLibraryInfo == null) {
-            // first build a map for the optional symbols.
-            Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
-            for (ResolvedArtifactResult artifactResult : librarySymbolFiles.getArtifacts()) {
-                symbolMap.put(
-                        artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
-            }
+    private static List<AaptPackageConfig.LibraryInfo> getLibraryInfoList(@NonNull File libInfoFile)
+            throws IOException {
+        ImmutableList.Builder<AaptPackageConfig.LibraryInfo> libInfoBuilder =
+                ImmutableList.builder();
 
-            // now loop through all the manifests and associate to a symbol file, if applicable.
-            Set<ResolvedArtifactResult> manifestArtifacts = libraryManifests.getArtifacts();
-            computedLibraryInfo = new ArrayList<>(manifestArtifacts.size());
-            for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
-                computedLibraryInfo.add(
-                        new AaptPackageConfig.LibraryInfo(
-                                artifactResult.getFile(),
-                                symbolMap.get(artifactResult.getId().getComponentIdentifier())));
+        if (libInfoFile.exists()) {
+            try (Stream<String> stream = Files.lines(Paths.get(libInfoFile.getPath()))) {
+                stream.forEach(
+                        line -> {
+                            String[] fileNames = line.split(Pattern.quote(File.pathSeparator));
+                            if (fileNames.length != 2) {
+                                return;
+                            }
+                            libInfoBuilder.add(
+                                    new AaptPackageConfig.LibraryInfo(
+                                            new File(fileNames[0]), new File(fileNames[1])));
+                        });
             }
-
-            computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
         }
 
-        return computedLibraryInfo;
+        return libInfoBuilder.build();
     }
 
     @InputFiles
@@ -200,6 +194,12 @@ public class ProcessAtomsResources extends IncrementalTask {
     @NonNull
     public FileCollection getResDirsCollection() {
         return atomResDirs.getArtifactFiles();
+    }
+
+    @InputFiles
+    @NonNull
+    public FileCollection getAtomLibInfoFilesCollection() {
+        return atomLibInfos.getArtifactFiles();
     }
 
     @OutputDirectories
@@ -282,11 +282,8 @@ public class ProcessAtomsResources extends IncrementalTask {
     private ArtifactCollection atomManifests;
     private ArtifactCollection atomResourcePackages;
     private ArtifactCollection atomResDirs;
+    private ArtifactCollection atomLibInfos;
     private AtomConfig atomConfigTask;
-
-    private ArtifactCollection libraryManifests;
-    private ArtifactCollection librarySymbolFiles;
-    private List<AaptPackageConfig.LibraryInfo> computedLibraryInfo;
 
     public static class ConfigAction implements TaskConfigAction<ProcessAtomsResources> {
 
@@ -335,23 +332,17 @@ public class ProcessAtomsResources extends IncrementalTask {
                     variantScope.getArtifactCollection(
                             AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.RESOURCES_PKG);
+                            AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
             processAtomsResources.atomResDirs =
                     variantScope.getArtifactCollection(
                             AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES);
-
-            processAtomsResources.libraryManifests =
+            processAtomsResources.atomLibInfos =
                     variantScope.getArtifactCollection(
                             AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.MANIFEST);
-            processAtomsResources.librarySymbolFiles =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.SYMBOL_LIST);
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
 
             ConventionMappingHelper.map(
                     processAtomsResources,

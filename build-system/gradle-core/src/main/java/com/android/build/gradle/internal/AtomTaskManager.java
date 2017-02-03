@@ -42,7 +42,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -50,8 +49,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  * TaskManager for creating tasks in an Android Atom project.
  */
 public class AtomTaskManager extends TaskManager {
-
-    private Task assembleDefault;
 
     public AtomTaskManager(
             @NonNull Project project,
@@ -177,7 +174,11 @@ public class AtomTaskManager extends TaskManager {
                                     .getVariantOutputData()
                                     .getProcessResourcePackageOutputFile(),
                             variantOutputScope.getProcessResourcesTask().getName(),
-                            AndroidArtifacts.ArtifactType.RESOURCES_PKG);
+                            AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
+                    variantScope.publishIntermediateArtifact(
+                            variantScope.getLibInfoFile(),
+                            variantOutputScope.getProcessResourcesTask().getName(),
+                            AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
                 });
 
         recorder.record(
@@ -286,7 +287,11 @@ public class AtomTaskManager extends TaskManager {
                         }
                         createPostCompilationTasks(tasks, variantScope);
                     }
-                    // TODO: Publish jar and/or class files when multi atom support is re-enabled.
+                    // TODO: Publish an obfuscated JAR instead.
+                    variantScope.publishIntermediateArtifact(
+                            javacTask.get(tasks).getDestinationDir(),
+                            jarTask.getName(),
+                            AndroidArtifacts.ArtifactType.ATOM_CLASSES);
                 });
 
         // Add data binding tasks if enabled
@@ -312,7 +317,6 @@ public class AtomTaskManager extends TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope variantScope) {
         final AtomVariantData variantData = (AtomVariantData) variantScope.getVariantData();
-        final TransformManager transformManager = variantScope.getTransformManager();
 
         // Get the single output.
         final VariantOutputScope variantOutputScope = variantData.getMainOutput().getScope();
@@ -338,15 +342,6 @@ public class AtomTaskManager extends TaskManager {
 
         variantScope.getAssembleTask().dependsOn(tasks, bundleAtom);
 
-        // FIXME: we shouldn't need this anymore?
-        String classifier =
-                variantData.getVariantDependency().getApiElements().getName();
-        bundleAtom.configure(tasks, packageTask -> project.getArtifacts().add(classifier,
-                AndroidArtifacts.buildAtomArtifact(
-                        getGlobalScope().getProjectBaseName(),
-                        classifier,
-                        packageTask)));
-
         variantScope.publishIntermediateArtifact(
                 bundleAtom.get(tasks).getDexBundleFolder(),
                 bundleAtom.getName(),
@@ -365,12 +360,5 @@ public class AtomTaskManager extends TaskManager {
     @Override
     protected Set<QualifiedContent.Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         return TransformManager.SCOPE_FULL_PROJECT;
-    }
-
-    private Task getAssembleDefault() {
-        if (assembleDefault == null) {
-            assembleDefault = project.getTasks().findByName("assembleDefaultAtom");
-        }
-        return assembleDefault;
     }
 }

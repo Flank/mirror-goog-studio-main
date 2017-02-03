@@ -473,6 +473,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getMainJarOutputDir();
 
+    @NonNull
+    File getLibInfoFile();
+
     AndroidTask<DefaultTask> getAssembleTask();
 
     void setAssembleTask(@NonNull AndroidTask<DefaultTask> assembleTask);

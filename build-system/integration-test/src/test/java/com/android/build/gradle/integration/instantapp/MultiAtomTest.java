@@ -47,12 +47,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Basic instantApp test with a multi-atom project.
- *
- * TODO: Reenable when gradle fix default not being consumable
- */
-@Ignore
+/** Basic instantApp test with a multi-atom project. */
 @Category(SmokeTests.class)
 public class MultiAtomTest {
     @ClassRule
@@ -133,7 +128,7 @@ public class MultiAtomTest {
         File atomCManifest =
                 sProject.getSubproject("atomc")
                         .getIntermediateFile(
-                                FileUtils.join("atombundles", "default", "AndroidManifest.xml"));
+                                FileUtils.join("atombundles", "release", "AndroidManifest.xml"));
         assertThat(atomCManifest)
                 .named("atomC manifest")
                 .containsAllOf(
@@ -155,6 +150,7 @@ public class MultiAtomTest {
         outputPackage.contains("atomf.apk");
     }
 
+    @Ignore
     @Test
     public void testModelLevel1() throws Exception {
         ModelContainer<AndroidProject> modelContainer;
@@ -174,6 +170,7 @@ public class MultiAtomTest {
         assertThat(dependencies.getBaseAtom()).named("Base atom").isNotNull();
     }
 
+    @Ignore
     @Test
     public void testModelFull() throws Exception {
         ModelContainer<AndroidProject> modelContainer = sProject.model().getMulti();

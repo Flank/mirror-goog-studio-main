@@ -16,11 +16,14 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.COMPILE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
 
+import android.databinding.tool.util.StringUtils;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
@@ -30,7 +33,6 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -57,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -139,6 +142,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private List<LibraryInfo> computedLibraryInfo;
 
+    private File libInfoFile;
+
     public Set<String> getSplits() throws IOException {
         return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                 ? splitList.getResourcesSplit()
@@ -215,6 +220,33 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
                 LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
+            }
+
+            // Output the library information for non-base atoms.
+            File libInfoFile = getLibInfoFile();
+            if (libInfoFile != null && getType() == VariantType.ATOM && baseAtomPackage != null) {
+                String buffer = "";
+
+                for (LibraryInfo libraryInfo : getLibraryInfoList()) {
+                    File symbolFile = libraryInfo.getSymbolFile();
+                    if (symbolFile == null || !symbolFile.exists()) {
+                        continue;
+                    }
+
+                    File manifestFile = libraryInfo.getManifest();
+                    buffer +=
+                            manifestFile.getPath()
+                                    + File.pathSeparator
+                                    + symbolFile.getPath()
+                                    + StringUtils.LINE_SEPARATOR;
+                }
+
+                if (!buffer.isEmpty()) {
+                    try (FileOutputStream fos = new FileOutputStream(libInfoFile)) {
+                        fos.write(buffer.getBytes());
+                        fos.close();
+                    }
+                }
             }
 
         } catch (IOException | InterruptedException | ProcessException e) {
@@ -423,10 +455,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                     variantScope.getBuildContext();
 
             processResources.setAtomResourcePackages(
-                    variantScope.getArtifactFileCollection(
-                            COMPILE,
-                            ALL,
-                            AndroidArtifacts.ArtifactType.RESOURCES_PKG));
+                    variantScope.getArtifactFileCollection(COMPILE, MODULE, ATOM_RESOURCE_PKG));
+
+            ConventionMappingHelper.map(
+                    processResources, "libInfoFile", variantScope::getLibInfoFile);
         }
     }
 
@@ -665,5 +697,16 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setSplitHandlingPolicy(SplitHandlingPolicy splitHandlingPolicy) {
         this.splitHandlingPolicy = splitHandlingPolicy;
+    }
+
+    @org.gradle.api.tasks.OutputFile
+    @Optional
+    @Nullable
+    public File getLibInfoFile() {
+        return libInfoFile;
+    }
+
+    public void setLibInfoFile(File libInfoFile) {
+        this.libInfoFile = libInfoFile;
     }
 }

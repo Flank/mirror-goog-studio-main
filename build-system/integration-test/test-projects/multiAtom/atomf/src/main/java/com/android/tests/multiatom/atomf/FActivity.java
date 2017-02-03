@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import com.android.tests.multiatom.atomc.AtomC;
 import com.android.tests.multiatom.base.Base;
+import com.android.tests.multiatom.libc.LibC;
 import java.util.logging.Logger;
 
 public class FActivity extends Activity {
@@ -15,6 +16,7 @@ public class FActivity extends Activity {
 
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning(Base.someString());
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning(AtomC.someString(this));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning(LibC.someString(this));
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning(AtomF.someString(this));
     }
 }
