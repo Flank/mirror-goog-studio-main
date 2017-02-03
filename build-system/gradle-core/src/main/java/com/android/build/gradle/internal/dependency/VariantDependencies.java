@@ -246,7 +246,7 @@ public class VariantDependencies {
             compileClasspath.setCanBeConsumed(false);
             applyVariantAttributes(compileClasspath, buildType, flavorMap);
             compileClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
-            compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
+            compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
 
             Configuration annotationProcessor =
                     project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -276,7 +276,7 @@ public class VariantDependencies {
             runtimeClasspath.setCanBeConsumed(false);
             applyVariantAttributes(runtimeClasspath, buildType, flavorMap);
             runtimeClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
-            runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENT_FIRST);
+            runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
 
             Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
             wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);

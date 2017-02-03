@@ -488,11 +488,20 @@ public class MergeResources extends IncrementalTask {
     @VisibleForTesting
     @NonNull
     List<ResourceSet> computeResourceSetList() {
-        List<ResourceSet> resourceSets = Lists.newArrayList();
+        List<ResourceSet> sourceFolderSets = sourceFolderInputs.get();
+        int size = sourceFolderSets.size() + 4;
+        if (libraries != null) {
+            size += libraries.getArtifacts().size();
+        }
 
+        List<ResourceSet> resourceSetList = Lists.newArrayListWithExpectedSize(size);
+
+        // add at the beginning since the libraries are less important than the folder based
+        // resource sets.
         // get the dependencies first
         if (libraries != null) {
             Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
+            // the order of the artifact is descending order, so we need to reverse it.
             for (ResolvedArtifactResult artifact : libArtifacts) {
                 ResourceSet resourceSet = new ResourceSet(
                         MergeManifests.getArtifactName(artifact),
@@ -500,9 +509,8 @@ public class MergeResources extends IncrementalTask {
                 resourceSet.setFromDependency(true);
                 resourceSet.addSource(artifact.getFile());
 
-                // add at the beginning since the libraries are less important than the folder based
-                // resource sets.
-                resourceSets.add(resourceSet);
+                // add to 0 always, since we need to reverse the order.
+                resourceSetList.add(0,resourceSet);
             }
         }
 
@@ -514,12 +522,11 @@ public class MergeResources extends IncrementalTask {
 
             // add at the beginning since the libraries are less important than the folder based
             // resource sets.
-            resourceSets.add(resourceSet);
+            resourceSetList.add(resourceSet);
         }
 
         // add the folder based next
-        List<ResourceSet> sourceFolderSets = sourceFolderInputs.get();
-        resourceSets.addAll(sourceFolderSets);
+        resourceSetList.addAll(sourceFolderSets);
 
 
         // We add the generated folders to the main set
@@ -541,7 +548,7 @@ public class MergeResources extends IncrementalTask {
         assert mainResourceSet.getConfigName().equals(BuilderConstants.MAIN);
         mainResourceSet.addSources(generatedResFolders);
 
-        return resourceSets;
+        return resourceSetList;
     }
 
     /**

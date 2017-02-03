@@ -271,28 +271,34 @@ public class MergeSourceSetFolders extends IncrementalTask {
      */
     @VisibleForTesting
     List<AssetSet> computeAssetSetList() {
-        List<AssetSet> sets;
+        List<AssetSet> assetSetList;
 
         List<AssetSet> assetSets = assetSetSupplier.get();
         if (copyApk == null
                 && shadersOutputDir == null
                 && ignoreAssets == null
                 && libraries == null) {
-            sets = assetSets;
+            assetSetList = assetSets;
         } else {
-            sets = Lists.newArrayList();
+            int size = assetSets.size() + 3;
+            if (libraries != null) {
+                size += libraries.getArtifacts().size();
+            }
+
+            assetSetList = Lists.newArrayListWithExpectedSize(size);
 
             // get the dependency base assets sets.
-
+            // add at the beginning since the libraries are less important than the folder based
+            // asset sets.
             if (libraries != null) {
+                // the order of the artifact is descending order, so we need to reverse it.
                 Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
                 for (ResolvedArtifactResult artifact : libArtifacts) {
                     AssetSet assetSet = new AssetSet(MergeManifests.getArtifactName(artifact));
                     assetSet.addSource(artifact.getFile());
 
-                    // add at the beginning since the libraries are less important than the folder based
-                    // resource sets.
-                    sets.add(assetSet);
+                    // add to 0 always, since we need to reverse the order.
+                    assetSetList.add(0, assetSet);
                 }
             }
 
@@ -302,9 +308,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
                 // add at the beginning since the libraries are less important than the folder based
                 // resource sets.
-                sets.add(assetSet);
+                assetSetList.add(assetSet);
             }
-
 
             // add the generated folders to the first set of the folder-based sets.
             List<File> generatedAssetFolders = Lists.newArrayList();
@@ -322,16 +327,16 @@ public class MergeSourceSetFolders extends IncrementalTask {
             assert mainAssetSet.getConfigName().equals(BuilderConstants.MAIN);
             mainAssetSet.addSources(generatedAssetFolders);
 
-            sets.addAll(assetSets);
+            assetSetList.addAll(assetSets);
         }
 
         if (ignoreAssets != null) {
-            for (AssetSet set : sets) {
+            for (AssetSet set : assetSetList) {
                 set.setIgnoredPatterns(ignoreAssets);
             }
         }
 
-        return sets;
+        return assetSetList;
     }
 
 
