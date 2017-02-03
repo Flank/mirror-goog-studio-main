@@ -29,7 +29,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
@@ -104,16 +104,21 @@ public class NoChangesVerifierTransform extends Transform {
         }
     }
 
-    private static boolean hasChangedInputs(Collection<TransformInput> inputs) {
+    private boolean hasChangedInputs(Collection<TransformInput> inputs) {
+        // Reference scopes are not filtered, so they will contain types we do not care about.
         for (TransformInput input : inputs) {
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                if (!directoryInput.getChangedFiles().isEmpty()) {
-                    return true;
+                if (!Sets.intersection(directoryInput.getContentTypes(), inputTypes).isEmpty()) {
+                    if (!directoryInput.getChangedFiles().isEmpty()) {
+                        return true;
+                    }
                 }
             }
             for (JarInput jarInput : input.getJarInputs()) {
-                if (jarInput.getStatus() != Status.NOTCHANGED) {
-                    return true;
+                if (!Sets.intersection(jarInput.getContentTypes(), inputTypes).isEmpty()) {
+                    if (jarInput.getStatus() != Status.NOTCHANGED) {
+                        return true;
+                    }
                 }
             }
         }

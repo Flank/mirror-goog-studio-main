@@ -132,7 +132,7 @@ public final class GradleTestProject implements TestRule {
             assertThat(TEST_PROJECT_DIR).isDirectory();
 
             String buildDirPath = System.getenv("TEST_TMPDIR");
-            assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
+            assertNotNull("$TEST_TEMPDIR not set", buildDirPath);
             BUILD_DIR = new File(buildDirPath);
             OUT_DIR = new File(BUILD_DIR, "tests");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
