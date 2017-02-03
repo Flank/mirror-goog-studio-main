@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
@@ -148,7 +149,7 @@ public class BasicTest {
     @Test
     public void checkDensityAndResourceConfigs() throws Exception {
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.RESTART_ONLY)
                 .withProperty(PROPERTY_BUILD_DENSITY, "xxhdpi")
                 .run("assembleDebug");
     }
