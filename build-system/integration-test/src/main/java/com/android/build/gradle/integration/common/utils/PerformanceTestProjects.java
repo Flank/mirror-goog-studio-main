@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -158,6 +159,44 @@ public class PerformanceTestProjects {
                 "flavorDimensions 'version'\n"
                         + "productFlavors {");
 
+        // replace manual variant aware dependency with automatic one.
+        // remove one line and edit the other for each dependency.
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:utils:WordPressUtils', configuration: 'release')"),
+                "compile project(path:':libs:utils:WordPressUtils') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:utils:WordPressUtils', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:networking:WordPressNetworking', configuration: 'release')"),
+                "compile project(path:':libs:networking:WordPressNetworking') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:networking:WordPressNetworking', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'release')"),
+                "compile project(path:':libs:analytics:WordPressAnalytics') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:editor:WordPressEditor', configuration: 'release')"),
+                "compile project(path:':libs:editor:WordPressEditor') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:editor:WordPressEditor', configuration: 'debug')"),
+                "");
+
 
         for (Path file : buildGradleFiles) {
             TestFileUtils.searchAndReplace(
@@ -270,10 +309,7 @@ public class PerformanceTestProjects {
             TestFileUtils.searchAndReplace(
                     path,
                     "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                    "releaseCompile "
-                            + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                            + "    debugCompile "
-                            + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
+                    "compile project(':libs:utils:WordPressUtils')\n");
         }
 
         // There is an extraneous BOM in the values-ja/strings.xml
