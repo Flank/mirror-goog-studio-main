@@ -52,7 +52,6 @@ public class SecondaryFileTest {
         File file = new File("foo");
 
         SecondaryFile result = SecondaryFile.incremental(project.files(file));
-        assertThat(result.getFile()).isEqualTo(project.file(file));
         assertThat(result.supportsIncrementalBuild()).isTrue();
         assertThat(result.getFileCollection(project)).containsExactly(project.file(file));
     }
@@ -72,7 +71,6 @@ public class SecondaryFileTest {
         File file = new File("foo");
 
         SecondaryFile result = SecondaryFile.nonIncremental(project.files(file));
-        assertThat(result.getFile()).isEqualTo(project.file(file));
         assertThat(result.supportsIncrementalBuild()).isFalse();
         assertThat(result.getFileCollection(project)).containsExactly(project.file(file));
     }
