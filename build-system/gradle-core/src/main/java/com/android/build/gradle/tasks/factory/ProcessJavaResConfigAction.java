@@ -5,26 +5,25 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SourceProvider;
 import com.android.utils.FileUtils;
-import com.google.common.util.concurrent.Callables;
-
-import org.gradle.api.tasks.Sync;
-
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.gradle.api.tasks.Sync;
 
 /**
  * Configuration Action for a process*JavaRes tasks.
  */
 public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
     private VariantScope scope;
+    private final File destinationDir;
 
-    public ProcessJavaResConfigAction(VariantScope scope) {
+    public ProcessJavaResConfigAction(VariantScope scope, File destinationDir) {
         this.scope = scope;
+        this.destinationDir = destinationDir;
     }
 
     @NonNull
@@ -86,9 +85,7 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
                 throw new RuntimeException("Cannot delete merged source resource folder", e);
             }
         }
-        ConventionMappingHelper.map(
-                processResources,
-                "destinationDir",
-                Callables.returning(scope.getSourceFoldersJavaResDestinationDir()));
+
+        processResources.setDestinationDir(destinationDir);
     }
 }

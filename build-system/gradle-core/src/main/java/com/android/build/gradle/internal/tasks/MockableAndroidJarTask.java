@@ -90,10 +90,16 @@ public class MockableAndroidJarTask extends DefaultTask {
 
     public static class ConfigAction implements TaskConfigAction<MockableAndroidJarTask> {
 
-        final GlobalScope scope;
+        @NonNull
+        private final GlobalScope scope;
+        @NonNull
+        private final File mockableJar;
 
-        public ConfigAction(GlobalScope scope) {
+        public ConfigAction(
+                @NonNull GlobalScope scope,
+                @NonNull File mockableJar) {
             this.scope = scope;
+            this.mockableJar = mockableJar;
         }
 
         @NonNull
@@ -119,7 +125,7 @@ public class MockableAndroidJarTask extends DefaultTask {
             task.mAndroidJar = new File(
                         scope.getAndroidBuilder().getTarget().getPath(IAndroidTarget.ANDROID_JAR));
 
-            task.setOutputFile(scope.getMockableAndroidJarFile());
+            task.setOutputFile(mockableJar);
         }
     }
 }

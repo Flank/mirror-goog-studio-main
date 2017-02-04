@@ -498,8 +498,8 @@ public class VariantManager implements VariantModel {
 
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
-//        project.getConfigurations().getByName("compile").setCanBeResolved(false);
-        project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        //project.getConfigurations().getByName("compile").setCanBeResolved(false);
+        //project.getConfigurations().getByName("default").setCanBeConsumed(false);
 
         AttributesSchema schema = dependencies.getAttributesSchema();
         // default configure attribute resolution for the build type attribute

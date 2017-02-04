@@ -46,7 +46,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /**
  * A scope containing data for the Android plugin.
  */
-public class GlobalScope implements TransformGlobalScope {
+public class GlobalScope extends TaskOutputHolderImpl
+        implements TransformGlobalScope, TaskOutputHolder {
 
     @NonNull
     private Project project;
