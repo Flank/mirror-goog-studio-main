@@ -1,5 +1,8 @@
 package com.android.build.gradle.tasks.factory;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
@@ -7,7 +10,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -154,9 +156,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 ? javacTask.getClasspath()
                 : project.files();
         processorPath = processorPath.plus(scope.getArtifactFileCollection(
-                AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
-                AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.JAR));
+                ANNOTATION_PROCESSOR, ALL, JAR));
         javacTask.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental = AbstractCompilesUtil.isIncremental(

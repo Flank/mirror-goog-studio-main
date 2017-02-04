@@ -16,6 +16,12 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ASSETS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_JAVA_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -25,7 +31,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -541,25 +546,13 @@ public class PackageAtom extends IncrementalTask {
             packageAtom.aaptOptions = globalScope.getExtension().getAaptOptions();
 
             packageAtom.atomManifests =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             packageAtom.atomJavaResDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_JAVA_RES);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
             packageAtom.atomJniDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_JNI);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
             packageAtom.atomAssetDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_ASSETS);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
             packageAtom.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
         }
     }

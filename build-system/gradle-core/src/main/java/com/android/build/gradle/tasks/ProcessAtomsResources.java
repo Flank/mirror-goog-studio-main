@@ -16,13 +16,19 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_LIB_INFO;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -324,25 +330,13 @@ public class ProcessAtomsResources extends IncrementalTask {
                     config.getBuildType().isPseudoLocalesEnabled());
 
             processAtomsResources.atomManifests =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             processAtomsResources.atomResourcePackages =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
             processAtomsResources.atomResDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
             processAtomsResources.atomLibInfos =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
 
             ConventionMappingHelper.map(
                     processAtomsResources,

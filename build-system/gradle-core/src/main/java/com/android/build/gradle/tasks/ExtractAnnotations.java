@@ -18,13 +18,15 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.UTF_8;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
@@ -41,16 +43,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.Util;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -445,9 +443,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setClasspath(variantScope.getJavaClasspath());
 
             task.libraries = variantScope.getArtifactCollection(
-                    AndroidArtifacts.ConfigType.COMPILE,
-                    AndroidArtifacts.ArtifactScope.EXTERNAL,
-                    AndroidArtifacts.ArtifactType.CLASSES);
+                    COMPILE_CLASSPATH, EXTERNAL, CLASSES);
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

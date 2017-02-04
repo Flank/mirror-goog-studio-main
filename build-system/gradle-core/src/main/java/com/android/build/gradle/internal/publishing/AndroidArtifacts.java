@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.publishing;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.FileSupplier;
@@ -27,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Task;
@@ -76,57 +80,87 @@ public class AndroidArtifacts {
     private static final String TYPE_MAPPING = "android-mapping";
     private static final String TYPE_METADATA = "android-metadata";
 
-    public enum ConfigType {
-        COMPILE, RUNTIME, ANNOTATION_PROCESSOR
+    public enum ConsumedConfigType {
+        COMPILE_CLASSPATH(API_ELEMENTS),
+        RUNTIME_CLASSPATH(RUNTIME_ELEMENTS),
+        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS);
+
+        @NonNull
+        private final PublishedConfigType publishedTo;
+        ConsumedConfigType(@NonNull PublishedConfigType publishedTo) {
+            this.publishedTo = publishedTo;
+        }
+
+        @NonNull
+        public PublishedConfigType getPublishedTo() {
+            return publishedTo;
+        }
+    }
+
+    public enum PublishedConfigType {
+        API_ELEMENTS, RUNTIME_ELEMENTS
     }
 
     public enum ArtifactScope {
         ALL, EXTERNAL, MODULE
     }
 
+    private static final List<PublishedConfigType> API_ELEMENTS_ONLY
+            = ImmutableList.of(API_ELEMENTS);
+    private static final List<PublishedConfigType> RUNTIME_ELEMENTS_ONLY
+            = ImmutableList.of(RUNTIME_ELEMENTS);
+    private static final List<PublishedConfigType> API_AND_RUNTIME_ELEMENTS
+            = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
+
     public enum ArtifactType {
-        CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE, ConfigType.RUNTIME),
-        JAR(TYPE_JAR, ConfigType.RUNTIME),
+        CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
+        JAR(TYPE_JAR, RUNTIME_ELEMENTS_ONLY),
 
-        AIDL(TYPE_AIDL, ConfigType.COMPILE),
-        RENDERSCRIPT(TYPE_RENDERSCRIPT, ConfigType.COMPILE),
-        DATA_BINDING(TYPE_DATA_BINDING, ConfigType.COMPILE),
+        AIDL(TYPE_AIDL, API_ELEMENTS_ONLY),
+        RENDERSCRIPT(TYPE_RENDERSCRIPT, API_ELEMENTS_ONLY),
+        DATA_BINDING(TYPE_DATA_BINDING, API_ELEMENTS_ONLY),
 
-        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY, ConfigType.RUNTIME),
-        MANIFEST(TYPE_MANIFEST, ConfigType.RUNTIME),
-        ANDROID_RES(TYPE_ANDROID_RES, ConfigType.RUNTIME),
-        ASSETS(TYPE_ASSETS, ConfigType.RUNTIME),
-        SYMBOL_LIST(TYPE_SYMBOL, ConfigType.RUNTIME),
-        JNI(TYPE_JNI, ConfigType.RUNTIME),
-        ANNOTATIONS(TYPE_EXT_ANNOTATIONS, ConfigType.RUNTIME),
-        PUBLIC_RES(TYPE_PUBLIC_RES, ConfigType.RUNTIME),
-        PROGUARD_RULES(TYPE_PROGUARD_RULES, ConfigType.RUNTIME),
+        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY, RUNTIME_ELEMENTS_ONLY),
+        MANIFEST(TYPE_MANIFEST, RUNTIME_ELEMENTS_ONLY),
+        ANDROID_RES(TYPE_ANDROID_RES, RUNTIME_ELEMENTS_ONLY),
+        ASSETS(TYPE_ASSETS, RUNTIME_ELEMENTS_ONLY),
+        SYMBOL_LIST(TYPE_SYMBOL, RUNTIME_ELEMENTS_ONLY),
+        JNI(TYPE_JNI, RUNTIME_ELEMENTS_ONLY),
+        ANNOTATIONS(TYPE_EXT_ANNOTATIONS, RUNTIME_ELEMENTS_ONLY),
+        PUBLIC_RES(TYPE_PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
+        PROGUARD_RULES(TYPE_PROGUARD_RULES, RUNTIME_ELEMENTS_ONLY),
 
-        LINT(TYPE_LINT_JAR),
+        // FIXME: we need a different publishing config with a CHECK Usage for this.
+        LINT(TYPE_LINT_JAR, API_AND_RUNTIME_ELEMENTS),
 
         // create a duplication of CLASSES because we don't want to publish
         // the classes of an APK to the runtime configuration as it's meant to be
         // used only for compilation, not runtime.
-        APK_CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE),
-        APK_MAPPING(TYPE_MAPPING, ConfigType.COMPILE),
-        APK_METADATA(TYPE_METADATA, ConfigType.COMPILE),
-        APK(TYPE_APK, ConfigType.RUNTIME),
+        APK_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY),
+        APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),
+        APK_METADATA(TYPE_METADATA, API_ELEMENTS_ONLY),
+        APK(TYPE_APK, RUNTIME_ELEMENTS_ONLY),
 
-        ATOM_RESOURCE_PKG(TYPE_ATOM_RESOURCE_PKG, ConfigType.COMPILE),
-        ATOM_MANIFEST(TYPE_ATOM_MANIFEST, ConfigType.COMPILE),
-        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES, ConfigType.COMPILE),
-        ATOM_DEX(TYPE_ATOM_DEX, ConfigType.COMPILE),
-        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES, ConfigType.COMPILE),
-        ATOM_JNI(TYPE_ATOM_JNI, ConfigType.COMPILE),
-        ATOM_ASSETS(TYPE_ATOM_ASSETS, ConfigType.COMPILE),
-        ATOM_LIB_INFO(TYPE_ATOM_LIB_INFO, ConfigType.COMPILE),
-        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE);
+        ATOM_RESOURCE_PKG(TYPE_ATOM_RESOURCE_PKG, API_ELEMENTS_ONLY),
+        ATOM_MANIFEST(TYPE_ATOM_MANIFEST, API_ELEMENTS_ONLY),
+        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES, API_ELEMENTS_ONLY),
+        ATOM_DEX(TYPE_ATOM_DEX, API_ELEMENTS_ONLY),
+        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES, API_ELEMENTS_ONLY),
+        ATOM_JNI(TYPE_ATOM_JNI, API_ELEMENTS_ONLY),
+        ATOM_ASSETS(TYPE_ATOM_ASSETS, API_ELEMENTS_ONLY),
+        ATOM_LIB_INFO(TYPE_ATOM_LIB_INFO, API_ELEMENTS_ONLY),
+        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY);
 
+        @NonNull
         private final String type;
-        private final Collection<ConfigType> configTypes;
-        ArtifactType(@NonNull String type, @NonNull ConfigType... configTypes) {
+        @NonNull
+        private final List<PublishedConfigType> publishedConfigTypes;
+
+        ArtifactType(
+                @NonNull String type,
+                @NonNull List<PublishedConfigType> publishedConfigTypes) {
             this.type = type;
-            this.configTypes = ImmutableList.copyOf(configTypes);
+            this.publishedConfigTypes = ImmutableList.copyOf(publishedConfigTypes);
         }
 
         @NonNull
@@ -135,8 +169,8 @@ public class AndroidArtifacts {
         }
 
         @NonNull
-        public Collection<ConfigType> getPublishingConfigurations() {
-            return configTypes;
+        public Collection<PublishedConfigType> getPublishingConfigurations() {
+            return publishedConfigTypes;
         }
 
         private static final Map<String, ArtifactType> reverseMap = new HashMap<>();

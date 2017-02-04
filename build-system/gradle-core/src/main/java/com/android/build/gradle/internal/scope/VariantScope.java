@@ -262,13 +262,13 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     FileCollection getArtifactFileCollection(
-            @NonNull AndroidArtifacts.ConfigType configType,
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,
             @NonNull ArtifactType artifactType);
 
     @NonNull
     ArtifactCollection getArtifactCollection(
-            @NonNull AndroidArtifacts.ConfigType configType,
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,
             @NonNull ArtifactType artifactType);
 

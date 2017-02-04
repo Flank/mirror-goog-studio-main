@@ -17,10 +17,12 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.FN_APK_CLASSES_DEX;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_DEX;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.TransformException;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -170,10 +172,7 @@ public class MergeDexAtomResClass extends BaseTask {
 
             task.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
             task.atomDexDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_DEX);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
         }
     }
 

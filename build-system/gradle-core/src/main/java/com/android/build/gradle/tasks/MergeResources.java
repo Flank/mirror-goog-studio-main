@@ -17,14 +17,13 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -648,7 +647,7 @@ public class MergeResources extends IncrementalTask {
 
             if (includeDependencies) {
                 mergeResourcesTask.libraries = scope.getArtifactCollection(
-                        RUNTIME, ALL, ANDROID_RES);
+                        RUNTIME_CLASSPATH, ALL, ANDROID_RES);
                 // only add the resources for tested libraries.
                 mergeResourcesTask.testedLibrary = scope.getTestedArtifact(
                         ANDROID_RES, VariantType.LIBRARY);

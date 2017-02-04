@@ -16,9 +16,19 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ASSETS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_DEX;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_JAVA_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_LIB_INFO;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -450,45 +460,21 @@ public class AtomConfig extends BaseTask {
             atomConfig.setVariantName(config.getFullName());
 
             atomConfig.atomManifests =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             atomConfig.atomResourcePackages =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
             atomConfig.atomAndroidRes =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
             atomConfig.atomDexDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_DEX);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
             atomConfig.atomJavaRes =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_JAVA_RES);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
             atomConfig.atomJniDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_JNI);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
             atomConfig.atomAssetDirs =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_ASSETS);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
             atomConfig.atomLibInfoFiles =
-                    variantScope.getArtifactCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
             atomConfig.variantOutputScope = scope;
         }
     }
