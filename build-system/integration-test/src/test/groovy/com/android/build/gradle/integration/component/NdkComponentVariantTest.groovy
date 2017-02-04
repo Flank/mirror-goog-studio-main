@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
 import com.android.builder.core.BuilderConstants
+import com.android.builder.model.AndroidProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -162,5 +163,16 @@ model {
         } else {
             project.execute(GradleTestProject.DEVICE_PROVIDER_NAME + "X86DebugAndroidTest")
         }
+    }
+
+    // http://b.android.com/233421
+    @Test
+    void testBuildWithSpecificAbi() {
+        project.executor()
+                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .run("assembleDebug")
+
+        File apk = project.getApk("x86", "debug")
+        assertThatZip(apk).contains("lib/x86/libhello-jni.so")
     }
 }
