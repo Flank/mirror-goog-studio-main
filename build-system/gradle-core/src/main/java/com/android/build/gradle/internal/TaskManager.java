@@ -18,8 +18,19 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -542,18 +553,14 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        CLASSES))
+                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
                 .build());
 
         transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        AndroidArtifacts.ArtifactType.JAVA_RES))
+                        RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
                 .build());
 
         // and the android AAR also have a specific jni folder
@@ -561,9 +568,7 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        AndroidArtifacts.ArtifactType.JNI))
+                        RUNTIME_CLASSPATH, EXTERNAL, JNI))
                 .build());
 
         if (variantScope.isJackEnabled()) {
@@ -608,18 +613,14 @@ public abstract class TaskManager {
                     .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                     .addScope(Scope.SUB_PROJECTS)
                     .setFileCollection(variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.DATA_BINDING))
+                            COMPILE_CLASSPATH, MODULE, DATA_BINDING))
                     .build()
             );
             transformManager.addStream(OriginalStream.builder(project)
                     .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                     .addScope(Scope.EXTERNAL_LIBRARIES)
                     .setFileCollection(variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConfigType.COMPILE,
-                            AndroidArtifacts.ArtifactScope.EXTERNAL,
-                            AndroidArtifacts.ArtifactType.DATA_BINDING))
+                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING))
                     .build()
             );
         }
@@ -629,9 +630,7 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.MODULE,
-                        CLASSES))
+                        RUNTIME_CLASSPATH, MODULE, CLASSES))
                 .build());
 
         // same for the resources which can be java-res or jni
@@ -639,9 +638,7 @@ public abstract class TaskManager {
                 .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.MODULE,
-                        AndroidArtifacts.ArtifactType.JAVA_RES))
+                        RUNTIME_CLASSPATH, MODULE, JAVA_RES))
                 .build());
 
         // and the android library sub-modules also have a specific jni folder
@@ -649,9 +646,7 @@ public abstract class TaskManager {
                 .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                 .addScope(Scope.SUB_PROJECTS)
                 .setFileCollection(variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.MODULE,
-                        AndroidArtifacts.ArtifactType.JNI))
+                        RUNTIME_CLASSPATH, MODULE, JNI))
                 .build());
 
         // provided only scopes.
@@ -690,9 +685,7 @@ public abstract class TaskManager {
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
                             .setFileCollection(testedVariantScope.getArtifactFileCollection(
-                                    AndroidArtifacts.ConfigType.RUNTIME,
-                                    AndroidArtifacts.ArtifactScope.ALL,
-                                    CLASSES))
+                                    RUNTIME_CLASSPATH, ALL, CLASSES))
                             .build());
         }
 
@@ -2412,16 +2405,11 @@ public abstract class TaskManager {
                 .getIncludeCompileClasspath();
         checkNotNull(includeCompileClasspaths);
         FileCollection processorPaths = includeCompileClasspaths
-                ? scope.getArtifactFileCollection(
-                AndroidArtifacts.ConfigType.COMPILE,
-                AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.CLASSES)
+                ? scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES)
                 : project.files();
         processorPaths = processorPaths.plus(
                 scope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.JAR));
+                        ANNOTATION_PROCESSOR, ALL, JAR));
         JackCompileTransform jackCompileTransform =
                 new JackCompileTransform(
                         JackOptionsUtils.forSourceCompilation(scope),
@@ -2558,7 +2546,7 @@ public abstract class TaskManager {
                 variantScope.publishIntermediateArtifact(
                         variantScope.getBundleFolderForDataBinding(),
                         task.getName(),
-                        AndroidArtifacts.ArtifactType.DATA_BINDING);
+                        DATA_BINDING);
             }
         }
     }
@@ -3239,10 +3227,7 @@ public abstract class TaskManager {
                     proguardFiles.add(outputData.processResourcesTask.getProguardOutputFile());
                     return proguardFiles;
                 }),
-                scope.getArtifactFileCollection(
-                        AndroidArtifacts.ConfigType.RUNTIME,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.PROGUARD_RULES)));
+                scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
         if (variantData.getType() == LIBRARY) {
             transform.keep("class **.R");

@@ -15,11 +15,14 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
@@ -335,9 +338,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             // this includes the libraries and the atoms.
             processManifestTask.manifests = variantScope.getArtifactCollection(
-                    AndroidArtifacts.ConfigType.RUNTIME,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.MANIFEST);
+                    RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // optional manifest files too.
             if (variantScope.getMicroApkTask() != null &&

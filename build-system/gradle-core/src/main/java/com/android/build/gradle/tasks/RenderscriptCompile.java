@@ -15,10 +15,13 @@
  */
 
 package com.android.build.gradle.tasks;
+
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -30,17 +33,15 @@ import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Task to compile Renderscript files. Supports incremental update.
@@ -260,9 +261,7 @@ public class RenderscriptCompile extends NdkTask {
             ConventionMappingHelper.map(renderscriptTask, "sourceDirs",
                     config::getRenderscriptSourceList);
             renderscriptTask.importDirs = scope.getArtifactFileCollection(
-                    AndroidArtifacts.ConfigType.COMPILE,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.RENDERSCRIPT);
+                    COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
 
             renderscriptTask.setSourceOutputDir(scope.getRenderscriptSourceOutputDir());
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());

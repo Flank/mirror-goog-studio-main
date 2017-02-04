@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -383,9 +386,7 @@ public class AidlCompile extends IncrementalTask {
             compileTask.sourceDirs = TaskInputHelper
                     .bypassFileSupplier(variantConfiguration::getAidlSourceList);
             compileTask.importDirs = scope.getArtifactFileCollection(
-                    AndroidArtifacts.ConfigType.COMPILE,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.AIDL);
+                    COMPILE_CLASSPATH, ALL, AIDL);
 
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
 

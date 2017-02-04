@@ -20,8 +20,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.COMPILE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import android.databinding.tool.util.StringUtils;
 import com.android.annotations.NonNull;
@@ -351,10 +351,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .getEnforceUniquePackageName();
 
                 processResources.manifests = variantScope.getArtifactCollection(
-                        RUNTIME, ALL, MANIFEST);
+                        RUNTIME_CLASSPATH, ALL, MANIFEST);
 
                 processResources.symbolFiles = variantScope.getArtifactCollection(
-                        RUNTIME, ALL, SYMBOL_LIST);
+                        RUNTIME_CLASSPATH, ALL, SYMBOL_LIST);
 
                 processResources.testedManifest = variantScope.getTestedArtifact(
                         MANIFEST, VariantType.LIBRARY);
@@ -455,7 +455,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     variantScope.getBuildContext();
 
             processResources.setAtomResourcePackages(
-                    variantScope.getArtifactFileCollection(COMPILE, MODULE, ATOM_RESOURCE_PKG));
+                    variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG));
 
             ConventionMappingHelper.map(
                     processResources, "libInfoFile", variantScope::getLibInfoFile);

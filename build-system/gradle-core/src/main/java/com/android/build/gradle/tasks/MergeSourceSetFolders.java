@@ -17,13 +17,12 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -401,7 +400,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
                 mergeAssetsTask.libraries = scope.getArtifactCollection(
-                        RUNTIME, ALL, ASSETS);
+                        RUNTIME_CLASSPATH, ALL, ASSETS);
 
                 // only add the assets for tested libraries.
                 mergeAssetsTask.testedLibrary =

@@ -17,7 +17,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType.RUNTIME;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -355,7 +355,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     processTestManifestTask, "testLabel", config::getTestLabel);
 
             processTestManifestTask.manifests = scope.getArtifactCollection(
-                    RUNTIME, ALL, MANIFEST);
+                    RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             processTestManifestTask.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());

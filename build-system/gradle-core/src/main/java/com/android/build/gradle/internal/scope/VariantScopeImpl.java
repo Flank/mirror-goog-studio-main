@@ -29,6 +29,12 @@ import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -50,7 +56,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConfigType;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
@@ -305,11 +312,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull File file,
             @NonNull String builtBy,
             @NonNull ArtifactType artifactType) {
+        Collection<PublishedConfigType> configTypes = artifactType.getPublishingConfigurations();
+        Preconditions.checkState(!configTypes.isEmpty());
 
-        Collection<ConfigType> configTypes = artifactType.getPublishingConfigurations();
-
-        // FIXME: figure out strategy for each ArtifactType and refuse types with no configTypes.
-        if (configTypes.isEmpty() || configTypes.contains(ConfigType.COMPILE)) {
+        // FIXME: figure out strategy for each ArtifactType
+        if (configTypes.contains(API_ELEMENTS)) {
             publishArtifactToConfiguration(
                     getVariantData().getVariantDependency().getApiElements(),
                     file,
@@ -317,7 +324,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     artifactType);
         }
 
-        if (configTypes.isEmpty() || configTypes.contains(ConfigType.RUNTIME)) {
+        if (configTypes.contains(RUNTIME_ELEMENTS)) {
             publishArtifactToConfiguration(
                     getVariantData().getVariantDependency().getRuntimeElements(),
                     file,
@@ -590,10 +597,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public FileCollection getJavaClasspath() {
         // TODO cache?
-        FileCollection classpath = getArtifactFileCollection(
-                ConfigType.COMPILE,
-                ArtifactScope.ALL,
-                ArtifactType.CLASSES);
+        FileCollection classpath = getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
 
         if (variantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
             File renderScriptSupportJar = globalScope.getAndroidBuilder().getRenderScriptSupportJar();
@@ -672,19 +676,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public FileCollection getArtifactFileCollection(
-            @NonNull ConfigType configType,
+            @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
+        checkConfigType(artifactType, configType);
 
         Configuration configuration;
         switch (configType) {
-            case COMPILE:
+            case COMPILE_CLASSPATH:
                 configuration = getVariantData().getVariantDependency().getCompileClasspath();
-                checkConfigType(artifactType, configType);
                 break;
-            case RUNTIME:
+            case RUNTIME_CLASSPATH:
                 configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
-                checkConfigType(artifactType, configType);
                 break;
             case ANNOTATION_PROCESSOR:
                 configuration = getVariantData()
@@ -707,7 +710,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 filter = id -> id instanceof ModuleComponentIdentifier;
                 // FIXME once Spec based filtering supports file based dependency
                 if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == ArtifactType.CLASSES) {
+                        || artifactType == CLASSES) {
 
                     // only remove the local jars to this project, not all file-based jars.
                     Callable<Collection<File>> callable = getLocalJarLambda(configuration)::get;
@@ -718,7 +721,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 filter = id -> id instanceof ProjectComponentIdentifier;
                 // FIXME once Spec based filtering supports file based dependency
                 if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == ArtifactType.CLASSES) {
+                        || artifactType == CLASSES) {
                     // remove all file-based local jar in this case.
                     minus = getAllFileBasedJars(attributes, configuration);
                 }
@@ -751,17 +754,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private static void checkConfigType(
             @NonNull ArtifactType artifactType,
-            @NonNull ConfigType configType) {
+            @NonNull ConsumedConfigType consumedConfigType) {
         // check if the queried configuration matches where this artifact has been published.
         // this is mostly a check against typo'ed configuration.
-        Collection<ConfigType> publishedConfigs = artifactType.getPublishingConfigurations();
+        Collection<PublishedConfigType> publishedConfigs = artifactType.getPublishingConfigurations();
+        PublishedConfigType publishedTo = consumedConfigType.getPublishedTo();
         // if empty, means it was published to all configs.
-        if (!publishedConfigs.isEmpty() && !publishedConfigs.contains(configType)) {
+        if (!publishedConfigs.contains(publishedTo)) {
             throw new RuntimeException(
                     "Querying Artifact '"
                             + artifactType.name()
                             + "' with config '"
-                            + configType.name()
+                            + consumedConfigType.name()
                             + "' for artifact published to: "
                             + publishedConfigs);
         }
@@ -770,16 +774,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public ArtifactCollection getArtifactCollection(
-            @NonNull ConfigType configType,
+            @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
+        checkConfigType(artifactType, configType);
 
         Configuration configuration;
         switch (configType) {
-            case COMPILE:
+            case COMPILE_CLASSPATH:
                 configuration = getVariantData().getVariantDependency().getCompileClasspath();
                 break;
-            case RUNTIME:
+            case RUNTIME_CLASSPATH:
                 configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
                 break;
             default:
@@ -828,11 +833,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {
-
-        FileCollection compile = getArtifactFileCollection(
-                ConfigType.COMPILE, ArtifactScope.ALL, ArtifactType.CLASSES);
-        FileCollection pkg = getArtifactFileCollection(
-                ConfigType.RUNTIME, ArtifactScope.ALL, ArtifactType.CLASSES);
+        FileCollection compile = getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
+        FileCollection pkg = getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
         return compile.minus(pkg);
     }
 
@@ -1803,7 +1805,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     private FileCollection handleTestedComponent(
             @NonNull FileCollection fileCollection,
-            @NonNull ConfigType configType,
+            @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope artifactScope,
             @NonNull ArtifactType artifactType) {
         // get the matching file collection for the tested variant, if any.
@@ -1812,7 +1814,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
             if (tested instanceof LibraryVariantData) {
                 // we only add the tested component to the MODULE scope.
-                if (artifactScope == ArtifactScope.MODULE || artifactScope == ArtifactScope.ALL) {
+                if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
                     // for the library, always add the tested scope no matter the
                     // configuration type (package or compile)
                     final LibraryVariantData testedVariantData = (LibraryVariantData) tested;
@@ -1829,22 +1831,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
                 // for tested application, first we add the tested component as provided (so
                 // only for the compile version), and only for the java compilation
-                if (configType == ConfigType.COMPILE &&
-                        (artifactScope == ArtifactScope.MODULE || artifactScope == ArtifactScope.ALL) &&
-                        artifactType == ArtifactType.CLASSES) {
+                if (configType == COMPILE_CLASSPATH &&
+                        (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) &&
+                        artifactType == CLASSES) {
                     ConfigurableFileCollection testedFC = testedVariantData.getScope()
-                            .getInternalArtifact(ArtifactType.CLASSES);
+                            .getInternalArtifact(CLASSES);
 
                     if (testedFC != null) {
                         fileCollection = testedFC.plus(fileCollection);
                     }
-                } else if (configType == ConfigType.RUNTIME) {
+                } else if (configType == RUNTIME_CLASSPATH) {
                     // however we also always remove the transitive dependencies coming from the
                     // tested app to avoid having the same artifact on each app and tested app.
                     // This applies only to the package scope since we do want these in the compile
                     // scope in order to compile
                     fileCollection = fileCollection.minus(testedVariantData.getScope()
-                            .getArtifactFileCollection(configType, ArtifactScope.ALL,
+                            .getArtifactFileCollection(configType, ALL,
                                     artifactType));
                 }
             }
