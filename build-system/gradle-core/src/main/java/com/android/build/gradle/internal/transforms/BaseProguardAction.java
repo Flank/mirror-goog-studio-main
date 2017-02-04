@@ -131,6 +131,12 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
     }
 
     public void applyConfigurationFile(@NonNull File file) throws IOException, ParseException {
+        // file might not actually exist if it comes from a sub-module library where publication
+        // happen whether the file is there or not.
+        if (!file.isFile()) {
+            return;
+        }
+
         ConfigurationParser parser =
                 new ConfigurationParser(file, System.getProperties());
         try {
