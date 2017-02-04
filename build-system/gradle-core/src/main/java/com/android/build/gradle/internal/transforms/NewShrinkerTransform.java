@@ -169,7 +169,11 @@ public class NewShrinkerTransform extends ProguardConfigurable {
         ProguardConfig config = new ProguardConfig();
 
         for (File configFile : getAllConfigurationFiles()) {
-            config.parse(configFile);
+            // the file could not exist if it's published by a library sub-module as the publication
+            // happens no matter what the module is doing (in case it's dynamically generated).
+            if (configFile.isFile()) {
+                config.parse(configFile);
+            }
         }
 
         config.parse(getAdditionalConfigString());

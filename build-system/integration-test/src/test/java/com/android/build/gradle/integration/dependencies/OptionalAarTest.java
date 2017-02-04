@@ -71,7 +71,11 @@ public class OptionalAarTest {
                 "dependencies {\n" +
                 "    provided project(\":library2\")\n" +
                 "}\n");
-        project.execute("clean", ":app:assembleDebug");
+
+        // build the app and need to build the aar separately since building the app
+        // doesn't build the aar anymore.
+
+        project.execute("clean", ":app:assembleDebug", "library:assembleDebug");
         models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
         helper = new LibraryGraphHelper(models);
 

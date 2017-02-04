@@ -47,7 +47,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Before
     public void buildProject() throws Exception {
-        project.execute("clean", ":test:assembleDebug");
+        project.execute("clean", ":test:assembleMinified");
     }
 
     @Test
@@ -58,7 +58,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
                         AndroidProject.FD_INTERMEDIATES +
                         "/transforms/" +
                         "proguard/" +
-                        "debug/" +
+                        "minified/" +
                         "jars/3/1f/main.jar");
 
         FieldNode stringProviderField = ZipHelper.checkClassFile(

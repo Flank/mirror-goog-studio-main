@@ -26,8 +26,6 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    publishNonDefault true
-
     defaultConfig {
         minSdkVersion 8
     }
