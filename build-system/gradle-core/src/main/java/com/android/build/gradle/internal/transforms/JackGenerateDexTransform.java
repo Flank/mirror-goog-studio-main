@@ -36,7 +36,6 @@ import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
-import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,7 +48,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -97,8 +95,6 @@ public class JackGenerateDexTransform extends Transform {
 
     @NonNull private final FileCollection jackCompilationOutput;
 
-    @NonNull private final FileCollection proguardFiles;
-
     @NonNull private final FileCollection jackPluginsClassPath;
 
     public JackGenerateDexTransform(
@@ -107,14 +103,12 @@ public class JackGenerateDexTransform extends Transform {
             @NonNull Supplier<BuildToolInfo> buildToolInfo,
             @NonNull ErrorReporter errorReporter,
             @NonNull JavaProcessExecutor javaProcessExecutor,
-            @NonNull FileCollection proguardFiles,
             @NonNull FileCollection jackPluginsClassPath) {
         this.options = jackProcessOptions;
         this.buildToolInfo = buildToolInfo;
         this.errorReporter = errorReporter;
         this.javaProcessExecutor = javaProcessExecutor;
         this.jackCompilationOutput = jackCompilationOutput;
-        this.proguardFiles = proguardFiles;
         this.jackPluginsClassPath = jackPluginsClassPath;
     }
 
@@ -150,7 +144,6 @@ public class JackGenerateDexTransform extends Transform {
                         .map(SecondaryFile::nonIncremental)
                         .collect(Collectors.toList()));
 
-        builder.add(SecondaryFile.nonIncremental(proguardFiles));
         builder.add(SecondaryFile.nonIncremental(jackPluginsClassPath));
 
         return builder.build();
@@ -238,18 +231,12 @@ public class JackGenerateDexTransform extends Transform {
                 Lists.newArrayList(
                         TransformInputUtil.getAllFiles(transformInvocation.getReferencedInputs()));
 
-        List<File> proguard =
-                Stream.concat(
-                        options.getProguardFiles().stream(),
-                        proguardFiles.getFiles().stream())
-                        .collect(ImmutableCollectors.toImmutableList());
         JackProcessOptions finalOptions =
                 JackProcessOptions.builder(options)
                         .setDexOutputDirectory(outDirectory)
                         .setImportFiles(importFiles)
                         .setClassPaths(classPath)
                         .setJackPluginClassPath(Lists.newArrayList(jackPluginsClassPath.getFiles()))
-                        .setProguardFiles(proguard)
                         .build();
 
         JackToolchain toolchain = new JackToolchain(buildToolInfo.get(), logger, errorReporter);

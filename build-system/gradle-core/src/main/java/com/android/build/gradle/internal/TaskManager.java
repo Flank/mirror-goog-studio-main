@@ -2491,10 +2491,6 @@ public abstract class TaskManager {
                         androidBuilder::getBuildToolInfo,
                         androidBuilder.getErrorReporter(),
                         androidBuilder.getJavaProcessExecutor(),
-                        scope.getArtifactFileCollection(
-                                AndroidArtifacts.ConfigType.RUNTIME,
-                                AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.PROGUARD_RULES),
                         variantDependency.getJackPluginConfiguration());
         TransformTask.ConfigActionCallback<JackGenerateDexTransform> jackDexTransformCallback =
                 (transform, task) -> {

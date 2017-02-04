@@ -380,7 +380,6 @@ public class JackGenerateDexTransformTest {
                         () -> buildToolInfo,
                         errorReporter,
                         noOpJavaExecutor,
-                        emptyFileCollection,
                         emptyFileCollection);
 
         ImmutableList.Builder<TransformInput> inputs = ImmutableList.builder();
