@@ -55,13 +55,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.io.Closeables;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -605,6 +599,57 @@ public class AvdManager {
         }
 
         return false;
+    }
+
+    // Log info about a running AVD.
+    // This is intended to help identify why we occasionally get a false report
+    // that an AVD instance is already executing.
+    public void logRunningAvdInfo(@NonNull AvdInfo info, @NonNull ILogger logger) {
+        String pid;
+        try {
+            pid = getAvdPid(info);
+        }
+        catch (IOException ex) {
+            logger.error(ex, "AVD not launched but got IOException while getting PID");
+            return;
+        }
+        if (pid == null) {
+            logger.warning("AVD not launched but PID is null. Should not have indicated that the AVD is running.");
+            return;
+        }
+        logger.warning("AVD not launched because an instance appears to be running on PID " + pid);
+        String command;
+        int numTermChars;
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            command = "cmd /c \"tasklist /FI \"PID eq " + pid + "\" /FO csv /V /NH\"";
+            numTermChars = 2; // <CR><LF>
+        }
+        else {
+            command = "ps -o pid= -o user= -o pcpu= -o tty= -o stat= -o time= -o etime= -o cmd= -p " + pid;
+            numTermChars = 1; // <LF>
+        }
+        try {
+            Process proc = Runtime.getRuntime().exec(command);
+            if (proc.waitFor() != 0) {
+                logger.warning("Could not get info for that AVD process");
+            }
+            else {
+                InputStream procInfoStream = proc.getInputStream(); // proc's output is our input
+                final int strMax = 256;
+                byte[] procInfo = new byte[strMax];
+                int nRead = procInfoStream.read(procInfo, 0, strMax);
+                if (nRead <= numTermChars) {
+                    logger.warning("Info for that AVD process is null");
+                }
+                else {
+                    logger.warning("AVD process info: [" + new String(procInfo, 0, nRead - numTermChars) + "]");
+                }
+            }
+        }
+        catch (IOException | InterruptedException ex) {
+            logger.warning("Got exception when getting info on that AVD process:\n%s",
+                           Arrays.toString(ex.getStackTrace()));
+        }
     }
 
     public void stopAvd(@NonNull AvdInfo info) {
