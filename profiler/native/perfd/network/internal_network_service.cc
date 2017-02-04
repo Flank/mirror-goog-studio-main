@@ -50,6 +50,14 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     ServerContext *context, const proto::HttpEventRequest *httpEvent,
     proto::EmptyNetworkReply *reply) {
   switch (httpEvent->event()) {
+    case proto::HttpEventRequest::CREATED: {
+      // TODO: Handle this case for now to avoid printing an error message to
+      // the user. We should probably remove this case later as it is already
+      // handled by |RegisterHttpData|.
+    }
+
+    break;
+
     case proto::HttpEventRequest::DOWNLOAD_STARTED: {
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->downloading_timestamp = httpEvent->timestamp();
