@@ -75,12 +75,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /** Unit test for {@link DexTransform}. */
-@RunWith(MockitoJUnitRunner.class)
 public class DexTransformTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule public TemporaryFolder testDir = new TemporaryFolder();
 

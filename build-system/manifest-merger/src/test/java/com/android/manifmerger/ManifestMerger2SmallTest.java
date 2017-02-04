@@ -40,10 +40,11 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,8 +56,8 @@ import org.xml.sax.SAXException;
 /**
  * Tests for the {@link ManifestMergerTestUtil} class
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ManifestMerger2SmallTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock
     private ActionRecorder mActionRecorder;

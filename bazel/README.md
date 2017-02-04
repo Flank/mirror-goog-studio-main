@@ -22,6 +22,10 @@ platform-specific binary and run it.
 
 ## Running all the tests
 
+*** note
+Warning: On a Mac, append `--genrule_strategy=standalone --spawn_strategy=standalone`
+***
+
 The command to run all the bazel tests run by the PSQ is:
 
 ```shell

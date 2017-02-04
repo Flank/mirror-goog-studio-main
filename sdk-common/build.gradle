@@ -16,7 +16,7 @@ dependencies {
     testCompile libs.junit
     testCompile project(':base:testutils')
     testCompile 'org.easymock:easymock:3.3'
-    testCompile libs.mockito_all
+    testCompile libs.mockito_core
     testCompile libs.truth
 }
 

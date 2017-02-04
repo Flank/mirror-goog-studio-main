@@ -37,14 +37,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /**
  * Simple test to ensure component model plugin do not crash when instant run is enabled.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class NativeLibraryInstantRunTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule
     public Adb adb = new Adb();

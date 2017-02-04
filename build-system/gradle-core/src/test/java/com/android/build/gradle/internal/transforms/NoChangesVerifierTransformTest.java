@@ -33,18 +33,18 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Collection;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-/**
- * Tests for the {@link NoChangesVerifierTransform}
- */
-@RunWith(MockitoJUnitRunner.class)
+/** Tests for the {@link NoChangesVerifierTransform} */
 public class NoChangesVerifierTransformTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
+
     @Mock
     TransformInvocation input;
     @Mock

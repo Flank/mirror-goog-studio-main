@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -74,7 +75,7 @@ public final class DuplicatedBitmapReportTest {
         inOrder.verify(mPrinterMock).endTable();
         inOrder.verify(mPrinterMock).startTable("All Duplicates");
         inOrder.verify(mPrinterMock, Mockito.atLeastOnce())
-                .addRow(Mockito.anyString());
+                .addRow(ArgumentMatchers.nullable(String.class));
         inOrder.verify(mPrinterMock).endTable();
 
         snapshot.dispose();
