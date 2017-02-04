@@ -26,5 +26,6 @@ android {
         release {
             minifyEnabled true
         }
+        proguard.initWith(buildTypes.debug)
     }
 }

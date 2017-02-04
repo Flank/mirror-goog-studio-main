@@ -26,10 +26,13 @@ model {
         buildToolsVersion = rootProject.buildToolsVersion
     }
 
-    getFlavorDimensionList().add('foo')
     android.productFlavors {
-        create("f1")
-        create("f2")
+        create("f1") {
+            dimension 'foo'
+        }
+        create("f2") {
+            dimension 'foo'
+        }
     }
 
     android.sources {

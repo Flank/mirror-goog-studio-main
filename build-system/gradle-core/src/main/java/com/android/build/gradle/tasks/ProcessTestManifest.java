@@ -242,18 +242,19 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
 
+        // tested manifest is the most important one. put it first.
+        if (testedManifest != null) {
+            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
+                    testedManifest.getSingleFile(),
+                    "__tested_library__"));
+        }
+
         for (ResolvedArtifactResult artifact : artifacts) {
             providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
                     artifact.getFile(),
                     MergeManifests.getArtifactName(artifact)));
         }
 
-        //add the tested manifest.
-        if (testedManifest != null) {
-            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
-                    testedManifest.getSingleFile(),
-                    "__tested_library__"));
-        }
 
         return providers;
     }
