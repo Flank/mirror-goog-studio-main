@@ -19,7 +19,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -157,7 +156,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         processorPath = processorPath.plus(scope.getArtifactFileCollection(
                 AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
                 AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.CLASSES));
+                AndroidArtifacts.ArtifactType.JAR));
         javacTask.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental = AbstractCompilesUtil.isIncremental(

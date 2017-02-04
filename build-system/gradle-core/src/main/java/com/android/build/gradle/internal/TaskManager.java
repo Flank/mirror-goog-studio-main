@@ -2421,7 +2421,7 @@ public abstract class TaskManager {
                 scope.getArtifactFileCollection(
                         AndroidArtifacts.ConfigType.ANNOTATION_PROCESSOR,
                         AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.CLASSES));
+                        AndroidArtifacts.ArtifactType.JAR));
         JackCompileTransform jackCompileTransform =
                 new JackCompileTransform(
                         JackOptionsUtils.forSourceCompilation(scope),
