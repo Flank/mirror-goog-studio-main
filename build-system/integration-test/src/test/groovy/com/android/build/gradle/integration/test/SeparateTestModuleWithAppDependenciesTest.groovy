@@ -78,6 +78,7 @@ public class FooActivity extends AppCompatActivity {
         project.getSubproject("test").getBuildFile() << """
 dependencies {
     compile 'com.android.support.test:rules:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
+    compile 'com.android.support:support-annotations:$GradleTestProject.SUPPORT_LIB_VERSION'
 }
         """
 
