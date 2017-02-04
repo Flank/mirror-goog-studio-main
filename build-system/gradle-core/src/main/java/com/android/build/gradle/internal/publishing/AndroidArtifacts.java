@@ -46,7 +46,6 @@ public class AndroidArtifacts {
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
-    private static final String TYPE_ATOM_BUNDLE = "atombundle";
 
     // types for AAR/ATOM content
     private static final String TYPE_MANIFEST = "android-manifest";
@@ -63,13 +62,14 @@ public class AndroidArtifacts {
     private static final String TYPE_DATA_BINDING = "android-databinding";
 
     // types for ATOM content.
-    private static final String TYPE_RESOURCES_PKG = "android-res-ap_";
+    private static final String TYPE_ATOM_RESOURCE_PKG = "android-atom-res-ap_";
     private static final String TYPE_ATOM_MANIFEST = "android-atom-manifest";
     private static final String TYPE_ATOM_ANDROID_RES = "android-atom-res";
     private static final String TYPE_ATOM_DEX = "android-atom-dex";
     private static final String TYPE_ATOM_JAVA_RES = "android-atom-java-res";
     private static final String TYPE_ATOM_JNI = "android-atom-jni";
     private static final String TYPE_ATOM_ASSETS = "android-atom-assets";
+    private static final String TYPE_ATOM_LIB_INFO = "android-atom-lib-info";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
@@ -110,14 +110,15 @@ public class AndroidArtifacts {
         APK_METADATA(TYPE_METADATA, ConfigType.COMPILE),
         APK(TYPE_APK, ConfigType.RUNTIME),
 
-        RESOURCES_PKG(TYPE_RESOURCES_PKG),
-        ATOM_MANIFEST(TYPE_ATOM_MANIFEST),
-        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES),
-        ATOM_DEX(TYPE_ATOM_DEX),
-        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES),
-        ATOM_JNI(TYPE_ATOM_JNI),
-        ATOM_ASSETS(TYPE_ATOM_ASSETS),
-        METADATA(TYPE_METADATA);
+        ATOM_RESOURCE_PKG(TYPE_ATOM_RESOURCE_PKG, ConfigType.COMPILE),
+        ATOM_MANIFEST(TYPE_ATOM_MANIFEST, ConfigType.COMPILE),
+        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES, ConfigType.COMPILE),
+        ATOM_DEX(TYPE_ATOM_DEX, ConfigType.COMPILE),
+        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES, ConfigType.COMPILE),
+        ATOM_JNI(TYPE_ATOM_JNI, ConfigType.COMPILE),
+        ATOM_ASSETS(TYPE_ATOM_ASSETS, ConfigType.COMPILE),
+        ATOM_LIB_INFO(TYPE_ATOM_LIB_INFO, ConfigType.COMPILE),
+        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE);
 
         private final String type;
         private final Collection<ConfigType> configTypes;
@@ -166,14 +167,6 @@ public class AndroidArtifacts {
                 return task.getArchivePath();
             }
         });
-    }
-
-    public static PublishArtifact buildAtomArtifact(
-            @NonNull String name,
-            @Nullable String classifier,
-            @NonNull FileSupplier outputFileSupplier) {
-        return new AndroidArtifact(
-                name, TYPE_ATOM_BUNDLE, TYPE_ATOM_BUNDLE, classifier, outputFileSupplier);
     }
 
     private static class AndroidArtifact implements PublishArtifact {

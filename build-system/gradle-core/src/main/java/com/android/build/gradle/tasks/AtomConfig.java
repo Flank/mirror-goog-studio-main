@@ -124,6 +124,12 @@ public class AtomConfig extends BaseTask {
                         artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
             }
 
+            Map<ComponentIdentifier, File> libInfoMap = new HashMap<>();
+            for (ResolvedArtifactResult artifactResult : atomLibInfoFiles.getArtifacts()) {
+                libInfoMap.put(
+                        artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
+            }
+
             VariantScope variantScope = variantOutputScope.getVariantScope();
             GlobalScope globalScope = variantScope.getGlobalScope();
 
@@ -175,6 +181,7 @@ public class AtomConfig extends BaseTask {
                                 javaResMap.get(componentIdentifier),
                                 jniDirMap.get(componentIdentifier),
                                 assetDirMap.get(componentIdentifier),
+                                libInfoMap.get(componentIdentifier),
                                 sourceOutputDir,
                                 textSymbolOutputDir,
                                 packageOutputFile,
@@ -214,6 +221,7 @@ public class AtomConfig extends BaseTask {
     private ArtifactCollection atomJavaRes;
     private ArtifactCollection atomJniDirs;
     private ArtifactCollection atomAssetDirs;
+    private ArtifactCollection atomLibInfoFiles;
     private VariantOutputScope variantOutputScope;
 
     // So we don't have to compute them twice.
@@ -240,6 +248,7 @@ public class AtomConfig extends BaseTask {
                 @NonNull File javaResourcesDir,
                 @NonNull File jniDir,
                 @NonNull File assetDir,
+                @NonNull File libInfoFile,
                 @NonNull File sourceOutputDir,
                 @NonNull File textSymbolOutputDir,
                 @NonNull File packageOutputFile,
@@ -256,6 +265,7 @@ public class AtomConfig extends BaseTask {
             this.javaResourcesDir = javaResourcesDir;
             this.jniDir = jniDir;
             this.assetDir = assetDir;
+            this.libInfoFile = libInfoFile;
             this.sourceOutputDir = sourceOutputDir;
             this.textSymbolOutputDir = textSymbolOutputDir;
             this.packageOutputFile = packageOutputFile;
@@ -297,6 +307,10 @@ public class AtomConfig extends BaseTask {
 
         public File getAssetDir() {
             return assetDir;
+        }
+
+        public File getLibInfoFile() {
+            return libInfoFile;
         }
 
         public File getSourceOutputDir() {
@@ -347,6 +361,7 @@ public class AtomConfig extends BaseTask {
                     .add("javaResourcesDir", javaResourcesDir)
                     .add("jniDir", jniDir)
                     .add("assetDir", assetDir)
+                    .add("libInfoFile", libInfoFile)
                     .add("sourceOutputDir", sourceOutputDir)
                     .add("textSymbolOutputDir", textSymbolOutputDir)
                     .add("packageOutputFile", packageOutputFile)
@@ -368,6 +383,7 @@ public class AtomConfig extends BaseTask {
                     javaResourcesDir,
                     jniDir,
                     assetDir,
+                    libInfoFile,
                     sourceOutputDir,
                     textSymbolOutputDir,
                     packageOutputFile,
@@ -387,6 +403,7 @@ public class AtomConfig extends BaseTask {
         private final File javaResourcesDir;
         private final File jniDir;
         private final File assetDir;
+        private final File libInfoFile;
 
         private final File sourceOutputDir;
         private final File textSymbolOutputDir;
@@ -441,7 +458,7 @@ public class AtomConfig extends BaseTask {
                     variantScope.getArtifactCollection(
                             AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.RESOURCES_PKG);
+                            AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
             atomConfig.atomAndroidRes =
                     variantScope.getArtifactCollection(
                             AndroidArtifacts.ConfigType.COMPILE,
@@ -467,6 +484,11 @@ public class AtomConfig extends BaseTask {
                             AndroidArtifacts.ConfigType.COMPILE,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.ATOM_ASSETS);
+            atomConfig.atomLibInfoFiles =
+                    variantScope.getArtifactCollection(
+                            AndroidArtifacts.ConfigType.COMPILE,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
             atomConfig.variantOutputScope = scope;
         }
     }

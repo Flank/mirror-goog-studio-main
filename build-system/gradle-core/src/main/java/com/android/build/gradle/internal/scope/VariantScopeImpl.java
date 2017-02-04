@@ -1377,6 +1377,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     getVariantConfiguration().getDirName());
     }
 
+    @NonNull
+    @Override
+    public File getLibInfoFile() {
+        return new File(getBaseBundleDir(), "libinfo.txt");
+    }
+
     // Tasks getters/setters.
 
     @Override
