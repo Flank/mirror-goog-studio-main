@@ -96,6 +96,7 @@ public class AarTransform extends ExtractTransform {
             case CLASSES:
             case JAVA_RES:
             case ATOM_CLASSES:
+            case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessairy enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.

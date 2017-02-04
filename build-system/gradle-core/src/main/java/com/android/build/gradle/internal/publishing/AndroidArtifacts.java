@@ -46,6 +46,7 @@ public class AndroidArtifacts {
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
+    private static final String TYPE_JAR = "jar";
 
     // types for AAR/ATOM content
     private static final String TYPE_MANIFEST = "android-manifest";
@@ -85,6 +86,7 @@ public class AndroidArtifacts {
 
     public enum ArtifactType {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, ConfigType.COMPILE, ConfigType.RUNTIME),
+        JAR(TYPE_JAR, ConfigType.RUNTIME),
 
         AIDL(TYPE_AIDL, ConfigType.COMPILE),
         RENDERSCRIPT(TYPE_RENDERSCRIPT, ConfigType.COMPILE),
