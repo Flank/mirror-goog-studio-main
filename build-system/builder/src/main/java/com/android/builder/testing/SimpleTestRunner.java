@@ -79,16 +79,12 @@ public class SimpleTestRunner implements TestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) throws TestException, NoAuthorizedDeviceFoundException, InterruptedException {
-        int threadPoolSize = maxThreads;
-
+        WaitableExecutor<Boolean> executor;
         if (mEnableSharding) {
-            threadPoolSize = deviceList.size();
+            executor = WaitableExecutor.useNewFixedSizeThreadPool(deviceList.size());
+        } else {
+            executor = WaitableExecutor.useGlobalSharedThreadPool();
         }
-
-        if (threadPoolSize == 0) {
-            threadPoolSize = Runtime.getRuntime().availableProcessors() / 2;
-        }
-        WaitableExecutor<Boolean> executor = WaitableExecutor.useNewFixedSizeThreadPool(threadPoolSize);
 
         int totalDevices = deviceList.size();
         int unauthorizedDevices = 0;
