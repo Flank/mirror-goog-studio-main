@@ -17,22 +17,27 @@
             </#if>
             <#if buildApi gte 16 && parentActivityClass != "">
                 android:parentActivityName="${parentActivityClass}"
+            </#if>
+            <#if isFeatureSplit>
+                split="${instantAppSplitName}"
             </#if>>
             <#if parentActivityClass != "">
                 <meta-data android:name="android.support.PARENT_ACTIVITY"
                     android:value="${parentActivityClass}" />
             </#if>
-            <#if isLauncher && isInstantApp!false>
-                <intent-filter instant:order="1">
+            <#if isInstantApp>
+                <intent-filter xmlns:instant="http://schemas.android.com/instantapps" 
+                    instant:order="${instantAppActivityOrder}">
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.BROWSABLE" />
                     <category android:name="android.intent.category.DEFAULT" />
                     <data
-                        android:host="${supportedDomain!"instantapp.example.com"}"
-                        android:pathPattern="${atomRoute!"/.*"}"
-                        android:scheme="http" />
+                        android:host="${instantAppActivityHost}"
+                        android:${instantAppActivityRouteType}="${instantAppActivityRoute}"
+                        android:scheme="https" />
                 </intent-filter>
-            <#elseif isLauncher && !(isLibraryProject!false)>
+            </#if>
+            <#if isLauncher && (!(isLibraryProject!false) || isInstantApp)>
                 <intent-filter>
                     <action android:name="android.intent.action.MAIN" />
                     <category android:name="android.intent.category.LAUNCHER" />

@@ -17,8 +17,12 @@
     <copy from="../../gradle/wrapper"
         to="${escapeXmlAttribute(topOut)}/" />
 
-<#if sdkDir??>
-  <instantiate from="root/local.properties.ftl"
-           to="${escapeXmlAttribute(topOut)}/local.properties" />
+<#if hasSdkDir>
+    <instantiate from="root/local.properties.ftl"
+                   to="${escapeXmlAttribute(topOut)}/local.properties" />
+</#if>
+<#if isInstantApp>
+    <instantiate from="root/aia.properties.ftl"
+                   to="${escapeXmlAttribute(topOut)}/aia.properties" />
 </#if>
 </recipe>

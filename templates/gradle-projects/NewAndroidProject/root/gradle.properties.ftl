@@ -9,7 +9,7 @@
 
 # Specifies the JVM arguments used for the daemon process.
 # The setting is particularly useful for tweaking memory settings.
-<#if isLowMemory!false>
+<#if isLowMemory>
 org.gradle.jvmargs=-Xmx1024m
 <#else>
 org.gradle.jvmargs=-Xmx1536m
