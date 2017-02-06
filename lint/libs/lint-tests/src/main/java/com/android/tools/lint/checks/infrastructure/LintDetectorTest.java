@@ -43,6 +43,7 @@ import com.android.tools.lint.Reporter;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
+import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.BytecodeProducer;
@@ -903,10 +904,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     return null;
                 }
                 return file;
-            } else if (relativePath.equals("platform-tools/api/api-versions.xml")) {
-                File file = new File(getSdkHome(), relativePath);
-                if (!file.exists()) {
-                    throw new RuntimeException("File " + file + " not found");
+            } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
+                File file = super.findResource(relativePath);
+                if (file == null || !file.exists()) {
+                    throw new RuntimeException("File "
+                            + (file == null ? relativePath : file.getPath()) + " not found");
                 }
                 return file;
             }

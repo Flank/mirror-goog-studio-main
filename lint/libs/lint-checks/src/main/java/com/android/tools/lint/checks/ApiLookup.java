@@ -25,12 +25,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.repository.api.LocalPackage;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.ByteSink;
 import com.google.common.io.Files;
 import com.google.common.primitives.UnsignedBytes;
@@ -75,7 +78,10 @@ import java.util.Set;
  */
 public class ApiLookup {
     /** Relative path to the api-versions.xml database file within the Lint installation */
-    private static final String XML_FILE_PATH = "platform-tools/api/api-versions.xml";
+    public static final String OLD_XML_FILE_PATH = "platform-tools/api/api-versions.xml";
+    public static final String XML_FILE_PATH = "api-versions.xml"; // relative to the SDK data/ dir
+    /** Database moved from platform-tools to SDK in API level 26 */
+    public static final int SDK_DATABASE_MIN_VERSION = 26;
     private static final String FILE_HEADER = "API database used by Android lint\000";
     private static final int BINARY_FORMAT_VERSION = 9;
     private static final boolean DEBUG_SEARCH = false;
@@ -95,9 +101,10 @@ public class ApiLookup {
     private byte[] mData;
     private int[] mIndices;
 
-    private static WeakReference<ApiLookup> sInstance = new WeakReference<>(null);
+    private static Map<AndroidVersion, WeakReference<ApiLookup>> instances = Maps.newHashMap();
 
-    private int mPackageCount;
+    private int packageCount;
+    private IAndroidTarget target;
 
     /**
      * Returns an instance of the API database
@@ -112,36 +119,68 @@ public class ApiLookup {
      */
     @Nullable
     public static ApiLookup get(@NonNull LintClient client) {
+        return get(client, null);
+    }
+
+    /**
+     * Returns an instance of the API database
+     *
+     * @param client the client to associate with this database - used only for logging. The
+     *               database object may be shared among repeated invocations, and in that case
+     *               client used will be the one originally passed in. In other words, this
+     *               parameter may be ignored if the client created is not new.
+     * @param target the corresponding Android target, if known
+     * @return a (possibly shared) instance of the API database, or null if its data can't be found
+     */
+    @Nullable
+    public static ApiLookup get(@NonNull LintClient client, @Nullable IAndroidTarget target) {
         synchronized (ApiLookup.class) {
-            ApiLookup db = sInstance.get();
+            AndroidVersion version = target != null ? target.getVersion() : AndroidVersion.DEFAULT;
+            WeakReference<ApiLookup> reference = instances.get(version);
+            ApiLookup db = reference != null ? reference.get() : null;
             if (db == null) {
-                // Fallbacks: Allow the API database
+                // Fallbacks: Allow the API database to be read from a custom location
                 String env = System.getProperty("LINT_API_DATABASE");
-                File file;
+                File file = null;
                 if (env != null) {
                     file = new File(env);
+                    if (!file.exists()) {
+                        file = null;
+                    }
                 } else {
-                    file = client.findResource(XML_FILE_PATH);
-                }
-                if (file == null) {
-                    // AOSP build environment?
-                    String build = System.getenv("ANDROID_BUILD_TOP");
-                    if (build != null) {
-                        file = new File(build, "development/sdk/api-versions.xml"
-                                .replace('/', File.separatorChar));
+                    if (target != null && version.getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
+                        file = new File(target.getFile(IAndroidTarget.DATA), XML_FILE_PATH);
+                        if (!file.isFile()) {
+                            file = null;
+                        }
+                    }
+
+                    if (file == null) {
+                        target = null; // The API database will no longer be tied to this target
+                        file = client.findResource(XML_FILE_PATH);
                     }
                 }
 
-                if (file == null || !file.exists()) {
+                if (file == null) {
                     return null;
                 } else {
-                    db = get(client, file);
+                    db = get(client, file, target);
                 }
-                sInstance = new WeakReference<>(db);
+                instances.put(version, new WeakReference<>(db));
             }
 
             return db;
         }
+    }
+
+    /**
+     * Returns the associated Android target, if known
+     *
+     * @return the target, if known
+     */
+    @Nullable
+    public IAndroidTarget getTarget() {
+        return target;
     }
 
     @VisibleForTesting
@@ -183,14 +222,13 @@ public class ApiLookup {
     /**
      * Returns an instance of the API database
      *
-     * @param client the client to associate with this database - used only for
-     *            logging
-     * @param xmlFile the XML file containing configuration data to use for this
-     *            database
-     * @return a (possibly shared) instance of the API database, or null
-     *         if its data can't be found
+     * @param client  the client to associate with this database - used only for logging
+     * @param xmlFile the XML file containing configuration data to use for this database
+     * @param target  the associated Android target, if known
+     * @return a (possibly shared) instance of the API database, or null if its data can't be found
      */
-    private static ApiLookup get(LintClient client, File xmlFile) {
+    private static ApiLookup get(@NonNull LintClient client, @NonNull File xmlFile,
+            @Nullable IAndroidTarget target) {
         if (!xmlFile.exists()) {
             client.log(null, "The API database file %1$s does not exist", xmlFile);
             return null;
@@ -222,7 +260,7 @@ public class ApiLookup {
             return null;
         }
 
-        return new ApiLookup(client, xmlFile, binaryData, null);
+        return new ApiLookup(client, xmlFile, binaryData, null, target);
     }
 
     private static boolean createCache(LintClient client, File xmlFile, File binaryData) {
@@ -255,8 +293,10 @@ public class ApiLookup {
             @NonNull LintClient client,
             @NonNull File xmlFile,
             @Nullable File binaryFile,
-            @Nullable Api info) {
+            @Nullable Api info,
+            @Nullable IAndroidTarget target) {
         mInfo = info;
+        this.target = target;
 
         if (binaryFile != null) {
             readData(client, xmlFile, binaryFile);
@@ -358,7 +398,7 @@ public class ApiLookup {
 
             int indexCount = get4ByteInt(b, offset);
             offset += 4;
-            mPackageCount = get4ByteInt(b, offset);
+            packageCount = get4ByteInt(b, offset);
             offset += 4;
 
             mIndices = new int[indexCount];
@@ -875,6 +915,7 @@ public class ApiLookup {
      * @return true if this is a class found in the API database
      */
     public boolean containsClass(@NonNull String className) {
+        //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             return findClass(className) != -1;
         }  else if (mInfo != null) {
@@ -1093,7 +1134,7 @@ public class ApiLookup {
         // The index array contains class indexes from 0 to classCount and
         //   member indices from classCount to mIndices.length.
         int low = 0;
-        int high = mPackageCount - 1;
+        int high = packageCount - 1;
         // Compare the api info at the given index.
         int classNameLength = owner.lastIndexOf('/');
         while (low <= high) {
@@ -1351,6 +1392,6 @@ public class ApiLookup {
     /** Clears out any existing lookup instances */
     @VisibleForTesting
     static void dispose() {
-        sInstance.clear();
+        instances.clear();
     }
 }

@@ -366,7 +366,8 @@ public class ApiDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckProject(@NonNull Context context) {
         if (mApiDatabase == null) {
-            mApiDatabase = ApiLookup.get(context.getClient());
+            mApiDatabase = ApiLookup.get(context.getClient(),
+                    context.getMainProject().getBuildTarget());
             // We can't look up the minimum API required by the project here:
             // The manifest file hasn't been processed yet in the -before- project hook.
             // For now it's initialized lazily in getMinSdk(Context), but the
@@ -377,6 +378,12 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
                         "Can't find API database; API check not performed");
             } else {
+                if (mApiDatabase == null || mApiDatabase.getTarget() != null) {
+                    // Don't warn about compileSdk/platform-tools mismatch if the API database
+                    // corresponds to an SDK platform
+                    return;
+                }
+
                 // See if you don't have at least version 23.0.1 of platform tools installed
                 AndroidSdkHandler sdk = context.getClient().getSdk();
                 if (sdk == null) {
@@ -423,7 +430,7 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(UNSUPPORTED,
                         location,
                         String.format("The SDK platform-tools version (%1$s) is too old "
-                                        + " to check APIs compiled with API %2$d; please update",
+                                        + "to check APIs compiled with API %2$d; please update",
                                 revision.toShortString(),
                                 compileSdkVersion));
             }

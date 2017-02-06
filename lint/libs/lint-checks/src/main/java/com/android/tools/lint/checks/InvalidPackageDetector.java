@@ -96,7 +96,8 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
 
     @Override
     public void beforeCheckProject(@NonNull Context context) {
-        mApiDatabase = ApiLookup.get(context.getClient());
+        mApiDatabase = ApiLookup.get(context.getClient(),
+                context.getMainProject().getBuildTarget());
     }
 
     // ---- Implements ClassScanner ----

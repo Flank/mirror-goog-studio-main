@@ -18,7 +18,9 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -35,9 +37,11 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
+import org.intellij.lang.annotations.Language;
 
 /**
  * The result of running a {@link TestLintTask}.
@@ -65,15 +69,27 @@ public class TestLintResult {
      * @param expectedText the text to expect
      */
     public TestLintResult expect(@NonNull String expectedText) {
-        if (output == null && exception != null) {
-            StringWriter writer = new StringWriter();
-            exception.printStackTrace(new PrintWriter(writer));
-            assertEquals(expectedText, writer.toString());
-        } else {
-            assertEquals(expectedText, output);
-        }
+        assertEquals(expectedText, describeOutput());
 
         return this;
+    }
+
+    private String describeOutput() {
+        if (exception != null) {
+            StringWriter writer = new StringWriter();
+            exception.printStackTrace(new PrintWriter(writer));
+
+            if (output != null) {
+                writer.write(output);
+            }
+
+            return writer.toString();
+        } else {
+            if (output == null) {
+                return "";
+            }
+            return output;
+        }
     }
 
     /**
@@ -268,5 +284,14 @@ public class TestLintResult {
         matches.sort((o1, o2) -> o2.offset - o1.offset);
 
         return matches;
+    }
+
+    public void expectMatches(@Language("RegExp") @NonNull String regexp) {
+        String output = describeOutput();
+        Pattern pattern = Pattern.compile(regexp);
+        boolean found = pattern.matcher(output).find();
+        if (!found) {
+            fail("Did not find pattern\n  " + regexp + "\n in \n" + output);
+        }
     }
 }
