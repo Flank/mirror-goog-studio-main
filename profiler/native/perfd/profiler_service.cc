@@ -26,9 +26,9 @@ using grpc::Status;
 
 namespace profiler {
 
-Status ProfilerServiceImpl::GetTimes(
-    ServerContext* context, const profiler::proto::TimesRequest* request,
-    profiler::proto::TimesResponse* response) {
+Status ProfilerServiceImpl::GetCurrentTime(
+    ServerContext* context, const profiler::proto::TimeRequest* request,
+    profiler::proto::TimeResponse* response) {
   Trace trace("PRO:GetTimes");
 
   response->set_timestamp_ns(clock_.GetCurrentTime());

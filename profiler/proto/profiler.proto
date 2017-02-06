@@ -29,6 +29,11 @@ enum AppId {
 // TODO: Add more essential fields.
 message CommonData {
   int32 process_id = 1;
-  string device_serial = 2;
+  Session session = 2;
   int64 end_timestamp = 3;
+}
+
+message Session {
+  string device_serial = 1;
+  string boot_id = 2;
 }
