@@ -214,7 +214,7 @@ android{
         project.execute("clean", "assembleDebug")
         // files should be merged
         assertThat(project.getApk("debug")).
-                containsFileWithContent("conflict.txt", "foo\nproject-foo")
+                containsFileWithContent("conflict.txt", "project-foo\nfoo")
     }
 
     @Test
@@ -226,7 +226,7 @@ dependencies {
 }
 """
         GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug")
-        assertThat(result.failureMessage).contains("Duplicate files copied in APK conflict.txt")
+        assertThat(result.failureMessage).contains("conflict.txt")
     }
 
 

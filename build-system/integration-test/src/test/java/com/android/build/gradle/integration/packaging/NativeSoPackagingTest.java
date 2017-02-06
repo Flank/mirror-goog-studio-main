@@ -34,6 +34,7 @@ import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 /**
  * test for packaging of asset files.
  */

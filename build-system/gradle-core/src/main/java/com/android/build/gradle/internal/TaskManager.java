@@ -915,7 +915,7 @@ public abstract class TaskManager {
         // Create the merge transform
         MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
                 variantScope.getGlobalScope().getExtension().getPackagingOptions(),
-                mergeScopes, ExtendedContentType.NATIVE_LIBS, "mergeJniLibs");
+                mergeScopes, ExtendedContentType.NATIVE_LIBS, "mergeJniLibs", variantScope);
         variantScope.getTransformManager().addTransform(tasks, variantScope, mergeTransform);
     }
 
@@ -1163,7 +1163,7 @@ public abstract class TaskManager {
         // Create the merge transform
         MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
                 variantScope.getGlobalScope().getExtension().getPackagingOptions(),
-                mergeScopes, DefaultContentType.RESOURCES, "mergeJavaRes");
+                mergeScopes, DefaultContentType.RESOURCES, "mergeJavaRes", variantScope);
         variantScope.setMergeJavaResourcesTask(
                 transformManager.addTransform(tasks, variantScope, mergeTransform).orElse(null));
     }
