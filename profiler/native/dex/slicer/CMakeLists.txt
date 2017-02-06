@@ -5,6 +5,4 @@ add_library(slicer
             dex_format.cc
             dex_ir.cc
             dex_utf8.cc
-            slicer.cc
-            stats.cc)
-
+            slicer.cc)

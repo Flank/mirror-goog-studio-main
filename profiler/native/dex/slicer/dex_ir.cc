@@ -17,7 +17,6 @@
 #include "dex_ir.h"
 #include "chronometer.h"
 #include "dex_utf8.h"
-#include "stats.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -160,8 +159,6 @@ static void NormalizeClass(Class* irClass) {
 //  Ex. FieldDecl has a method comp() returning tie(parent->index, name->index, type->index)
 //
 void DexFile::Normalize() {
-  slicer::Chronometer chrono(slicer::perf.norm_time);
-
   // sort build the .dex indexes
   IndexItems(strings, [](const own<String>& a, const own<String>& b) {
     // this list must be sorted by std::string contents, using UTF-16 code point values
