@@ -27,7 +27,7 @@ maven_java_library(
     srcs = glob(["src/main/java/**/*.java"]) + [
         "//tools/base/apkzlib:srcjar",
         "//tools/base/build-system/profile:srcjar",
-        "//tools/base/aaptjlib:sources",
+        "//tools/base/aaptjlib:srcjar",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
