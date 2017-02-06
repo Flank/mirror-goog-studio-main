@@ -133,7 +133,7 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
       info.set_info_id(next_allocations_info_id_);
       info.set_start_time(timestamp);
       info.set_end_time(kUnfinishedTimestamp);
-      info.set_legacy_tracking(legacy);
+      info.set_legacy(legacy);
       info.set_status(AllocationsInfo::IN_PROGRESS);
 
       response->mutable_info()->CopyFrom(info);
@@ -143,14 +143,7 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
       int last_info_index = GetSampleIndex(next_allocations_info_id_ - 1);
       AllocationsInfo& info = allocations_info_[last_info_index];
       info.set_end_time(timestamp);
-      if (info.legacy_tracking()) {
-        // Legacy tracking requires post-proccessing on
-        // perfd-host upon arrival of jdwp data.
-        info.set_status(AllocationsInfo::POST_PROCESS);
-      } else {
-        info.set_status(AllocationsInfo::COMPLETED);
-      }
-
+      info.set_status(AllocationsInfo::COMPLETED);
       response->mutable_info()->CopyFrom(info);
     }
     response->set_status(TrackAllocationsResponse::SUCCESS);
