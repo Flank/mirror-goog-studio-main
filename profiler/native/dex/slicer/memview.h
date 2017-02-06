@@ -14,21 +14,37 @@
  * limitations under the License.
  */
 
-#include "dex_format.h"
+#pragma once
 
-#include <zlib.h>
+#include "common.h"
 
-namespace dex {
+#include <assert.h>
+#include <stdlib.h>
 
-// Compute the DEX file checksum for a memory-mapped DEX file
-u4 ComputeChecksum(const Header* header) {
-  const u1* start = reinterpret_cast<const u1*>(header);
+namespace slicer {
 
-  uLong adler = adler32(0L, Z_NULL, 0);
-  const int nonSum = sizeof(header->magic) + sizeof(header->checksum);
+// A shallow, non-owning reference to a "view" inside a memory buffer
+class MemView {
+ public:
+  MemView() : ptr_(nullptr), size_(0) {}
 
-  return static_cast<u4>(
-      adler32(adler, start + nonSum, header->file_size - nonSum));
-}
+  MemView(const void* ptr, size_t size) : ptr_(ptr), size_(size) {
+    assert(size > 0);
+  }
 
-}  // namespace dex
+  ~MemView() = default;
+
+  template <class T = void>
+  const T* ptr() const {
+    return static_cast<const T*>(ptr_);
+  }
+
+  size_t size() const { return size_; }
+
+ private:
+  const void* ptr_;
+  size_t size_;
+};
+
+} // namespace slicer
+

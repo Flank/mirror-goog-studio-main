@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-#include "dex_format.h"
+#pragma once
 
-#include <zlib.h>
+namespace slicer {
 
-namespace dex {
+// Encapsulate the runtime check and error reporting policy.
+// (currently a simple fail-fast but the the intention is to allow customization)
+void _checkFailed(const char* expr, int line, const char* file);
+#define CHECK(expr) do { if(!(expr)) slicer::_checkFailed(#expr, __LINE__, __FILE__); } while(false)
 
-// Compute the DEX file checksum for a memory-mapped DEX file
-u4 ComputeChecksum(const Header* header) {
-  const u1* start = reinterpret_cast<const u1*>(header);
+// Annotation customization point for extra validation / state.
+// TODO: put this under a #if that can switch it off
+#define EXTRA(x) x
 
-  uLong adler = adler32(0L, Z_NULL, 0);
-  const int nonSum = sizeof(header->magic) + sizeof(header->checksum);
+} // namespace slicer
 
-  return static_cast<u4>(
-      adler32(adler, start + nonSum, header->file_size - nonSum));
-}
-
-}  // namespace dex
