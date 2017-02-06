@@ -2100,4 +2100,12 @@ public final class SdkConstants {
     public static final String GOOGLE_SUPPORT_ARTIFACT_PREFIX = "com.google.android.";
     /** Prefix of firebase groupIds */
     public static final String FIREBASE_ARTIFACT_PREFIX = "com.google.firebase.";
+
+
+    @Deprecated
+    public static String androidCmdName() {
+        throw new UnsupportedOperationException(
+                "The \"android\" command is no longer included in the SDK. Any references to it (e.g. "
+                        + "by third-party plugins) should be removed.");
+    }
 }
