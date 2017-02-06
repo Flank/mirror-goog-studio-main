@@ -33,7 +33,10 @@ import org.gradle.api.Project;
 
 /**
  * Determines if various options, triggered from the command line or environment, are set.
+ *
+ * @deprecated see {@link com.android.build.gradle.options.ProjectOptions}
  */
+@Deprecated
 public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_AAPT2 = false;
