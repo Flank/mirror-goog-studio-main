@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import org.gradle.api.Project;
 
 /**
  * Implementation of the {@link TransformVariantScope} for external build system integration.
@@ -65,6 +66,11 @@ import java.util.Collections;
     @Override
     public TransformGlobalScope getGlobalScope() {
         return globalScope;
+    }
+
+    @Override
+    protected Project getProject() {
+        return globalScope.getProject();
     }
 
     @NonNull

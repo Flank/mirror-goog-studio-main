@@ -16,25 +16,26 @@
 
 package com.android.build.gradle.tasks.factory;
 
-import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.List;
-import java.util.function.Predicate;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.TaskInputs;
-import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 
@@ -66,9 +67,6 @@ public class AndroidUnitTest extends Test {
      * Configuration Action for a JavaCompile task.
      */
     public static class ConfigAction implements TaskConfigAction<AndroidUnitTest> {
-
-        private static final Predicate<File> PLATFORM_JAR =
-                file -> FN_FRAMEWORK_LIBRARY.equals(file.getName());
 
         private final VariantScope scope;
 
@@ -107,47 +105,7 @@ public class AndroidUnitTest extends Test {
 
             configureSources(runTestsTask);
 
-            ConventionMappingHelper.map(
-                    runTestsTask,
-                    "classpath",
-                    () -> {
-                        List<Object> classpaths = Lists.newArrayList();
-
-                        // Get classpath values from tasks if the tasks are already created.
-                        final AbstractCompile testCompileTask = variantData.javacTask;
-                        if (testCompileTask != null) {
-                            // When Jack is used for building the APK, the platform jar for javac
-                            // may end up in the class path (as opposed to boot class path), so we
-                            // need to remove it.
-                            testCompileTask
-                                    .getClasspath()
-                                    .getFiles()
-                                    .stream()
-                                    .filter(PLATFORM_JAR.negate())
-                                    .forEach(classpaths::add);
-
-                            classpaths.add(testCompileTask.getOutputs().getFiles());
-                        } else {
-                            classpaths.add(testedVariantData.getScope().getJavaOutputs());
-                            classpaths.add(scope.getJavaOutputs());
-                        }
-
-                        classpaths.add(variantData.getJavaResourcesForUnitTesting());
-                        classpaths.add(testedVariantData.getJavaResourcesForUnitTesting());
-
-                        scope.getGlobalScope()
-                                .getAndroidBuilder()
-                                .getBootClasspath(false)
-                                .stream()
-                                .filter(PLATFORM_JAR.negate())
-                                .forEach(classpaths::add);
-
-                        // Mockable JAR is last, to make sure you can shadow the classes with
-                        // dependencies.
-                        classpaths.add(scope.getGlobalScope().getMockableAndroidJarFile());
-
-                        return scope.getGlobalScope().getProject().files(classpaths);
-                    });
+            runTestsTask.setClasspath(computeClasspath(testedVariantData));
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not
@@ -171,6 +129,34 @@ public class AndroidUnitTest extends Test {
                     .getTestOptions()
                     .getUnitTests()
                     .applyConfiguration(runTestsTask);
+        }
+
+        @NonNull
+        private ConfigurableFileCollection computeClasspath(BaseVariantData testedVariantData) {
+            ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
+
+            // the test classpath is made up of:
+            // - the test and tested compilation output
+            collection.from(scope.getOutputs(JAVAC));
+            collection.from(testedVariantData.getScope().getOutputs(JAVAC));
+
+            // - the test and tested java resources
+            collection.from(scope.getOutputs(TaskOutputType.JAVA_RES));
+            collection.from(testedVariantData.getScope().getOutputs(TaskOutputType.JAVA_RES));
+
+            // - the runtime dependencies for both CLASSES and JAVA_RES type
+            collection.from(
+                    scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES));
+            collection.from(
+                    scope.getArtifactFileCollection(
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            ArtifactType.JAVA_RES));
+
+            // Mockable JAR is last, to make sure you can shadow the classes with
+            // dependencies.
+            collection.from(scope.getGlobalScope().getOutputs(TaskOutputType.MOCKABLE_JAR));
+            return collection;
         }
 
         /**

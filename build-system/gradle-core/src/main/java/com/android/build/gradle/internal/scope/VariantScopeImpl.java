@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
@@ -221,6 +222,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private InstantRunTaskManager instantRunTaskManager;
 
+    private final Map<AndroidArtifacts.ArtifactType, ConfigurableFileCollection> artifactMap = Maps.newHashMap();
+
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
@@ -230,81 +233,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.variantData = variantData;
     }
 
-    private final Map<OutputType, FileCollection> outputMap = Maps.newHashMap();
-    private final Map<ArtifactType, ConfigurableFileCollection> artifactMap = Maps.newHashMap();
-
-    @NonNull
     @Override
-    public FileCollection getOutputs(@NonNull OutputType outputType) {
-        FileCollection fileCollection = outputMap.get(outputType);
-        if (fileCollection == null) {
-            throw new IllegalStateException("No output of type: " + outputType.toString());
-        }
-        return fileCollection;
-    }
-
-    @Override
-    public boolean hasOutput(@NonNull OutputType outputType) {
-        return outputMap.containsKey(outputType);
-    }
-
-    @Override
-    public void addTaskOutput(
-            @NonNull TaskOutputType outputType,
-            @NonNull File file,
-            @NonNull String taskName) {
-        addTaskOutput(outputType, createCollection(file, taskName));
-    }
-
-    @Override
-    public void addTaskOutput(@NonNull TaskOutputType outputType,
-            @NonNull FileCollection fileCollection) {
-        if (outputMap.containsKey(outputType)) {
-            throw new IllegalStateException("Output already registered for type: " + outputType);
-        }
-
-        outputMap.put(outputType, fileCollection);
-    }
-
-    @NonNull
-    @Override
-    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
-        if (outputMap.containsKey(outputType)) {
-            throw new IllegalStateException("Anchor Output already created for type: " + outputType);
-        }
-
-        FileCollection fileCollection = getGlobalScope().getProject().files();
-        outputMap.put(outputType, fileCollection);
-
-        return fileCollection;
-    }
-
-    @Override
-    public void addToAnchorOutput(
-            @NonNull AnchorOutputType outputType,
-            @NonNull File file,
-            @NonNull String taskName) {
-        addToAnchorOutput(outputType, createCollection(file, taskName));
-    }
-
-    @Override
-    public void addToAnchorOutput(
-            @NonNull AnchorOutputType outputType,
-            @NonNull FileCollection fileCollection) {
-
-        FileCollection anchorCollection = outputMap.get(outputType);
-        if (anchorCollection == null) {
-            throw new IllegalStateException("No Anchor output created for type: " + outputType);
-        }
-
-        if (!(anchorCollection instanceof ConfigurableFileCollection)) {
-            throw new IllegalStateException(
-                    "Anchor File collection for type '"
-                            + outputType
-                            + "' is not a ConfigurableFileCollection.");
-        }
-
-        ((ConfigurableFileCollection) anchorCollection).from(fileCollection);
+    protected Project getProject() {
+        return globalScope.getProject();
     }
 
     @Override
@@ -376,11 +307,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return null;
-    }
-
-    @NonNull
-    private ConfigurableFileCollection createCollection(@NonNull File file, @NonNull String taskName) {
-        return getGlobalScope().getProject().files(file).builtBy(taskName);
     }
 
     @Override
@@ -665,12 +591,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getIncrementalVerifierDir() {
         return new File(globalScope.getIntermediatesDir(), "/incremental-verifier/" +
                 variantData.getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public FileCollection getJavaOutputs() {
-        return getJavaClasspath().plus(getGlobalScope().getProject().files(getJavaOutputDir()));
     }
 
     @Override
@@ -1808,6 +1728,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope artifactScope,
             @NonNull ArtifactType artifactType) {
+        // this only handles Android Test, not unit tests.
+        VariantType variantType = getVariantConfiguration().getType();
+        if (!variantType.isForTesting() || variantType != VariantType.ANDROID_TEST) {
+            return fileCollection;
+        }
+
         // get the matching file collection for the tested variant, if any.
         if (variantData instanceof TestVariantData) {
             TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();

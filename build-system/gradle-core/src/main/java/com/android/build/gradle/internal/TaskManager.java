@@ -31,6 +31,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -533,7 +535,11 @@ public abstract class TaskManager {
     }
 
     public void createMockableJarTask(TaskFactory tasks) {
-        createMockableJar = androidTasks.create(tasks, new MockableAndroidJarTask.ConfigAction(globalScope));
+        File mockableJar = globalScope.getMockableAndroidJarFile();
+        createMockableJar = androidTasks
+                .create(tasks, new MockableAndroidJarTask.ConfigAction(globalScope, mockableJar));
+
+        globalScope.addTaskOutput(MOCKABLE_JAR, mockableJar, createMockableJar.getName());
     }
 
     protected void createDependencyStreams(
@@ -1268,19 +1274,28 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope) {
         // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
+
+        // TODO: move this file computation completely out of VariantScope.
+        File destinationDir = variantScope.getSourceFoldersJavaResDestinationDir();
+
         AndroidTask<Sync> processJavaResourcesTask =
-                androidTasks.create(tasks, new ProcessJavaResConfigAction(variantScope));
+                androidTasks.create(tasks, new ProcessJavaResConfigAction(variantScope, destinationDir));
         variantScope.setProcessJavaResourcesTask(processJavaResourcesTask);
         processJavaResourcesTask.dependsOn(tasks, variantScope.getPreBuildTask());
+
+        // create the task outputs for others to consume
+        variantScope.addTaskOutput(
+                VariantScope.TaskOutputType.JAVA_RES,
+                destinationDir,
+                processJavaResourcesTask.getName());
 
         // create the stream generated from this task
         variantScope.getTransformManager().addStream(OriginalStream.builder(project)
                 .addContentType(DefaultContentType.RESOURCES)
                 .addScope(Scope.PROJECT)
-                .setFolder(variantScope.getSourceFoldersJavaResDestinationDir())
+                .setFolder(destinationDir)
                 .setDependency(processJavaResourcesTask.getName())
                 .build());
-
     }
 
     /**
@@ -1356,6 +1371,8 @@ public abstract class TaskManager {
         javacTask.dependsOn(tasks, javacIncrementalSafeguard, preCompileTask);
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
+
+        scope.addTaskOutput(JAVAC, scope.getJavaOutputDir(), javacTask.getName());
 
         // Create the classes artifact for uses by external test modules.
         if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
@@ -1580,7 +1597,6 @@ public abstract class TaskManager {
 
         createRunUnitTestTask(tasks, variantScope);
 
-        variantScope.getAssembleTask().dependsOn(tasks, createMockableJar);
         // This hides the assemble unit test task from the task list.
         variantScope.getAssembleTask().configure(tasks, task -> task.setGroup(null));
     }
@@ -1775,7 +1791,6 @@ public abstract class TaskManager {
             @NonNull final VariantScope variantScope) {
         final AndroidTask<AndroidUnitTest> runTestsTask =
                 androidTasks.create(tasks, new AndroidUnitTest.ConfigAction(variantScope));
-        runTestsTask.dependsOn(tasks, variantScope.getAssembleTask());
 
         tasks.named(JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask.getName()));
     }
