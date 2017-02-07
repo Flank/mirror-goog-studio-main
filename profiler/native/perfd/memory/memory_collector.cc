@@ -127,9 +127,8 @@ void MemoryCollector::GetHeapDumpData(int32_t dump_id,
   memory_cache_.ReadHeapDumpFileContents(dump_id, response);
 }
 
-void MemoryCollector::TrackAllocations(
-    bool enabled, bool legacy,
-    TrackAllocationsResponse* response) {
+void MemoryCollector::TrackAllocations(bool enabled, bool legacy,
+                                       TrackAllocationsResponse* response) {
   memory_cache_.TrackAllocations(enabled, legacy, response);
 }
 

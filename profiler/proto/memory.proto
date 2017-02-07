@@ -36,15 +36,18 @@ service MemoryService {
   }
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
+
+  // Returns all allocation data associated with a allocation tracking session.
+  // e.g. alloc events, class + stack pool
+  // TODO implement streaming version for jvmti.
+  rpc GetAllocationEvents(AllocationEventsRequest)
+      returns (AllocationEventsResponse) {}
+
   rpc ListAllocationContexts(AllocationContextsRequest)
       returns (AllocationContextsResponse) {}
-  rpc GetAllocationDump(DumpDataRequest) returns (DumpDataResponse) {
-  }
 
-  // Used by perfd-host only for legacy allocation
-  // tracking support.
-  rpc GetAllocationsInfoStatus(GetAllocationsInfoStatusRequest)
-      returns (GetAllocationsInfoStatusResponse) {}
+  // Used by perfd-host only for exporting legacy tracking data.
+  rpc GetAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 }
 
 message MemoryStartRequest {
@@ -117,21 +120,12 @@ message MemoryData {
     int32 gc_count = 4;
   }
 
-  message AllocationEvent {
-    int64 timestamp = 1;
-    int32 size = 2;
-    int32 threadId = 3;
-    int32 allocatedClassId = 4;
-    bytes allocationStackId = 5;
-  }
-
   // end timestamp after which values are yet to be queried for
   int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
   repeated VmStatsSample vm_stats_samples = 3;
   repeated HeapDumpInfo heap_dump_infos = 4;
   repeated AllocationsInfo allocations_info = 5;
-  repeated AllocationEvent allocation_events = 6;
 }
 
 message ListDumpInfosRequest {
@@ -183,22 +177,18 @@ message ListHeapDumpInfosResponse {
 }
 
 message AllocationsInfo {
-  // Used for supporting legacy allocation tracking,
-  // where there can be a delay between stopping tracking
-  // and receiving the jdwp data.
   enum Status {
     UNSPECIFIED = 0;
     IN_PROGRESS = 1;
-    POST_PROCESS = 2;
-    COMPLETED = 3;
-    FAILURE_UNKNOWN = 4;
+    COMPLETED = 2;
+    FAILURE_UNKNOWN = 3;
   }
 
   int32 info_id = 1;
   Status status = 2;
   int64 start_time = 3;
   int64 end_time = 4;
-  bool legacy_tracking = 5;
+  bool legacy = 5;
 }
 
 message TrackAllocationsResponse {
@@ -215,38 +205,56 @@ message TrackAllocationsResponse {
 }
 
 message TrackAllocationsRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  int64 timestamp = 1;
+  int32 process_id = 2;
+  Session session = 3;
   // Requests whether an allocation tracking session is
   // to be enabled/disabled. If a session is already in
   // progress, re-enabling it does nothing, this is also
   // true for disabling a session when no tracking is in
   // progress.
-  bool enabled = 3;
+  bool enabled = 4;
   // A flag to indicate whether the request is initiated
-  // via the legacy allocation tracking path. On pre-O 
+  // via the legacy allocation tracking path. On pre-O
   // setups, legacy tracking would simply mark the start
   // and end times of a session. On O+ setups, perfd +
   // perfa would perform allocation tracking.
-  bool legacy_tracking = 4;
+  bool legacy = 5;
 }
 
-message GetAllocationsInfoStatusRequest {
+message AllocationEventsRequest {
   int32 process_id = 1;
   Session session = 2;
   int32 info_id = 3;
+  // TODO include start/end time in query.
 }
 
-message GetAllocationsInfoStatusResponse {
-  int32 info_id = 1;
-  AllocationsInfo.Status status = 2;
+message AllocationEventsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  repeated AllocationEvent events = 2;
+}
+
+message AllocationEvent {
+  int64 timestamp = 1;
+  int32 info_id = 2;
+  int32 size = 3;
+  int32 threadId = 4;
+  int32 allocatedClassId = 5;
+  bytes allocationStackId = 6;
 }
 
 message AllocationContextsRequest {
   int32 process_id = 1;
   Session session = 2;
-  int64 start_time = 3; // exclusive
-  int64 end_time = 4;   // inclusive
+  repeated int32 classIds = 3;
+  repeated bytes stackIds = 4;
 }
 
 message AllocationContextsResponse {
