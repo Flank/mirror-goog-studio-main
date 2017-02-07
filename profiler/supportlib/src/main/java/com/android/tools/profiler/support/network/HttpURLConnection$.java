@@ -39,6 +39,7 @@ final class HttpURLConnection$ extends HttpURLConnection {
     private final HttpConnectionTracker myConnectionTracker;
 
     private boolean myConnectTracked;
+    private InputStream myTrackedInputStream;
 
     public HttpURLConnection$(HttpURLConnection wrapped, StackTraceElement[] callstack) {
         super(wrapped.getURL());
@@ -48,6 +49,14 @@ final class HttpURLConnection$ extends HttpURLConnection {
 
     @Override
     public void disconnect() {
+        // Close the input stream in case the user didn't explicitly themselves, ensuring any
+        // remaining data we want to track is flushed.
+        if (myTrackedInputStream != null) {
+            try {
+                myTrackedInputStream.close();
+            } catch (Exception ignored) {
+            }
+        }
         myWrapped.disconnect();
         myConnectionTracker.disconnect();
     }
@@ -249,7 +258,8 @@ final class HttpURLConnection$ extends HttpURLConnection {
         try {
             InputStream stream = myWrapped.getInputStream();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
-            return myConnectionTracker.trackResponseBody(stream);
+            myTrackedInputStream = myConnectionTracker.trackResponseBody(stream);
+            return myTrackedInputStream;
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
@@ -265,7 +275,17 @@ final class HttpURLConnection$ extends HttpURLConnection {
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        return myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
+        try {
+            return myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+        } catch (IOException e) {
+            myConnectionTracker.error(e.toString());
+            throw e;
+        } finally {
+            myConnectTracked = true;
+        }
     }
 
     @Override
