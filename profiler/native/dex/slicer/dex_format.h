@@ -99,35 +99,39 @@ constexpr u1 DBG_START_LOCAL_EXTENDED   = 0x04;
 constexpr u1 DBG_END_LOCAL              = 0x05;
 constexpr u1 DBG_RESTART_LOCAL          = 0x06;
 constexpr u1 DBG_SET_PROLOGUE_END       = 0x07;
-constexpr u1 DBG_SET_PROLOGUE_BEGIN     = 0x08;
+constexpr u1 DBG_SET_EPILOGUE_BEGIN     = 0x08;
 constexpr u1 DBG_SET_FILE               = 0x09;
 constexpr u1 DBG_FIRST_SPECIAL          = 0x0a;
+
+// special debug info values
+constexpr int DBG_LINE_BASE = -4;
+constexpr int DBG_LINE_RANGE = 15;
 
 // "header_item"
 struct Header {
   u1 magic[8];
   u4 checksum;
   u1 signature[kSHA1DigestLen];
-  u4 fileSize;
-  u4 headerSize;
-  u4 endianTag;
-  u4 linkSize;
-  u4 linkOff;
-  u4 mapOff;
-  u4 stringIdsSize;
-  u4 stringIdsOff;
-  u4 typeIdsSize;
-  u4 typeIdsOff;
-  u4 protoIdsSize;
-  u4 protoIdsOff;
-  u4 fieldIdsSize;
-  u4 fieldIdsOff;
-  u4 methodIdsSize;
-  u4 methodIdsOff;
-  u4 classDefsSize;
-  u4 classDefsOff;
-  u4 dataSize;
-  u4 dataOff;
+  u4 file_size;
+  u4 header_size;
+  u4 endian_tag;
+  u4 link_size;
+  u4 link_off;
+  u4 map_off;
+  u4 string_ids_size;
+  u4 string_ids_off;
+  u4 type_ids_size;
+  u4 type_ids_off;
+  u4 proto_ids_size;
+  u4 proto_ids_off;
+  u4 field_ids_size;
+  u4 field_ids_off;
+  u4 method_ids_size;
+  u4 method_ids_off;
+  u4 class_defs_size;
+  u4 class_defs_off;
+  u4 data_size;
+  u4 data_off;
 };
 
 // "map_item"
@@ -146,50 +150,50 @@ struct MapList {
 
 // "string_id_item"
 struct StringId {
-  u4 stringDataOff;
+  u4 string_data_off;
 };
 
 // "type_id_item"
 struct TypeId {
-  u4 descriptorIdx;
+  u4 descriptor_idx;
 };
 
 // "field_id_item"
 struct FieldId {
-  u2 classIdx;
-  u2 typeIdx;
-  u4 nameIdx;
+  u2 class_idx;
+  u2 type_idx;
+  u4 name_idx;
 };
 
 // "method_id_item"
 struct MethodId {
-  u2 classIdx;
-  u2 protoIdx;
-  u4 nameIdx;
+  u2 class_idx;
+  u2 proto_idx;
+  u4 name_idx;
 };
 
 // "proto_id_item"
 struct ProtoId {
-  u4 shortyIdx;
-  u4 returnTypeIdx;
-  u4 parametersOff;
+  u4 shorty_idx;
+  u4 return_type_idx;
+  u4 parameters_off;
 };
 
 // "class_def_item"
 struct ClassDef {
-  u4 classIdx;
-  u4 accessFlags;
-  u4 superclassIdx;
-  u4 interfacesOff;
-  u4 sourceFileIdx;
-  u4 annotationsOff;
-  u4 classDataOff;
-  u4 staticValuesOff;
+  u4 class_idx;
+  u4 access_flags;
+  u4 superclass_idx;
+  u4 interfaces_off;
+  u4 source_file_idx;
+  u4 annotations_off;
+  u4 class_data_off;
+  u4 static_values_off;
 };
 
 // "type_item"
 struct TypeItem {
-  u2 typeIdx;
+  u2 type_idx;
 };
 
 // "type_list"
@@ -200,58 +204,58 @@ struct TypeList {
 
 // "code_item"
 struct Code {
-  u2 registersSize;
-  u2 insSize;
-  u2 outsSize;
-  u2 triesSize;
-  u4 debugInfoOff;
-  u4 insnsSize;
+  u2 registers_size;
+  u2 ins_size;
+  u2 outs_size;
+  u2 tries_size;
+  u4 debug_info_off;
+  u4 insns_size;
   u2 insns[];
   // followed by optional u2 padding
-  // followed by try_item[triesSize]
+  // followed by try_item[tries_size]
   // followed by uleb128 handlersSize
   // followed by catch_handler_item[handlersSize]
 };
 
 // "try_item"
 struct TryBlock {
-  u4 startAddr;
-  u2 insnCount;
-  u2 handlerOff;
+  u4 start_addr;
+  u2 insn_count;
+  u2 handler_off;
 };
 
 // "annotations_directory_item"
 struct AnnotationsDirectoryItem {
-  u4 classAnnotationsOff;
-  u4 fieldsSize;
-  u4 methodsSize;
-  u4 parametersSize;
-  // followed by FieldAnnotationsItem[fieldsSize]
-  // followed by MethodAnnotationsItem[methodsSize]
-  // followed by ParameterAnnotationsItem[parametersSize]
+  u4 class_annotations_off;
+  u4 fields_size;
+  u4 methods_size;
+  u4 parameters_size;
+  // followed by FieldAnnotationsItem[fields_size]
+  // followed by MethodAnnotationsItem[methods_size]
+  // followed by ParameterAnnotationsItem[parameters_size]
 };
 
 // "field_annotations_item"
 struct FieldAnnotationsItem {
-  u4 fieldIdx;
-  u4 annotationsOff;
+  u4 field_idx;
+  u4 annotations_off;
 };
 
 // "method_annotations_item"
 struct MethodAnnotationsItem {
-  u4 methodIdx;
-  u4 annotationsOff;
+  u4 method_idx;
+  u4 annotations_off;
 };
 
 // "parameter_annotations_item"
 struct ParameterAnnotationsItem {
-  u4 methodIdx;
-  u4 annotationsOff;
+  u4 method_idx;
+  u4 annotations_off;
 };
 
 // "annotation_set_ref_item"
 struct AnnotationSetRefItem {
-  u4 annotationsOff;
+  u4 annotations_off;
 };
 
 // "annotation_set_ref_list"

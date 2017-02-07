@@ -15,6 +15,7 @@
  */
 
 #include "dex_bytecode.h"
+#include "common.h"
 
 #include <assert.h>
 #include <array>
@@ -475,12 +476,12 @@ static u4 InstAA(u2 inst) { return inst >> 8; }
 
 // Helper for DecodeInstruction()
 static u4 FetchU4(const u2* ptr) {
-    return ptr[0] | (u4(ptr[1]) << 16);
+  return ptr[0] | (u4(ptr[1]) << 16);
 }
 
 // Helper for DecodeInstruction()
 static u8 FetchU8(const u2* ptr) {
-    return FetchU4(ptr) | (u8(FetchU4(ptr + 2)) << 32);
+  return FetchU4(ptr) | (u8(FetchU4(ptr + 2)) << 32);
 }
 
 // Decode a Dalvik bytecode and extract the individual fields
@@ -586,7 +587,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
       switch (dec.vA) {
         case 5:
           // A fifth arg is verboten for inline invokes
-          assert(format != kFmt35mi);
+          CHECK(format != kFmt35mi);
 
           // Per note at the top of this format decoder, the
           // fifth argument comes from the A field in the
@@ -609,7 +610,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
           // Valid, but no need to do anything
           break;
         default:
-          assert(!"Invalid arg count in 35c/35ms/35mi");
+          CHECK(!"Invalid arg count in 35c/35ms/35mi");
           break;
       }
     } break;
@@ -625,7 +626,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
       dec.vB_wide = FetchU8(bytecode + 1);
       break;
     default:
-      assert(!"Can't decode unexpected format");
+      CHECK(!"Can't decode unexpected format");
       break;
   }
 

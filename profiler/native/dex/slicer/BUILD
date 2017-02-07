@@ -1,17 +1,27 @@
 cc_library(
     name = "slicer",
     srcs = [
+        "common.cc",
         "dex_bytecode.cc",
         "dex_format.cc",
+        "dex_ir.cc",
         "dex_utf8.cc",
         "slicer.cc",
+        "stats.cc",
     ],
     hdrs = [
+        "arrayview.h",
+        "buffer.h",
+        "chronometer.h",
+        "common.h",
         "dex_bytecode.h",
         "dex_format.h",
+        "dex_ir.h",
         "dex_leb128.h",
         "dex_utf8.h",
+        "memview.h",
         "slicer.h",
+        "stats.h",
     ],
     visibility = ["//visibility:public"],
 )
