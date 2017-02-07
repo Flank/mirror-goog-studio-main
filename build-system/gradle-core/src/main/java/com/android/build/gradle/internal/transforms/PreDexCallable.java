@@ -22,12 +22,14 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
+import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -126,7 +128,7 @@ class PreDexCallable implements Callable<Void> {
             hashes.add(hash);
         }
 
-        Callable<Void> preDexLibraryAction =
+        ExceptionRunnable preDexLibraryAction =
                 () -> {
                     FileUtils.deletePath(to);
                     Files.createParentDirs(to);
@@ -135,7 +137,6 @@ class PreDexCallable implements Callable<Void> {
                     }
                     androidBuilder.preDexLibrary(
                             from, to, dexingMode.isMultiDex, dexOptions, outputHandler);
-                    return null;
                 };
 
         // If the build cache is used, run pre-dexing using the cache
@@ -169,17 +170,18 @@ class PreDexCallable implements Callable<Void> {
                         exception);
             }
             if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                Verify.verifyNotNull(result.getCauseOfCorruption());
                 logger.verbose(
                         "The build cache at '%1$s' contained an invalid cache entry.\n"
                                 + "Cause: %2$s\n"
                                 + "We have recreated the cache entry.\n"
                                 + "%3$s",
                         buildCache.getCacheDirectory().getAbsolutePath(),
-                        Throwables.getStackTraceAsString(result.getCauseOfCorruption().get()),
+                        Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
                         BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
             }
         } else {
-            preDexLibraryAction.call();
+            preDexLibraryAction.run();
         }
         return null;
     }
@@ -189,7 +191,7 @@ class PreDexCallable implements Callable<Void> {
      * predex-library task to use the build cache.
      */
     @NonNull
-    private FileCache.Inputs getBuildCacheInputs(
+    private static FileCache.Inputs getBuildCacheInputs(
             @NonNull File inputFile,
             @NonNull Revision buildToolsRevision,
             @NonNull DexOptions dexOptions,
