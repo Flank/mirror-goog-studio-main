@@ -96,9 +96,8 @@ message MemoryRequest {
 message HeapDumpInfo {
   int64 start_time = 1;
   int64 end_time = 2;
-  int32 dump_id = 3;
-  string file_path = 4;
-  bool success = 5;
+  string file_path = 3;
+  bool success = 4;
 }
 
 message MemoryData {
@@ -138,7 +137,7 @@ message ListDumpInfosRequest {
 message DumpDataRequest {
   int32 process_id = 1;
   Session session = 2;
-  int32 dump_id = 3;
+  int64 dump_time = 3;
 }
 
 message DumpDataResponse {
@@ -184,11 +183,10 @@ message AllocationsInfo {
     FAILURE_UNKNOWN = 3;
   }
 
-  int32 info_id = 1;
-  Status status = 2;
-  int64 start_time = 3;
-  int64 end_time = 4;
-  bool legacy = 5;
+  Status status = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
+  bool legacy = 4;
 }
 
 message TrackAllocationsResponse {
@@ -200,14 +198,13 @@ message TrackAllocationsResponse {
     FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
-  int64 timestamp = 2;
-  AllocationsInfo info = 3;
+  AllocationsInfo info = 2;
 }
 
 message TrackAllocationsRequest {
-  int64 timestamp = 1;
-  int32 process_id = 2;
-  Session session = 3;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 request_time = 3;
   // Requests whether an allocation tracking session is
   // to be enabled/disabled. If a session is already in
   // progress, re-enabling it does nothing, this is also
@@ -225,8 +222,8 @@ message TrackAllocationsRequest {
 message AllocationEventsRequest {
   int32 process_id = 1;
   Session session = 2;
-  int32 info_id = 3;
-  // TODO include start/end time in query.
+  int64 start_time = 3; // exclusive
+  int64 end_time = 4;   // inclusive
 }
 
 message AllocationEventsResponse {
@@ -242,8 +239,11 @@ message AllocationEventsResponse {
 }
 
 message AllocationEvent {
-  int64 timestamp = 1;
-  int32 info_id = 2;
+  // tracking_start_time associates an event with a
+  // particular tracking session.
+  // TODO: include endTime for de-allocation tracking
+  int64 tracking_start_time = 1;
+  int64 timestamp = 2;
   int32 size = 3;
   int32 threadId = 4;
   int32 allocatedClassId = 5;

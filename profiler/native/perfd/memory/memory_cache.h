@@ -51,7 +51,7 @@ class MemoryCache {
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
-  void ReadHeapDumpFileContents(int32_t dump_id,
+  void ReadHeapDumpFileContents(int64_t dump_time,
                                 proto::DumpDataResponse* response);
 
  private:
