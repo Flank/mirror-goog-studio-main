@@ -16,9 +16,36 @@
 
 package com.android.builder.dexing;
 
-/** Different dexing modes. */
+/**
+ * The type of dex we produce. It can be:
+ *
+ * <ul>
+ *   <li>mono dex: no multidex enabled, only one final DEX file produced
+ *   <li>legacy multidex: multidex enabled, and min sdk version is less than 21
+ *   <li>native multidex: multidex enabled, and min sdk version is greater or equal to 21
+ * </ul>
+ */
 public enum DexingMode {
-    MONO_DEX,
-    LEGACY_MULTIDEX,
-    NATIVE_MULTIDEX
+    MONO_DEX(false, true),
+    LEGACY_MULTIDEX(true, false),
+    NATIVE_MULTIDEX(true, true);
+
+    /** If this mode allows multiple DEX files. */
+    private final boolean isMultiDex;
+
+    /** If we should pre-dex in this dexing mode. */
+    private final boolean preDex;
+
+    DexingMode(boolean isMultiDex, boolean preDex) {
+        this.isMultiDex = isMultiDex;
+        this.preDex = preDex;
+    }
+
+    public boolean isMultiDex() {
+        return isMultiDex;
+    }
+
+    public boolean isPreDex() {
+        return preDex;
+    }
 }
