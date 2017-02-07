@@ -31,6 +31,9 @@ public class ScreenRecorderOptions {
     public final long timeLimit;
     public final TimeUnit timeLimitUnits;
 
+    // display touches
+    public final boolean showTouches;
+
     private ScreenRecorderOptions(Builder builder) {
         width = builder.mWidth;
         height = builder.mHeight;
@@ -39,12 +42,15 @@ public class ScreenRecorderOptions {
 
         timeLimit = builder.mTime;
         timeLimitUnits = builder.mTimeUnits;
+
+        showTouches = builder.mShowTouches;
     }
 
     public static class Builder {
         private int mWidth;
         private int mHeight;
         private int mBitRate;
+        private boolean mShowTouches;
         private long mTime;
         private TimeUnit mTimeUnits;
 
@@ -62,6 +68,11 @@ public class ScreenRecorderOptions {
         public Builder setTimeLimit(long time, TimeUnit units) {
             mTime = time;
             mTimeUnits = units;
+            return this;
+        }
+
+        public Builder setShowTouches(boolean showTouches) {
+            mShowTouches = showTouches;
             return this;
         }
 
