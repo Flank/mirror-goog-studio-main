@@ -17,7 +17,6 @@
 #pragma once
 
 #include "common.h"
-#include "stats.h"
 #include "dex_leb128.h"
 
 #include <assert.h>
@@ -35,7 +34,7 @@ namespace slicer {
 //
 class Buffer {
  public:
-  Buffer() { ++stats.buff_count; }
+  Buffer() = default;
 
   ~Buffer() { Free(); }
 
@@ -62,8 +61,6 @@ class Buffer {
     CHECK(!sealed_);
     Align(alignment);
     sealed_ = true;
-    stats.buff_size += size_;
-    stats.buff_capacity += capacity_;
     return size();
   }
 
@@ -81,11 +78,8 @@ class Buffer {
   // Align the buffer size to the specified alignment
   void Align(size_t alignment) {
     assert(alignment > 0);
-
-    ++stats.buff_alignments;
     size_t rem = size_ % alignment;
     if (rem != 0) {
-      stats.buff_align_padding += (alignment - rem);
       Alloc(alignment - rem);
     }
   }
@@ -165,7 +159,6 @@ class Buffer {
   void Expand(size_t size) {
     CHECK(!sealed_);
     if (size_ + size > capacity_) {
-      ++stats.buff_reallocs;
       capacity_ = std::max(size_t(capacity_ * 1.5), size_ + size);
       buff_ = static_cast<dex::u1*>(::realloc(buff_, capacity_));
       CHECK(buff_ != nullptr);
