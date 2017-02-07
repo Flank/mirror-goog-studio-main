@@ -64,6 +64,11 @@ final class HttpURLConnection$ extends HttpURLConnection {
 
     @Override
     public String getRequestMethod() {
+        if (myWrapped.getDoOutput() && myWrapped.getRequestMethod().equals("GET")) {
+            // Unfortunately, HttpURLConnection only updates its method to "POST" after connect is
+            // called. But for our tracking purposes, that's too late.
+            return "POST";
+        }
         return myWrapped.getRequestMethod();
     }
 
