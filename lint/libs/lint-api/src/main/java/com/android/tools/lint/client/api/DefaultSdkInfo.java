@@ -197,7 +197,7 @@ class DefaultSdkInfo extends SdkInfo {
             case ABS_LIST_VIEW:
                 return ADAPTER_VIEW;
             case ABS_SEEK_BAR:
-                return ADAPTER_VIEW;
+                return PROGRESS_BAR;
             case ADAPTER_VIEW:
                 return VIEW_GROUP;
             case VIEW_GROUP:
