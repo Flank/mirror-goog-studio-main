@@ -115,6 +115,13 @@ message Device {
 }
 
 message Process {
+  enum State {
+    UNSPECIFIED = 0;
+    ALIVE = 1;
+    DEAD = 2;
+  }
   string name = 1;
   int32 pid = 2;
+  State state = 3;
+
 }
