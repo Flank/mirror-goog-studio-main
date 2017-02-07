@@ -17,7 +17,6 @@
 package com.android.builder.utils;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -31,7 +30,7 @@ public interface ExceptionConsumer<T> {
      *
      * @param input the input
      */
-    void accept(@Nullable T input) throws Exception;
+    void accept(@NonNull T input) throws Exception;
 
     /**
      * Wraps an {@link ExceptionConsumer} into a {@link Consumer} by throwing a

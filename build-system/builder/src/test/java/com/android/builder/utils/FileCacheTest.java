@@ -65,10 +65,10 @@ public class FileCacheTest {
         File outputFile = new File(outputDir, "output");
 
         // First access to the cache, expect cache miss
-        fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(fileCache.getHits()).isEqualTo(0);
         assertThat(fileCache.getMisses()).isEqualTo(1);
         assertThat(outputFile).hasContents("Some text");
@@ -79,7 +79,6 @@ public class FileCacheTest {
         fileCache.createFile(outputFile, inputs, () -> {
             fail("This statement should not be executed");
             Files.write("This text should not be written", outputFile, StandardCharsets.UTF_8);
-            return null;
         });
         assertThat(fileCache.getHits()).isEqualTo(1);
         assertThat(fileCache.getMisses()).isEqualTo(1);
@@ -95,17 +94,16 @@ public class FileCacheTest {
 
         // First access to the cache
         File outputFile1 = new File(outputDir, "output1");
-        fileCache.createFile(outputFile1, inputs, () -> {
-            Files.write("Some text", outputFile1, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile1,
+                inputs,
+                () -> Files.write("Some text", outputFile1, StandardCharsets.UTF_8));
 
         // Second access to the cache, expect cache hit
         File outputFile2 = new File(outputDir, "output2");
         fileCache.createFile(outputFile2, inputs, () -> {
             fail("This statement should not be executed");
             Files.write("This text should not be written", outputFile2, StandardCharsets.UTF_8);
-            return null;
         });
         assertThat(fileCache.getHits()).isEqualTo(1);
         assertThat(fileCache.getMisses()).isEqualTo(1);
@@ -122,19 +120,19 @@ public class FileCacheTest {
         FileCache.Inputs inputs1 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input1")).build();
-        fileCache.createFile(outputFile, inputs1, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs1,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
 
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input2")).build();
-        fileCache.createFile(outputFile, inputs2, () -> {
-            Files.write("Some other text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs2,
+                () -> Files.write("Some other text", outputFile, StandardCharsets.UTF_8));
         assertThat(fileCache.getHits()).isEqualTo(0);
         assertThat(fileCache.getMisses()).isEqualTo(2);
         assertThat(outputFile).hasContents("Some other text");
@@ -149,20 +147,20 @@ public class FileCacheTest {
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input1")).build();
         File outputFile1 = new File(outputDir, "output1");
-        fileCache.createFile(outputFile1, inputs1, () -> {
-            Files.write("Some text", outputFile1, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile1,
+                inputs1,
+                () -> Files.write("Some text", outputFile1, StandardCharsets.UTF_8));
 
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input2")).build();
         File outputFile2 = new File(outputDir, "output2");
-        fileCache.createFile(outputFile2, inputs2, () -> {
-            Files.write("Some other text", outputFile2, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile2,
+                inputs2,
+                () -> Files.write("Some other text", outputFile2, StandardCharsets.UTF_8));
         assertThat(fileCache.getHits()).isEqualTo(0);
         assertThat(fileCache.getMisses()).isEqualTo(2);
         assertThat(outputFile1).hasContents("Some text");
@@ -228,15 +226,17 @@ public class FileCacheTest {
         // Second access to the cache, expect cache miss
         FileCache.Inputs inputs2 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFilePath("file", new File("input2")).build();
+                        .putFilePath("file", new File("input2"))
+                        .build();
         File cachedFile2 =
                 fileCache
                         .createFileInCacheIfAbsent(
                                 inputs2,
-                                (outputFile) -> {
-                                    Files.write(
-                                            "Some other text", outputFile, StandardCharsets.UTF_8);
-                                })
+                                (outputFile) ->
+                                        Files.write(
+                                                "Some other text",
+                                                outputFile,
+                                                StandardCharsets.UTF_8))
                         .getCachedFile();
         assertThat(fileCache.getHits()).isEqualTo(0);
         assertThat(fileCache.getMisses()).isEqualTo(2);
@@ -259,7 +259,6 @@ public class FileCacheTest {
             FileUtils.mkdirs(outputDir1);
             Files.write(
                     "Some text", new File(outputDir1, "fileInOutputDir"), StandardCharsets.UTF_8);
-            return null;
         });
 
         // Second access to the cache, expect cache hit
@@ -270,7 +269,6 @@ public class FileCacheTest {
             Files.write(
                     "This text should not be written",
                     new File(outputDir2, "fileInOutputDir"), StandardCharsets.UTF_8);
-            return null;
         });
         assertThat(fileCache.getHits()).isEqualTo(1);
         assertThat(fileCache.getMisses()).isEqualTo(1);
@@ -331,10 +329,10 @@ public class FileCacheTest {
                         .putFilePath("file", new File("input")).build();
 
         File outputFile = new File(outputDir, "output");
-        fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
 
         File cachedFile =
                 fileCache
@@ -374,11 +372,14 @@ public class FileCacheTest {
                         .getCachedFile();
 
         File outputFile = new File(outputDir, "output");
-        fileCache.createFile(outputFile, inputs, () -> {
-            fail("This statement should not be executed");
-            Files.write("This text should not be written", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> {
+                    fail("This statement should not be executed");
+                    Files.write(
+                            "This text should not be written", outputFile, StandardCharsets.UTF_8);
+                });
 
         assertThat(fileCache.getHits()).isEqualTo(1);
         assertThat(fileCache.getMisses()).isEqualTo(1);
@@ -398,10 +399,10 @@ public class FileCacheTest {
                         .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
         try {
-            fileCache.createFile(outputFile, inputs, () -> {
-                Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-                return null;
-            });
+            fileCache.createFile(
+                    outputFile,
+                    inputs,
+                    () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
             fail("Expected IOException");
         } catch (IOException e) {
             assertThat(e).hasMessage("Invalid file path");
@@ -418,10 +419,10 @@ public class FileCacheTest {
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
-        fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(fileCache.getCacheDirectory()).exists();
     }
 
@@ -435,9 +436,9 @@ public class FileCacheTest {
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input")).build();
-        fileCache.createFileInCacheIfAbsent(inputs, (outputFile) -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-        });
+        fileCache.createFileInCacheIfAbsent(
+                inputs,
+                (outputFile) -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(fileCache.getCacheDirectory()).exists();
     }
 
@@ -449,10 +450,10 @@ public class FileCacheTest {
                         .putFilePath("file", new File("")).build();
 
         File outputFile = new File(outputDir, "output");
-        fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
 
         assertThat(fileCache.getHits()).isEqualTo(0);
         assertThat(fileCache.getMisses()).isEqualTo(1);
@@ -468,7 +469,7 @@ public class FileCacheTest {
 
         File outputFile = new File(cacheDir, "output");
         try {
-            fileCache.createFile(outputFile, inputs, () -> null);
+            fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
             assertThat(exception).hasMessage(
@@ -482,7 +483,7 @@ public class FileCacheTest {
 
         outputFile = cacheDir.getParentFile();
         try {
-            fileCache.createFile(outputFile, inputs, () -> null);
+            fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
             assertThat(exception).hasMessage(
@@ -495,7 +496,7 @@ public class FileCacheTest {
 
         outputFile = cacheDir;
         try {
-            fileCache.createFile(outputFile, inputs, () -> null);
+            fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
             assertThat(exception).hasMessage(
@@ -527,12 +528,11 @@ public class FileCacheTest {
             // before calling this callback
             assertThat(fileInOutputDir1).doesNotExist();
             assertThat(fileInOutputDir1.getParentFile()).exists();
-            return null;
         });
 
         // Since the callback didn't create an output, if the cache is called again, it should
         // delete any existing output files (but not their parent directories)
-        fileCache.createFile(fileInOutputDir2, inputs, () -> null);
+        fileCache.createFile(fileInOutputDir2, inputs, () -> {});
         assertThat(fileInOutputDir2).doesNotExist();
         assertThat(fileInOutputDir2.getParentFile()).exists();
     }
@@ -555,12 +555,11 @@ public class FileCacheTest {
             assertThat(fileInOutputDir1).doesNotExist();
             assertThat(fileInOutputDir1.getParentFile()).exists();
             Files.touch(fileInOutputDir1);
-            return null;
         });
 
         // Since the callback created an output, if the cache is called again, it should create new
         // output files (together with their parent directories)
-        fileCache.createFile(fileInOutputDir2, inputs, () -> null);
+        fileCache.createFile(fileInOutputDir2, inputs, () -> {});
         assertThat(fileInOutputDir2).exists();
     }
 
@@ -614,7 +613,7 @@ public class FileCacheTest {
         // Use an invalid character in the file name
         File outputFile = new File("\0");
         try {
-            fileCache.createFile(outputFile, inputs, () -> null);
+            fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IOException");
         } catch (IOException exception) {
             // Expected
@@ -692,10 +691,10 @@ public class FileCacheTest {
         assertThat(FileUtils.isFileInDirectory(cachedFile, fileCache.getCacheDirectory())).isTrue();
 
         File outputFile = new File(outputDir, "output");
-        fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(fileCache.getCacheDirectory().list()).hasLength(1);
         assertThat(cachedFile).hasContents("Some text");
 
@@ -717,10 +716,11 @@ public class FileCacheTest {
                         .putFilePath("file", new File("input")).build();
         File outputFile = new File(outputDir, "output");
 
-        FileCache.QueryResult result = fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        FileCache.QueryResult result =
+                fileCache.createFile(
+                        outputFile,
+                        inputs,
+                        () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(result.getQueryEvent()).isEqualTo(FileCache.QueryEvent.MISSED);
         assertThat(result.getCauseOfCorruption()).isNull();
         assertThat(result.getCachedFile()).isNull();
@@ -730,10 +730,11 @@ public class FileCacheTest {
         File inputsFile = new File(cachedFile.getParent(), "inputs");
         FileUtils.delete(inputsFile);
 
-        result = fileCache.createFile(outputFile, inputs, () -> {
-            Files.write("Some text", outputFile, StandardCharsets.UTF_8);
-            return null;
-        });
+        result =
+                fileCache.createFile(
+                        outputFile,
+                        inputs,
+                        () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
         assertThat(result.getQueryEvent()).isEqualTo(FileCache.QueryEvent.CORRUPTED);
         assertNotNull(result.getCauseOfCorruption());
         assertThat(result.getCauseOfCorruption().getMessage())
@@ -917,7 +918,7 @@ public class FileCacheTest {
 
     /**
      * Performs a few steps common to the concurrency tests for {@link FileCache#createFile(File,
-     * FileCache.Inputs, Callable)}.
+     * FileCache.Inputs, ExceptionRunnable)}.
      */
     private static void prepareConcurrencyTestForCreateFile(
             @NonNull ConcurrencyTester<File, Void> tester,
@@ -1000,7 +1001,8 @@ public class FileCacheTest {
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFilePath("file", new File("input")).build();
+                        .putFilePath("file", new File("input"))
+                        .build();
         String fileContent = "Some text";
         File[] cachedFiles = new File[2];
 
@@ -1024,10 +1026,12 @@ public class FileCacheTest {
     private static void testCreateFileInCacheIfAbsent_MultiThreads_SameCacheDifferentInputs(
             @NonNull FileCache fileCache) throws IOException {
         FileCache.Inputs[] inputList = {
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFilePath("file1", new File("input1")).build(),
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFilePath("file2", new File("input2")).build(),
+            new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                    .putFilePath("file1", new File("input1"))
+                    .build(),
+            new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                    .putFilePath("file2", new File("input2"))
+                    .build(),
         };
         String[] fileContents = {"Foo text", "Bar text"};
         File[] cachedFiles = new File[2];
@@ -1056,7 +1060,8 @@ public class FileCacheTest {
         FileCache[] fileCaches = {fileCache1, fileCache2};
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFilePath("file", new File("input")).build();
+                        .putFilePath("file", new File("input"))
+                        .build();
         String[] fileContents = {"Foo text", "Bar text"};
         File[] cachedFiles = new File[2];
 

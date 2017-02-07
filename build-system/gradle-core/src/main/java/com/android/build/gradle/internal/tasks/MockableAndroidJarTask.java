@@ -64,13 +64,7 @@ public class MockableAndroidJarTask extends DefaultTask {
         }
 
         if (fileCache != null) {
-            fileCache.createFile(
-                    outputFile,
-                    getCacheInputs(),
-                    () -> {
-                        doCreateMockableJar();
-                        return null;
-                    });
+            fileCache.createFile(outputFile, getCacheInputs(), this::doCreateMockableJar);
         } else {
             doCreateMockableJar();
         }

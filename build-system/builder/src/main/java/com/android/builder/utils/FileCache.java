@@ -43,11 +43,11 @@ import java.util.concurrent.locks.ReadWriteLock;
  * Cache for already-created files/directories.
  *
  * <p>This class is used to avoid creating the same file/directory multiple times. The main API
- * method {@link #createFile(File, Inputs, Callable)} creates an output file/directory by either
- * copying it from the cache, or creating it first and caching it if the cached file/directory does
- * not yet exist. Similarly, the {@link #createFileInCacheIfAbsent(Inputs, ExceptionConsumer)}
- * method returns the cached output file/directory, and creates it first if the cached
- * file/directory does not yet exist.
+ * method {@link #createFile(File, Inputs, ExceptionRunnable)} creates an output file/directory by
+ * either copying it from the cache, or creating it first and caching it if the cached
+ * file/directory does not yet exist. Similarly, the {@link #createFileInCacheIfAbsent(Inputs,
+ * ExceptionConsumer)} method returns the cached output file/directory, and creates it first if the
+ * cached file/directory does not yet exist.
  *
  * <p>Note that if a cache entry exists but is found to be corrupted, the cache entry will be
  * deleted and recreated.
@@ -204,7 +204,7 @@ public class FileCache {
     public QueryResult createFile(
             @NonNull File outputFile,
             @NonNull Inputs inputs,
-            @NonNull Callable<Void> fileCreator)
+            @NonNull ExceptionRunnable fileCreator)
             throws ExecutionException, IOException {
         Preconditions.checkArgument(
                 !FileUtils.isFileInDirectory(outputFile, cacheDirectory),
@@ -227,18 +227,19 @@ public class FileCache {
         File cachedFile = getCachedFile(cacheEntryDir);
 
         // Callable to create the output file
-        Callable<Void> createOutputFile = () -> {
-            // Delete the output file and create its parent directory first according to the
-            // contract of this method
-            FileUtils.deletePath(outputFile);
-            Files.createParentDirs(outputFile);
-            try {
-                fileCreator.call();
-            } catch (Exception exception) {
-                throw new FileCreatorException(exception);
-            }
-            return null;
-        };
+        Callable<Void> createOutputFile =
+                () -> {
+                    // Delete the output file and create its parent directory first according to the
+                    // contract of this method
+                    FileUtils.deletePath(outputFile);
+                    Files.createParentDirs(outputFile);
+                    try {
+                        fileCreator.run();
+                    } catch (Exception exception) {
+                        throw new FileCreatorException(exception);
+                    }
+                    return null;
+                };
 
         // Callable to copy the output file to the cached file
         Callable<Void> copyOutputFileToCachedFile = () -> {
