@@ -375,12 +375,27 @@ public final class GradleTestProject implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 createTestDirectory(description.getTestClass(), description.getMethodName());
+                boolean testFailed = false;
                 try {
                     base.evaluate();
+                } catch (Exception e) {
+                    testFailed = true;
                 } finally {
                     openConnections.forEach(ProjectConnection::close);
                     if (benchmarkRecorder != null) {
                         benchmarkRecorder.doUploads();
+                    }
+                    if (testFailed && lastBuildResult != null) {
+                        System.err.println("==============================================");
+                        System.err.println("= Test " + description + " failed. Last build:");
+                        System.err.println("==============================================");
+                        System.err.println("=================== Stderr ===================");
+                        System.err.print(lastBuildResult.getStderr());
+                        System.err.println("=================== Stdout ===================");
+                        System.err.print(lastBuildResult.getStdout());
+                        System.err.println("==============================================");
+                        System.err.println("=============== End last build ===============");
+                        System.err.println("==============================================");
                     }
                 }
             }
