@@ -47,18 +47,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,12 +54,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-/**
- * Tests for the InstantRunDex transform.
- */
-@RunWith(MockitoJUnitRunner.class)
+/** Tests for the InstantRunDex transform. */
 public class InstantRunDexTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
 
     @Mock
     InstantRunVariantScope variantScope;

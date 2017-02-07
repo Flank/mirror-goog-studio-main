@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
@@ -73,7 +73,7 @@ public final class MaterialDesignIconsTest {
         Function<String, Iterator<String>> generator
                 = (Function<String, Iterator<String>>) Mockito.mock(Function.class);
 
-        Mockito.when(generator.apply(Matchers.any()))
+        Mockito.when(generator.apply(ArgumentMatchers.any()))
                 .thenReturn(Collections.emptyIterator());
 
         Mockito.when(generator.apply("images/material_design_icons/action/"))

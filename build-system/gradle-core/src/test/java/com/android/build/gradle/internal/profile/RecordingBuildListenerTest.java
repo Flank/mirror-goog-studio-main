@@ -48,15 +48,16 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskState;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /** Tests for {@link RecordingBuildListener} */
-@RunWith(MockitoJUnitRunner.class)
 public class RecordingBuildListenerTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
 
     @Mock Task task;
 

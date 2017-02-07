@@ -9,7 +9,7 @@ dependencies {
     compile project(':base:lint')
     compile project(':base:testutils')
     compile libs.junit
-    compile libs.mockito_all
+    compile libs.mockito_core
 
     testCompile libs.groovy
     testCompile libs.truth

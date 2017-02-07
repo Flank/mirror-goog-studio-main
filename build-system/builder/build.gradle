@@ -27,7 +27,7 @@ dependencies {
     compile libs.asm_tree
 
     testCompile libs.junit
-    testCompile libs.mockito_all
+    testCompile libs.mockito_core
     testCompile libs.truth
     testCompile libs.equalsverifier
     testCompile project(':base:testutils')

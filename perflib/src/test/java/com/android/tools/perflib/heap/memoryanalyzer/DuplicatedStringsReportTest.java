@@ -3,19 +3,18 @@ package com.android.tools.perflib.heap.memoryanalyzer;
 import com.android.tools.perflib.analyzer.AnalysisResultEntry;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.memoryanalyzer.DuplicatedStringsAnalyzerTask.DuplicatedStringsEntry;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Tests for {@link DuplicatedStringsReport}.
@@ -69,14 +68,18 @@ public final class DuplicatedStringsReportTest {
         inOrder.verify(mPrinterMock).addHeading(2, task.getTaskName() + " Report");
         inOrder.verify(mPrinterMock).addParagraph(task.getTaskDescription());
         // verify that the entries were sorted correctly
-        inOrder
-                .verify(mPrinterMock)
-                .addRow(Mockito.anyString(), Mockito.anyString(), Mockito.eq("2"),
-                        Mockito.anyString());
-        inOrder
-                .verify(mPrinterMock)
-                .addRow(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"),
-                        Mockito.anyString());
+        inOrder.verify(mPrinterMock)
+                .addRow(
+                        Mockito.anyString(),
+                        Mockito.anyString(),
+                        Mockito.eq("2"),
+                        ArgumentMatchers.nullable(String.class));
+        inOrder.verify(mPrinterMock)
+                .addRow(
+                        Mockito.anyString(),
+                        Mockito.anyString(),
+                        Mockito.eq("1"),
+                        ArgumentMatchers.nullable(String.class));
     }
 
     @Test

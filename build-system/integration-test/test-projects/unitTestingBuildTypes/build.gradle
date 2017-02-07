@@ -16,7 +16,7 @@ android {
 
 dependencies {
     testCompile 'junit:junit:4.12'
-    testCompile "org.mockito:mockito-core:1.9.5"
+    testCompile "org.mockito:mockito-core:2.7.1"
 
     testDebugCompile 'com.google.guava:guava:19.0'
 }

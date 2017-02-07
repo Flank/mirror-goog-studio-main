@@ -33,13 +33,14 @@ import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-@RunWith(MockitoJUnitRunner.class)
 public class DexByteCodeConverterTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     private ILogger logger;
 

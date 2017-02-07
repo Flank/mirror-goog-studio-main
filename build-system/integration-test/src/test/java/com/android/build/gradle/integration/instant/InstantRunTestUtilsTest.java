@@ -36,13 +36,14 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-@RunWith(MockitoJUnitRunner.class)
 public class InstantRunTestUtilsTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock public IDevice device;
 

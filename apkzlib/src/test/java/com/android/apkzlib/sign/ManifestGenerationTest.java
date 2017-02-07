@@ -20,19 +20,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
-import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.internal.util.collections.Sets;
 
 public class ManifestGenerationTest {
 
@@ -66,7 +66,7 @@ public class ManifestGenerationTest {
 
             assertEquals("Manifest-Version: 1.0", lines[0].trim());
 
-            Set<String> linesSet = Sets.newSet();
+            Set<String> linesSet = new HashSet<>();
             for (String l : lines) {
                 linesSet.add(l.trim());
             }
@@ -102,7 +102,7 @@ public class ManifestGenerationTest {
 
             assertEquals("Manifest-Version: 1.0", lines[0].trim());
 
-            Set<String> linesSet = Sets.newSet();
+            Set<String> linesSet = new HashSet<>();
             for (String l : lines) {
                 linesSet.add(l.trim());
             }
@@ -140,7 +140,7 @@ public class ManifestGenerationTest {
 
             assertEquals("Manifest-Version: 1.0", lines[0].trim());
 
-            Set<String> linesSet = Sets.newSet();
+            Set<String> linesSet = new HashSet<>();
             for (String l : lines) {
                 linesSet.add(l.trim());
             }

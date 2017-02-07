@@ -67,7 +67,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
     "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-    "//tools/base/third_party:org.mockito_mockito-all",
+    "//tools/base/third_party:org.mockito_mockito-core",
     "//tools/base/third_party:org.ow2.asm_asm",
     "//tools/base/third_party:org.ow2.asm_asm-tree",
     "//tools/base/third_party:org.smali_dexlib2",
@@ -234,6 +234,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/me/tatarka/gradle-retrolambda/3.2.4:jar",
         "//prebuilts/tools/common/m2/repository/me/tatarka/retrolambda/projectlombok/lombok.ast/0.2.3.a2:jar",
         "//prebuilts/tools/common/m2/repository/me/zhanghai/android/materialprogressbar/library/1.1.4:aar",
+        "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.6.5:jar",
+        "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.6.5:jar",
         "//prebuilts/tools/common/m2/repository/net/orfjackal/retrolambda/retrolambda/2.0.6:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
@@ -249,6 +251,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.3:jar",
         "//prebuilts/tools/common/m2/repository/org/json/json/20141113:jar",
         "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.7.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
         "//prebuilts/tools/common/m2/repository/org/shredzone/flattr4j/flattr4j-core/2.12:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.2:jar",
         "//prebuilts/tools/common/m2/repository/org/thoughtcrime/ssl/pinning/AndroidPinning/1.0.0:aar",
@@ -264,6 +268,5 @@ maven_repo(
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.jacoco_org.jacoco.agent",
-        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

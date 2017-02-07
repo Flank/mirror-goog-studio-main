@@ -45,16 +45,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /**
  * Connected smoke test for cold swap.
  */
 @Category(DeviceTests.class)
-@RunWith(MockitoJUnitRunner.class)
 public class ConnectedColdSwapTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()

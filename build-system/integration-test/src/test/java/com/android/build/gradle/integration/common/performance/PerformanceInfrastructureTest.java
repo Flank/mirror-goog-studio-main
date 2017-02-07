@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.integration.performance.ProjectScenario;
 import com.android.ide.common.util.ReferenceHolder;
-import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -34,13 +33,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /** Smoke test for the performance test infrastructure. */
-@RunWith(MockitoJUnitRunner.class)
 public class PerformanceInfrastructureTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     private final List<Logging.GradleBenchmarkResult> benchmarkResults = new ArrayList<>();
 

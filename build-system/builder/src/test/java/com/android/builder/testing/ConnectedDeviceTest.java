@@ -23,20 +23,19 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.utils.ILogger;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ConnectedDeviceTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock
     public IDevice mIDevice;
