@@ -6,6 +6,12 @@
 
         <uses-library android:name="com.google.android.wearable" android:required="true" />
 
+	<!--
+               Set to true if your app is Standalone, that is, it does not require the handheld
+               app to run.
+	-->
+	<meta-data android:name="com.google.android.wearable.standalone" android:value="false"/>
+
         <activity android:name="${relativePackage}.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
