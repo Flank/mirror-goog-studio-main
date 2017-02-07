@@ -48,11 +48,11 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
     }
 
     @Override
-    public void addTaskOutput(
-            @NonNull TaskOutputType outputType,
-            @NonNull File file,
-            @NonNull String taskName) {
-        addTaskOutput(outputType, createCollection(file, taskName));
+    public ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
+        ConfigurableFileCollection collection = createCollection(file, taskName);
+        addTaskOutput(outputType, collection);
+        return collection;
     }
 
     @Override

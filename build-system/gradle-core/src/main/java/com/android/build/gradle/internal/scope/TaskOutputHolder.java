@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import java.io.File;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -76,17 +77,17 @@ public interface TaskOutputHolder {
     /**
      * Adds a new Task output.
      *
-     * To ensure that task wiring works for both direct and delayed task configuration, this must
+     * <p>To ensure that task wiring works for both direct and delayed task configuration, this must
      * be called outside of {@link TaskConfigAction}
      *
      * @param outputType the type of the output
      * @param file the output file
      * @param taskName the name of the task that generates the output file.
+     * @return the {@link ConfigurableFileCollection} that contains both the file and the task
+     *     dependency.
      */
-    void addTaskOutput(
-            @NonNull TaskOutputType outputType,
-            @NonNull File file, @NonNull
-            String taskName);
+    ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName);
 
     /**
      * Adds a new Task output.
