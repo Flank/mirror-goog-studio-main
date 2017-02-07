@@ -17,13 +17,16 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.testing.MockableJarGenerator;
+import com.android.builder.utils.FileCache;
 import com.android.sdklib.IAndroidTarget;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -37,17 +40,17 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class MockableAndroidJarTask extends DefaultTask {
 
-    private File mAndroidJar;
-
-    private File mOutputFile;
+    private File androidJar;
+    private File outputFile;
+    @Nullable private FileCache fileCache;
 
     /**
      * Whether the generated jar should return default values from all methods or throw exceptions.
      */
-    private boolean mReturnDefaultValues;
+    private boolean returnDefaultValues;
 
     @TaskAction
-    public void createMockableJar() throws IOException {
+    public void createMockableJar() throws IOException, ExecutionException {
         File outputFile = getOutputFile();
         if (outputFile.exists()) {
             // Modules share the mockable jar, all the "inputs" are reflected in the filename,
@@ -59,33 +62,54 @@ public class MockableAndroidJarTask extends DefaultTask {
             // need to return here manually because of that behavior.
             return;
         }
-        MockableJarGenerator generator = new MockableJarGenerator(getReturnDefaultValues());
-        getLogger().info(String.format("Creating %s from %s.", outputFile.getAbsolutePath(),
-                mAndroidJar.getAbsolutePath()));
-        generator.createMockableJar(getAndroidJar(), outputFile);
+
+        if (fileCache != null) {
+            fileCache.createFile(
+                    outputFile,
+                    getCacheInputs(),
+                    () -> {
+                        doCreateMockableJar();
+                        return null;
+                    });
+        } else {
+            doCreateMockableJar();
+        }
     }
 
     @Input
     public boolean getReturnDefaultValues() {
-        return mReturnDefaultValues;
-    }
-
-    public void setReturnDefaultValues(boolean returnDefaultValues) {
-        mReturnDefaultValues = returnDefaultValues;
+        return returnDefaultValues;
     }
 
     @OutputFile
     public File getOutputFile() {
-        return mOutputFile;
-    }
-
-    public void setOutputFile(File outputFile) {
-        mOutputFile = outputFile;
+        return outputFile;
     }
 
     @InputFile
     public File getAndroidJar() {
-        return mAndroidJar;
+        return androidJar;
+    }
+
+    private void doCreateMockableJar() throws IOException {
+        MockableJarGenerator generator = new MockableJarGenerator(getReturnDefaultValues());
+        getLogger()
+                .info(
+                        String.format(
+                                "Creating %s from %s.",
+                                outputFile.getAbsolutePath(), androidJar.getAbsolutePath()));
+        generator.createMockableJar(getAndroidJar(), outputFile);
+    }
+
+    /**
+     * Builds the cache key. All the relevant information should already be in the file name, see
+     * {@link GlobalScope#getMockableAndroidJarFile()}.
+     */
+    private FileCache.Inputs getCacheInputs() throws IOException {
+        return new FileCache.Inputs.Builder(FileCache.Command.GENERATE_MOCKABLE_JAR)
+                .putString("fileName", outputFile.getName())
+                .putFilePathLengtTimestamp("platformJar", androidJar)
+                .build();
     }
 
     public static class ConfigAction implements TaskConfigAction<MockableAndroidJarTask> {
@@ -119,13 +143,17 @@ public class MockableAndroidJarTask extends DefaultTask {
             task.setGroup(TaskManager.BUILD_GROUP);
             task.setDescription(
                     "Creates a version of android.jar that's suitable for unit tests.");
-            task.setReturnDefaultValues(
-                    scope.getExtension().getTestOptions().getUnitTests().isReturnDefaultValues());
+            task.returnDefaultValues =
+                    scope.getExtension().getTestOptions().getUnitTests().isReturnDefaultValues();
 
-            task.mAndroidJar = new File(
-                        scope.getAndroidBuilder().getTarget().getPath(IAndroidTarget.ANDROID_JAR));
+            task.androidJar =
+                    new File(
+                            scope.getAndroidBuilder()
+                                    .getTarget()
+                                    .getPath(IAndroidTarget.ANDROID_JAR));
 
-            task.setOutputFile(mockableJar);
+            task.outputFile = mockableJar;
+            task.fileCache = scope.getBuildCache();
         }
     }
 }
