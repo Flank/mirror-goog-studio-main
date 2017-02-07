@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.nio.file.Files.createTempDirectory;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -137,10 +138,13 @@ public final class GradleTestProject implements TestRule {
             OUT_DIR = new File(BUILD_DIR, "tests");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
-            // Use a temporary directory, so that shards don't share daemons.
+            // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
+            // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
+            // across invocations to save disk space.
             GRADLE_USER_HOME =
-                    java.nio.file.Files.createTempDirectory(BUILD_DIR.toPath(), "GRADLE_USER_HOME")
-                            .toFile();
+                    TestUtils.runningFromBazel()
+                            ? createTempDirectory(BUILD_DIR.toPath(), "GRADLE_USER_HOME").toFile()
+                            : new File(BUILD_DIR, "GRADLE_USER_HOME");
 
             boolean useNightly =
                     Boolean.parseBoolean(
