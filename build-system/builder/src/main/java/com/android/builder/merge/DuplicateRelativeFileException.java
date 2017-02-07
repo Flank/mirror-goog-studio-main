@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.api.transform;
-
-import com.google.common.annotations.Beta;
+package com.android.builder.merge;
 
 /**
- * The file changed status for incremental execution.
+ * Exception by {@link StreamMergeAlgorithms#acceptOnlyOne()} if more than one file needs to be
+ * merged.
  */
-public enum Status {
+public class DuplicateRelativeFileException extends RuntimeException {
+
     /**
-     * The file was not changed since the last build.
+     * Creates a new exception.
+     *
+     * @param description a description of the exception
      */
-    NOTCHANGED,
-    /**
-     * The file was added since the last build.
-     */
-    ADDED,
-    /**
-     * The file was modified since the last build.
-     */
-    CHANGED,
-    /**
-     * The file was removed since the last build.
-     */
-    REMOVED;
+    public DuplicateRelativeFileException(String description) {
+        super(description);
+    }
 }

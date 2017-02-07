@@ -168,7 +168,7 @@ public class StripDebugSymbolTransform extends Transform {
                                 }
                                 break;
                             case REMOVED:
-                                FileUtils.deleteIfExists(strippedLib);
+                                FileUtils.deletePath(new File(output, path));
                                 break;
                             default:
                                 break;
