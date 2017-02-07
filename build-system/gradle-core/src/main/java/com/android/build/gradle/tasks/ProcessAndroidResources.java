@@ -186,6 +186,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                 new ToolOutputParser(new AaptOutputParser(), getILogger()),
                 new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
 
+        String preferredDensity =
+                getResourceConfigs().isEmpty()
+                        ? getPreferredDensity()
+                        : null; /* when resConfigs are set, we should respect it */
         try {
             Aapt aapt =
                     AaptGradleFactory.make(
@@ -213,7 +217,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                             .setPseudoLocalize(getPseudoLocalesEnabled())
                             .setResourceConfigs(getResourceConfigs())
                             .setSplits(getSplits())
-                            .setPreferredDensity(getPreferredDensity())
+                            .setPreferredDensity(preferredDensity)                   
                             .setBaseFeature(baseAtomPackage);
 
             builder.processResources(aapt, config, getEnforceUniquePackageName());

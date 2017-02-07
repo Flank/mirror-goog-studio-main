@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_DENSITY;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.Variant;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
@@ -140,6 +142,14 @@ public class BasicTest {
         assertThat(model.getPluginGeneration())
                 .named("Plugin Generation")
                 .isEqualTo(AndroidProject.GENERATION_ORIGINAL);
+    }
+
+    @Test
+    public void checkDensityAndResourceConfigs() throws Exception {
+        project.executor()
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withProperty(PROPERTY_BUILD_DENSITY, "xxhdpi")
+                .run("assembleDebug");
     }
 
     @Test
