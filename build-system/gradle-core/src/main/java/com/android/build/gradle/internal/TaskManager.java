@@ -1602,30 +1602,32 @@ public abstract class TaskManager {
         variantLintCheck.dependsOn(tasks, LINT_COMPILE, scope.getJavacTask());
     }
 
-    private void createLintVitalTask(
-            @NonNull TaskFactory tasks,
-            @NonNull ApkVariantData variantData) {
-        checkState(getExtension().getLintOptions().isCheckReleaseBuilds());
+    private void maybeCreateLintVitalTask(
+            @NonNull TaskFactory tasks, @NonNull ApkVariantData variantData) {
         // TODO: re-enable with Jack when possible
-        if (!variantData.getVariantConfiguration().getBuildType().isDebuggable()
-                && !variantData.getVariantConfiguration().isJackEnabled()) {
-            final AndroidTask<Lint> lintReleaseCheck = androidTasks.create(
-                    tasks,
-                    new Lint.VitalConfigAction(variantData.getScope()));
-            lintReleaseCheck.optionalDependsOn(tasks, variantData.javacTask);
-
-            variantData.getScope().getAssembleTask().dependsOn(tasks, lintReleaseCheck);
-
-            // If lint is being run, we do not need to run lint vital.
-            // TODO: Find a better way to do this.
-            project.getGradle().getTaskGraph().whenReady(new Closure<Void>(this, this) {
-                public void doCall(TaskExecutionGraph taskGraph) {
-                    if (taskGraph.hasTask(LINT)) {
-                        project.getTasks().getByName(lintReleaseCheck.getName()).setEnabled(false);
-                    }
-                }
-            });
+        if (variantData.getVariantConfiguration().getBuildType().isDebuggable()
+                || variantData.getVariantConfiguration().isJackEnabled()
+                || !getExtension().getLintOptions().isCheckReleaseBuilds()) {
+            return;
         }
+
+        AndroidTask<Lint> lintReleaseCheck =
+                androidTasks.create(tasks, new Lint.VitalConfigAction(variantData.getScope()));
+        lintReleaseCheck.optionalDependsOn(tasks, variantData.javacTask);
+
+        variantData.getScope().getAssembleTask().dependsOn(tasks, lintReleaseCheck);
+
+        // If lint is being run, we do not need to run lint vital.
+        project.getGradle()
+                .getTaskGraph()
+                .whenReady(
+                        taskGraph -> {
+                            if (taskGraph.hasTask(LINT)) {
+                                project.getTasks()
+                                        .getByName(lintReleaseCheck.getName())
+                                        .setEnabled(false);
+                            }
+                        });
     }
 
     private void createRunUnitTestTask(
@@ -2828,9 +2830,8 @@ public abstract class TaskManager {
             installTask.dependsOn(tasks, variantScope.getAssembleTask());
         }
 
-        if (getExtension().getLintOptions().isCheckReleaseBuilds()
-                && (incrementalMode == IncrementalMode.NONE)) {
-            createLintVitalTask(tasks, variantData);
+        if (incrementalMode == IncrementalMode.NONE) {
+            maybeCreateLintVitalTask(tasks, variantData);
         }
 
         // add an uninstall task

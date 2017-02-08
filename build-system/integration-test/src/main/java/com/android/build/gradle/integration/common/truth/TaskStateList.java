@@ -27,8 +27,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.task.TaskFailureResult;
 import org.gradle.tooling.events.task.TaskFinishEvent;
 import org.gradle.tooling.events.task.TaskOperationResult;
+import org.gradle.tooling.events.task.TaskSkippedResult;
 import org.gradle.tooling.events.task.TaskSuccessResult;
 
 /**
@@ -37,21 +39,29 @@ import org.gradle.tooling.events.task.TaskSuccessResult;
 public class TaskStateList {
 
     public static class TaskInfo {
+
         private final String taskName;
         private final boolean wasExecuted;
         private final boolean upToDate;
         private final boolean inputChanged;
+        private final boolean failed;
+        private final boolean skipped;
         private final TaskStateList taskStateList;
 
-        public TaskInfo(String taskName,
+        public TaskInfo(
+                String taskName,
                 boolean wasExecuted,
                 boolean upToDate,
                 boolean inputChanged,
+                boolean failed,
+                boolean skipped,
                 TaskStateList taskStateList) {
             this.taskName = taskName;
             this.wasExecuted = wasExecuted;
             this.upToDate = upToDate;
             this.inputChanged = inputChanged;
+            this.failed = failed;
+            this.skipped = skipped;
             this.taskStateList = taskStateList;
         }
 
@@ -77,10 +87,25 @@ public class TaskStateList {
             return inputChanged;
         }
 
+        public boolean isSkipped() {
+            if (!wasExecuted) {
+                throw new IllegalStateException("Task " + getTaskName() + " was not executed");
+            }
+            return skipped;
+        }
+
+        public boolean failed() {
+            if (!wasExecuted) {
+                throw new IllegalStateException("Task " + getTaskName() + " was not executed");
+            }
+            return failed;
+        }
+
         TaskStateList getTaskStateList() {
             return taskStateList;
         }
     }
+
 
     private static final Pattern INPUT_CHANGED_PATTERN = Pattern.compile(
             "Value of input property '.*' has changed for task ':(\\S+)'");
@@ -95,6 +120,8 @@ public class TaskStateList {
     @NonNull private final ImmutableSet<String> upToDateTasks;
     @NonNull private final ImmutableSet<String> notUpToDateTasks;
     @NonNull private final ImmutableSet<String> inputChangedTasks;
+    @NonNull private final ImmutableSet<String> skippedTasks;
+    @NonNull private final ImmutableSet<String> failedTasks;
 
     public TaskStateList(
             @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
@@ -102,6 +129,8 @@ public class TaskStateList {
         ImmutableList.Builder<String> orderedTasksBuilder = ImmutableList.builder();
         ImmutableSet.Builder<String> upToDateTasksBuilder = ImmutableSet.builder();
         ImmutableSet.Builder<String> notUpToDateTasksBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> skippedTasksBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> failedTasksBuilder = ImmutableSet.builder();
 
         for (ProgressEvent progressEvent : progressEvents) {
             if (progressEvent instanceof TaskFinishEvent) {
@@ -118,6 +147,10 @@ public class TaskStateList {
                     } else {
                         notUpToDateTasksBuilder.add(name);
                     }
+                } else if (result instanceof TaskFailureResult) {
+                    failedTasksBuilder.add(name);
+                } else if (result instanceof TaskSkippedResult) {
+                    skippedTasksBuilder.add(name);
                 }
             }
         }
@@ -126,18 +159,24 @@ public class TaskStateList {
         allTasks = ImmutableSet.copyOf(orderedTasks);
         upToDateTasks = upToDateTasksBuilder.build();
         notUpToDateTasks = notUpToDateTasksBuilder.build();
+        failedTasks = failedTasksBuilder.build();
+        skippedTasks = skippedTasksBuilder.build();
         inputChangedTasks = getInputChangedTasks(gradleOutput, notUpToDateTasks);
 
 
         taskInfoList = Maps.newHashMapWithExpectedSize(orderedTasks.size());
 
         for (String taskName : orderedTasks) {
-            taskInfoList.put(taskName, new TaskInfo(
+            taskInfoList.put(
                     taskName,
-                    true,
-                    upToDateTasks.contains(taskName),
-                    inputChangedTasks.contains(taskName),
-                    this));
+                    new TaskInfo(
+                            taskName,
+                            true,
+                            upToDateTasks.contains(taskName),
+                            inputChangedTasks.contains(taskName),
+                            failedTasks.contains(taskName),
+                            skippedTasks.contains(taskName),
+                            this));
         }
     }
 
@@ -162,8 +201,9 @@ public class TaskStateList {
     @NonNull
     public TaskInfo getTask(@NonNull String name) {
         // if the task-info is missing, then create one for a non executed task.
-        return taskInfoList.computeIfAbsent(name,
-                k -> new TaskInfo(name, false /*wasExecuted*/, false, false, this));
+        return taskInfoList.computeIfAbsent(
+                name,
+                k -> new TaskInfo(name, false /*wasExecuted*/, false, false, false, false, this));
     }
 
     @NonNull

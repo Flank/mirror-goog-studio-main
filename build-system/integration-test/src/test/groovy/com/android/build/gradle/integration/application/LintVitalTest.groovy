@@ -15,18 +15,19 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.google.common.base.Throwables
-import org.gradle.tooling.BuildException
+import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import static org.junit.Assert.fail
-
+import static com.google.common.truth.Truth.assertThat
 /**
  * Checks if fatal lint errors stop the release build.
  */
@@ -61,12 +62,31 @@ android {
     }
 
     @Test
-    public void "Fatal lint checks stop the build"() {
-        try {
-            project.execute("assembleRelease")
-            fail("Release build should fail with fatal lint errors.")
-        } catch (BuildException e) {
-            assert Throwables.getRootCause(e).message.contains("fatal errors")
-        }
+    public void fatalLintCheckFailsBuild() {
+        GradleBuildResult result =
+                project.executor().expectFailure().run("assembleRelease");
+        assertThat(result.getFailureMessage()).contains("fatal errors");
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).failed();
+    }
+
+    @Test
+    public void lintVitalIsNotRunForLibraries() {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "com\\.android\\.application",
+                "com.android.library");
+        GradleBuildResult result = project.executor().run("assembleRelease");
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
+    }
+
+
+    @Test
+    public void lintVitalDisabled() {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.lintOptions.checkReleaseBuilds = false\n");
+
+        GradleBuildResult result = project.executor().run("assembleRelease");
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
     }
 }
