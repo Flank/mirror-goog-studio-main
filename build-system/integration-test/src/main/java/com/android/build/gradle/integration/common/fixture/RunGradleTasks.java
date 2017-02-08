@@ -208,10 +208,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 throw failure;
             }
             return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
-        } catch (Exception e) {
-            stderr.writeTo(System.err);
-            stdout.writeTo(System.out);
-            throw e;
         }
     }
 
