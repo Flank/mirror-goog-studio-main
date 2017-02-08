@@ -190,7 +190,11 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
                             }
                         }
 
-                        for (T iface : interfaceTraverser.preOrderTraversal(klass)) {
+                        Iterable<T> implementedInterfaces =
+                                // Skip the class itself.
+                                interfaceTraverser.preOrderTraversal(klass).skip(1);
+
+                        for (T iface : implementedInterfaces) {
                             if (mGraph.isProgramClass(iface)) {
                                 mGraph.addDependency(
                                         klass, iface, DependencyType.INTERFACE_IMPLEMENTED);
@@ -231,7 +235,9 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
 
                             Iterable<T> interfaces =
                                     TypeHierarchyTraverser.interfaces(mGraph, mShrinkerLogger)
-                                            .preOrderTraversal(klass);
+                                            .preOrderTraversal(klass)
+                                            .skip(1); // Skip the class itself.
+
                             for (T iface : interfaces) {
                                 for (T method : mGraph.getMethods(iface)) {
                                     handleMethod(method);
@@ -251,7 +257,9 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
 
                             FluentIterable<T> superclasses =
                                     TypeHierarchyTraverser.superclasses(mGraph, mShrinkerLogger)
-                                            .preOrderTraversal(klass);
+                                            .preOrderTraversal(klass)
+                                            .skip(1); // Skip the class itself.
+
                             for (T current : superclasses) {
                                 if (!isProgramClass(current)) {
                                     // We will not remove the method anyway.
@@ -319,7 +327,8 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
                         FluentIterable<T> superTypes =
                                 TypeHierarchyTraverser.superclassesAndInterfaces(
                                                 mGraph, mShrinkerLogger)
-                                        .preOrderTraversal(mGraph.getOwnerClass(method));
+                                        .preOrderTraversal(mGraph.getOwnerClass(method))
+                                        .skip(1); // Skip the class itself.
 
                         for (T klass : superTypes) {
                             if (mGraph.getClassName(klass).equals("java/lang/Object")) {

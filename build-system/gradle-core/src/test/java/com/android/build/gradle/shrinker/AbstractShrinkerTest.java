@@ -245,17 +245,19 @@ public abstract class AbstractShrinkerTest {
         return new ProguardFlagsKeepRules(config.getFlags(), mShrinkerLogger);
     }
 
-    protected void fullRun(KeepRules keepRules) throws IOException {
+    protected ShrinkerGraph<String> fullRun(KeepRules keepRules) throws IOException {
         mFullRunShrinker.run(
                 mInputs,
                 Collections.emptyList(),
                 mOutput,
                 ImmutableMap.of(AbstractShrinker.CounterSet.SHRINK, keepRules),
                 true);
+        return mFullRunShrinker.mGraph;
     }
 
-    protected void fullRun(String className, String... methods) throws IOException {
-        fullRun(new TestKeepRules(className, methods));
+    protected ShrinkerGraph<String> fullRun(String className, String... methods)
+            throws IOException {
+        return fullRun(new TestKeepRules(className, methods));
     }
 
     protected void incrementalRun(Map<String, Status> changes) throws Exception {
