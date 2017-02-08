@@ -133,7 +133,7 @@ java_test(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.OnlineTests",
+        "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
