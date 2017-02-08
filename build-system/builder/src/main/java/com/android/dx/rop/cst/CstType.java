@@ -18,8 +18,8 @@ package com.android.dx.rop.cst;
 
 import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.type.Type;
-import com.google.common.collect.MapMaker;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -32,10 +32,8 @@ public final class CstType extends TypedConstant {
      *
      * <p>The initial capacity is based on a medium-size project.
      */
-    private static final ConcurrentMap<Type, CstType> interns = new MapMaker()
-            .concurrencyLevel(Main.CONCURRENCY_LEVEL)
-            .initialCapacity(1_000)
-            .makeMap();
+    private static final ConcurrentMap<Type, CstType> interns =
+            new ConcurrentHashMap<>(1_000, 0.75f, Main.CONCURRENCY_LEVEL);
 
     /** {@code non-null;} instance corresponding to the class {@code Object} */
     public static final CstType OBJECT = intern(Type.OBJECT);
