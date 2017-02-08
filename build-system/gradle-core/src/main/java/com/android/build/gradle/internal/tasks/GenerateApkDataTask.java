@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
@@ -35,7 +34,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -70,8 +68,7 @@ public class GenerateApkDataTask extends BaseTask {
     }
 
     @TaskAction
-    void generate() throws IOException, ProcessException, LoggedErrorException,
-            InterruptedException {
+    void generate() throws IOException, ProcessException, InterruptedException {
         // if the FileCollection contains no file, then there's nothing to do just abort.
         File apk = null;
         if (apkFile != null) {

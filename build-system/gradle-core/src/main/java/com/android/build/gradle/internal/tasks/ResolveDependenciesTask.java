@@ -20,19 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.DependencyManager;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskAction;
@@ -50,8 +45,7 @@ public class ResolveDependenciesTask extends BaseTask {
     @Nullable private FileCache buildCache;
 
     @TaskAction
-    public void resolveDependencies() throws LoggedErrorException, InterruptedException,
-            IOException {
+    public void resolveDependencies() throws InterruptedException, IOException {
         // Resolve variant dependencies.
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
@@ -69,7 +63,7 @@ public class ResolveDependenciesTask extends BaseTask {
     //        @NonNull Project project,
     //        @NonNull GradleVariantConfiguration config,
     //        Nullable FileCache buildCache)
-    //        throws LoggedErrorException, InterruptedException, IOException {
+    //        throws InterruptedException, IOException {
     //    WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
     //
     //    Set<AndroidDependency> dependencies =

@@ -32,7 +32,6 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.builder.internal.incremental.DependencyDataStore;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
@@ -42,14 +41,13 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
-import java.util.function.Supplier;
-import org.gradle.api.file.FileCollection;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -125,14 +123,14 @@ public class AidlCompile extends IncrementalTask {
     /**
      * Action methods to compile all the files.
      *
-     * The method receives a {@link DependencyFileProcessor} to be used by the
-     * {@link com.android.builder.internal.compiler.SourceSearcher.SourceFileProcessor} during
-     * the compilation.
+     * <p>The method receives a {@link DependencyFileProcessor} to be used by the {@link
+     * com.android.builder.internal.compiler.SourceSearcher.SourceFileProcessor} during the
+     * compilation.
      *
      * @param dependencyFileProcessor a DependencyFileProcessor
      */
     private void compileAllFiles(DependencyFileProcessor dependencyFileProcessor)
-            throws InterruptedException, ProcessException, LoggedErrorException, IOException {
+            throws InterruptedException, ProcessException, IOException {
         getBuilder().compileAllAidlFiles(
                 sourceDirs.get(),
                 getSourceOutputDir(),
@@ -158,9 +156,9 @@ public class AidlCompile extends IncrementalTask {
     /**
      * Compiles a single file.
      *
-     * @param sourceFolder            the file to compile.
-     * @param file                    the file to compile.
-     * @param importFolders           the import folders.
+     * @param sourceFolder the file to compile.
+     * @param file the file to compile.
+     * @param importFolders the import folders.
      * @param dependencyFileProcessor a DependencyFileProcessor
      */
     private void compileSingleFile(
@@ -169,7 +167,7 @@ public class AidlCompile extends IncrementalTask {
             @Nullable List<File> importFolders,
             @NonNull DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws InterruptedException, ProcessException, LoggedErrorException, IOException {
+            throws InterruptedException, ProcessException, IOException {
         getBuilder().compileAidlFile(
                 sourceFolder,
                 file,

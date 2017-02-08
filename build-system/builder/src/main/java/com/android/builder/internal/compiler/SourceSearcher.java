@@ -18,7 +18,6 @@ package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +62,7 @@ public class SourceSearcher {
     }
 
     public void search(@NonNull SourceFileProcessor processor)
-            throws ProcessException, LoggedErrorException, InterruptedException, IOException {
+            throws ProcessException, InterruptedException, IOException {
         for (File file : mSourceFolders) {
             // pass both the root folder (the source folder) and the file/folder to process,
             // in this case the source folder as well.

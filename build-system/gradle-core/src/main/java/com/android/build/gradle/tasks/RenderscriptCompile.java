@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
@@ -181,8 +180,7 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @TaskAction
-    void taskAction()
-            throws IOException, InterruptedException, ProcessException, LoggedErrorException {
+    void taskAction() throws IOException, InterruptedException, ProcessException {
         // this is full run (always), clean the previous outputs
         File sourceDestDir = getSourceOutputDir();
         FileUtils.cleanOutputDir(sourceDestDir);

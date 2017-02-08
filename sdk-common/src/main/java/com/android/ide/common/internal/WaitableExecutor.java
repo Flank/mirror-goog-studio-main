@@ -125,8 +125,7 @@ public class WaitableExecutor<T> {
      * @throws InterruptedException if this thread was interrupted. Not if the tasks were
      *     interrupted.
      */
-    public List<T> waitForTasksWithQuickFail(boolean cancelRemaining)
-            throws InterruptedException, LoggedErrorException {
+    public List<T> waitForTasksWithQuickFail(boolean cancelRemaining) throws InterruptedException {
         List<T> results = Lists.newArrayListWithCapacity(mFutureSet.size());
         try {
             while (!mFutureSet.isEmpty()) {
@@ -145,12 +144,7 @@ public class WaitableExecutor<T> {
             }
 
             // get the original exception and throw that one.
-            Throwable cause = e.getCause();
-            if (cause instanceof LoggedErrorException) {
-                throw (LoggedErrorException) cause;
-            } else {
-                throw new RuntimeException(cause);
-            }
+            throw new RuntimeException(e.getCause());
         } finally {
             if (mExecutorService != null) {
                 mExecutorService.shutdownNow();
