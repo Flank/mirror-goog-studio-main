@@ -301,10 +301,10 @@ public class VariantDependencies {
                 applyVariantAttributes(runtimeElements, buildType, flavorMap2);
                 runtimeElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
-                // if the variant is not a library, then the publishing configuration should
-                // not extend from anything. It's mostly there to access the artifacts from
-                // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
+                // if the variant is not a dependent bundle, then the publishing configuration
+                // should not extend from the apkConfigs. It's mostly there to access the artifact
+                // from another project but it shouldn't bring any dependencies with it.
+                if (variantType == VariantType.LIBRARY || variantType == VariantType.ATOM) {
                     runtimeElements.setExtendsFrom(runtimeClasspaths);
                 }
 
