@@ -384,6 +384,7 @@ public final class GradleTestProject implements TestRule {
                     base.evaluate();
                 } catch (Exception e) {
                     testFailed = true;
+                    throw e;
                 } finally {
                     openConnections.forEach(ProjectConnection::close);
                     if (benchmarkRecorder != null) {
