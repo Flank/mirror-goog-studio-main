@@ -100,6 +100,7 @@ testEnvironment << [
 // rebuilding the plugin.
 task testPrebuilts(type: Test)
 task connectedIntegrationTestPrebuilts(type: Test)
+task connectedIntegrationTestPrebuiltsQuarantine(type: Test)
 
 File tempFile = new File(project.buildDir, 'tmp')
 tempFile.mkdirs()
@@ -126,6 +127,7 @@ configure([test, testPrebuilts]) {
         }
         excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
         excludeCategories "com.android.build.gradle.integration.common.category.OnlineTests"
+        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
     }
 
     exclude "com/android/build/gradle/integration/performance/**"
@@ -154,8 +156,17 @@ task onlineTest(type: Test) {
 check.dependsOn automaticTest
 
 task connectedIntegrationTest(type: Test)
+task connectedIntegrationTestQuarantine(type: Test)
 
-configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
+def allConnectedTestTasks = [
+        connectedIntegrationTest,
+        connectedIntegrationTestPrebuilts,
+        connectedIntegrationTestQuarantine,
+        connectedIntegrationTestPrebuiltsQuarantine,
+]
+
+
+configure(allConnectedTestTasks) {
     testClassesDir = sourceSets.test.output.classesDir
     classpath = sourceSets.test.runtimeClasspath
 
@@ -179,12 +190,23 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     }
     maxParallelForks = count
 
-    useJUnit {
-        includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
-    }
     exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
 }
+
+configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
+    }
+}
+
+configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuiltsQuarantine]) {
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
+    }
+}
+
 
 task performanceTest(type: Test) {
     include "com/android/build/gradle/integration/performance/**"
@@ -232,14 +254,15 @@ task('stopDevicePool').doLast {
 }
 
 startDevicePool.finalizedBy stopDevicePool
-stopDevicePool.mustRunAfter connectedIntegrationTestPrebuilts, connectedIntegrationTest
+allConnectedTestTasks.forEach({task -> stopDevicePool.mustRunAfter(task)})
 
 automaticTest.dependsOn ':publishLocal'
 onlineTest.dependsOn ':publishLocal'
 test.dependsOn buildTestDependencies, ':publishLocal'
 testPrebuilts.dependsOn buildTestDependencies
-connectedIntegrationTest.dependsOn buildTestDependencies, ':publishLocal', startDevicePool
-connectedIntegrationTestPrebuilts.dependsOn buildTestDependencies, startDevicePool
+allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool})
+connectedIntegrationTest.dependsOn ':publishLocal'
+connectedIntegrationTestQuarantine.dependsOn ':publishLocal'
 performanceTest.dependsOn ':publishLocal'
 
 

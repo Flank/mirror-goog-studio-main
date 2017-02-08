@@ -25,6 +25,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -354,7 +355,7 @@ public class BasicTest2 {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(DeviceTestsQuarantine.class)
     public void install() throws Exception {
         project.execute("assembleDebug");
         adb.exclusiveAccess();
