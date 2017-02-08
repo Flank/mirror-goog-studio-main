@@ -24,8 +24,12 @@ import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -219,5 +223,24 @@ public class DexArchiveMergerTest {
         assertThat(outputDex.resolve("classes.dex")).exists();
         assertThat(outputDex.resolve("classes2.dex")).exists();
         assertThat(outputDex.resolve("classes3.dex")).doesNotExist();
+    }
+
+    @Test
+    public void testWindowsSmokeTest() throws Exception {
+        FileSystem fs = Jimfs.newFileSystem(Configuration.windows());
+
+        Set<String> classNames = ImmutableSet.of("A", "B", "C");
+        Path classesInput = fs.getPath("tmp\\input_classes");
+        DexArchiveTestUtil.createClasses(classesInput, classNames);
+        Path dexArchive = fs.getPath("tmp\\dex_archive");
+        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, dexArchive);
+
+        Path output = fs.getPath("tmp\\out");
+        DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive), output);
+
+        Dex outputDex = new Dex(output.resolve("classes.dex"));
+
+        assertThat(outputDex)
+                .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B", "C"));
     }
 }

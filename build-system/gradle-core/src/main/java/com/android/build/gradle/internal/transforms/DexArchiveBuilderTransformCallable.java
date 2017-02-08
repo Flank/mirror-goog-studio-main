@@ -248,7 +248,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                 .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
                 .putBoolean(
                         FileCacheInputParams.OPTIMIZE.name(),
-                        dexOptions.getAdditionalParameters().contains("--no-optimize"));
+                        !dexOptions.getAdditionalParameters().contains("--no-optimize"));
 
         return buildCacheInputs.build();
     }

@@ -25,6 +25,7 @@ import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
+import com.android.utils.FileUtils;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
@@ -61,7 +62,8 @@ public class DexArchiveBuilderCallable implements Callable<DexArchiveEntry> {
     @Override
     public DexArchiveEntry call() throws Exception {
         // parses the class file
-        DirectClassFile directClassFile = parseClass(relativePath.toString(), classFileContent);
+        String unixClassFile = FileUtils.toSystemIndependentPath(relativePath);
+        DirectClassFile directClassFile = parseClass(unixClassFile, classFileContent);
 
         DexFile dexFile = new DexFile(dexOptions);
         // starts the actual translation and writes the content to the dex file specified
