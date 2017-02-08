@@ -74,7 +74,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private String testApplicationId;
     private String minSdkVersion;
     private String targetSdkVersion;
-    private String testedApplicationId;
     private String instrumentationRunner;
     private Boolean handleProfiling;
     private Boolean functionalTest;
@@ -92,7 +91,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         if (testApplicationId == null && testTargetMetadata == null) {
             throw new RuntimeException("testApplicationId and testTargetMetadata are null");
         }
-        String testedApplicationId = this.testedApplicationId;
+        String testedApplicationId = this.testApplicationId;
         if (testTargetMetadata != null) {
             BuildContext buildContext = new BuildContext();
             try {
@@ -164,16 +163,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     public void setTargetSdkVersion(String targetSdkVersion) {
         this.targetSdkVersion = targetSdkVersion;
-    }
-
-    @Input
-    @Optional
-    public String getTestedApplicationId() {
-        return testedApplicationId;
-    }
-
-    public void setTestedApplicationId(String testedApplicationId) {
-        this.testedApplicationId = testedApplicationId;
     }
 
     @Input
