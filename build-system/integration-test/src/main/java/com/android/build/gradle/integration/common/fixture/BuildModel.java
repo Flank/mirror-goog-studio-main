@@ -254,10 +254,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
             return executor.withArguments(arguments).run();
-        } catch (Exception e) {
-            stderr.writeTo(System.err);
-            stdout.writeTo(System.out);
-            throw e;
         }
     }
 
