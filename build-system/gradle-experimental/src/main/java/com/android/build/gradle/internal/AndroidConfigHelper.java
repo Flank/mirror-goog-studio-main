@@ -55,7 +55,7 @@ public class AndroidConfigHelper {
         model.setAaptOptions(instantiator.newInstance(AaptOptions.class));
         model.setDexOptions(instantiator.newInstance(DexOptions.class, extraModelInfo));
         model.setLintOptions(instantiator.newInstance(LintOptions.class));
-        model.setTestOptions(instantiator.newInstance(TestOptions.class));
+        model.setTestOptions(instantiator.newInstance(TestOptions.class, instantiator));
         model.setCompileOptions(instantiator.newInstance(CompileOptions.class));
         model.setPackagingOptions(instantiator.newInstance(PackagingOptions.class));
         model.setJacoco(instantiator.newInstance(JacocoOptions.class));

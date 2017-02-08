@@ -134,6 +134,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
+import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.Lint;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
@@ -1127,45 +1128,54 @@ public abstract class TaskManager {
     /**
      * Creates the java resources processing tasks.
      *
-     * The java processing will happen in two steps:
+     * <p>The java processing will happen in two steps:
+     *
      * <ul>
-     * <li>{@link Sync} task configured with {@link ProcessJavaResConfigAction} will sync all source
-     * folders into a single folder identified by
-     * {@link VariantScope#getSourceFoldersJavaResDestinationDir()}</li>
-     * <li>{@link MergeJavaResourcesTransform} will take the output of this merge plus the
-     * dependencies and will create a single merge with the {@link PackagingOptions} settings
-     * applied.</li>
+     *   <li>{@link Sync} task configured with {@link ProcessJavaResConfigAction} will sync all
+     *       source folders into a single folder identified by {@link
+     *       VariantScope#getSourceFoldersJavaResDestinationDir()}
+     *   <li>{@link MergeJavaResourcesTransform} will take the output of this merge plus the
+     *       dependencies and will create a single merge with the {@link PackagingOptions} settings
+     *       applied.
      * </ul>
      *
      * @param tasks tasks factory to create tasks.
      * @param variantScope the variant scope we are operating under.
      */
     public void createProcessJavaResTasks(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope) {
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
         TransformManager transformManager = variantScope.getTransformManager();
 
-        // now copy the source folders java resources into the temporary location, mainly to
+        // First copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
         AndroidTask<Sync> processJavaResourcesTask =
                 androidTasks.create(tasks, new ProcessJavaResConfigAction(variantScope));
         variantScope.setProcessJavaResourcesTask(processJavaResourcesTask);
+        processJavaResourcesTask.configure(
+                tasks, t -> variantScope.getVariantData().processJavaResourcesTask = t);
 
-        // create the stream generated from this task
-        variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                .addContentType(DefaultContentType.RESOURCES)
-                .addScope(Scope.PROJECT)
-                .setFolder(variantScope.getSourceFoldersJavaResDestinationDir())
-                .setDependency(processJavaResourcesTask.getName())
-                .build());
+        // Create the stream generated from this task.
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project)
+                                .addContentType(DefaultContentType.RESOURCES)
+                                .addScope(Scope.PROJECT)
+                                .setFolder(variantScope.getSourceFoldersJavaResDestinationDir())
+                                .setDependency(processJavaResourcesTask.getName())
+                                .build());
 
-        // compute the scopes that need to be merged.
+        // Compute the scopes that need to be merged.
         Set<Scope> mergeScopes = getResMergingScopes(variantScope);
 
-        // Create the merge transform
-        MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
-                variantScope.getGlobalScope().getExtension().getPackagingOptions(),
-                mergeScopes, DefaultContentType.RESOURCES, "mergeJavaRes", variantScope);
+        // Create the merge transform.
+        MergeJavaResourcesTransform mergeTransform =
+                new MergeJavaResourcesTransform(
+                        variantScope.getGlobalScope().getExtension().getPackagingOptions(),
+                        mergeScopes,
+                        DefaultContentType.RESOURCES,
+                        "mergeJavaRes",
+                        variantScope);
         variantScope.setMergeJavaResourcesTask(
                 transformManager.addTransform(tasks, variantScope, mergeTransform).orElse(null));
     }
@@ -1415,8 +1425,9 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
-        BaseVariantData testedVariantData = variantScope.getTestedVariantData();
-        checkState(testedVariantData != null);
+        BaseVariantData testedVariantData =
+                checkNotNull(variantScope.getTestedVariantData(), "Not a unit test variant");
+        VariantScope testedVariantScope = testedVariantData.getScope();
 
         createPreBuildTasks(tasks, variantScope);
 
@@ -1426,23 +1437,44 @@ public abstract class TaskManager {
         createProcessJavaResTasks(tasks, variantScope);
         createCompileAnchorTask(tasks, variantScope);
 
-        // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add an
-        // explicit dependency on resource copying tasks.
-        variantScope.getCompileTask().dependsOn(
+        if (getExtension().getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+            AndroidTask<GenerateTestConfig> generateTestConfig =
+                    androidTasks.create(tasks, new GenerateTestConfig.ConfigAction(variantScope));
+
+            variantScope.getProcessJavaResourcesTask().dependsOn(tasks, generateTestConfig);
+        }
+
+        // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
+        // dependencies on tasks that prepare necessary data files.
+        AndroidTask<Task> compileTask = variantScope.getCompileTask();
+        compileTask.dependsOn(
                 tasks,
                 variantScope.getProcessJavaResourcesTask(),
-                testedVariantData.getScope().getProcessJavaResourcesTask());
+                testedVariantScope.getProcessJavaResourcesTask());
+        if (getExtension().getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+            compileTask.dependsOn(tasks, testedVariantScope.getMergeResourcesTask());
+            compileTask.dependsOn(tasks, testedVariantScope.getMergeAssetsTask());
+            compileTask.dependsOn(
+                    tasks,
+                    testedVariantScope
+                            .getVariantData()
+                            .getMainOutput()
+                            .getScope()
+                            .getManifestProcessorTask());
+        }
 
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
-        javacTask.dependsOn(tasks, testedVariantData.getScope().getJavacTask());
+        javacTask.dependsOn(tasks, testedVariantScope.getJavacTask());
 
         createRunUnitTestTask(tasks, variantScope);
 
-        variantScope.getAssembleTask().dependsOn(tasks, createMockableJar);
+        AndroidTask<DefaultTask> assembleUnitTests = variantScope.getAssembleTask();
+        assembleUnitTests.dependsOn(tasks, createMockableJar);
+
         // This hides the assemble unit test task from the task list.
-        variantScope.getAssembleTask().configure(tasks, task -> task.setGroup(null));
+        assembleUnitTests.configure(tasks, task -> task.setGroup(null));
     }
 
     /**
