@@ -44,6 +44,7 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.internal.FakeAndroidTarget;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;

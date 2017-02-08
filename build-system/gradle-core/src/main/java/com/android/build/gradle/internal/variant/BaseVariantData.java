@@ -57,7 +57,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import groovy.lang.Closure;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -308,6 +307,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return StringHelper.capitalize(variantConfiguration.getFlavorName());
     }
 
+    @NonNull
     public VariantType getType() {
         return variantConfiguration.getType();
     }

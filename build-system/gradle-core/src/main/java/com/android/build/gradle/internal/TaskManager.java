@@ -110,8 +110,9 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLay
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
+import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
+import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
-import com.android.build.gradle.internal.transforms.DexingMode;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.JackCompileTransform;
 import com.android.build.gradle.internal.transforms.JackGenerateDexTransform;
@@ -179,6 +180,7 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
@@ -2121,22 +2123,92 @@ public abstract class TaskManager {
             multiDexClassListTask = Optional.empty();
         }
 
-        final DexingMode dexingMode;
-        if (isLegacyMultiDexMode) {
-            dexingMode = DexingMode.LEGACY_MULTIDEX;
-        } else if (!isMultiDexEnabled) {
-            dexingMode = DexingMode.MONO_DEX;
-        } else {
-            dexingMode = DexingMode.NATIVE_MULTIDEX;
-        }
+        DexingMode dexingMode = getDexingMode(variantScope, isMultiDexEnabled);
 
-        createDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)
+                && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+            createNewDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
+        } else {
+            createDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
+        }
 
         if (preColdSwapTask != null) {
             for (AndroidTask<? extends DefaultTask> task : variantScope.getColdSwapBuildTasks()) {
                 task.dependsOn(tasks, preColdSwapTask);
             }
         }
+    }
+
+    @NonNull
+    private DexingMode getDexingMode(@NonNull VariantScope scope, boolean isMultiDexEnabled) {
+        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        if (variantData.getType().isForTesting()
+                && scope.getTestedVariantData() != null
+                && scope.getTestedVariantData().getType() != VariantType.LIBRARY) {
+            // for non-library test variants, we always want to have exactly one DEX file
+            return DexingMode.MONO_DEX;
+        } else if (isLegacyMultidexMode(scope)) {
+            return DexingMode.LEGACY_MULTIDEX;
+        } else if (!isMultiDexEnabled) {
+            return DexingMode.MONO_DEX;
+        } else {
+            return DexingMode.NATIVE_MULTIDEX;
+        }
+    }
+
+    /**
+     * Creates tasks used for DEX generation. This will use a new pipeline that uses dex archives in
+     * order to enable incremental dexing support.
+     */
+    private void createNewDexTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
+            @Nullable AndroidTask<TransformTask> multiDexClassListTask,
+            @NonNull DexingMode dexingMode) {
+        TransformManager transformManager = variantScope.getTransformManager();
+
+        DefaultDexOptions dexOptions;
+        if (variantScope.getVariantData().getType().isForTesting()) {
+            // Don't use custom dx flags when compiling the test APK. They can break the test APK,
+            // like --minimal-main-dex.
+            dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
+            dexOptions.setAdditionalParameters(ImmutableList.of());
+        } else {
+            dexOptions = extension.getDexOptions();
+        }
+
+        boolean cachePreDex = dexOptions.getPreDexLibraries() && !isMinifyEnabled(variantScope);
+        FileCache buildCache;
+        if (cachePreDex && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+            buildCache = globalScope.getBuildCache();
+        } else {
+            buildCache = null;
+        }
+
+        DexArchiveBuilderTransform preDexTransform =
+                new DexArchiveBuilderTransform(
+                        dexOptions,
+                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                        buildCache,
+                        variantScope.getBuildContext().isInInstantRunMode());
+        transformManager
+                .addTransform(tasks, variantScope, preDexTransform)
+                .ifPresent(variantScope::addColdSwapBuildTask);
+
+        DexMergerTransform dexTransform =
+                new DexMergerTransform(
+                        dexingMode,
+                        project.files(variantScope.getMainDexListFile()),
+                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter());
+        Optional<AndroidTask<TransformTask>> dexTask =
+                transformManager.addTransform(tasks, variantScope, dexTransform);
+        // need to manually make dex task depend on MultiDexTransform since there's no stream
+        // consumption making this automatic
+        dexTask.ifPresent(
+                t -> {
+                    t.optionalDependsOn(tasks, multiDexClassListTask);
+                    variantScope.addColdSwapBuildTask(t);
+                });
     }
 
     /** Creates the pre-dexing task if needed, and task for producing the final DEX file(s). */
@@ -2159,14 +2231,15 @@ public abstract class TaskManager {
         }
 
         boolean cachePreDex =
-                dexingMode.preDex
+                dexingMode.isPreDex()
                         && dexOptions.getPreDexLibraries()
                         && !isMinifyEnabled(variantScope);
         boolean preDexEnabled =
                 variantScope.getBuildContext().isInInstantRunMode() || cachePreDex;
         if (preDexEnabled) {
             FileCache buildCache;
-            if (cachePreDex && AndroidGradleOptions.isPreDexBuildCacheEnabled(project)) {
+            if (cachePreDex
+                    && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
                 buildCache = globalScope.getBuildCache();
             } else {
                 buildCache = null;

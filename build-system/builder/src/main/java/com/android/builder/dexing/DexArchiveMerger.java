@@ -22,7 +22,9 @@ import com.android.dex.Dex;
 import com.android.dex.DexIndexOverflowException;
 import com.android.dx.merge.DexMerger;
 import com.android.ide.common.blame.parser.DexParser;
+import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -93,24 +95,24 @@ public class DexArchiveMerger {
             @NonNull Path outputDir,
             @NonNull Set<String> mainDexClasses)
             throws IOException {
-        if (config.getDexingMode() == DexingMode.MONO_DEX) {
-            mergeMonoDex(inputs, outputDir);
-        } else {
-            mergeMultidex(inputs, outputDir, mainDexClasses);
-        }
-
         try {
-            for (WaitableExecutor.TaskResult<Void> result : executor.waitForAllTasks()) {
-                if (result.exception != null) {
-                    // if at least one exception, re-throw
-                    config.getDxContext().err.print(DexParser.DX_UNEXPECTED_EXCEPTION + "\n");
-                    config.getDxContext().err.print(result.exception);
-                    throw new DexArchiveMergerException("Unable to merge dex", result.exception);
-                }
+            if (config.getDexingMode() == DexingMode.MONO_DEX) {
+                mergeMonoDex(inputs, outputDir);
+            } else {
+                mergeMultidex(inputs, outputDir, mainDexClasses);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new DexArchiveMergerException("Unable to merge dex", e);
+
+            executor.waitForTasksWithQuickFail(true);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            config.getDxContext().err.println(DexParser.DX_UNEXPECTED_EXCEPTION);
+            config.getDxContext().err.println(Throwables.getRootCause(e));
+            config.getDxContext().err.print(Throwables.getStackTraceAsString(e));
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new DexArchiveMergerException("Unable to merge dex", e.getCause());
         }
     }
 
@@ -122,12 +124,13 @@ public class DexArchiveMerger {
      * reading stage, we invoke the merger.
      */
     private void mergeMonoDex(@NonNull Collection<Path> inputs, @NonNull Path output)
-            throws IOException {
+            throws IOException, InterruptedException, LoggedErrorException {
         WaitableExecutor<Set<Dex>> readersExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         for (Path archivePath : inputs) {
             readersExecutor.execute(
                     () -> {
                         try (DexArchive dexArchive = DexArchives.fromInput(archivePath)) {
+
                             Set<DexArchiveEntry> entries = dexArchive.getFiles();
                             Set<Dex> result = new HashSet<>(entries.size());
                             for (DexArchiveEntry e : entries) {
@@ -138,18 +141,13 @@ public class DexArchiveMerger {
                     });
         }
 
-        try {
-            Set<Dex> readDexes =
-                    readersExecutor
-                            .waitForAllTasks()
-                            .stream()
-                            .flatMap(e -> e.value.stream())
-                            .collect(Collectors.toSet());
-            submitForMerging(readDexes, output.resolve(getDexFileName(0)));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new DexArchiveMergerException("Unable to read dex archives.", e);
-        }
+        Set<Dex> readDexes =
+                readersExecutor
+                        .waitForTasksWithQuickFail(true)
+                        .stream()
+                        .flatMap(Set::stream)
+                        .collect(Collectors.toSet());
+        submitForMerging(readDexes, output.resolve(getDexFileName(0)));
     }
 
     /**

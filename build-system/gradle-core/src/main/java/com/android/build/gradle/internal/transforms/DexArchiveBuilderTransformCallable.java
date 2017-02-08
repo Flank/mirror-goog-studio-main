@@ -20,14 +20,20 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.ClassFileInput;
+import com.android.builder.dexing.ClassFileInputs;
+import com.android.builder.dexing.DexArchive;
+import com.android.builder.dexing.DexArchiveBuilder;
+import com.android.builder.dexing.DexArchiveBuilderConfig;
+import com.android.builder.dexing.DexArchiveEntry;
+import com.android.builder.dexing.DexArchives;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.repository.Revision;
-import com.android.utils.FileUtils;
+import com.android.builder.utils.PerformanceUtils;
+import com.android.dx.Version;
+import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.process.ProcessOutput;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
@@ -37,22 +43,21 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 
-/**
- * Callable helper class used to invoke dx for pre-dexing.
- */
-class PreDexCallable implements Callable<Void> {
+/** Callable helper class used to invoke conversion of single jar or directory to a dex archive. */
+class DexArchiveBuilderTransformCallable implements Callable<Void> {
 
     /**
      * Input parameters to be provided by the client when using {@link FileCache}.
      *
      * <p>The clients of {@link FileCache} need to exhaustively specify all the inputs that affect
      * the creation of an output file/directory. This enum class lists the input parameters that are
-     * used in {@link PreDexCallable}.
+     * used in {@link DexArchiveBuilderTransformCallable}.
      */
     private enum FileCacheInputParams {
 
@@ -68,57 +73,54 @@ class PreDexCallable implements Callable<Void> {
         /** Hash of an input file. */
         FILE_HASH,
 
-        /** Revision of the build tools. */
-        BUILD_TOOLS_REVISION,
+        /** Dx version used to create the dex archive. */
+        DX_VERSION,
 
         /** Whether jumbo mode is enabled. */
         JUMBO_MODE,
 
         /** Whether optimize is enabled. */
-        OPTIMIZE,
-
-        /** Whether multi-dex is enabled. */
-        MULTI_DEX,
-
-        /** List of additional parameters. */
-        ADDITIONAL_PARAMETERS
+        OPTIMIZE
     }
 
-    private static final LoggerWrapper logger = LoggerWrapper.getLogger(PreDexCallable.class);
+    private static final LoggerWrapper logger =
+            LoggerWrapper.getLogger(DexArchiveBuilderTransformCallable.class);
 
-    @NonNull private final File from;
+    private static final int NUM_THREADS = PerformanceUtils.getNumThreadsForDexArchives();
+
+    @NonNull private final Path rootPath;
+    @NonNull private final Predicate<Path> toProcess;
+    @NonNull private final Predicate<Path> toRemove;
     @NonNull private final File to;
     @NonNull private final Set<String> hashes;
-    @NonNull private final ProcessOutputHandler outputHandler;
+    @NonNull private final ProcessOutput processOutput;
     @Nullable private final FileCache buildCache;
-    @NonNull private final DexingMode dexingMode;
     @NonNull private final DexOptions dexOptions;
-    @NonNull private final AndroidBuilder androidBuilder;
 
-    public PreDexCallable(
-            @NonNull File from,
+    public DexArchiveBuilderTransformCallable(
+            @NonNull Path rootPath,
+            @NonNull Predicate<Path> toProcess,
+            @NonNull Predicate<Path> toRemove,
             @NonNull File to,
             @NonNull Set<String> hashes,
-            @NonNull ProcessOutputHandler outputHandler,
+            @NonNull ProcessOutput processOutput,
             @Nullable FileCache buildCache,
-            @NonNull DexingMode dexingMode,
-            @NonNull DexOptions dexOptions,
-            @NonNull AndroidBuilder androidBuilder) {
-        this.from = from;
+            @NonNull DexOptions dexOptions) {
+        this.rootPath = rootPath;
+        this.toProcess = toProcess;
+        this.toRemove = toRemove;
         this.to = to;
         this.hashes = hashes;
-        this.outputHandler = outputHandler;
+        this.processOutput = processOutput;
         this.buildCache = buildCache;
-        this.dexingMode = dexingMode;
         this.dexOptions = dexOptions;
-        this.androidBuilder = androidBuilder;
     }
 
     @Override
     public Void call() throws Exception {
-        logger.verbose("predex called for %s", from);
+        logger.verbose("predex will process %s", rootPath.toString());
         // TODO remove once we can properly add a library as a dependency of its test.
-        String hash = getFileHash(from);
+        String hash = getFileHash(rootPath.toFile());
 
         synchronized (hashes) {
             if (hashes.contains(hash)) {
@@ -129,34 +131,20 @@ class PreDexCallable implements Callable<Void> {
             hashes.add(hash);
         }
 
-        ExceptionRunnable preDexLibraryAction =
-                () -> {
-                    FileUtils.deletePath(to);
-                    Files.createParentDirs(to);
-                    if (dexingMode.isMultiDex()) {
-                        FileUtils.mkdirs(to);
-                    }
-                    androidBuilder.preDexLibrary(
-                            from, to, dexingMode.isMultiDex(), dexOptions, outputHandler);
-                };
+        // TODO(gavra@): add project level cache
+        ExceptionRunnable cacheMissAction = cacheMissAction();
 
         // If the build cache is used, run pre-dexing using the cache
         if (buildCache != null) {
-            FileCache.Inputs buildCacheInputs =
-                    getBuildCacheInputs(
-                            from,
-                            androidBuilder.getTargetInfo().getBuildTools().getRevision(),
-                            dexOptions,
-                            dexingMode.isMultiDex());
+            FileCache.Inputs buildCacheInputs = getBuildCacheInputs(rootPath.toFile(), dexOptions);
             FileCache.QueryResult result;
             try {
-                result = buildCache.createFile(to, buildCacheInputs, preDexLibraryAction);
+                result = buildCache.createFile(to, buildCacheInputs, cacheMissAction);
             } catch (ExecutionException exception) {
                 throw new RuntimeException(
                         String.format(
                                 "Unable to pre-dex '%1$s' to '%2$s'",
-                                from.getAbsolutePath(),
-                                to.getAbsolutePath()),
+                                rootPath.toString(), to.getAbsolutePath()),
                         exception);
             } catch (Exception exception) {
                 throw new RuntimeException(
@@ -164,7 +152,7 @@ class PreDexCallable implements Callable<Void> {
                                 "Unable to pre-dex '%1$s' to '%2$s' using the build cache at"
                                         + " '%3$s'.\n"
                                         + "%4$s",
-                                from.getAbsolutePath(),
+                                rootPath.toString(),
                                 to.getAbsolutePath(),
                                 buildCache.getCacheDirectory().getAbsolutePath(),
                                 BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
@@ -182,9 +170,40 @@ class PreDexCallable implements Callable<Void> {
                         BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
             }
         } else {
-            preDexLibraryAction.run();
+            cacheMissAction.run();
         }
+
+        try (DexArchive outputArchive = DexArchives.fromInput(to.toPath())) {
+            for (DexArchiveEntry entry : outputArchive.getFiles()) {
+                Path dexPath = entry.getRelativePathInArchive();
+                Path withClassExt = DexArchiveEntry.withClassExtension(dexPath);
+                if (toRemove.test(withClassExt)) {
+                    outputArchive.removeFile(dexPath);
+                }
+            }
+        }
+
         return null;
+    }
+
+    @NonNull
+    private ExceptionRunnable cacheMissAction() {
+        return () -> {
+            try (ClassFileInput input = ClassFileInputs.fromPath(rootPath, toProcess);
+                    DexArchive outputArchive = DexArchives.fromInput(to.toPath())) {
+                boolean optimizedDex =
+                        !dexOptions.getAdditionalParameters().contains("--no-optimize");
+                DxContext dxContext =
+                        new DxContext(
+                                processOutput.getStandardOutput(), processOutput.getErrorOutput());
+                DexArchiveBuilderConfig config =
+                        new DexArchiveBuilderConfig(
+                                NUM_THREADS, dxContext, optimizedDex, dexOptions.getJumboMode());
+
+                DexArchiveBuilder converter = new DexArchiveBuilder(config);
+                converter.convert(input, outputArchive);
+            }
+        };
     }
 
     /**
@@ -192,16 +211,12 @@ class PreDexCallable implements Callable<Void> {
      * predex-library task to use the build cache.
      */
     @NonNull
-    private static FileCache.Inputs getBuildCacheInputs(
-            @NonNull File inputFile,
-            @NonNull Revision buildToolsRevision,
-            @NonNull DexOptions dexOptions,
-            boolean multiDex)
-            throws IOException {
+    private FileCache.Inputs getBuildCacheInputs(
+            @NonNull File inputFile, @NonNull DexOptions dexOptions) throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
         FileCache.Inputs.Builder buildCacheInputs =
-                new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY);
+                new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY_TO_DEX_ARCHIVE);
 
         // As a general rule, we use the file's path and hash to uniquely identify a file. However,
         // certain types of files are usually copied/duplicated at different locations. To recognize
@@ -229,23 +244,14 @@ class PreDexCallable implements Callable<Void> {
         // hash to identify an input file, and provide other input parameters to the cache
         buildCacheInputs
                 .putFileHash(FileCacheInputParams.FILE_HASH.name(), inputFile)
-                .putString(
-                        FileCacheInputParams.BUILD_TOOLS_REVISION.name(),
-                        buildToolsRevision.toString())
+                .putString(FileCacheInputParams.DX_VERSION.name(), Version.VERSION)
                 .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
-                .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
-                .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
-
-        List<String> additionalParams = dexOptions.getAdditionalParameters();
-        for (int i = 0; i < additionalParams.size(); i++) {
-            buildCacheInputs.putString(
-                    FileCacheInputParams.ADDITIONAL_PARAMETERS.name() + "[" + i + "]",
-                    additionalParams.get(i));
-        }
+                .putBoolean(
+                        FileCacheInputParams.OPTIMIZE.name(),
+                        dexOptions.getAdditionalParameters().contains("--no-optimize"));
 
         return buildCacheInputs.build();
     }
-
 
     /**
      * Returns the hash of a file.

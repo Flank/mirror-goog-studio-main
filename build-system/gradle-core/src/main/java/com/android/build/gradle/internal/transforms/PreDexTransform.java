@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.Message;
@@ -254,13 +255,18 @@ public class PreDexTransform extends Transform {
             WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
             for (Map.Entry<File, File> entry : inputFiles.entrySet()) {
+                FileCache usedBuildCache =
+                        getBuildCache(
+                                entry.getKey(),
+                                externalLibJarFiles.contains(entry.getKey()),
+                                buildCache);
                 Callable<Void> action =
                         new PreDexCallable(
                                 entry.getKey(),
                                 entry.getValue(),
                                 hashes,
                                 outputHandler,
-                                getBuildCache(entry.getKey(), externalLibJarFiles),
+                                usedBuildCache,
                                 dexingMode,
                                 dexOptions,
                                 androidBuilder);
@@ -284,14 +290,15 @@ public class PreDexTransform extends Transform {
     }
 
     /**
-     * Returns the build cache if it should be used for the predex-library task, and
-     * {@code null} otherwise.
+     * Returns the build cache if it should be used for the predex-library task, and {@code null}
+     * otherwise.
      */
     @Nullable
-    private FileCache getBuildCache(@NonNull File inputFile, @NonNull Set<File> external) {
+    static FileCache getBuildCache(
+            @NonNull File inputFile, boolean isExternalLib, @Nullable FileCache buildCache) {
         // We use the build cache only when it is enabled and the input file is a (non-snapshot)
         // external-library jar file
-        if (buildCache == null || !external.contains(inputFile)) {
+        if (buildCache == null || !isExternalLib) {
             return null;
         }
         // After the check above, here the build cache should be enabled and the input file is an
@@ -320,7 +327,7 @@ public class PreDexTransform extends Transform {
                 || qualifiedContent.getScopes().contains(Scope.SUB_PROJECTS))) {
             name = getInstantRunFileName(qualifiedContent.getFile());
         } else {
-            name = getFilename(qualifiedContent.getFile());
+            name = getFilename(qualifiedContent.getFile(), dexingMode);
         }
 
         File contentLocation =
@@ -328,8 +335,8 @@ public class PreDexTransform extends Transform {
                         name,
                         TransformManager.CONTENT_DEX,
                         qualifiedContent.getScopes(),
-                        dexingMode.isMultiDex ? Format.DIRECTORY : Format.JAR);
-        if (dexingMode.isMultiDex) {
+                        dexingMode.isMultiDex() ? Format.DIRECTORY : Format.JAR);
+        if (dexingMode.isMultiDex()) {
             FileUtils.mkdirs(contentLocation);
         } else {
             FileUtils.mkdirs(contentLocation.getParentFile());
@@ -338,7 +345,7 @@ public class PreDexTransform extends Transform {
     }
 
     @NonNull
-    private String getInstantRunFileName(@NonNull File inputFile) {
+    static String getInstantRunFileName(@NonNull File inputFile) {
         if (inputFile.isDirectory()) {
             return inputFile.getName();
         } else {
@@ -347,10 +354,10 @@ public class PreDexTransform extends Transform {
     }
 
     @NonNull
-    private String getFilename(@NonNull File inputFile) {
+    static String getFilename(@NonNull File inputFile, @NonNull DexingMode dexingMode) {
         // If multidex is enabled, this name will be used for a folder and classes*.dex files will
         // inside of it.
-        String suffix = dexingMode.isMultiDex ? "" : SdkConstants.DOT_JAR;
+        String suffix = dexingMode.isMultiDex() ? "" : SdkConstants.DOT_JAR;
         return FileUtils.getDirectoryNameForJar(inputFile) + suffix;
     }
 }
