@@ -123,5 +123,5 @@ message Process {
   string name = 1;
   int32 pid = 2;
   State state = 3;
-
+  int64 start_timestamp_ns = 4;
 }
