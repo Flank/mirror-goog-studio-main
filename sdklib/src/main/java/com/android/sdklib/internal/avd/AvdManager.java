@@ -293,8 +293,9 @@ public class AvdManager {
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
     public static final Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
+    public static final String USERDATA_IMG = "userdata.img";
+    public static final String USERDATA_QEMU_IMG = "userdata-qemu.img";
 
-    private static final String USERDATA_IMG = "userdata.img"; //$NON-NLS-1$
     private static final String BOOT_PROP = "boot.prop"; //$NON-NLS-1$
     static final String CONFIG_INI = "config.ini"; //$NON-NLS-1$
     private static final String SDCARD_IMG = "sdcard.img"; //$NON-NLS-1$
@@ -1726,7 +1727,7 @@ public class AvdManager {
     }
 
     /**
-     * Create the user data file for an AVD
+     * Create the user data files for an AVD
      * @param systemImage the system image of the AVD
      * @param avdFolder where the AVDs live
      * @param log receives error messages
@@ -1736,7 +1737,7 @@ public class AvdManager {
             @NonNull File         avdFolder,
             @NonNull ILogger      log)
             throws IOException, AvdMgrException {
-        // writes the userdata.img into the *.avd directory
+        // Copy userdata.img from system-images to the *.avd directory
         File imageFolder = systemImage.getLocation();
         File userdataSrc = new File(imageFolder, USERDATA_IMG);
 
@@ -1757,6 +1758,18 @@ public class AvdManager {
             if (!mFop.exists(userdataDest)) {
                 log.warning("Unable to create '%1$s' file in the AVD folder.",
                             userdataDest);
+                throw new AvdMgrException();
+            }
+        }
+        // Copy userdata.img to userdata-qemu.img in the *.avd directory
+        File userQemuDest = new File(avdFolder, USERDATA_QEMU_IMG);
+
+        if (!mFop.exists(userQemuDest)) {
+            mFop.copyFile(userdataSrc, userQemuDest);
+
+            if (!mFop.exists(userQemuDest)) {
+                log.warning("Unable to create '%1$s' file in the AVD folder.",
+                            userQemuDest);
                 throw new AvdMgrException();
             }
         }
