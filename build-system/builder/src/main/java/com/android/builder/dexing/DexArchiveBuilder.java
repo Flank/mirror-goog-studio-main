@@ -19,7 +19,6 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.parser.DexParser;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
@@ -93,7 +92,7 @@ public class DexArchiveBuilder {
 
     /** Waits for all inputs to be processed, and writes the outputs to the dex archive. */
     private void processOutputs(@NonNull DexArchive output)
-            throws IOException, LoggedErrorException, InterruptedException {
+            throws IOException, InterruptedException {
         List<DexArchiveEntry> entries = executor.waitForTasksWithQuickFail(true);
         for (DexArchiveEntry dexEntry : entries) {
             Verify.verifyNotNull(dexEntry);

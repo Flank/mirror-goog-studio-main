@@ -22,7 +22,6 @@ import com.android.dex.Dex;
 import com.android.dex.DexIndexOverflowException;
 import com.android.dx.merge.DexMerger;
 import com.android.ide.common.blame.parser.DexParser;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -124,7 +123,7 @@ public class DexArchiveMerger {
      * reading stage, we invoke the merger.
      */
     private void mergeMonoDex(@NonNull Collection<Path> inputs, @NonNull Path output)
-            throws IOException, InterruptedException, LoggedErrorException {
+            throws IOException, InterruptedException {
         WaitableExecutor<Set<Dex>> readersExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         for (Path archivePath : inputs) {
             readersExecutor.execute(
