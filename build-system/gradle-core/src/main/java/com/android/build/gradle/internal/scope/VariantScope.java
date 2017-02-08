@@ -244,6 +244,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaResourcesDestinationDir();
 
     @NonNull
+    File getGeneratedJavaResourcesDir();
+
+    @NonNull
     File getRClassSourceOutputDir();
 
     @NonNull

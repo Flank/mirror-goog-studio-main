@@ -40,7 +40,6 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
 
     @Override
     public void execute(@NonNull Sync processResources) {
-        scope.getVariantData().processJavaResourcesTask = processResources;
         GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
         AndroidSourceSet defaultSourceSet =
@@ -77,6 +76,8 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
         if (variantSourceSet != null) {
             processResources.from(variantSourceSet.getResources().getSourceFiles());
         }
+
+        processResources.from(scope.getGeneratedJavaResourcesDir());
 
         if (processResources.getInputs().getFiles().getFiles().isEmpty()) {
             try {

@@ -22,6 +22,7 @@
                 <tr><td>Name</td></tr>
             </thead>
             <tr><td>returnDefaultValues</td></tr>
+            <tr><td>includeAndroidResources</td></tr>
         </table>
     </section>
     <section>
