@@ -1968,7 +1968,8 @@ public abstract class TaskManager {
 
             // ----------
             // create a transform to jar the inputs into a single jar.
-            if (!isMinifyEnabled) {
+            if (!isMinifyEnabled
+                    && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
                 // merge the classes only, no need to package the resources since they are
                 // not used during the computation.
                 JarMergingTransform jarMergingTransform = new JarMergingTransform(

@@ -20,14 +20,11 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -35,22 +32,21 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.multidex.MainDexListBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.LoggingManager;
 import proguard.ParseException;
@@ -75,6 +71,9 @@ public class MainDexListTransform extends BaseProguardAction {
 
     private final boolean keepRuntimeAnnotatedClasses;
 
+    // Internal intermediates
+    private final File proguardComponentsJarFile;
+
     // Outputs
     @NonNull
     private final File configFileOut;
@@ -94,6 +93,7 @@ public class MainDexListTransform extends BaseProguardAction {
                 + "/components.flags");
         mainDexListFile = variantScope.getMainDexListFile();
         keepRuntimeAnnotatedClasses = dexOptions.getKeepRuntimeAnnotatedClasses();
+        proguardComponentsJarFile = variantScope.getProguardComponentsJarFile();
     }
 
     @NonNull
@@ -129,12 +129,8 @@ public class MainDexListTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return Arrays.asList(
-                        manifestKeepListProguardFile,
-                        userMainDexKeepFile,
-                        userMainDexKeepProguard)
-                .stream()
-                .filter(file -> file != null)
+        return Stream.of(manifestKeepListProguardFile, userMainDexKeepFile, userMainDexKeepProguard)
+                .filter(Objects::nonNull)
                 .map(SecondaryFile::nonIncremental)
                 .collect(Collectors.toList());
     }
@@ -172,32 +168,23 @@ public class MainDexListTransform extends BaseProguardAction {
         loggingManager.captureStandardError(LogLevel.WARN);
 
         try {
-            File input = verifyInputs(invocation.getReferencedInputs());
-            shrinkWithProguard(input);
-            computeList(input);
+            Collection<File> inputs =
+                    TransformInputUtil.getAllFiles(invocation.getReferencedInputs());
+            shrinkWithProguard(inputs, proguardComponentsJarFile);
+            Set<String> classes =
+                    computeList(
+                            inputs,
+                            proguardComponentsJarFile,
+                            userMainDexKeepFile,
+                            keepRuntimeAnnotatedClasses);
+            Files.write(mainDexListFile.toPath(), classes);
         } catch (ParseException | ProcessException e) {
             throw new TransformException(e);
         }
     }
 
-    private static File verifyInputs(@NonNull Collection<TransformInput> inputs) {
-        // Collect the inputs. There should be only one.
-        List<File> inputFiles = Lists.newArrayList();
-
-        for (TransformInput transformInput : inputs) {
-            for (JarInput jarInput : transformInput.getJarInputs()) {
-                inputFiles.add(jarInput.getFile());
-            }
-
-            for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                inputFiles.add(directoryInput.getFile());
-            }
-        }
-
-        return Iterables.getOnlyElement(inputFiles);
-    }
-
-    private void shrinkWithProguard(@NonNull File input) throws IOException, ParseException {
+    private void shrinkWithProguard(@NonNull Collection<File> inputs, @NonNull File outJar)
+            throws IOException, ParseException {
         dontobfuscate();
         dontoptimize();
         dontpreverify();
@@ -222,10 +209,12 @@ public class MainDexListTransform extends BaseProguardAction {
 
         // handle inputs
         libraryJar(findShrinkedAndroidJar());
-        inJar(input);
+        for (File input : inputs) {
+            inJar(input);
+        }
 
         // outputs.
-        outJar(variantScope.getProguardComponentsJarFile());
+        outJar(outJar);
         printconfiguration(configFileOut);
 
         // run proguard
@@ -251,32 +240,47 @@ public class MainDexListTransform extends BaseProguardAction {
         return shrinkedAndroid;
     }
 
-    private void computeList(File _allClassesJarFile) throws ProcessException, IOException {
+    @VisibleForTesting
+    static ImmutableSet<String> computeList(
+            @NonNull Collection<File> allClasses,
+            @NonNull File jarOfRoots,
+            @Nullable File userMainDexKeepFile,
+            boolean keepRuntimeAnnotatedClasses)
+            throws ProcessException, IOException {
         // manifest components plus immediate dependencies must be in the main dex.
-        Set<String> mainDexClasses = callDx(
-                _allClassesJarFile,
-                variantScope.getProguardComponentsJarFile());
-
-        if (userMainDexKeepFile != null) {
-            mainDexClasses = ImmutableSet.<String>builder()
-                    .addAll(mainDexClasses)
-                    .addAll(Files.readLines(userMainDexKeepFile, Charsets.UTF_8))
-                    .build();
+        ImmutableSet<String> mainDexClasses =
+                callDx(allClasses, jarOfRoots, keepRuntimeAnnotatedClasses);
+        if (userMainDexKeepFile == null) {
+            return mainDexClasses;
         }
 
-        String fileContent = Joiner.on(System.getProperty("line.separator")).join(mainDexClasses);
-
-        Files.write(fileContent, mainDexListFile, Charsets.UTF_8);
-
+        return ImmutableSet.<String>builder()
+                .addAll(mainDexClasses)
+                .addAll(Files.readAllLines(userMainDexKeepFile.toPath(), Charsets.UTF_8))
+                .build();
     }
 
-    private Set<String> callDx(File allClassesJarFile, File jarOfRoots) throws IOException {
+    @NonNull
+    private static ImmutableSet<String> callDx(
+            @NonNull Collection<File> allClasses,
+            @NonNull File jarOfRoots,
+            boolean keepRuntimeAnnotatedClasses)
+            throws IOException {
+        String pathList =
+                allClasses
+                        .stream()
+                        .map(File::getAbsolutePath)
+                        .collect(Collectors.joining(File.pathSeparator));
         MainDexListBuilder builder =
                 new MainDexListBuilder(
-                        keepRuntimeAnnotatedClasses,
-                        jarOfRoots.getAbsolutePath(),
-                        allClassesJarFile.getAbsolutePath());
-        Set<String> mainDexList = builder.getMainDexList();
+                        keepRuntimeAnnotatedClasses, jarOfRoots.getAbsolutePath(), pathList);
+        Set<String> mainDexList =
+                builder.getMainDexList()
+                        .stream()
+                        // Dx prefixes classes read from directories with forward slash.
+                        .map(input -> input.startsWith("/") ? input.substring(1) : input)
+                        .collect(Collectors.toSet());
         return ImmutableSet.copyOf(mainDexList);
     }
+
 }
