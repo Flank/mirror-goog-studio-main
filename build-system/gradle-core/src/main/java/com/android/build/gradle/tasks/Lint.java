@@ -50,7 +50,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -324,9 +323,6 @@ public class Lint extends BaseTask {
         LintGradleClient client = new LintGradleClient(registry, flags, getProject(), modelProject,
                 sdkHome, variant, getBuildTools(), getManifestReportFile(variant));
         if (fatalOnly) {
-            if (lintOptions != null && !lintOptions.isCheckReleaseBuilds()) {
-                return Pair.of(Collections.emptyList(), null);
-            }
             flags.setFatalOnly(true);
         }
         if (lintOptions != null) {
