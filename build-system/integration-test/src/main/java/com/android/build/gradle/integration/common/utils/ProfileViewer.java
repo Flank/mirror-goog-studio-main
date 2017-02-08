@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;

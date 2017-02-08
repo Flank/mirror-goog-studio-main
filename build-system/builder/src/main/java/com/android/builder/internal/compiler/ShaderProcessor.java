@@ -30,7 +30,6 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.utils.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

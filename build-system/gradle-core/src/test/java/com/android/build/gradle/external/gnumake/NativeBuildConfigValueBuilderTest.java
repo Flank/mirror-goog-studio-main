@@ -36,11 +36,9 @@ import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.google.common.truth.Truth;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import org.junit.Test;
 
 
 public class NativeBuildConfigValueBuilderTest {

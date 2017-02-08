@@ -17,7 +17,6 @@
 package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
-
 import java.util.regex.Matcher;
 
 /**

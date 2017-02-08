@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.resources.Density;
 import com.google.common.collect.Iterables;
-
 import java.util.function.Predicate;
 
 /**

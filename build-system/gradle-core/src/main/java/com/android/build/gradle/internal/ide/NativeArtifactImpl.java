@@ -22,7 +22,6 @@ import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeFolder;
 import com.google.common.base.MoreObjects;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

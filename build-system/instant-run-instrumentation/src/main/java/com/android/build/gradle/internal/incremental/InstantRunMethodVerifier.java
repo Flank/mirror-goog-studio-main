@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMultimap;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

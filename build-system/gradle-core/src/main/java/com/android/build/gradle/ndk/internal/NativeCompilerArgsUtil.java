@@ -18,7 +18,6 @@ package com.android.build.gradle.ndk.internal;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.regex.Pattern;
 

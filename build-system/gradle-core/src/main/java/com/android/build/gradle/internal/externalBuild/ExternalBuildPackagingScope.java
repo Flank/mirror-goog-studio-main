@@ -34,12 +34,10 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
-
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
 /**

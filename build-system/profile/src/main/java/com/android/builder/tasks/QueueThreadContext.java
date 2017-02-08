@@ -17,7 +17,6 @@
 package com.android.builder.tasks;
 
 import com.android.annotations.NonNull;
-
 import java.io.IOException;
 
 /**

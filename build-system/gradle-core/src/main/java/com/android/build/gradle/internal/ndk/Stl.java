@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ndk;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
-
 import org.gradle.api.InvalidUserDataException;
 
 /**

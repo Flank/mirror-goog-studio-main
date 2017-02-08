@@ -3,7 +3,6 @@ package com.android.build.gradle.integration.common.fixture.app;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-
 import java.io.IOException;
 
 /**

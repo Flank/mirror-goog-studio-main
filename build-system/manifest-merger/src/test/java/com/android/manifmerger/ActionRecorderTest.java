@@ -17,17 +17,13 @@
 package com.android.manifmerger;
 
 import com.android.utils.ILogger;
-
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link ActionRecorder} class

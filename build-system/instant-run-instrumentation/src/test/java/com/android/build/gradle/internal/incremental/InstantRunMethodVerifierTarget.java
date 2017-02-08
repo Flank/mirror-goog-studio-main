@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.example.basic.AllTypesFields;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

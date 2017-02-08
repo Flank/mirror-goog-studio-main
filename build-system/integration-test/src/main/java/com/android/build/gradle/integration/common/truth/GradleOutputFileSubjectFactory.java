@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.SubjectFactory;
-
 import java.io.File;
 
 /**

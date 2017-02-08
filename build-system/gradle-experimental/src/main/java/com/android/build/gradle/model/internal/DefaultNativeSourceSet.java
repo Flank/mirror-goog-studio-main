@@ -18,7 +18,6 @@ package com.android.build.gradle.model.internal;
 
 import com.android.build.gradle.internal.AbstractNativeDependentSourceSet;
 import com.android.build.gradle.model.NativeSourceSet;
-
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.DefaultSourceDirectorySet;
 import org.gradle.api.tasks.util.PatternFilterable;

@@ -27,18 +27,17 @@ import static com.android.build.gradle.model.ModelConstants.TASK_MANAGER;
 
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.NativeDependencyResolveResult;
 import com.android.build.gradle.internal.ide.ModelBuilder;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.managed.NdkAbiOptions;
 import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.google.common.collect.Multimap;
-
 import org.gradle.api.Project;
 import org.gradle.model.ModelMap;
 import org.gradle.model.internal.core.ModelPath;

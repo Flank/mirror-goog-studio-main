@@ -1,7 +1,6 @@
 package com.android.build.gradle.managed;
 
 import com.android.annotations.NonNull;
-
 import org.gradle.model.Managed;
 
 /**

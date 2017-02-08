@@ -18,7 +18,6 @@ package com.android.build.gradle.model;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskFactory;
-
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.model.ModelMap;

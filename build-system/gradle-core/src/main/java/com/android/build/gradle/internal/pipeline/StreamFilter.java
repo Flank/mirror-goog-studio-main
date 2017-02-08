@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
-
 import java.util.Set;
 
 /**

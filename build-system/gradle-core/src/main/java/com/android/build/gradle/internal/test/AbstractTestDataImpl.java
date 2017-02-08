@@ -24,7 +24,6 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.TestData;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.util.Locale;
 import java.util.Map;
 

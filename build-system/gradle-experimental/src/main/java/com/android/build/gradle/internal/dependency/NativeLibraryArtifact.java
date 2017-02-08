@@ -18,14 +18,12 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.NativeDependencyLinkage;
-
-import org.gradle.api.Named;
-import org.gradle.model.Managed;
-import org.gradle.model.Unmanaged;
-
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Named;
+import org.gradle.model.Managed;
+import org.gradle.model.Unmanaged;
 
 /**
  * Container for all native library artifacts.

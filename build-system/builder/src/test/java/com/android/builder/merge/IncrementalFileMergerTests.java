@@ -28,9 +28,6 @@ import com.android.utils.Pair;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +38,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.junit.Test;
 
 /**
  * Tests {@link IncrementalFileMerger}. This relies on {@link IncrementalFileMergerTestInput}

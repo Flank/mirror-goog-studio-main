@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.builder.core.DefaultVectorDrawablesOptions;
-
 import java.util.Arrays;
 
 /**

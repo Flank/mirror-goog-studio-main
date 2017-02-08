@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
-
 import java.io.File;
 import java.util.List;
 

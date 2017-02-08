@@ -21,7 +21,6 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.TestException;
 import com.android.utils.ILogger;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;

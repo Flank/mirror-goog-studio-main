@@ -18,14 +18,12 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.ndk.internal.NdkNamingScheme;
-
+import java.io.File;
+import java.util.Collection;
 import org.gradle.api.Action;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Copy;
 import org.gradle.nativeplatform.NativeBinarySpec;
-
-import java.io.File;
-import java.util.Collection;
 
 /**
  * Merge native libraries and their dependencies into a single folder.

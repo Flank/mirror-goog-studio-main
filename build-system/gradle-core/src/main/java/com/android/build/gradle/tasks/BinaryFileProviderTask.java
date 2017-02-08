@@ -17,10 +17,8 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-
-import org.gradle.api.Task;
-
 import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * Denotes a {@link Task} that is capable of providing a zip or jar package of compiled java

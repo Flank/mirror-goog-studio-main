@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
-
 import org.gradle.model.Managed;
 
 @Managed

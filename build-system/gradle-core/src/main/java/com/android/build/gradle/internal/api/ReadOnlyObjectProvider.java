@@ -22,7 +22,6 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 
 /**

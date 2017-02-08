@@ -20,10 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.blame.MessageReceiver;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
-import java.util.List;
 
 /**
  * An error reporter for project evaluation and execution.

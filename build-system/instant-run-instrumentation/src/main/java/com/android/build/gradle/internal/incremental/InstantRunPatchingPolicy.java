@@ -17,12 +17,9 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.base.Strings;
 
-import java.util.Locale;
 
 /**
  * Patching policy for delivering incremental code changes and triggering a cold start (application

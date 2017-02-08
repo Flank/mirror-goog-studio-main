@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.Nullable;
-
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskContainer;

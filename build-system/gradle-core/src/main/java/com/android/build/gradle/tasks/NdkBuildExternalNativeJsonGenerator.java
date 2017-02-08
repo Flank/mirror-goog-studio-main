@@ -36,13 +36,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.gson.GsonBuilder;
-
-import org.gradle.api.GradleException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import org.gradle.api.GradleException;
 
 /**
  * ndk-build JSON generation logic. This is separated from the corresponding ndk-build task so that

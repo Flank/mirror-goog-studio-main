@@ -26,7 +26,6 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import org.w3c.dom.Element;
 
 /**

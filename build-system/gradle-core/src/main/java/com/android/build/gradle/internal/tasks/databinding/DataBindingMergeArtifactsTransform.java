@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.databinding;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
@@ -36,12 +37,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
-
-import org.apache.commons.io.FileUtils;
-import org.gradle.api.logging.Logger;
-
-import android.databinding.tool.DataBindingBuilder;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -51,6 +46,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.apache.commons.io.FileUtils;
+import org.gradle.api.logging.Logger;
 
 /**
  * This transform merges the data binding related data from external artifacts into a folder which

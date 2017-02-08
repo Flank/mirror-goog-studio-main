@@ -18,7 +18,6 @@ package com.android.build.gradle.ndk.internal;
 
 import com.android.build.gradle.internal.ndk.NativeToolSpecification;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 /**

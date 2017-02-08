@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.builder.core.VariantType.ANDROID_TEST;
+import static com.android.builder.core.VariantType.UNIT_TEST;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
@@ -30,11 +33,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
-
 import org.gradle.internal.reflect.Instantiator;
-
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.UNIT_TEST;
 
 /**
  * Factory to create ApiObject from VariantData.

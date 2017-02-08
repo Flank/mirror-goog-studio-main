@@ -31,16 +31,12 @@ import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.List;
-
 import javax.xml.parsers.ParserConfigurationException;
+import junit.framework.TestCase;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 /**
  * Tests for {@link Actions} class

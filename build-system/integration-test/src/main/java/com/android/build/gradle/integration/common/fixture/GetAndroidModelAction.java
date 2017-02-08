@@ -20,16 +20,14 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.model.DomainObjectSet;
 import org.gradle.tooling.model.gradle.BasicGradleProject;
 import org.gradle.tooling.model.gradle.GradleBuild;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * a Build Action that returns all the models of the parameterized type for all the Gradle projects

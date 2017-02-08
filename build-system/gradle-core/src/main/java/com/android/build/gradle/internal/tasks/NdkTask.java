@@ -18,11 +18,10 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
-
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 /**
  * Base task for tasks that require an NdkConfig

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -17,19 +17,17 @@
 package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.ApkZFileCreatorFactory;
 import com.android.apkzlib.zip.ZFileOptions;
 import com.android.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
-
-import org.gradle.api.Project;
-
+import com.android.build.gradle.AndroidGradleOptions;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.Deflater;
+import org.gradle.api.Project;
 
 /**
  * Constructs a {@link ApkCreatorFactory} based on gradle options.

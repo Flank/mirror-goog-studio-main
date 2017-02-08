@@ -24,7 +24,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;

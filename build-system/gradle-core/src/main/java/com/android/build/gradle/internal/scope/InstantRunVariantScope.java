@@ -21,11 +21,9 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.DefaultTask;
-
 import java.io.File;
 import java.util.List;
+import org.gradle.api.DefaultTask;
 
 /**
  * Scope for all variant scoped information related to supporting the Instant Run features.

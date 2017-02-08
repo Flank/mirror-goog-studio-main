@@ -43,11 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.logging.LoggingManager;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,7 +52,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.logging.LoggingManager;
 import proguard.ParseException;
 
 /**

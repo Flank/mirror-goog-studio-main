@@ -17,12 +17,10 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.builder.model.AndroidProject;
-
-import org.gradle.tooling.BuildAction;
-import org.gradle.tooling.BuildController;
-
 import java.util.Collections;
 import java.util.Map;
+import org.gradle.tooling.BuildAction;
+import org.gradle.tooling.BuildController;
 
 /**
  * a Build Action that returns an empty model. This is similar to doing only evaluation basically.

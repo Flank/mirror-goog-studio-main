@@ -27,10 +27,10 @@ import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.JavaDependency;
-import com.android.builder.model.MavenCoordinates;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -39,9 +39,6 @@ import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
 import org.gradle.internal.graph.GraphRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
 import org.gradle.util.GUtil;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * android version of the AsciiReportRenderer that outputs Android Library dependencies.

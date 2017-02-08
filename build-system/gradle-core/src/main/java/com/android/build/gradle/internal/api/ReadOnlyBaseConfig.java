@@ -22,16 +22,13 @@ import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-
 import groovy.lang.GroovyObject;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingPropertyException;
+import java.io.File;
+import java.util.Collection;
+import java.util.Map;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 /**
  * Read-only version of the BaseConfig wrapping another BaseConfig.

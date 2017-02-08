@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;

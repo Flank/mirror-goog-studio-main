@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-
+import java.util.List;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
-
-import java.util.List;
 
 /**
  * A deconstructed constructor, split up in the parts mentioned above.

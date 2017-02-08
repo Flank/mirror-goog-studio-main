@@ -21,11 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
 import proguard.ClassPath;
 import proguard.ClassPathEntry;
 import proguard.ClassSpecification;

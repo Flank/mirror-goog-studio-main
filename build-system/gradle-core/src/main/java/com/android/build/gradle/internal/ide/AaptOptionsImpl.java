@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AaptOptions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;

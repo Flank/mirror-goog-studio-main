@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;

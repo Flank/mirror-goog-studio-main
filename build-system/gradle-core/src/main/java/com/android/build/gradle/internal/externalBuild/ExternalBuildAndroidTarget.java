@@ -22,7 +22,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;

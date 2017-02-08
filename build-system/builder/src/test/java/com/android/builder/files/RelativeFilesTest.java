@@ -22,14 +22,12 @@ import static org.junit.Assert.assertEquals;
 import com.android.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class RelativeFilesTest {
 

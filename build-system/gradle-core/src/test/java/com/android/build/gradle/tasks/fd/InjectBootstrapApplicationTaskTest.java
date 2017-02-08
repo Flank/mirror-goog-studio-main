@@ -16,16 +16,15 @@
 
 package com.android.build.gradle.tasks.fd;
 
-import org.junit.Test;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.util.ASMifier;
-import org.objectweb.asm.util.TraceClassVisitor;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import org.junit.Test;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.util.ASMifier;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 public class InjectBootstrapApplicationTaskTest {
 

@@ -31,7 +31,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-
 import java.util.Collection;
 import java.util.Map;
 

@@ -17,7 +17,6 @@
 package com.example.basic;
 
 import com.google.common.base.Joiner;
-
 import java.util.ArrayList;
 
 /**

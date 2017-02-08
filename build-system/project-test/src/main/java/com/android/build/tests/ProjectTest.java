@@ -17,13 +17,11 @@
 package com.android.build.tests;
 
 import com.android.annotations.NonNull;
-
+import java.io.File;
+import java.util.Collections;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.io.File;
-import java.util.Collections;
 
 /**
  */

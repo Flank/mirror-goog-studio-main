@@ -21,7 +21,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.testutils.truth.FileSubject;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.TestVerb;
-
 import java.io.File;
 
 /**

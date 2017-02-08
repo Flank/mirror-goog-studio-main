@@ -17,7 +17,6 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
-
 import java.io.InputStream;
 
 /**

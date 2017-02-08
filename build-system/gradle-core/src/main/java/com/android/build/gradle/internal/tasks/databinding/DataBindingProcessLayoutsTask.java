@@ -16,14 +16,16 @@
 
 package com.android.build.gradle.internal.tasks.databinding;
 
+import android.databinding.tool.LayoutXmlProcessor;
+import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-
-import android.databinding.tool.LayoutXmlProcessor;
-import android.databinding.tool.processing.Scope;
-import android.databinding.tool.util.L;
-
+import java.io.File;
+import java.io.IOException;
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.InputDirectory;
@@ -32,13 +34,6 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
 import org.xml.sax.SAXException;
-
-import java.io.File;
-import java.io.IOException;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Parses xml files and generates metadata. Will be removed when aapt supports binding tags.

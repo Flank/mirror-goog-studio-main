@@ -18,18 +18,14 @@ package com.android.manifmerger;
 
 import com.android.testutils.MockLog;
 import com.google.common.base.Strings;
-
+import java.io.IOException;
+import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.util.Optional;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link com.android.manifmerger.ToolsInstructionsCleaner} class.

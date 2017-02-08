@@ -25,16 +25,14 @@ import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.LintOptions;
+import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.Variant;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
 
 /**

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 

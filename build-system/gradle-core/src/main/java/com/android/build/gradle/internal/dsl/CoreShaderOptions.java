@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.google.common.collect.ListMultimap;
-
 import java.util.List;
 
 /**

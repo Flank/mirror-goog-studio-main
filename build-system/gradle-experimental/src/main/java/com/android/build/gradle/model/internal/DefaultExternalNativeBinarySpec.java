@@ -18,7 +18,6 @@ package com.android.build.gradle.model.internal;
 
 import com.android.build.gradle.managed.NativeLibrary;
 import com.android.build.gradle.model.ExternalNativeBinarySpec;
-
 import org.gradle.platform.base.binary.BaseBinarySpec;
 
 /**

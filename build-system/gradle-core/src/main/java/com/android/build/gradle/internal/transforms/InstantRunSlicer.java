@@ -41,10 +41,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logger;
-import org.objectweb.asm.ClassWriter;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +48,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.logging.Logger;
+import org.objectweb.asm.ClassWriter;
 
 /**
  * Transform that slices the project's classes into approximately 10 slices for

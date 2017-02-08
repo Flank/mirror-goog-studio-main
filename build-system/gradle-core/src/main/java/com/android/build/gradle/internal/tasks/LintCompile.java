@@ -20,11 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.utils.FileUtils;
-
+import java.io.File;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
 
 /**
  * This is a stub task.

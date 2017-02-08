@@ -23,16 +23,14 @@ import static org.junit.Assert.fail;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.model.DimensionAware;
 import com.google.common.collect.ImmutableList;
-
+import java.util.Collections;
+import java.util.List;
 import org.gradle.api.Named;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Collections;
-import java.util.List;
 
 public class ProductFlavorComboTest {
 

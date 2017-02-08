@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier;
 import org.junit.Test;

@@ -19,7 +19,6 @@ package com.android.build.gradle.managed.adaptor;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.managed.ExternalNativeNdkBuildOptions;
-
 import java.util.List;
 import java.util.Set;
 

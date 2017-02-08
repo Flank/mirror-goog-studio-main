@@ -33,11 +33,9 @@ package com.android.build.gradle.external.gnumake;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Lists;
-
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.util.List;
+import org.junit.Test;
 
 public class CommandLineParserTest {
     private static List<String> EMPTY_ARGS = Lists.newArrayList();

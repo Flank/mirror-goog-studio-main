@@ -22,7 +22,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

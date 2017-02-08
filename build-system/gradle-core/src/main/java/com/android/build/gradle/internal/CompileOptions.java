@@ -23,10 +23,8 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.google.common.base.Charsets;
-
-import org.gradle.api.JavaVersion;
-
 import java.util.Locale;
+import org.gradle.api.JavaVersion;
 
 /**
  * Java compilation options.

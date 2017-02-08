@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.managed;
 
+import java.io.File;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
-
-import java.io.File;
 
 /**
  * A Managed SigningConfig.

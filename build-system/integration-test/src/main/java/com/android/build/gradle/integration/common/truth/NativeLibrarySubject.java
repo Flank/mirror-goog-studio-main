@@ -16,14 +16,11 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.io.File;
 import java.io.IOException;
 

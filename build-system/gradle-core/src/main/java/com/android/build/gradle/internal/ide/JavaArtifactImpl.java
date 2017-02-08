@@ -27,7 +27,6 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

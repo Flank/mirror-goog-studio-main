@@ -20,17 +20,14 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Unit test for GenerateResValues

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;

@@ -20,7 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
+import groovy.lang.Closure;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileTree;
@@ -28,15 +34,6 @@ import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import groovy.lang.Closure;
 
 /**
  * Default implementation of the AndroidSourceDirectorySet.

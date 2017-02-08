@@ -38,12 +38,10 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
-
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
-
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * User configuration settings for all android plugins.

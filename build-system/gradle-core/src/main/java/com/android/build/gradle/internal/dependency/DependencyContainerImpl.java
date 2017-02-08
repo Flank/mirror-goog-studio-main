@@ -24,7 +24,6 @@ import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.JavaDependency;
-import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;

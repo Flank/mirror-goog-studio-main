@@ -17,15 +17,11 @@
 package com.android.manifmerger;
 
 import com.android.testutils.MockLog;
-
-import junit.framework.TestCase;
-
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.logging.Logger;
-
 import javax.xml.parsers.ParserConfigurationException;
+import junit.framework.TestCase;
+import org.xml.sax.SAXException;
 
 /**
  * Tests for the {@link com.android.manifmerger.PreValidator} class.

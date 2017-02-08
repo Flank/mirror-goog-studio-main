@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.fixture.app;
 import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 

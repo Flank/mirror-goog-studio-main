@@ -19,10 +19,8 @@ package com.android.build.gradle.tasks.factory;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-
-import org.gradle.api.tasks.bundling.Jar;
-
 import java.io.File;
+import org.gradle.api.tasks.bundling.Jar;
 
 public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
 

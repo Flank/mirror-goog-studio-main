@@ -16,14 +16,6 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dex.util.ByteArrayByteInput;
-import com.android.dex.util.ByteInput;
-import com.android.dex.util.ExceptionWithContext;
-import com.android.dex.Leb128;
-import com.android.dx.dex.code.DalvCode;
-import com.android.dx.dex.code.DalvInsnList;
-import com.android.dx.dex.code.LocalList;
-import com.android.dx.dex.code.PositionList;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_LINE;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_PC;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_LOCAL;
@@ -37,6 +29,15 @@ import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_FILE;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_PROLOGUE_END;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL_EXTENDED;
+
+import com.android.dex.Leb128;
+import com.android.dex.util.ByteArrayByteInput;
+import com.android.dex.util.ByteInput;
+import com.android.dex.util.ExceptionWithContext;
+import com.android.dx.dex.code.DalvCode;
+import com.android.dx.dex.code.DalvInsnList;
+import com.android.dx.dex.code.LocalList;
+import com.android.dx.dex.code.PositionList;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;

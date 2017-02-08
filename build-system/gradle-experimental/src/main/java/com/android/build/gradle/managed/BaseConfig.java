@@ -19,14 +19,12 @@ package com.android.build.gradle.managed;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
-
-import org.gradle.api.Named;
-import org.gradle.model.Managed;
-import org.gradle.model.ModelSet;
-
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Named;
+import org.gradle.model.Managed;
+import org.gradle.model.ModelSet;
 
 /**
  * A Managed BaseConfig.

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.FieldOverridingChild;
 import com.example.basic.FieldOverridingGrandChild;
 import com.example.basic.FieldOverridingParent;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

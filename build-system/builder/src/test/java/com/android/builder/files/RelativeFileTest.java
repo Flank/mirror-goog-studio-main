@@ -23,13 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import java.io.File;
+import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.Set;
 
 /**
  * Tests for {@link RelativeFile} and {@link RelativeFiles}.

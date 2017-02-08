@@ -17,7 +17,6 @@ package com.android.build.gradle.external.gnumake;
 
 
 import com.google.common.base.Joiner;
-
 import java.util.List;
 
 /**

@@ -27,10 +27,6 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -38,6 +34,8 @@ import java.nio.charset.Charset;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Test that tries to ensure that our public API remains stable.

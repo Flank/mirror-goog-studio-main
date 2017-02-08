@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.managed.JackOptions;
 import com.android.build.gradle.managed.KeyValuePair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

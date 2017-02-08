@@ -19,7 +19,6 @@ package com.android.build.gradle.external.gnumake;
 import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**

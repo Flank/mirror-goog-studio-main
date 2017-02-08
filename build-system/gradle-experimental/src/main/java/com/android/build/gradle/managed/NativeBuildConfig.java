@@ -17,13 +17,11 @@
 package com.android.build.gradle.managed;
 
 import com.android.annotations.NonNull;
-
-import org.gradle.model.Managed;
-import org.gradle.model.ModelMap;
-
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.model.Managed;
+import org.gradle.model.ModelMap;
 
 /**
  * Configuration model for a native project.

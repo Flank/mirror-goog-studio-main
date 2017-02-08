@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt.v2;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.AaptException;
 import com.google.common.io.Files;
-
 import java.io.File;
 
 /**

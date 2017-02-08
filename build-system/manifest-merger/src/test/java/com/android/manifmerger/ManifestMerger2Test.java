@@ -27,11 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,6 +38,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Tests for the {@link com.android.manifmerger.ManifestMerger2} class

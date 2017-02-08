@@ -26,14 +26,12 @@ import com.android.builder.model.SyncIssue;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
-
+import java.util.List;
+import java.util.Map;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.util.List;
-import java.util.Map;
 
 @ParallelizableTask
 public class PrepareDependenciesTask extends BaseTask {

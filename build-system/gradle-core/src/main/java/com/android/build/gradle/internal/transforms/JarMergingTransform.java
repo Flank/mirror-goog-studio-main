@@ -21,8 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -31,12 +29,12 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
+import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.packaging.ZipEntryFilter;
-import com.android.builder.packaging.ZipAbortException;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

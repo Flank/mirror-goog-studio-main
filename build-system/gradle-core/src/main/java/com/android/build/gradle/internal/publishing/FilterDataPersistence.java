@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.tasks.SplitFileSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;

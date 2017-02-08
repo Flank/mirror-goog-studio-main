@@ -17,11 +17,9 @@
 package com.android.build.gradle.managed;
 
 import com.android.annotations.NonNull;
-
+import java.util.List;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelMap;
-
-import java.util.List;
 
 /**
  * Managed type for Jack options.

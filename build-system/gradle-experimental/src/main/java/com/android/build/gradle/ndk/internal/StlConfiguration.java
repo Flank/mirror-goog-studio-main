@@ -22,13 +22,11 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.Stl;
 import com.android.build.gradle.internal.ndk.StlNativeToolSpecification;
-
+import java.io.File;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
 import org.gradle.model.ModelMap;
 import org.gradle.nativeplatform.NativeBinarySpec;
-
-import java.io.File;
 
 /**
  * Configuration to setup STL for NDK.

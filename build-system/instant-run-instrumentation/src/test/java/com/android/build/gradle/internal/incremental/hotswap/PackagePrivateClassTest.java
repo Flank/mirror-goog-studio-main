@@ -22,13 +22,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.PackagePrivateInvoker;
-
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 /**
  * Test for package private classes/methods and fields.

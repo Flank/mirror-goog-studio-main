@@ -21,19 +21,15 @@ import static org.mockito.Mockito.when;
 import com.android.SdkConstants;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
-
+import java.io.IOException;
+import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.w3c.dom.Attr;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.util.List;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for {@link com.android.manifmerger.XmlAttribute} class

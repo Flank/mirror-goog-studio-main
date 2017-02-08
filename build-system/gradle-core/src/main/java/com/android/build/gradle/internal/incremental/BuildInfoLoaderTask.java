@@ -24,12 +24,10 @@ import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
-
+import java.io.File;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
 
 /**
  * Task responsible for loading past iteration build-info.xml file and backup necessary files for

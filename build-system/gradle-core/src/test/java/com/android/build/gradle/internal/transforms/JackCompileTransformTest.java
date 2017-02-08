@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.util.Collection;
 import org.gradle.api.internal.file.collections.DefaultConfigurableFileTree;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
-
 import groovy.lang.Closure;
 
 /**

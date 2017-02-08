@@ -17,14 +17,11 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
-
+import groovy.lang.GroovyObject;
+import java.util.concurrent.Callable;
 import org.gradle.api.Task;
 import org.gradle.api.internal.ConventionMapping;
 import org.gradle.api.internal.ConventionTask;
-
-import java.util.concurrent.Callable;
-
-import groovy.lang.GroovyObject;
 
 /**
  * Helper class to dynamically access conventionMapping of a task.

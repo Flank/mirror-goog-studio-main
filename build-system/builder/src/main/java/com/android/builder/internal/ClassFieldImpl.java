@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.Serializable;
 import java.util.Set;
 

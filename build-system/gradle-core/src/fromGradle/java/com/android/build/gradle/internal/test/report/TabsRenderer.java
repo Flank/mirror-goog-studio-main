@@ -16,11 +16,10 @@
 
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.reporting.ReportRenderer;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.gradle.reporting.ReportRenderer;
 
 public class TabsRenderer<T> extends ReportRenderer<T, SimpleHtmlWriter> {
     private final List<TabDefinition> tabs = new ArrayList<>();

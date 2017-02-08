@@ -25,10 +25,8 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.Task;
-
 import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * Implementation of the base variant output. This is the base class for items common to apps,

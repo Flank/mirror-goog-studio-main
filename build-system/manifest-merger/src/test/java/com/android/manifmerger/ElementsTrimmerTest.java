@@ -25,9 +25,10 @@ import com.android.SdkConstants;
 import com.android.utils.ILogger;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -36,11 +37,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.util.List;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link ElementsTrimmer} class

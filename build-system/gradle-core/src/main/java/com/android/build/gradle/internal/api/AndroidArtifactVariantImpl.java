@@ -22,7 +22,6 @@ import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SigningConfig;
-
 import java.util.Set;
 
 /**

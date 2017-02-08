@@ -22,7 +22,6 @@ import com.android.dx.cf.iface.Attribute;
 import com.android.dx.cf.iface.FieldList;
 import com.android.dx.cf.iface.HasAttribute;
 import com.android.dx.cf.iface.MethodList;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;

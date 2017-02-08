@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.NativeDependencyLinkage;
-
-import org.gradle.api.InvalidUserDataException;
-
 import java.util.Locale;
+import org.gradle.api.InvalidUserDataException;
 
 /**
  * Specification for native dependencies.

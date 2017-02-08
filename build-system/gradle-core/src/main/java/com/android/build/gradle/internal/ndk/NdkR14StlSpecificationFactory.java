@@ -16,11 +16,7 @@
 
 package com.android.build.gradle.internal.ndk;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.core.Abi;
-import com.google.common.collect.ImmutableList;
 
-import java.util.List;
 
 /**
  * Factory for creating STL specification for NDK r14.

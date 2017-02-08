@@ -16,8 +16,8 @@
 
 package com.example.basic;
 
-import java.util.List;
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 /**
  * Class with all types of access methods.

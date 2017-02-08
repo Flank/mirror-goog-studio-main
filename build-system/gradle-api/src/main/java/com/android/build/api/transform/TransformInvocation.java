@@ -18,7 +18,6 @@ package com.android.build.api.transform;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.Collection;
 
 /**

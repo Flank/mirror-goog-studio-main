@@ -20,11 +20,9 @@ import static org.junit.Assert.fail;
 
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
-
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
 
 /**
  * Tests for the {@link ExtendedContentType} and {@link DefaultContentType}

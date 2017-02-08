@@ -24,15 +24,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.util.Arrays;
+import java.util.Random;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Random;
 
 /**
  * Tests for {@link FileCacheByPath}.

@@ -20,11 +20,9 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.sdklib.BuildToolInfo;
-import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 
-import java.io.File;
 
 public abstract class BaseTask extends DefaultAndroidTask {
 

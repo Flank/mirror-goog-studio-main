@@ -37,9 +37,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-
-import org.xml.sax.SAXException;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,8 +48,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Contains all actions taken during a merging invocation.
