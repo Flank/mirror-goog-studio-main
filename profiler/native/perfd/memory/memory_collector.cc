@@ -122,9 +122,9 @@ void MemoryCollector::HeapDumpMain(const std::string& file_path) {
   is_heap_dump_running_.exchange(false);
 }
 
-void MemoryCollector::GetHeapDumpData(int32_t dump_id,
+void MemoryCollector::GetHeapDumpData(int64_t dump_time,
                                       DumpDataResponse* response) {
-  memory_cache_.ReadHeapDumpFileContents(dump_id, response);
+  memory_cache_.ReadHeapDumpFileContents(dump_time, response);
 }
 
 void MemoryCollector::TrackAllocations(bool enabled, bool legacy,

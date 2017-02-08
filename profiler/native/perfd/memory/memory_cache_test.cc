@@ -38,8 +38,6 @@ TEST(MemoryCache, TrackAllocations) {
   // Begin a tracking session at t=5.
   cache.TrackAllocations(true, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
-  EXPECT_EQ(5, response.timestamp());
-  EXPECT_EQ(0, response.info().info_id());
   EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
   EXPECT_EQ(5, response.info().start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
@@ -55,7 +53,6 @@ TEST(MemoryCache, TrackAllocations) {
   fake_clock.SetCurrentTime(10);
   cache.TrackAllocations(false, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
-  EXPECT_EQ(0, response.info().info_id());
   EXPECT_EQ(AllocationsInfo::COMPLETED, response.info().status());
   EXPECT_EQ(5, response.info().start_time());
   EXPECT_EQ(10, response.info().end_time());
@@ -64,7 +61,6 @@ TEST(MemoryCache, TrackAllocations) {
   // Start a tracking session at t=10;
   cache.TrackAllocations(true, true, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
-  EXPECT_EQ(1, response.info().info_id());
   EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
   EXPECT_EQ(10, response.info().start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
@@ -76,14 +72,12 @@ TEST(MemoryCache, TrackAllocations) {
   cache.LoadMemoryData(0, 20, &data_response);
   EXPECT_EQ(2, data_response.allocations_info().size());
 
-  EXPECT_EQ(0, data_response.allocations_info(0).info_id());
   EXPECT_EQ(AllocationsInfo::COMPLETED,
             data_response.allocations_info(0).status());
   EXPECT_EQ(5, data_response.allocations_info(0).start_time());
   EXPECT_EQ(10, data_response.allocations_info(0).end_time());
   EXPECT_EQ(false, data_response.allocations_info(0).legacy());
 
-  EXPECT_EQ(1, data_response.allocations_info(1).info_id());
   EXPECT_EQ(AllocationsInfo::IN_PROGRESS,
             data_response.allocations_info(1).status());
   EXPECT_EQ(10, data_response.allocations_info(1).start_time());
@@ -95,7 +89,6 @@ TEST(MemoryCache, TrackAllocations) {
   fake_clock.SetCurrentTime(15);
   cache.TrackAllocations(false, true, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
-  EXPECT_EQ(1, response.info().info_id());
   EXPECT_EQ(AllocationsInfo::COMPLETED, response.info().status());
   EXPECT_EQ(10, response.info().start_time());
   EXPECT_EQ(15, response.info().end_time());
@@ -105,7 +98,6 @@ TEST(MemoryCache, TrackAllocations) {
   MemoryData data_response_2;
   cache.LoadMemoryData(10, 15, &data_response_2);
   EXPECT_EQ(1, data_response_2.allocations_info().size());
-  EXPECT_EQ(1, data_response_2.allocations_info(0).info_id());
   EXPECT_EQ(AllocationsInfo::COMPLETED,
             data_response_2.allocations_info(0).status());
   EXPECT_EQ(10, data_response_2.allocations_info(0).start_time());
@@ -129,7 +121,6 @@ TEST(MemoryCache, HeapDump) {
   EXPECT_EQ(5, response.info().start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
             response.info().end_time());
-  EXPECT_EQ(0, response.info().dump_id());
   EXPECT_EQ(false, response.info().success());
 
   // Ensure calling StartheapDump the second time fails and
@@ -140,7 +131,6 @@ TEST(MemoryCache, HeapDump) {
   EXPECT_EQ(5, response.info().start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
             response.info().end_time());
-  EXPECT_EQ(0, response.info().dump_id());
 
   // Completes a heap dump
   EXPECT_EQ(true, cache.EndHeapDump(15, true));
@@ -152,7 +142,6 @@ TEST(MemoryCache, HeapDump) {
   EXPECT_EQ(20, response.info().start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
             response.info().end_time());
-  EXPECT_EQ(1, response.info().dump_id());
   EXPECT_EQ(false, response.info().success());
 
   // Ensures validity of the HeapDumpInfos returned via LoadMemoryData
@@ -160,12 +149,10 @@ TEST(MemoryCache, HeapDump) {
   cache.LoadMemoryData(10, 20, &data_response);
   EXPECT_EQ(2, data_response.heap_dump_infos().size());
 
-  EXPECT_EQ(0, data_response.heap_dump_infos(0).dump_id());
   EXPECT_EQ(true, data_response.heap_dump_infos(0).success());
   EXPECT_EQ(5, data_response.heap_dump_infos(0).start_time());
   EXPECT_EQ(15, data_response.heap_dump_infos(0).end_time());
 
-  EXPECT_EQ(1, data_response.heap_dump_infos(1).dump_id());
   EXPECT_EQ(false, data_response.heap_dump_infos(1).success());
   EXPECT_EQ(20, data_response.heap_dump_infos(1).start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,

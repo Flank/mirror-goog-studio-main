@@ -116,7 +116,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, DumpDataResponse::FAILURE_UNKNOWN)
 
-  (result->second).GetHeapDumpData(request->dump_id(), response);
+  (result->second).GetHeapDumpData(request->dump_time(), response);
   switch (response->status()) {
     case DumpDataResponse::NOT_READY:
     case DumpDataResponse::SUCCESS:
