@@ -37,7 +37,6 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -56,7 +55,7 @@ import org.gradle.api.tasks.TaskAction;
 public class MergeDexAtomResClass extends BaseTask {
 
     @TaskAction
-    public void TaskAction() throws InterruptedException, LoggedErrorException {
+    public void TaskAction() throws InterruptedException {
         DexOptions dexOptions =
                 DefaultDexOptions.copyOf(scope.getGlobalScope().getExtension().getDexOptions());
         ProcessOutputHandler outputHandler =

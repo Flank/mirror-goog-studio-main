@@ -49,7 +49,6 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.PackagingUtils;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
@@ -92,8 +91,7 @@ public class PackageAtom extends IncrementalTask {
     }
 
     @Override
-    protected void doFullTaskAction()
-            throws IOException, InterruptedException, LoggedErrorException {
+    protected void doFullTaskAction() throws IOException, InterruptedException {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         // Clear the cache to make sure we do not do an incremental build.
         cacheByPath.clear();
@@ -153,7 +151,7 @@ public class PackageAtom extends IncrementalTask {
 
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
-            throws InterruptedException, LoggedErrorException {
+            throws InterruptedException {
         checkNotNull(changedInputs, "changedInputs == null");
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 

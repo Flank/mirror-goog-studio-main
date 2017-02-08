@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.api.transform.QualifiedContent.Scope.PROJECT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,7 +31,6 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipEntryFilter;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 /**
@@ -162,11 +159,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
             });
         }
 
-        try {
-            executor.waitForTasksWithQuickFail(true);
-        } catch (LoggedErrorException e) {
-            throw new TransformException(e);
-        }
+        executor.waitForTasksWithQuickFail(true);
     }
 
     private void handleMainClass(

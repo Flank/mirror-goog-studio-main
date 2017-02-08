@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ObjectArrays;
@@ -41,7 +40,7 @@ import org.gradle.api.tasks.TaskAction;
 public class JavaCompileAtomResClass extends DefaultAndroidTask {
 
     @TaskAction
-    public void compile() throws InterruptedException, LoggedErrorException {
+    public void compile() throws InterruptedException {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
