@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
@@ -77,7 +78,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -138,7 +138,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
     protected FileCollection dexFolders;
 
-    private File assets;
+    protected FileCollection assets;
 
     @InputFiles
     @Optional
@@ -146,13 +146,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         return dexFolders;
     }
 
-    @InputDirectory
-    public File getAssets() {
+    @InputFiles
+    public FileCollection getAssets() {
         return assets;
-    }
-
-    public void setAssets(File assets) {
-        this.assets = assets;
     }
 
     /** list of folders and/or jars that contain the merged java resources. */
@@ -308,8 +304,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         ImmutableMap<RelativeFile, FileStatus> updatedJavaResources =
                 updatedJavaResourcesBuilder.build();
         ImmutableMap<RelativeFile, FileStatus> updatedAssets =
-                    IncrementalRelativeFileSets.fromZipsAndDirectories(
-                            Collections.singleton(getAssets()));
+                IncrementalRelativeFileSets.fromZipsAndDirectories(assets.getFiles());
         ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
         ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
@@ -469,6 +464,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
 
         KnownFilesSaveData saveData = KnownFilesSaveData.make(getIncrementalFolder());
 
+        final Set<File> assetsFiles = assets.getFiles();
+
         Set<Runnable> cacheUpdates = new HashSet<>();
         ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
                 KnownFilesSaveData.getChangedInputs(
@@ -493,7 +490,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
                         changedInputs,
                         saveData,
                         InputSet.ASSET,
-                        Collections.singleton(getAssets()),
+                        assetsFiles,
                         cacheByPath,
                         cacheUpdates);
 
@@ -535,8 +532,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
         ImmutableMap<RelativeFile, FileStatus> allJavaResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJavaResourceFiles());
         ImmutableMap<RelativeFile, FileStatus> allAssets =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(
-                        Collections.singleton(getAssets()));
+                IncrementalRelativeFileSets.fromZipsAndDirectories(assetsFiles);
         ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
         ImmutableMap<RelativeFile, FileStatus> allJniResources =
@@ -661,7 +657,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask implements 
             packageAndroidArtifact.dexFolders = packagingScope.getDexFolders();
             packageAndroidArtifact.javaResourceFiles = packagingScope.getJavaResources();
 
-            packageAndroidArtifact.setAssets(packagingScope.getAssetsDir());
+            packageAndroidArtifact.assets = packagingScope.getOutputs(MERGED_ASSETS);
 
             if (packagingScope.getSplitHandlingPolicy() == SplitHandlingPolicy.PRE_21_POLICY) {
                 packageAndroidArtifact.jniFolders = packagingScope.getJniFolders();

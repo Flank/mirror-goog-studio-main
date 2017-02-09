@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_APK_NATIVE_LIBS;
-import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
@@ -66,7 +65,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
-import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -195,17 +193,15 @@ public class LibraryTaskManager extends TaskManager {
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 projectPath,
                 variantName,
-                () ->  {
-                    AndroidTask<MergeSourceSetFolders> task
-                            = createMergeAssetsTask(tasks, variantScope);
-
-                    // publish intermediate assets folder
-                    variantScope.publishIntermediateArtifact(
-                            new File(variantBundleDir, FD_ASSETS),
-                            task.getName(),
-                            AndroidArtifacts.ArtifactType.ASSETS);
-
-                });
+                () ->
+                        createMergeAssetsTask(
+                                tasks,
+                                variantScope,
+                                (task, file) ->
+                                        variantScope.publishIntermediateArtifact(
+                                                file,
+                                                task.getName(),
+                                                AndroidArtifacts.ArtifactType.ASSETS)));
 
         // Add a task to create the BuildConfig class
         recorder.record(

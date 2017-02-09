@@ -211,9 +211,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir(@NonNull String atomName);
 
     @NonNull
-    File getMergeAssetsOutputDir();
-
-    @NonNull
     File getMergeNativeLibsOutputDir();
 
     @NonNull

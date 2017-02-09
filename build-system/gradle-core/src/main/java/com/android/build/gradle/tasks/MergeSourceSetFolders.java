@@ -342,9 +342,11 @@ public class MergeSourceSetFolders extends IncrementalTask {
     protected abstract static class ConfigAction implements TaskConfigAction<MergeSourceSetFolders> {
         @NonNull
         protected final VariantScope scope;
+        @NonNull protected final File outputDir;
 
-        protected ConfigAction(@NonNull VariantScope scope) {
+        protected ConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
             this.scope = scope;
+            this.outputDir = outputDir;
         }
 
         @NonNull
@@ -366,8 +368,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     public static class MergeAssetConfigAction extends ConfigAction {
 
-        public MergeAssetConfigAction(@NonNull VariantScope scope) {
-            super(scope);
+        public MergeAssetConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
+            super(scope, outputDir);
         }
 
         @NonNull
@@ -407,14 +409,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
                         scope.getTestedArtifact(ASSETS, VariantType.LIBRARY);
             }
 
-            mergeAssetsTask.setOutputDir(scope.getMergeAssetsOutputDir());
+            mergeAssetsTask.setOutputDir(outputDir);
         }
     }
 
     public static class MergeJniLibFoldersConfigAction extends ConfigAction {
 
         public MergeJniLibFoldersConfigAction(@NonNull VariantScope scope) {
-            super(scope);
+            super(scope, null);
         }
 
         @NonNull
@@ -437,7 +439,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     public static class MergeShaderSourceFoldersConfigAction extends ConfigAction {
 
         public MergeShaderSourceFoldersConfigAction(@NonNull VariantScope scope) {
-            super(scope);
+            super(scope, null);
         }
 
         @NonNull

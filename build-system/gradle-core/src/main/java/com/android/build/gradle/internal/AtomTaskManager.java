@@ -33,7 +33,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.MergeResources;
-import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -131,16 +130,15 @@ public class AtomTaskManager extends TaskManager {
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> {
-                    AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
-                            createMergeAssetsTask(tasks, variantScope);
-
-                    // Publish intermediate assets folder.
-                    variantScope.publishIntermediateArtifact(
-                            variantScope.getMergeAssetsOutputDir(),
-                            mergeAssetsTask.getName(),
-                            AndroidArtifacts.ArtifactType.ATOM_ASSETS);
-                });
+                () ->
+                        createMergeAssetsTask(
+                                tasks,
+                                variantScope,
+                                (task, outputDir) ->
+                                        variantScope.publishIntermediateArtifact(
+                                                outputDir,
+                                                task.getName(),
+                                                AndroidArtifacts.ArtifactType.ATOM_ASSETS)));
 
         // Add a task to create the BuildConfig class
         recorder.record(

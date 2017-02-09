@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -30,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -122,9 +124,17 @@ public class GenerateTestConfig extends DefaultTask {
 
         @Override
         public void execute(@NonNull GenerateTestConfig task) {
+            // get the file collection that this task consumes.
+            FileCollection assets = testedScope.getOutputs(MERGED_ASSETS);
+
+            // we don't actually consume the task, only the path, so make a manual dependency
+            // on the filecollections.
+            task.dependsOn(assets);
+
+            // then record the path for actual inputs.
             task.generatedJavaResourcesDirectory = scope.getGeneratedJavaResourcesDir().toPath();
             task.resourcesDirectory = testedScope.getMergeResourcesOutputDir().toPath();
-            task.assetsDirectory = testedScope.getMergeAssetsOutputDir().toPath();
+            task.assetsDirectory = assets.getSingleFile().toPath();
             task.mergeManifest =
                     testedScope
                             .getVariantData()

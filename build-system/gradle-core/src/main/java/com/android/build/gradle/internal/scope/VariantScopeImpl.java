@@ -886,15 +886,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 StringHelper.toStrings("blame", "res", atomName, getDirectorySegments()));
     }
 
-    @Override
-    @NonNull
-    public File getMergeAssetsOutputDir() {
-        return getVariantConfiguration().isBundled() ?
-                new File(getBaseBundleDir(), FD_ASSETS) :
-                FileUtils.join(globalScope.getIntermediatesDir(),
-                        FD_ASSETS, getVariantConfiguration().getDirName());
-    }
-
     @NonNull
     @Override
     public File getMergeNativeLibsOutputDir() {

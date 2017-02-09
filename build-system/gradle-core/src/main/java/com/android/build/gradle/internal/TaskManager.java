@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.OutputFile.DENSITY;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
@@ -32,6 +33,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
@@ -192,6 +194,7 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidVersion;
+import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -207,6 +210,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -947,9 +951,30 @@ public abstract class TaskManager {
         return scope.getMergeResourcesTask();
     }
 
-    public AndroidTask<MergeSourceSetFolders> createMergeAssetsTask(TaskFactory tasks, VariantScope scope) {
-        AndroidTask<MergeSourceSetFolders> mergeAssetsTask = androidTasks.create(tasks,
-                new MergeSourceSetFolders.MergeAssetConfigAction(scope));
+    public AndroidTask<MergeSourceSetFolders> createMergeAssetsTask(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope scope,
+            @Nullable BiConsumer<AndroidTask<MergeSourceSetFolders>, File> consumer) {
+        final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
+        File outputDir =
+                variantConfiguration.isBundled()
+                        ? new File(scope.getBaseBundleDir(), FD_ASSETS)
+                        : FileUtils.join(
+                                globalScope.getIntermediatesDir(),
+                                FD_ASSETS,
+                                variantConfiguration.getDirName());
+
+        AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
+                androidTasks.create(
+                        tasks, new MergeSourceSetFolders.MergeAssetConfigAction(scope, outputDir));
+
+        // register the output
+        scope.addTaskOutput(MERGED_ASSETS, outputDir, mergeAssetsTask.getName());
+
+        if (consumer != null) {
+            consumer.accept(mergeAssetsTask, outputDir);
+        }
+
         mergeAssetsTask.dependsOn(tasks,
                 scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);
@@ -1667,7 +1692,7 @@ public abstract class TaskManager {
         createMergeResourcesTask(tasks, variantScope);
 
         // Add a task to merge the assets folders
-        createMergeAssetsTask(tasks, variantScope);
+        createMergeAssetsTask(tasks, variantScope, null);
 
         if (variantData.getTestedVariantData().getVariantConfiguration().getType().equals(
                 VariantType.LIBRARY)) {

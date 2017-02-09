@@ -32,10 +32,8 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
-/**
- * Data needed by the packaging tasks.
- */
-public interface PackagingScope {
+/** Data needed by the packaging tasks. */
+public interface PackagingScope extends TaskOutputHolder {
 
     /**
      * The {@link AndroidBuilder} to use.
@@ -81,9 +79,6 @@ public interface PackagingScope {
 
     @NonNull
     FileCollection getJavaResources();
-
-    @NonNull
-    File getAssetsDir();
 
     @NonNull
     FileCollection getJniFolders();

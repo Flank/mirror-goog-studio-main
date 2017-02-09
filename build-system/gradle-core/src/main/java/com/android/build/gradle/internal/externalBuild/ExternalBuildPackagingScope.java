@@ -38,6 +38,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -213,12 +214,6 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getAssetsDir() {
-        return mVariantScope.getAssetsDir();
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
     }
@@ -258,5 +253,48 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return new File(
                 mExternalBuildContext.getExecutionRoot(),
                 mBuildManifest.getAndroidManifest().getExecRootPath());
+    }
+
+    // TaskOutputHolder
+
+    @NonNull
+    @Override
+    public FileCollection getOutputs(@NonNull OutputType outputType) {
+        return mVariantScope.getOutputs(outputType);
+    }
+
+    @Override
+    public boolean hasOutput(@NonNull OutputType outputType) {
+        return mVariantScope.hasOutput(outputType);
+    }
+
+    @Override
+    public ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
+        return mVariantScope.addTaskOutput(outputType, file, taskName);
+    }
+
+    @Override
+    public void addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull FileCollection fileCollection) {
+        mVariantScope.addTaskOutput(outputType, fileCollection);
+    }
+
+    @NonNull
+    @Override
+    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
+        return mVariantScope.createAnchorOutput(outputType);
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType, @NonNull File file, @NonNull String taskName) {
+        mVariantScope.addToAnchorOutput(outputType, file, taskName);
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType, @NonNull FileCollection fileCollection) {
+        mVariantScope.addToAnchorOutput(outputType, fileCollection);
     }
 }

@@ -32,9 +32,12 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
@@ -43,6 +46,9 @@ import org.gradle.api.tasks.testing.TestTaskReports;
  * Patched version of {@link Test} that we need to use for local unit tests support.
  */
 public class AndroidUnitTest extends Test {
+
+    private FileCollection resCollection;
+    private FileCollection assetsCollection;
 
     /**
      * Returns the test class files.
@@ -61,6 +67,18 @@ public class AndroidUnitTest extends Test {
         } else {
             return super.getCandidateClassFiles();
         }
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getResCollection() {
+        return resCollection;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getAssetsCollection() {
+        return assetsCollection;
     }
 
     /**
@@ -107,6 +125,19 @@ public class AndroidUnitTest extends Test {
 
             runTestsTask.setClasspath(computeClasspath(testedVariantData));
 
+            // if android resources are meant to be accessible, then we need to make sure
+            // changes to them trigger a new run of the tasks
+            if (scope.getGlobalScope()
+                    .getExtension()
+                    .getTestOptions()
+                    .getUnitTests()
+                    .isIncludeAndroidResources()) {
+                VariantScope testedScope = testedVariantData.getScope();
+                runTestsTask.assetsCollection =
+                        testedScope.getOutputs(TaskOutputType.MERGED_ASSETS);
+                runTestsTask.resCollection = testedScope.getOutputs(TaskOutputType.MERGED_RES);
+            }
+
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not
             // yet configured.  We get a hardcoded value matching Gradle's default. This will
@@ -135,14 +166,16 @@ public class AndroidUnitTest extends Test {
         private ConfigurableFileCollection computeClasspath(BaseVariantData testedVariantData) {
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
+            final VariantScope testedScope = testedVariantData.getScope();
+
             // the test classpath is made up of:
             // - the test and tested compilation output
             collection.from(scope.getOutputs(JAVAC));
-            collection.from(testedVariantData.getScope().getOutputs(JAVAC));
+            collection.from(testedScope.getOutputs(JAVAC));
 
             // - the test and tested java resources
             collection.from(scope.getOutputs(TaskOutputType.JAVA_RES));
-            collection.from(testedVariantData.getScope().getOutputs(TaskOutputType.JAVA_RES));
+            collection.from(testedScope.getOutputs(TaskOutputType.JAVA_RES));
 
             // - the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(
