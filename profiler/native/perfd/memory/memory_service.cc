@@ -38,6 +38,8 @@ using profiler::proto::MemoryStopResponse;
 using profiler::proto::AllocationsInfo;
 using profiler::proto::AllocationEventsRequest;
 using profiler::proto::AllocationEventsResponse;
+using profiler::proto::ForceGarbageCollectionRequest;
+using profiler::proto::ForceGarbageCollectionResponse;
 
 namespace profiler {
 
@@ -182,6 +184,13 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::GetAllocationEvents(
     ::grpc::ServerContext* context, const AllocationEventsRequest* request,
     AllocationEventsResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::ForceGarbageCollection(
+    ::grpc::ServerContext* context, const ForceGarbageCollectionRequest* request,
+    ForceGarbageCollectionResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");
 }

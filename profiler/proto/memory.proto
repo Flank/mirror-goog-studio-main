@@ -36,6 +36,8 @@ service MemoryService {
   }
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
+  rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
+      returns (ForceGarbageCollectionResponse) {}
 
   // Returns all allocation data associated with a allocation tracking session.
   // e.g. alloc events, class + stack pool
@@ -278,3 +280,10 @@ message AllocationStack {
   bytes stackId = 1;
   repeated StackFrame stackFrames = 2;
 }
+
+message ForceGarbageCollectionRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message ForceGarbageCollectionResponse {}
