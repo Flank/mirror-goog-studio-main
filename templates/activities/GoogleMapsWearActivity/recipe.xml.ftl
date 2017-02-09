@@ -15,6 +15,9 @@
              to="${escapeXmlAttribute(appManifestOut)}/AndroidManifest.xml" />
 </#if>
 
+    <merge from="root/build.gradle.ftl"
+             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+
     <instantiate from="root/res/layout/activity_map.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
