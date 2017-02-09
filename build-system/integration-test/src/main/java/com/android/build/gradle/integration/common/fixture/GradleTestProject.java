@@ -102,6 +102,8 @@ public final class GradleTestProject implements TestRule {
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
+    public static final String DEFAULT_KOTLIN_PLUGIN_VERSION = "1.0.5";
+
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
@@ -487,36 +489,39 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     private String generateCommonHeader() {
-        String result = String.format(
-                "ext {\n"
-                + "    buildToolsVersion = '%1$s'\n"
-                + "    latestCompileSdk = %2$s\n"
-                + "    useJack = %3$s\n"
-                + "\n"
-                + "    plugins.withId('com.android.application') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.library') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.model.application') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.model.library') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "}\n"
-                + "\n"
-                + "plugins.withId(\"com.android.application\") { plugin ->\n"
-                + "    if (ext.useJack != null) {\n"
-                + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
-                + "    }\n"
-                + "}\n"
-                + "\n"
-                + "",
-                DEFAULT_BUILD_TOOL_VERSION,
-                DEFAULT_COMPILE_SDK_VERSION,
-                useJack);
+        String result =
+                String.format(
+                        "ext {\n"
+                                + "    buildToolsVersion = '%1$s'\n"
+                                + "    latestCompileSdk = %2$s\n"
+                                + "    useJack = %3$s\n"
+                                + "    kotlinVersion = '%4$s'\n"
+                                + "\n"
+                                + "    plugins.withId('com.android.application') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.library') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.model.application') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.model.library') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "\n"
+                                + "plugins.withId(\"com.android.application\") { plugin ->\n"
+                                + "    if (ext.useJack != null) {\n"
+                                + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "\n"
+                                + "",
+                        DEFAULT_BUILD_TOOL_VERSION,
+                        DEFAULT_COMPILE_SDK_VERSION,
+                        useJack,
+                        DEFAULT_KOTLIN_PLUGIN_VERSION);
         if (withDependencyChecker) {
             result = result
                     + "// Check to ensure dependencies are not resolved during configuration.\n"
