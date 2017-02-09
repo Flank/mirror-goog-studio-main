@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.transforms.JarMerger;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -150,6 +151,10 @@ public class LibraryJarTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        // non incremental transform, need to clear out outputs.
+        // main class jar will get rewritten, just delete local jar folder content.
+        FileUtils.deleteDirectoryContents(localJarsLocation);
+
         List<String> excludes = Lists.newArrayListWithExpectedSize(5);
 
         // these must be regexp to match the zip entries
