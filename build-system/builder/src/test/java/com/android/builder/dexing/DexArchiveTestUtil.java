@@ -62,7 +62,6 @@ public final class DexArchiveTestUtil {
     @NonNull
     public static Path createClassesAndConvertToDexArchive(
             @NonNull Path emptyDir, @NonNull String... classes) throws Exception {
-        FileUtils.cleanOutputDir(emptyDir.toFile());
         Path classesInput = emptyDir.resolve("input");
         createClasses(classesInput, Sets.newHashSet(classes));
         Path dexArchive = emptyDir.resolve("dex_archive.jar");

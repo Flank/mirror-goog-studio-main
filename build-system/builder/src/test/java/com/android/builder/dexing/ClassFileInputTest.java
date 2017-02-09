@@ -16,11 +16,11 @@
 
 package com.android.builder.dexing;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
-import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -148,16 +148,20 @@ public class ClassFileInputTest {
 
     @Test
     public void checkClassFileRenaming() {
-        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("A.class")))
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("A.class")))
                 .isEqualTo(Paths.get("A.dex"));
-        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("A$a.class")))
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("A$a.class")))
                 .isEqualTo(Paths.get("A$a.dex"));
-        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("/A.class")))
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("/A.class")))
                 .isEqualTo(Paths.get("/A.dex"));
-        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("a/A.class")))
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("a/A.class")))
                 .isEqualTo(Paths.get("a/A.dex"));
-        MoreTruth.assertThat(ClassFileEntry.withDexExtension(Paths.get("a/.class/A.class")))
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("a/.class/A.class")))
                 .isEqualTo(Paths.get("a/.class/A.dex"));
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("a\\class\\A.class")))
+                .isEqualTo(Paths.get("a\\class\\A.dex"));
+        assertThat(ClassFileEntry.withDexExtension(Paths.get("a\\A.class")))
+                .isEqualTo(Paths.get("a\\A.dex"));
 
         try {
             DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));

@@ -92,6 +92,7 @@ java_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",

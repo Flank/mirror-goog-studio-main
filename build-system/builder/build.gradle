@@ -30,6 +30,7 @@ dependencies {
     testCompile libs.mockito_core
     testCompile libs.truth
     testCompile libs.equalsverifier
+    testCompile libs.jimfs
     testCompile project(':base:testutils')
 }
 

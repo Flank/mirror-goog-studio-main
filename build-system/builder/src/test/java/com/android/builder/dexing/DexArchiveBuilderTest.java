@@ -25,8 +25,11 @@ import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -214,12 +217,30 @@ public class DexArchiveBuilderTest {
                 .isEqualTo(Paths.get("a/A.class"));
         assertThat(DexArchiveEntry.withClassExtension(Paths.get("a/.dex/A.dex")))
                 .isEqualTo(Paths.get("a/.dex/A.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a\\.dex\\A.dex")))
+                .isEqualTo(Paths.get("a\\.dex\\A.class"));
+        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a\\A.dex")))
+                .isEqualTo(Paths.get("a\\A.class"));
 
         try {
             DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
         } catch (IllegalStateException e) {
             // should throw
         }
+    }
+
+    @Test
+    public void checkWindowsPathsDoesNotFail() throws Exception {
+        Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
+
+        FileSystem fs = Jimfs.newFileSystem(Configuration.windows());
+        Path input = fs.getPath("tmp\\input");
+        Files.createDirectories(input);
+        DexArchiveTestUtil.createClasses(input, classesInInput);
+
+        Path output = fs.getPath("tmp\\output");
+        Files.createDirectories(output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
     }
 
     @NonNull

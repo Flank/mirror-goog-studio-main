@@ -19,8 +19,8 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * A single .class file. Relative path matches the package directory structure, and the content is
@@ -41,13 +41,12 @@ public final class ClassFileEntry {
      */
     @NonNull
     public static Path withDexExtension(@NonNull Path classFilePath) {
+        String fileName = classFilePath.getFileName().toString();
         Preconditions.checkState(
-                classFilePath.toString().endsWith(SdkConstants.DOT_CLASS),
+                fileName.endsWith(SdkConstants.DOT_CLASS),
                 "Dex archives: setting .DEX extension only for .CLASS files");
 
-        String filePath = classFilePath.toString();
-        int lastDot = filePath.lastIndexOf('.');
-        String noExtensionPath = filePath.substring(0, lastDot);
-        return Paths.get(noExtensionPath + SdkConstants.DOT_DEX);
+        return classFilePath.resolveSibling(
+                Files.getNameWithoutExtension(fileName) + SdkConstants.DOT_DEX);
     }
 }

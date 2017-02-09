@@ -112,7 +112,7 @@ public class DexSubject extends Subject<DexSubject, Dex> {
                         "contains exactly classes",
                         Iterables.toString(expected),
                         "has unexpected",
-                        missing);
+                        unexpectedElements);
             }
         }
     }
