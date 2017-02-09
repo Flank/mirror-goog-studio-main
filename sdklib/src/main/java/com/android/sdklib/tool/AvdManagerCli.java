@@ -39,7 +39,6 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.sdklib.util.CommandLineParser;
 import com.android.utils.ILogger;
 import com.android.utils.IReaderLogger;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -453,10 +452,18 @@ class AvdManagerCli extends CommandLineParser {
             if (details instanceof DetailsTypes.PlatformDetailsType) {
                 mSdkLog.info("  API: %s",
                         versionWithCodename);
-            } else {
+            } else if (details instanceof DetailsTypes.SysImgDetailsType) {
+                IdDisplay vendor = ((DetailsTypes.SysImgDetailsType) details).getVendor();
+                String vendorStr = "";
+                if (vendor != null) {
+                    vendorStr = " (" + vendor.getDisplay() + ")";
+                }
+                mSdkLog.info("  Target: %s%s\n", img.getTag().getDisplay(), vendorStr);
+                mSdkLog.info("          Based on: %s", versionWithCodename);
+            } else if (details instanceof DetailsTypes.AddonDetailsType) {
                 mSdkLog.info("  Target: %s (%s)\n", img.getPackage().getDisplayName(),
                         ((DetailsTypes.AddonDetailsType) details).getVendor().getDisplay());
-                mSdkLog.info("          Based on: %s", versionWithCodename);
+                mSdkLog.info("          Based on: %s\n", versionWithCodename);
             }
             mSdkLog.info(" Tag/ABI: %s/%s\n", info.getTag().getId(), info.getAbiType());
 
