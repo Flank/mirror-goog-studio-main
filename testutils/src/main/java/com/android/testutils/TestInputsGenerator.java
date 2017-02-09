@@ -73,4 +73,14 @@ public final class TestInputsGenerator {
             Files.write(path.resolve(fullName + SdkConstants.DOT_CLASS), byteCode);
         }
     }
+
+    public static void writeJarWithEmptyEntries(
+            @NonNull Path jar, @NonNull Iterable<String> entries) throws Exception {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(jar))) {
+            for (String name : entries) {
+                zipOutputStream.putNextEntry(new ZipEntry(name));
+                zipOutputStream.closeEntry();
+            }
+        }
+    }
 }
