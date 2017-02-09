@@ -78,6 +78,12 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        // non incremental transform, need to clear out outputs.
+        // main class jar will get rewritten, just delete local jar folder content.
+        if (localJarsLocation != null) {
+            FileUtils.deleteDirectoryContents(localJarsLocation);
+        }
+
         List<Pattern> patterns = computeExcludeList();
 
         // first look for what inputs we have. There shouldn't be that many inputs so it should
