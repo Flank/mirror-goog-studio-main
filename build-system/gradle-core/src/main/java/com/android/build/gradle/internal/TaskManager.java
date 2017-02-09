@@ -79,7 +79,6 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -3124,8 +3123,8 @@ public abstract class TaskManager {
                                 name,
                                 ZipAlign.class,
                                 new ZipAlign.ConfigAction(variantOutputScope));
-        ConventionMappingHelper.map(zipAlignTask, "inputFile", () -> inputFile);
-        ConventionMappingHelper.map(zipAlignTask, "outputFile", () -> outputFile);
+        zipAlignTask.setInputFile(inputFile);
+        zipAlignTask.setOutputFile(outputFile);
 
         /*
          * We need to make sure we have the manifest available so, we need a dependency.

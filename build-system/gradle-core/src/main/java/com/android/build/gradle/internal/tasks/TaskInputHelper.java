@@ -96,15 +96,16 @@ public class TaskInputHelper {
     }
 
     /**
-     * Returns a new supplier wrapping the provided one that cache the result of the supplier
-     * to only run it once.
+     * Returns a new supplier wrapping the provided one that cache the result of the supplier to
+     * only run it once.
      *
-     * Supplier returning a collection of File should use {@link #bypassFileSupplier(Supplier)}.
+     * <p>Supplier returning a collection of File should use {@link #bypassFileSupplier(Supplier)}.
      *
      * @param supplier the supplier to wrap.
-     * @param <T>      the return type for the supplier.
+     * @param <T> the return type for the supplier.
      * @return a new supplier.
      */
+    @NonNull
     public static <T> Supplier<T> memoize(@NonNull Supplier<T> supplier) {
         return new MemoizedSupplier<>(supplier);
     }

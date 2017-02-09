@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
@@ -119,7 +120,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Nullable
     private FileCollection testedSymbolFile;
 
-    private String packageForR;
+    private Supplier<String> packageForR;
 
     private SplitList splitList;
     private SplitHandlingPolicy splitHandlingPolicy;
@@ -365,15 +366,16 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.testedSymbolFile = variantScope.getTestedArtifact(
                         SYMBOL_LIST, VariantType.LIBRARY);
 
-                ConventionMappingHelper.map(processResources, "packageForR",
-                        () -> {
-                                String splitName = config.getSplitFromManifest();
-                                if (splitName == null) {
-                                    return config.getOriginalApplicationId();
-                                } else {
-                                    return config.getOriginalApplicationId() + "." + splitName;
-                                }
-                            }) ;
+                processResources.packageForR =
+                        TaskInputHelper.memoize(
+                                () -> {
+                                    String splitName = config.getSplitFromManifest();
+                                    if (splitName == null) {
+                                        return config.getOriginalApplicationId();
+                                    } else {
+                                        return config.getOriginalApplicationId() + "." + splitName;
+                                    }
+                                });
 
                 // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
                 processResources
@@ -618,11 +620,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public String getPackageForR() {
-        return packageForR;
-    }
-
-    public void setPackageForR(String packageForR) {
-        this.packageForR = packageForR;
+        return packageForR != null ? packageForR.get() : null;
     }
 
     @InputFiles
