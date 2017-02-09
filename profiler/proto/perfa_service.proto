@@ -31,6 +31,9 @@ service PerfaService {
   // independent way.
   rpc DataStream(stream CommonData) returns (DataStreamResponse) {
   }
+
+  // A simple ping mechanism to notify perfd of perfa's existence, vice versa.
+  rpc HeartBeat(CommonData) returns (HeartBeatResponse) {}
 }
 
 // TODO: Add more data to this object what can be sent during initialization
@@ -43,4 +46,7 @@ message PerfaControlRequest {
 }
 
 message DataStreamResponse {
+}
+
+message HeartBeatResponse {
 }
