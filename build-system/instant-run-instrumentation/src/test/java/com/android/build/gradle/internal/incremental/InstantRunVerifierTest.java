@@ -30,6 +30,7 @@ import com.verifier.tests.AddNotRuntimeClassAnnotation;
 import com.verifier.tests.ChangeFieldType;
 import com.verifier.tests.ChangeInstanceFieldToStatic;
 import com.verifier.tests.ChangeInstanceFieldVisibility;
+import com.verifier.tests.ChangeKotlinMetadataAnnotation;
 import com.verifier.tests.ChangeStaticFieldToInstance;
 import com.verifier.tests.ChangeStaticFieldVisibility;
 import com.verifier.tests.ChangeSuperClass;
@@ -97,6 +98,14 @@ public class InstantRunVerifierTest {
         assertEquals(COMPATIBLE, harness.verify(RemoveClassAnnotation.class, null));
         InstantRunVerifierStatus changes = harness.verify(RemoveClassAnnotation.class, "verifier");
         assertEquals(InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE, changes);
+    }
+
+    @Test
+    public void testKotlinMetadataAnnotationChanged() throws IOException {
+        // having the annotation should be fine.
+        assertEquals(COMPATIBLE, harness.verify(ChangeKotlinMetadataAnnotation.class, null));
+        // and changing its value should be fine.
+        assertEquals(COMPATIBLE, harness.verify(ChangeKotlinMetadataAnnotation.class, "verifier"));
     }
 
     @Test
