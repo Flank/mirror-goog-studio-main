@@ -25,12 +25,12 @@ import com.android.ide.common.xml.ManifestData;
 import com.android.io.FileWrapper;
 import com.android.io.StreamException;
 import com.android.xml.AndroidManifest;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +48,7 @@ public class SymbolUtils {
      * @param libraries libraries which this library depends on
      * @param enforceUniquePackageName should the package name be unique in the project
      * @param mainPackageName package name of this library
-     * @param manifestFile manifest file, used to generate proguard rules
+     * @param manifestFile manifest file
      * @param sourceOut directory to contain R.java
      * @param symbolsOut directory to contain R.txt
      * @param proguardOut directory to contain proguard rules
@@ -64,14 +64,21 @@ public class SymbolUtils {
             @Nullable File proguardOut)
             throws IOException {
 
+        // Parse the manifest only when necessary.
+        if (mainPackageName == null || proguardOut != null) {
+            ManifestData manifestData = SymbolUtils.parseManifest(manifestFile);
+
+            if (mainPackageName == null) {
+                mainPackageName = getPackageNameFromManifest(manifestData);
+            }
+            // Generate aapt_rules.txt containing keep rules if minify is enabled.
+            if (proguardOut != null) {
+                Files.write(proguardOut.toPath(), generateMinifyKeepRules(manifestData));
+            }
+        }
+
         // finalIds set to false since this method should only be used for libraries.
         boolean finalIds = false;
-
-        ManifestData manifestData = getManifestData(manifestFile);
-
-        if (mainPackageName == null) {
-            mainPackageName = getPackageNameFromManifest(manifestData);
-        }
 
         mainSymbolTable = mainSymbolTable.rename(mainPackageName);
 
@@ -80,11 +87,6 @@ public class SymbolUtils {
 
         // Generate R.java file.
         SymbolIo.exportToJava(mainSymbolTable, sourceOut, finalIds);
-
-        // Generate aapt_rules.txt containing keep rules if minify is enabled.
-        if (proguardOut != null) {
-            generateProguardRules(proguardOut, manifestData);
-        }
 
         // Get symbol tables of the libraries we depend on.
         Set<SymbolTable> depSymbolTables =
@@ -173,35 +175,64 @@ public class SymbolUtils {
     }
 
     /**
-     * Generates proguard rules based on the activities declared in the manifest file. For each of
-     * the activities creates a {@code keep} rule.
+     * Generates keep rules based on the nodes declared in the manifest file.
      *
      * <p>Used in the new resource processing, since aapt is not used in processing libraries'
-     * resources and the {@code aapt_rules.txt} file and its rules are required by proguard.
+     * resources and the {@code aapt_rules.txt} file and its rules are required by minify.
      *
-     * @param out directory to contain proguard rules
-     * @param manifest to extract activities from
+     * <p>Goes through all {@code application}, {@code instrumentation}, {@code activity}, {@code
+     * service}, {@code provider} and {@code receiver} keep class data in the manifest, generates
+     * keep rules for each of them and returns them as a list.
+     *
+     * <p>For examples refer to {@link SymbolUtilsTest.java}.
+     *
+     * @param manifest containing keep class data
      */
-    public static void generateProguardRules(@Nullable File out, @NonNull ManifestData manifest)
-            throws IOException {
-        if (out == null) {
-            throw new IllegalStateException(
-                    "Minify is enabled but proguard output directory is not set.");
-        }
+    public static List<String> generateMinifyKeepRules(@NonNull ManifestData manifest) {
+        return generateKeepRules(manifest, false);
+    }
 
-        List<String> rules = new ArrayList<>();
+    /**
+     * Generates keep rules based on the nodes declared in the manifest file.
+     *
+     * <p>When AAPT2 is enabled, this method is called to generate {@code manifest_keep.txt} file
+     * for Dex. Goes through all {@code application}, {@code instrumentation}, {@code activity},
+     * {@code service}, {@code provider} and {@code receiver} nodes and generates keep rules for
+     * each of them, as long as the node doesn't declare it belongs to a private process. Returns
+     * the keep rules as a list.
+     *
+     * <p>For examples refer to {@link SymbolUtilsTest.java}.
+     *
+     * @param manifest containing keep class data
+     */
+    public static List<String> generateMainDexKeepRules(@NonNull ManifestData manifest) {
+        return generateKeepRules(manifest, true);
+    }
 
-        for (ManifestData.Activity activity : manifest.getActivities()) {
-            rules.add(String.format("-keep class %s { <init>(...); }", activity.getName()));
-        }
+    @VisibleForTesting
+    static List<String> generateKeepRules(@NonNull ManifestData manifest, boolean isMainDex) {
+        ImmutableList.Builder<String> rules = ImmutableList.builder();
 
-        try (FileOutputStream fos = new FileOutputStream(out);
-                PrintWriter pw = new PrintWriter(fos)) {
-            rules.forEach(pw::println);
-        } catch (IOException e) {
-            throw new IOException(
-                    "There was a problem writing the Proguard rules file in " + out, e);
+        for (ManifestData.KeepClass keepClass : manifest.getKeepClasses()) {
+            if (isMainDex) {
+                // When creating keep rules for Dex, we should sometimes omit some activity, service
+                // provider and receiver nodes. It is based on the process declared in their node or,
+                // if none was specified or was empty, on the default process of the application.
+                // If the process was not declared, was empty or starts with a colon symbol (last
+                // case meaning private process), we do not need to keep that class.
+                String type = keepClass.getType();
+                String process = keepClass.getProcess();
+                if ((type == AndroidManifest.NODE_ACTIVITY
+                                || type == AndroidManifest.NODE_SERVICE
+                                || type == AndroidManifest.NODE_PROVIDER
+                                || type == AndroidManifest.NODE_RECEIVER)
+                        && (process == null || process.isEmpty() || process.startsWith(":"))) {
+                    continue;
+                }
+            }
+            rules.add(String.format("-keep class %s { <init>(...); }", keepClass.getName()));
         }
+        return rules.build();
     }
 
     /**
@@ -215,7 +246,7 @@ public class SymbolUtils {
         SymbolIo.write(table, file);
     }
 
-    private static ManifestData getManifestData(@NonNull File manifestFile) throws IOException {
+    public static ManifestData parseManifest(@NonNull File manifestFile) throws IOException {
         AndroidManifestParser parser = new AndroidManifestParser();
         try {
             return parser.parse(new FileWrapper(manifestFile));

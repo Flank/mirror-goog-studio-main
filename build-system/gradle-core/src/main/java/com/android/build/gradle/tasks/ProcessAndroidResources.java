@@ -15,9 +15,6 @@
  */
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING;
-import static com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_DENISTY;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
@@ -33,6 +30,8 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
@@ -124,6 +123,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private boolean enableNewResourceProcessing;
 
+    private boolean enableAapt2;
+
     @Override
     protected void doFullTaskAction() throws IOException {
 
@@ -133,15 +134,16 @@ public class ProcessAndroidResources extends IncrementalTask {
             FileUtils.cleanOutputDir(srcOut);
         }
 
-        @Nullable
-        File resOutBaseNameFile = getPackageOutputFile();
+        @Nullable File resOutBaseNameFile = getPackageOutputFile();
 
         // If we are in instant run mode and we have an instant run enabled manifest
         File instantRunManifest = getInstantRunManifestFile();
-        File manifestFileToPackage = instantRunBuildContext.isInInstantRunMode() &&
-                instantRunManifest != null && instantRunManifest.exists()
-                    ? instantRunManifest
-                    : getManifestFile();
+        File manifestFileToPackage =
+                instantRunBuildContext.isInInstantRunMode()
+                                && instantRunManifest != null
+                                && instantRunManifest.exists()
+                        ? instantRunManifest
+                        : getManifestFile();
 
         // If the new resources flag is enabled and if we are dealing with a library process
         // resources through the new parsers
@@ -160,59 +162,59 @@ public class ProcessAndroidResources extends IncrementalTask {
                     srcOut,
                     getTextSymbolOutputDir(),
                     getProguardOutputFile());
+        } else {
+            AndroidBuilder builder = getBuilder();
+            MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+            ProcessOutputHandler processOutputHandler =
+                    new ParsingProcessOutputHandler(
+                            new ToolOutputParser(new AaptOutputParser(), getILogger()),
+                            new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
 
-            return;
-        }
+            String preferredDensity =
+                    getResourceConfigs().isEmpty()
+                            ? getPreferredDensity()
+                            : null; /* when resConfigs are set, we should respect it */
+            try {
+                Aapt aapt =
+                        AaptGradleFactory.make(
+                                builder,
+                                processOutputHandler,
+                                true,
+                                getProject(),
+                                FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
+                                aaptOptions.getCruncherProcesses());
 
-        AndroidBuilder builder = getBuilder();
-        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
-        ProcessOutputHandler processOutputHandler = new ParsingProcessOutputHandler(
-                new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+                AaptPackageConfig.Builder config =
+                        new AaptPackageConfig.Builder()
+                                .setManifestFile(manifestFileToPackage)
+                                .setOptions(getAaptOptions())
+                                .setResourceDir(getResDir())
+                                .setLibraries(getAndroidDependencies())
+                                .setCustomPackageForR(getPackageForR())
+                                .setSymbolOutputDir(getTextSymbolOutputDir())
+                                .setSourceOutputDir(srcOut)
+                                .setResourceOutputApk(resOutBaseNameFile)
+                                .setProguardOutputFile(getProguardOutputFile())
+                                .setMainDexListProguardOutputFile(
+                                        getMainDexListProguardOutputFile())
+                                .setVariantType(getType())
+                                .setDebuggable(getDebuggable())
+                                .setPseudoLocalize(getPseudoLocalesEnabled())
+                                .setResourceConfigs(getResourceConfigs())
+                                .setSplits(getSplits())
+                                .setPreferredDensity(preferredDensity)
+                                .setBaseFeature(getBaseFeature())
+                                .setPreviousFeatures(getPreviousFeatures());
 
-        String preferredDensity =
-                getResourceConfigs().isEmpty()
-                        ? getPreferredDensity()
-                        : null; /* when resConfigs are set, we should respect it */
-        try {
-            Aapt aapt =
-                    AaptGradleFactory.make(
-                            builder,
-                            processOutputHandler,
-                            true,
-                            getProject(),
-                            FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
-                            aaptOptions.getCruncherProcesses());
+                builder.processResources(aapt, config, getEnforceUniquePackageName());
 
-            AaptPackageConfig.Builder config =
-                    new AaptPackageConfig.Builder()
-                            .setManifestFile(manifestFileToPackage)
-                            .setOptions(getAaptOptions())
-                            .setResourceDir(getResDir())
-                            .setLibraries(getAndroidDependencies())
-                            .setCustomPackageForR(getPackageForR())
-                            .setSymbolOutputDir(getTextSymbolOutputDir())
-                            .setSourceOutputDir(srcOut)
-                            .setResourceOutputApk(resOutBaseNameFile)
-                            .setProguardOutputFile(getProguardOutputFile())
-                            .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
-                            .setVariantType(getType())
-                            .setDebuggable(getDebuggable())
-                            .setPseudoLocalize(getPseudoLocalesEnabled())
-                            .setResourceConfigs(getResourceConfigs())
-                            .setSplits(getSplits())
-                            .setPreferredDensity(preferredDensity)
-                            .setBaseFeature(getBaseFeature())
-                            .setPreviousFeatures(getPreviousFeatures());
+                if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
+                    LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
+                }
 
-            builder.processResources(aapt, config, getEnforceUniquePackageName());
-
-            if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
-                LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
+            } catch (InterruptedException | ProcessException e) {
+                throw new RuntimeException(e);
             }
-
-        } catch (IOException | InterruptedException | ProcessException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -259,7 +261,11 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setIncrementalFolder(
                     scope.getVariantScope().getIncrementalDir(getName()));
             processResources.setEnableNewResourceProcessing(
-                    scope.getGlobalScope().getProjectOptions().get(ENABLE_NEW_RESOURCE_PROCESSING));
+                    scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING));
+            processResources.setEnableAapt2(
+                    scope.getGlobalScope().getProjectOptions().get(BooleanOption.ENABLE_AAPT2));
 
             if (variantData.getSplitHandlingPolicy() ==
                     SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
@@ -372,7 +378,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         }
                         return scope.getGlobalScope()
                                 .getProjectOptions()
-                                .get(IDE_BUILD_TARGET_DENISTY);
+                                .get(StringOption.IDE_BUILD_TARGET_DENISTY);
                     });
 
             processResources.setMergeBlameLogFolder(
@@ -642,5 +648,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
         this.enableNewResourceProcessing = enableNewResourceProcessing;
+    }
+
+    @Input
+    public boolean isAapt2Enabled() {
+        return enableAapt2;
+    }
+
+    public void setEnableAapt2(boolean enableAapt2) {
+        this.enableAapt2 = enableAapt2;
     }
 }

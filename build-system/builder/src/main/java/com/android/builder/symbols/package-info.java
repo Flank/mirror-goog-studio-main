@@ -57,10 +57,15 @@
  * create the R.txt and R.java files for the library as well as R.java files for all the libraries
  * it depends on.
  *
- * <p>It is worth mentioning that with this new flow, the new pipeline needs to also create Proguard
+ * <p>It is worth mentioning that with this new flow, the new pipeline needs to also create minify
  * rules in the {@code aapt_rules.txt} file since we are not calling AAPT anymore. It is done by
- * parsing the library's android manifest in {@link com.android.builder.symbols.SymbolUtils} method
- * {@code generateProguardRules}.
+ * parsing the library's android manifest, creating keep rules and writing the file in method {@link
+ * com.android.builder.symbols.SymbolUtils#generateMinifyKeepRules}.
+ *
+ * <p>{@link com.android.builder.symbols.SymbolUtils#generateMainDexKeepRules method is used when
+ * AAPT2 is enabled and we need to create the {@code manifest_keep.txt} file with keep rules for
+ * Dex. In this case, we keep only nodes with shared processes and filter out remaining ones: if
+ * their {@code process} is null, empty or starts with a colon symbol (private process).
  *
  * <p>Naming conventions:
  *
