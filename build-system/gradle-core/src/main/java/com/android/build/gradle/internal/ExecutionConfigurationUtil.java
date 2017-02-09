@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.ide.common.internal.ExecutorSingleton;
-
 import org.gradle.api.Project;
 
 public class ExecutionConfigurationUtil {

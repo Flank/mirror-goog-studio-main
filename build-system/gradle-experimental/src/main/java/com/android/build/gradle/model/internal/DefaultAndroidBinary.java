@@ -24,11 +24,9 @@ import com.android.build.gradle.managed.NdkOptions;
 import com.android.build.gradle.managed.ProductFlavor;
 import com.android.build.gradle.model.NdkConfigImpl;
 import com.google.common.collect.Lists;
-
+import java.util.List;
 import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 import org.gradle.platform.base.binary.BaseBinarySpec;
-
-import java.util.List;
 
 /**
  * Binary for Android.

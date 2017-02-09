@@ -34,13 +34,6 @@ import com.android.utils.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,6 +51,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class LazyIncrementalFileMergerInputTest {

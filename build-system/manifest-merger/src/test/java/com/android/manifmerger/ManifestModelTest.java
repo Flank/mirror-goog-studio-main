@@ -23,16 +23,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link com.android.manifmerger.ManifestModel} class.

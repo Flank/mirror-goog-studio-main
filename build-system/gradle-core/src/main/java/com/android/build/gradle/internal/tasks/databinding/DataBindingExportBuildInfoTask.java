@@ -16,14 +16,17 @@
 
 package com.android.build.gradle.internal.tasks.databinding;
 
+import android.databinding.tool.LayoutXmlProcessor;
+import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-
+import java.io.File;
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
@@ -34,12 +37,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-
-import android.databinding.tool.LayoutXmlProcessor;
-import android.databinding.tool.processing.Scope;
-
-import java.io.File;
-import java.util.stream.Collectors;
 
 /**
  * This task creates a class which includes the build environment information, which is needed for

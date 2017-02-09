@@ -24,7 +24,6 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.transforms.JarMerger;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;

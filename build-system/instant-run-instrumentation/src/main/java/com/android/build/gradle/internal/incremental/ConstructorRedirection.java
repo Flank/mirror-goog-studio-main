@@ -17,14 +17,12 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-
+import java.util.List;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.tree.LabelNode;
-
-import java.util.List;
 
 /**
  * A specialized redirection that handles redirecting the part that redirects the

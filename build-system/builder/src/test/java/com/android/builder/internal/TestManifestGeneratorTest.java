@@ -19,11 +19,10 @@ package com.android.builder.internal;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
+import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
 
 public class TestManifestGeneratorTest {
 

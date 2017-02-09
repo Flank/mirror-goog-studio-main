@@ -23,7 +23,6 @@ import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
 import java.io.Serializable;
 
 /**

@@ -19,7 +19,6 @@ package com.android.builder.compiling;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.ide.common.process.ProcessOutputHandler;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;

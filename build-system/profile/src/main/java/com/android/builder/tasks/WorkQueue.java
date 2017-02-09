@@ -18,7 +18,6 @@ package com.android.builder.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

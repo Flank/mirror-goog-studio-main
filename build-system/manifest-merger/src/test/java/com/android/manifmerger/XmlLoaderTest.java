@@ -22,17 +22,13 @@ import com.android.ide.common.xml.XmlFormatPreferences;
 import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.google.common.base.Optional;
-
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for {@link XmlLoader}

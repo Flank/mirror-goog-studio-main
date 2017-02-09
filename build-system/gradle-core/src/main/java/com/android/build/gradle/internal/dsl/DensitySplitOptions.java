@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.util.Set;
 
 /**
  * DSL object for configuring APK Splits options.

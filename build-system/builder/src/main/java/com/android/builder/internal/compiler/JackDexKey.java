@@ -22,15 +22,13 @@ import com.android.repository.Revision;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
-
+import java.io.File;
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.io.File;
-import java.util.Map;
 
 /**
  * Key to store the dexed items. This is Jack specific key, and in addition to

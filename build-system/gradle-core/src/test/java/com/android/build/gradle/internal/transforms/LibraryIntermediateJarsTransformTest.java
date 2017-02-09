@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.api.transform.QualifiedContent.Scope.PROJECT;
-import static com.android.build.api.transform.QualifiedContent.Scope.PROJECT_LOCAL_DEPS;
 import static com.android.build.gradle.internal.transforms.TransformTestHelper.invocationBuilder;
 import static com.android.build.gradle.internal.transforms.TransformTestHelper.singleJarBuilder;
 import static com.android.testutils.truth.MoreTruth.assertThat;

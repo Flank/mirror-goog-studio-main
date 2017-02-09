@@ -22,15 +22,12 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.blame.SourceFile;
 import com.android.utils.PositionXmlParser;
 import com.google.common.base.Optional;
-
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Responsible for loading XML files.

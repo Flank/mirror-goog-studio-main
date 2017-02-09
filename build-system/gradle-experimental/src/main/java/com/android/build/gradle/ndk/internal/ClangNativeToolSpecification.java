@@ -25,11 +25,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
-
-import org.gradle.nativeplatform.platform.NativePlatform;
-
 import java.util.Collection;
 import java.util.Map;
+import org.gradle.nativeplatform.platform.NativePlatform;
 
 /**
  * Flag configuration for Clang toolchain.

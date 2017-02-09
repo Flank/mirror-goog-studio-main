@@ -26,7 +26,6 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.LineCollector;
 import com.google.common.base.MoreObjects;
-
 import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;

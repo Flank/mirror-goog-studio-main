@@ -19,9 +19,7 @@ package com.android.manifmerger;
 import static org.mockito.Mockito.verify;
 
 import com.android.utils.ILogger;
-
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;

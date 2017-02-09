@@ -24,13 +24,11 @@ import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-
+import java.io.IOException;
 import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.IOException;
 
 /**
  * Task to disable execution of the InstantRun slicer, dexer and packager when they are not needed.

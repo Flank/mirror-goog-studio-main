@@ -16,9 +16,9 @@
 
 package com.android.dx.util;
 
+import com.android.dex.Leb128;
 import com.android.dex.util.ByteOutput;
 import com.android.dex.util.ExceptionWithContext;
-import com.android.dex.Leb128;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;

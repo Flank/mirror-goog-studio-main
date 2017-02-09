@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
-
 import java.io.File;
 import java.util.regex.Pattern;
 

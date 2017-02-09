@@ -18,7 +18,6 @@ package com.android.builder.testing.api;
 
 import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
-
 import java.util.List;
 
 /**

@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.managed.AnnotationProcessorOptions;
 import com.android.build.gradle.managed.KeyValuePair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

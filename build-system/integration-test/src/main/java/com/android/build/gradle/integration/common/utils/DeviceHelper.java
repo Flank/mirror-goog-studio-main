@@ -16,27 +16,15 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.builder.testing.ConnectedDevice;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
-import com.android.builder.testing.api.DeviceProvider;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.IDevice;
-import com.android.sdklib.devices.Device;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
-import org.junit.Assert;
-
-import java.util.List;
 import java.util.Set;
 
 /**

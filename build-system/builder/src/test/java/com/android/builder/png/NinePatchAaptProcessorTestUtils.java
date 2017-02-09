@@ -48,8 +48,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 import javax.imageio.ImageIO;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Assert;
 
 /**
  * Utilities common to tests for both the synchronous and the asynchronous Aapt processor.

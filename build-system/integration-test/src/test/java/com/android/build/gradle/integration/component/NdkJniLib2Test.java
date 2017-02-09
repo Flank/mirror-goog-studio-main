@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;

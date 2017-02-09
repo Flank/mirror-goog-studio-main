@@ -20,7 +20,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;

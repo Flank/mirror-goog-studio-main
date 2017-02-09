@@ -24,9 +24,14 @@ import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.w3c.dom.Document;
@@ -37,15 +42,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-import java.util.logging.Logger;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for {@link com.android.manifmerger.XmlDocument}

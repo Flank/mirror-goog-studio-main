@@ -20,13 +20,11 @@ import com.android.build.gradle.internal.dependency.AndroidNativeDependencySpec;
 import com.android.build.gradle.internal.dependency.AndroidNativeDependencySpecContainer;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.Action;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import org.gradle.api.Action;
 
 /**
  * Implementation of {@link AndroidNativeDependencySpecContainer}

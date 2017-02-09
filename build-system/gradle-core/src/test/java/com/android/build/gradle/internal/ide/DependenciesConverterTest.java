@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
-import com.android.builder.dependency.level2.Dependency;
 import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
+import com.android.builder.dependency.level2.Dependency;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;

@@ -17,7 +17,6 @@
 package com.android.builder.model;
 
 import com.android.annotations.Nullable;
-
 import java.util.Set;
 
 /**

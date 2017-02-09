@@ -19,7 +19,6 @@ package com.android.builder.merge;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closer;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

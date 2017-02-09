@@ -20,8 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ide.NativeLibraryImpl;
+import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.Stl;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.model.NativeLibrary;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;

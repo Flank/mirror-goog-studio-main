@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.core;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -35,18 +34,15 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;

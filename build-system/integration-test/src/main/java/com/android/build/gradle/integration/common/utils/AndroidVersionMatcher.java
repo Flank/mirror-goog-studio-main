@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Range;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

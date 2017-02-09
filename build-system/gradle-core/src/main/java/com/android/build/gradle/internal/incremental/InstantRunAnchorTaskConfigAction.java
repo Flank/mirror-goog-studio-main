@@ -20,8 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-
 import org.gradle.api.DefaultTask;
 
 /**

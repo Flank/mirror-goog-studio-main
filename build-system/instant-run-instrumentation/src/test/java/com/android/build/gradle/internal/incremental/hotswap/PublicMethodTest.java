@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.AllAccessMethods;
 import com.example.basic.PublicMethodInvoker;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

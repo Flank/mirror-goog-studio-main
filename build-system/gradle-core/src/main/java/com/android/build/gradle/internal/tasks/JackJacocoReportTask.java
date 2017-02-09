@@ -26,8 +26,9 @@ import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
+import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
@@ -35,9 +36,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * Jacoco report task for Jack.

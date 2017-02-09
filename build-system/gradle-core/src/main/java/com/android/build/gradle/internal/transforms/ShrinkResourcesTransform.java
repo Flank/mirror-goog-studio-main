@@ -37,14 +37,12 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logger;
 
 /**
  * Implementation of Resource Shrinking as a transform.

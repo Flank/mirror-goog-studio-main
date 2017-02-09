@@ -16,9 +16,6 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dex.util.ExceptionWithContext;
-import com.android.dx.dex.code.LocalList;
-import com.android.dx.dex.code.PositionList;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_LINE;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_PC;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_LOCAL;
@@ -30,6 +27,10 @@ import static com.android.dx.dex.file.DebugInfoConstants.DBG_RESTART_LOCAL;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_PROLOGUE_END;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL;
 import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL_EXTENDED;
+
+import com.android.dex.util.ExceptionWithContext;
+import com.android.dx.dex.code.LocalList;
+import com.android.dx.dex.code.PositionList;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.CstMethodRef;

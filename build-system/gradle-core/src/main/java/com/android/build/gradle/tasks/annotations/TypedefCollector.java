@@ -20,7 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -30,11 +33,6 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /** Gathers information about typedefs (@IntDef and @StringDef */
 public class TypedefCollector extends ASTVisitor {

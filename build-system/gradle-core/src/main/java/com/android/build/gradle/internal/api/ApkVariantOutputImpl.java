@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.ZipAlign;
-
 import java.io.File;
 
 /**

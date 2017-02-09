@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.build.api.transform.QualifiedContent;
 import com.google.common.collect.ImmutableSet;
-
 import org.junit.Test;
 
 public class QualifiedContentScopeTest {

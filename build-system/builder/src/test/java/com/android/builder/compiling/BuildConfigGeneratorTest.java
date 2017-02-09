@@ -23,13 +23,11 @@ import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.List;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class BuildConfigGeneratorTest {

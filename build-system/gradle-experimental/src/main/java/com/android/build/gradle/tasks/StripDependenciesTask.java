@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.ndk.internal.NdkNamingScheme;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
@@ -31,7 +31,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
@@ -39,12 +42,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.api.tasks.incremental.InputFileDetails;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * Task to remove debug symbols from a native library depended on from jniLibs sourceSet.

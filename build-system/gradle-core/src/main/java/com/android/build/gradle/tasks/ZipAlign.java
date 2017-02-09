@@ -4,27 +4,25 @@ import static com.android.apkzlib.zfile.NativeLibrariesPackagingMode.UNCOMPRESSE
 import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
 
 import com.android.annotations.NonNull;
+import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.build.gradle.internal.annotations.PackageFile;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.variant.ApkVariantOutputData;
-import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
 import com.google.common.base.Preconditions;
-
+import java.io.File;
+import java.io.IOException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
 
 @ParallelizableTask
 public class ZipAlign extends DefaultTask implements FileSupplier {

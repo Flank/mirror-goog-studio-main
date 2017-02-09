@@ -21,7 +21,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.google.common.base.MoreObjects;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;

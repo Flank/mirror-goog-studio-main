@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifactOutput;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

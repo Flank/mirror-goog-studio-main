@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-
 import java.util.List;
 import java.util.Set;
 

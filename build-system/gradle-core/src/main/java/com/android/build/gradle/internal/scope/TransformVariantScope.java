@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
-
-import com.android.build.gradle.internal.incremental.BuildContext;
 import java.util.Collection;
 
 /**

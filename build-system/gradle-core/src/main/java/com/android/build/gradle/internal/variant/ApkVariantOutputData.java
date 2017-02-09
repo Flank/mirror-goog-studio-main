@@ -28,7 +28,6 @@ import com.android.build.gradle.tasks.ZipAlign;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;

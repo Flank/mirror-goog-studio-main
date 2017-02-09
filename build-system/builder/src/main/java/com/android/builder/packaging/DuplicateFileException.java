@@ -18,7 +18,6 @@ package com.android.builder.packaging;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.List;
 

@@ -27,7 +27,6 @@ import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;

@@ -43,7 +43,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
 

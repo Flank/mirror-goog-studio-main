@@ -26,14 +26,9 @@ import com.android.builder.model.SyncIssue;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
 

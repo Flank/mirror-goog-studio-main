@@ -18,9 +18,6 @@ package com.android.build.gradle.internal.test.report;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-
-import org.gradle.reporting.ReportRenderer;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +29,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Set;
+import org.gradle.reporting.ReportRenderer;
 
 public class HtmlReportRenderer {
     private final Set<URL> resources = new HashSet<>();

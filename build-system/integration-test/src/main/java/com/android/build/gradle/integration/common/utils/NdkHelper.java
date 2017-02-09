@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.repository.Revision;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 
 /**

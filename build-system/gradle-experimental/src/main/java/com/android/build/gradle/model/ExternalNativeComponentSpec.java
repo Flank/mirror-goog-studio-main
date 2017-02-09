@@ -17,7 +17,6 @@
 package com.android.build.gradle.model;
 
 import com.android.build.gradle.managed.NativeBuildConfig;
-
 import org.gradle.platform.base.GeneralComponentSpec;
 
 /**

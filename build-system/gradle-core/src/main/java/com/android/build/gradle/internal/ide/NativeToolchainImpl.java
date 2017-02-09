@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeToolchain;
-
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;

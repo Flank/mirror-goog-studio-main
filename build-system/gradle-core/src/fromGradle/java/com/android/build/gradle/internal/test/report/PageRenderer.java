@@ -15,11 +15,10 @@
  */
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.api.Action;
-import org.gradle.reporting.ReportRenderer;
-
 import java.io.IOException;
 import java.util.Map;
+import org.gradle.api.Action;
+import org.gradle.reporting.ReportRenderer;
 
 /**
  * Custom PageRenderer based on Gradle's PageRenderer

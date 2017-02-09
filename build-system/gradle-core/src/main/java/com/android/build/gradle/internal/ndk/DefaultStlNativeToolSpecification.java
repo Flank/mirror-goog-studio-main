@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ndk;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;

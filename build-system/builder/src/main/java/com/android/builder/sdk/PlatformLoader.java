@@ -27,15 +27,13 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.internal.FakeAndroidTarget;
+import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.repository.Revision;
 import com.android.utils.ILogger;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;

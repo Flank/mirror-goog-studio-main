@@ -19,27 +19,19 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidLibrary;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Configuration for an {@code aapt} packaging operation. This implementation provides getters

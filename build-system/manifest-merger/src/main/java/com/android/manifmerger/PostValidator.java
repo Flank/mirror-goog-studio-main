@@ -22,12 +22,10 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-
-import org.w3c.dom.Node;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Node;
 
 /**
  * Validator that runs post merging activities and verifies that all "tools:" instructions

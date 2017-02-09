@@ -19,7 +19,6 @@ package com.android.build.gradle;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
-
 import org.gradle.api.DomainObjectSet;
 
 /**

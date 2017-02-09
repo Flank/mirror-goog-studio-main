@@ -22,7 +22,6 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
-
 import java.util.Collections;
 import java.util.List;
 

@@ -30,7 +30,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
+import java.io.File;
+import java.util.Map;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Task;
@@ -41,9 +42,6 @@ import org.gradle.language.base.internal.registry.LanguageTransform;
 import org.gradle.nativeplatform.NativeLibraryBinary;
 import org.gradle.nativeplatform.SharedLibraryBinary;
 import org.gradle.platform.base.BinarySpec;
-
-import java.io.File;
-import java.util.Map;
 
 /**
  * {@link LanguageTransform} for {@link JniLibsSourceSet}.

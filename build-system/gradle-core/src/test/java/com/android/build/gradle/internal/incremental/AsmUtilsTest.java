@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.incremental;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
 import java.io.IOException;

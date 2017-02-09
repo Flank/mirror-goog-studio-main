@@ -23,11 +23,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.File;
 import java.io.IOException;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * File cache that stored files based on their origin path. The general contract of the

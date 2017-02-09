@@ -23,7 +23,10 @@ import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.InputFiles;
@@ -31,11 +34,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Pre-task for {@link AndroidJavaCompile} that will use all generated source folders as inputs.

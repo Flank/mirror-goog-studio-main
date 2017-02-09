@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.ProductFlavor;
-
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;

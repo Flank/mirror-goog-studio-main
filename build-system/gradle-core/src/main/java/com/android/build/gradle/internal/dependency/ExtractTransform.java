@@ -34,8 +34,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
-import org.gradle.api.attributes.Attribute;
-import org.gradle.api.internal.artifacts.ArtifactAttributes;
 
 /**
  */

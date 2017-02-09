@@ -22,7 +22,6 @@ import com.android.builder.model.Dependencies;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.util.Collection;
 
 

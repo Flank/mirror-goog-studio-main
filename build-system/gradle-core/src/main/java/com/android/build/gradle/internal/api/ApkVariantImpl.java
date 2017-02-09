@@ -22,7 +22,6 @@ import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
-
 import java.io.File;
 import java.util.Collection;
 import org.gradle.api.file.FileCollection;

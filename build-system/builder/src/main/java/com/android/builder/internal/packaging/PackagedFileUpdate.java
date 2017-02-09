@@ -21,7 +21,6 @@ import com.android.builder.files.RelativeFile;
 import com.android.ide.common.res2.FileStatus;
 import com.google.common.base.Objects;
 
-import java.util.function.Function;
 
 /**
  * Elementary update of a file in a package.

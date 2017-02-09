@@ -20,12 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
-import com.android.builder.packaging.ZipEntryFilter;
 import com.android.builder.packaging.ZipAbortException;
+import com.android.builder.packaging.ZipEntryFilter;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.io.Closer;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;

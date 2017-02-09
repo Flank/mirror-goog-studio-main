@@ -29,13 +29,11 @@ import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.logging.Logging;
-
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
+import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.logging.Logging;
 
 /**
  * Default NdkInfo.  Used for r10 and r11.

@@ -32,7 +32,6 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;

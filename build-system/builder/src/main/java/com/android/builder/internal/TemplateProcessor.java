@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

@@ -22,13 +22,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyContainer;
-import com.android.builder.dependency.level2.DependencyNode;
-import com.android.builder.model.MavenCoordinates;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * A temporary flattened representation of a dependency graph.

@@ -18,16 +18,14 @@ package com.android.build.gradle.integration.common.runner;
 
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.Lists;
-
-import org.junit.Test;
-import org.junit.runners.Suite;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 /**
  * JUnit runner that includes all JUnit4 tests.

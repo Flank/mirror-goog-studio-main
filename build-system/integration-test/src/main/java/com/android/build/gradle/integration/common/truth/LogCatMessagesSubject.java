@@ -24,7 +24,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.util.function.Predicate;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")

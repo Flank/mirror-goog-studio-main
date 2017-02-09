@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.Collection;
 import java.util.List;
 

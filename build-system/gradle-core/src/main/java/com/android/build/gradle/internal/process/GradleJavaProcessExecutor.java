@@ -23,14 +23,12 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-
+import java.io.File;
+import java.io.IOException;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.process.ExecResult;
 import org.gradle.process.JavaExecSpec;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Implementation of JavaProcessExecutor that uses Gradle's mechanism to execute external java

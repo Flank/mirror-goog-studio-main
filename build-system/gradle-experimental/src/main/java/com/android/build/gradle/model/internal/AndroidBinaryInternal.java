@@ -21,10 +21,8 @@ import com.android.build.gradle.managed.BuildType;
 import com.android.build.gradle.managed.NdkConfig;
 import com.android.build.gradle.managed.ProductFlavor;
 import com.android.build.gradle.model.AndroidBinary;
-
-import org.gradle.nativeplatform.NativeLibraryBinarySpec;
-
 import java.util.List;
+import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 
 /**
  * Internal interface for {@link AndroidBinary}

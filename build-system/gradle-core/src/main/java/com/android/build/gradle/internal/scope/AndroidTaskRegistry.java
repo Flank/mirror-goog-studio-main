@@ -19,16 +19,13 @@ package com.android.build.gradle.internal.scope;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskFactory;
-
+import groovy.lang.Closure;
+import java.util.HashMap;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.internal.ClosureBackedAction;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import groovy.lang.Closure;
 
 /**
  * Registry for creating and storing AndroidTask.

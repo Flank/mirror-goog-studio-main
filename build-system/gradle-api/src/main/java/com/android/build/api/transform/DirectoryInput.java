@@ -17,8 +17,6 @@
 package com.android.build.api.transform;
 
 import com.android.annotations.NonNull;
-import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;

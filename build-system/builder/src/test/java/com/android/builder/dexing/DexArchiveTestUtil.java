@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

@@ -19,7 +19,6 @@ package com.android.builder.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**

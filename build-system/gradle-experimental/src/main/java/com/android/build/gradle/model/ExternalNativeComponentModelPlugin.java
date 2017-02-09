@@ -37,7 +37,11 @@ import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -60,13 +64,6 @@ import org.gradle.platform.base.ComponentBinaries;
 import org.gradle.platform.base.ComponentType;
 import org.gradle.platform.base.TypeBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
-
-import javax.inject.Inject;
 
 /**
  * Plugin for importing projects built with external tools into Android Studio.

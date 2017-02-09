@@ -22,8 +22,8 @@ import com.android.build.gradle.api.AtomVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.AtomVariantData;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 
 /**

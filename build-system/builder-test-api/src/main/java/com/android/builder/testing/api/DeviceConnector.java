@@ -23,7 +23,6 @@ import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.TimeoutException;
 import com.android.utils.ILogger;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;

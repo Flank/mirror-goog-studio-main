@@ -18,7 +18,6 @@ package com.android.build.api.transform;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Preconditions;
 import java.io.File;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;

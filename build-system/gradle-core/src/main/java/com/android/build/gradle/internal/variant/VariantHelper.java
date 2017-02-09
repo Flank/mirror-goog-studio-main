@@ -18,16 +18,13 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.Action;
+import java.util.Collections;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.maven.MavenDeployer;
 import org.gradle.api.plugins.MavenPlugin;
 import org.gradle.api.tasks.Upload;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  */

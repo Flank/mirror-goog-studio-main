@@ -17,7 +17,6 @@ package com.android.builder.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;

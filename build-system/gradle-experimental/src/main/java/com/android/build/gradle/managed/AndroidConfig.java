@@ -31,17 +31,14 @@ import com.android.builder.core.LibraryRequest;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
-
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.Action;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelMap;
 import org.gradle.model.Unmanaged;
-
-import java.util.Collection;
-import java.util.Set;
 
 /**
  * Component model for all Android plugin.

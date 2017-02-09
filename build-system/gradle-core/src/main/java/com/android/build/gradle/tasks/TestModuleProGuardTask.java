@@ -17,15 +17,12 @@
 package com.android.build.gradle.tasks;
 
 import com.android.builder.core.VariantConfiguration;
-
+import java.io.IOException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.IOException;
-
 import proguard.ParseException;
 import proguard.gradle.ProGuardTask;
 

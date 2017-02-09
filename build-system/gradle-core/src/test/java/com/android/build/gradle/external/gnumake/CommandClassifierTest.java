@@ -33,11 +33,9 @@ package com.android.build.gradle.external.gnumake;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.util.List;
+import org.junit.Test;
 
 public class CommandClassifierTest {
 

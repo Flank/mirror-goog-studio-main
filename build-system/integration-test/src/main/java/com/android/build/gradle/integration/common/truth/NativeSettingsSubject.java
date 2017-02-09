@@ -21,7 +21,6 @@ import com.android.builder.model.NativeSettings;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.util.List;
 
 /**

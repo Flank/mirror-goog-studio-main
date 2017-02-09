@@ -21,13 +21,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.MavenCoordinates;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * Serializable implementation of MavenCoordinates for use in the model.

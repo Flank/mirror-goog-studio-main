@@ -23,7 +23,6 @@ import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.TwoColumnOutput;
-
 import java.util.BitSet;
 
 /**

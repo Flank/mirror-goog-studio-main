@@ -18,14 +18,13 @@ package com.android.build.gradle.internal.incremental;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Tests for the InstantRunMethodVerifier class

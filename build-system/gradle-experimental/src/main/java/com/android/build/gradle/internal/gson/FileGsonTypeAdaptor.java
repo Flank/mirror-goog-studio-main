@@ -20,11 +20,9 @@ import com.android.annotations.NonNull;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import org.gradle.api.internal.file.FileResolver;
-
 import java.io.File;
 import java.io.IOException;
+import org.gradle.api.internal.file.FileResolver;
 
 /**
  * Gson Type Adaptor for File.

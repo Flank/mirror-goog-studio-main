@@ -19,7 +19,6 @@ package com.android.builder.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
-
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;

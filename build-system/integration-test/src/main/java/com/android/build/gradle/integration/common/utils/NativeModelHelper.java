@@ -26,7 +26,6 @@ import com.android.builder.model.NativeFolder;
 import com.android.builder.model.NativeSettings;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;

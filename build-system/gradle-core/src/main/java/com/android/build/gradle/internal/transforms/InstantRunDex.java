@@ -26,8 +26,8 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.builder.core.DexByteCodeConverter;
@@ -42,9 +42,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.gradle.api.logging.Logger;
-
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -57,6 +54,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import org.gradle.api.logging.Logger;
 
 /**
  * Transform that takes the hot (or warm) swap classes and dexes them.

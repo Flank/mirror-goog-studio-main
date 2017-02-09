@@ -26,13 +26,11 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.artifacts.Configuration;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.gradle.api.artifacts.Configuration;
 
 /**
  * Implementation of {@link com.android.builder.model.Dependencies} over a Gradle

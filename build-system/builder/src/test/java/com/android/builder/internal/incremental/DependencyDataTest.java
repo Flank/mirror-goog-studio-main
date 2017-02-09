@@ -17,12 +17,10 @@
 package com.android.builder.internal.incremental;
 
 import com.android.testutils.TestResources;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import junit.framework.TestCase;
 
 public class DependencyDataTest extends TestCase {
 

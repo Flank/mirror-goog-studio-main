@@ -25,17 +25,15 @@ import com.android.utils.FileUtils;
 import com.android.utils.NullLogger;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Unit tests for {@link VectorDrawableRenderer}.

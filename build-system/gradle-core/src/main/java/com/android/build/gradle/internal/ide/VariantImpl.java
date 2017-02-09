@@ -23,7 +23,6 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
-
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Collection;

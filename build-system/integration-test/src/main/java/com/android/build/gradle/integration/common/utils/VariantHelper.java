@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.Variant;
-
 import java.io.File;
 import java.util.Collection;
 

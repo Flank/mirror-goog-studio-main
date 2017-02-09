@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
-
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;

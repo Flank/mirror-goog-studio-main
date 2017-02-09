@@ -23,7 +23,6 @@ import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.TransformInput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
 

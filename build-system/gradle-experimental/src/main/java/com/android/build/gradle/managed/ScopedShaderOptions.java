@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.managed;
 
+import java.util.List;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
-
-import java.util.List;
 
 /**
  * Managed type for scoped shader options.

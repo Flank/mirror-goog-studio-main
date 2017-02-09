@@ -19,7 +19,6 @@ package com.android.builder.model.level2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.MavenCoordinates;
 import java.io.File;
 import java.util.Collection;
 

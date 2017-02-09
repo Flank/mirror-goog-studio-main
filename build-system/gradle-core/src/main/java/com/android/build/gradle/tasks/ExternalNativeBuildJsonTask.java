@@ -21,11 +21,9 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.ide.common.process.ProcessException;
-
+import java.io.IOException;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.IOException;
 
 /**
  * Task wrapper around ExternalNativeJsonGenerator.

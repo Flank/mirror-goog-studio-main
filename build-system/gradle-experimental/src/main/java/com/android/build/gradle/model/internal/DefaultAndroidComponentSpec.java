@@ -19,7 +19,6 @@ package com.android.build.gradle.model.internal;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.builder.model.SigningConfig;
-
 import org.gradle.nativeplatform.NativeLibrarySpec;
 import org.gradle.platform.base.component.BaseComponentSpec;
 

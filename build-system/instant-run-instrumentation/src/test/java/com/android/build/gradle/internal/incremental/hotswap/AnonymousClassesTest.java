@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.AnonymousClasses;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

@@ -27,15 +27,13 @@ import com.android.build.gradle.internal.publishing.FilterDataPersistence;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.tasks.SplitFileSupplier;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.Task;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.gradle.api.Task;
 
 /**
  * Common code for all split related tasks

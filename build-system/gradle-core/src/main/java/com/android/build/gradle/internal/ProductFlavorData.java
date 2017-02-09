@@ -20,13 +20,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.builder.core.BuilderConstants;
-import com.android.utils.StringHelper;
-
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.plugins.BasePlugin;
 
 /**
  * Class containing a ProductFlavor and associated data (sourcesets)

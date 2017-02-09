@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;

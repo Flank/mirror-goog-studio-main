@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.COMPATIBLE;
 import static org.junit.Assert.assertEquals;
 
+import Lpackage.AnyClassWithMethodInvocation;
 import com.android.build.gradle.internal.incremental.fixture.VerifierHarness;
 import com.google.common.collect.Lists;
 import com.verifier.tests.AddClassAnnotation;
@@ -49,15 +50,11 @@ import com.verifier.tests.RemoveMethodAnnotation;
 import com.verifier.tests.RemoveNotRuntimeClassAnnotation;
 import com.verifier.tests.UnchangedClass;
 import com.verifier.tests.UnchangedClassInitializer1;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
-
-import java.io.IOException;
-
-import Lpackage.AnyClassWithMethodInvocation;
 
 /** Tests for the {@link InstantRunVerifier} */
 public class InstantRunVerifierTest {

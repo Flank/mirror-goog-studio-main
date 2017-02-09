@@ -19,7 +19,6 @@ package com.android.builder.files;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
-
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;

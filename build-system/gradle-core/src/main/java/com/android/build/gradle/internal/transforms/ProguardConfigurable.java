@@ -22,14 +22,8 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 

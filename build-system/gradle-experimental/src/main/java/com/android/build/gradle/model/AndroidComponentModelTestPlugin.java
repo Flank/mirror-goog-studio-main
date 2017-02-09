@@ -28,7 +28,6 @@ import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.base.Preconditions;
-
 import org.gradle.api.Task;
 import org.gradle.model.ModelMap;
 import org.gradle.model.Mutate;

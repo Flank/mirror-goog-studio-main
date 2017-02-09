@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import com.android.utils.ILogger;
-
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 

@@ -18,7 +18,6 @@ package com.android.builder.internal.compiler;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.util.Set;
 

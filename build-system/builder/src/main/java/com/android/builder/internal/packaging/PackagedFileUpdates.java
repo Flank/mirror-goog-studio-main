@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.res2.FileStatus;
 import com.google.common.collect.Sets;
-
 import java.util.Map;
 import java.util.Set;
 

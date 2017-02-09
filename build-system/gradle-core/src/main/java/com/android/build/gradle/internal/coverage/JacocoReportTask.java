@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

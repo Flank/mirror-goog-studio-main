@@ -23,10 +23,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import com.android.builder.core.AndroidBuilder;
-import com.google.common.collect.Sets;
 
-import java.io.File;
-import java.util.Collection;
 
 /**
  * Implementation of the {@link InstantAppVariant} interface around a

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.SyncIssue;
-
 import java.util.Arrays;
 
 /**

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
-
 import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ConfigurationContainer;

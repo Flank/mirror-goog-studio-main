@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

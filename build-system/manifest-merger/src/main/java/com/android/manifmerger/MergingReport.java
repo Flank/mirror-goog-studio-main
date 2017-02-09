@@ -26,14 +26,11 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.ILogger;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Contains the result of 2 files merging.

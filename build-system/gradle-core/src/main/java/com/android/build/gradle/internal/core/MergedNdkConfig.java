@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.util.List;
 import java.util.Set;
 

@@ -37,7 +37,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;

@@ -23,7 +23,6 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;

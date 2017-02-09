@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.managed;
 
-import org.gradle.model.Managed;
-
 import java.util.Set;
+import org.gradle.model.Managed;
 
 /**
  * Managed VectorDrawablesOptions.

@@ -43,7 +43,14 @@ import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.utils.XmlUtils;
-
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.jar.JarOutputStream;
+import java.util.zip.ZipEntry;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
@@ -58,16 +65,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.function.Supplier;
-import java.util.jar.JarOutputStream;
-import java.util.zip.ZipEntry;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Reads the merged manifest file and creates an AppInfo class listing the applicationId and

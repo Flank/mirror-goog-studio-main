@@ -22,14 +22,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.google.common.base.Optional;
-
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Utilities for testing ManifestMerge classes.

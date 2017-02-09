@@ -16,7 +16,6 @@
 
 package com.android.build.api.transform;
 
-import com.google.common.annotations.Beta;
 
 /**
  * An exception during the execution of a Transform.

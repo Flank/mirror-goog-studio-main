@@ -19,10 +19,8 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.model.CoreCmakeOptions;
-
-import org.gradle.api.Project;
-
 import java.io.File;
+import org.gradle.api.Project;
 
 /**
  * DSL object for per-module CMake configurations, such as the path to your

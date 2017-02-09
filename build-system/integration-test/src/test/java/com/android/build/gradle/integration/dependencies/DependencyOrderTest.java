@@ -17,25 +17,14 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
-import com.android.builder.model.level2.DependencyGraphs;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

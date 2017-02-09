@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.Nullable;
-
 import java.util.function.Supplier;
 
 /**

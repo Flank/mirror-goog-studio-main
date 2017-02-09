@@ -25,7 +25,10 @@ import com.android.utils.StringHelper;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.NamedDomainObjectSet;
 import org.gradle.api.internal.resolve.ProjectModelResolver;
@@ -41,11 +44,6 @@ import org.gradle.nativeplatform.Repositories;
 import org.gradle.nativeplatform.SharedLibraryBinary;
 import org.gradle.nativeplatform.StaticLibraryBinary;
 import org.gradle.nativeplatform.internal.prebuilt.PrebuiltLibraryResolveException;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Resolver for determining native dependencies based on {@link AndroidNativeDependencySpec}

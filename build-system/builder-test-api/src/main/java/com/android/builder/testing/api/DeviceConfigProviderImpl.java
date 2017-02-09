@@ -18,7 +18,6 @@ package com.android.builder.testing.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.List;
 
 /**

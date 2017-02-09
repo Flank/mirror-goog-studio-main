@@ -23,7 +23,6 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-
 import java.io.File;
 import java.util.Set;
 

@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.managed;
 
-import org.gradle.model.Managed;
-
 import java.io.File;
 import java.util.List;
+import org.gradle.model.Managed;
 
 /**
  * Managed type for specifying a JSON configurations file.

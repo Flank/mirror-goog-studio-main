@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
-
 import java.io.Closeable;
 import java.io.IOException;
 

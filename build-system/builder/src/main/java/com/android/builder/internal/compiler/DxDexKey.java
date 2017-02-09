@@ -25,13 +25,11 @@ import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.io.File;
+import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * Key to store the dexed items. This is dx tool specific key, and in addition to

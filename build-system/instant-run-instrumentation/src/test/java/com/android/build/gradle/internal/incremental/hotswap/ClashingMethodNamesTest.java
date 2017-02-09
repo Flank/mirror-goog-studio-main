@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.incremental.hotswap;
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.ClashStaticMethod;
 import com.google.common.truth.Expect;
-
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;

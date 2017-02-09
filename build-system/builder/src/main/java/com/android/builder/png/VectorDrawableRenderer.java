@@ -34,12 +34,10 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-
 import javax.imageio.ImageIO;
 
 /**

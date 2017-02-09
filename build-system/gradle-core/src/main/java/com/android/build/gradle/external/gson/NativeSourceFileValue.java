@@ -17,9 +17,7 @@
 package com.android.build.gradle.external.gson;
 
 import com.android.annotations.Nullable;
-
 import java.io.File;
-import java.util.List;
 
 /**
  * Value type to be used with Gson.

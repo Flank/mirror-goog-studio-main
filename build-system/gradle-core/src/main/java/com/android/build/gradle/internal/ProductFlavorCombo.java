@@ -27,11 +27,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.Named;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import org.gradle.api.Named;
 
 /**
  * A combination of product flavors for a variant, each belonging to a different flavor dimension.

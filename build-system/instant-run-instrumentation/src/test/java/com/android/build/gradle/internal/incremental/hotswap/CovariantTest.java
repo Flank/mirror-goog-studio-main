@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.CovariantChild;
 import com.example.basic.CovariantParent;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

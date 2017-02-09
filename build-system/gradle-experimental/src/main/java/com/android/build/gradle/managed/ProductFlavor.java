@@ -22,10 +22,8 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.DimensionAware;
 import com.android.builder.model.Variant;
-
-import org.gradle.model.Managed;
-
 import java.util.Set;
+import org.gradle.model.Managed;
 
 /**
  * A Managed product flavor.

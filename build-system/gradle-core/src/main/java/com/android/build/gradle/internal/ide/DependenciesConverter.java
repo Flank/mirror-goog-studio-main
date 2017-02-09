@@ -29,9 +29,9 @@ import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
+import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyNode.NodeType;
-import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 

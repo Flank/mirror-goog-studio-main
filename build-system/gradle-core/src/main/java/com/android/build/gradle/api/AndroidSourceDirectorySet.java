@@ -17,14 +17,12 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
-
-import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.util.PatternFilterable;
-
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.tasks.util.PatternFilterable;
 
 /**
  * An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.
