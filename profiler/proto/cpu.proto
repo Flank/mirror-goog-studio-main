@@ -229,8 +229,8 @@ message CpuProfilingAppStartRequest {
   Profiler profiler = 4;
   // When using ART, the size of the in-memory buffer that holds tracing data.
   int32 buffer_size_in_mb = 5;
-  // When using sampling, the Hertz of sampling.
-  int32 sampling_freq = 6;
+  // When using sampling, the sampling interval in microseconds.
+  int32 sampling_interval_us = 6;
 }
 
 // Returns the status and absolute path location (on device) where the trace
