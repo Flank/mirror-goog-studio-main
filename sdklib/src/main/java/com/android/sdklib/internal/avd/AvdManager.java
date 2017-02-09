@@ -1426,7 +1426,13 @@ public class AvdManager {
 
         FileOpFileWrapper configIniFile = null;
         Map<String, String> properties = null;
-        LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
+        LoggerProgressIndicatorWrapper progress =
+                new LoggerProgressIndicatorWrapper(log) {
+                    @Override
+                    public void logVerbose(@NonNull String s) {
+                        // Skip verbose messages
+                    }
+                };
 
         // load the AVD properties.
         if (avdPath != null) {
