@@ -27,7 +27,7 @@ namespace profiler {
 
 class CpuProfilerComponent final : public ProfilerComponent {
  private:
-  // Deafult collection interval is 100000 microseconds, i.e., 0.1 second.
+  // Default collection interval is 100000 microseconds, i.e., 0.1 second.
   static const int64_t kDefaultCollectionIntervalUs = 100000;
 
  public:

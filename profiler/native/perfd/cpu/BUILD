@@ -18,6 +18,7 @@ cc_library(
         "procfs_files.h",
         "simpleperf_manager.h",
         "thread_monitor.h",
+        "threads_sample.h",
     ],
     copts = [
         "-Itools/base/profiler/native",

@@ -51,4 +51,41 @@ vector<CpuProfilerData> CpuCache::Retrieve(int32_t app_id, int64_t from,
   return filtered;
 }
 
+void CpuCache::AddThreads(const ThreadsSample& threads_sample) {
+  std::lock_guard<std::mutex> lock(threads_cache_mutex_);
+  threads_cache_.push_back(threads_sample);
+}
+
+CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t app_id,
+                                                    int64_t from, int64_t to) {
+  std::lock_guard<std::mutex> lock(threads_cache_mutex_);
+  CpuCache::ThreadSampleResponse response;
+  const ThreadsSample* latest_before_from = nullptr;
+  // TODO: optimize it to binary search the initial point. That will also make
+  // it easier to get the data from the greatest timestamp smaller than |from|.
+  for (const auto& sample : threads_cache_) {
+    auto id = sample.basic_info.process_id();
+    auto timestamp = sample.basic_info.end_timestamp();
+    if (id == app_id || app_id == proto::AppId::ANY) {
+      if (timestamp > from && timestamp <= to) {
+        response.activity_samples.push_back(sample);
+      }
+    }
+    // Update the latest sample that was registered before (or at the
+    // same time) of the request start timestamp, in case there is one.
+    if (timestamp <= from &&
+        (latest_before_from == nullptr ||
+         timestamp > latest_before_from->basic_info.end_timestamp())) {
+      latest_before_from = &sample;
+    }
+  }
+
+  if (latest_before_from != nullptr) {
+    // Add the snapshot to the response
+    response.snapshot = latest_before_from->snapshot;
+  }
+
+  return response;
+}
+
 }  // namespace profiler
