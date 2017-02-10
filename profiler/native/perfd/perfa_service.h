@@ -19,11 +19,19 @@
 #include <grpc++/grpc++.h>
 
 #include "proto/perfa_service.grpc.pb.h"
+#include "utils/clock.h"
+
+#include <unordered_map>
 
 namespace profiler {
 
 class PerfaServiceImpl : public proto::PerfaService::Service {
  public:
+  explicit PerfaServiceImpl(
+      const Clock& clock,
+      std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
+      : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
+
   grpc::Status RegisterAgent(
       grpc::ServerContext* context, const proto::RegisterApplication* request,
       grpc::ServerWriter<proto::PerfaControlRequest>* writer) override;
@@ -31,6 +39,15 @@ class PerfaServiceImpl : public proto::PerfaService::Service {
   grpc::Status DataStream(grpc::ServerContext* context,
                           grpc::ServerReader<proto::CommonData>* reader,
                           proto::DataStreamResponse* response) override;
+
+  grpc::Status HeartBeat(grpc::ServerContext* context,
+                          const proto::CommonData* data,
+                          proto::HeartBeatResponse* response) override;
+
+ private:
+  const Clock& clock_;
+  // used for marking the last time this service receives a ping from perfa.
+  std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };
 
 }  // namespace profiler

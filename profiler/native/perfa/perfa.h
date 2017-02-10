@@ -27,6 +27,8 @@
 #include "proto/internal_network.grpc.pb.h"
 #include "proto/perfa_service.grpc.pb.h"
 
+#include "utils/clock.h"
+
 namespace profiler {
 
 class Perfa {
@@ -53,6 +55,8 @@ class Perfa {
   }
 
  private:
+  static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
+
   // Use Perfa::Initialize to initialize
   explicit Perfa(const char* address);
   ~Perfa() = delete;  // TODO: Support destroying perfa.
@@ -62,6 +66,8 @@ class Perfa {
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
+
+  std::thread heartbeat_thread_;
 
   // TODO: Move this over to the StreamingRpcManager when it is ready
   std::thread control_thread_;
@@ -74,6 +80,7 @@ class Perfa {
   std::unique_ptr<grpc::ClientWriter<proto::CommonData>> data_stream_;
 
   void RunControlThread();
+  void RunHeartbeatThread();
 };
 
 }  // end of namespace profiler

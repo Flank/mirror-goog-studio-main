@@ -23,13 +23,19 @@
 #include "utils/clock.h"
 #include "utils/file_cache.h"
 
+#include <unordered_map>
+
 namespace profiler {
 
 class ProfilerServiceImpl final
     : public profiler::proto::ProfilerService::Service {
  public:
-  explicit ProfilerServiceImpl(Daemon::Utilities* utilities)
-      : clock_(utilities->clock()), file_cache_(*utilities->file_cache()) {}
+  explicit ProfilerServiceImpl(
+      Daemon::Utilities* utilities,
+      std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
+      : clock_(utilities->clock()),
+        file_cache_(*utilities->file_cache()),
+        heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
                         const profiler::proto::TimeRequest* request,
@@ -43,10 +49,18 @@ class ProfilerServiceImpl final
                         const profiler::proto::BytesRequest* request,
                         profiler::proto::BytesResponse* response) override;
 
+  grpc::Status GetAgentStatus(
+      grpc::ServerContext* context,
+      const profiler::proto::AgentStatusRequest* request,
+      profiler::proto::AgentStatusResponse* response) override;
+
  private:
+  static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
+
   // Clock knows about timestamps.
   const Clock& clock_;
   FileCache& file_cache_;
+  std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };
 
 }  // namespace profiler
