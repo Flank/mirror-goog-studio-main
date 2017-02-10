@@ -168,7 +168,7 @@ public class DexArchivesTest {
     }
 
     private void assembleDebug() throws IOException, InterruptedException {
-        project.executor().enableDexArchive().run("assembleDebug");
+        project.executor().withUseDexArchive(true).run("assembleDebug");
     }
 
     @NonNull

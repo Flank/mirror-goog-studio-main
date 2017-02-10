@@ -74,7 +74,7 @@ public class AntennaPodPerformanceMatrixTest {
         return new ProjectScenario[] {
             ProjectScenario.NORMAL,
             ProjectScenario.JACK_ON,
-            ProjectScenario.DEX_ARCHIVE_MONODEX,
+            //ProjectScenario.DEX_ARCHIVE_MONODEX,
             ProjectScenario.DEX_OUT_OF_PROCESS,
             ProjectScenario.JACK_OUT_OF_PROCESS,
         };
@@ -258,7 +258,7 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withtUseDexArchive(projectScenario.useDexArchive());
+                .withUseDexArchive(projectScenario.useDexArchive());
     }
 
     private boolean isJackOn() {

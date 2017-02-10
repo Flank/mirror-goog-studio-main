@@ -65,12 +65,12 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static ProjectScenario[] getParameters() {
-        return new ProjectScenario[]{
-                ProjectScenario.LEGACY_MULTIDEX,
-                ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
-                ProjectScenario.NATIVE_MULTIDEX,
-                ProjectScenario.JACK_NATIVE_MULTIDEX,
-                ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
+        return new ProjectScenario[] {
+            ProjectScenario.LEGACY_MULTIDEX,
+            //ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
+            ProjectScenario.NATIVE_MULTIDEX,
+            ProjectScenario.JACK_NATIVE_MULTIDEX,
+            //ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
         };
     }
 
@@ -150,6 +150,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withtUseDexArchive(projectScenario.useDexArchive());
+                .withUseDexArchive(projectScenario.useDexArchive());
     }
 }
