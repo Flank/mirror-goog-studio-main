@@ -47,6 +47,10 @@ service ProfilerService {
   // return an ID which can be used to fetch data using this central cache.
   rpc GetBytes(BytesRequest) returns (BytesResponse) {
   }
+
+  // Query for whether perfa is alive.
+  rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
+  }
 }
 
 message TimeRequest {
@@ -99,6 +103,23 @@ message BytesResponse {
   // Byte contents from a cache, or "" if no data was found associated with the
   // cache key used to fetch it, or if the data was removed after some timeout.
   bytes contents = 1;
+}
+
+message AgentStatusRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message AgentStatusResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    ATTACHED = 1;
+    DETACHED = 2;
+  }
+  Status status = 1;
+  // The last time a heartbeat was received from the requested agent.
+  // If no heartbeat was ever detected, this returns INT64_MIN.
+  int64 last_timestamp = 2;
 }
 
 message DeviceProcesses {

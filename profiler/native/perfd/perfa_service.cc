@@ -41,4 +41,11 @@ grpc::Status PerfaServiceImpl::DataStream(
   return grpc::Status::OK;
 }
 
+grpc::Status PerfaServiceImpl::HeartBeat(grpc::ServerContext* context,
+                                         const proto::CommonData* data,
+                                         proto::HeartBeatResponse* response) {
+  heartbeat_timestamp_map_[data->process_id()] = clock_.GetCurrentTime();
+  return grpc::Status::OK;
+}
+
 }  // namespace profiler

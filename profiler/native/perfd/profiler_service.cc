@@ -23,6 +23,7 @@
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+using profiler::proto::AgentStatusResponse;
 
 namespace profiler {
 
@@ -53,6 +54,26 @@ Status ProfilerServiceImpl::GetBytes(
     ServerContext* context, const profiler::proto::BytesRequest* request,
     profiler::proto::BytesResponse* response) {
   response->set_contents(file_cache_.GetFile(request->id())->Contents());
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::GetAgentStatus(
+    ServerContext* context, const profiler::proto::AgentStatusRequest* request,
+    profiler::proto::AgentStatusResponse* response) {
+  auto got = heartbeat_timestamp_map_.find(request->process_id());
+  if (got != heartbeat_timestamp_map_.end()) {
+    int64_t current_time = clock_.GetCurrentTime();
+    if (kHeartbeatThresholdNs > (current_time - got->second)) {
+      response->set_status(AgentStatusResponse::ATTACHED);
+    } else {
+      response->set_status(AgentStatusResponse::DETACHED);
+    }
+    response->set_last_timestamp(got->second);
+  } else {
+    response->set_status(AgentStatusResponse::DETACHED);
+    response->set_last_timestamp(INT64_MIN);
+  }
+
   return Status::OK;
 }
 
