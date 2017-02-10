@@ -94,6 +94,7 @@ message SystemData {
   int64 end_timestamp = 4;
   int32 process_id = 5;
   int64 event_id = 6;
+  string event_data = 7;
 }
 
 message ActivityData {

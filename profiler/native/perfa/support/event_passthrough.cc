@@ -80,6 +80,15 @@ void SendFragmentEvent(JNIEnv* env, const jstring& name,
 
 extern "C" {
 // TODO: Create figure out how to autogenerate this class, to avoid typo errors.
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_event_InputConnectionWrapper_sendKeyboardEvent(
+    JNIEnv* env, jobject thiz, jstring jtext) {
+  SystemData event;
+  event.set_type(SystemData::KEY);
+  JStringWrapper text(env, jtext);
+  event.set_event_data(text.get());
+  SendSystemEvent(&event, GetClock().GetCurrentTime());
+}
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(
