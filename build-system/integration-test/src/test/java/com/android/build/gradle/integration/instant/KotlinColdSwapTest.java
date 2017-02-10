@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
+import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.testutils.apk.Apk;
@@ -41,7 +41,8 @@ import org.junit.Test;
 /** Smoke test for cold swap builds of Kotlin apps. */
 public class KotlinColdSwapTest {
 
-    private static InstantRunVerifierStatus EXPECTED_STATUS = InstantRunVerifierStatus.METHOD_ADDED;
+    private static final InstantRunVerifierStatus EXPECTED_STATUS =
+            InstantRunVerifierStatus.METHOD_ADDED;
 
     @Rule
     public GradleTestProject project =
@@ -88,7 +89,7 @@ public class KotlinColdSwapTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    @NonNull List<BuildContext.Artifact> artifacts)
                                     throws Exception {
                                 assertThat(artifacts).hasSize(1);
                                 checkDalvikApk(new Apk(artifacts.get(0).getLocation()));
@@ -132,10 +133,10 @@ public class KotlinColdSwapTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
+                                    @NonNull List<BuildContext.Artifact> artifacts)
                                     throws Exception {
                                 assertThat(artifacts).hasSize(1);
-                                for (InstantRunBuildContext.Artifact artifact : artifacts) {
+                                for (BuildContext.Artifact artifact : artifacts) {
                                     expect.that(artifact.getType()).isEqualTo(FileType.SPLIT);
                                     checkUpdatedClassPresence(
                                             new SplitApks(
