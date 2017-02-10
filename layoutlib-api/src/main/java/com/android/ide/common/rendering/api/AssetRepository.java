@@ -34,4 +34,8 @@ public class AssetRepository {
     public InputStream openAsset(String path, int mode) throws IOException {
         return null;
     }
+
+    public InputStream openNonAsset(int cookie, String path, int mode) throws IOException {
+        return null;
+    }
 }
