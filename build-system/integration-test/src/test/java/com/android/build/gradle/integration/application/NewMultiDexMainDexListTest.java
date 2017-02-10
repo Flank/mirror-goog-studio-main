@@ -96,15 +96,11 @@ public class NewMultiDexMainDexListTest {
 
     private void checkBuild() throws Exception {
 
-        project.executor()
-                .disableDexArchive()
-                .run(testProject.assembleTask);
+        project.executor().withUseDexArchive(false).run(testProject.assembleTask);
 
         Set<String> mainDexList = getMainDexList();
 
-        project.executor()
-                .enableDexArchive()
-                .run(testProject.assembleTask);
+        project.executor().withUseDexArchive(true).run(testProject.assembleTask);
 
         Set<String> mainDexList2 = getMainDexList();
 
