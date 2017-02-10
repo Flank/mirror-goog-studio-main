@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.compiling.BuildConfigGenerator;
@@ -31,6 +32,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -58,21 +60,21 @@ public class GenerateBuildConfig extends BaseTask {
 
     private String buildConfigPackageName;
 
-    private String appPackageName;
+    private Supplier<String> appPackageName;
 
-    private boolean debuggable;
+    private Supplier<Boolean> debuggable;
 
-    private String flavorName;
+    private Supplier<String> flavorName;
 
-    private List<String> flavorNamesWithDimensionNames;
+    private Supplier<List<String>> flavorNamesWithDimensionNames;
 
     private String buildTypeName;
 
-    private String versionName;
+    private Supplier<String> versionName;
 
-    private int versionCode;
+    private Supplier<Integer> versionCode;
 
-    private List<Object> items;
+    private Supplier<List<Object>> items;
 
     @Input
     public String getBuildConfigPackageName() {
@@ -85,39 +87,22 @@ public class GenerateBuildConfig extends BaseTask {
 
     @Input
     public String getAppPackageName() {
-        return appPackageName;
-    }
-
-    public void setAppPackageName(String appPackageName) {
-        this.appPackageName = appPackageName;
+        return appPackageName.get();
     }
 
     @Input
     public boolean isDebuggable() {
-        return debuggable;
-    }
-
-    public void setDebuggable(boolean debuggable) {
-        this.debuggable = debuggable;
+        return debuggable.get();
     }
 
     @Input
     public String getFlavorName() {
-        return flavorName;
-    }
-
-    public void setFlavorName(String flavorName) {
-        this.flavorName = flavorName;
+        return flavorName.get();
     }
 
     @Input
     public List<String> getFlavorNamesWithDimensionNames() {
-        return flavorNamesWithDimensionNames;
-    }
-
-    public void setFlavorNamesWithDimensionNames(
-            List<String> flavorNamesWithDimensionNames) {
-        this.flavorNamesWithDimensionNames = flavorNamesWithDimensionNames;
+        return flavorNamesWithDimensionNames.get();
     }
 
     @Input
@@ -132,28 +117,16 @@ public class GenerateBuildConfig extends BaseTask {
     @Input
     @Optional
     public String getVersionName() {
-        return versionName;
-    }
-
-    public void setVersionName(String versionName) {
-        this.versionName = versionName;
+        return versionName.get();
     }
 
     @Input
     public int getVersionCode() {
-        return versionCode;
-    }
-
-    public void setVersionCode(int versionCode) {
-        this.versionCode = versionCode;
+        return versionCode.get();
     }
 
     public List<Object> getItems() {
-        return items;
-    }
-
-    public void setItems(List<Object> items) {
-        this.items = items;
+        return items.get();
     }
 
     @Input
@@ -193,13 +166,17 @@ public class GenerateBuildConfig extends BaseTask {
         // where debug is true, which is the most likely scenario while the user is looking
         // at source code.
         //map.put(PH_DEBUG, Boolean.toString(mDebug));
-        generator.addField("boolean", "DEBUG",
-                isDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false")
-                .addField("String", "APPLICATION_ID", '"' + getAppPackageName() + '"')
+        generator
+                .addField(
+                        "boolean",
+                        "DEBUG",
+                        isDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false")
+                .addField("String", "APPLICATION_ID", '"' + appPackageName.get() + '"')
                 .addField("String", "BUILD_TYPE", '"' + getBuildTypeName() + '"')
                 .addField("String", "FLAVOR", '"' + getFlavorName() + '"')
                 .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
-                .addField("String", "VERSION_NAME", '"' + Strings.nullToEmpty(getVersionName()) + '"')
+                .addField(
+                        "String", "VERSION_NAME", '"' + Strings.nullToEmpty(getVersionName()) + '"')
                 .addItems(getItems());
 
         List<String> flavors = getFlavorNamesWithDimensionNames();
@@ -265,36 +242,28 @@ public class GenerateBuildConfig extends BaseTask {
                         }
                     });
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask,
-                    "appPackageName",
-                    variantConfiguration::getApplicationId);
+            generateBuildConfigTask.appPackageName =
+                    TaskInputHelper.memoize(variantConfiguration::getApplicationId);
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask, "versionName", variantConfiguration::getVersionName);
+            generateBuildConfigTask.versionName =
+                    TaskInputHelper.memoize(variantConfiguration::getVersionName);
+            generateBuildConfigTask.versionCode =
+                    TaskInputHelper.memoize(variantConfiguration::getVersionCode);
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask, "versionCode", variantConfiguration::getVersionCode);
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask,
-                    "debuggable",
-                    () -> variantConfiguration.getBuildType().isDebuggable());
+            generateBuildConfigTask.debuggable =
+                    TaskInputHelper.memoize(
+                            () -> variantConfiguration.getBuildType().isDebuggable());
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask,
-                    "buildTypeName",
-                    () -> variantConfiguration.getBuildType().getName());
+            generateBuildConfigTask.buildTypeName = variantConfiguration.getBuildType().getName();
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask, "flavorName", variantConfiguration::getFlavorName);
+            // no need to memoize, variant configuration does that already.
+            generateBuildConfigTask.flavorName = variantConfiguration::getFlavorName;
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask,
-                    "flavorNamesWithDimensionNames",
-                    variantConfiguration::getFlavorNamesWithDimensionNames);
+            generateBuildConfigTask.flavorNamesWithDimensionNames =
+                    TaskInputHelper.memoize(variantConfiguration::getFlavorNamesWithDimensionNames);
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask, "items", variantConfiguration::getBuildConfigItems);
+            generateBuildConfigTask.items =
+                    TaskInputHelper.memoize(variantConfiguration::getBuildConfigItems);
 
             generateBuildConfigTask.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
         }

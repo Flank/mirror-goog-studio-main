@@ -20,9 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
@@ -33,6 +33,7 @@ import com.android.manifmerger.MergingReport;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -45,11 +46,9 @@ import org.gradle.api.tasks.ParallelizableTask;
 @ParallelizableTask
 public class ProcessManifest extends ManifestProcessorTask {
 
-    private String minSdkVersion;
-
-    private String targetSdkVersion;
-
-    private Integer maxSdkVersion;
+    private Supplier<String> minSdkVersion;
+    private Supplier<String> targetSdkVersion;
+    private Supplier<Integer> maxSdkVersion;
 
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
@@ -86,31 +85,19 @@ public class ProcessManifest extends ManifestProcessorTask {
     @Input
     @Optional
     public String getMinSdkVersion() {
-        return minSdkVersion;
-    }
-
-    public void setMinSdkVersion(String minSdkVersion) {
-        this.minSdkVersion = minSdkVersion;
+        return minSdkVersion.get();
     }
 
     @Input
     @Optional
     public String getTargetSdkVersion() {
-        return targetSdkVersion;
-    }
-
-    public void setTargetSdkVersion(String targetSdkVersion) {
-        this.targetSdkVersion = targetSdkVersion;
+        return targetSdkVersion.get();
     }
 
     @Input
     @Optional
     public Integer getMaxSdkVersion() {
-        return maxSdkVersion;
-    }
-
-    public void setMaxSdkVersion(Integer maxSdkVersion) {
-        this.maxSdkVersion = maxSdkVersion;
+        return maxSdkVersion.get();
     }
 
     public VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> getVariantConfiguration() {
@@ -209,35 +196,41 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
-            ConventionMappingHelper.map(processManifest, "minSdkVersion", () -> {
-                if (androidBuilder.isPreviewTarget()) {
-                    return androidBuilder.getTargetCodename();
-                }
-                ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
-                if (minSdkVersion1 == null) {
-                    return null;
-                }
-                return minSdkVersion1.getApiString();
-            });
+            processManifest.minSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                if (androidBuilder.isPreviewTarget()) {
+                                    return androidBuilder.getTargetCodename();
+                                }
+                                ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
+                                if (minSdkVersion1 == null) {
+                                    return null;
+                                }
+                                return minSdkVersion1.getApiString();
+                            });
 
-            ConventionMappingHelper.map(processManifest, "targetSdkVersion", () -> {
-                        if (androidBuilder.isPreviewTarget()) {
-                            return androidBuilder.getTargetCodename();
-                        }
-                        ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
-                        if (targetSdkVersion == null) {
-                            return null;
-                        }
-                        return targetSdkVersion.getApiString();
-                    });
+            processManifest.targetSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                if (androidBuilder.isPreviewTarget()) {
+                                    return androidBuilder.getTargetCodename();
+                                }
+                                ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
+                                if (targetSdkVersion == null) {
+                                    return null;
+                                }
+                                return targetSdkVersion.getApiString();
+                            });
 
-            ConventionMappingHelper.map(processManifest, "maxSdkVersion", () -> {
-                        if (androidBuilder.isPreviewTarget()) {
-                            return null;
-                        } else {
-                            return mergedFlavor.getMaxSdkVersion();
-                        }
-                    });
+            processManifest.maxSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                if (androidBuilder.isPreviewTarget()) {
+                                    return null;
+                                } else {
+                                    return mergedFlavor.getMaxSdkVersion();
+                                }
+                            });
 
             processManifest.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());
