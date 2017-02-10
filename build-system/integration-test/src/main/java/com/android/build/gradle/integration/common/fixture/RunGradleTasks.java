@@ -53,7 +53,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
-    private Boolean useDexArchive = true;
+    private Boolean useDexArchive = false;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -228,16 +228,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
     }
 
-    public RunGradleTasks enableDexArchive() {
-        useDexArchive = true;
-        return this;
-    }
-    public RunGradleTasks disableDexArchive() {
-        useDexArchive = false;
-        return this;
-    }
-
-    public RunGradleTasks withtUseDexArchive(boolean useDexArchive) {
+    public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
         this.useDexArchive = useDexArchive;
         return this;
     }

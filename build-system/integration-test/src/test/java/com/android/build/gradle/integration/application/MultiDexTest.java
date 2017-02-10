@@ -217,7 +217,7 @@ public class MultiDexTest {
 
         // dexing with dex archives does not support additional parameters
         GradleBuildResult result =
-                project.executor().expectFailure().disableDexArchive().run("assembleIcsDebug");
+                project.executor().expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
 
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
     }

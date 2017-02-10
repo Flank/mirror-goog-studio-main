@@ -82,8 +82,8 @@ android {
 
     @Test
     public void nullBuild() {
-        project.executor().disableDexArchive().run("assemble")
-        GradleBuildResult result = project.executor().disableDexArchive().run("assemble")
+        project.executor().withUseDexArchive(false).run("assemble")
+        GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble")
 
         assertThat(result.getUpToDateTasks())
                 .containsAllIn(GradleTestProject.USE_JACK ? JACK_TASKS : JAVAC_TASKS)
