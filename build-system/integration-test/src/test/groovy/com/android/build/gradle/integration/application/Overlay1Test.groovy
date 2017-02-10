@@ -20,28 +20,35 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ImageHelper
 import com.android.builder.model.AndroidProject
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+
+import static com.android.testutils.truth.MoreTruth.assertThat
 
 /**
  * Assemble tests for overlay1.
  */
 @CompileStatic
+@RunWith(Parameterized.class)
 class Overlay1Test {
+    @Parameterized.Parameters(name = "enableAapt2 = {0}")
+    public static Collection<Object> data() {
+        return [(Object) false, (Object) true];
+    }
+
+    @Parameterized.Parameter
+    public boolean useAapt2;
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("overlay1")
             .create()
-
-    @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
-    }
 
     @AfterClass
     static void cleanUp() {
@@ -50,11 +57,29 @@ class Overlay1Test {
 
     @Test
     void "check image color"() {
+        project.executor().withEnabledAapt2(useAapt2).run("clean", "assembleDebug")
+
         int GREEN = ImageHelper.GREEN
-        File drawableOutput = project.
-                file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/debug/drawable")
-        ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "type_overlay.png", GREEN)
+        if (!useAapt2) {
+            File drawableOutput = project
+                    .file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/debug/drawable")
+            //First image should have no overlay (first pixel remains green), but the second image
+            //should have the first picture overlay over it (first pixel goes from red to green).
+            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "type_overlay.png", GREEN)
+        } else {
+            File resOutput = project.
+                    file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/debug")
+            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_type_overlay.png.flat")).exists()
+        }
+
+        //Check if the images in the APK are correct
+        Apk apk = project.getApk("debug")
+        //First image should have no overlay (first pixel remains green), but the second image
+        //should have the first picture overlay over it (first pixel goes from red to green).
+        ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/type_overlay.png"), GREEN)
     }
 
     @Test
