@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="guava-tools">
+  <library name="Guava">
     <ANNOTATIONS>
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/guava-tools/annotations" />
     </ANNOTATIONS>
