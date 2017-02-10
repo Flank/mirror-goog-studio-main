@@ -34,6 +34,11 @@ void EventCache::AddSystemData(const SystemData& data) {
   lock_guard<std::mutex> lock(system_cache_mutex_);
   if (system_cache_map_.find(data.event_id()) == system_cache_map_.end()) {
     system_cache_map_[data.event_id()] = data;
+    // If we are not a touch event ensure we have an end time set so we don't
+    // forever return non-touch events.
+    if (data.type() != SystemData::TOUCH) {
+      system_cache_map_[data.event_id()].set_end_timestamp(data.start_timestamp());
+    }
   } else {
     system_cache_map_[data.event_id()].set_end_timestamp(
         data.start_timestamp());
