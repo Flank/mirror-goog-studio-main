@@ -211,7 +211,8 @@ message HttpDetailsRequest {
   }
 
   int64 conn_id = 1;
-  Type type = 2;
+  Session session = 2;
+  Type type = 3;
 }
 
 message HttpDetailsResponse {
@@ -256,5 +257,3 @@ message HttpDetailsResponse {
     Body response_body = 4;
   }
 }
-
-
