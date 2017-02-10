@@ -8,7 +8,7 @@
         <#if buildApi gte 25 && targetApi gte 25>android:roundIcon="@mipmap/ic_launcher_round"</#if><#elseif assetName??>
         android:icon="@drawable/${assetName}"</#if>
         <#if buildApi gte 17>android:supportsRtl="true"</#if>
-        <#if baseTheme != "none" && (!isLibraryProject || (isInstantApp!false))>android:theme="@style/AppTheme"</#if>>
+        <#if (!isLibraryProject || (isInstantApp!false))>android:theme="@style/AppTheme"</#if>>
 
     </application>
     </#if>
