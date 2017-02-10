@@ -22,10 +22,10 @@ import static com.android.build.OutputFile.DENSITY;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANNOTATION_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
@@ -2553,9 +2553,9 @@ public abstract class TaskManager {
         FileCollection processorPaths = includeCompileClasspaths
                 ? scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES)
                 : project.files();
-        processorPaths = processorPaths.plus(
-                scope.getArtifactFileCollection(
-                        ANNOTATION_PROCESSOR, ALL, JAR));
+        processorPaths =
+                processorPaths.plus(
+                        scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, ANNOTATION_JAR));
         JackCompileTransform jackCompileTransform =
                 new JackCompileTransform(
                         JackOptionsUtils.forSourceCompilation(scope),

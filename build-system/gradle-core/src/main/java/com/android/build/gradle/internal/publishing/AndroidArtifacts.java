@@ -50,7 +50,6 @@ public class AndroidArtifacts {
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
-    private static final String TYPE_JAR = "jar";
 
     // types for AAR/ATOM content
     private static final String TYPE_MANIFEST = "android-manifest";
@@ -65,6 +64,9 @@ public class AndroidArtifacts {
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING = "android-databinding";
+    private static final String TYPE_ANNOTATION_JAR = "android-annotation-jar";
+    private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
+    private static final String TYPE_JAR = "jar";
 
     // types for ATOM content.
     private static final String TYPE_ATOM_RESOURCE_PKG = "android-atom-res-ap_";
@@ -114,7 +116,12 @@ public class AndroidArtifacts {
 
     public enum ArtifactType {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
-        JAR(TYPE_JAR, RUNTIME_ELEMENTS_ONLY),
+        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
+
+        // TODO: ANDROID_JAR is created as Gradle's JavaCompile has trouble with using class
+        // directory with annotation processors instead of jar files.  It should not be necessary
+        // and should be removed when it is fixed.
+        ANNOTATION_JAR(TYPE_ANNOTATION_JAR, RUNTIME_ELEMENTS_ONLY),
 
         AIDL(TYPE_AIDL, API_ELEMENTS_ONLY),
         RENDERSCRIPT(TYPE_RENDERSCRIPT, API_ELEMENTS_ONLY),
@@ -129,6 +136,7 @@ public class AndroidArtifacts {
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS, RUNTIME_ELEMENTS_ONLY),
         PUBLIC_RES(TYPE_PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
         PROGUARD_RULES(TYPE_PROGUARD_RULES, RUNTIME_ELEMENTS_ONLY),
+        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_ELEMENTS_ONLY),
 
         // FIXME: we need a different publishing config with a CHECK Usage for this.
         LINT(TYPE_LINT_JAR, API_AND_RUNTIME_ELEMENTS),
@@ -268,11 +276,13 @@ public class AndroidArtifacts {
         }
 
         @Override
+        @NonNull
         public String getExtension() {
             return extension;
         }
 
         @Override
+        @NonNull
         public String getType() {
             return type;
         }

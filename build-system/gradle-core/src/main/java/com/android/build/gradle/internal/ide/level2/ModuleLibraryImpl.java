@@ -41,16 +41,26 @@ public final class ModuleLibraryImpl implements Library, Serializable {
     @Nullable
     private final String variant;
 
+    public ModuleLibraryImpl(
+            @NonNull String address,
+            @NonNull File artifactFile,
+            @Nullable String projectPath,
+            @Nullable String variant) {
+        this.address = address;
+        this.artifactFile = artifactFile;
+        this.projectPath = projectPath;
+        this.variant = variant;
+    }
+
     public ModuleLibraryImpl(@NonNull Dependency dependency) {
+        this(
+                dependency.getAddress().toString(),
+                dependency.getArtifactFile(),
+                dependency.getProjectPath(),
+                dependency instanceof ExtractedDependency
+                        ? ((ExtractedDependency) dependency).getVariant()
+                        : null);
         Preconditions.checkNotNull(dependency.getProjectPath());
-        this.address = dependency.getAddress().toString();
-        this.artifactFile = dependency.getArtifactFile();
-        this.projectPath = dependency.getProjectPath();
-        if (dependency instanceof ExtractedDependency) {
-            variant = ((ExtractedDependency) dependency).getVariant();
-        } else {
-            variant = null;
-        }
     }
 
     @Override

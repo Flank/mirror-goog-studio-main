@@ -49,8 +49,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @NonNull
-    private final File artifactFile;
+    @Nullable private final File artifactFile;
     @NonNull
     private final File folder;
     @NonNull
@@ -59,22 +58,31 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     private final List<String> localJarPath;
 
     public AndroidLibraryImpl(
-            @NonNull AndroidDependency androidDependency,
+            @NonNull String address,
+            @Nullable File artifactFile,
+            @NonNull File folder,
+            @NonNull File jarsRootFolder,
             @NonNull Collection<File> localJarOverride) {
-        this.address = androidDependency.getAddress().toString();
-        this.artifactFile = androidDependency.getArtifactFile();
-        this.folder = androidDependency.getExtractedFolder();
-
-        // compute relate jars folder
-        jarsRootFolder =
-                relativePossiblyNonExistingPath(
-                        androidDependency.getJarFile().getParentFile(), folder).intern();
-
+        this.address = address;
+        this.artifactFile = artifactFile;
+        this.folder = folder;
+        this.jarsRootFolder = relativePossiblyNonExistingPath(jarsRootFolder, folder).intern();
         // TODO Fix me once we are always extracting AARs during sync.
         localJarPath = Lists.newArrayListWithCapacity(localJarOverride.size());
         for (File localJar : localJarOverride) {
             localJarPath.add(relativePossiblyNonExistingPath(localJar, folder).intern());
         }
+    }
+
+    public AndroidLibraryImpl(
+            @NonNull AndroidDependency androidDependency,
+            @NonNull Collection<File> localJarOverride) {
+        this(
+                androidDependency.getAddress().toString(),
+                androidDependency.getArtifactFile(),
+                androidDependency.getExtractedFolder(),
+                androidDependency.getJarFile().getParentFile(),
+                localJarOverride);
     }
 
     @Override
@@ -91,6 +99,10 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public File getArtifact() {
+        if (artifactFile == null) {
+            throw new UnsupportedOperationException(
+                    "getArtifact() cannot be called when getType() returns ANDROID_LIBRARY");
+        }
         return artifactFile;
     }
 
