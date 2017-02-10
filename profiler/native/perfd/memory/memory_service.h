@@ -82,6 +82,11 @@ class MemoryServiceImpl final
       const ::profiler::proto::DumpDataRequest* request,
       ::profiler::proto::DumpDataResponse* response) override;
 
+  ::grpc::Status ForceGarbageCollection(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::ForceGarbageCollectionRequest* request,
+      ::profiler::proto::ForceGarbageCollectionResponse* response) override;
+
  private:
   MemoryCollector* GetCollector(int32_t app_id);
 
