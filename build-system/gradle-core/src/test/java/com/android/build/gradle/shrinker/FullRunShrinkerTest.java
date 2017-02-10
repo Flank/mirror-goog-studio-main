@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.shrinker;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.build.api.transform.Status;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
@@ -334,10 +335,11 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        fullRun(
-                "Main",
-                "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
-                "useMyInterface:(Ltest/MyInterface;)V");
+        ShrinkerGraph<String> graph =
+                fullRun(
+                        "Main",
+                        "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
+                        "useMyInterface:(Ltest/MyInterface;)V");
 
         // Then:
         assertMembersLeft(
@@ -356,6 +358,34 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertClassSkipped("MyCharSequence");
 
         assertImplements("ImplementationFromSuperclass", "test/MySubInterface");
+
+        // Check the graph for unexepcted edges:
+        assertThat(graph.getDependencies("test/MySubInterface"))
+                .containsExactly(
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
+        assertThat(graph.getDependencies("test/MyInterface"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/MySubInterface", DependencyType.SUPERINTERFACE_KEPT));
+        assertThat(graph.getDependencies("test/MyImpl"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/MyImpl.doSomething:(Ljava/lang/Object;)V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
+        assertThat(graph.getDependencies("test/ImplementationFromSuperclass"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/DoesSomething", DependencyType.REQUIRED_CLASS_STRUCTURE),
+                        new Dependency<>(
+                                "test/ImplementationFromSuperclass.anotherMethod:()V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>(
+                                "test/MySubInterface", DependencyType.INTERFACE_IMPLEMENTED),
+                        new Dependency<>(
+                                "test/ImplementationFromSuperclass.doSomething$shrinker_fake:(Ljava/lang/Object;)V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
     }
 
     @Test
@@ -1438,7 +1468,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
         // Either 'a' or 'b'.
         Set<String> members = getMembers("Foo");
-        Truth.assertThat(members).hasSize(1);
+        assertThat(members).hasSize(1);
     }
 
     @Test
