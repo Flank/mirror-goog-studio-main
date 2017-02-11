@@ -138,9 +138,12 @@ public class InstantRunVerifierTransform extends Transform {
             resultSoFar = processJarInputs(resultSoFar, transformInput);
         }
 
-        // if we are being asked to produce the RESTART artifacts, there is no need to set the
+        // If we are being asked to produce the RESTART artifacts, there is no need to set the
         // verifier result, however the transform needed to run to backup the .class files.
-        if (!variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY)) {
+        // But we do record the result as a build-eligibility status, for the IDE.
+        if (variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY)) {
+            variantScope.getInstantRunBuildContext().setInstantRunEligibilityStatus(resultSoFar);
+        } else {
             variantScope.getInstantRunBuildContext().setVerifierStatus(resultSoFar);
         }
     }
