@@ -67,10 +67,10 @@ public class MediumGradleProjectPerformanceMatrixTest {
     public static ProjectScenario[] getParameters() {
         return new ProjectScenario[] {
             ProjectScenario.LEGACY_MULTIDEX,
-            //ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
+            ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
             ProjectScenario.NATIVE_MULTIDEX,
             ProjectScenario.JACK_NATIVE_MULTIDEX,
-            //ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
+            ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
         };
     }
 
