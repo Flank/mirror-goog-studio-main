@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class VmStatsSampler extends Thread {
 
-    public static final String NAME = "Android Studio Profiler Supportlib VmStatsSampler";
+    public static final String NAME = "Studio:VmStats";
 
     private static final long SLEEP_TIME_NS = TimeUnit.MILLISECONDS.toNanos(250);
 
