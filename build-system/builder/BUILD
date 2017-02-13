@@ -28,6 +28,7 @@ maven_java_library(
         "//tools/base/apkzlib:srcjar",
         "//tools/base/build-system/profile:srcjar",
         "//tools/base/aaptjlib:srcjar",
+        "//tools/base/build-system/builder/src/dex:srcjar",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
