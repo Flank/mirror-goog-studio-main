@@ -91,12 +91,6 @@ static void IndexItems(std::vector<T>& items, C comp) {
 }
 
 // Helper for IR normalization (DFS for topological sort)
-//
-// NOTE: this recursive version is clean and simple and we know
-//  that the max depth is bounded (exactly 1 for JVMTI and a small
-//  max for general case - the largest .dex file in AOSP has 5000 classes
-//  total)
-//
 void DexFile::TopSortClassIndex(Class* irClass, dex::u4* nextIndex) {
   if (irClass->index == dex::u4(-1)) {
     if (irClass->super_class && irClass->super_class->class_def) {
