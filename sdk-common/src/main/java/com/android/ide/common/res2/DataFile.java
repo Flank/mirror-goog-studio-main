@@ -18,13 +18,12 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Maps;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 /**
  * Represents a data file.
@@ -50,7 +49,8 @@ public abstract class DataFile<I extends DataItem> {
         if (fileType == FileType.SINGLE_FILE) {
             mItems = Maps.newHashMapWithExpectedSize(1);
         } else {
-            mItems = Maps.newHashMap();
+            // we use LinkedHashMap to preserve ordering as some editors display items in original order.
+            mItems = new LinkedHashMap<>();
         }
     }
 
