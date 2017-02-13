@@ -16,11 +16,10 @@
 
 #pragma once
 
-///////////////////////////////////////////////////////////////////////////////
-//
+#include <stdlib.h>
+
 // Encapsulates the state (command line switches, stats, ...) and
 // the interface of the command line .dex manipulation tool.
-//
 class Dexter {
   static constexpr const char* VERSION = "v1.0";
 
@@ -46,4 +45,5 @@ class Dexter {
   bool verbose_ = false;
   const char* out_dex_filename_ = nullptr;
   const char* dex_filename_ = nullptr;
+  bool print_map_ = false;
 };
