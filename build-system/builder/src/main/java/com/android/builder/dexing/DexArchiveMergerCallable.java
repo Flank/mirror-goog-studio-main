@@ -21,6 +21,8 @@ import com.android.dex.Dex;
 import com.android.dx.command.dexer.DxContext;
 import com.android.dx.merge.CollisionPolicy;
 import com.android.dx.merge.DexMerger;
+import com.android.ide.common.blame.parser.DexParser;
+import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,14 +59,23 @@ public class DexArchiveMergerCallable implements Callable<Void> {
 
     @NonNull
     private Dex mergeDexes(@NonNull Collection<Dex> dexes) throws IOException {
-        DexMerger dexMerger =
-                new DexMerger(
-                        dexes.toArray(new Dex[dexes.size()]), CollisionPolicy.FAIL, dxContext);
+        try {
+            DexMerger dexMerger =
+                    new DexMerger(
+                            dexes.toArray(new Dex[dexes.size()]), CollisionPolicy.FAIL, dxContext);
 
-        Dex mergedDex = dexMerger.merge();
-        Verify.verifyNotNull(
-                mergedDex,
-                String.format("Merged dex is null. We tried to merge %d DEX files", dexes.size()));
-        return mergedDex;
+            Dex mergedDex = dexMerger.merge();
+            Verify.verifyNotNull(
+                    mergedDex,
+                    String.format(
+                            "Merged dex is null. We tried to merge %d DEX files", dexes.size()));
+            return mergedDex;
+        } catch (Exception e) {
+            dxContext.err.println(DexParser.DX_UNEXPECTED_EXCEPTION);
+            dxContext.err.println(Throwables.getRootCause(e));
+            dxContext.err.print(Throwables.getStackTraceAsString(e));
+
+            throw new DexArchiveMerger.DexArchiveMergerException("Unable to merge dex", e);
+        }
     }
 }

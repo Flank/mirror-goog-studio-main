@@ -214,6 +214,19 @@ public class DexMergerTransformTest {
                 .forEach(f -> Truth.assertThat(f.lastModified()).isEqualTo(lastModified));
     }
 
+    @Test(timeout = 20_000)
+    public void test_native_doesNotDeadlock() throws Exception {
+        int inputCnt = 3 * Runtime.getRuntime().availableProcessors();
+        List<TransformInput> inputs =
+                getTransformInputs(inputCnt, QualifiedContent.Scope.SUB_PROJECTS);
+        getTransform(DexingMode.NATIVE_MULTIDEX)
+                .transform(
+                        new TransformInvocationBuilder(context)
+                                .addInputs(inputs)
+                                .addOutputProvider(outputProvider)
+                                .build());
+    }
+
     private DexMergerTransform getTransform(@NonNull DexingMode mode) throws IOException {
         return getTransform(mode, ImmutableSet.of());
     }

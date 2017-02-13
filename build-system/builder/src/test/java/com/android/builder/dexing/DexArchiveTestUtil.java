@@ -19,9 +19,9 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -70,7 +70,7 @@ public final class DexArchiveTestUtil {
     }
 
     public static void mergeMonoDex(@NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
-            throws IOException {
+            throws IOException, InterruptedException {
         implMergeDexes(dexArchives, outputDir, ImmutableSet.of(), DexingMode.MONO_DEX);
     }
 
@@ -78,12 +78,13 @@ public final class DexArchiveTestUtil {
             @NonNull Collection<Path> dexArchives,
             @NonNull Path outputDir,
             @NonNull Set<String> mainDexList)
-            throws IOException {
+            throws IOException, InterruptedException {
         implMergeDexes(dexArchives, outputDir, mainDexList, DexingMode.LEGACY_MULTIDEX);
     }
 
     public static void mergeNativeDex(
-            @NonNull Collection<Path> dexArchives, @NonNull Path outputDir) throws IOException {
+            @NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
+            throws IOException, InterruptedException {
         implMergeDexes(dexArchives, outputDir, ImmutableSet.of(), DexingMode.NATIVE_MULTIDEX);
     }
 
@@ -137,11 +138,13 @@ public final class DexArchiveTestUtil {
             @NonNull Path outputDir,
             @NonNull Set<String> mainDexList,
             @NonNull DexingMode dexingMode)
-            throws IOException {
+            throws IOException, InterruptedException {
+        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
-        DexArchiveMerger merger = new DexArchiveMerger(config);
+        DexArchiveMerger merger = new DexArchiveMerger(config, executor);
         Files.createDirectory(outputDir);
 
         merger.merge(inputs, outputDir, mainDexList);
+        executor.waitForTasksWithQuickFail(true);
     }
 }

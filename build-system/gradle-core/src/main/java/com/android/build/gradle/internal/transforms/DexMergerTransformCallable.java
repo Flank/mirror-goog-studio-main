@@ -21,6 +21,7 @@ import com.android.builder.dexing.DexArchiveMerger;
 import com.android.builder.dexing.DexMergerConfig;
 import com.android.builder.dexing.DexingMode;
 import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutput;
 import java.io.File;
 import java.nio.file.Path;
@@ -39,18 +40,21 @@ class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final File dexOutputDir;
     @NonNull private final Collection<Path> dexArchives;
     @NonNull private final Set<String> mainDexList;
+    @NonNull private final WaitableExecutor<Void> executor;
 
     public DexMergerTransformCallable(
             @NonNull DexingMode dexingMode,
             @NonNull ProcessOutput processOutput,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
-            @NonNull Set<String> mainDexList) {
+            @NonNull Set<String> mainDexList,
+            @NonNull WaitableExecutor<Void> executor) {
         this.dexingMode = dexingMode;
         this.processOutput = processOutput;
         this.dexOutputDir = dexOutputDir;
         this.dexArchives = dexArchives;
         this.mainDexList = mainDexList;
+        this.executor = executor;
     }
 
     @Override
@@ -58,8 +62,7 @@ class DexMergerTransformCallable implements Callable<Void> {
         DxContext dxContext =
                 new DxContext(processOutput.getStandardOutput(), processOutput.getErrorOutput());
         DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
-        DexArchiveMerger merger = new DexArchiveMerger(config);
-
+        DexArchiveMerger merger = new DexArchiveMerger(config, executor);
         merger.merge(dexArchives, dexOutputDir.toPath(), mainDexList);
         return null;
     }
