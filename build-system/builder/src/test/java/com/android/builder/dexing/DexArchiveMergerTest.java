@@ -21,11 +21,13 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.testutils.apk.Dex;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import com.google.common.truth.Truth;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.List;
@@ -122,8 +124,8 @@ public class DexArchiveMergerTest {
         try {
             DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
             fail("Too many methods for mono-dex. Merging should fail.");
-        } catch (DexArchiveMerger.DexArchiveMergerException e) {
-            // this should be thrown
+        } catch (Exception e) {
+            Truth.assertThat(Throwables.getStackTraceAsString(e)).contains("method ID not in");
         }
     }
 

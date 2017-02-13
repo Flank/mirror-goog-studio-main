@@ -49,7 +49,7 @@ public class WaitableExecutor<T> {
 
     @Nullable private final ExecutorService mExecutorService;
     @NonNull private final CompletionService<T> mCompletionService;
-    @NonNull private final Set<Future<T>> mFutureSet = Sets.newHashSet();
+    @NonNull private final Set<Future<T>> mFutureSet = Sets.newConcurrentHashSet();
 
     private WaitableExecutor(
             @Nullable ExecutorService mExecutorService,

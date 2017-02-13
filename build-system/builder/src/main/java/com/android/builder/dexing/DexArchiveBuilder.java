@@ -85,8 +85,7 @@ public class DexArchiveBuilder {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            throw new DexArchiveMerger.DexArchiveMergerException(
-                    "Unable to merge dex", e.getCause());
+            throw new DexBuilderException("Unable to convert input to dex archive.", e.getCause());
         }
     }
 

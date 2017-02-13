@@ -93,12 +93,10 @@ public class DexMergerTransform extends Transform {
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DexMergerTransform.class);
 
     @NonNull private final DexingMode dexingMode;
-
     @NonNull private final FileCollection mainDexListFile;
-
     @NonNull private final ErrorReporter errorReporter;
-
-    @NonNull private final WaitableExecutor<Void> executor;
+    @NonNull private final WaitableExecutor<Void> callableExecutor;
+    @NonNull private final WaitableExecutor<Void> dexMergerExecutor;
 
     public DexMergerTransform(
             @NonNull DexingMode dexingMode,
@@ -107,7 +105,8 @@ public class DexMergerTransform extends Transform {
         this.dexingMode = dexingMode;
         this.mainDexListFile = mainDexListFile;
         this.errorReporter = errorReporter;
-        this.executor = WaitableExecutor.useGlobalSharedThreadPool();
+        this.callableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
+        this.dexMergerExecutor = WaitableExecutor.useGlobalSharedThreadPool();
     }
 
     @NonNull
@@ -187,7 +186,9 @@ public class DexMergerTransform extends Transform {
             } else {
                 handleLegacyAndMonoDex(transformInvocation.getInputs(), output, outputProvider);
             }
-            executor.waitForTasksWithQuickFail(true);
+
+            callableExecutor.waitForTasksWithQuickFail(true);
+            dexMergerExecutor.waitForTasksWithQuickFail(true);
         } catch (IOException e) {
             throw new TransformException(e);
         } catch (InterruptedException e) {
@@ -356,8 +357,13 @@ public class DexMergerTransform extends Transform {
             @NonNull Set<String> mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
-                        dexingMode, output, dexOutputDir, dexArchives, mainDexList);
-        executor.execute(callable);
+                        dexingMode,
+                        output,
+                        dexOutputDir,
+                        dexArchives,
+                        mainDexList,
+                        dexMergerExecutor);
+        callableExecutor.execute(callable);
     }
 
     @NonNull
