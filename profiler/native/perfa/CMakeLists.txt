@@ -1,5 +1,4 @@
 add_library(perfa SHARED
-            support/energy_passthrough.cc
             support/event_passthrough.cc
             support/http_tracker.cc
             support/profiler_service.cc
