@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
-import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -73,25 +72,9 @@ public class AntennaPodPerformanceMatrixTest {
     public static ProjectScenario[] getParameters() {
         return new ProjectScenario[] {
             ProjectScenario.NORMAL,
-            ProjectScenario.JACK_ON,
             ProjectScenario.DEX_ARCHIVE_MONODEX,
             ProjectScenario.DEX_OUT_OF_PROCESS,
-            ProjectScenario.JACK_OUT_OF_PROCESS,
         };
-    }
-
-    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws Exception {
-        TestFileUtils.searchAndReplace(
-                buildGradleFile,
-                "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
-                "buildToolsVersion$1 \"25.0.0\"");
-    }
-
-    private static void disableRetrolambda(@NonNull File buildGradleFile) throws Exception {
-        TestFileUtils.searchAndReplace(
-                buildGradleFile,
-                "apply plugin: \"me.tatarka.retrolambda\"",
-                "// retrolambda disabled");
     }
 
     @Before
@@ -105,15 +88,6 @@ public class AntennaPodPerformanceMatrixTest {
                 break;
             case DEX_OUT_OF_PROCESS:
                 DexInProcessHelper.disableDexInProcess(appBuildFile);
-                break;
-            case JACK_ON:
-                disableRetrolambda(appBuildFile);
-                JackHelper.enableJack(appBuildFile);
-                break;
-            case JACK_OUT_OF_PROCESS:
-                disableRetrolambda(appBuildFile);
-                // automatically enables Jack as well
-                JackHelper.disableJackInProcess(appBuildFile);
                 break;
             case DEX_ARCHIVE_MONODEX:
                 break;
@@ -135,12 +109,6 @@ public class AntennaPodPerformanceMatrixTest {
             InstantRun instantRunModel = null;
             List<String> tasks;
             boolean isEdit = false;
-
-            if (isJackOn() && isInstantRunOn(benchmarkMode)) {
-                // Jack does not support Instant Run, because it does not generate intermediate
-                // class files when compiling an app
-                continue;
-            }
 
             switch (benchmarkMode) {
                 case EVALUATION:
@@ -259,27 +227,6 @@ public class AntennaPodPerformanceMatrixTest {
                 .disablePreDexBuildCache()
                 .disableAaptV2()
                 .withUseDexArchive(projectScenario.useDexArchive());
-    }
-
-    private boolean isJackOn() {
-        return projectScenario.getFlags().getCompiler()
-                == Logging.GradleBenchmarkResult.Flags.Compiler.JACK;
-    }
-
-    private boolean isInstantRunOn(BenchmarkMode benchmarkMode) {
-        final List<Logging.BenchmarkMode> instantRunModes = ImmutableList.of(
-                BenchmarkMode.INSTANT_RUN_BUILD__FROM_CLEAN,
-                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
-                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
-                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
-                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__JAVA__API_CHANGE,
-                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__RES__EDIT,
-                BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__RES__ADD,
-                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__RES__EDIT,
-                BenchmarkMode.INSTANT_RUN_BUILD__SUB_PROJECT__RES__ADD,
-                BenchmarkMode.INSTANT_RUN_BUILD_INC_JAVA_DEPRECATED
-        );
-        return instantRunModes.contains(benchmarkMode);
     }
 
     private void doEdit(

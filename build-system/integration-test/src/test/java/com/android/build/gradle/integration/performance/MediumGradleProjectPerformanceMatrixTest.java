@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -46,20 +45,13 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
         this.projectScenario = projectScenario;
-        String heapSize;
-        if (projectScenario.usesJack()) {
-            // Jack takes too long with 1.5GB heap. With 6GB, the duration is reasonable.
-            heapSize = "6G";
-        } else {
-            heapSize = "1536M";
-        }
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("gradle-perf-android-medium")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenario))
-                        .withHeap(heapSize)
+                        .withHeap("1536M")
                         .create();
     }
 
@@ -69,7 +61,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
             ProjectScenario.LEGACY_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
             ProjectScenario.NATIVE_MULTIDEX,
-            ProjectScenario.JACK_NATIVE_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
         };
     }
@@ -87,13 +78,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 break;
             case LEGACY_MULTIDEX:
             case DEX_ARCHIVE_LEGACY_MULTIDEX:
-                break;
-            case JACK_NATIVE_MULTIDEX:
-                TestFileUtils.searchAndReplace(
-                        project.file("WordPress/build.gradle"),
-                        "minSdkVersion( )* \\d+",
-                        "minSdkVersion 21");
-                JackHelper.enableJack(project.file("WordPress/build.gradle"));
                 break;
             default:
                 throw new IllegalArgumentException(
