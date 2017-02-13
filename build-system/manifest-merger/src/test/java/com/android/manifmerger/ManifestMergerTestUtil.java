@@ -28,10 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.junit.runner.RunWith;
-import org.w3c.dom.Document;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;

@@ -25,20 +25,18 @@ import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Callable;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Task to compile Renderscript files. Supports incremental update.
@@ -178,8 +176,7 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @TaskAction
-    void taskAction()
-            throws IOException, InterruptedException, ProcessException, LoggedErrorException {
+    void taskAction() throws IOException, InterruptedException, ProcessException {
         // this is full run (always), clean the previous outputs
         File sourceDestDir = getSourceOutputDir();
         FileUtils.cleanOutputDir(sourceDestDir);

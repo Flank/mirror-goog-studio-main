@@ -752,25 +752,20 @@ maven_java_library(
 )
 
 maven_java_library(
-    name = "org.mockito_mockito-all",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
+    name = "org.mockito_mockito-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
-)
-
-maven_java_library(
-    name = "org.mockito_mockito-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.9.5:jar",
-    visibility = ["//visibility:public"],
-    exports = [
-        ":org.hamcrest_hamcrest-core",
+    runtime_deps = [
         ":org.objenesis_objenesis",
+        "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.6.5:jar",
+        "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.6.5:jar",
     ],
 )
 
 maven_java_library(
     name = "org.objenesis_objenesis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

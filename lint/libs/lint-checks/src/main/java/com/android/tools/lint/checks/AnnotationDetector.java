@@ -77,7 +77,6 @@ import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationOwner;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiArrayType;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCodeBlock;
@@ -85,7 +84,6 @@ import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
@@ -112,6 +110,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -520,52 +519,10 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
 
                 if (resolved instanceof PsiLocalVariable) {
                     PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                    PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class,
-                            false);
-                    if (statement != null) {
-                        PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                                PsiStatement.class);
-                        String targetName = variable.getName();
-                        if (targetName == null) {
-                            return null;
-                        }
-                        while (prev != null) {
-                            if (prev instanceof PsiDeclarationStatement) {
-                                for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                        .getDeclaredElements()) {
-                                    if (variable.equals(element)) {
-                                        PsiExpression initializer = variable.getInitializer();
-                                        if (initializer != null) {
-                                            return findIntDef(initializer);
-                                        }
-                                        break;
-                                    }
-                                }
-                            } else if (prev instanceof PsiExpressionStatement) {
-                                PsiExpression expression = ((PsiExpressionStatement) prev)
-                                        .getExpression();
-                                if (expression instanceof PsiAssignmentExpression) {
-                                    PsiAssignmentExpression assign
-                                            = (PsiAssignmentExpression) expression;
-                                    PsiExpression lhs = assign.getLExpression();
-                                    if (lhs instanceof PsiReferenceExpression) {
-                                        PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                        if (targetName.equals(reference.getReferenceName()) &&
-                                                reference.getQualifier() == null) {
-                                            PsiExpression rExpression = assign.getRExpression();
-                                            if (rExpression != null) {
-                                                return findIntDef(rExpression);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                    PsiStatement.class);
-                        }
+                    PsiExpression last = ConstantEvaluator.findLastAssignment(node, variable);
+                    if (last != null) {
+                        return findIntDef(last);
                     }
-
                 }
             } else if (node instanceof PsiMethodCallExpression) {
                 PsiMethod method = ((PsiMethodCallExpression) node).resolveMethod();
@@ -681,31 +638,15 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
                             // the ECJ fields do, which is tied to the ECJ binding hash code.)
                             // So instead, manually check for equals. These lists tend to
                             // be very short anyway.
-                            boolean found = false;
-                            ListIterator<PsiElement> iterator = fields.listIterator();
-                            while (iterator.hasNext()) {
-                                PsiElement field = iterator.next();
-                                if (field.equals(resolved)) {
-                                    iterator.remove();
-                                    found = true;
-                                    break;
-                                }
-                            }
+                            PsiField resolvedField = (PsiField) resolved;
+                            boolean found = removeFieldFromList(fields, resolvedField);
                             if (!found) {
                                 // Look for local alias
                                 PsiExpression initializer = ((PsiField) resolved).getInitializer();
                                 if (initializer instanceof PsiReferenceExpression) {
-                                    resolved = ((PsiReferenceExpression) expression).resolve();
+                                    resolved = ((PsiReferenceExpression) initializer).resolve();
                                     if (resolved instanceof PsiField) {
-                                        iterator = fields.listIterator();
-                                        while (iterator.hasNext()) {
-                                            PsiElement field = iterator.next();
-                                            if (field.equals(initializer)) {
-                                                iterator.remove();
-                                                found = true;
-                                                break;
-                                            }
-                                        }
+                                        found = removeFieldFromList(fields, (PsiField) resolved);
                                     }
                                 }
                             }
@@ -961,5 +902,43 @@ public class AnnotationDetector extends Detector implements JavaPsiScanner {
             scope = node;
         }
         return scope;
+    }
+
+    private static boolean removeFieldFromList(@NonNull List<PsiElement> fields,
+            @NonNull PsiField resolvedField) {
+        ListIterator<PsiElement> iterator = fields.listIterator();
+        String resolvedName = resolvedField.getName();
+        PsiClass resolvedCls = resolvedField.getContainingClass();
+        String resolvedClsName = resolvedCls != null ?
+                resolvedCls.getQualifiedName() : null;
+        while (iterator.hasNext()) {
+            PsiElement field = iterator.next();
+
+            // We can't just call .equals here because the annotation
+            // we are comparing against may be either a PsiFieldImpl
+            // (for a local annotation) or a ClsFieldImpl (for an annotation
+            // read from storage) or maybe even other PSI internal classes.
+            // So compare by name and class instead.
+
+            if (!(field instanceof PsiField)) {
+                continue;
+            }
+            PsiField candidateField = (PsiField) field;
+            if (resolvedName != null
+                    && !resolvedName.equals(candidateField.getName())) {
+                continue;
+            }
+            PsiClass candidateCls = candidateField.getContainingClass();
+            if (candidateCls == null) {
+                continue;
+            }
+            if (Objects.equals(resolvedClsName,
+                    candidateCls.getQualifiedName())) {
+                iterator.remove();
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -21,18 +21,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
 import java.io.Serializable;
 
-/**
- * Edge in the shrinker graph.
- */
+/** Edge in the shrinker graph. */
 public final class Dependency<T> implements Serializable {
-    @NonNull
-    final T target;
+    @NonNull final T target;
 
-    @NonNull
-    final DependencyType type;
+    @NonNull final DependencyType type;
 
     public Dependency(@NonNull T target, @NonNull DependencyType type) {
         this.target = checkNotNull(target);
@@ -55,9 +50,6 @@ public final class Dependency<T> implements Serializable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("target", target)
-                .add("type", type)
-                .toString();
+        return MoreObjects.toStringHelper(this).add("target", target).add("type", type).toString();
     }
 }

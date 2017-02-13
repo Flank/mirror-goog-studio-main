@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
-
 import java.io.File;
 import java.util.Collection;
 

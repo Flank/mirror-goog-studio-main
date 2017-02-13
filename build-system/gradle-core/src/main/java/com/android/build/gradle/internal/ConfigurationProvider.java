@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import org.gradle.api.artifacts.Configuration;
 
 /**
@@ -40,4 +39,7 @@ public interface ConfigurationProvider {
 
     @NonNull
     Configuration getJackPluginConfiguration();
+
+    @NonNull
+    Configuration getWearAppConfiguration();
 }

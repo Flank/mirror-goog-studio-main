@@ -152,7 +152,7 @@ public class MultiAtomTest {
     }
 
     @Test
-    public void testModelLevel1() {
+    public void testModelLevel1() throws Exception {
         ModelContainer<AndroidProject> modelContainer;
         modelContainer = sProject.model().level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
 
@@ -171,7 +171,7 @@ public class MultiAtomTest {
     }
 
     @Test
-    public void testModelFull() {
+    public void testModelFull() throws Exception {
         ModelContainer<AndroidProject> modelContainer = sProject.model().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 

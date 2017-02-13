@@ -15,21 +15,16 @@
  */
 package com.android.build.gradle.internal.tasks;
 import com.android.ide.common.res2.FileStatus;
-import com.android.ide.common.res2.SourceSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public abstract class IncrementalTask extends BaseTask {
 

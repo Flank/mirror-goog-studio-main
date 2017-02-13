@@ -74,7 +74,6 @@ import com.android.utils.SdkUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closer;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -377,16 +376,9 @@ public abstract class Reporter {
             nameToFile.put(base, new File(url.toExternalForm()));
 
             File target = new File(resourceDir, base);
-            Closer closer = Closer.create();
-            try {
-                FileOutputStream output = closer.register(new FileOutputStream(target));
-                InputStream input = closer.register(url.openStream());
+            try (FileOutputStream output = new FileOutputStream(target);
+                 InputStream input = url.openStream()) {
                 ByteStreams.copy(input, output);
-            } catch (Throwable e) {
-                //noinspection ThrowableResultOfMethodCallIgnored
-                closer.rethrow(e);
-            } finally {
-                closer.close();
             }
             return resourceDir.getName() + '/' + encodeUrl(base);
         }

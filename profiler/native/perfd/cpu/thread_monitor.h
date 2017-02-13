@@ -38,8 +38,8 @@ namespace profiler {
 class ThreadMonitor {
  public:
   // Creates a thread monitor that detects and saves activities to |cpu_cache|.
-  ThreadMonitor(const Daemon& daemon, CpuCache* cpu_cache)
-      : clock_(daemon.clock()), cache_(*cpu_cache) {}
+  ThreadMonitor(Daemon::Utilities* utilities, CpuCache* cpu_cache)
+      : clock_(utilities->clock()), cache_(*cpu_cache) {}
 
   // Starts collecting thread activity for process with ID of |pid|. Does
   // nothing if the process has been monitored.
@@ -59,7 +59,7 @@ class ThreadMonitor {
   struct ThreadState {
     int64_t timestamp;
     std::string name;
-    profiler::proto::ThreadActivity::State state;
+    profiler::proto::GetThreadsResponse::State state;
   };
 
   // States of all threads in a given process.
@@ -75,14 +75,14 @@ class ThreadMonitor {
   // If there is no running process of |pid|, still returns true and stops
   // monitoring it.
   bool MonitorAProcess(int32_t pid);
-  // Adds activities into proto message |data|, considering all thread states
+  // Adds activities into |sample|, considering all thread states
   // in |new_states| as activities.
   // Returns true if at least one activity is added.
   // This method is expected to be called when a process is observed for the
   // first time.
   bool CopyNewStatesToActivities(const ThreadStates& new_states,
-                                 profiler::proto::CpuProfilerData* data) const;
-  // Adds becoming-dead activities into proto message |data|, considering all
+                                 ThreadsSample* sample) const;
+  // Adds becoming-dead activities into |sample|, considering all
   // threads in |old_states| became dead at |timestamp|.
   // Returns true if at least one activity is added.
   // This method is expected to be called when a process is deleted.
@@ -90,27 +90,32 @@ class ThreadMonitor {
   // becoming-dead activity should already be recorded.
   bool CopyOldStatesToActivities(int64_t timestamp,
                                  const ThreadStates& old_states,
-                                 profiler::proto::CpuProfilerData* data) const;
-  // Adds activities into proto message |data|, considering all differences
+                                 ThreadsSample* sample) const;
+  // Adds activities into |sample|, considering all differences
   // between |old_states| and |new_states| as activities.
   // Returns true if at least one activity is added.
   // If a thread disappeared, adds an activity that it became dead at
-  // |timestamp|. However, doesn't add the activity if the thread is last known
-  // as dead because a becoming-dead activity should already be recorded.
+  // |sample| timestamp. However, doesn't add the activity if the thread is last
+  // known as dead because a becoming-dead activity should already be recorded.
   bool DetectActivities(int64_t timestamp, const ThreadStates& old_states,
                         const ThreadStates& new_states,
-                        profiler::proto::CpuProfilerData* data) const;
-  // Collectes thread states of a given process of |pid|. Returns true if at
+                        ThreadsSample* sample) const;
+  // Collects thread states of a given process of |pid|. Returns true if at
   // least one thread's state is captured.
   bool CollectStates(int32_t pid, ThreadStates* states) const;
-  // Adds an activity of thread |tid| into |data|, considering |state| is the
-  // activity .
+  // Adds an activity of thread |tid| into |sample|, considering |state| is the
+  // activity.
   void AddActivity(int32_t tid, const ThreadState& state,
-                   profiler::proto::CpuProfilerData* data) const;
-  // Adds an activity of thread |tid| into |data| with given information.
-  void AddActivity(int32_t tid, profiler::proto::ThreadActivity::State state,
+                   ThreadsSample* sample) const;
+  // Adds an activity of thread |tid| into |sample| with given information.
+  void AddActivity(int32_t tid,
+                   profiler::proto::GetThreadsResponse::State state,
                    const std::string& name, int64_t timestamp,
-                   profiler::proto::CpuProfilerData* data) const;
+                   ThreadsSample* sample) const;
+  // Adds the state of a thread |tid| into |sample|.
+  void AddThreadSnapshot(int32_t tid,
+                         profiler::proto::GetThreadsResponse::State state,
+                         const std::string& name, ThreadsSample* sample) const;
 
   // PIDs of app process that are being monitored.
   std::unordered_set<int32_t> pids_{};

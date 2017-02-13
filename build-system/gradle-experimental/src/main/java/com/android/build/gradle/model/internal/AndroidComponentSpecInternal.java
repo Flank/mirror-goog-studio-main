@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.model.AndroidComponentSpec;
 import com.android.builder.model.SigningConfig;
-
 import org.gradle.nativeplatform.NativeLibrarySpec;
 
 /**

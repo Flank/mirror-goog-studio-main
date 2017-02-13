@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -412,7 +413,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
             return Collections.emptyList();
         }
         List<Element> nodes = new ArrayList<>(permissions.size());
-        for (Element child : LintUtils.getChildren(manifestElement)) {
+        for (Element child : XmlUtils.getSubTags(manifestElement)) {
             if (TAG_USES_PERMISSION.equals(child.getTagName())
                     && permissions.contains(child.getAttributeNS(ANDROID_URI, ATTR_NAME))) {
                 nodes.add(child);
@@ -439,7 +440,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
             return Collections.emptyList();
         }
         List<Element> nodes = new ArrayList<>(featureNames.size());
-        for (Element child : LintUtils.getChildren(manifestElement)) {
+        for (Element child : XmlUtils.getSubTags(manifestElement)) {
             if (TAG_USES_FEATURE.equals(child.getTagName())
                     && featureNames.contains(child.getAttributeNS(ANDROID_URI, ATTR_NAME))) {
                 nodes.add(child);
@@ -520,9 +521,9 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
 
     private static boolean hasLeanbackIntentFilter(@NonNull Node activityNode) {
         // Visit every intent filter
-        for (Element activityChild : LintUtils.getChildren(activityNode)) {
+        for (Element activityChild : XmlUtils.getSubTags(activityNode)) {
             if (NODE_INTENT.equals(activityChild.getNodeName())) {
-                for (Element intentFilterChild : LintUtils.getChildren(activityChild)) {
+                for (Element intentFilterChild : XmlUtils.getSubTags(activityChild)) {
                     // Check to see if the category is the leanback launcher
                     String attrName = intentFilterChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                     if (NODE_CATEGORY.equals(intentFilterChild.getNodeName())
@@ -539,7 +540,7 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
      * Assumes that the node is a direct child of the given Node.
      */
     private static Node getElementWithTagName(@NonNull String tagName, @NonNull Node node) {
-        for (Element child : LintUtils.getChildren(node)) {
+        for (Element child : XmlUtils.getSubTags(node)) {
             if (tagName.equals(child.getTagName())) {
                 return child;
             }

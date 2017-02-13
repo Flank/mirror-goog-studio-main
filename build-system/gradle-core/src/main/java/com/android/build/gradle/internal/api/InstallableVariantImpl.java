@@ -21,7 +21,6 @@ import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
-
 import org.gradle.api.DefaultTask;
 
 /**

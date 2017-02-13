@@ -1,15 +1,15 @@
-load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:utils.bzl", "srcjar")
 
-fileset(
-    name = "sources",
-    srcs = glob(["src/main/java/**/*.java"]),
+srcjar(
+    name = "srcjar",
+    java_library = ":profile",
     visibility = ["//tools/base/build-system/builder:__pkg__"],
 )
 
 java_library(
     name = "profile",
     srcs = glob(["src/main/java/**"]),
-    visibility = ["//visibility:public"],
+    visibility = ["//visibility:private"],  # These sources are compiled into builder.
     deps = [
         "//tools/analytics-library/protos:analytics-protos",
         "//tools/analytics-library/shared:tools.analytics-shared",
@@ -34,6 +34,6 @@ java_test(
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

@@ -19,16 +19,13 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -52,7 +49,7 @@ public class InstantRunLibraryAdd {
                 project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // get the build-info timestamp.
@@ -86,7 +83,7 @@ public class InstantRunLibraryAdd {
 
         // now perform an incremental build.
         project.executor()
-                .withInstantRun(23, ColdswapMode.AUTO)
+                .withInstantRun(23)
                 .run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.
@@ -105,7 +102,7 @@ public class InstantRunLibraryAdd {
                 project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // now add a library to the project.
@@ -126,7 +123,7 @@ public class InstantRunLibraryAdd {
         // now perform an incremental build, setting the RESTART_ONLY flag which would suggest
         // a cold swap build.
         project.executor()
-                .withInstantRun(23, ColdswapMode.AUTO, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.
@@ -138,7 +135,7 @@ public class InstantRunLibraryAdd {
                         InstantRunArtifactType.SPLIT_MAIN));
     }
 
-    private void updateClass() throws IOException {
+    private void updateClass() throws Exception {
         String updatedClass = "package noapkrebuilt.tests.android.com.b220425;\n"
                 + "\n"
                 + "import android.content.Intent;\n"

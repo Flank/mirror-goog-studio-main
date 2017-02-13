@@ -32,9 +32,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.junit.Assume;
@@ -67,7 +67,7 @@ public class MultiDexTest {
     @Parameterized.Parameter public boolean dexInProcess;
 
     @Before
-    public void disableDexInProcess() throws IOException {
+    public void disableDexInProcess() throws Exception {
         if (!dexInProcess) {
             DexInProcessHelper.disableDexInProcess(project.getBuildFile());
         }
@@ -124,30 +124,20 @@ public class MultiDexTest {
                 mandatoryClasses,
                 nonMandatoryMainDexClasses);
 
-        String transform = GradleTestProject.USE_JACK ? "jack" : "dex";
-
-        // The path is fragile, and depends on internals of dex transforms. If this changes
-        // in the production code, it should be updated here.
-        File dexDir =
-                FileUtils.join(
-                        project.getIntermediatesDir(),
-                        "transforms",
-                        transform,
-                        "ics",
-                        "debug",
-                        "folders",
-                        "1000",
-                        "1f",
-                        "main");
         // manually inspect the apk to ensure that the classes.dex that was created is the same
         // one in the apk. This tests that the packaging didn't rename the multiple dex files
         // around when we packaged them.
-        File classesDex = FileUtils.join(dexDir, "classes.dex");
+        List<File> allClassesDex =
+                FileUtils.find(
+                        project.getIntermediateFile("transforms"),
+                        Pattern.compile("(dex|dexMerger|jackDexer)/ics/debug/.*/classes\\.dex"));
+        assertThat(allClassesDex).hasSize(1);
+        File classesDex = allClassesDex.get(0);
 
         assertThat(project.getApk("ics", "debug"))
                 .containsFileWithContent("classes.dex", Files.toByteArray(classesDex));
 
-        File classes2Dex = FileUtils.join(dexDir, "classes2.dex");
+        File classes2Dex = FileUtils.join(classesDex.getParentFile(), "classes2.dex");
 
         assertThat(project.getApk("ics", "debug"))
                 .containsFileWithContent("classes2.dex", Files.toByteArray(classes2Dex));
@@ -225,7 +215,9 @@ public class MultiDexTest {
                 project.getBuildFile(),
                 "\nandroid.dexOptions.additionalParameters '--set-max-idx-number=10'\n");
 
-        GradleBuildResult result = project.executor().expectFailure().run("assembleIcsDebug");
+        // dexing with dex archives does not support additional parameters
+        GradleBuildResult result =
+                project.executor().expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
 
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
     }
@@ -290,7 +282,7 @@ public class MultiDexTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException {
+    public void connectedCheck() throws Exception {
         project.execute(
                 "assembleIcsDebug",
                 "assembleIcsDebugAndroidTest",

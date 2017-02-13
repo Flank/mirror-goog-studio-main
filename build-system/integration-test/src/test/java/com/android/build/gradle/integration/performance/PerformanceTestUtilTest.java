@@ -26,7 +26,7 @@ import org.junit.Test;
 public final class PerformanceTestUtilTest {
 
     @Test
-    public void checkGetEditType() {
+    public void checkGetEditType() throws Exception {
         Set<PerformanceTestUtil.EditType> editTypes =
                 EnumSet.allOf(PerformanceTestUtil.EditType.class);
         for (Logging.BenchmarkMode mode: PerformanceTestUtil.BENCHMARK_MODES) {
@@ -45,7 +45,7 @@ public final class PerformanceTestUtilTest {
     }
 
     @Test
-    public void checkGetgetSubProjectType() {
+    public void checkGetgetSubProjectType() throws Exception {
         Set<PerformanceTestUtil.SubProjectType> subprojectTypes =
                 EnumSet.allOf(PerformanceTestUtil.SubProjectType.class);
         for (Logging.BenchmarkMode mode: PerformanceTestUtil.BENCHMARK_MODES) {

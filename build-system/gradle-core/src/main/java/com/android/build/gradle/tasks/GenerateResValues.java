@@ -25,18 +25,15 @@ import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.TaskAction;
 
 @ParallelizableTask
 public class GenerateResValues extends BaseTask {

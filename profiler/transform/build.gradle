@@ -1,0 +1,39 @@
+apply plugin: 'java'
+apply plugin: 'org.anarres.jarjar'
+
+group = 'com.android.tools'
+
+archivesBaseName = 'profilers-transform'
+
+buildscript {
+    dependencies {
+        classpath 'org.anarres.jarjar:jarjar-gradle:1.0.0'
+    }
+}
+
+configurations {
+    repackage
+    support
+}
+
+jarjar.repackage('asm') {
+    destinationName = "profler-asm.jar"
+    from configurations.repackage
+    classRename 'org.objectweb.asm.**', 'com.android.tools.profiler.asm.@1'
+}
+
+dependencies {
+    repackage('org.ow2.asm:asm:5.0.4') { transitive = false }
+
+    support project(":supportlib")
+
+    compile files(asm.outputs)
+}
+
+
+jar {
+    from asm.outputs.files.collect { zipTree(it) }
+    from(configurations.support) {
+        into 'dependencies'
+    }
+}

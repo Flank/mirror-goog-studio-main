@@ -17,5 +17,6 @@
     <orderEntry type="module" module-name="sdk-common" exported="" />
     <orderEntry type="module" module-name="layoutlib-api" exported="" />
     <orderEntry type="module" module-name="java-psi-api" exported="" />
+    <orderEntry type="module" module-name="manifest-merger" exported="" />
   </component>
 </module>

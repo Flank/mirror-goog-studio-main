@@ -57,11 +57,11 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
 
 public class DeviceParser {
+    public static final String ROUND_BOOT_PROP = "ro.emulator.circular";
+    public static final String CHIN_BOOT_PROP = "ro.emu.win_outset_bottom_px";
 
     private static class DeviceHandler extends DefaultHandler {
         private static final Splitter sSpaceSplitter = Splitter.on(' ').omitEmptyStrings();
-        private static final String ROUND_BOOT_PROP = "ro.emulator.circular";
-        private static final String CHIN_BOOT_PROP = "ro.emu.win_outset_bottom_px";
 
         private final Table<String, String, Device> mDevices = HashBasedTable.create();
         private final StringBuilder mStringAccumulator = new StringBuilder();

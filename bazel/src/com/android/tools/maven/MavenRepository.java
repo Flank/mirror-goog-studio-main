@@ -83,7 +83,7 @@ public class MavenRepository {
         return mRepoDirectory;
     }
 
-    public DefaultRepositorySystemSession getmRepositorySystemSession() {
+    public DefaultRepositorySystemSession getRepositorySystemSession() {
         return mRepositorySystemSession;
     }
 

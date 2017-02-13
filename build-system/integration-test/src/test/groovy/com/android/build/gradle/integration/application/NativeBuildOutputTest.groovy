@@ -158,10 +158,13 @@ class NativeBuildOutputTest {
             }
             """;
 
-        checkFailed(["cmake.path",
-                     "CMakeLists.txt but that file doesn't exist"],
-            ["cmake.path",
-             "CMakeLists.txt but that file doesn't exist"], 2);
+        checkFailed(
+                ["non/existent/CMakeLists.txt",
+                 "externalNativeJsonGenerator.makefile",
+                 "does not exist"],
+                ["cmake.path",
+                 "CMakeLists.txt but that file doesn't exist"],
+                2);
     }
 
     @Test
@@ -312,8 +315,10 @@ class NativeBuildOutputTest {
             }
             """;
 
-        checkFailed(["ndkBuild.path", "Android.mk but that file doesn't exist"],
-              ["ndkBuild.path", "Android.mk but that file doesn't exist"], 2);
+        checkFailed(
+                ["non/existent/Android.mk", "externalNativeJsonGenerator.makefile", "does not exist"],
+                ["ndkBuild.path", "Android.mk but that file doesn't exist"],
+                2);
     }
 
     @Test

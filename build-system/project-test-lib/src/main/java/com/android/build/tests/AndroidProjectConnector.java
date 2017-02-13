@@ -22,17 +22,15 @@ import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
-
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
 
 /**
  */

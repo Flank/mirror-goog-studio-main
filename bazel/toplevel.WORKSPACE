@@ -16,6 +16,12 @@ new_local_repository(
     path = 'external/AntennaPod'
 )
 
+new_local_repository(
+    name = 'gradle_perf_android_medium',
+    build_file = 'tools/base/build-system/integration-test/gradle_perf_android_medium.BUILD',
+    path = 'external/gradle-perf-android-medium'
+)
+
 local_repository(
     name = "protobuf_repo",
     path = "external/protobuf",

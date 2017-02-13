@@ -102,7 +102,7 @@ public class NamespaceDetector extends LayoutDetector {
 
             "In Gradle projects, the actual package used in the final APK can vary; for example," +
             "you can add a `.debug` package suffix in one version and not the other. " +
-            "Therefore, you should *not* hardcode the application package in the resource; " +
+            "Therefore, you should **not** hardcode the application package in the resource; " +
             "instead, use the special namespace `http://schemas.android.com/apk/res-auto` " +
             "which will cause the tools to figure out the right namespace for the resource " +
             "regardless of the actual package used during the build.",

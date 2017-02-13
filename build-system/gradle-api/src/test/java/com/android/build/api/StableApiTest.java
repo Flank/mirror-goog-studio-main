@@ -27,10 +27,6 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -38,6 +34,8 @@ import java.nio.charset.Charset;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Test that tries to ensure that our public API remains stable.
@@ -71,7 +69,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "b259247bbcfdf9c2ba033f77535ccaab4c3f42c6",
+                "9755c368d764f69d404cbeadebe1d36c4d485b50",
                 Hashing.sha1().hashBytes(Resources.toByteArray(API_LIST_URL)).toString());
     }
 

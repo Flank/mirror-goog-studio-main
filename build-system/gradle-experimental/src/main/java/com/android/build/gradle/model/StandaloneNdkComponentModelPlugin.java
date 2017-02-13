@@ -26,7 +26,8 @@ import com.android.build.gradle.managed.ProductFlavor;
 import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.ndk.internal.NdkNamingScheme;
 import com.android.utils.StringHelper;
-
+import java.io.File;
+import java.util.List;
 import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -39,9 +40,6 @@ import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
 import org.gradle.model.Validate;
 import org.gradle.nativeplatform.NativeBinarySpec;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * Plugin for compiling native source code to create a shared object.

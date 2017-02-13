@@ -51,7 +51,7 @@ public class NdkSanAngelesTest {
     public static AndroidProject model;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
@@ -62,12 +62,12 @@ public class NdkSanAngelesTest {
     }
 
     @Test
-    public void lint() {
+    public void lint() throws Exception {
         project.execute("lint");
     }
 
     @Test
-    public void checkVersionCodeInModel() {
+    public void checkVersionCodeInModel() throws Exception {
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2, variants.size());
 
@@ -110,7 +110,7 @@ public class NdkSanAngelesTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

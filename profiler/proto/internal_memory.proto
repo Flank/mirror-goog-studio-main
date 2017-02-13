@@ -24,7 +24,7 @@ service InternalMemoryService {
 }
 
 message VmStatsRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
   MemoryData.VmStatsSample vm_stats_sample = 2;
 }
 

@@ -43,12 +43,12 @@ public class NativeSoPackagingFromRemoteAarTest {
     private GradleTestProject appProject;
     private GradleTestProject libProject;
 
-    private void execute(String... tasks) {
+    private void execute(String... tasks) throws IOException, InterruptedException {
         project.executor().run(tasks);
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         appProject = project.getSubproject("app");
         libProject = project.getSubproject("library");
 
@@ -99,14 +99,15 @@ public class NativeSoPackagingFromRemoteAarTest {
             @NonNull File projectFolder,
             @NonNull String dimension,
             @NonNull String filename,
-            @NonNull String content) throws IOException {
+            @NonNull String content)
+            throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86");
         FileUtils.mkdirs(assetFolder);
         Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
     }
 
     @Test
-    public void testNonIncrementalPackaging() throws IOException, InterruptedException {
+    public void testNonIncrementalPackaging() throws Exception {
         checkApk(appProject, "liblibrary.so",      "library:abcd");
         checkApk(appProject, "liblibrary2.so",     "library2:abcdef");
     }
@@ -156,7 +157,7 @@ public class NativeSoPackagingFromRemoteAarTest {
     /**
      * check an apk has (or not) the given asset file name.
      *
-     * If the content is non-null the file is expected to be there with the same content. If the
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
      *
      * @param project the project
@@ -164,9 +165,8 @@ public class NativeSoPackagingFromRemoteAarTest {
      * @param content the content
      */
     private static void checkApk(
-            @NonNull GradleTestProject project,
-            @NonNull String filename,
-            @Nullable String content) throws IOException, InterruptedException {
+            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
+            throws Exception {
         Apk apk = project.getApk("debug");
         if (content != null) {
             TruthHelper.assertThat(apk).containsFileWithContent("lib/x86/" + filename, content);

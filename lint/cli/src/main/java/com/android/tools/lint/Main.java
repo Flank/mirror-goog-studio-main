@@ -864,6 +864,11 @@ public class Main {
             "\n" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<lint>\n" +
+            NBSP + "<!-- Ignore everything in the test source set -->\n" +
+            NBSP + "<issue id=\"all\">\n" +
+            NBSP + NBSP + "<ignore path=\"\\*/test/\\*\" />\n" +
+            NBSP + "</issue>\n" +
+            "\n" +
             NBSP + "<!-- Disable this given check in this project -->\n" +
             NBSP + "<issue id=\"IconMissingDensityFolder\" severity=\"ignore\" />\n" +
             "\n" +
@@ -871,6 +876,7 @@ public class Main {
             NBSP + "<issue id=\"ObsoleteLayoutParam\">\n" +
             NBSP + NBSP + "<ignore path=\"res/layout/activation.xml\" />\n" +
             NBSP + NBSP + "<ignore path=\"res/layout-xlarge/activation.xml\" />\n" +
+            NBSP + NBSP + "<ignore regexp=\"(foo|bar)\\.java\" />\n" +
             NBSP + "</issue>\n" +
             "\n" +
             NBSP + "<!-- Ignore the UselessLeaf issue in the given file -->\n" +

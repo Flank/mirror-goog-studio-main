@@ -24,11 +24,6 @@ import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +31,9 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 
 /**
  * Finds and deletes typedef annotation classes (and also warns if their

@@ -23,7 +23,6 @@ import com.android.builder.model.ClassField;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;

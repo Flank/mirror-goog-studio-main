@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.utils.FileUtils.delete;
 import static com.android.utils.FileUtils.mkdirs;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,21 +32,17 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedInputStream;
-import java.io.InputStream;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Locale;
@@ -55,6 +50,8 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 
 /**
  * Transform to extract jars.
@@ -159,10 +156,11 @@ public class ExtractJarsTransform extends Transform {
                                 });
                                 break;
                             case REMOVED:
-                                executor.execute(() -> {
-                                    delete(outJarFolder);
-                                    return null;
-                                });
+                                executor.execute(
+                                        () -> {
+                                            FileUtils.cleanOutputDir(outJarFolder);
+                                            return null;
+                                        });
                                 break;
                         }
                     }
@@ -271,10 +269,4 @@ public class ExtractJarsTransform extends Transform {
                 : Action.IGNORE;
     }
 
-    @NonNull
-    private static File getFolder(
-            @NonNull File outFolder,
-            @NonNull File jarFile) {
-        return new File(outFolder, jarFile.getName() + "-" + jarFile.getPath().hashCode());
-    }
 }

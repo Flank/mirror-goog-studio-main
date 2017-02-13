@@ -108,11 +108,14 @@ android {
         htmlOutput file("lint-report.html")
         // Reduce severity of this check to just informational
         informational 'LogConditional'
+        // Run all lint checks on all test sources, not just production code
+        checkTestSources true
     }
 
     // Override the versionCode of the release version
     applicationVariants.all { variant ->
         if (variant.buildType.name == "release") {
+            assert variant.outputs.size() == 1 : "There must be exactly one output"
             variant.outputs.get(0).versionCodeOverride = 13
         }
     }

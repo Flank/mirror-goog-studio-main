@@ -17,27 +17,22 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.utils.FileUtils;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
-
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import org.gradle.api.Project;
-import org.gradle.util.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 
 /**
  * Tests for the {@link ExternalBuildManifestLoader}

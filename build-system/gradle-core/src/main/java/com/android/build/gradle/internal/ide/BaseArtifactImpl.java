@@ -22,7 +22,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.SourceProvider;
-
 import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
 import java.io.Serializable;

@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.util.List;
 import java.util.Set;
 

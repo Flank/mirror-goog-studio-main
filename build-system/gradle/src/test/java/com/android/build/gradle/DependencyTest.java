@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import org.junit.Assume;
 
 /** Test variant dependencies. */
 public class DependencyTest extends BaseDslTest {

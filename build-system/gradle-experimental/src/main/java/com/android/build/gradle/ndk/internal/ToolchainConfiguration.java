@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.managed.NdkAbiOptions;
-
+import java.util.Collections;
 import org.gradle.internal.os.OperatingSystem;
 import org.gradle.model.ModelMap;
 import org.gradle.nativeplatform.platform.NativePlatform;
@@ -30,8 +30,6 @@ import org.gradle.nativeplatform.toolchain.GccCompatibleToolChain;
 import org.gradle.nativeplatform.toolchain.NativeToolChainRegistry;
 import org.gradle.nativeplatform.toolchain.internal.gcc.DefaultGccPlatformToolChain;
 import org.gradle.platform.base.PlatformContainer;
-
-import java.util.Collections;
 
 /**
  * Action to configure toolchain for native binaries.

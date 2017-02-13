@@ -22,15 +22,13 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiConditionalExpression;
-import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
-import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
@@ -40,9 +38,7 @@ import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiTypeCastExpression;
-import com.intellij.psi.util.PsiTreeUtil;
 
 /**
  * Utility for locating permissions required by an intent or content resolver
@@ -207,47 +203,9 @@ public class PermissionFinder {
                 }
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                String targetName = variable.getName();
-                PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class, false);
-                if (statement != null && targetName != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                    .getDeclaredElements()) {
-                                if (variable.equals(element)) {
-                                    if (variable.getInitializer() != null) {
-                                        return search(variable.getInitializer());
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        if (assign.getRExpression() != null) {
-                                            return search(assign.getRExpression());
-                                        } else {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = ConstantEvaluator.findLastAssignment(node, variable);
+                if (last != null) {
+                    return search(last);
                 }
             }
         }

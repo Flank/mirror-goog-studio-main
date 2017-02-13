@@ -17,10 +17,8 @@
 package com.android.build.gradle.external.gnumake;
 
 import com.android.annotations.NonNull;
-
 import java.util.Arrays;
 import java.util.List;
-
 import joptsimple.OptionParser;
 
 /**

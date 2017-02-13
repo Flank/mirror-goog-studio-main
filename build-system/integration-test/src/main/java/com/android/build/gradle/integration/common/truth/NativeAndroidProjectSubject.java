@@ -26,7 +26,6 @@ import com.google.common.collect.Sets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

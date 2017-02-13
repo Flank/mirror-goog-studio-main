@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.TestProject;
-import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;

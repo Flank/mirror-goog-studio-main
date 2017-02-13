@@ -23,14 +23,12 @@ import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import org.gradle.api.Project;
 
 /**
  * Deals with the default ProGuard files for Gradle.

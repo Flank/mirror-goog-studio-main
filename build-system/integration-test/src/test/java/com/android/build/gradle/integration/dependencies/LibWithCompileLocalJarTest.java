@@ -22,8 +22,6 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -40,7 +38,7 @@ public class LibWithCompileLocalJarTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         appendToFile(
                 project.getBuildFile(),
                 "\n" +
@@ -64,14 +62,14 @@ public class LibWithCompileLocalJarTest {
     }
 
     @Test
-    public void checkCompileLocalJarIsPackaged() throws IOException, ProcessException {
+    public void checkCompileLocalJarIsPackaged() throws Exception {
         // search in secondary jars only.
         TruthHelper.assertThat(project.getAar("debug"))
                 .containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void testLibraryTestContainsLocalJarClasses() throws IOException, ProcessException {
+    public void testLibraryTestContainsLocalJarClasses() throws Exception {
         project.execute("assembleDebugAndroidTest");
 
         TruthHelper.assertThat(project.getTestApk("debug")).containsClass(

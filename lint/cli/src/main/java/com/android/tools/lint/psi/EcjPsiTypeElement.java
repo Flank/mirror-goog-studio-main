@@ -22,6 +22,7 @@ import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiEllipsisType;
+import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeElement;
@@ -29,7 +30,7 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 
-class EcjPsiTypeElement extends EcjPsiSourceElement implements PsiTypeElement {
+class EcjPsiTypeElement extends EcjPsiExpression implements PsiTypeElement, PsiExpression {
 
     private PsiJavaCodeReferenceElement mReferenceElement;
 

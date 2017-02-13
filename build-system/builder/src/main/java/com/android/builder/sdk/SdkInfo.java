@@ -17,7 +17,6 @@
 package com.android.builder.sdk;
 
 import com.android.annotations.NonNull;
-
 import java.io.File;
 
 /**

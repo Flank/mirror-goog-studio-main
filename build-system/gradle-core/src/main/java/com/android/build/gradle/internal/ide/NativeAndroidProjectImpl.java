@@ -22,7 +22,6 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
-
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;

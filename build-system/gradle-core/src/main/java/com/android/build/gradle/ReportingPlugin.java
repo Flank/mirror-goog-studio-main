@@ -25,9 +25,11 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.report.ReportType;
 import java.io.File;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.TaskCollection;
+import org.gradle.internal.reflect.Instantiator;
 
 /**
  * Gradle plugin class for 'reporting' projects.
@@ -37,7 +39,13 @@ import org.gradle.api.tasks.TaskCollection;
  */
 class ReportingPlugin implements org.gradle.api.Plugin<Project> {
 
+    private final Instantiator instantiator;
     private TestOptions extension;
+
+    @Inject
+    public ReportingPlugin(Instantiator instantiator) {
+        this.instantiator = instantiator;
+    }
 
     @Override
     public void apply(final Project project) {
@@ -45,7 +53,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         // it's evaluated last.
         project.evaluationDependsOnChildren();
 
-        extension = project.getExtensions().create("android", TestOptions.class);
+        extension = project.getExtensions().create("android", TestOptions.class, instantiator);
 
         final AndroidReportTask mergeReportsTask = project.getTasks().create("mergeAndroidReports",
                 AndroidReportTask.class);

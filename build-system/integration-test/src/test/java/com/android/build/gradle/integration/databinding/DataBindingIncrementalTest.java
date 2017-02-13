@@ -22,20 +22,15 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.truth.DexClassSubject;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.xml.sax.SAXException;
 
 
 @RunWith(FilterableParameterized.class)
@@ -78,22 +73,22 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void compileWithoutChange() throws UnsupportedEncodingException {
-        GradleBuildResult result = project.executor().run("assembleDebug");
+    public void compileWithoutChange() throws Exception {
+        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
         assertThat(result.getTask(PROCESS_LAYOUTS_TASK)).wasNotUpToDate();
 
-        result = project.executor().run("assembleDebug");
+        result = project.executor().run(EXPORT_INFO_TASK);
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
         assertThat(result.getTask(PROCESS_LAYOUTS_TASK)).wasUpToDate();
         assertRecompile();
     }
 
     @Test
-    public void changeJavaCode() throws IOException {
-        project.execute("assembleDebug");
+    public void changeJavaCode() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_JAVA), 44, "return false;");
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
         assertThat(result.getTask(PROCESS_LAYOUTS_TASK)).wasUpToDate();
@@ -101,9 +96,8 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void changeVariableName()
-            throws IOException, ProcessException, ParserConfigurationException, SAXException {
-        project.execute("assembleDebug");
+    public void changeVariableName() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
                 "<variable name=\"foo2\" type=\"String\"/>");
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 29,
@@ -121,9 +115,8 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void addVariable()
-            throws IOException, ProcessException, SAXException, ParserConfigurationException {
-        project.execute("assembleDebug");
+    public void addVariable() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
                 "<variable name=\"foo\" type=\"String\"/><variable name=\"foo2\" type=\"String\"/>");
         GradleBuildResult result = project.executor().run("assembleDebug");
@@ -137,9 +130,8 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void addIdToView()
-            throws IOException, ProcessException, SAXException, ParserConfigurationException {
-        project.execute("assembleDebug");
+    public void addIdToView() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30,
                 "android:id=\"@+id/myTextView\"");
         GradleBuildResult result = project.executor().run("assembleDebug");
@@ -163,8 +155,8 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void addNewLayoutFolderAndFile() throws IOException, ProcessException {
-        project.execute("assembleDebug");
+    public void addNewLayoutFolderAndFile() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
@@ -187,9 +179,8 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void addNewLayout()
-            throws IOException, ProcessException, SAXException, ParserConfigurationException {
-        project.execute("assembleDebug");
+    public void addNewLayout() throws Exception {
+        project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
@@ -205,7 +196,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void removeLayout() throws IOException, ProcessException {
+    public void removeLayout() throws Exception {
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
@@ -220,7 +211,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void renameLayout() throws IOException, ProcessException {
+    public void renameLayout() throws Exception {
         String activity2ClassName = "Landroid/databinding/testapp/databinding/Activity2Binding;";
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
@@ -246,8 +237,8 @@ public class DataBindingIncrementalTest {
         assertRecompile();
     }
 
-    private void assertRecompile() {
-        GradleBuildResult result = project.executor().run("assembleDebug");
+    private void assertRecompile() throws Exception {
+        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
         assertThat(result.getTask(PROCESS_LAYOUTS_TASK)).wasUpToDate();

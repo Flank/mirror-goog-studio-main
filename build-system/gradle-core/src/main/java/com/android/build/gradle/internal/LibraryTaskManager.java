@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.VariantHelper;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
@@ -83,6 +84,7 @@ public class LibraryTaskManager extends TaskManager {
 
     public LibraryTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -93,6 +95,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
@@ -271,17 +274,23 @@ public class LibraryTaskManager extends TaskManager {
         copyLintTask.dependsOn(tasks, LINT_COMPILE);
 
         final Zip bundle = project.getTasks().create(variantScope.getTaskName("bundle"), Zip.class);
+
+
+        AndroidTask<ExtractAnnotations> extractAnnotationsTask;
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
                 || variantData.getVariantDependency().isAnnotationsPresent()) {
-            AndroidTask<ExtractAnnotations> extractAnnotationsTask =
-                    getAndroidTasks().create(
-                            tasks,
-                            new ExtractAnnotations.ConfigAction(
-                                    project, getExtension(), variantScope));
+            extractAnnotationsTask =
+                    getAndroidTasks()
+                            .create(
+                                    tasks,
+                                    new ExtractAnnotations.ConfigAction(
+                                            project, getExtension(), variantScope));
             extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
             if (!generateSourcesOnly) {
                 bundle.dependsOn(extractAnnotationsTask.getName());
             }
+        } else {
+            extractAnnotationsTask = null;
         }
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
@@ -353,6 +362,8 @@ public class LibraryTaskManager extends TaskManager {
                             createMinifyTransform(tasks, variantScope, false);
                         }
 
+                        maybeCreateShrinkResourcesTransform(tasks, variantScope);
+
                         // now add a transform that will take all the class/res and package them
                         // into the main and secondary jar files.
                         // This transform technically does not use its transform output, but that's
@@ -368,7 +379,9 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryJarTransform(
                                         new File(variantBundleDir, FN_CLASSES_JAR),
                                         new File(variantBundleDir, LIBS_FOLDER),
-                                        variantScope.getTypedefFile(),
+                                        extractAnnotationsTask != null
+                                                ? variantScope.getTypedefFile()
+                                                : null,
                                         packageName,
                                         getExtension().getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
@@ -376,7 +389,11 @@ public class LibraryTaskManager extends TaskManager {
                         Optional<AndroidTask<TransformTask>> jarPackagingTask =
                                 transformManager.addTransform(tasks, variantScope, transform);
                         if (!generateSourcesOnly) {
-                            jarPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
+                            jarPackagingTask.ifPresent(
+                                    t -> {
+                                        t.optionalDependsOn(tasks, extractAnnotationsTask);
+                                        bundle.dependsOn(t.getName());
+                                    });
                         }
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle.
@@ -401,7 +418,7 @@ public class LibraryTaskManager extends TaskManager {
                 // needed explicitly, as bundle no longer depends on compileJava
                 variantScope.getAidlCompileTask().getName(),
                 variantScope.getMergeAssetsTask().getName(),
-                variantData.getOutputs().get(0).getScope().getManifestProcessorTask().getName());
+                variantData.getMainOutput().getScope().getManifestProcessorTask().getName());
         if (!generateSourcesOnly) {
             bundle.dependsOn(variantScope.getNdkBuildable());
         }
@@ -418,7 +435,7 @@ public class LibraryTaskManager extends TaskManager {
                         StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
 
         // get the single output for now, though that may always be the case for a library.
-        LibVariantOutputData variantOutputData = libVariantData.getOutputs().get(0);
+        LibVariantOutputData variantOutputData = libVariantData.getMainOutput();
         variantOutputData.packageLibTask = bundle;
 
         variantScope.getAssembleTask().dependsOn(tasks, bundle);

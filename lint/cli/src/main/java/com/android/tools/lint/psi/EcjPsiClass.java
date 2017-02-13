@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -487,7 +486,33 @@ class EcjPsiClass extends EcjPsiSourceElement implements PsiClass {
     @NonNull
     @Override
     public PsiMethod[] findMethodsBySignature(PsiMethod psiMethod, boolean checkBases) {
-        throw new UnimplementedLintPsiApiException();
+        String name = psiMethod.getName();
+        PsiMethod[] candidates = findMethodsByName(name, checkBases);
+        if (candidates.length == 0 || candidates.length == 1 && candidates[0] == psiMethod) {
+            return candidates;
+        }
+
+        // Filter out methods that don't match
+        List<PsiMethod> matches = Lists.newArrayListWithCapacity(candidates.length + 2);
+        for (PsiMethod candidate : candidates) {
+            if (candidate.equals(psiMethod) || EcjPsiManager.sameSignature(psiMethod, candidate)) {
+                matches.add(candidate);
+            }
+        }
+
+        // Now need to find interface methods as well.
+        if (checkBases) {
+            for (PsiClass itf : getInterfaces()) {
+                candidates = itf.findMethodsBySignature(psiMethod, true);
+                for (PsiMethod candidate : candidates) {
+                    if (!matches.contains(candidate)) {
+                        matches.add(candidate);
+                    }
+                }
+            }
+        }
+
+        return matches.toArray(PsiMethod.EMPTY_ARRAY);
     }
 
     @NonNull

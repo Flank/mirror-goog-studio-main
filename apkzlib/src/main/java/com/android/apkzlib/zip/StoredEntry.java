@@ -655,6 +655,22 @@ public class StoredEntry {
     }
 
     /**
+     * Removes the data descriptor, if it has one and resets the data descriptor bit in the
+     * central directory header.
+     *
+     * @return was the data descriptor remove?
+     */
+    boolean removeDataDescriptor() {
+        if (dataDescriptorType == DataDescriptorType.NO_DATA_DESCRIPTOR) {
+            return false;
+        }
+
+        dataDescriptorType = DataDescriptorType.NO_DATA_DESCRIPTOR;
+        cdh.resetDeferredCrc();
+        return true;
+    }
+
+    /**
      * Obtains the local header data.
      *
      * @return the header data

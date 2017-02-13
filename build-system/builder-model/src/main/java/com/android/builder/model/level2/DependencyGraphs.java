@@ -19,7 +19,6 @@ package com.android.builder.model.level2;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A set of dependency Graphs.

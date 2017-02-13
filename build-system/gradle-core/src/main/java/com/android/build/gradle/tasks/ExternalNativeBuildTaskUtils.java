@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -41,18 +40,16 @@ import com.google.common.io.FileBackedOutputStream;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-import org.gradle.api.Project;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.gradle.api.Project;
 
 /**
  * Shared utility methods for dealing with external native build tasks.
@@ -234,7 +231,7 @@ public class ExternalNativeBuildTaskUtils {
             androidBuilder.executeProcess(process.createProcess(), handler)
                     .rethrowFailure().assertNormalExitValue();
 
-            return handler.getCombinedOutputString();
+            return handler.getStandardOutputString();
         } catch (ProcessException e) {
             // Also, add process output to the process exception so that it can be analyzed by
             // caller. Use combined stderr stdout instead of just stdout because compiler errors
@@ -253,8 +250,8 @@ public class ExternalNativeBuildTaskUtils {
     private static class ProgressiveLoggingProcessOutputHandler implements ProcessOutputHandler {
         @NonNull
         private final ILogger logger;
-        @NonNull
-        private final FileBackedOutputStream combinedOutput;
+        @NonNull private final FileBackedOutputStream standardOutput;
+        @NonNull private final FileBackedOutputStream combinedOutput;
         @NonNull
         private final ProgressiveLoggingProcessOutput loggingProcessOutput;
         private final boolean logStdioToInfo;
@@ -263,8 +260,14 @@ public class ExternalNativeBuildTaskUtils {
                 @NonNull ILogger logger, boolean logStdioToInfo) {
             this.logger = logger;
             this.logStdioToInfo = logStdioToInfo;
+            standardOutput = new FileBackedOutputStream(2048);
             combinedOutput = new FileBackedOutputStream(2048);
             loggingProcessOutput = new ProgressiveLoggingProcessOutput();
+        }
+
+        @NonNull
+        String getStandardOutputString() throws IOException {
+            return standardOutput.asByteSource().asCharSource(Charsets.UTF_8).read();
         }
 
         @NonNull
@@ -288,8 +291,8 @@ public class ExternalNativeBuildTaskUtils {
             private final ProgressiveLoggingOutputStream errorStream;
 
             ProgressiveLoggingProcessOutput() {
-                outputStream = new ProgressiveLoggingOutputStream(logStdioToInfo);
-                errorStream = new ProgressiveLoggingOutputStream(true /* logStdioToInfo */);
+                outputStream = new ProgressiveLoggingOutputStream(logStdioToInfo, standardOutput);
+                errorStream = new ProgressiveLoggingOutputStream(true /* logStdioToInfo */, null);
             }
 
             @NonNull @Override public ProgressiveLoggingOutputStream getStandardOutput() {
@@ -309,13 +312,19 @@ public class ExternalNativeBuildTaskUtils {
                 byte[] buffer = new byte[INITIAL_BUFFER_SIZE];
                 int nextByteIndex = 0;
                 private final boolean logToInfo;
+                private final FileBackedOutputStream individualOutput;
 
-                ProgressiveLoggingOutputStream(boolean logToInfo) {
+                ProgressiveLoggingOutputStream(
+                        boolean logToInfo, FileBackedOutputStream individualOutput) {
                     this.logToInfo = logToInfo;
+                    this.individualOutput = individualOutput;
                 }
 
                 @Override public void write(int b) throws IOException {
                     combinedOutput.write(b);
+                    if (individualOutput != null) {
+                        individualOutput.write(b);
+                    }
                     // Check for /r and /n respectively
                     if (b == 0x0A || b == 0x0D) {
                         printBuffer();

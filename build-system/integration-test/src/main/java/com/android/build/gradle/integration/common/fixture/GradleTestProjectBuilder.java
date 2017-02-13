@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
-import static org.junit.Assert.fail;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
@@ -29,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -46,6 +45,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
+    private boolean withDependencyChecker = true;
 
     /** Create a GradleTestProject. */
     public GradleTestProject create() {
@@ -59,6 +59,7 @@ public final class GradleTestProjectBuilder {
                 improvedDependencyEnabled,
                 targetGradleVersion,
                 withoutNdk,
+                withDependencyChecker,
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
@@ -121,6 +122,12 @@ public final class GradleTestProjectBuilder {
                             .getParentFile();
             parentDir = new File(parentDir, "external");
             File projectDir = new File(parentDir, project);
+            if (!projectDir.exists()) {
+                projectDir = new File(parentDir, project.replace('-', '_'));
+            }
+            if (!projectDir.exists()) {
+                throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
+            }
             addAllFiles(app, projectDir);
             return fromTestApp(app);
         } catch (IOException e) {
@@ -173,6 +180,12 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
+    public GradleTestProjectBuilder withDependencyChecker(
+            boolean dependencyChecker) {
+        this.withDependencyChecker = dependencyChecker;
+        return this;
+    }
+
     public GradleTestProjectBuilder withBuildToolsVersion(String buildToolsVersion) {
         this.buildToolsVersion = buildToolsVersion;
         return this;
@@ -212,7 +225,7 @@ public final class GradleTestProjectBuilder {
                                 file.getName(),
                                 Files.toByteArray(new File(projectDir, filePath))));
             } catch (IOException e) {
-                fail(e.toString());
+                throw new UncheckedIOException(e);
             }
         }
     }

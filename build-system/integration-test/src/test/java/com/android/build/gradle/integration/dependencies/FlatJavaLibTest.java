@@ -31,7 +31,6 @@ import com.android.builder.model.Variant;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,7 +52,7 @@ public class FlatJavaLibTest {
     static ModelContainer<AndroidProject> models;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app'", project.getSettingsFile(), Charsets.UTF_8);
 
         /*
@@ -79,7 +78,7 @@ public class FlatJavaLibTest {
     }
 
     @Test
-    public void checkDeDupedExternalJavaLibraries() {
+    public void checkDeDupedExternalJavaLibraries() throws Exception {
         Variant variant = ModelHelper.getVariant(models.getModelMap().get(":app").getVariants(), "debug");
 
         Dependencies deps = variant.getMainArtifact().getDependencies();

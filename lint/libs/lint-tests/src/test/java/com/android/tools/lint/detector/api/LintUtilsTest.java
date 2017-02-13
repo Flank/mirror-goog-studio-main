@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN_WRAPPER;
@@ -37,10 +39,13 @@ import static com.android.tools.lint.detector.api.LintUtils.computeResourceName;
 import static com.android.tools.lint.detector.api.LintUtils.convertVersion;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
+import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.android.tools.lint.detector.api.LintUtils.getFormattedParameters;
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 import static com.android.tools.lint.detector.api.LintUtils.getPrimitiveType;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
+import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
+import static com.android.tools.lint.detector.api.LintUtils.resolveManifestName;
 import static com.android.tools.lint.detector.api.LintUtils.splitPath;
 import static com.android.utils.SdkUtils.escapePropertyValue;
 import static com.google.common.truth.Truth.assertThat;
@@ -60,6 +65,7 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Iterables;
 import com.intellij.psi.PsiJavaFile;
 import java.io.BufferedOutputStream;
@@ -74,6 +80,8 @@ import java.util.regex.Pattern;
 import junit.framework.TestCase;
 import lombok.ast.Node;
 import org.intellij.lang.annotations.Language;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {
@@ -645,6 +653,74 @@ public class LintUtilsTest extends TestCase {
             assertEquals(autoBoxed, getAutoBoxedType(primitive));
             assertEquals(primitive, getPrimitiveType(autoBoxed));
         }
+    }
+
+    @NonNull
+    private static Element getElementWithNameValue(
+            @NonNull @Language("XML") String xml,
+            @NonNull String activityName) {
+        Document document = XmlUtils.parseDocumentSilently(xml, true);
+        assertNotNull(document);
+        Element root = document.getDocumentElement();
+        assertNotNull(root);
+        for (Element application : getChildren(root)) {
+            for (Element element : getChildren(application)) {
+                String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                if (activityName.equals(name)) {
+                    return element;
+                }
+            }
+        }
+
+        fail("Didn't find " + activityName);
+        throw new AssertionError("Didn't find " + activityName);
+    }
+
+    public void testResolveManifestName() throws Exception {
+        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    package=\"test.pkg\">\n"
+                + "    <application>\n"
+                + "        <activity android:name=\".TestActivity\" />\n"
+                + "    </application>\n"
+                + "</manifest>\n", ".TestActivity")));
+
+
+        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    package=\"test.pkg\">\n"
+                + "    <application>\n"
+                + "        <activity android:name=\"TestActivity\" />\n"
+                + "    </application>\n"
+                + "</manifest>\n", "TestActivity")));
+
+        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    package=\"test.pkg\">\n"
+                + "    <application>\n"
+                + "        <activity android:name=\"test.pkg.TestActivity\" />\n"
+                + "    </application>\n"
+                + "</manifest>\n", "test.pkg.TestActivity")));
+
+        assertEquals("test.pkg.TestActivity.Bar", resolveManifestName(getElementWithNameValue(""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    package=\"test.pkg\">\n"
+                + "    <application>\n"
+                + "        <activity android:name=\"test.pkg.TestActivity$Bar\" />\n"
+                + "    </application>\n"
+                + "</manifest>\n", "test.pkg.TestActivity$Bar")));
+    }
+
+    public void testJavaKeyword() {
+        assertThat(isJavaKeyword("")).isFalse();
+        assertThat(isJavaKeyword("iff")).isFalse();
+        assertThat(isJavaKeyword("if")).isTrue();
+        assertThat(isJavaKeyword("true")).isTrue();
+        assertThat(isJavaKeyword("false")).isTrue();
     }
 
     private static class TestContext extends JavaContext {

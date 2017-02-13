@@ -19,88 +19,86 @@ package com.android.build.gradle.shrinker.parser;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
-/**
- * Represents a ProGuard class specification.
- */
+/** Represents a ProGuard class specification. */
 public class ClassSpecification {
 
-    @NonNull private final NameSpecification mNameSpec;
-    @NonNull private final ClassTypeSpecification mClassType;
-    @Nullable private final AnnotationSpecification mAnnotation;
-    @Nullable private KeepModifier mKeepModifier;
-    @Nullable private ModifierSpecification mModifier;
-    @NonNull private List<FieldSpecification> mFieldSpecifications = Lists.newArrayList();
-    @NonNull private List<MethodSpecification> mMethodSpecifications = Lists.newArrayList();
-    @Nullable private InheritanceSpecification mInheritanceSpecification;
+    @NonNull private final List<NameSpecification> nameSpecs;
+    @NonNull private final ClassTypeSpecification classType;
+    @Nullable private final AnnotationSpecification annotation;
+    @Nullable private KeepModifier keepModifier;
+    @Nullable private ModifierSpecification modifier;
+    @NonNull private List<FieldSpecification> fieldSpecifications = Lists.newArrayList();
+    @NonNull private List<MethodSpecification> methodSpecifications = Lists.newArrayList();
+    @Nullable private InheritanceSpecification inheritanceSpecification;
 
     public ClassSpecification(
-            @NonNull NameSpecification nameSpec,
+            @NonNull List<NameSpecification> nameSpecs,
             @NonNull ClassTypeSpecification classType,
             @Nullable AnnotationSpecification annotation) {
-        mNameSpec = nameSpec;
-        mClassType = classType;
-        mAnnotation = annotation;
+        this.nameSpecs = nameSpecs;
+        this.classType = classType;
+        this.annotation = annotation;
+        this.keepModifier = new KeepModifier();
     }
 
     public void setKeepModifier(@Nullable KeepModifier keepModifier) {
-        mKeepModifier = keepModifier;
+        this.keepModifier = keepModifier;
     }
 
-    @Nullable
+    @NonNull
     public KeepModifier getKeepModifier() {
-        return mKeepModifier;
+        return keepModifier;
     }
 
     public void setModifier(@Nullable ModifierSpecification modifier) {
-        mModifier = modifier;
+        this.modifier = modifier;
     }
 
     @Nullable
     public ModifierSpecification getModifier() {
-        return mModifier;
+        return modifier;
     }
 
     public void add(FieldSpecification fieldSpecification) {
-        mFieldSpecifications.add(fieldSpecification);
+        fieldSpecifications.add(fieldSpecification);
     }
 
     public void add(MethodSpecification methodSpecification) {
-        mMethodSpecifications.add(methodSpecification);
+        methodSpecifications.add(methodSpecification);
     }
 
     @NonNull
     public List<MethodSpecification> getMethodSpecifications() {
-        return mMethodSpecifications;
+        return methodSpecifications;
     }
 
-    public NameSpecification getName() {
-        return mNameSpec;
+    public List<NameSpecification> getNames() {
+        return nameSpecs;
     }
 
     @NonNull
     public ClassTypeSpecification getClassType() {
-        return mClassType;
+        return classType;
     }
 
     @Nullable
     public AnnotationSpecification getAnnotation() {
-        return mAnnotation;
+        return annotation;
     }
 
     @NonNull
     public List<FieldSpecification> getFieldSpecifications() {
-        return mFieldSpecifications;
+        return fieldSpecifications;
     }
 
     public void setInheritance(@Nullable InheritanceSpecification inheritanceSpecification) {
-        mInheritanceSpecification = inheritanceSpecification;
+        this.inheritanceSpecification = inheritanceSpecification;
     }
 
     @Nullable
     public InheritanceSpecification getInheritance() {
-        return mInheritanceSpecification;
+        return inheritanceSpecification;
     }
 }

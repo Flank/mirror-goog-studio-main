@@ -98,6 +98,21 @@ public class InstantRunBuildInfoTest {
         assertEquals("COLD", info.getBuildMode());
     }
 
+    @Test
+    public void fullBuildBasedOnNumberOfArtifacts() throws IOException {
+        // output of a full build is never a patch
+        InstantRunBuildInfo info = getBuildInfo("instantrun", "build-info-split1.xml");
+        assertFalse(info.isPatchBuild());
+
+        // output of a coldswap build should be considered a full build if the number of artifacts == 12
+        info = getBuildInfo("instantrun", "build-info-split2.xml");
+        assertFalse(info.isPatchBuild());
+
+        // otherwise it is a patch build
+        info = getBuildInfo("instantrun", "build-info-split3.xml");
+        assertTrue(info.isPatchBuild());
+    }
+
     @NonNull
     private static InstantRunBuildInfo getBuildInfo(@NonNull String... buildInfoPath)
             throws IOException {

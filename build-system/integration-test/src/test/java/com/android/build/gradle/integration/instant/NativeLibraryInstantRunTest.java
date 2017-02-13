@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -34,19 +33,18 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /**
  * Simple test to ensure component model plugin do not crash when instant run is enabled.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class NativeLibraryInstantRunTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule
     public Adb adb = new Adb();
@@ -59,7 +57,7 @@ public class NativeLibraryInstantRunTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "project.ext['android.useDeprecatedNdk'] = true"
                         + "\napply plugin: \"com.android.application\"\n"
@@ -83,17 +81,16 @@ public class NativeLibraryInstantRunTest {
         AndroidProject model = project.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
-                .withInstantRun(21, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(21, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
         device.uninstallPackage("com.example.hellojni");
-        InstantRunTestUtils.doInstall(device, info.getArtifacts());
+        InstantRunTestUtils.doInstall(device, info);
 
         // Run app
         InstantRunTestUtils.unlockDevice(device);
 
         InstantRunTestUtils.runApp(device, "com.example.hellojni/.HelloJni");
-        InstantRunTestUtils.startService(device, "com.example.hellojni");
 
         long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
 

@@ -23,14 +23,16 @@ import com.android.testutils.truth.DexUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 
 @Immutable
 public final class Dex {
 
-    @NonNull private final Path path;
+    @NonNull private final Supplier<byte[]> fileBytesSupplier;
     @NonNull private final String name;
 
     // Lazily initialized properties
@@ -44,8 +46,20 @@ public final class Dex {
         this(file.toPath());
     }
 
+    public Dex(@NonNull byte[] fileContent, @NonNull String name) {
+        this.fileBytesSupplier = () -> fileContent;
+        this.name = name;
+    }
+
     Dex(@NonNull Path path, @NonNull String name) {
-        this.path = path;
+        this.fileBytesSupplier =
+                () -> {
+                    try {
+                        return Files.readAllBytes(path);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                };
         this.name = name;
     }
 
@@ -55,7 +69,7 @@ public final class Dex {
             return classes;
         }
         ImmutableMap.Builder<String, DexBackedClassDef> mapBuilder = ImmutableMap.builder();
-        for (DexBackedClassDef classDef : DexUtils.loadDex(Files.readAllBytes(path)).getClasses()) {
+        for (DexBackedClassDef classDef : DexUtils.loadDex(fileBytesSupplier.get()).getClasses()) {
             mapBuilder.put(classDef.getType(), classDef);
         }
         classes = mapBuilder.build();

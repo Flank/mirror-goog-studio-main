@@ -31,22 +31,20 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-import java.io.IOException;
-import java.util.Collection;
-
-/**
- * Tests for the {@link NoChangesVerifierTransform}
- */
-@RunWith(MockitoJUnitRunner.class)
+/** Tests for the {@link NoChangesVerifierTransform} */
 public class NoChangesVerifierTransformTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
+
     @Mock
     TransformInvocation input;
     @Mock
@@ -88,21 +86,23 @@ public class NoChangesVerifierTransformTest {
         when(input.isIncremental()).thenReturn(Boolean.TRUE);
         JarInput jarInput = Mockito.mock(JarInput.class);
         when(jarInput.getStatus()).thenReturn(Status.ADDED);
+        when(jarInput.getContentTypes()).thenReturn(TransformManager.CONTENT_CLASS);
 
         ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of(jarInput);
-                    }
+                ImmutableList.of(
+                        new TransformInput() {
+                            @NonNull
+                            @Override
+                            public Collection<JarInput> getJarInputs() {
+                                return ImmutableList.of(jarInput);
+                            }
 
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.of();
-                    }
-                });
+                            @NonNull
+                            @Override
+                            public Collection<DirectoryInput> getDirectoryInputs() {
+                                return ImmutableList.of();
+                            }
+                        });
 
         when(input.getReferencedInputs()).thenReturn(transformInputs);
 
@@ -115,5 +115,48 @@ public class NoChangesVerifierTransformTest {
 
         assertThat(verifierStatusCaptor.getValue()).isEqualTo(
                 InstantRunVerifierStatus.DEPENDENCY_CHANGED);
+    }
+
+    @Test
+    public void testIncTransformInvocationNoTypes()
+            throws TransformException, InterruptedException, IOException {
+        NoChangesVerifierTransform checker =
+                new NoChangesVerifierTransform(
+                        "name",
+                        buildContext,
+                        TransformManager.CONTENT_CLASS,
+                        TransformManager.SCOPE_FULL_PROJECT,
+                        InstantRunVerifierStatus.DEPENDENCY_CHANGED);
+
+        assertThat(checker.isIncremental()).isTrue();
+        when(input.isIncremental()).thenReturn(Boolean.TRUE);
+        JarInput jarInput = Mockito.mock(JarInput.class);
+        when(jarInput.getStatus()).thenReturn(Status.ADDED);
+        when(jarInput.getContentTypes()).thenReturn(TransformManager.CONTENT_RESOURCES);
+
+        ImmutableList<TransformInput> transformInputs =
+                ImmutableList.of(
+                        new TransformInput() {
+                            @NonNull
+                            @Override
+                            public Collection<JarInput> getJarInputs() {
+                                return ImmutableList.of(jarInput);
+                            }
+
+                            @NonNull
+                            @Override
+                            public Collection<DirectoryInput> getDirectoryInputs() {
+                                return ImmutableList.of();
+                            }
+                        });
+
+        when(input.getReferencedInputs()).thenReturn(transformInputs);
+
+        checker.transform(input);
+
+        // make sure the verifier is not set by the constructor.
+        ArgumentCaptor<InstantRunVerifierStatus> verifierStatusCaptor =
+                ArgumentCaptor.forClass(InstantRunVerifierStatus.class);
+        Mockito.verify(buildContext, times(0)).setVerifierStatus(verifierStatusCaptor.capture());
     }
 }

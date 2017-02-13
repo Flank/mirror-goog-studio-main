@@ -35,7 +35,6 @@ import com.android.builder.model.Variant;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -56,7 +55,7 @@ public class AppWithResolutionStrategyForJarTest {
 
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getBuildFile(),
@@ -104,7 +103,7 @@ public class AppWithResolutionStrategyForJarTest {
     }
 
     @Test
-    public void checkModelContainsCorrectDependencies() {
+    public void checkModelContainsCorrectDependencies() throws Exception {
 
         AndroidProject appProject = models.getModelMap().get(":app");
         Collection<Variant> appVariants = appProject.getVariants();

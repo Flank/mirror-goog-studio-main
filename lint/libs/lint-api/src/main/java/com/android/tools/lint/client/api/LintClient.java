@@ -26,6 +26,7 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.SRC_FOLDER;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -51,6 +52,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,11 +68,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -426,6 +430,15 @@ public abstract class LintClient {
     }
 
     /**
+     * Database moved from platform-tools to SDK in API level 26.
+     *
+     * This duplicates the constant in {@link LintClient} but that
+     * constant is not public (because it's in the API package and I don't
+     * want this part of the API surface; it's an implementation optimization.)
+     */
+    private static final int SDK_DATABASE_MIN_VERSION = 26;
+
+    /**
      * Locates an SDK resource (relative to the SDK root directory).
      * <p>
      * TODO: Consider switching to a {@link URL} return type instead.
@@ -440,7 +453,56 @@ public abstract class LintClient {
         File top = getSdkHome();
         if (top == null) {
             throw new IllegalArgumentException("Lint must be invoked with the System property "
-                   + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
+                    + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
+        }
+
+        // Files looked up by ExternalAnnotationRepository and ApiLookup, respectively
+        boolean isAnnotationZip = "annotations.zip".equals(relativePath);
+        boolean isApiDatabase = "api-versions.xml".equals(relativePath);
+        if (isAnnotationZip || isApiDatabase) {
+            if (isAnnotationZip) {
+                // Allow Gradle builds etc to point to a specific location
+                String path = System.getenv("SDK_ANNOTATIONS");
+                if (path != null) {
+                    File file = new File(path);
+                    if (file.exists()) {
+                        return file;
+                    }
+                }
+            }
+
+            // Look for annotations.zip or api-versions.xml: these used to ship with the
+            // platform-tools, but were (in API 26) moved over to the API platform.
+            // Look for the most recent version, falling back to platform-tools if necessary.
+            IAndroidTarget[] targets = getTargets();
+            for (int i = targets.length - 1; i >= 0; i--) {
+                IAndroidTarget target = targets[i];
+                if (target.isPlatform() &&
+                        target.getVersion().getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
+                    File file = new File(target.getFile(IAndroidTarget.DATA), relativePath);
+                    if (file.isFile()) {
+                        return file;
+                    }
+                }
+            }
+
+            // Fallback to looking in the old location: platform-tools/api/<name> under the SDK
+            File file = new File(top, "platform-tools" + File.separator + "api" +
+                    File.separator + relativePath);
+            if (file.exists()) {
+                return file;
+            }
+
+            if (isApiDatabase) {
+                // AOSP build environment?
+                String build = System.getenv("ANDROID_BUILD_TOP");
+                if (build != null) {
+                    file = new File(build, "development/sdk/api-versions.xml"
+                            .replace('/', File.separatorChar));
+                }
+            }
+
+            return null;
         }
 
         File file = new File(top, relativePath);
@@ -1152,6 +1214,133 @@ public abstract class LintClient {
      */
     public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
         return new URLClassLoader(urls, parent);
+    }
+
+    /**
+     * Returns the merged manifest of the given project. This may return null
+     * if not called on the main project. Note that the file reference
+     * in the merged manifest isn't accurate; the merged manifest accumulates
+     * information from a wide variety of locations.
+     *
+     * @return The merged manifest, if available.
+     */
+    @Nullable
+    public Document getMergedManifest(@NonNull Project project) {
+        List<File> manifestFiles = project.getManifestFiles();
+        if (manifestFiles.size() == 1) {
+            File primary = manifestFiles.get(0);
+            try {
+                String xml = Files.toString(primary, UTF_8);
+                return XmlUtils.parseDocumentSilently(xml, true);
+            } catch (IOException e) {
+                log(Severity.ERROR, e, "Could not read manifest " + primary);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Key stashed as user data on merged manifest documents such that we
+     * can quickly determine if a node is originally from a merged manifest (this
+     * is used to automatically resolve reported errors on the merged manifest
+     * back to the corresponding source locations, when possible.)
+     */
+    private static final String MERGED_MANIFEST = "lint-merged-manifest";
+
+    /**
+     * Record that the given document corresponds to a merged manifest file;
+     * locations from this document should attempt to resolve back to the original
+     * source location
+     *
+     * @param mergedManifest the document for the merged manifest
+     * @param reportFile the manifest merger report file
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    public void resolveMergeManifestSources(@NonNull Document mergedManifest,
+            @NonNull File reportFile) {
+        mergedManifest.setUserData(MERGED_MANIFEST, reportFile, null);
+    }
+
+    /**
+     * Returns true if the given node is part of a merged manifest document
+     * (already configured via {@link #resolveMergeManifestSources(Document, File)})
+     *
+     * @param node the node to look up
+     * @return true if this node is part of a merged manifest document
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    public boolean isMergeManifestNode(@NonNull Node node) {
+        Document doc = node.getOwnerDocument();
+        return doc != null && doc.getUserData(MERGED_MANIFEST) != null;
+    }
+
+    /** Cache used by {@link #findManifestSourceNode(Node)} */
+    @Nullable private Map<File,BlameFile> reportFileCache;
+
+    /** Cache used by {@link #findManifestSourceNode(Node)} */
+    @Nullable protected IdentityHashMap<Node,Node> sourceNodeCache;
+
+    /**
+     * For the given node from a merged manifest, find the corresponding
+     * source manifest node, if possible
+     *
+     * @param mergedNode the node from the merged manifest
+     * @return the corresponding manifest node in one of the source files, if possible
+     */
+    @SuppressWarnings("MethodMayBeStatic") // clients can override
+    @Nullable
+    public Node findManifestSourceNode(@NonNull Node mergedNode) {
+        if (sourceNodeCache != null) {
+            Node source = sourceNodeCache.get(mergedNode);
+            if (source != null) {
+                // document node is a place holder meaning "searched, not found". See
+                // code at the end of this method which populates cache.
+                if (source.getNodeType() == Node.DOCUMENT_NODE) {
+                    return null;
+                }
+                return source;
+            }
+        }
+
+        Document doc = mergedNode.getOwnerDocument();
+        if (doc == null) {
+            return null;
+        }
+        File reportFile = (File) doc.getUserData(MERGED_MANIFEST);
+        if (reportFile == null) {
+            return null;
+        }
+
+        BlameFile blameFile = null;
+        if (reportFileCache != null) {
+            blameFile = reportFileCache.get(reportFile);
+        } else {
+            reportFileCache = Maps.newHashMap();
+        }
+        if (blameFile == null) {
+            try {
+                blameFile = BlameFile.parse(reportFile);
+            } catch (IOException ignore) {
+                blameFile = BlameFile.NONE;
+            }
+            reportFileCache.put(reportFile, blameFile);
+        }
+
+        Node source = null;
+        if (blameFile != BlameFile.NONE) {
+            source = blameFile.findSourceNode(this, mergedNode);
+        }
+
+        // Cache for next time
+        // If not found, put doc node as place holder meaning "already searched, not found"
+        Node cacheValue = source != null ? source : doc;
+        if (sourceNodeCache == null) {
+            sourceNodeCache = Maps.newIdentityHashMap();
+        }
+        sourceNodeCache.put(mergedNode, cacheValue);
+
+        return source;
     }
 
     /**

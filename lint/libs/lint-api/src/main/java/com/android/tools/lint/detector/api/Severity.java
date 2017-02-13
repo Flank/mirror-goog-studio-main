@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.LintOptions;
 import com.google.common.annotations.Beta;
 
 /**
@@ -99,6 +100,59 @@ public enum Severity {
         }
 
         return null;
+    }
+
+    /**
+     * Returns a severity corresponding to the various {@link LintOptions} severity
+     * constants
+     *
+     * @param severity the {@link LintOptions} severity constant, such as {@link
+     *                 LintOptions#SEVERITY_FATAL}
+     * @return the corresponding lint {@linkplain Severity}
+     */
+    @NonNull
+    public static Severity fromLintOptionSeverity(int severity) {
+        switch (severity) {
+            case LintOptions.SEVERITY_FATAL:
+                return Severity.FATAL;
+            case LintOptions.SEVERITY_ERROR:
+                return Severity.ERROR;
+            case LintOptions.SEVERITY_WARNING:
+                return Severity.WARNING;
+            case LintOptions.SEVERITY_INFORMATIONAL:
+                return Severity.INFORMATIONAL;
+            case LintOptions.SEVERITY_IGNORE:
+            default:
+                return Severity.IGNORE;
+        }
+    }
+
+    /**
+     * Returns the smallest / least severe of the two given severities
+     *
+     * @param severity1 the first severity to compare
+     * @param severity2 the second severity to compare
+     * @return the least severe of the given severities
+     */
+    @NonNull
+    public static Severity min(@NonNull Severity severity1, @NonNull Severity severity2) {
+        // Using ">" instead of "<" here because compareTo is inherited from
+        // enum and the severity constants are in descending order of severity
+        return severity1.compareTo(severity2) > 0 ? severity1 : severity2;
+    }
+
+    /**
+     * Returns the largest / most severe of the two given severities
+     *
+     * @param severity1 the first severity to compare
+     * @param severity2 the second severity to compare
+     * @return the most severe of the given severities
+     */
+    @NonNull
+    public static Severity max(@NonNull Severity severity1, @NonNull Severity severity2) {
+        // Using "<" instead of ">" here because compareTo is inherited from
+        // enum and the severity constants are in descending order of severity
+        return severity1.compareTo(severity2) < 0 ? severity1 : severity2;
     }
 
     /** Returns true if this severity is at least an error */

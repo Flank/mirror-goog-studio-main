@@ -22,7 +22,7 @@ option java_outer_classname = "NetworkProfiler";
 import "profiler.proto";
 
 service NetworkService {
-  // Requests profiler data from the app with ID being |app_id|, in the time range
+  // Requests profiler data from the app with ID being |process_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
   rpc GetData(NetworkDataRequest) returns (NetworkDataResponse) {
@@ -48,10 +48,6 @@ service NetworkService {
   // Gets misc metadata about a http request, given its |conn_id| and a
   // |HttpDetailsRequest::Type|. Use |GetHttpRange| to get this ids.
   rpc GetHttpDetails(HttpDetailsRequest) returns (HttpDetailsResponse) {
-  }
-
-  // Request the byte data associated with a body payload.
-  rpc GetPayload(NetworkPayloadRequest) returns (NetworkPayloadResponse) {
   }
 }
 
@@ -97,7 +93,7 @@ message NetworkDataRequest {
   enum SpecialValues {
     // First enum value is required to be zero.
     UNSPECIFIED = 0;
-    // app_id field special value, it means these data is applicable to any app.
+    // process_id field special value, it means these data is applicable to any app.
     ANY_APP = -1;
   }
   enum Type {
@@ -105,17 +101,18 @@ message NetworkDataRequest {
     ALL = 0;
     // Default network type (wifi or mobile) and radio power state.
     // This data is device-wide and the same values will be returned across all
-    // valid |app_id| values.
+    // valid |process_id| values.
     CONNECTIVITY = 1;
     // Network transmitted and received speeds (in bytes / sec).
     SPEED = 2;
     // Number of open connections.
     CONNECTIONS = 3;
   }
-  int32 app_id = 1;
-  int64 start_timestamp = 2;
-  int64 end_timestamp = 3;
-  Type type = 4;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
+  Type type = 5;
 }
 
 message NetworkDataResponse {
@@ -123,7 +120,8 @@ message NetworkDataResponse {
 }
 
 message NetworkStartRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 // TODO: Dig more about network collector start response.
@@ -131,7 +129,8 @@ message NetworkStartResponse {
 }
 
 message NetworkStopRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 // TODO: Dig more about network collector stop response.
@@ -156,9 +155,10 @@ message NetworkStopResponse {
 // The time range match is inclusive, so requests ending on time |start| and
 // requests starting on time |end| will be included in the results.
 message HttpRangeRequest {
-  int32 app_id = 1;
-  int64 start_timestamp = 2;
-  int64 end_timestamp = 3;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
 }
 
 // An HTTP connection represents the full lifetime of a single HTTP request /
@@ -211,7 +211,8 @@ message HttpDetailsRequest {
   }
 
   int64 conn_id = 1;
-  Type type = 2;
+  Session session = 2;
+  Type type = 3;
 }
 
 message HttpDetailsResponse {
@@ -237,8 +238,7 @@ message HttpDetailsResponse {
 
   message Body {
     // An ID which will uniquely identify the contents of an http body. It can
-    // be used to fetch payload bytes via |GetPayload|, and it can safely be
-    // used as a filename, if you want to cache the contents locally.
+    // be used to fetch payload bytes via |ProfilerService.GetBytes|.
     //
     // This value will be a hash of the contents, and the same hash always
     // indicates the same contents. This hash value calculation is independent
@@ -257,16 +257,3 @@ message HttpDetailsResponse {
     Body response_body = 4;
   }
 }
-
-message NetworkPayloadRequest {
-  string payload_id = 1;
-}
-
-message NetworkPayloadResponse {
-  // The contents of the payload response, or "" if there is no payload (or
-  // otherwise the payload file was not found, e.g. removed from the cache after
-  // time passed). The caller should just treat no data as unable to preview.
-  bytes contents = 1;
-}
-
-

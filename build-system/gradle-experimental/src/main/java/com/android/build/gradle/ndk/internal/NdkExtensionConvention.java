@@ -4,7 +4,6 @@ import com.android.build.gradle.internal.core.Toolchain;
 import com.android.build.gradle.internal.ndk.Stl;
 import com.android.build.gradle.managed.NdkConfig;
 import com.google.common.primitives.Ints;
-
 import org.gradle.api.InvalidUserDataException;
 
 /**

@@ -16,6 +16,8 @@
 #ifndef PERFD_GENERIC_COMPONENT_H_
 #define PERFD_GENERIC_COMPONENT_H_
 
+#include <unordered_map>
+
 #include "perfd/daemon.h"
 #include "perfd/perfa_service.h"
 #include "perfd/profiler_component.h"
@@ -25,8 +27,10 @@ namespace profiler {
 
 class GenericComponent final : public ProfilerComponent {
  public:
-  explicit GenericComponent(const Daemon& daemon)
-      : generic_public_service_(daemon) {}
+  // TODO: Fix this so we don't have to pass in a non-const Daemon
+  explicit GenericComponent(Daemon::Utilities* utilities)
+      : generic_public_service_(utilities, &heartbeat_timestamp_map_),
+        perfa_service_(utilities->clock(), &heartbeat_timestamp_map_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override {
@@ -39,6 +43,9 @@ class GenericComponent final : public ProfilerComponent {
  private:
   ProfilerServiceImpl generic_public_service_;
   PerfaServiceImpl perfa_service_;
+
+  // Mapping pid -> timestamp of last ping from perfa.
+  std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
 };
 
 }  // namespace profiler

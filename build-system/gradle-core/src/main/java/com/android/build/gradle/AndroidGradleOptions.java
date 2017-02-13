@@ -18,7 +18,6 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.InstantRunApiLevelMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
@@ -34,12 +33,13 @@ import org.gradle.api.Project;
 
 /**
  * Determines if various options, triggered from the command line or environment, are set.
+ *
+ * @deprecated see {@link com.android.build.gradle.options.ProjectOptions}
  */
+@Deprecated
 public class AndroidGradleOptions {
 
     private static final boolean DEFAULT_ENABLE_AAPT2 = false;
-
-    private static final boolean DEFAULT_ENABLE_BUILD_CACHE = true;
 
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
@@ -59,7 +59,7 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
-    public static final String ANDROID_ADDITIONAL_PLUGINS = "android.additional.plugins";
+    public static final String ANDROID_CUSTOM_CLASS_TRANSFORMS = "android.custom.class.transforms";
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
@@ -75,9 +75,9 @@ public class AndroidGradleOptions {
     public static  final String PROPERTY_USE_SDK_DOWNLOAD =
             "android.builder.sdkDownload";
 
-    public static final String PROPERTY_ENABLE_BUILD_CACHE = "android.enableBuildCache";
-
     public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
+
+    public static final String PROPERTY_USE_DEX_ARCHIVE = "android.useDexArchive";
 
     /**
      * Build cache is used for dependency resolution, and when pre-dexing. Setting this property
@@ -103,45 +103,6 @@ public class AndroidGradleOptions {
 
     public static final String OLD_OVERRIDE_PATH_CHECK_PROPERTY =
             "com.android.build.gradle.overridePathCheck";
-
-    public static final String INSTANT_RUN_API_LEVEL_PROPERTY = "android.instantRun.apiLevel";
-
-    private final boolean buildCacheEnabled;
-
-    @Nullable private final String buildCacheDir;
-
-    public AndroidGradleOptions(@NonNull Project project) {
-        buildCacheEnabled =
-                getBoolean(project, PROPERTY_ENABLE_BUILD_CACHE, DEFAULT_ENABLE_BUILD_CACHE);
-        buildCacheDir = getString(project, PROPERTY_BUILD_CACHE_DIR);
-    }
-
-    /**
-     * Returns {@code true} if {@link #PROPERTY_ENABLE_BUILD_CACHE} is set to {@code true}, and
-     * {@code false} otherwise.
-     *
-     * <p>Note: This method is not meant to be called directly, it is made public only for use by
-     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, even if
-     * this property is set to {@code true}, the build cache may still get disabled if the build
-     * cache directory is invalid. For a reliable check, use {@code
-     * TransformGlobalScope.getBuildCache().isPresent()} instead.
-     */
-    public boolean isBuildCacheEnabled() {
-        return buildCacheEnabled;
-    }
-
-    /**
-     * Returns the value of {@link #PROPERTY_BUILD_CACHE_DIR}.
-     *
-     * <p>Note: This method is not meant to be called directly, it is made public only for use by
-     * the {@link com.android.build.gradle.internal.scope.GlobalScope} class. For example, if this
-     * property is not set, we will use a default build cache location. For the resolved location,
-     * use {@code TransformGlobalScope.getBuildCache().getCacheDirectory()} instead.
-     */
-    @Nullable
-    public String getBuildCacheDir() {
-        return buildCacheDir;
-    }
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
@@ -213,9 +174,9 @@ public class AndroidGradleOptions {
      * @param project the project
      * @return an integer or null if we are not in model-only mode.
      *
-     * @see AndroidProject#MODEL_LEVEL_0_ORIGNAL
+     * @see AndroidProject#MODEL_LEVEL_0_ORIGINAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
-     * @see AndroidProject#MODEL_LEVEL_2_NEW_DEP_MODEL
+     * @see AndroidProject#MODEL_LEVEL_2_DONT_USE
      */
     @Nullable
     public static Integer buildModelOnlyVersion(@NonNull Project project) {
@@ -229,7 +190,7 @@ public class AndroidGradleOptions {
         }
 
         if (getBoolean(project, AndroidProject.PROPERTY_BUILD_MODEL_ONLY)) {
-            return AndroidProject.MODEL_LEVEL_0_ORIGNAL;
+            return AndroidProject.MODEL_LEVEL_0_ORIGINAL;
         }
 
         return null;
@@ -294,11 +255,6 @@ public class AndroidGradleOptions {
             project.getLogger().warn("Wrong build target version passed ", ignore);
             return AndroidVersion.DEFAULT.getFeatureLevel();
         }
-    }
-
-    @Nullable
-    public static String getColdswapMode(@NonNull Project project) {
-        return getString(project, AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE);
     }
 
     public static boolean useDeprecatedNdk(@NonNull Project project) {
@@ -376,20 +332,6 @@ public class AndroidGradleOptions {
         return getString(project, AndroidProject.PROPERTY_VERSION_NAME);
     }
 
-    @NonNull
-    public static InstantRunApiLevelMode getInstantRunApiLevelMode(@NonNull Project project) {
-        String valueName = getString(project, INSTANT_RUN_API_LEVEL_PROPERTY);
-        if (valueName != null) {
-            try {
-                return InstantRunApiLevelMode.valueOf(valueName);
-            } catch (IllegalArgumentException ignored) {
-                // Return the default value below.
-            }
-        }
-
-        return InstantRunApiLevelMode.COMPILE_SDK;
-    }
-
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
         return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
     }
@@ -453,8 +395,9 @@ public class AndroidGradleOptions {
         return project.hasProperty(PROPERTY_INCREMENTAL_JAVA_COMPILE);
     }
 
-    public static String[] getAdditionalPlugins(Project project) {
-        String string = getString(project, ANDROID_ADDITIONAL_PLUGINS);
+    @NonNull
+    public static String[] getCustomClassTransforms(@NonNull Project project) {
+        String string = getString(project, ANDROID_CUSTOM_CLASS_TRANSFORMS);
         return string == null ?  new String[]{} : string.split(",");
     }
 

@@ -17,7 +17,6 @@
 package com.android.build.gradle.model.internal;
 
 import com.android.build.gradle.model.AndroidLanguageSourceSet;
-
 import org.gradle.language.base.sources.BaseLanguageSourceSet;
 
 /**

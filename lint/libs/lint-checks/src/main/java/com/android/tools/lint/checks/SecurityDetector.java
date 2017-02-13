@@ -45,11 +45,11 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
@@ -221,7 +221,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
         if (exportValue != null && !exportValue.isEmpty()) {
             return Boolean.valueOf(exportValue);
         } else {
-            for (Element child : LintUtils.getChildren(element)) {
+            for (Element child : XmlUtils.getSubTags(element)) {
                 if (child.getTagName().equals(TAG_INTENT_FILTER)) {
                     return true;
                 }
@@ -262,9 +262,9 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
         // Checks whether a service has an action for a WearableListenerService
         // see developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
         // for details on the applicable actions.
-        for (Element child : LintUtils.getChildren(element)) {
+        for (Element child : XmlUtils.getSubTags(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                for (Element innerChild : LintUtils.getChildren(child)) {
+                for (Element innerChild : XmlUtils.getSubTags(child)) {
                     if (innerChild.getTagName().equals(NODE_ACTION)) {
                         String name = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                         if ("com.google.android.gms.wearable.BIND_LISTENER".equals(name) // deprecated
@@ -291,9 +291,9 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
         }
 
         // Checks whether a broadcast receiver receives a standard Android action
-        for (Element child : LintUtils.getChildren(element)) {
+        for (Element child : XmlUtils.getSubTags(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                for (Element innerChild : LintUtils.getChildren(child)) {
+                for (Element innerChild : XmlUtils.getSubTags(child)) {
                     if (innerChild.getTagName().equals(NODE_ACTION)) {
                         String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                         return categoryString.startsWith("android.");
@@ -364,7 +364,7 @@ public class SecurityDetector extends Detector implements XmlScanner, JavaPsiSca
                         // TODO: Add a Lint check to ensure the path-permission is good, similar to
                         // the grant-uri-permission check.
                         boolean hasPermission = false;
-                        for (Element child : LintUtils.getChildren(element)) {
+                        for (Element child : XmlUtils.getSubTags(element)) {
                             String tag = child.getTagName();
                             if (tag.equals(TAG_PATH_PERMISSION)) {
                                 hasPermission = true;

@@ -25,7 +25,6 @@ import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

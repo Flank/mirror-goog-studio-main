@@ -15,8 +15,8 @@
  */
 #include "network_service.h"
 
-#include "utils/trace.h"
 #include "utils/log.h"
+#include "utils/trace.h"
 
 namespace profiler {
 
@@ -28,8 +28,6 @@ using profiler::proto::HttpDetailsResponse;
 using profiler::proto::HttpRangeRequest;
 using profiler::proto::HttpRangeResponse;
 using profiler::proto::NetworkDataRequest;
-using profiler::proto::NetworkPayloadRequest;
-using profiler::proto::NetworkPayloadResponse;
 using profiler::Log;
 using std::string;
 
@@ -50,7 +48,7 @@ grpc::Status NetworkServiceImpl::GetData(
     grpc::ServerContext *context, const proto::NetworkDataRequest *request,
     proto::NetworkDataResponse *response) {
   Trace trace("NET:GetData");
-  int pid = request->app_id();
+  int pid = request->process_id();
   NetworkProfilerBuffer *app_buffer = nullptr;
   for (const auto &buffer : app_buffers_) {
     if (pid == buffer->pid()) {
@@ -90,14 +88,14 @@ grpc::Status NetworkServiceImpl::GetData(
 grpc::Status NetworkServiceImpl::StartMonitoringApp(
     grpc::ServerContext *context, const proto::NetworkStartRequest *request,
     proto::NetworkStartResponse *response) {
-  StartAppCollector(request->app_id());
+  StartAppCollector(request->process_id());
   return Status::OK;
 }
 
 grpc::Status NetworkServiceImpl::StopMonitoringApp(
     grpc::ServerContext *context, const proto::NetworkStopRequest *request,
     proto::NetworkStopResponse *response) {
-  int pid = request->app_id();
+  int pid = request->process_id();
   for (auto it = app_buffers_.begin(); it != app_buffers_.end(); it++) {
     if (pid == (*it)->pid()) {
       app_buffers_.erase(it);
@@ -118,7 +116,7 @@ grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
                                               const HttpRangeRequest *httpRange,
                                               HttpRangeResponse *response) {
   auto range =
-      network_cache_.GetRange(httpRange->app_id(), httpRange->start_timestamp(),
+      network_cache_.GetRange(httpRange->process_id(), httpRange->start_timestamp(),
                               httpRange->end_timestamp());
 
   for (const auto &conn : range) {
@@ -172,15 +170,6 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
         break;
     }
   }
-
-  return Status::OK;
-}
-
-grpc::Status NetworkServiceImpl::GetPayload(
-    grpc::ServerContext *context, const NetworkPayloadRequest *request,
-    NetworkPayloadResponse *response) {
-  auto payload_file = network_cache_.GetPayloadFile(request->payload_id());
-  response->set_contents(payload_file->Contents());
 
   return Status::OK;
 }

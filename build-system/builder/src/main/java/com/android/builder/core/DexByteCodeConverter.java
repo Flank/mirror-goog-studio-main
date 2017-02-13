@@ -28,25 +28,20 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.builder.internal.compiler.DexWrapper;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.utils.PerformanceUtils;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,16 +54,8 @@ import java.util.zip.ZipFile;
  */
 public class DexByteCodeConverter {
 
-    /**
-     * Amount of heap size that an "average" project needs for dexing in-process.
-     */
-    private static final long DEFAULT_DEX_HEAP_SIZE = 1024 * 1024 * 1024; // 1 GiB
-
-    /**
-     * Approximate amount of heap space necessary for non-dexing steps of the build process.
-     */
-    @VisibleForTesting
-    static final long NON_DEX_HEAP_SIZE = 512 * 1024 * 1024; // 0.5 GiB
+    /** Amount of heap size that an "average" project needs for dexing in-process. */
+    public static final long DEFAULT_DEX_HEAP_SIZE = 1024 * 1024 * 1024; // 1 GiB
 
     private static final Object LOCK_FOR_DEX = new Object();
 
@@ -94,7 +81,9 @@ public class DexByteCodeConverter {
     private Boolean mIsDexInProcess = null;
 
 
-    public DexByteCodeConverter(ILogger logger, TargetInfo targetInfo,
+    public DexByteCodeConverter(
+            ILogger logger,
+            TargetInfo targetInfo,
             JavaProcessExecutor javaProcessExecutor,
             boolean verboseExec) {
         mLogger = logger;
@@ -108,9 +97,6 @@ public class DexByteCodeConverter {
      * @param inputs the input files
      * @param outDexFolder the location of the output folder
      * @param dexOptions dex options
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ProcessException
      */
     public void convertByteCode(
             @NonNull Collection<File> inputs,
@@ -240,12 +226,9 @@ public class DexByteCodeConverter {
         }
     }
 
-    /**
-     * Determine whether to dex in process.
-     */
+    /** Determine whether to dex in process. */
     @VisibleForTesting
-    synchronized boolean shouldDexInProcess(
-            @NonNull DexOptions dexOptions) {
+    synchronized boolean shouldDexInProcess(@NonNull DexOptions dexOptions) {
         if (mIsDexInProcess != null) {
             return mIsDexInProcess;
         }
@@ -255,12 +238,11 @@ public class DexByteCodeConverter {
         }
 
         // Requested memory for dex.
-        long requestedHeapSize;
+        Long requestedHeapSize;
         if (dexOptions.getJavaMaxHeapSize() != null) {
-            Optional<Long> heapSize = parseSizeToBytes(dexOptions.getJavaMaxHeapSize());
-            if (heapSize.isPresent()) {
-                requestedHeapSize = heapSize.get();
-            } else {
+            requestedHeapSize = PerformanceUtils.parseSizeToBytes(dexOptions.getJavaMaxHeapSize());
+
+            if (requestedHeapSize == null) {
                 mLogger.warning(
                         "Unable to parse dex options size parameter '%1$s', assuming %2$s bytes.",
                         dexOptions.getJavaMaxHeapSize(),
@@ -271,10 +253,10 @@ public class DexByteCodeConverter {
             requestedHeapSize = DEFAULT_DEX_HEAP_SIZE;
         }
         // Approximate heap size requested.
-        long requiredHeapSizeHeuristic = requestedHeapSize + NON_DEX_HEAP_SIZE;
+        long requiredHeapSizeHeuristic = requestedHeapSize + PerformanceUtils.NON_DEX_HEAP_SIZE;
         // Get the heap size defined by the user. This value will be compared with
         // requiredHeapSizeHeuristic, which we suggest the user set in their gradle.properties file.
-        long maxMemory = getUserDefinedHeapSize();
+        long maxMemory = PerformanceUtils.getUserDefinedHeapSize();
 
         if (requiredHeapSizeHeuristic > maxMemory) {
             String dexOptionsComment = "";
@@ -303,59 +285,6 @@ public class DexByteCodeConverter {
         mIsDexInProcess = true;
         return true;
 
-    }
-
-    /**
-     * Returns the heap size that was specified by the -Xmx value from the user, or an approximated
-     * value if the -Xmx value was not set or was set improperly.
-     */
-    public static long getUserDefinedHeapSize() {
-        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            if (arg.startsWith("-Xmx")) {
-                Optional<Long> heapSize = parseSizeToBytes(arg.substring("-Xmx".length()));
-                if (heapSize.isPresent()) {
-                    return heapSize.get();
-                }
-                break;
-            }
-        }
-
-        // If the -Xmx value was not set or was set improperly, get an approximation of the
-        // heap size
-        long heapSize = 0;
-        for (MemoryPoolMXBean mpBean : ManagementFactory.getMemoryPoolMXBeans()) {
-            if (mpBean.getType() == MemoryType.HEAP) {
-                heapSize += mpBean.getUsage().getMax();
-            }
-        }
-        return heapSize;
-    }
-
-    /**
-     * Returns an Optional<Long> that is present when the size can be parsed successfully, and
-     * empty otherwise.
-     */
-    @VisibleForTesting
-    @NonNull
-    static Optional<Long> parseSizeToBytes(@NonNull String sizeParameter) {
-        long multiplier = 1;
-        if (SdkUtils.endsWithIgnoreCase(sizeParameter, "k")) {
-            multiplier = 1024;
-        } else if (SdkUtils.endsWithIgnoreCase(sizeParameter, "m")) {
-            multiplier = 1024 * 1024;
-        } else if (SdkUtils.endsWithIgnoreCase(sizeParameter, "g")) {
-            multiplier = 1024 * 1024 * 1024;
-        }
-
-        if (multiplier != 1) {
-            sizeParameter = sizeParameter.substring(0, sizeParameter.length() - 1);
-        }
-
-        try {
-            return Optional.of(multiplier * Long.parseLong(sizeParameter));
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
     }
 
     /**

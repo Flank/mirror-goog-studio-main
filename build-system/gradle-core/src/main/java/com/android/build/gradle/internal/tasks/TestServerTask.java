@@ -19,14 +19,12 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.builder.testing.api.TestServer;
 import com.google.common.base.Preconditions;
-
+import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
 
 /**
  * Task sending APKs out to a {@link TestServer}

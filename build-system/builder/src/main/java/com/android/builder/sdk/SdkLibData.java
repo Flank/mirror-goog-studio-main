@@ -18,7 +18,6 @@ package com.android.builder.sdk;
 
 import com.android.annotations.NonNull;
 import com.android.repository.api.Downloader;
-import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.google.common.base.Preconditions;
 

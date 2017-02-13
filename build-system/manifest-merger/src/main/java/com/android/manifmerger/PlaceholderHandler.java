@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -92,6 +91,7 @@ public class PlaceholderHandler {
             String inputString = xmlAttribute.getValue();
             Matcher matcher = PATTERN.matcher(inputString);
             if (matcher.matches()) {
+                int injected = 0;
                 while (matcher.matches()) {
                     String placeholderValue = valueProvider.getValue(matcher.group(2));
                     // whatever precedes the placeholder key is added back to the string.
@@ -116,13 +116,7 @@ public class PlaceholderHandler {
                         resultString.append(matcher.group(2));
                         resultString.append(SdkConstants.MANIFEST_PLACEHOLDER_SUFFIX);
                     } else {
-                        // record the attribute set
-                        mergingReportBuilder.getActionRecorder().recordAttributeAction(
-                                xmlAttribute,
-                                SourcePosition.UNKNOWN,
-                                Actions.ActionType.INJECTED,
-                                null /* attributeOperationType */);
-
+                        injected++;
                         // substitute the placeholder key with its value.
                         resultString.append(placeholderValue);
                     }
@@ -135,6 +129,17 @@ public class PlaceholderHandler {
                 // append the last remainder (without placeholders) in the result string.
                 resultString.append(inputString);
                 xmlAttribute.getXml().setValue(resultString.toString());
+
+                for (int i = 0; i < injected; i++) {
+                    // record the attribute set
+                    mergingReportBuilder
+                            .getActionRecorder()
+                            .recordAttributeAction(
+                                    xmlAttribute,
+                                    SourcePosition.UNKNOWN,
+                                    Actions.ActionType.INJECTED,
+                                    null /* attributeOperationType */);
+                }
             }
         }
         for (XmlElement childElement : xmlElement.getMergeableElements()) {

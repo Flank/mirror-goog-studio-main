@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.SdkConstants.DOT_JAR;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.utils.FileUtils.mkdirs;
-import static com.android.utils.FileUtils.renameTo;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -31,6 +29,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
@@ -39,22 +38,19 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.SimpleWorkQueue;
-import com.android.builder.core.VariantType;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import proguard.ClassPath;
 
 /**
@@ -63,10 +59,6 @@ import proguard.ClassPath;
 public class ProGuardTransform extends BaseProguardAction {
 
     private final VariantScope variantScope;
-    private final boolean asJar;
-
-    private final boolean isLibrary;
-    private final boolean isTest;
 
     private final File proguardOut;
 
@@ -79,19 +71,9 @@ public class ProGuardTransform extends BaseProguardAction {
     private File testedMappingFile = null;
     private org.gradle.api.artifacts.Configuration testMappingConfiguration = null;
 
-    public ProGuardTransform(
-            @NonNull VariantScope variantScope,
-            boolean asJar) {
+    public ProGuardTransform(@NonNull VariantScope variantScope) {
         super(variantScope);
         this.variantScope = variantScope;
-
-        // TODO: Allow asJar to be true, once we make sure input jars have unique file names.
-        // There cannot be duplicate classes.jar inputs for example. This confuses ProGuard in
-        // "directory output" mode.
-        this.asJar = true;
-
-        isLibrary = variantScope.getVariantData().getType() == VariantType.LIBRARY;
-        isTest = variantScope.getTestedVariantData() != null;
 
         GlobalScope globalScope = variantScope.getGlobalScope();
         proguardOut = new File(Joiner.on(File.separatorChar).join(
@@ -135,17 +117,19 @@ public class ProGuardTransform extends BaseProguardAction {
 
     @NonNull
     @Override
-    public Collection<File> getSecondaryFileInputs() {
-        final List<File> files = Lists.newArrayList();
+    public Collection<SecondaryFile> getSecondaryFiles() {
+        final List<SecondaryFile> files = Lists.newArrayList();
 
-        // the mapping file.
-        File testedMappingFile = computeMappingFile();
-        if (testedMappingFile != null) {
-            files.add(testedMappingFile);
+        if (testedMappingFile != null && testedMappingFile.isFile()) {
+            files.add(SecondaryFile.nonIncremental(testedMappingFile));
+        } else if (testMappingConfiguration != null) {
+            files.add(SecondaryFile.nonIncremental(testMappingConfiguration));
         }
 
         // the config files
-        files.addAll(getAllConfigurationFiles());
+        files.addAll(getAllConfigurationFiles().stream()
+                .map(SecondaryFile::nonIncremental)
+                .collect(Collectors.toList()));
 
         return files;
     }
@@ -208,13 +192,8 @@ public class ProGuardTransform extends BaseProguardAction {
         checkNotNull(output, "Missing output object for transform " + getName());
         Set<ContentType> outputTypes = getOutputTypes();
         Set<Scope> scopes = getScopes();
-        File outFile = output.getContentLocation("main", outputTypes, scopes,
-                asJar ? Format.JAR : Format.DIRECTORY);
-        if (asJar) {
-            mkdirs(outFile.getParentFile());
-        } else {
-            mkdirs(outFile);
-        }
+        File outFile = output.getContentLocation("main", outputTypes, scopes, Format.JAR);
+        mkdirs(outFile.getParentFile());
 
         try {
             GlobalScope globalScope = variantScope.getGlobalScope();
@@ -252,29 +231,6 @@ public class ProGuardTransform extends BaseProguardAction {
 
             forceprocessing();
             runProguard();
-
-            if (!asJar) {
-                // if the output of proguard is a folder (rather than a single jar), the
-                // dependencies will be written as jar in the same folder output.
-                // So we move it to their normal location as new jar outputs.
-                File[] jars = outFile.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File file, String name) {
-                        return name.endsWith(DOT_JAR);
-                    }
-                });
-                if (jars != null) {
-                    for (File jarFile : jars) {
-                        String jarFileName = jarFile.getName();
-                        File to = output.getContentLocation(
-                                jarFileName.substring(0, jarFileName.length() - DOT_JAR.length()),
-                                outputTypes, scopes, Format.JAR);
-                        mkdirs(to.getParentFile());
-                        renameTo(jarFile, to);
-                    }
-                }
-            }
-
         } catch (Exception e) {
             if (e instanceof IOException) {
                 throw (IOException) e;

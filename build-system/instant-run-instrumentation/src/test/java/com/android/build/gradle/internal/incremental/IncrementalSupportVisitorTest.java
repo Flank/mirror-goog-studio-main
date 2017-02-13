@@ -20,7 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
@@ -28,10 +30,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Tests for IncrementalSupportVisitor class.

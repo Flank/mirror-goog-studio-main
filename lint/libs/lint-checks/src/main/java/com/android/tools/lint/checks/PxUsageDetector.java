@@ -114,7 +114,7 @@ public class PxUsageDetector extends LayoutDetector {
             "specifying font sizes, so they will be adjusted for both the screen density " +
             "and the user's preference.\n" +
             "\n" +
-            "There *are* cases where you might need to use `dp`; typically this happens when " +
+            "There **are** cases where you might need to use `dp`; typically this happens when " +
             "the text is in a container with a specific dp-size. This will prevent the text " +
             "from spilling outside the container. Note however that this means that the user's " +
             "font size settings are not respected, so consider adjusting the layout itself " +

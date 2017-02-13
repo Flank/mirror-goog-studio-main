@@ -66,6 +66,6 @@ class ApiTest {
         assertThat(FileUtils.sha1(project.file("app/build.gradle")))
                 .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163")
         assertThat(FileUtils.sha1(project.file("lib/build.gradle")))
-                .isEqualTo("a8e6745dacc2951d2fe6a94b8526f3e738439b8b")
+                .isEqualTo("f908668309ebe8e45fdf1f2eefb15803db6e844e")
     }
 }

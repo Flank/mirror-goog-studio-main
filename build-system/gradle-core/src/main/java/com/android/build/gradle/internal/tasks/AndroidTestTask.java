@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import org.gradle.api.tasks.VerificationTask;
-
 import java.io.File;
+import org.gradle.api.tasks.VerificationTask;
 
 /**
  * Base interface for test classes that integrate with other test classes for reporting

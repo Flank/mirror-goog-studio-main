@@ -27,9 +27,10 @@ dependencies {
     compile libs.asm_tree
 
     testCompile libs.junit
-    testCompile libs.mockito_all
+    testCompile libs.mockito_core
     testCompile libs.truth
     testCompile libs.equalsverifier
+    testCompile libs.jimfs
     testCompile project(':base:testutils')
 }
 
@@ -52,6 +53,9 @@ def generated = new File("${project.buildDir}/generated/resources")
 
 sourceSets {
     main {
+        java {
+            srcDir 'src/dex/java'
+        }
         resources {
             srcDir generated
         }
@@ -76,6 +80,7 @@ dependencies {
     provided(project(':base:profile')) {
         transitive = false
     }
+
     sourcesProvided(project(path:':base:profile', configuration:'sourcesOnly')) {
         transitive = false
     }
@@ -83,7 +88,16 @@ dependencies {
     provided(project(':base:apkzlib')) {
         transitive = false
     }
+
     sourcesProvided(project(path:':base:apkzlib', configuration:'sourcesOnly')) {
+        transitive = false
+    }
+
+    provided(project(':base:aaptjlib')) {
+        transitive = false
+    }
+
+    sourcesProvided(project(path:':base:aaptjlib', configuration:'sourcesOnly')) {
         transitive = false
     }
 }

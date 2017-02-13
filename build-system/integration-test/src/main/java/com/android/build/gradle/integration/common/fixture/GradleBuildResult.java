@@ -20,15 +20,22 @@ import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
-import java.io.File;
-import java.util.Set;
-import org.gradle.tooling.GradleConnectionException;
-
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
+import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+import org.gradle.api.ProjectConfigurationException;
+import org.gradle.api.tasks.TaskExecutionException;
+import org.gradle.internal.serialize.PlaceholderException;
+import org.gradle.tooling.BuildException;
+import org.gradle.tooling.GradleConnectionException;
+import org.gradle.tooling.events.ProgressEvent;
 
 /**
  * The result from running a build.
@@ -43,6 +50,8 @@ public class GradleBuildResult {
     @NonNull
     private final String stderr;
 
+    @NonNull private final ImmutableList<ProgressEvent> taskEvents;
+
     @Nullable
     private final GradleConnectionException exception;
 
@@ -51,9 +60,11 @@ public class GradleBuildResult {
     public GradleBuildResult(
             @NonNull ByteArrayOutputStream stdout,
             @NonNull ByteArrayOutputStream stderr,
+            @NonNull ImmutableList<ProgressEvent> taskEvents,
             @Nullable GradleConnectionException exception) {
         this.stdout = stdout.toString();
         this.stderr = stderr.toString();
+        this.taskEvents = taskEvents;
         this.exception = exception;
     }
 
@@ -65,6 +76,43 @@ public class GradleBuildResult {
         return exception;
     }
 
+    /**
+     * Returns the short (single-line) message that Gradle would print out in the console, without
+     * {@code --stacktrace}. If the build succeeded, returns null.
+     */
+    @Nullable
+    public String getFailureMessage() {
+        if (exception == null) {
+            return null;
+        }
+
+        List<Throwable> causalChain = Throwables.getCausalChain(exception);
+        // Try the common scenarios: configuration or task failure.
+        for (Throwable throwable : causalChain) {
+            // Because of different class loaders involved, we are forced to do stringly-typed
+            // programming.
+            String throwableType = throwable.getClass().getName();
+            if (throwableType.equals(ProjectConfigurationException.class.getName())) {
+                return throwable.getCause().getMessage();
+            } else if (throwableType.equals(PlaceholderException.class.getName())) {
+                if (throwable.toString().startsWith(TaskExecutionException.class.getName())) {
+                    return throwable.getCause().getMessage();
+                }
+            }
+        }
+
+        // Look for any BuildException, for other cases.
+        for (Throwable throwable : causalChain) {
+            String throwableType = throwable.getClass().getName();
+            if (throwableType.equals(BuildException.class.getName())) {
+                return throwable.getCause().getMessage();
+            }
+        }
+
+        throw new AssertionError("Failed to determine the failure message.", exception);
+    }
+
+    @NonNull
     public String getStdout() {
         return stdout;
     }
@@ -84,6 +132,7 @@ public class GradleBuildResult {
 
     @NonNull
     public TaskStateList.TaskInfo getTask(String name) {
+        Preconditions.checkArgument(name.startsWith(":"), "Task name must start with :");
         return initTaskStates().getTask(name);
     }
 
@@ -97,9 +146,13 @@ public class GradleBuildResult {
         return initTaskStates().getInputChangedTasks();
     }
 
+    public Set<String> getNotUpToDateTasks() {
+        return initTaskStates().getNotUpToDateTasks();
+    }
+
     private TaskStateList initTaskStates() {
         if (taskStateList == null) {
-            taskStateList = new TaskStateList(stdout);
+            taskStateList = new TaskStateList(taskEvents, stdout);
         }
         return taskStateList;
     }

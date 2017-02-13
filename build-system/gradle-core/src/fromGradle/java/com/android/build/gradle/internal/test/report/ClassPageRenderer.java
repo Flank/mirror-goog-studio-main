@@ -21,7 +21,6 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;

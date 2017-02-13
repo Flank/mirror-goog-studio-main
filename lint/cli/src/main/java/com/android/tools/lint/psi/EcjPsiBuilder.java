@@ -1007,6 +1007,8 @@ public class EcjPsiBuilder {
             return toArrayInitializerExpression(parent, (ArrayInitializer) expression);
         } else if (expression instanceof ArrayAllocationExpression) {
             return toArrayAllocationExpression(parent, ((ArrayAllocationExpression) expression));
+        } else if (expression instanceof TypeReference) {
+            return toTypeElement(parent, (TypeReference) expression);
         } else {
             throw new IllegalArgumentException(expression.getClass().getName());
         }

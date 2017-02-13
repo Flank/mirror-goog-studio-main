@@ -32,7 +32,7 @@ maven_java_library(
     ]) + [
         ":proguard-parser",
         "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
-        "//tools/base/build-system/instant-run-instrumentation:sources",
+        "//tools/base/build-system/instant-run-instrumentation:srcjar",
     ],
     exclusions = {
         "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
@@ -102,13 +102,12 @@ java_test(
         ":gradle-core",
         "//tools/analytics-library/protos:analytics-protos",
         "//tools/base/annotations",
-        "//tools/base/apkzlib",
         "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
         "//tools/base/build-system/gradle-core/src/main/proto",  # TODO: move this to this package?
-        "//tools/base/build-system/profile",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-checks",
@@ -123,9 +122,10 @@ java_test(
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.jsoup_jsoup",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.ow2.asm_asm-util",

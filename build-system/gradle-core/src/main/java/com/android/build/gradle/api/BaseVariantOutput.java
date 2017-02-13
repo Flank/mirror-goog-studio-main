@@ -21,10 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-
-import org.gradle.api.Task;
-
 import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * A Build variant output and all its public data. This is the base class for items common to apps,

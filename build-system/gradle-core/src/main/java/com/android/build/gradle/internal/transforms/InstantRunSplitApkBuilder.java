@@ -73,12 +73,6 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     private final AaptOptions aaptOptions;
     @NonNull
     private final File supportDirectory;
-    @NonNull
-    private final String applicationId;
-
-    private final int versionCode;
-    @Nullable
-    private final String versionName;
 
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
@@ -89,10 +83,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
-            @NonNull File supportDirectory,
-            @NonNull String applicationId,
-            @Nullable String versionName,
-            int versionCode) {
+            @NonNull File supportDirectory) {
         this.logger = logger;
         this.project = project;
         this.instantRunBuildContext = instantRunBuildContext;
@@ -102,19 +93,16 @@ abstract class InstantRunSplitApkBuilder extends Transform {
         this.aaptOptions = aaptOptions;
         this.outputDirectory = outputDirectory;
         this.supportDirectory = supportDirectory;
-        this.applicationId = applicationId;
-        this.versionName = versionName;
-        this.versionCode = versionCode;
     }
 
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                .put("applicationId", applicationId)
-                .put("versionCode", versionCode);
-        if (versionName != null) {
-            builder.put("versionName", versionName);
+                .put("applicationId", packagingScope.getApplicationId())
+                .put("versionCode", packagingScope.getVersionCode());
+        if (packagingScope.getVersionName() != null) {
+            builder.put("versionName", packagingScope.getVersionName());
         }
         try {
             File zipAlignExe = getZipAlignExe();
@@ -200,7 +188,8 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     private File generateSplitApkManifest(@NonNull String uniqueName)
             throws IOException, ProcessException, InterruptedException {
 
-        String versionNameToUse = versionName;
+        String versionNameToUse = packagingScope.getVersionName();
+        int versionCode = packagingScope.getVersionCode();
         if (versionNameToUse == null) {
             versionNameToUse = String.valueOf(versionCode);
         }
@@ -214,7 +203,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                      new OutputStreamWriter(new FileOutputStream(androidManifest), "UTF-8")) {
             fileWriter.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
                     .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-                    .append("      package=\"").append(applicationId).append("\"\n");
+                    .append("      package=\"").append(packagingScope.getApplicationId()).append("\"\n");
             if (versionCode != VersionQualifier.DEFAULT_VERSION) {
                 fileWriter
                         .append("      android:versionCode=\"").append(String.valueOf(versionCode))

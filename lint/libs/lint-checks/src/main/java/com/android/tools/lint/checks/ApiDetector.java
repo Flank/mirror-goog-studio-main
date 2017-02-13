@@ -136,6 +136,7 @@ import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
+import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiQualifiedExpression;
 import com.intellij.psi.PsiReferenceExpression;
@@ -207,13 +208,13 @@ public class ApiDetector extends ResourceXmlDetector
             "Calling new methods on older versions",
 
             "This check scans through all the Android API calls in the application and " +
-            "warns about any calls that are not available on *all* versions targeted " +
+            "warns about any calls that are not available on **all** versions targeted " +
             "by this application (according to its minimum SDK attribute in the manifest).\n" +
             "\n" +
             "If you really want to use this API and don't need to support older devices just " +
             "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files.\n" +
             "\n" +
-            "If your code is *deliberately* accessing newer APIs, and you have ensured " +
+            "If your code is **deliberately** accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +
             "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
@@ -221,7 +222,7 @@ public class ApiDetector extends ResourceXmlDetector
             "file's minimum SDK as the required API level.\n" +
             "\n" +
             "If you are deliberately setting `android:` attributes in style definitions, " +
-            "make sure you place this in a `values-vNN` folder in order to avoid running " +
+            "make sure you place this in a `values-v`*NN* folder in order to avoid running " +
             "into runtime conflicts on certain devices where manufacturers have added " +
             "custom attributes whose ids conflict with the new ones on later platforms.\n" +
             "\n" +
@@ -256,7 +257,7 @@ public class ApiDetector extends ResourceXmlDetector
             "If you really want to use this API and don't need to support older devices just " +
             "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files." +
             "\n" +
-            "If your code is *deliberately* accessing newer APIs, and you have ensured " +
+            "If your code is **deliberately** accessing newer APIs, and you have ensured " +
             "(e.g. with conditional execution) that this code will only ever be called on a " +
             "supported platform, then you can annotate your class or method with the " +
             "`@TargetApi` annotation specifying the local minimum SDK to apply, such as " +
@@ -282,7 +283,7 @@ public class ApiDetector extends ResourceXmlDetector
             "know about the method.\n" +
             "\n" +
             "The above scenario is what this lint detector looks for. The above example is " +
-            "real, since `isDestroyed()` was added in API 17, but it will be true for *any* " +
+            "real, since `isDestroyed()` was added in API 17, but it will be true for **any** " +
             "method you have added to a subclass of an Android class where your build target " +
             "is lower than the version the method was introduced in.\n" +
             "\n" +
@@ -310,7 +311,7 @@ public class ApiDetector extends ResourceXmlDetector
             "`minSdkVersion` attribute).\n" +
             "\n" +
             "This is not an error; the application will simply ignore the attribute. However, " +
-            "if the attribute is important to the appearance of functionality of your " +
+            "if the attribute is important to the appearance or functionality of your " +
             "application, you should consider finding an alternative way to achieve the " +
             "same result with only available attributes, and then you can optionally create " +
             "a copy of the layout in a layout-vNN folder which will be used on API NN or " +
@@ -365,7 +366,8 @@ public class ApiDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckProject(@NonNull Context context) {
         if (mApiDatabase == null) {
-            mApiDatabase = ApiLookup.get(context.getClient());
+            mApiDatabase = ApiLookup.get(context.getClient(),
+                    context.getMainProject().getBuildTarget());
             // We can't look up the minimum API required by the project here:
             // The manifest file hasn't been processed yet in the -before- project hook.
             // For now it's initialized lazily in getMinSdk(Context), but the
@@ -376,6 +378,12 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
                         "Can't find API database; API check not performed");
             } else {
+                if (mApiDatabase == null || mApiDatabase.getTarget() != null) {
+                    // Don't warn about compileSdk/platform-tools mismatch if the API database
+                    // corresponds to an SDK platform
+                    return;
+                }
+
                 // See if you don't have at least version 23.0.1 of platform tools installed
                 AndroidSdkHandler sdk = context.getClient().getSdk();
                 if (sdk == null) {
@@ -422,7 +430,7 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(UNSUPPORTED,
                         location,
                         String.format("The SDK platform-tools version (%1$s) is too old "
-                                        + " to check APIs compiled with API %2$d; please update",
+                                        + "to check APIs compiled with API %2$d; please update",
                                 revision.toShortString(),
                                 compileSdkVersion));
             }
@@ -2496,20 +2504,57 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            // If you're simply calling super.X from method X, even if method X is in a higher
-            // API level than the minSdk, we're generally safe; that method should only be
-            // called by the framework on the right API levels. (There is a danger of somebody
-            // calling that method locally in other contexts, but this is hopefully unlikely.)
             if (expression instanceof PsiMethodCallExpression) {
                 PsiMethodCallExpression call = (PsiMethodCallExpression) expression;
                 PsiReferenceExpression methodExpression = call.getMethodExpression();
-                if (methodExpression.getQualifierExpression() instanceof PsiSuperExpression) {
+                PsiExpression qualifierExpression = methodExpression.getQualifierExpression();
+
+                PsiClass target = null;
+                if (!method.isConstructor()) {
+                    if (qualifierExpression != null) {
+                        PsiType type = qualifierExpression.getType();
+                        if (type instanceof PsiClassType) {
+                            target = ((PsiClassType)type).resolve();
+                        }
+                    }
+                    else {
+                        target = PsiTreeUtil.getParentOfType(expression, PsiClass.class, true);
+                    }
+                }
+
+                // Look to see if there's a possible local receiver
+                if (target != null) {
+                    PsiMethod[] methods = target.findMethodsBySignature(method, true);
+                    if (methods.length > 1) {
+                        for (PsiMethod m : methods) {
+                            if (!method.equals(m)) {
+                                PsiClass provider = m.getContainingClass();
+                                if (provider != null) {
+                                    String methodOwner = evaluator.getInternalName(provider);
+                                    if (methodOwner != null) {
+                                        int methodApi = mApiDatabase.getCallVersion(methodOwner, name, desc);
+                                        if (methodApi == -1 || methodApi <= minSdk) {
+                                            // Yes, we found another call that doesn't have an API requirement
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If you're simply calling super.X from method X, even if method X is in a higher
+                // API level than the minSdk, we're generally safe; that method should only be
+                // called by the framework on the right API levels. (There is a danger of somebody
+                // calling that method locally in other contexts, but this is hopefully unlikely.)
+                if (qualifierExpression instanceof PsiSuperExpression) {
                     PsiMethod containingMethod = PsiTreeUtil
                             .getParentOfType(expression, PsiMethod.class, true);
                     if (containingMethod != null && name.equals(containingMethod.getName())
                             && evaluator.areSignaturesEqual(method, containingMethod)
                             // We specifically exclude constructors from this check, because we
-                            // do want to flag constructors requiring thenew API level; it's
+                            // do want to flag constructors requiring the new API level; it's
                             // highly likely that the constructor is called by local code so
                             // you should specifically investigate this as a developer
                             && !method.isConstructor()) {
@@ -2685,6 +2730,9 @@ public class ApiDetector extends ResourceXmlDetector
                     resolved = ((PsiClassType)type).resolve();
                 }
                 for (PsiElement child : typeElement.getChildren()) {
+                    if (child instanceof PsiParenthesizedExpression) {
+                        child = ((PsiParenthesizedExpression)child).getExpression();
+                    }
                     if (child instanceof PsiTypeElement) {
                         PsiTypeElement childTypeElement = (PsiTypeElement)child;
                         PsiType childType = childTypeElement.getType();

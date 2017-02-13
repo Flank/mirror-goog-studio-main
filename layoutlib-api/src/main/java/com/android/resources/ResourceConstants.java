@@ -29,6 +29,8 @@ public class ResourceConstants {
     public static final String FD_RES_COLOR = "color"; //$NON-NLS-1$
     /** Default drawable resource folder name, i.e. "drawable" */
     public static final String FD_RES_DRAWABLE = "drawable"; //$NON-NLS-1$
+    /** Default font resource folder name, i.e. "font" */
+    public static final String FD_RES_FONT = "font"; //$NON-NLS-1$
     /** Default interpolator resource folder name, i.e. "interpolator" */
     public static final String FD_RES_INTERPOLATOR = "interpolator"; //$NON-NLS-1$
     /** Default layout resource folder name, i.e. "layout" */

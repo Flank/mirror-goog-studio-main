@@ -16,12 +16,11 @@
 
 package org.gradle.api.tasks;
 
-import org.gradle.api.Incubating;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.gradle.api.Incubating;
 
 /**
  * Declares that the associated task can be safely executed in parallel with other tasks.

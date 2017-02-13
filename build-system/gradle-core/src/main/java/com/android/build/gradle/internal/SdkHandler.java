@@ -25,8 +25,10 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.DefaultSdkLoader;
 import com.android.builder.sdk.PlatformLoader;
 import com.android.builder.sdk.SdkInfo;
@@ -143,6 +145,10 @@ public class SdkHandler {
         androidBuilder.setTargetInfo(targetInfo);
         androidBuilder.setLibraryRequests(usedLibraries);
 
+        logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+
+    public void ensurePlatformToolsIsInstalled(ErrorReporter errorReporter) {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
         ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -150,9 +156,16 @@ public class SdkHandler {
         LocalPackage platformToolsPackage =
                 sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_PLATFORM_TOOLS, true, progress);
         if (platformToolsPackage == null) {
-            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+            if (sdkLibData.useSdkDownload()) {
+                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+            } else {
+                errorReporter.handleSyncError(
+                        null,
+                        SyncIssue.TYPE_GENERIC,
+                        SdkConstants.FD_PLATFORM_TOOLS
+                                + " package is not installed and SDK auto-download is disabled.");
+            }
         }
-        logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
     @Nullable

@@ -32,13 +32,8 @@ import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -52,34 +47,33 @@ import org.junit.runners.Parameterized;
 public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
-    @NonNull private final Set<ProjectScenario> projectScenarios;
+    @NonNull private final ProjectScenario projectScenario;
 
-    public LargeGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
-        this.projectScenarios = projectScenarios;
+    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+        this.projectScenario = projectScenario;
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("android-studio-gradle-test")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_LARGE, projectScenarios))
+                                        Logging.Benchmark.PERF_ANDROID_LARGE, projectScenario))
                         .withHeap("4096M")
                         .create();
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> getParameters() {
-        return Arrays.asList(
-                new Object[][] {
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    // TODO: re-enable Jack scenarios
-                    //{EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
-                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    //{EnumSet.of(ProjectScenario.LEGACY_MULTIDEX, ProjectScenario.JACK_ON)}
-                });
+    public static ProjectScenario[] getParameters() {
+        return new ProjectScenario[]{
+                ProjectScenario.NATIVE_MULTIDEX,
+                // TODO: re-enable Jack scenarios
+                //ProjectScenario.JACK_NATIVE_MULTIDEX
+                ProjectScenario.LEGACY_MULTIDEX,
+                //ProjectScenario.JACK_LEGACY_MULTIDEX
+        };
     }
 
     @Before
-    public void initializeProject() throws IOException {
+    public void initializeProject() throws Exception {
 
         //noinspection ConstantConditions
         TestFileUtils.searchAndReplace(
@@ -131,23 +125,28 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 "minSdkVersion( )*: \\d+,",
                 "minSdkVersion : 18,");
 
-        for (ProjectScenario projectScenario : projectScenarios) {
-            switch (projectScenario) {
-                case NATIVE_MULTIDEX:
-                    TestFileUtils.searchAndReplace(
-                            project.file("dependencies.gradle"),
-                            "minSdkVersion( )*: \\d+,",
-                            "minSdkVersion : 21,");
-                    break;
-                case LEGACY_MULTIDEX:
-                    break;
-                case JACK_ON:
-                    JackHelper.enableJack(project.getBuildFile());
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unknown project scenario" + projectScenario);
-            }
+        switch (projectScenario) {
+            case NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("dependencies.gradle"),
+                        "minSdkVersion( )*: \\d+,",
+                        "minSdkVersion : 21,");
+                break;
+            case LEGACY_MULTIDEX:
+                break;
+            case JACK_NATIVE_MULTIDEX:
+                JackHelper.enableJack(project.getBuildFile());
+                TestFileUtils.searchAndReplace(
+                        project.file("dependencies.gradle"),
+                        "minSdkVersion( )*: \\d+,",
+                        "minSdkVersion : 21,");
+                break;
+            case JACK_LEGACY_MULTIDEX:
+                JackHelper.enableJack(project.getBuildFile());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown project scenario" + projectScenario);
         }
     }
 

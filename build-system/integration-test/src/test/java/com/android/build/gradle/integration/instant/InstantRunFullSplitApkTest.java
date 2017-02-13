@@ -22,14 +22,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,10 +45,11 @@ public class InstantRunFullSplitApkTest {
     private InstantRun instantRunModel;
 
     @Before
-    public void getModel() throws IOException {
+    public void getModel() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
-        TestFileUtils.appendToFile(mProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                mProject.getBuildFile(),
                 "android {\n"
                         + "    splits {\n"
                         + "        abi {\n"
@@ -60,6 +59,16 @@ public class InstantRunFullSplitApkTest {
                         + "            universalApk false\n"
                         + "        }\n"
                         + "    }\n"
+                        + "}\n"
+                        + "ext.abiCodes = ['x86':1, 'armeabi-v7a':2]\n"
+                        + "android.applicationVariants.all { variant ->\n"
+                        + "  variant.outputs.each { output ->\n"
+                        + "    def baseAbiVersionCode =\n"
+                        + "        project.ext.abiCodes.get(\n"
+                        + "            output.getFilter(com.android.build.OutputFile.ABI), 0)\n"
+                        + "    output.versionCodeOverride =\n"
+                        + "        baseAbiVersionCode * 1000 + variant.versionCode\n"
+                        + "  }\n"
                         + "}");
 
 
@@ -73,7 +82,6 @@ public class InstantRunFullSplitApkTest {
         mProject.executor()
                 .withInstantRun(
                         24,
-                        ColdswapMode.AUTO,
                         OptionalCompilationStep.FULL_APK)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .run("assembleDebug");
@@ -85,5 +93,10 @@ public class InstantRunFullSplitApkTest {
                 .findFirst().orElseThrow(() -> new AssertionError("Main artifact not found"));
 
         assertThat(main.file).hasName("project-armeabi-v7a-debug.apk");
+        assertThat(
+                        mProject.file(
+                                "build/intermediates/instant-run-support/debug/slice_0"
+                                        + "/AndroidManifest.xml"))
+                .contains("android:versionCode=\"2001\"");
     }
 }

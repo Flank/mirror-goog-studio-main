@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.incremental.hotswap;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.FinalFieldsInCtor;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

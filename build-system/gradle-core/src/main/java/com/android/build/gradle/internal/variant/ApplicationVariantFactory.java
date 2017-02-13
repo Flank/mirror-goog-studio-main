@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.TaskManager;
@@ -40,11 +41,17 @@ import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.android.ide.common.build.SplitOutputMatcher;
+import com.android.resources.Density;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -130,9 +137,42 @@ public class ApplicationVariantFactory implements VariantFactory {
                             builder.build());
                 }
             }
+
+            // If ABI is specified (and there are more than one output), set the main output as the
+            // one corresponding to the given ABI
+            List<ApkVariantOutputData> outputDataList = variant.getOutputs();
+            Project project = variant.getScope().getGlobalScope().getProject();
+            String abiString = Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetAbi(project));
+            if (!abiString.isEmpty() && outputDataList.size() > 1) {
+                List<String> abiList = Arrays.asList(abiString.split(","));
+                String densityString =
+                        Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetDensity(project));
+                Density density = Density.getEnum(densityString);
+
+                List<OutputFile> outputFiles =
+                        SplitOutputMatcher.computeBestOutput(
+                                outputDataList,
+                                variantConfiguration.getSupportedAbis(),
+                                density == null ? -1 : density.getDpiValue(),
+                                abiList);
+
+                Preconditions.checkState(
+                        !outputFiles.isEmpty(),
+                        "Unable to find a suitable output for ABI(s) '" + abiString + "'");
+                OutputFile bestOutput = outputFiles.get(0);
+
+                ApkVariantOutputData mainOutput = null;
+                for (ApkVariantOutputData outputData : outputDataList) {
+                    if (outputData.getMainOutputFile() == bestOutput) {
+                        mainOutput = outputData;
+                        break;
+                    }
+                }
+                Objects.requireNonNull(mainOutput);
+                variant.setMainOutput(mainOutput);
+            }
         } else {
-            variant.createOutput(OutputFile.OutputType.MAIN,
-                    Collections.<FilterData>emptyList());
+            variant.createOutput(OutputFile.OutputType.MAIN, Collections.emptyList());
         }
 
         return variant;

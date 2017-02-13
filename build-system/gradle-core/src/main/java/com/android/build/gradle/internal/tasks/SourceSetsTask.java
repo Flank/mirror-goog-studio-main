@@ -23,15 +23,13 @@ import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.core.VariantType;
-
+import java.io.IOException;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.diagnostics.AbstractReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
-
-import java.io.IOException;
-import java.util.stream.Collectors;
 
 /**
  * Prints out the DSL names and directory names of available source sets.

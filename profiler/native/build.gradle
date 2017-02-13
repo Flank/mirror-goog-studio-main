@@ -30,7 +30,7 @@ buildTypesList.each() { buildType ->
 }
 
 task assemblePerfa(type: Copy, dependsOn: compileAndroidRelease) {
-    into "$buildDir/artifacts/jni"
+    into "$buildDir/artifacts/lib"
     from("$buildDir/out/release") {
         include "*/libperfa.so"
         exclude "host/**"

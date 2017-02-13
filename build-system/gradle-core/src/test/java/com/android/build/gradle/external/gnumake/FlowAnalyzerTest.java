@@ -35,15 +35,13 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 public class FlowAnalyzerTest {
 

@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.profile.ProcessProfileWriterFactory;
-import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.Project;
@@ -51,8 +50,7 @@ public class BuildInfoTasksTest {
         pastBuildsDirectory = new File(buildDir, "build/intermediates/builds/debug/");
         buildInfoFile = new File(buildDir, "build/intermediates/restart-dex/build-info.xml");
         tmpBuildInfoFile = new File(buildDir, "build/intermediates/restart-dex/tmp-build-info.xml");
-        ProcessProfileWriterFactory.initializeForTests(
-                Jimfs.newFileSystem().getPath("/tmp/profile.rawproto"));
+        ProcessProfileWriterFactory.initializeForTests();
     }
 
     @Test
@@ -71,7 +69,7 @@ public class BuildInfoTasksTest {
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
+        context.setApiLevel(23, null);
         runLoaderTask(project, context);
 
         context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
@@ -83,7 +81,7 @@ public class BuildInfoTasksTest {
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(23, ColdswapMode.MULTIAPK.toString(), null);
+        context.setApiLevel(23, null);
 
         runLoaderTask(project, context);
 

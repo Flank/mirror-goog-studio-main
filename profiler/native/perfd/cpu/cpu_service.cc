@@ -26,6 +26,7 @@
 
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::StatusCode;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
 using profiler::proto::CpuProfilerData;
@@ -37,15 +38,18 @@ using profiler::proto::CpuStartRequest;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopRequest;
 using profiler::proto::CpuStopResponse;
+using profiler::proto::GetThreadsRequest;
+using profiler::proto::GetThreadsResponse;
+using std::map;
 using std::string;
 using std::vector;
 
 namespace profiler {
 
-Status CpuServiceImpl::GetData(ServerContext* context,
-                               const CpuDataRequest* request,
-                               CpuDataResponse* response) {
-  int64_t id_in_request = request->app_id();
+grpc::Status CpuServiceImpl::GetData(ServerContext* context,
+                                     const CpuDataRequest* request,
+                                     CpuDataResponse* response) {
+  int64_t id_in_request = request->process_id();
   int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? proto::AppId::ANY
                                                          : id_in_request);
   Trace trace("CPU:GetData");
@@ -57,12 +61,67 @@ Status CpuServiceImpl::GetData(ServerContext* context,
   return Status::OK;
 }
 
+grpc::Status CpuServiceImpl::GetThreads(ServerContext* context,
+                                        const GetThreadsRequest* request,
+                                        GetThreadsResponse* response) {
+  int64_t id = request->process_id();
+  if (id == CpuDataRequest::ANY_APP) {
+    // |response| expects a single app, so we return early (with error) if
+    // request does not provide a single app process id.
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid process id");
+  }
+
+  Trace trace("CPU:GetThreads");
+  CpuCache::ThreadSampleResponse threads_response = cache_.GetThreads(
+      id, request->start_timestamp(), request->end_timestamp());
+  // Samples containing all the activities that should be added to the response.
+  const vector<ThreadsSample>& samples = threads_response.activity_samples;
+
+  // Snapshot that should be included in the response.
+  auto snapshot = threads_response.snapshot;
+  if (snapshot.threads().empty()) {
+    // If there are no threads in the |snapshot|, we use the snapshot of the
+    // first sample from |samples|, in case it's not empty
+    if (!samples.empty()) {
+      *(response->mutable_initial_snapshot()) = samples.front().snapshot;
+    }
+  } else {
+    *(response->mutable_initial_snapshot()) = snapshot;
+  }
+
+  // Threads that should be added to the response, ordered by thread id.
+  // The activities detected by the sampled should be grouped by thread.
+  map<int32_t, GetThreadsResponse::Thread> threads;
+
+  for (const auto& sample : samples) {
+    for (const auto& activity : sample.activities) {
+      auto tid = activity.tid;
+      // Add the thread to the map if it's not there yet.
+      if (threads.find(tid) == threads.end()) {
+        GetThreadsResponse::Thread thread;
+        thread.set_tid(tid);
+        thread.set_name(activity.name);
+        threads[tid] = thread;
+      }
+      auto* thread_activity = threads[tid].add_activities();
+      thread_activity->set_timestamp(activity.timestamp);
+      thread_activity->set_new_state(activity.state);
+    }
+  }
+
+  // Add all the threads to the response.
+  for (const auto& thread : threads) {
+    *(response->add_threads()) = thread.second;
+  }
+  return Status::OK;
+}
+
 grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
                                                 const CpuStartRequest* request,
                                                 CpuStartResponse* response) {
-  auto status = usage_sampler_.AddProcess(request->app_id());
+  auto status = usage_sampler_.AddProcess(request->process_id());
   if (status == CpuStartResponse::SUCCESS) {
-    status = thread_monitor_.AddProcess(request->app_id());
+    status = thread_monitor_.AddProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;
@@ -71,9 +130,9 @@ grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
 grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
                                                const CpuStopRequest* request,
                                                CpuStopResponse* response) {
-  auto status = usage_sampler_.RemoveProcess(request->app_id());
+  auto status = usage_sampler_.RemoveProcess(request->process_id());
   if (status == CpuStopResponse::SUCCESS) {
-    status = thread_monitor_.RemoveProcess(request->app_id());
+    status = thread_monitor_.RemoveProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;

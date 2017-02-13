@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -83,7 +82,7 @@ public class NdkConnectedCheckTest {
 
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -100,14 +99,14 @@ public class NdkConnectedCheckTest {
     }
 
     @Test
-    public void checkTestLibIsPackaged() throws IOException {
+    public void checkTestLibIsPackaged() throws Exception {
         Apk apk = project.getTestApk("debug");
         assertThat(apk).contains("lib/x86/libhello-jni_test.so");
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 }

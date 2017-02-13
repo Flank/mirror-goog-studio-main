@@ -31,10 +31,10 @@ public interface AndroidProject {
     String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
     // Sent by Studio 1.1+
     String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
-    // Sent by Studio 2.3+. The value of the prop is a monotonically increasing integer.
+    // Sent by Studio 2.4+. The value of the prop is a monotonically increasing integer.
     // see MODEL_LEVEL_* constants
     String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
-    // Sent by Studio 2.3+. Additional model feature trigger on a case by case basis
+    // Sent by Studio 2.4+. Additional model feature trigger on a case by case basis
     // Value is simply true to enable.
     String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
 
@@ -62,7 +62,11 @@ public interface AndroidProject {
     String PROPERTY_BUILD_ABI = "android.injected.build.abi";
     String PROPERTY_BUILD_DENSITY = "android.injected.build.density";
 
+    // Has the effect of telling the Gradle plugin to
+    //   1) Generate machine-readable errors
+    //   2) Generate build metadata JSON files
     String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
+
     String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
 
     String PROPERTY_RESTRICT_VARIANT_PROJECT = "android.injected.restrict.variant.project";
@@ -113,11 +117,10 @@ public interface AndroidProject {
     int GENERATION_ORIGINAL = 1;
     int GENERATION_COMPONENT = 2;
 
-    int MODEL_LEVEL_0_ORIGNAL = 0 ; // studio 1.0, no support for SyncIssue
+    int MODEL_LEVEL_0_ORIGINAL = 0 ; // studio 1.0, no support for SyncIssue
     int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
-    int MODEL_LEVEL_2_NEW_DEP_MODEL = 2; // studio 2.3+, new model for dependencies
-    //int MODEL_LEVEL_3_FULL_DEP_GRAPH = 3; // studio 2.3+, new model for dependencies
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_NEW_DEP_MODEL;
+    int MODEL_LEVEL_2_DONT_USE = 2; // Don't use this. Go level 1 to level 3 when ready.
+    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_DONT_USE;
 
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;

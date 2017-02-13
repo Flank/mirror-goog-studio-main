@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 
 public class DexParser implements PatternAwareOutputParser {
 
+    public static final String DX_UNEXPECTED_EXCEPTION = "UNEXPECTED TOP-LEVEL EXCEPTION:";
+
     static final String DEX_TOOL_NAME = "Dex";
 
     static final String DEX_LIMIT_EXCEEDED_ERROR =
@@ -98,7 +100,7 @@ public class DexParser implements PatternAwareOutputParser {
             return true;
         }
 
-        if (line.startsWith("trouble writing output: Too many method references:")) {
+        if (line.startsWith("trouble writing output: Too many method references")) {
             StringBuilder original1 = new StringBuilder(line).append('\n');
             String nextLine = reader.readLine();
             while (!Strings.isNullOrEmpty(nextLine)) {
@@ -142,7 +144,7 @@ public class DexParser implements PatternAwareOutputParser {
             return true;
         }
 
-        if (!line.equals("UNEXPECTED TOP-LEVEL EXCEPTION:")) {
+        if (!line.equals(DX_UNEXPECTED_EXCEPTION)) {
             return false;
         }
         StringBuilder original = new StringBuilder(line).append('\n');

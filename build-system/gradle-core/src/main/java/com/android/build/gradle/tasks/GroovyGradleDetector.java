@@ -26,7 +26,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
+import java.util.List;
+import java.util.Map;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
@@ -42,9 +43,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Implementation of the {@link GradleDetector} using a real Groovy AST,

@@ -48,8 +48,10 @@ class BuildToolsTest {
     ]
 
     private static final List<String> JAVAC_TASKS = ImmutableList.builder().add(COMMON_TASKS)
-            .add(":transformClassesWithDexForDebug")
-            .add(":transformClassesWithDexForRelease")
+            .add(":transformClassesWithPreDexForDebug")
+            .add(":transformDexWithDexForDebug")
+            .add(":transformClassesWithPreDexForRelease")
+            .add(":transformDexWithDexForRelease")
             .build()
 
     private static final List<String> JACK_TASKS = ImmutableList.builder().add(COMMON_TASKS)
@@ -80,8 +82,8 @@ android {
 
     @Test
     public void nullBuild() {
-        project.execute("assemble")
-        GradleBuildResult result = project.executor().run("assemble")
+        project.executor().withUseDexArchive(false).run("assemble")
+        GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble")
 
         assertThat(result.getUpToDateTasks())
                 .containsAllIn(GradleTestProject.USE_JACK ? JACK_TASKS : JAVAC_TASKS)

@@ -54,7 +54,7 @@ class MemoryServiceImpl final
 
   ::grpc::Status GetHeapDump(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::HeapDumpDataRequest* request,
+      const ::profiler::proto::DumpDataRequest* request,
       ::profiler::proto::DumpDataResponse* response) override;
 
   ::grpc::Status ListHeapDumpInfos(
@@ -67,16 +67,25 @@ class MemoryServiceImpl final
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
 
-  ::grpc::Status GetAllocationsInfoStatus(
+  ::grpc::Status GetAllocationEvents(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::GetAllocationsInfoStatusRequest* request,
-      ::profiler::proto::GetAllocationsInfoStatusResponse* response) override;
+      const ::profiler::proto::AllocationEventsRequest* request,
+      ::profiler::proto::AllocationEventsResponse* response) override;
 
   ::grpc::Status ListAllocationContexts(
       ::grpc::ServerContext* context,
       const ::profiler::proto::AllocationContextsRequest* request,
-      ::profiler::proto::AllocationContextsResponse* response)
-      override;
+      ::profiler::proto::AllocationContextsResponse* response) override;
+
+  ::grpc::Status GetAllocationDump(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::DumpDataRequest* request,
+      ::profiler::proto::DumpDataResponse* response) override;
+
+  ::grpc::Status ForceGarbageCollection(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::ForceGarbageCollectionRequest* request,
+      ::profiler::proto::ForceGarbageCollectionResponse* response) override;
 
  private:
   MemoryCollector* GetCollector(int32_t app_id);

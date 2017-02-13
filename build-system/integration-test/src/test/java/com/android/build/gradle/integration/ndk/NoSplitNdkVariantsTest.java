@@ -25,10 +25,8 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -52,7 +50,7 @@ public class NoSplitNdkVariantsTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "apply plugin: 'com.android.application'\n"
                 + "\n"
@@ -97,7 +95,7 @@ public class NoSplitNdkVariantsTest {
     }
 
     @Test
-    public void assembleX86Release() throws IOException {
+    public void assembleX86Release() throws Exception {
         project.execute("assembleX86Release");
 
         // Verify .so are built for all platform.
@@ -109,7 +107,7 @@ public class NoSplitNdkVariantsTest {
     }
 
     @Test
-    public void assembleArmRelease() throws IOException {
+    public void assembleArmRelease() throws Exception {
         project.execute("assembleArmRelease");
 
         // Verify .so are built for all platform.
@@ -122,7 +120,7 @@ public class NoSplitNdkVariantsTest {
     }
 
     @Test
-    public void assembleMipsRelease() throws IOException {
+    public void assembleMipsRelease() throws Exception {
         project.execute("assembleMipsRelease");
 
         // Verify .so are built for all platform.
@@ -135,7 +133,7 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedAndroidTest() throws DeviceException {
+    public void connectedAndroidTest() throws Exception {
         project.executor().run(
                 "assembleX86Debug", "assembleX86DebugAndroidTest",
                 "assembleArmDebug", "assembleArmDebugAndroidTest");

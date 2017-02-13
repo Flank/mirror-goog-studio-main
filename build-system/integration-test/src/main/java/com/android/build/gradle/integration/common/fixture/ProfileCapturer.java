@@ -107,6 +107,7 @@ public class ProfileCapturer implements Closeable {
         return ImmutableSet.copyOf(
                 Files.walk(profileDirectory)
                         .filter(Files::isRegularFile)
+                        .filter(file -> file.getFileName().toString().endsWith(".rawproto"))
                         .collect(Collectors.toSet()));
     }
 }

@@ -64,13 +64,13 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
     public static final Issue FIXED_POSITION = Issue.create(
             "RecyclerView",
             "RecyclerView Problems",
-            "`RecyclerView` will *not* call `onBindViewHolder` again when the position of " +
+            "`RecyclerView` will **not** call `onBindViewHolder` again when the position of " +
             "the item changes in the data set unless the item itself is " +
             "invalidated or the new position cannot be determined.\n" +
             "\n" +
-            "For this reason, you should *only* use the position parameter " +
+            "For this reason, you should **only** use the position parameter " +
             "while acquiring the related data item inside this method, and " +
-            "should *not* keep a copy of it.\n" +
+            "should **not** keep a copy of it.\n" +
             "\n" +
             "If you need the position of an item later on (e.g. in a click " +
             "listener), use `getAdapterPosition()` which will have the updated " +
@@ -83,7 +83,7 @@ public class RecyclerViewDetector extends Detector implements JavaPsiScanner {
     public static final Issue DATA_BINDER = Issue.create(
             "PendingBindings",
             "Missing Pending Bindings",
-            "When using a `ViewDataBinding` in a `onBindViewHolder` method, you *must* " +
+            "When using a `ViewDataBinding` in a `onBindViewHolder` method, you **must** " +
             "call `executePendingBindings()` before the method exits; otherwise " +
             "the data binding runtime will update the UI in the next animation frame " +
             "causing a delayed update and potential jumps if the item resizes.",

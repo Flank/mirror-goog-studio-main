@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.example.basic.Exceptions;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

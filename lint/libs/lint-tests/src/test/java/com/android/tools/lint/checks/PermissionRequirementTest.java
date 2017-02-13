@@ -317,11 +317,6 @@ public class PermissionRequirementTest extends TestCase {
                             name.equals("android.permission.WRITE_PROFILE")) {
                             // Removed in 6d2c0e5
                             revocable.add(name);
-                        } else if (name.equals("android.permission.USE_FINGERPRINT")) {
-                            // Made normal in d6bd9da; apply targetSdkVersion?
-                            // (It's not clear whether app developers have to worry about
-                            // this in M. Find out.)
-                            revocable.add(name);
                         } else if (name.equals("android.permission.WRITE_SETTINGS")) {
                             // This one seems to have gone from a dangerous permission
                             // in M to a signature permission

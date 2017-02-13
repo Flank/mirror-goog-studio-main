@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.pipeline;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.google.common.collect.ImmutableSet;
-
-
 import java.util.Set;
 
 /**
@@ -60,7 +58,11 @@ public enum ExtendedContentType implements ContentType {
     DATA_BINDING(0x10000),
 
     /** The content is Java source file. */
-    JAVA_SOURCES(0x20000);
+    JAVA_SOURCES(0x20000),
+
+    /** The content is a dex archive. It contains a single DEX file per class. */
+    DEX_ARCHIVE(0x40000),
+    ;
 
     private final int value;
 

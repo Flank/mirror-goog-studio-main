@@ -16,13 +16,6 @@
 
 package com.android.dx.merge;
 
-import com.android.dex.Annotation;
-import com.android.dex.util.ByteOutput;
-import com.android.dex.ClassDef;
-import com.android.dex.Dex;
-import com.android.dex.DexException;
-import com.android.dex.EncodedValue;
-import com.android.dex.EncodedValueReader;
 import static com.android.dex.EncodedValueReader.ENCODED_ANNOTATION;
 import static com.android.dex.EncodedValueReader.ENCODED_ARRAY;
 import static com.android.dex.EncodedValueReader.ENCODED_BOOLEAN;
@@ -39,13 +32,21 @@ import static com.android.dex.EncodedValueReader.ENCODED_NULL;
 import static com.android.dex.EncodedValueReader.ENCODED_SHORT;
 import static com.android.dex.EncodedValueReader.ENCODED_STRING;
 import static com.android.dex.EncodedValueReader.ENCODED_TYPE;
+
+import com.android.dex.Annotation;
+import com.android.dex.ClassDef;
+import com.android.dex.Dex;
+import com.android.dex.DexException;
+import com.android.dex.EncodedValue;
 import com.android.dex.EncodedValueCodec;
+import com.android.dex.EncodedValueReader;
 import com.android.dex.FieldId;
 import com.android.dex.Leb128;
 import com.android.dex.MethodId;
 import com.android.dex.ProtoId;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
+import com.android.dex.util.ByteOutput;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import java.util.HashMap;
 

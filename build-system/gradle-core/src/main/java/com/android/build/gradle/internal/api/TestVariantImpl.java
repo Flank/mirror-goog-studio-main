@@ -23,10 +23,8 @@ import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.core.AndroidBuilder;
-
-import org.gradle.api.DefaultTask;
-
 import java.util.List;
+import org.gradle.api.DefaultTask;
 
 /**
  * implementation of the {@link TestVariant} interface around an {@link TestVariantData} object.

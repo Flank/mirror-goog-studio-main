@@ -136,3 +136,13 @@ def merged_properties(name, srcs, mappings, visibility=None):
              " ".join(["--input $(location " + src + ") " for src in srcs]) + " " +
              "--output '$@'")
   )
+
+def srcjar(name, java_library, visibility=None):
+  implicit_jar = ':lib' + java_library[1:] + '-src.jar'
+  native.genrule(
+      name = name,
+      srcs = [implicit_jar],
+      outs = [java_library[1:] + ".srcjar"],
+      visibility = visibility,
+      cmd = "cp $(location " + implicit_jar + ") $@"
+  )

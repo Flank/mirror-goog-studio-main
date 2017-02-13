@@ -17,11 +17,9 @@
 package com.android.builder.core;
 
 import com.google.common.io.Resources;
-
-import junit.framework.TestCase;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import junit.framework.TestCase;
 
 public class ApkInfoParserTest extends TestCase {
 

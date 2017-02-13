@@ -16,6 +16,8 @@
 
 package com.android.builder.profile;
 
+import static com.google.common.base.Verify.verifyNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -24,14 +26,10 @@ import com.android.tools.analytics.Anonymizer;
 import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,14 +44,11 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ProcessProfileWriterFactory {
 
-    private static final DateTimeFormatter PROFILE_FILE_NAME =
-            DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
-
-    public static void shutdown() throws InterruptedException {
+    public static void shutdownAndWrite(Path outputFile) throws InterruptedException {
         synchronized (LOCK) {
-
             if (sINSTANCE.isInitialized()) {
-                sINSTANCE.processProfileWriter.finish();
+                verifyNotNull(sINSTANCE.processProfileWriter);
+                sINSTANCE.processProfileWriter.finishAndWrite(outputFile);
             }
             sINSTANCE.processProfileWriter = null;
         }
@@ -73,22 +68,16 @@ public final class ProcessProfileWriterFactory {
             @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            @NonNull File profileOutputDirectory) {
+            boolean enableChromeTracingOutput) {
 
         synchronized (LOCK) {
             if (sINSTANCE.isInitialized()) {
                 return;
             }
             sINSTANCE.setLogger(logger);
-
-            sINSTANCE.setProfileOutputFile(
-                    profileOutputDirectory
-                            .toPath()
-                            .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
-
+            sINSTANCE.setEnableChromeTracingOutput(enableChromeTracingOutput);
             ProcessProfileWriter recorder =
                     sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
-
             setGlobalProperties(recorder, rootProjectDirectoryPath, gradleVersion, logger);
         }
     }
@@ -141,9 +130,8 @@ public final class ProcessProfileWriterFactory {
     @Nullable private ProcessProfileWriter processProfileWriter = null;
 
     @VisibleForTesting
-    public static void initializeForTests(@NonNull Path profileOutputFile) {
+    public static void initializeForTests() {
         sINSTANCE = new ProcessProfileWriterFactory();
-        sINSTANCE.setProfileOutputFile(profileOutputFile);
         ProcessProfileWriter recorder =
                 sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
         recorder.resetForTests();
@@ -162,23 +150,21 @@ public final class ProcessProfileWriterFactory {
         tracker.setMaxJournalSize(1000);
     }
 
-    private Path profileOutputFile = null;
-
-    private void setProfileOutputFile(Path outputFile) {
-        this.profileOutputFile = outputFile;
-    }
+    private boolean enableChromeTracingOutput;
 
     synchronized ProcessProfileWriter get() {
         if (processProfileWriter == null) {
-            Preconditions.checkState(
-                    profileOutputFile != null, "call setProfileOutputFile() first");
             if (mLogger == null) {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
             initializeAnalytics(mLogger, mScheduledExecutorService);
-            processProfileWriter = new ProcessProfileWriter(profileOutputFile);
+            processProfileWriter = new ProcessProfileWriter(enableChromeTracingOutput);
         }
 
         return processProfileWriter;
+    }
+
+    public void setEnableChromeTracingOutput(boolean enableChromeTracingOutput) {
+        this.enableChromeTracingOutput = enableChromeTracingOutput;
     }
 }

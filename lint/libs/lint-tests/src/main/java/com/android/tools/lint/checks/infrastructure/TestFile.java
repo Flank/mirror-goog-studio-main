@@ -197,6 +197,10 @@ public class TestFile {
             boolean foundClass = matcher.find();
             assert foundClass : "Couldn't find class declaration in source";
             String cls = matcher.group(2).trim();
+            if (cls.contains("<")) {
+                // Remove type variables
+                cls = cls.substring(0, cls.indexOf('<'));
+            }
             String to = pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
 
             return new JavaTestFile().to(to).within("src").withSource(source);

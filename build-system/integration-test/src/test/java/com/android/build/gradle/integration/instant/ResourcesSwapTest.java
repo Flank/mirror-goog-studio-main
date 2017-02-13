@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.instant.HotSwapTester.COLDSWAP_MODE;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
@@ -40,7 +39,6 @@ import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.Before;
@@ -69,7 +67,7 @@ public class ResourcesSwapTest {
     public final Adb adb = new Adb();
 
     @Before
-    public void checkEnvironment() {
+    public void checkEnvironment() throws Exception {
         // IR currently does not work with Jack - http://b.android.com/224374
         AssumeUtil.assumeNotUsingJack();
     }
@@ -83,7 +81,7 @@ public class ResourcesSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(mProject, 21, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(mProject, 21);
         Apk apk = mProject.getApk("debug");
         assertThat(apk).contains("assets/movie.mp4");
         assertThat(apk).contains("classes.dex");
@@ -91,7 +89,7 @@ public class ResourcesSwapTest {
         TestFileUtils.appendToFile(asset, " upgraded");
 
         mProject.executor()
-                .withInstantRun(21, COLDSWAP_MODE)
+                .withInstantRun(21)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getResourcesArtifact(instantRunModel);
@@ -206,7 +204,7 @@ public class ResourcesSwapTest {
                 });
     }
 
-    private void copyTestResourceToProjectFile(String resourceName) throws IOException {
+    private void copyTestResourceToProjectFile(String resourceName) throws Exception {
         File file = mProject.file("src/main/res/drawable/image.png");
         Files.createParentDirs(file);
 

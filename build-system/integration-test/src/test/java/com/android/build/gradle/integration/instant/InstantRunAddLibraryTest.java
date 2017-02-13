@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -35,7 +34,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +61,7 @@ public class InstantRunAddLibraryTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void addBlankUtilClass() throws IOException {
+    public void addBlankUtilClass() throws Exception {
         writeClass("throw new RuntimeException();");
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.packagingOptions.exclude 'META-INF/maven/com.google.guava/guava/pom.xml'\n"
@@ -83,7 +81,7 @@ public class InstantRunAddLibraryTest {
                 .getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // Add dependency
@@ -94,7 +92,7 @@ public class InstantRunAddLibraryTest {
         // Use that dependency
         writeClass("com.google.common.base.Strings.nullToEmpty(null);");
 
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -115,7 +113,7 @@ public class InstantRunAddLibraryTest {
     }
 
 
-    public void writeClass(String action) throws IOException {
+    public void writeClass(String action) throws Exception {
         String contents = "package com.example.helloworld;" +
                 "public class Util {\n" +
                 "    public static void doStuff() {\n" +

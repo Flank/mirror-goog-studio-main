@@ -114,7 +114,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiConditionalExpression;
-import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiDisjunctionType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiEnumConstant;
@@ -137,11 +136,11 @@ import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiParenthesizedExpression;
+import com.intellij.psi.PsiPolyadicExpression;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiTryStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeCastExpression;
@@ -1025,11 +1024,27 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             // (2) package private is available in the same package
             // (3) protected is available either from subclasses or in same package
             PsiFile containingFile = node.getContainingFile();
-            PsiFile containingFile1 = method.getContainingFile();
-            if (Objects.equals(containingFile, containingFile1)) {
+            PsiFile containingFile2 = method.getContainingFile();
+            if (Objects.equals(containingFile, containingFile2)) {
                 // Same compilation unit
                 return;
             }
+
+            // Default constructor? If so the method resolve doesn't point to a
+            // method, so look up the class instead to get a valid file to compare
+            // with
+            if (containingFile2 == null && node instanceof PsiNewExpression) {
+                PsiJavaCodeReferenceElement reference = ((PsiNewExpression) node)
+                        .getClassReference();
+                if (reference != null) {
+                    containingFile2 = reference.getContainingFile();
+                    if (Objects.equals(containingFile, containingFile2)) {
+                        // Same compilation unit
+                        return;
+                    }
+                }
+            }
+
             if (visibility == VISIBILITY_PRIVATE) {
                 if (!isTestContext(context, node)) {
                     reportVisibilityError(context, node, "private");
@@ -1399,7 +1414,7 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
             }
 
             String message = String.format(
-                 "%1$s %2$s must be called from the `%3$s` thread, currently inferred thread is `%4$s` thread",
+                 "%1$s %2$s must be called from the %3$s thread, currently inferred thread is %4$s thread",
                  method.isConstructor() ? "Constructor" : "Method",
                  method.getName(), describeThreads(targetThreads, true),
                  describeThreads(threadContext, false));
@@ -1735,42 +1750,9 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 }
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(node, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return false;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                    .getDeclaredElements()) {
-                                if (variable.equals(element)) {
-                                    return typeArrayFromArrayLiteral(variable.getInitializer());
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        return typeArrayFromArrayLiteral(assign.getRExpression());
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = ConstantEvaluator.findLastAssignment(node, variable);
+                if (last != null) {
+                    return typeArrayFromArrayLiteral(last);
                 }
             }
         } else if (node instanceof PsiNewExpression) {
@@ -2178,14 +2160,14 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 checkTypeDefConstant(context, annotation, expression.getElseExpression(), errorNode, flag,
                         allAnnotations);
             }
-        } else if (argument instanceof PsiBinaryExpression) {
+        } else if (argument instanceof PsiPolyadicExpression) {
             // If it's ?: then check both the if and else clauses
-            PsiBinaryExpression expression = (PsiBinaryExpression) argument;
+            PsiPolyadicExpression expression = (PsiPolyadicExpression) argument;
             if (flag) {
-                checkTypeDefConstant(context, annotation, expression.getLOperand(), errorNode, true,
-                        allAnnotations);
-                checkTypeDefConstant(context, annotation, expression.getROperand(), errorNode, true,
-                        allAnnotations);
+                for (PsiExpression operand : expression.getOperands()) {
+                    checkTypeDefConstant(context, annotation, operand, errorNode,true,
+                            allAnnotations);
+                }
             } else {
                 IElementType operator = expression.getOperationTokenType();
                 if (operator == JavaTokenType.AND
@@ -2217,50 +2199,12 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 }
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiStatement statement = PsiTreeUtil.getParentOfType(argument, PsiStatement.class,
-                        false);
-                if (statement != null) {
-                    PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                            PsiStatement.class);
-                    String targetName = variable.getName();
-                    if (targetName == null) {
-                        return;
-                    }
-                    while (prev != null) {
-                        if (prev instanceof PsiDeclarationStatement) {
-                            for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                    .getDeclaredElements()) {
-                                if (variable.equals(element)) {
-                                    checkTypeDefConstant(context, annotation,
-                                            variable.getInitializer(),
-                                            errorNode != null ? errorNode : argument, flag,
-                                            allAnnotations);
-                                    return;
-                                }
-                            }
-                        } else if (prev instanceof PsiExpressionStatement) {
-                            PsiExpression expression = ((PsiExpressionStatement) prev)
-                                    .getExpression();
-                            if (expression instanceof PsiAssignmentExpression) {
-                                PsiAssignmentExpression assign
-                                        = (PsiAssignmentExpression) expression;
-                                PsiExpression lhs = assign.getLExpression();
-                                if (lhs instanceof PsiReferenceExpression) {
-                                    PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                                    if (targetName.equals(reference.getReferenceName()) &&
-                                            reference.getQualifier() == null) {
-                                        checkTypeDefConstant(context, annotation,
-                                                assign.getRExpression(),
-                                                errorNode != null ? errorNode : argument, flag,
-                                                allAnnotations);
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                        prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                PsiStatement.class);
-                    }
+                PsiExpression last = ConstantEvaluator.findLastAssignment(argument, variable);
+                if (last != null) {
+                    checkTypeDefConstant(context, annotation,
+                            last,
+                            errorNode != null ? errorNode : argument, flag,
+                            allAnnotations);
                 }
             }
         } else if (argument instanceof PsiNewExpression) {
@@ -2621,9 +2565,8 @@ public class SupportAnnotationDetector extends Detector implements JavaPsiScanne
                 classAnnotations = evaluator.getAllAnnotations(containingClass, true);
                 classAnnotations = filterRelevantAnnotations(evaluator, classAnnotations);
 
-                PsiElement parent = containingClass.getParent();
-                if (parent instanceof PsiPackage) {
-                    PsiPackage pkg = (PsiPackage) parent;
+                PsiPackage pkg = evaluator.getPackage(containingClass);
+                if (pkg != null) {
                     pkgAnnotations = evaluator.getAllAnnotations(pkg, false);
                     pkgAnnotations = filterRelevantAnnotations(evaluator, pkgAnnotations);
                 } else {

@@ -19,11 +19,9 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.tasks.SourceSet;
-
 import java.io.File;
 import java.util.Collection;
+import org.gradle.api.tasks.SourceSet;
 
 /**
  * An implementation of SourceProvider that's wrapper around a Java SourceSet.

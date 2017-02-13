@@ -39,6 +39,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collection;
@@ -175,7 +176,7 @@ public class ResourcePrefixDetector extends ResourceXmlDetector implements
             return;
         }
 
-        for (Element item : LintUtils.getChildren(element)) {
+        for (Element item : XmlUtils.getSubTags(element)) {
             Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
             if (nameAttribute != null) {
                 String name = nameAttribute.getValue();

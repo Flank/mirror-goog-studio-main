@@ -125,6 +125,8 @@ import org.w3c.dom.Element;
  */
 public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner {
 
+    // TODO: Use the new merged manifest model
+
     private static final boolean INCLUDE_LDPI;
     static {
         boolean includeLdpi = false;
@@ -211,7 +213,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             "The res/drawable folder is intended for density-independent graphics such as " +
             "shapes defined in XML. For bitmaps, move it to `drawable-mdpi` and consider " +
             "providing higher and lower resolution versions in `drawable-ldpi`, `drawable-hdpi` " +
-            "and `drawable-xhdpi`. If the icon *really* is density independent (for example " +
+            "and `drawable-xhdpi`. If the icon **really** is density independent (for example " +
             "a solid color) you can place it in `drawable-nodpi`.",
             Category.ICONS,
             5,
@@ -301,7 +303,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             "IconNoDpi",
             "Icon appears in both `-nodpi` and dpi folders",
             "Bitmaps that appear in `drawable-nodpi` folders will not be scaled by the " +
-            "Android framework. If a drawable resource of the same name appears *both* in " +
+            "Android framework. If a drawable resource of the same name appears **both** in " +
             "a `-nodpi` folder as well as a dpi folder such as `drawable-hdpi`, then " +
             "the behavior is ambiguous and probably not intentional. Delete one or the " +
             "other, or use different names for the icons.",
@@ -2473,9 +2475,9 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
 
     // ---- Implements JavaScanner ----
 
-    private static final String NOTIFICATION_CLASS = "Notification";
-    private static final String NOTIFICATION_BUILDER_CLASS = "Notification.Builder";
-    private static final String NOTIFICATION_COMPAT_BUILDER_CLASS = "NotificationCompat.Builder";
+    private static final String NOTIFICATION_CLASS = "android.app.Notification";
+    private static final String NOTIFICATION_BUILDER_CLASS = "android.app.Notification.Builder";
+    private static final String NOTIFICATION_COMPAT_BUILDER_CLASS = "android.support.v4.app.NotificationCompat.Builder";
     private static final String SET_SMALL_ICON = "setSmallIcon";
     private static final String ON_CREATE_OPTIONS_MENU = "onCreateOptionsMenu";
 
@@ -2513,7 +2515,7 @@ public class IconDetector extends ResourceXmlDetector implements JavaPsiScanner 
             if (!(resolved instanceof PsiClass)) {
                 return;
             }
-            String typeName = ((PsiClass)resolved).getName();
+            String typeName = ((PsiClass)resolved).getQualifiedName();
             if (NOTIFICATION_CLASS.equals(typeName)) {
                 PsiExpressionList argumentList = node.getArgumentList();
                 PsiExpression[] args = argumentList != null

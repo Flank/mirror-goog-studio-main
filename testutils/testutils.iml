@@ -8,12 +8,13 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module" module-name="common" exported="" />
+    <orderEntry type="module" module-name="common" />
     <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="library" name="easymock-tools" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="library" name="jimfs" level="project" />
+    <orderEntry type="library" name="asm-tools" level="project" />
   </component>
 </module>

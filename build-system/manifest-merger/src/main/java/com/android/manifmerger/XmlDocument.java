@@ -37,13 +37,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
+import java.util.concurrent.atomic.AtomicReference;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Represents a loaded xml document.

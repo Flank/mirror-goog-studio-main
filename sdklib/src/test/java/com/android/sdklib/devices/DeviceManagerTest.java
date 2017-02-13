@@ -360,4 +360,42 @@ public class DeviceManagerTest {
         assertThat(d.getDisplayName()).isEqualTo("Custom");
         assertThat(manager.getDevices(EnumSet.allOf(DeviceFilter.class)).size()).isEqualTo(count);
     }
+
+    @Test
+    public final void testWriteUserDevice() throws Exception {
+        Device testDeviceBefore = dm.getDevice("Test Round User Wear Device", "User");
+        assertThat(testDeviceBefore).isNull();
+
+        Device squareDevice = dm.getDevice("wear_square", "Google");
+        String squareName = squareDevice.getDisplayName();
+        assertThat(squareName).isEqualTo("Android Wear Square");
+        assertThat(squareDevice.isScreenRound()).isFalse();
+
+        Device.Builder devBuilder = new Device.Builder(squareDevice);
+        devBuilder.setId("test_round_dev");
+        devBuilder.setName("Test Round User Wear Device");
+        devBuilder.setManufacturer("User");
+        devBuilder.addBootProp(DeviceParser.ROUND_BOOT_PROP, "true");
+        Device roundDevice = devBuilder.build();
+        assertThat(roundDevice).isNotNull();
+
+        dm.addUserDevice(roundDevice);
+
+        Device testDeviceMid = dm.getDevice("test_round_dev", "User");
+        assertThat(testDeviceMid).isNotNull();
+
+        // Write the user-defined device definitions to devices.xml
+        dm.saveUserDevices();
+        dm.removeUserDevice(testDeviceMid);
+
+        // Create a new DeviceManager. It will read the newly-written
+        // devices.xml file, so we can check the contents.
+        DeviceManager newDM = createDeviceManager();
+
+        Device testDeviceAfter = newDM.getDevice("test_round_dev", "User");
+        assertThat(testDeviceAfter).isNotNull();
+        String afterName = testDeviceAfter.getDisplayName();
+        assertThat(afterName).isEqualTo("Test Round User Wear Device");
+        assertThat(testDeviceAfter.isScreenRound()).isTrue();
+    }
 }

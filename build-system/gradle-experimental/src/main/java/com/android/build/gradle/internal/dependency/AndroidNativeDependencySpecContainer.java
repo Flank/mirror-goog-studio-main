@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import java.util.Collection;
 import org.gradle.model.internal.core.UnmanagedStruct;
 import org.gradle.platform.base.DependencySpecContainer;
-
-import java.util.Collection;
 
 /**
  * Container for {@link AndroidNativeDependencySpec}.

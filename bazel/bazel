@@ -1,10 +1,10 @@
 #!/usr/bin/python
-
 """Runs the bazel executable for the platform, passing args along."""
 
 import os
 import subprocess
 import sys
+import multiprocessing
 
 
 def main():
@@ -20,15 +20,33 @@ def main():
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
-  bazel = os.path.join(
-      workspace, 'prebuilts', 'tools', platform, 'bazel', 'bazel-real')
+  bazel = os.path.join(workspace, 'prebuilts', 'tools', platform, 'bazel',
+                       'bazel-real')
   env = {
-      'CC': '/usr/bin/gcc',
-      'JAVA_HOME': os.path.join(
-          workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir),
-      'TERM': os.environ.get('TERM') or '',
+      'CC':
+          '/usr/bin/gcc',
+      'JAVA_HOME':
+          os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir),
+      'TERM':
+          os.environ.get('TERM') or '',
   }
-  sys.exit(subprocess.call([bazel] + sys.argv[1:], env=env))
+  args = sys.argv[1:]
+
+  if args[0] == 'test':
+    # Keep this logic in sync with integration-test BUILD file and CheckAllRunner.
+    cpus = multiprocessing.cpu_count()
+    if cpus > 20:
+      # Most likely z840. For now limit test jobs to 8, until we experiment
+      # with higher values.
+      test_jobs = 8
+    else:
+      test_jobs = 2
+
+    # Insert the flag right after "test".
+    args.insert(1, '--local_test_jobs=' + str(test_jobs))
+    print('Running with {} local test jobs.'.format(test_jobs))
+
+  sys.exit(subprocess.call([bazel] + args, env=env))
 
 
 def find_workspace(path):

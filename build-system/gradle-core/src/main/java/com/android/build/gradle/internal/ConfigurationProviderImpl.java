@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 
@@ -61,6 +60,12 @@ public class ConfigurationProviderImpl implements ConfigurationProvider {
     @Override
     public Configuration getJackPluginConfiguration() {
         return project.getConfigurations().getByName(sourceSet.getJackPluginConfigurationName());
+    }
+
+    @NonNull
+    @Override
+    public Configuration getWearAppConfiguration() {
+        return project.getConfigurations().getByName(sourceSet.getWearAppConfigurationName());
     }
 }
 

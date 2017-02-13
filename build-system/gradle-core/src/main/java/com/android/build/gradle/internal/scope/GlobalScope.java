@@ -25,8 +25,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -34,15 +37,11 @@ import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-
-import com.google.common.base.Throwables;
-import java.util.Optional;
+import java.io.File;
+import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import java.io.File;
-import java.util.EnumSet;
 
 /**
  * A scope containing data for the Android plugin.
@@ -67,51 +66,38 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     private ToolingModelBuilderRegistry toolingRegistry;
 
-    @NonNull
-    private final File intermediatesDir;
-
-    @NonNull
-    private final File generatedDir;
-
-    @NonNull
-    private final File reportsDir;
-
-    @NonNull
-    private final File outputsDir;
-
     @Nullable
     private File mockableAndroidJarFile;
 
-    @NonNull
-    private final EnumSet<OptionalCompilationStep> optionalCompilationSteps;
+    @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
 
-    @NonNull
-    private final AndroidGradleOptions androidGradleOptions;
+    @NonNull private final ProjectOptions projectOptions;
 
-    @NonNull
-    private final Optional<FileCache> buildCache;
+    @Nullable
+    private final FileCache buildCache;
 
     public GlobalScope(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+        // Attention: remember that this code runs early in the build lifecycle, project may not
+        // have been fully configured yet (e.g. buildDir can still change).
         this.project = project;
         this.androidBuilder = androidBuilder;
         this.extension = extension;
         this.sdkHandler = sdkHandler;
         this.ndkHandler = ndkHandler;
         this.toolingRegistry = toolingRegistry;
-        intermediatesDir = new File(getBuildDir(), FD_INTERMEDIATES);
-        generatedDir = new File(getBuildDir(), FD_GENERATED);
-        reportsDir = new File(getBuildDir(), FD_REPORTS);
-        outputsDir = new File(getBuildDir(), FD_OUTPUTS);
-        optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
-        androidGradleOptions = new AndroidGradleOptions(project);
-        buildCache = getBuildCache(project, androidGradleOptions);
-        validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
+        this.optionalCompilationSteps = projectOptions.getOptionalCompilationSteps();
+        this.projectOptions = projectOptions;
+        this.buildCache =
+                BuildCacheUtils.createBuildCacheIfEnabled(
+                        project.getRootProject()::file, projectOptions);
+        validateAndroidGradleOptions(projectOptions, buildCache);
     }
 
     @NonNull
@@ -158,17 +144,17 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public File getIntermediatesDir() {
-        return intermediatesDir;
+        return new File(getBuildDir(), FD_INTERMEDIATES);
     }
 
     @NonNull
     public File getGeneratedDir() {
-        return generatedDir;
+        return new File(getBuildDir(), FD_GENERATED);
     }
 
     @NonNull
     public File getReportsDir() {
-        return reportsDir;
+        return new File(getBuildDir(), FD_REPORTS);
     }
 
     public File getTestResultsFolder() {
@@ -214,7 +200,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public File getOutputsDir() {
-        return outputsDir;
+        return new File(getBuildDir(), FD_OUTPUTS);
     }
 
     /**
@@ -261,59 +247,26 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     @Override
-    public AndroidGradleOptions getAndroidGradleOptions() {
-        return androidGradleOptions;
+    public ProjectOptions getProjectOptions() {
+        return projectOptions;
     }
 
-    @NonNull
+    @Nullable
     @Override
-    public Optional<FileCache> getBuildCache() {
+    public FileCache getBuildCache() {
         return buildCache;
     }
 
-    @NonNull
-    public static Optional<FileCache> getBuildCache(
-            @NonNull Project project, @NonNull AndroidGradleOptions androidGradleOptions) {
-        if (androidGradleOptions.isBuildCacheEnabled()) {
-            String buildCacheDirString = androidGradleOptions.getBuildCacheDir();
-            File buildCacheDir =
-                    androidGradleOptions.getBuildCacheDir() != null
-                            ? new File(buildCacheDirString)
-                            // Use a default directory if the build cache directory is not set
-                            : new File(FileUtils.join(
-                                    System.getProperty("user.home"), ".android", "build-cache"));
-            try {
-                return Optional.of(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
-            } catch (Exception exception) {
-                project.getLogger().warn(
-                        String.format(
-                                "Unable to create the build cache at '%1$s'.\n"
-                                        + "Cause: %2$s\n"
-                                        + "We have temporarily disabled the build cache.\n"
-                                        + "If you are unable to fix the underlying cause, please"
-                                        + " file a bug or disable the build cache by setting"
-                                        + " android.enableBuildCache=false in the gradle.properties"
-                                        + " file.",
-                                buildCacheDir.getAbsolutePath(),
-                                Throwables.getStackTraceAsString(exception)));
-                return Optional.empty();
-            }
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Validate flag options.
-     */
+    /** Validate flag options. */
     public static void validateAndroidGradleOptions(
-            @NonNull Project project,
-            @NonNull AndroidGradleOptions andoiAndroidGradleOptions,
-            @NonNull Optional<FileCache> buildCache) {
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                && !buildCache.isPresent()) {
-            throw new InvalidUserDataException("Build cache must be enable to use improved "
-                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.");
+            @NonNull ProjectOptions projectOptions, @Nullable FileCache buildCache) {
+        if (projectOptions.get(BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION)
+                && buildCache == null) {
+            throw new InvalidUserDataException("Build cache must be enabled to use improved "
+                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.  "
+                    + "If enabling build cache is not possible, improved dependency resolution can "
+                    + "be disabled by setting "
+                    + "-Pandroid.enableImprovedDependenciesResolution=false.");
         }
     }
 }

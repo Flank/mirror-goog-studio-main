@@ -6,7 +6,6 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -47,14 +46,14 @@ public class JackSmokeTest {
     }
 
     @Test
-    public void assembleMinifyDebug() {
+    public void assembleMinifyDebug() throws Exception {
         GradleBuildResult result =
                 sMinify.executor().run("clean", "assembleDebug", "assembleDebugAndroidTest");
         assertThat(result.getTask(":transformJackWithJackDexerForDebug")).wasExecuted();
     }
 
     @Test
-    public void assembleMultiDexDebug() {
+    public void assembleMultiDexDebug() throws Exception {
         GradleBuildResult result =
                 sMultiDex
                         .executor()
@@ -74,13 +73,13 @@ public class JackSmokeTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void basicConnectedCheck() {
+    public void basicConnectedCheck() throws Exception {
         sBasic.executeConnectedCheck();
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void multiDexConnectedCheck() throws IOException {
+    public void multiDexConnectedCheck() throws Exception {
         sMultiDex.execute(
                 "assembleDebug", "assembleIcsDebugAndroidTest", "assembleLollipopDebugAndroidTest");
         adb.exclusiveAccess();
@@ -88,12 +87,12 @@ public class JackSmokeTest {
     }
 
     @Test
-    public void minifyUnitTestsWithJavac() {
+    public void minifyUnitTestsWithJavac() throws Exception {
         sMinify.execute("testMinified");
     }
 
     @Test
-    public void minifyUnitTestsWithJack() {
+    public void minifyUnitTestsWithJack() throws Exception {
         sMinify.execute("clean", "testMinified");
 
         // Make sure javac was run.

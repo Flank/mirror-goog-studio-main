@@ -3,9 +3,8 @@
     format="5"
     revision="1"
     name="Scrolling Activity"
-    minApi="7"
+    minApi="9"
     minBuildApi="22"
-    requireAppTheme="true"
     description="Creates a new vertical scrolling activity.">
 
     <category value="Activity" />

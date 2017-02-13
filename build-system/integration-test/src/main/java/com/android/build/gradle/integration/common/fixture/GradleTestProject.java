@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.nio.file.Files.createTempDirectory;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -101,6 +102,8 @@ public final class GradleTestProject implements TestRule {
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
+    public static final String DEFAULT_KOTLIN_PLUGIN_VERSION = "1.0.5";
+
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
@@ -132,11 +135,18 @@ public final class GradleTestProject implements TestRule {
             assertThat(TEST_PROJECT_DIR).isDirectory();
 
             String buildDirPath = System.getenv("TEST_TMPDIR");
-            assertNotNull(buildDirPath, "$TEST_TEMPDIR not set");
+            assertNotNull("$TEST_TEMPDIR not set", buildDirPath);
             BUILD_DIR = new File(buildDirPath);
             OUT_DIR = new File(BUILD_DIR, "tests");
-            GRADLE_USER_HOME = new File(BUILD_DIR, "GRADLE_USER_HOME");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
+
+            // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
+            // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
+            // across invocations to save disk space.
+            GRADLE_USER_HOME =
+                    TestUtils.runningFromBazel()
+                            ? createTempDirectory(BUILD_DIR.toPath(), "GRADLE_USER_HOME").toFile()
+                            : new File(BUILD_DIR, "GRADLE_USER_HOME");
 
             boolean useNightly =
                     Boolean.parseBoolean(
@@ -181,23 +191,26 @@ public final class GradleTestProject implements TestRule {
                     Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
             if (envCustomAndroidHome != null) {
                 ANDROID_HOME = new File(envCustomAndroidHome);
+                assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
             } else {
                 ANDROID_HOME = TestUtils.getSdk();
             }
-            assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
 
             String envCustomAndroidNdkHome =
                     Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
             if (envCustomAndroidNdkHome != null) {
                 ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
+                assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
             } else {
-                ANDROID_NDK_HOME = new File(ANDROID_HOME, SdkConstants.FD_NDK);
+                ANDROID_NDK_HOME =
+                        TestUtils.runningFromBazel()
+                                ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
+                                : new File(ANDROID_HOME, SdkConstants.FD_NDK);
             }
-            assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
         } catch (Throwable t) {
             // Print something to stdout, to give us a chance to debug initialization problems.
             System.out.println(Throwables.getStackTraceAsString(t));
-            throw t;
+            throw Throwables.propagate(t);
         }
     }
 
@@ -218,6 +231,7 @@ public final class GradleTestProject implements TestRule {
     private File buildFile;
     private File localProp;
     private final boolean withoutNdk;
+    private final boolean withDependencyChecker;
 
     private final Collection<String> gradleProperties;
 
@@ -246,6 +260,7 @@ public final class GradleTestProject implements TestRule {
             boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
             boolean withoutNdk,
+            boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
@@ -259,6 +274,7 @@ public final class GradleTestProject implements TestRule {
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
         this.withoutNdk = withoutNdk;
+        this.withDependencyChecker = withDependencyChecker;
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
@@ -283,6 +299,7 @@ public final class GradleTestProject implements TestRule {
         buildFile = new File(getTestDir(), "build.gradle");
         sourceDir = new File(getTestDir(), "src");
         withoutNdk = rootProject.withoutNdk;
+        withDependencyChecker = rootProject.withDependencyChecker;
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
@@ -364,12 +381,28 @@ public final class GradleTestProject implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 createTestDirectory(description.getTestClass(), description.getMethodName());
+                boolean testFailed = false;
                 try {
                     base.evaluate();
+                } catch (Exception e) {
+                    testFailed = true;
+                    throw e;
                 } finally {
                     openConnections.forEach(ProjectConnection::close);
                     if (benchmarkRecorder != null) {
                         benchmarkRecorder.doUploads();
+                    }
+                    if (testFailed && lastBuildResult != null) {
+                        System.err.println("==============================================");
+                        System.err.println("= Test " + description + " failed. Last build:");
+                        System.err.println("==============================================");
+                        System.err.println("=================== Stderr ===================");
+                        System.err.print(lastBuildResult.getStderr());
+                        System.err.println("=================== Stdout ===================");
+                        System.err.print(lastBuildResult.getStdout());
+                        System.err.println("==============================================");
+                        System.err.println("=============== End last build ===============");
+                        System.err.println("==============================================");
                     }
                 }
             }
@@ -456,34 +489,73 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     private String generateCommonHeader() {
-        return String.format(
-                "ext {\n"
-                + "    buildToolsVersion = '%1$s'\n"
-                + "    latestCompileSdk = %2$s\n"
-                + "    useJack = %3$s\n"
-                + "\n"
-                + "    plugins.withId('com.android.application') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.library') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.model.application') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "    plugins.withId('com.android.model.library') {\n"
-                + "        apply plugin: 'devicepool'\n"
-                + "    }\n"
-                + "}\n"
-                + "\n"
-                + "plugins.withId(\"com.android.application\") { plugin ->\n"
-                + "    if (ext.useJack != null) {\n"
-                + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
-                + "    }\n"
-                + "}",
-                DEFAULT_BUILD_TOOL_VERSION,
-                DEFAULT_COMPILE_SDK_VERSION,
-                useJack);
+        String result =
+                String.format(
+                        "ext {\n"
+                                + "    buildToolsVersion = '%1$s'\n"
+                                + "    latestCompileSdk = %2$s\n"
+                                + "    useJack = %3$s\n"
+                                + "    kotlinVersion = '%4$s'\n"
+                                + "\n"
+                                + "    plugins.withId('com.android.application') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.library') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.model.application') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "    plugins.withId('com.android.model.library') {\n"
+                                + "        apply plugin: 'devicepool'\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "\n"
+                                + "plugins.withId(\"com.android.application\") { plugin ->\n"
+                                + "    if (ext.useJack != null) {\n"
+                                + "        plugin.extension.defaultConfig.jackOptions.enabled = ext.useJack\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "\n"
+                                + "",
+                        DEFAULT_BUILD_TOOL_VERSION,
+                        DEFAULT_COMPILE_SDK_VERSION,
+                        useJack,
+                        DEFAULT_KOTLIN_PLUGIN_VERSION);
+        if (withDependencyChecker) {
+            result = result
+                    + "// Check to ensure dependencies are not resolved during configuration.\n"
+                    + "//\n"
+                    + "// If it is intentional, create GradleTestProject without dependency checker"
+                    + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the"
+                    + "// checker with:\n"
+                    + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
+                    + "//\n"
+                    + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
+                    + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
+                    + "// interest to get a stacktrace.\n"
+                    + "Boolean isTaskGraphReady = false\n"
+                    + "gradle.taskGraph.whenReady { isTaskGraphReady = true }\n"
+                    + "\n"
+                    + "ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
+                    + "    @Override\n"
+                    + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
+                    + "        if (!isTaskGraphReady\n"
+                    + "                && !resolvableDependencies.getName().equals('classpath')\n"  // classpath is resolved to find the plugin.
+                    + "                && !resolvableDependencies.getName().startsWith('testTarget')\n"  // TODO: Fix for test plugin.
+                    + "                && project.findProperty(\"" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "\")?.toBoolean() != true) {\n"
+                    + "            throw new RuntimeException(\n"
+                    + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "\n"
+                    + "    @Override\n"
+                    + "    void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
+                    + "}\n"
+                    + "\n"
+                    + "gradle.addListener(dependencyResolutionChecker)\n";
+        }
+        return result;
     }
 
     @NonNull
@@ -628,22 +700,18 @@ public final class GradleTestProject implements TestRule {
      * "unsigned", "aligned")
      */
     @NonNull
-    public Apk getApk(String... dimensions) {
+    public Apk getApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
         File apkFile =
                 getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
                         + SdkConstants.DOT_ANDROID_PACKAGE);
-        try {
-            return new Apk(apkFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return new Apk(apkFile);
     }
 
     @NonNull
-    public Apk getTestApk(String... dimensions) {
+    public Apk getTestApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayList(dimensions);
         dimensionList.add("androidTest");
         return getApk(Iterables.toArray(dimensionList, String.class));
@@ -655,16 +723,12 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public Aar getAar(String... dimensions) {
+    public Aar getAar(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        try {
             return new Aar(getOutputFile(
                     "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     /**
@@ -693,17 +757,13 @@ public final class GradleTestProject implements TestRule {
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public Apk getAtom(String atomName, String... dimensions) {
-        try {
+    public Apk getAtom(String atomName, String... dimensions) throws IOException {
             return new Apk(
                     getIntermediateFile(
                             FileUtils.join(
                                     "atoms",
                                     Joiner.on("-").join(dimensions),
                                     atomName + SdkConstants.DOT_ANDROID_PACKAGE)));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     /**
@@ -756,24 +816,27 @@ public final class GradleTestProject implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(@NonNull String... tasks) {
+    public void execute(@NonNull String... tasks) throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
     }
 
-    public void execute(@NonNull List<String> arguments, @NonNull String... tasks) {
+    public void execute(@NonNull List<String> arguments, @NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().withArguments(arguments).run(tasks);
     }
 
-    public GradleConnectionException executeExpectingFailure(@NonNull String... tasks) {
+    public GradleConnectionException executeExpectingFailure(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().expectFailure().run(tasks);
         return lastBuildResult.getException();
     }
 
-    public void executeConnectedCheck() {
+    public void executeConnectedCheck() throws IOException, InterruptedException {
         lastBuildResult = executor().executeConnectedCheck();
     }
 
-    public void executeConnectedCheck(@NonNull List<String> arguments) {
+    public void executeConnectedCheck(@NonNull List<String> arguments)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().withArguments(arguments).executeConnectedCheck();
     }
 
@@ -784,7 +847,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getSingle();
     }
@@ -798,7 +862,8 @@ public final class GradleTestProject implements TestRule {
      * @return the model for the project with the specified type.
      */
     @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks) {
+    public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getSingle(modelClass);
     }
@@ -811,7 +876,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle();
     }
@@ -825,7 +891,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks) {
+    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().level(modelLevel).getSingle(modelClass);
     }
@@ -838,7 +905,8 @@ public final class GradleTestProject implements TestRule {
      * @return the AndroidProject model for the project.
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks) {
+    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks)
+            throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getMulti();
     }

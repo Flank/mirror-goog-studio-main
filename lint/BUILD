@@ -16,6 +16,7 @@ iml_module(
         "//tools/base/sdk-common:studio.sdk-common",
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools/idea/java/java-psi-api",
+        "//tools/base/build-system:studio.manifest-merger",
     ],
     # do not sort: must match IML order
     deps = [
@@ -29,6 +30,7 @@ iml_module(
         "//tools/base/sdk-common:studio.sdk-common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
         "//tools/idea/java/java-psi-api[module]",
+        "//tools/base/build-system:studio.manifest-merger[module]",
     ],
 )
 
@@ -45,6 +47,7 @@ maven_java_library(
     deps = [
         "//prebuilts/tools/common/uast:uast-162.2228.14",
         "//tools/base/annotations",
+        "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

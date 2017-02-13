@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public class BuildCacheTest {
                     .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         AssumeUtil.assumeNotUsingJack();
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
@@ -55,21 +54,21 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testBuildCacheEnabled() throws IOException {
+    public void testBuildCacheEnabled() throws Exception {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
         RunGradleTasks executor =
                 project.executor()
+                        .withUseDexArchive(false)
                         .withProperty("android.enableBuildCache", "true")
                         .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
-        File preDexDir = FileUtils.join(project.getIntermediatesDir(), "pre-dexed", "debug");
-        List<File> dexFiles = Arrays.asList(preDexDir.listFiles());
+        File preDexDir = FileUtils.join(project.getIntermediatesDir(), "transforms", "preDex");
+        List<File> dexFiles = FileUtils.getAllFiles(preDexDir).toList();
         List<File> cachedEntryDirs =
-                Arrays.asList(buildCacheDir.listFiles())
-                        .stream()
+                Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
 
@@ -97,11 +96,10 @@ public class BuildCacheTest {
         executor.run("clean", "assembleDebug");
 
         cachedEntryDirs =
-                Arrays.asList(buildCacheDir.listFiles())
-                        .stream()
+                Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
-        assertThat(preDexDir.list()).hasLength(2);
+        assertThat(FileUtils.getAllFiles(preDexDir)).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
 
         // Assert that the cached file is unchanged and the guava library's pre-dexed file is copied
@@ -115,9 +113,14 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testBuildCacheDisabled() throws IOException {
+    public void testBuildCacheDisabled() throws Exception {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
+
+        // Remove dependencyResolutionChecker.
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n");
 
         RunGradleTasks executor =
                 project.executor()

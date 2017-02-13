@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.gradle.api.JavaVersion;
@@ -69,7 +68,7 @@ public class JackTest {
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         Assume.assumeTrue("Jack tool requires Java 7", JavaVersion.current().isJava7Compatible());
         String buildScript = new BuildScriptGenerator(
                 "apply plugin: '${application_plugin}'\n"
@@ -97,7 +96,7 @@ public class JackTest {
     }
 
     @Test
-    public void assembleDebug() throws IOException {
+    public void assembleDebug() throws Exception {
         project.execute("clean", "assembleDebug");
         assertThat(project.getApk("debug")).contains("classes.dex");
         assertThat(project.getBuildResult().getTask(":transformJackWithJackDexerForDebug"))
@@ -106,12 +105,12 @@ public class JackTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() {
+    public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
 
     @Test
-    public void unitTest() {
+    public void unitTest() throws Exception {
         project.execute("testDebug");
 
         // Make sure javac was run.

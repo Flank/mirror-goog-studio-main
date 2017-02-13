@@ -41,6 +41,11 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
                        const profiler::proto::CpuDataRequest* request,
                        profiler::proto::CpuDataResponse* response) override;
 
+  grpc::Status GetThreads(
+      grpc::ServerContext* context,
+      const profiler::proto::GetThreadsRequest* request,
+      profiler::proto::GetThreadsResponse* response) override;
+
   // TODO: Handle the case if there is no such a running process.
   grpc::Status StartMonitoringApp(
       grpc::ServerContext* context,

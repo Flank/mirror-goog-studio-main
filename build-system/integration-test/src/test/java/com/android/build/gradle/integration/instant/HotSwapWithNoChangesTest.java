@@ -18,12 +18,10 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -44,8 +42,6 @@ import org.junit.Test;
  */
 public class HotSwapWithNoChangesTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
-
     private static final String LOG_TAG = "NoCodeChangeAfterCompatibleChangeTest";
 
     public static final String ACTIVITY_PATH =
@@ -64,7 +60,7 @@ public class HotSwapWithNoChangesTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass("Original");
     }
@@ -74,7 +70,7 @@ public class HotSwapWithNoChangesTest {
         doTestArtifacts(() -> {
             // Force cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.RESTART_ONLY)
+                    .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                     .run("assembleDebug");
         });
     }
@@ -89,17 +85,17 @@ public class HotSwapWithNoChangesTest {
 
             // Adding a new class will force a cold swap.
             project.executor()
-                    .withInstantRun(23, COLDSWAP_MODE)
+                    .withInstantRun(23)
                     .run("assembleDebug");
         });
     }
 
-    private void doTestArtifacts(IOExceptionRunnable runColdSwapBuild) throws Exception {
+    private void doTestArtifacts(BuildRunnable runColdSwapBuild) throws Exception {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
 
@@ -122,7 +118,7 @@ public class HotSwapWithNoChangesTest {
 
         // now run again the incremental build.
         project.executor()
-                .withInstantRun(23, COLDSWAP_MODE)
+                .withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildContext instantRunBuildContext =
@@ -133,12 +129,11 @@ public class HotSwapWithNoChangesTest {
                 .isEqualTo(InstantRunVerifierStatus.NO_CHANGES);
     }
 
-    private void makeHotSwapChange() throws IOException {
+    private void makeHotSwapChange() throws Exception {
         createActivityClass("HOT SWAP!");
     }
 
-    private void createActivityClass(String message)
-            throws IOException {
+    private void createActivityClass(String message) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "import android.app.Activity;\n"
                 + "import android.os.Bundle;\n"
@@ -159,4 +154,8 @@ public class HotSwapWithNoChangesTest {
                 Charsets.UTF_8);
     }
 
+    @FunctionalInterface
+    private interface BuildRunnable {
+        void run() throws IOException, InterruptedException;
+    }
 }

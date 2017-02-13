@@ -21,7 +21,6 @@ import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.utils.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;

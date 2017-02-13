@@ -19,13 +19,10 @@ package com.android.build.gradle.shrinker;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeTraverser;
-
 import java.util.Collections;
 import java.util.List;
 
-/**
- * {@link TreeTraverser} that finds all supertypes (both superclasses and interfaces) of types.
- */
+/** {@link TreeTraverser} that finds all supertypes (both superclasses and interfaces) of types. */
 public class TypeHierarchyTraverser<T> extends TreeTraverser<T> {
 
     private final ShrinkerGraph<T> mGraph;
@@ -47,18 +44,18 @@ public class TypeHierarchyTraverser<T> extends TreeTraverser<T> {
         mIncludeInterfaces = includeInterfaces;
     }
 
-    public static <T> TypeHierarchyTraverser<T> superclassesAndInterfaces(ShrinkerGraph<T> graph,
-            ShrinkerLogger shrinkerLogger) {
+    public static <T> TypeHierarchyTraverser<T> superclassesAndInterfaces(
+            ShrinkerGraph<T> graph, ShrinkerLogger shrinkerLogger) {
         return new TypeHierarchyTraverser<>(graph, shrinkerLogger, true, true);
     }
 
-    public static <T> TypeHierarchyTraverser<T> superclasses(ShrinkerGraph<T> graph,
-            ShrinkerLogger shrinkerLogger) {
+    public static <T> TypeHierarchyTraverser<T> superclasses(
+            ShrinkerGraph<T> graph, ShrinkerLogger shrinkerLogger) {
         return new TypeHierarchyTraverser<>(graph, shrinkerLogger, true, false);
     }
 
-    public static <T> TypeHierarchyTraverser<T> interfaces(ShrinkerGraph<T> graph,
-            ShrinkerLogger shrinkerLogger) {
+    public static <T> TypeHierarchyTraverser<T> interfaces(
+            ShrinkerGraph<T> graph, ShrinkerLogger shrinkerLogger) {
         return new TypeHierarchyTraverser<>(graph, shrinkerLogger, false, true);
     }
 
@@ -86,8 +83,7 @@ public class TypeHierarchyTraverser<T> extends TreeTraverser<T> {
                 for (T iface : interfaces) {
                     if (!mGraph.isClassKnown(iface)) {
                         mShrinkerLogger.invalidClassReference(
-                                mGraph.getClassName(klass),
-                                mGraph.getClassName(iface));
+                                mGraph.getClassName(klass), mGraph.getClassName(iface));
                     } else {
                         result.add(iface);
                     }

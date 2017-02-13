@@ -968,8 +968,13 @@ public class ResourceUsageModel {
                 if (TAG_STYLE.equals(tagName)) {
                     if (element.hasAttribute(ATTR_PARENT)) {
                         String parent = element.getAttribute(ATTR_PARENT);
-                        if (!parent.isEmpty() && !parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)
-                                && !parent.startsWith(PREFIX_ANDROID)) {
+                        if (parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)
+                            || parent.startsWith(PREFIX_ANDROID)) {
+                            // Extending a builtin theme: treat these as used
+                            if (definition != null) {
+                                markReachable(definition);
+                            }
+                        } else if (!parent.isEmpty()) {
                             String parentStyle = parent;
                             if (!parentStyle.startsWith(STYLE_RESOURCE_PREFIX)) {
                                 parentStyle = STYLE_RESOURCE_PREFIX + parentStyle;
@@ -977,12 +982,8 @@ public class ResourceUsageModel {
                             Resource ps = getResourceFromUrl(
                                     LintUtils.getFieldName(parentStyle));
                             if (ps != null && definition != null) {
-                                ps.addReference(definition);
                                 definition.addReference(ps);
                             }
-                        } else if (definition != null) {
-                            // Extending a builtin theme: treat these as used
-                            markReachable(definition);
                         }
                     } else {
                         // Implicit parent styles by name
@@ -994,7 +995,6 @@ public class ResourceUsageModel {
                                 Resource ps = getResourceFromUrl(
                                         STYLE_RESOURCE_PREFIX + LintUtils.getFieldName(name));
                                 if (ps != null && definition != null) {
-                                    ps.addReference(definition);
                                     definition.addReference(ps);
                                 }
                             } else {

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
 import org.gradle.api.Action;
 import org.gradle.internal.reflect.Instantiator;
 

@@ -20,6 +20,8 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LOCALE;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.BIN_FOLDER;
 import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JPEG;
@@ -76,6 +78,7 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
@@ -345,16 +348,7 @@ public class LintUtils {
      * @return the count of element children
      */
     public static int getChildCount(@NonNull Node node) {
-        NodeList childNodes = node.getChildNodes();
-        int childCount = 0;
-        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-            Node child = childNodes.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                childCount++;
-            }
-        }
-
-        return childCount;
+        return XmlUtils.getSubTagCount(node);
     }
 
     /**
@@ -1579,5 +1573,100 @@ public class LintUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the fully qualified class name for a manifest entry element that
+     * specifies a name attribute. Will also replace $ with dots for inner classes.
+     *
+     * @param element the element
+     * @return the fully qualified class name
+     */
+    @NonNull
+    public static String resolveManifestName(@NonNull Element element) {
+        String className = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+        className = className.replace('$', '.');
+        if (className.startsWith(".")) { //$NON-NLS-1$
+            // If the activity class name starts with a '.', it is shorthand for prepending the
+            // package name specified in the manifest.
+            String pkg = element.getOwnerDocument().getDocumentElement()
+                    .getAttribute(ATTR_PACKAGE);   // required to exist
+            return pkg + className;
+        } else if (className.indexOf('.') == -1) {
+            String pkg = element.getOwnerDocument().getDocumentElement()
+                    .getAttribute(ATTR_PACKAGE);   // required to exist
+
+            // According to the <activity> manifest element documentation, this is not
+            // valid ( http://developer.android.com/guide/topics/manifest/activity-element.html )
+            // but it appears in manifest files and appears to be supported by the runtime
+            // so handle this in code as well:
+            return pkg + '.' + className;
+        } // else: the class name is already a fully qualified class name
+
+        return className;
+    }
+
+    /** Returns true if the given string is a reserved Java keyword */
+    public static boolean isJavaKeyword(@NonNull String keyword) {
+        // TODO when we built on top of IDEA core replace this with
+        //   JavaLexer.isKeyword(candidate, LanguageLevel.JDK_1_5)
+        switch (keyword) {
+            case "abstract":
+            case "assert":
+            case "boolean":
+            case "break":
+            case "byte":
+            case "case":
+            case "catch":
+            case "char":
+            case "class":
+            case "const":
+            case "continue":
+            case "default":
+            case "do":
+            case "double":
+            case "else":
+            case "enum":
+            case "extends":
+            case "false":
+            case "final":
+            case "finally":
+            case "float":
+            case "for":
+            case "goto":
+            case "if":
+            case "implements":
+            case "import":
+            case "instanceof":
+            case "int":
+            case "interface":
+            case "long":
+            case "native":
+            case "new":
+            case "null":
+            case "package":
+            case "private":
+            case "protected":
+            case "public":
+            case "return":
+            case "short":
+            case "static":
+            case "strictfp":
+            case "super":
+            case "switch":
+            case "synchronized":
+            case "this":
+            case "throw":
+            case "throws":
+            case "transient":
+            case "true":
+            case "try":
+            case "void":
+            case "volatile":
+            case "while":
+                return true;
+        }
+
+        return false;
     }
 }

@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
-import java.util.regex.Pattern;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -4244,33 +4243,27 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testHigherCompileSdkVersionThanPlatformTools() throws Exception {
         // Warn if the platform tools are too old on the system
-        assertTrue(Pattern.matches(""
-                + "ApiDetectorTest_testHigherCompileSdkVersionThanPlatformTools: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProject(
-                        manifest().minSdk(14),
-                        projectProperties().compileSdk(400), // in the future
-                        mApiCallTest12,
-                        mApiCallTest12_class
-                )));
+        lint().files(
+                manifest().minSdk(14),
+                projectProperties().compileSdk(400), // in the future
+                mApiCallTest12,
+                mApiCallTest12_class)
+                .run()
+                .expectMatches(""
+                        + "Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
     public void testHigherCompileSdkVersionThanPlatformToolsInEditor() throws Exception {
         // When editing a file we place the error on the first line of the file instead
-        assertTrue(Pattern.matches(""
-                + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old  to check APIs compiled with API 400; please update \\[NewApi\\]\n"
-                + "package test.pkg;\n"
-                + "~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProjectIncrementally(
-                        "src/test/pkg/ApiCallTest12.java",
-                        manifest().minSdk(14),
-                        projectProperties().compileSdk(400), // in the future
-                        mApiCallTest12,
-                        mApiCallTest12_class
-                )));
+        lint().files(
+                manifest().minSdk(14),
+                projectProperties().compileSdk(400), // in the future
+                mApiCallTest12,
+                mApiCallTest12_class)
+                .incremental("src/test/pkg/ApiCallTest12.java")
+                .run()
+                .expectMatches(""
+                        + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
     @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
@@ -5248,6 +5241,95 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "            Context c2 = Fragment.this.getContext();\n"
                         + "        }\n"
                         + "    }\n"
+                        + "}\n"));
+    }
+
+    public void testMethodWithInterfaceAlternative() throws Exception {
+        // Make sure we correctly handle the case where you ensure that a method exists
+        // at runtime (e.g. is always overridden) by using an interface
+        //noinspection all // Sample code
+        checkApiCheck("No warnings.",
+                "No warnings.",
+
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class MyActivity extends Activity implements LifecycleAware {\n"
+                        + "    private void verifyUserCanBeMessaged(Bundle intentExtras) {\n"
+                        + "        if (isDestroyed() || isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Test scenario where the qualifier is non-null\n"
+                        + "    private void verifyUserCanBeMessaged(MyActivity myActivity, Bundle intentExtras) {\n"
+                        + "        if (myActivity.isDestroyed() || myActivity.isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public interface LifecycleAware {\n"
+                        + "    boolean isDestroyed();\n"
+                        + "}\n"));
+    }
+
+    public void testMethodWithInterfaceAlternative2() throws Exception {
+        // Slight variation on testMethodWithInterfaceAlternative where
+        // we extend a class which implements the interface
+        //noinspection all // Sample code
+        checkApiCheck("No warnings.",
+                "No warnings.",
+
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class MyActivity extends BaseFragmentActivity {\n"
+                        + "    private void verifyUserCanBeMessaged(Bundle intentExtras) {\n"
+                        + "        if (isDestroyed() || isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // Test scenario where the qualifier is non-null\n"
+                        + "    private void verifyUserCanBeMessaged(MyActivity myActivity, Bundle intentExtras) {\n"
+                        + "        if (myActivity.isDestroyed() || myActivity.isFinishing()) {\n"
+                        + "            return;\n"
+                        + "        }\n"
+                        + "        // ...\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "\n"
+                        + "public class BaseFragmentActivity extends Activity implements LifecycleAware {\n"
+                        + "    boolean mDestroyed;\n"
+                        + "    \n"
+                        + "    @Override\n"
+                        + "    public boolean isDestroyed() {\n"
+                        + "        return mDestroyed;\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public interface LifecycleAware {\n"
+                        + "    boolean isDestroyed();\n"
                         + "}\n"));
     }
 

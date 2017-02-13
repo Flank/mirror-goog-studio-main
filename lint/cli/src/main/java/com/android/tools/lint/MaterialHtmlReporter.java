@@ -43,6 +43,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -532,11 +533,9 @@ public class MaterialHtmlReporter extends Reporter {
             }
         });
 
-        writeNewHtmlFormatInfoCard();
-
         if (!issues.isEmpty()) {
             append("\n<a name=\"overview\"></a>\n");
-            writeCard(() -> writeOverview(related, missing.size()), "Overview", true);
+            writeCard(() -> writeOverview(related, missing.size()), "Overview", true, "OverviewCard");
 
             Category previousCategory = null;
             for (List<Warning> warnings : related) {
@@ -558,7 +557,7 @@ public class MaterialHtmlReporter extends Reporter {
 
             writeSuppressIssuesCard();
         } else {
-            writeCard(() -> append("Congratulations!"), "No Issues Found");
+            writeCard(() -> append("Congratulations!"), "No Issues Found", "NoIssuesCard");
         }
 
         finishReport();
@@ -584,7 +583,7 @@ public class MaterialHtmlReporter extends Reporter {
         writeCard(() -> {
             append(TextFormat.RAW.convertTo(Main.getSuppressHelp(), TextFormat.HTML));
             this.append('\n');
-        }, "Suppressing Warnings and Errors");
+        }, "Suppressing Warnings and Errors", "SuppressCard");
     }
 
     private void writeIssueCard(List<Warning> warnings) {
@@ -775,7 +774,7 @@ public class MaterialHtmlReporter extends Reporter {
                     append("</div>\n"); //class=chips
 
                 }, XmlUtils.toXmlTextValue(firstIssue.getBriefDescription(TextFormat.TEXT)), true,
-                new Action("Explain", getExplanationId(firstIssue),
+                firstIssue.getId() + "Card", new Action("Explain", getExplanationId(firstIssue),
                         "reveal")); // HTML style isn't handled right by card widget
     }
 
@@ -800,20 +799,6 @@ public class MaterialHtmlReporter extends Reporter {
             }
         }
         return related;
-    }
-
-    private void writeNewHtmlFormatInfoCard() {
-        writeCard(() -> {
-            append("This is a new version of Android Lint's HTML report. ");
-            append("You can temporarily switch back to the old format by setting "
-                    + "the following property in your <code>gradle.properties</code> file:");
-            append("<pre>\n");
-            append("    " + NEW_FORMAT_PROPERTY + "=true\n");
-            append("</pre>\n");
-            append(""
-                    + "Please also file a tools bug on <a href=\"http://b.android.com\">http://b.android.com</a> "
-                    + "explaining what is wrong with the new format or what it is missing.\n");
-        }, "New Lint Format", true);
     }
 
     private void startReport(@NonNull Stats stats) {
@@ -1063,6 +1048,7 @@ public class MaterialHtmlReporter extends Reporter {
 
                 append("</div>"); //SuppressedIssues
             }, "Disabled Checks", true,
+                    "MissingIssuesCard",
                     new Action("List Missing Issues", "SuppressedIssues", "reveal"));
         }
     }
@@ -1139,10 +1125,10 @@ public class MaterialHtmlReporter extends Reporter {
         return "explanation" + issue.getId();
     }
 
-    public void writeCardHeader(String title, int cardNumber) {
+    public void writeCardHeader(@Nullable String title, @NonNull String cardId) {
         append(""
                 + "<section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\""
-                + getCardId(cardNumber) + "\" style=\"display: block;\">\n"
+                + cardId + "\" style=\"display: block;\">\n"
                 + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n");
         if (title != null) {
             append(""
@@ -1188,8 +1174,9 @@ public class MaterialHtmlReporter extends Reporter {
                 + "          </section>");
     }
 
-    public void writeCard(@NonNull Runnable appender, @Nullable String title) {
-        writeCard(appender, title, false);
+    public void writeCard(@NonNull Runnable appender, @Nullable String title,
+            @Nullable String cardId) {
+        writeCard(appender, title, false, cardId);
     }
 
     public void writeChip(@NonNull String text) {
@@ -1201,17 +1188,27 @@ public class MaterialHtmlReporter extends Reporter {
 
     int cardNumber = 0;
 
+    Set<String> usedCardIds = Sets.newHashSet();
+
     public void writeCard(@NonNull Runnable appender, @Nullable String title, boolean dismissible,
-            Action... actions) {
-        int card = cardNumber++;
-        writeCardHeader(title, card);
+            String cardId, Action... actions) {
+        if (cardId == null) {
+            int card = cardNumber++;
+            cardId = getCardId(card);
+        }
+
+        // Ensure we don't have duplicates (for right now)
+        assert !usedCardIds.contains(cardId) : cardId;
+        usedCardIds.add(cardId);
+
+        writeCardHeader(title, cardId);
         appender.run();
         if (dismissible) {
             String dismissTitle = "Dismiss";
             if ("New Lint Report Format".equals(title)) {
                 dismissTitle = "Got It";
             }
-            actions = ObjectArrays.concat(actions, new Action(dismissTitle, getCardId(card),
+            actions = ObjectArrays.concat(actions, new Action(dismissTitle, cardId,
                     "hideid"));
             writeCardAction(actions);
         }
@@ -1323,7 +1320,7 @@ public class MaterialHtmlReporter extends Reporter {
         });
 
         if (stats.errorCount == 0 && stats.warningCount == 0) {
-            writeCard(() -> append("Congratulations!"), "No Issues Found");
+            writeCard(() -> append("Congratulations!"), "No Issues Found", "NoIssuesCard");
             return;
         }
 
@@ -1358,7 +1355,7 @@ public class MaterialHtmlReporter extends Reporter {
 
             append("</table>\n");
             append("<br/>");
-        }, "Projects");
+        }, "Projects", "OverviewCard");
 
         finishReport();
         writeReport();

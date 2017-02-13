@@ -25,24 +25,13 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,12 +42,12 @@ import org.junit.runners.Parameterized;
 public class MediumGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
-    @NonNull private final Set<ProjectScenario> projectScenarios;
+    @NonNull private final ProjectScenario projectScenario;
 
-    public MediumGradleProjectPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
-        this.projectScenarios = projectScenarios;
+    public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+        this.projectScenario = projectScenario;
         String heapSize;
-        if (projectScenarios.contains(ProjectScenario.JACK_ON)) {
+        if (projectScenario.usesJack()) {
             // Jack takes too long with 1.5GB heap. With 6GB, the duration is reasonable.
             heapSize = "6G";
         } else {
@@ -69,130 +58,47 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         .fromExternalProject("gradle-perf-android-medium")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenarios))
+                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenario))
                         .withHeap(heapSize)
                         .create();
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> getParameters() {
-        return Arrays.asList(
-                new Object[][] {
-                    {EnumSet.of(ProjectScenario.LEGACY_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX)},
-                    {EnumSet.of(ProjectScenario.NATIVE_MULTIDEX, ProjectScenario.JACK_ON)},
-                });
+    public static ProjectScenario[] getParameters() {
+        return new ProjectScenario[] {
+            ProjectScenario.LEGACY_MULTIDEX,
+            ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
+            ProjectScenario.NATIVE_MULTIDEX,
+            ProjectScenario.JACK_NATIVE_MULTIDEX,
+            ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
+        };
     }
 
     @Before
-    public void initializeProject() throws IOException {
-        for (ProjectScenario projectScenario : projectScenarios) {
-            switch (projectScenario) {
-                case NATIVE_MULTIDEX:
-                    TestFileUtils.searchAndReplace(
-                            project.file("WordPress/build.gradle"),
-                            "minSdkVersion( )* \\d+",
-                            "minSdkVersion 21");
-                    break;
-                case LEGACY_MULTIDEX:
-                    break;
-                case JACK_ON:
-                    JackHelper.enableJack(project.file("WordPress/build.gradle"));
-                    disableCrashlyticsForJack();
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unknown project scenario" + projectScenario);
-            }
+    public void initializeProject() throws Exception {
+        PerformanceTestProjects.initializeWordpress(project);
+        switch (projectScenario) {
+            case NATIVE_MULTIDEX:
+            case DEX_ARCHIVE_NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("WordPress/build.gradle"),
+                        "minSdkVersion( )* \\d+",
+                        "minSdkVersion 21");
+                break;
+            case LEGACY_MULTIDEX:
+            case DEX_ARCHIVE_LEGACY_MULTIDEX:
+                break;
+            case JACK_NATIVE_MULTIDEX:
+                TestFileUtils.searchAndReplace(
+                        project.file("WordPress/build.gradle"),
+                        "minSdkVersion( )* \\d+",
+                        "minSdkVersion 21");
+                JackHelper.enableJack(project.file("WordPress/build.gradle"));
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown project scenario" + projectScenario);
         }
-        Files.copy(
-                project.file("WordPress/gradle.properties-example").toPath(),
-                project.file("WordPress/gradle.properties").toPath());
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "buildscript {\n"
-                        + "    repositories {\n"
-                        + "        maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'       }"
-                        + "    }\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + "'\n"
-                        + "    }\n"
-                        + "}");
-
-        List<Path> buildGradleFiles =
-                ImmutableList.of(
-                                "WordPress/build.gradle",
-                                "libs/utils/WordPressUtils/build.gradle",
-                                "libs/editor/example/build.gradle",
-                                "libs/editor/WordPressEditor/build.gradle",
-                                "libs/networking/WordPressNetworking/build.gradle",
-                                "libs/analytics/WordPressAnalytics/build.gradle")
-                        .stream()
-                        .map(name -> project.file(name).toPath())
-                        .collect(Collectors.toList());
-
-        for (Path file : buildGradleFiles) {
-            TestFileUtils.searchAndReplace(
-                    file, "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'", "");
-
-            TestFileUtils.searchAndReplace(
-                    file,
-                    "jcenter\\(\\)",
-                    "maven { url '"
-                            + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                            + "'}\njcenter()");
-
-            TestFileUtils.searchAndReplace(
-                    file,
-                    "buildToolsVersion \"[^\"]+\"",
-                    String.format("buildToolsVersion \"%s\"", AndroidBuilder.MIN_BUILD_TOOLS_REV));
-        }
-
-        //TODO: Upstream some of this?
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "classpath 'com\\.novoda:bintray-release:0\\.3\\.4'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "apply plugin: 'com\\.novoda\\.bintray-release'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "publish \\{[\\s\\S]*\\}",
-                "");
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/networking/WordPressNetworking/build.gradle"),
-                "maven \\{ url 'http://wordpress-mobile\\.github\\.io/WordPress-Android' \\}",
-                "");
-
-        TestFileUtils.searchAndReplace(
-                project.file("libs/networking/WordPressNetworking/build.gradle"),
-                "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                "releaseCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                        + "    debugCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
-        TestFileUtils.searchAndReplace(
-                project.file("libs/analytics/WordPressAnalytics/build.gradle"),
-                "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                "releaseCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                        + "    debugCompile "
-                        + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
-
-        // There is an extraneous BOM in the values-ja/strings.xml
-        Files.copy(
-                project.file("WordPress/src/main/res/values-en-rCA/strings.xml").toPath(),
-                project.file("WordPress/src/main/res/values-ja/strings.xml").toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Test
@@ -220,6 +126,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
         executor().run("clean");
 
+        FileUtils.cleanOutputDir(project.executor().getBuildCacheDir());
+
         executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleVanillaDebug");
 
         executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
@@ -242,18 +150,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withoutOfflineFlag();
-    }
-
-    /** Removes the crashlytics plugin, and any dependencies on it. */
-    private void disableCrashlyticsForJack() throws IOException {
-        TestFileUtils.searchAndReplace(
-                project.getSubproject("WordPress").getBuildFile(),
-                "apply plugin: 'io\\.fabric'",
-                "");
-        TestFileUtils.searchAndReplace(
-                project.getSubproject("WordPress").getBuildFile(),
-                "variant\\.generateBuildConfig\\.dependsOn\\(generateCrashlyticsConfig\\)",
-                "");
+                .withUseDexArchive(projectScenario.useDexArchive());
     }
 }

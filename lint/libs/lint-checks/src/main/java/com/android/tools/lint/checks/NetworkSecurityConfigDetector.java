@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.time.LocalDate;
@@ -180,7 +181,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         // 0 or 1 of <base-config>
         // Any number of <domain-config>
         // 0 or 1 of <debug-overrides>
-        for (Element child : LintUtils.getChildren(root)) {
+        for (Element child : XmlUtils.getSubTags(root)) {
             String tagName = child.getTagName();
             if (TAG_BASE_CONFIG.equals(tagName)) {
                 if (baseConfigHandle != null) {
@@ -223,7 +224,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
 
         checkForTyposInAttributes(context, config, ATTR_CLEARTEXT_TRAFFIC_PERMITTED, false);
 
-        for (Element node : LintUtils.getChildren(config)) {
+        for (Element node : XmlUtils.getSubTags(config)) {
             String tagName = node.getTagName();
             if (TAG_DOMAIN.equals(tagName)) {
                 if (!isDomainConfig) {
@@ -326,7 +327,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
 
         int pinElementCount = 0;
         boolean foundTyposInPin = false;
-        for (Element child : LintUtils.getChildren(node)) {
+        for (Element child : XmlUtils.getSubTags(node)) {
             String tagName = child.getTagName();
             if (TAG_PIN.equals(tagName)) {
                 pinElementCount += 1;
@@ -385,7 +386,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     }
 
     private static void handleTrustAnchors(XmlContext context, Element node) {
-        for (Element child : LintUtils.getChildren(node)) {
+        for (Element child : XmlUtils.getSubTags(node)) {
             if (TAG_CERTIFICATES.equals(child.getTagName())) {
                 if (!child.hasAttribute(ATTR_SRC)) {
                     checkForTyposInAttributes(context, child, ATTR_SRC, true);

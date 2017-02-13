@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
@@ -72,8 +71,8 @@ public class DexLimitTest {
     }
 
     @Before
-    public void disableDexInProcess() throws IOException {
-        if (mDexInProcess) {
+    public void disableDexInProcess() throws Exception {
+        if (!mDexInProcess) {
             DexInProcessHelper.disableDexInProcess(mProject.getBuildFile());
         }
     }

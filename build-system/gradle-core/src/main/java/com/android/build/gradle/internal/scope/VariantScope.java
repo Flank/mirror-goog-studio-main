@@ -124,9 +124,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     Iterable<File> getJavaOutputs();
 
     @NonNull
-    File getJavaDependencyCache();
-
-    @NonNull
     File getPreDexOutputDir();
 
     @NonNull
@@ -204,6 +201,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getJavaResourcesDestinationDir();
+
+    @NonNull
+    File getGeneratedJavaResourcesDir();
 
     @NonNull
     File getRClassSourceOutputDir();

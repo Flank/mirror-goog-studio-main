@@ -18,7 +18,7 @@ java_library(
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
     ],
 )

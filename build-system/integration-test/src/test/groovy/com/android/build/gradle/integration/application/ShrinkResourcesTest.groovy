@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Apk
@@ -41,16 +42,15 @@ import java.util.zip.ZipFile
 
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY
 import static com.android.testutils.truth.MoreTruth.assertThatZip
+import static com.google.common.truth.Truth.assertThat
 import static java.io.File.separator
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
-
 /**
  * Assemble tests for shrink.
  */
 
-@Ignore("Flaky: http://b.android.com/224406")
 @CompileStatic
 class ShrinkResourcesTest {
 
@@ -65,6 +65,19 @@ class ShrinkResourcesTest {
     }
 
     @Test
+    public void "minifyEnabled is required"() throws Exception {
+        TestFileUtils.appendToFile(
+                project.buildFile,
+                "android.buildTypes.debug.shrinkResources = true")
+
+        AndroidProject model =
+                project.model().ignoreSyncIssues().getMulti().getModelMap().get(":")
+        assertThat(model.syncIssues).hasSize(1)
+        assertThat(model.syncIssues.first().message).contains("requires minifyEnabled")
+    }
+
+    @Test
+    @Ignore("Flaky: http://b.android.com/224406")
     void "check shrink resources"() {
         project.execute("clean", "assembleRelease", "assembleDebug", "assembleProguardNoShrink")
 

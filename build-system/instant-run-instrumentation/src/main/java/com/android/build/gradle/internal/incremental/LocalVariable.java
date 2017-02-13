@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-
 import org.objectweb.asm.Type;
 
 /**

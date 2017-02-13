@@ -16,6 +16,11 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static org.gradle.internal.logging.text.StyledTextOutput.Style.Description;
+import static org.gradle.internal.logging.text.StyledTextOutput.Style.Failure;
+import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier;
+import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.model.SigningConfig;
@@ -24,12 +29,6 @@ import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.internal.logging.text.StyledTextOutput;
-import org.gradle.internal.logging.text.StyledTextOutputFactory;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -42,11 +41,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static org.gradle.internal.logging.text.StyledTextOutput.Style.Description;
-import static org.gradle.internal.logging.text.StyledTextOutput.Style.Failure;
-import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier;
-import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.internal.logging.text.StyledTextOutput;
+import org.gradle.internal.logging.text.StyledTextOutputFactory;
 
 /**
  * Report tasks displaying the signing information for all variants.

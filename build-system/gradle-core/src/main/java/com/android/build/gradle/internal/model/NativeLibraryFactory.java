@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.NativeLibrary;
-
 import java.util.Optional;
 
 /**

@@ -26,11 +26,9 @@ import static org.junit.Assert.assertNotNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,7 +44,7 @@ public class WearSimpleTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         File mainAppBuildGradle = project.file("main/build.gradle");
 
         TestFileUtils.appendToFile(mainAppBuildGradle,
@@ -61,7 +59,7 @@ public class WearSimpleTest {
     }
 
     @Test
-    public void checkDefaultEmbedding() throws IOException, ProcessException {
+    public void checkDefaultEmbedding() throws Exception {
         project.execute("clean", ":main:assemble");
 
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
@@ -96,7 +94,7 @@ public class WearSimpleTest {
     }
 
     @Test
-    public void checkWearReleaseNotBuildWithMainDebug() {
+    public void checkWearReleaseNotBuildWithMainDebug() throws Exception {
         GradleBuildResult result = project.executor().run("clean", ":main:assembleDebug");
         assertThat(result.getTask(":wear:packageRelease")).wasNotExecuted();
     }

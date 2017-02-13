@@ -16,9 +16,6 @@
 package com.android.tools.profiler.support.network;
 
 import com.android.tools.profiler.support.util.ByteBatcher;
-
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,9 +31,10 @@ final class HttpTracker {
     /**
      * Wraps an InputStream to enable the network profiler capturing of response body
      */
-    private static final class InputStreamTracker extends FilterInputStream {
+    private static final class InputStreamTracker extends InputStream {
 
         private Connection myConnectionTracker;
+        private InputStream myWrapped;
         private boolean myFirstRead = true;
 
         private final ByteBatcher mByteBatcher = new ByteBatcher(new ByteBatcher.FlushReceiver() {
@@ -47,28 +45,33 @@ final class HttpTracker {
         });
 
         InputStreamTracker(InputStream wrapped, Connection connectionTracker) {
-            super(wrapped);
+            myWrapped = wrapped;
             myConnectionTracker = connectionTracker;
         }
 
         @Override
+        public int available() throws IOException {
+            return myWrapped.available();
+        }
+
+        @Override
         public boolean markSupported() {
-            return false;
+            return myWrapped.markSupported();
         }
 
         @Override
         public void mark(int readLimit) {
-            throw new UnsupportedOperationException("mark() not supported");
+            myWrapped.mark(readLimit);
         }
 
         @Override
         public void reset() throws IOException {
-            throw new UnsupportedOperationException("reset() not supported");
+            myWrapped.reset();
         }
 
         @Override
         public void close() throws IOException {
-            super.close();
+            myWrapped.close();
             mByteBatcher.flush();
             onClose(myConnectionTracker.myId);
         }
@@ -85,7 +88,7 @@ final class HttpTracker {
                 myFirstRead = false;
             }
 
-            int b = super.read();
+            int b = myWrapped.read();
             mByteBatcher.addByte(b);
             return b;
         }
@@ -97,7 +100,7 @@ final class HttpTracker {
                 myFirstRead = false;
             }
 
-            int bytesRead = super.read(buffer, byteOffset, byteCount);
+            int bytesRead = myWrapped.read(buffer, byteOffset, byteCount);
             mByteBatcher.addBytes(buffer, byteOffset, bytesRead);
             return bytesRead;
         }
@@ -108,7 +111,7 @@ final class HttpTracker {
                 onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
-            return super.skip(byteCount);
+            return myWrapped.skip(byteCount);
         }
 
         private native void onClose(long id);
@@ -119,25 +122,26 @@ final class HttpTracker {
     /**
      * Wraps an OutputStream to enable the network profiler capturing of request body
      */
-    private static final class OutputStreamTracker extends FilterOutputStream {
+    private static final class OutputStreamTracker extends OutputStream {
 
         private Connection myConnectionTracker;
+        private OutputStream myWrapped;
         private boolean myFirstWrite = true;
 
         OutputStreamTracker(OutputStream wrapped, Connection connectionTracker) {
-            super(wrapped);
+            myWrapped = wrapped;
             myConnectionTracker = connectionTracker;
         }
 
         @Override
         public void close() throws IOException {
-            super.close();
+            myWrapped.close();
             onClose(myConnectionTracker.myId);
         }
 
         @Override
         public void flush() throws IOException {
-            super.flush();
+            myWrapped.flush();
         }
 
         @Override
@@ -146,7 +150,7 @@ final class HttpTracker {
                 onWriteBegin(myConnectionTracker.myId);
                 myFirstWrite = false;
             }
-            super.write(buffer, offset, length);
+            myWrapped.write(buffer, offset, length);
         }
 
         @Override
@@ -155,15 +159,11 @@ final class HttpTracker {
                 onWriteBegin(myConnectionTracker.myId);
                 myFirstWrite = false;
             }
-            super.write(oneByte);
+            myWrapped.write(oneByte);
         }
 
         @Override
         public void write(byte[] buffer) throws IOException {
-            if (myFirstWrite) {
-                onWriteBegin(myConnectionTracker.myId);
-                myFirstWrite = false;
-            }
             write(buffer, 0, buffer.length);
         }
 

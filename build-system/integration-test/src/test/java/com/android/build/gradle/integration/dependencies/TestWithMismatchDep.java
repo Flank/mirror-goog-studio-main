@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +38,7 @@ public class TestWithMismatchDep {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -55,7 +54,7 @@ public class TestWithMismatchDep {
                     + " See http://g.co/androidstudio/app-test-app-conflict for details.";
 
     @Test
-    public void testMismatchDependencyErrorIsInTheModel() {
+    public void testMismatchDependencyErrorIsInTheModel() throws Exception {
         // Query the model to get the mismatch dep sync error.
         ModelContainer<AndroidProject> model = project.model().ignoreSyncIssues().getSingle();
 
@@ -67,7 +66,7 @@ public class TestWithMismatchDep {
     }
 
     @Test
-    public void testMismatchDependencyBreaksTestBuild() {
+    public void testMismatchDependencyBreaksTestBuild() throws Exception {
         // want to check the log, so can't use Junit's expected exception mechanism.
 
         GradleBuildResult result =
@@ -89,7 +88,7 @@ public class TestWithMismatchDep {
     }
 
     @Test
-    public void testMismatchDependencyDoesNotBreakDebugBuild() {
+    public void testMismatchDependencyDoesNotBreakDebugBuild() throws Exception {
         GradleBuildResult result = project.executor().run("assembleDebug");
 
         // check there is a log output
@@ -100,7 +99,7 @@ public class TestWithMismatchDep {
     }
 
     @Test
-    public void testMismatchDependencyCanRunNonBuildTasks() {
+    public void testMismatchDependencyCanRunNonBuildTasks() throws Exception {
         // it's important to be able to run the dependencies task to
         // investigate dependency issues.
         GradleBuildResult result = project.executor().run("dependencies");

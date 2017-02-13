@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.wireless.android.sdk.stats.InstantRunArtifact;
 import com.google.wireless.android.sdk.stats.InstantRunStatus;
-import org.jetbrains.annotations.Nullable;
 
 public class InstantRunAnalyticsHelper {
 

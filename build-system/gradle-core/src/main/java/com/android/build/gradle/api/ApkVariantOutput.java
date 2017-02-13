@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.ZipAlign;
-
 import java.io.File;
 
 /**

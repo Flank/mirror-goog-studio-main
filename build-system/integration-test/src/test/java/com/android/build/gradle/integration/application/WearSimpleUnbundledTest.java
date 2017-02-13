@@ -20,18 +20,14 @@ import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_RAW;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getFailureMessage;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
-import org.gradle.api.GradleException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,7 +43,7 @@ public class WearSimpleUnbundledTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         File mainAppBuildGradle = project.file("main/build.gradle");
 
         TestFileUtils.appendToFile(mainAppBuildGradle,
@@ -64,7 +60,7 @@ public class WearSimpleUnbundledTest {
     }
 
     @Test
-    public void checkDefaultNonEmbedding() throws IOException {
+    public void checkDefaultNonEmbedding() throws Exception {
         project.execute("clean", ":main:assemble");
 
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
@@ -76,22 +72,5 @@ public class WearSimpleUnbundledTest {
             Apk fullApk = project.getSubproject("main").getApk(apkName);
             assertThat(fullApk).doesNotContain(embeddedApkPath);
         }
-    }
-
-    @Test
-    public void checErrorOnUnbundledFlagPlusDependency() throws IOException {
-        File mainAppBuildGradle = project.file("main/build.gradle");
-
-        TestFileUtils.appendToFile(mainAppBuildGradle,
-                "dependencies {\n"
-                + "  wearApp project(':wear')\n"
-                + "}\n");
-
-        GradleBuildResult result = project.executor().expectFailure().run(
-                "clean", ":main:assembleDebug");
-
-        //noinspection ThrowableResultOfMethodCallIgnored
-        assertThat(getFailureMessage(result.getException(), GradleException.class)).contains(
-                "Wear app unbundling is turned on but a dependency on a wear App has been found for variant debug");
     }
 }

@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.builder.model.JavaCompileOptions;
-
 import java.io.Serializable;
 import java.util.Objects;
 

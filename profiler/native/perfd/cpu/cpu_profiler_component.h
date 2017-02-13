@@ -27,15 +27,15 @@ namespace profiler {
 
 class CpuProfilerComponent final : public ProfilerComponent {
  private:
-  // Deafult collection interval is 100000 microseconds, i.e., 0.1 second.
+  // Default collection interval is 100000 microseconds, i.e., 0.1 second.
   static const int64_t kDefaultCollectionIntervalUs = 100000;
 
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  explicit CpuProfilerComponent(const Daemon& daemon)
-      : clock_(daemon.clock()), usage_sampler_(daemon, &cache_),
-        thread_monitor_(daemon, &cache_)
-         {
+  explicit CpuProfilerComponent(Daemon::Utilities* utilities)
+      : clock_(utilities->clock()),
+        usage_sampler_(utilities, &cache_),
+        thread_monitor_(utilities, &cache_) {
     collector_.Start();
   }
 
@@ -53,7 +53,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
   CpuCollector collector_{kDefaultCollectionIntervalUs, &usage_sampler_,
                           &thread_monitor_};
   CpuServiceImpl public_service_{clock_, &cache_, &usage_sampler_,
-                                         &thread_monitor_};
+                                 &thread_monitor_};
 };
 
 }  // namespace profiler

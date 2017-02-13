@@ -28,7 +28,7 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
-
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 
@@ -46,18 +46,17 @@ public class DexWrapper {
             @NonNull DexProcessBuilder processBuilder,
             @NonNull DexOptions dexOptions,
             @NonNull ProcessOutputHandler outputHandler) throws IOException, ProcessException {
-        ProcessOutput output = outputHandler.createOutput();
-        int res;
-        try {
+        ProcessOutput output = null;
+        try (Closeable ignored = output = outputHandler.createOutput()) {
             DxContext dxContext = new DxContext(output.getStandardOutput(), output.getErrorOutput());
             Main.Arguments args = buildArguments(processBuilder, dexOptions, dxContext);
-            res = new Main(dxContext).run(args);
-        } finally {
-            output.close();
-        }
 
-        outputHandler.handleOutput(output);
-        return new DexProcessResult(res);
+            return new DexProcessResult(new Main(dxContext).runDx(args));
+        } finally {
+            if (output != null) {
+                outputHandler.handleOutput(output);
+            }
+        }
     }
 
     @NonNull

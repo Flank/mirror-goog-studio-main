@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -39,7 +38,7 @@ public class TestWithJavaLibDepTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getBuildFile(),
@@ -66,7 +65,7 @@ public class TestWithJavaLibDepTest {
     }
 
     @Test
-    public void checkBuild() {
+    public void checkBuild() throws Exception {
         project.execute("app:assembleDebugAndroidTest");
     }
 }

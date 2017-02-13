@@ -20,6 +20,7 @@
 
 #include "proto/internal_network.grpc.pb.h"
 
+#include "perfd/daemon.h"
 #include "perfd/network/network_cache.h"
 
 namespace profiler {
@@ -27,7 +28,8 @@ namespace profiler {
 class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
-  explicit InternalNetworkServiceImpl(NetworkCache *network_cache);
+  InternalNetworkServiceImpl(Daemon::Utilities *utilities,
+                             NetworkCache *network_cache);
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,
                                 const proto::HttpDataRequest *httpData,
@@ -41,12 +43,16 @@ class InternalNetworkServiceImpl final
                              const proto::HttpEventRequest *httpEvent,
                              proto::EmptyNetworkReply *reply) override;
 
-  grpc::Status SendHttpResponse(
-      grpc::ServerContext *context,
-      const proto::HttpResponseRequest *httpResponse,
-      proto::EmptyNetworkReply *reply) override;
+  grpc::Status SendHttpRequest(grpc::ServerContext *context,
+                               const proto::HttpRequestRequest *httpRequest,
+                               proto::EmptyNetworkReply *reply) override;
+
+  grpc::Status SendHttpResponse(grpc::ServerContext *context,
+                                const proto::HttpResponseRequest *httpResponse,
+                                proto::EmptyNetworkReply *reply) override;
 
  private:
+  FileCache &file_cache_;
   NetworkCache &network_cache_;
 };
 

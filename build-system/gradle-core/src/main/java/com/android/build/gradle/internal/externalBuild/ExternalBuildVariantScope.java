@@ -30,7 +30,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;

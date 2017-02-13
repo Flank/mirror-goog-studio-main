@@ -85,6 +85,10 @@ import java.util.Set;
  *          informational 'StopShip'
  *          // Use (or create) a baseline file for issues that should not be reported
  *          baseline file("lint-baseline.xml")
+ *          // Normally most lint checks are not run on test sources (except the checks
+ *          // dedicated to looking for mistakes in unit or instrumentation tests.) You can
+ *          // turn on normal lint checking in all sources with the following:
+ *          checkTestSources true
  *     }
  * }
  * </pre>
@@ -141,6 +145,17 @@ public interface LintOptions {
 
     /** Returns whether lint should treat all warnings as errors */
     boolean isWarningsAsErrors();
+
+    /**
+     * Returns whether lint should run all checks on test sources, instead of just the
+     * lint checks that have been specifically written to include tests (e.g. checks
+     * looking for specific test errors, or checks that need to consider testing code
+     * such as the unused resource detector)
+     *
+     * @return true to check tests, defaults to false
+     * @since 2.4
+     */
+    boolean isCheckTestSources();
 
     /** Returns whether lint should include explanations for issue errors. (Note that
      * HTML and XML reports intentionally do this unconditionally, ignoring this setting.) */

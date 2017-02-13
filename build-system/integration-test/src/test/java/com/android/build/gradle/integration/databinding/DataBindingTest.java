@@ -21,11 +21,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Joiner;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -90,7 +88,7 @@ public class DataBindingTest {
     }
 
     @Test
-    public void checkApkContainsDataBindingClasses() throws IOException, ProcessException {
+    public void checkApkContainsDataBindingClasses() throws Exception {
         project.setBuildFile(buildFile);
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getTask(":dataBindingProcessLayoutsDebug")).wasExecuted();

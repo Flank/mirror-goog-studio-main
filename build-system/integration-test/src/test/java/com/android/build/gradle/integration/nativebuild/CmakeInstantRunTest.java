@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -34,7 +33,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -58,7 +56,7 @@ public class CmakeInstantRunTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getBuildFile(),
                 new BuildScriptGenerator(
@@ -84,7 +82,7 @@ public class CmakeInstantRunTest {
     @Test
     public void checkHotSwapBuild() throws Exception {
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -102,7 +100,7 @@ public class CmakeInstantRunTest {
                             "tv.setText(\"Hello from Java\")");
 
                     sProject.executor()
-                            .withInstantRun(23, ColdswapMode.DEFAULT)
+                            .withInstantRun(23)
                             .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -114,7 +112,7 @@ public class CmakeInstantRunTest {
     @Test
     public void checkFullBuildIsTriggered() throws Exception {
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -126,7 +124,7 @@ public class CmakeInstantRunTest {
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
         sProject.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT)
+                .withInstantRun(23)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

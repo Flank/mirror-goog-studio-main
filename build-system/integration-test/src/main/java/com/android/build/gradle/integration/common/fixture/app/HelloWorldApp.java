@@ -35,107 +35,122 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
 
     public static final String APP_ID = "com.example.helloworld";
 
-    private static final TestSourceFile javaSource = new TestSourceFile(
-            "src/main/java/com/example/helloworld", "HelloWorld.java",
-            "package com.example.helloworld;\n" +
-            "\n" +
-            "import android.app.Activity;\n" +
-            "import android.os.Bundle;\n" +
-            "\n" +
-            "public class HelloWorld extends Activity {\n" +
-            "    /** Called when the activity is first created. */\n" +
-            "    @Override\n" +
-            "    public void onCreate(Bundle savedInstanceState) {\n" +
-            "        super.onCreate(savedInstanceState);\n" +
-            "        setContentView(R.layout.main);\n" +
-            "        // onCreate\n" +
-            "    }\n" +
-            "}\n");
-
-    private static final TestSourceFile resValuesSource = new TestSourceFile(
-            "src/main/res/values",
-            "strings.xml",
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<resources>\n" +
-            "    <string name=\"app_name\">HelloWorld</string>\n" +
-            "</resources>\n");
-
-    private static final TestSourceFile resLayoutSource = new TestSourceFile(
-            "src/main/res/layout",
-            "main.xml",
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-            "    android:orientation=\"vertical\"\n" +
-            "    android:layout_width=\"fill_parent\"\n" +
-            "    android:layout_height=\"fill_parent\"\n" +
-            "    >\n" +
-            "<TextView\n" +
-            "    android:layout_width=\"fill_parent\"\n" +
-            "    android:layout_height=\"wrap_content\"\n" +
-            "    android:text=\"hello world!\"\n" +
-            "    android:id=\"@+id/text\"\n" +
-            "    />\n" +
-            "</LinearLayout>\n");
-
-    private static final TestSourceFile manifest = new TestSourceFile(
-            "src/main",
-            "AndroidManifest.xml",
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-            "      package=\"com.example.helloworld\"\n" +
-            "      android:versionCode=\"1\"\n" +
-            "      android:versionName=\"1.0\">\n" +
-            "\n" +
-            "    <uses-sdk android:minSdkVersion=\"3\" />\n" +
-            "    <application android:label=\"@string/app_name\">\n" +
-            "        <activity android:name=\".HelloWorld\"\n" +
-            "                  android:label=\"@string/app_name\">\n" +
-            "            <intent-filter>\n" +
-            "                <action android:name=\"android.intent.action.MAIN\" />\n" +
-            "                <category android:name=\"android.intent.category.LAUNCHER\" />\n" +
-            "            </intent-filter>\n" +
-            "        </activity>\n" +
-            "    </application>\n" +
-            "</manifest>\n");
-
-
-    private static final TestSourceFile androidTestSource = new TestSourceFile(
-            "src/androidTest/java/com/example/helloworld",
-            "HelloWorldTest.java",
-            "package com.example.helloworld;\n" +
-            "\n" +
-            "import android.test.ActivityInstrumentationTestCase2;\n" +
-            "import android.test.suitebuilder.annotation.MediumTest;\n" +
-            "import android.widget.TextView;\n" +
-            "\n" +
-            "public class HelloWorldTest extends ActivityInstrumentationTestCase2<HelloWorld> {\n" +
-            "    private TextView mTextView;\n" +
-            "\n" +
-            "    public HelloWorldTest() {\n" +
-            "        super(\"com.example.helloworld\", HelloWorld.class);\n" +
-            "    }\n" +
-            "\n" +
-            "    @Override\n" +
-            "    protected void setUp() throws Exception {\n" +
-            "        super.setUp();\n" +
-            "        final HelloWorld a = getActivity();\n" +
-            "        // ensure a valid handle to the activity has been returned\n" +
-            "        assertNotNull(a);\n" +
-            "        mTextView = (TextView) a.findViewById(R.id.text);\n" +
-            "\n" +
-            "    }\n" +
-            "\n" +
-            "    @MediumTest\n" +
-            "    public void testPreconditions() {\n" +
-            "        assertNotNull(mTextView);\n" +
-            "    }\n" +
-            "}\n");
-
-    private HelloWorldApp() {
-        addFiles(javaSource, resValuesSource, resLayoutSource, manifest, androidTestSource);
+    protected TestSourceFile getSource() {
+        return new TestSourceFile(
+                "src/main/java/com/example/helloworld",
+                "HelloWorld.java",
+                "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "public class HelloWorld extends Activity {\n"
+                        + "    /** Called when the activity is first created. */\n"
+                        + "    @Override\n"
+                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "        setContentView(R.layout.main);\n"
+                        + "        // onCreate\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
-    private HelloWorldApp(String plugin) {
+    protected TestSourceFile getResValuesSource() {
+        return new TestSourceFile(
+                "src/main/res/values",
+                "strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <string name=\"app_name\">HelloWorld</string>\n"
+                        + "</resources>\n");
+    }
+
+    protected TestSourceFile getResLayoutSource() {
+        return new TestSourceFile(
+                "src/main/res/layout",
+                "main.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:orientation=\"vertical\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    >\n"
+                        + "<TextView\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"wrap_content\"\n"
+                        + "    android:text=\"hello world!\"\n"
+                        + "    android:id=\"@+id/text\"\n"
+                        + "    />\n"
+                        + "</LinearLayout>\n");
+    }
+
+    protected TestSourceFile getManifest() {
+        return new TestSourceFile(
+                "src/main",
+                "AndroidManifest.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "      package=\"com.example.helloworld\"\n"
+                        + "      android:versionCode=\"1\"\n"
+                        + "      android:versionName=\"1.0\">\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"3\" />\n"
+                        + "    <application android:label=\"@string/app_name\">\n"
+                        + "        <activity android:name=\".HelloWorld\"\n"
+                        + "                  android:label=\"@string/app_name\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "</manifest>\n");
+    }
+
+    protected TestSourceFile getAndroidTestSource() {
+        return new TestSourceFile(
+                "src/androidTest/java/com/example/helloworld",
+                "HelloWorldTest.java",
+                "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.test.ActivityInstrumentationTestCase2;\n"
+                        + "import android.test.suitebuilder.annotation.MediumTest;\n"
+                        + "import android.widget.TextView;\n"
+                        + "\n"
+                        + "public class HelloWorldTest extends ActivityInstrumentationTestCase2<HelloWorld> {\n"
+                        + "    private TextView mTextView;\n"
+                        + "\n"
+                        + "    public HelloWorldTest() {\n"
+                        + "        super(\"com.example.helloworld\", HelloWorld.class);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    protected void setUp() throws Exception {\n"
+                        + "        super.setUp();\n"
+                        + "        final HelloWorld a = getActivity();\n"
+                        + "        // ensure a valid handle to the activity has been returned\n"
+                        + "        assertNotNull(a);\n"
+                        + "        mTextView = (TextView) a.findViewById(R.id.text);\n"
+                        + "\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @MediumTest\n"
+                        + "    public void testPreconditions() {\n"
+                        + "        assertNotNull(mTextView);\n"
+                        + "    }\n"
+                        + "}\n");
+    }
+
+    protected HelloWorldApp() {
+        addFiles(
+                getSource(),
+                getResValuesSource(),
+                getResLayoutSource(),
+                getManifest(),
+                getAndroidTestSource());
+    }
+
+    protected HelloWorldApp(String plugin) {
         this();
 
         TestSourceFile buildFile = new TestSourceFile("", "build.gradle", "" +

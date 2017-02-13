@@ -20,6 +20,7 @@ import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import gnu.trove.TObjectProcedure;
 
 import java.util.List;
@@ -71,14 +72,12 @@ public abstract class DominatorsBase {
      */
     public void computeRetainedSizes() {
         // We only update the retained sizes of objects in the dominator tree (i.e. reachable).
-        for (Instance node : mSnapshot.getReachableInstances()) {
-            int heapIndex = mSnapshot.getHeapIndex(node.getHeap());
-            // Add the size of the current node to the retained size of every dominator up to the
-            // root, in the same heap.
-            for (Instance dom = node.getImmediateDominator(); dom != Snapshot.SENTINEL_ROOT;
-                    dom = dom.getImmediateDominator()) {
-                assert dom != null;
-                dom.addRetainedSize(heapIndex, node.getSize());
+        // This loop relies on the fact that getReachableInstances returns the
+        // nodes in topological order.
+        for (Instance node : Lists.reverse(mSnapshot.getReachableInstances())) {
+            Instance dom = node.getImmediateDominator();
+            if (dom != Snapshot.SENTINEL_ROOT) {
+                dom.addRetainedSizes(node);
             }
         }
     }

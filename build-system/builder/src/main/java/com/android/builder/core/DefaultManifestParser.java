@@ -16,63 +16,67 @@
 
 package com.android.builder.core;
 
+import static com.android.SdkConstants.ATTR_EXTRACT_NATIVE_LIBS;
+import static com.android.SdkConstants.ATTR_FUNCTIONAL_TEST;
+import static com.android.SdkConstants.ATTR_HANDLE_PROFILING;
+import static com.android.SdkConstants.ATTR_LABEL;
+import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.SdkConstants.ATTR_TARGET_PACKAGE;
+import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.SdkConstants.ATTR_VERSION_CODE;
+import static com.android.SdkConstants.ATTR_VERSION_NAME;
+import static com.android.SdkConstants.NS_RESOURCES;
+import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_INSTRUMENTATION;
+import static com.android.SdkConstants.TAG_MANIFEST;
+import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.builder.core.DefaultManifestParser.Attribute.APP_EXTRACT_NATIVE_LIBS;
+import static com.android.builder.core.DefaultManifestParser.Attribute.INST_FUNCTIONAL_TEST;
+import static com.android.builder.core.DefaultManifestParser.Attribute.INST_HANDLE_PROF;
+import static com.android.builder.core.DefaultManifestParser.Attribute.INST_LABEL;
+import static com.android.builder.core.DefaultManifestParser.Attribute.INST_NAME;
+import static com.android.builder.core.DefaultManifestParser.Attribute.INST_TARGET_PKG;
+import static com.android.builder.core.DefaultManifestParser.Attribute.MIN_SDK_VERSION;
+import static com.android.builder.core.DefaultManifestParser.Attribute.PACKAGE;
+import static com.android.builder.core.DefaultManifestParser.Attribute.SPLIT;
+import static com.android.builder.core.DefaultManifestParser.Attribute.TARGET_SDK_VERSION;
+import static com.android.builder.core.DefaultManifestParser.Attribute.VERSION_CODE;
+import static com.android.builder.core.DefaultManifestParser.Attribute.VERSION_NAME;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.manifmerger.PlaceholderHandler;
-import com.android.utils.XmlUtils;
-import com.android.xml.AndroidManifest;
-import com.android.xml.AndroidXPathFactory;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Implementation of the {@link ManifestAttributeSupplier}. The parser is build per manifest file,
- * and all values are extracted when the instance of this class is built.
+ * Implementation of the {@link ManifestAttributeSupplier}.
+ *
+ * <p>This is meant to be a quick parser to create the building model.
  */
 public class DefaultManifestParser implements ManifestAttributeSupplier {
 
+    @NonNull private final File manifestFile;
+
     @NonNull
-    private final Map<String, String> attributeValues;
+    private final Map<Attribute, String> attributeValues = Maps.newEnumMap(Attribute.class);
+
+    private boolean initialized = false;
 
     /**
      * Builds instance of the parser, and parses the supplied file.
      */
     public DefaultManifestParser(@NonNull File manifestFile) {
-        if (!manifestFile.exists()) {
-            attributeValues = Maps.newHashMap();
-        } else {
-            Set<String> xPaths =
-                    Sets.newHashSet(
-                            AndroidManifest.getPackageXPath(),
-                            AndroidManifest.getSplitXPath(),
-                            AndroidManifest.getVersionNameXPath(),
-                            AndroidManifest.getVersionCodeXPath(),
-                            AndroidManifest.getMinSdkVersionXPath(),
-                            AndroidManifest.getTargetSdkVersionXPath(),
-                            AndroidManifest.getInstrumentationRunnerXPath(),
-                            AndroidManifest.getTestTargetPackageXPath(),
-                            AndroidManifest.getTestFunctionalTestXPath(),
-                            AndroidManifest.getTestHandleProfilingXPath(),
-                            AndroidManifest.getTestLabelXPath(),
-                            AndroidManifest.getExtractNativeLibsXPath());
-
-            attributeValues = getStringValues(manifestFile, xPaths);
-        }
+        this.manifestFile = manifestFile;
     }
 
     /**
@@ -81,7 +85,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getPackage() {
-        return attributeValues.get(AndroidManifest.getPackageXPath());
+        init();
+        return attributeValues.get(PACKAGE);
     }
 
     /**
@@ -90,7 +95,9 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getSplit() {
-        return attributeValues.get(AndroidManifest.getSplitXPath());
+        init();
+
+        return attributeValues.get(SPLIT);
     }
 
     /**
@@ -99,7 +106,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getVersionName() {
-        return attributeValues.get(AndroidManifest.getVersionNameXPath());
+        init();
+        return attributeValues.get(VERSION_NAME);
     }
 
     /**
@@ -107,7 +115,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
      */
     @Override
     public int getVersionCode() {
-        String versionCode = attributeValues.get(AndroidManifest.getVersionCodeXPath());
+        init();
+        String versionCode = attributeValues.get(VERSION_CODE);
         return (int) parseIntValueOrDefault(versionCode, -1, -1);
     }
 
@@ -117,7 +126,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Override
     @NonNull
     public Object getMinSdkVersion() {
-        String minSdkVersion = attributeValues.get(AndroidManifest.getMinSdkVersionXPath());
+        init();
+        String minSdkVersion = attributeValues.get(MIN_SDK_VERSION);
         return parseIntValueOrDefault(minSdkVersion, minSdkVersion, 1);
     }
 
@@ -127,7 +137,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Override
     @NonNull
     public Object getTargetSdkVersion() {
-        String targetSdkVersion = attributeValues.get(AndroidManifest.getTargetSdkVersionXPath());
+        init();
+        String targetSdkVersion = attributeValues.get(TARGET_SDK_VERSION);
         return parseIntValueOrDefault(targetSdkVersion, targetSdkVersion, -1);
     }
 
@@ -137,7 +148,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getInstrumentationRunner() {
-        return attributeValues.get(AndroidManifest.getInstrumentationRunnerXPath());
+        init();
+        return attributeValues.get(INST_NAME);
     }
 
     /**
@@ -146,7 +158,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getTargetPackage() {
-        return attributeValues.get(AndroidManifest.getTestTargetPackageXPath());
+        init();
+        return attributeValues.get(INST_TARGET_PKG);
     }
 
     /**
@@ -155,7 +168,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public Boolean getFunctionalTest() {
-        String functionalTest = attributeValues.get(AndroidManifest.getTestFunctionalTestXPath());
+        init();
+        String functionalTest = attributeValues.get(INST_FUNCTIONAL_TEST);
         return parseBoolean(functionalTest);
     }
 
@@ -165,7 +179,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public Boolean getHandleProfiling() {
-        String handleProfiling = attributeValues.get(AndroidManifest.getTestHandleProfilingXPath());
+        init();
+        String handleProfiling = attributeValues.get(INST_HANDLE_PROF);
         return parseBoolean(handleProfiling);
     }
 
@@ -175,13 +190,15 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @Nullable
     @Override
     public String getTestLabel() {
-        return attributeValues.get(AndroidManifest.getTestLabelXPath());
+        init();
+        return attributeValues.get(INST_LABEL);
     }
 
     @Nullable
     @Override
     public Boolean getExtractNativeLibs() {
-        String extractNativeLibs = attributeValues.get(AndroidManifest.getExtractNativeLibsXPath());
+        init();
+        String extractNativeLibs = attributeValues.get(Attribute.APP_EXTRACT_NATIVE_LIBS);
         return parseBoolean(extractNativeLibs);
     }
 
@@ -216,53 +233,92 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
         }
     }
 
-    /**
-     * Reads the file using the specified XPath expression values. It produces a map containing
-     * XPath expressions as keys, and read value as the map entry value (in case the value is not
-     * found, map entry value will be {@code null}).
-     *
-     * @param file   file to be read from
-     * @param xPaths {@link Set} of XPath expressions that we are matching against in the file
-     * @return map containing the supplied XPath expressions as keys, and read values as entry
-     * values
-     * @throws DefaultManifestParserException
-     */
-    @NonNull
-    private static Map<String, String> getStringValues(
-            @NonNull File file, @NonNull Set<String> xPaths) {
+    enum Attribute {
+        SPLIT,
+        PACKAGE,
+        VERSION_CODE,
+        VERSION_NAME,
+        INST_LABEL,
+        INST_FUNCTIONAL_TEST,
+        INST_NAME,
+        INST_HANDLE_PROF,
+        INST_TARGET_PKG,
+        MIN_SDK_VERSION,
+        TARGET_SDK_VERSION,
+        APP_EXTRACT_NATIVE_LIBS;
+    }
 
-        try {
-            Document document = XmlUtils.parseUtfXmlFile(file, true);
+    /** Parse the file and store the result in a map. */
+    private void init() {
+        if (!initialized && manifestFile.isFile()) {
+            DefaultHandler handler =
+                    new DefaultHandler() {
+                        @Override
+                        public void startElement(
+                                String uri, String localName, String qName, Attributes attributes)
+                                throws SAXException {
+                            if (uri == null || uri.isEmpty()) {
+                                if (TAG_MANIFEST.equals(localName)) {
+                                    putValue(SPLIT, attributes.getValue("", ATTR_SPLIT));
+                                    putValue(PACKAGE, attributes.getValue("", ATTR_PACKAGE));
+                                    putValue(
+                                            VERSION_CODE,
+                                            attributes.getValue(NS_RESOURCES, ATTR_VERSION_CODE));
+                                    putValue(
+                                            VERSION_NAME,
+                                            attributes.getValue(NS_RESOURCES, ATTR_VERSION_NAME));
+                                } else if (TAG_INSTRUMENTATION.equals(localName)) {
+                                    putValue(
+                                            INST_LABEL,
+                                            attributes.getValue(NS_RESOURCES, ATTR_LABEL));
+                                    putValue(
+                                            INST_FUNCTIONAL_TEST,
+                                            attributes.getValue(
+                                                    NS_RESOURCES, ATTR_FUNCTIONAL_TEST));
+                                    putValue(
+                                            INST_NAME,
+                                            attributes.getValue(NS_RESOURCES, ATTR_NAME));
+                                    putValue(
+                                            INST_HANDLE_PROF,
+                                            attributes.getValue(
+                                                    NS_RESOURCES, ATTR_HANDLE_PROFILING));
+                                    putValue(
+                                            INST_TARGET_PKG,
+                                            attributes.getValue(NS_RESOURCES, ATTR_TARGET_PACKAGE));
+                                } else if (TAG_USES_SDK.equals(localName)) {
+                                    putValue(
+                                            MIN_SDK_VERSION,
+                                            attributes.getValue(
+                                                    NS_RESOURCES, ATTR_MIN_SDK_VERSION));
+                                    putValue(
+                                            TARGET_SDK_VERSION,
+                                            attributes.getValue(
+                                                    NS_RESOURCES, ATTR_TARGET_SDK_VERSION));
+                                } else if (TAG_APPLICATION.equals(localName)) {
+                                    putValue(
+                                            APP_EXTRACT_NATIVE_LIBS,
+                                            attributes.getValue(
+                                                    NS_RESOURCES, ATTR_EXTRACT_NATIVE_LIBS));
+                                }
+                            }
+                        }
+                    };
 
-            Map<String, String> pathsToVals = Maps.newHashMap();
-
-            for (String path : xPaths) {
-                XPath xpath = AndroidXPathFactory.newXPath();
-                Node node = (Node) xpath.evaluate(path, document, XPathConstants.NODE);
-
-                String nodeValue = null;
-                if (node != null && !Strings.isNullOrEmpty(node.getNodeValue())
-                        && !PlaceholderHandler.isPlaceHolder(node.getNodeValue())) {
-                    // if the node's value exists, and is not a placeholder, get the value
-                    nodeValue = node.getNodeValue();
-                }
-                pathsToVals.put(path, nodeValue);
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            try {
+                SAXParser saxParser = factory.newSAXParser();
+                saxParser.parse(manifestFile, handler);
+                initialized = true;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-            return pathsToVals;
-        } catch (XPathExpressionException | SAXException | ParserConfigurationException
-                | IOException e) {
-            throw new DefaultManifestParserException(file, e);
         }
     }
 
-    /**
-     * Runtime exception thrown when something went bad with the manifest parsing
-     */
-    private static class DefaultManifestParserException extends RuntimeException {
-
-        DefaultManifestParserException(@NonNull File file, @NonNull Throwable cause) {
-            super("Exception while parsing the supplied manifest file " + file.getAbsolutePath(),
-                    cause);
+    private void putValue(@NonNull Attribute attribute, @Nullable String value) {
+        if (value != null && !PlaceholderHandler.isPlaceHolder(value)) {
+            attributeValues.put(attribute, value);
         }
     }
 }

@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Supplier;
-
-import org.gradle.api.Task;
-
 import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * Denotes a supplier of a file. The supplier also provides a link to the task generating the file.

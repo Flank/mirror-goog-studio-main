@@ -28,8 +28,6 @@ import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestRunResult;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
@@ -122,7 +120,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
                     throw new InstallException("Internal error, file a bug, multi-apk applications"
                             + " require a device with API level 21+");
                 }
-                if (device.getApiLevel() >= 21) {
+                if (testedApks.size() > 1) {
                     device.installPackages(testedApks, installOptions, timeoutInMs, logger);
                 } else {
                     device.installPackage(testedApks.get(0), installOptions, timeoutInMs, logger);
@@ -130,12 +128,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             }
 
             logger.verbose("DeviceConnector '%s': installing %s", deviceName, testApk);
-            if (device.getApiLevel() >= 21) {
-                device.installPackages(
-                        ImmutableList.of(testApk), installOptions,timeoutInMs, logger);
-            } else {
-                device.installPackage(testApk, installOptions, timeoutInMs, logger);
-            }
+            device.installPackage(testApk, installOptions, timeoutInMs, logger);
             isInstalled = true;
 
             RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(

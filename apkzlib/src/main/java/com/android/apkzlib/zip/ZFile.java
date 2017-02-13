@@ -19,6 +19,7 @@ package com.android.apkzlib.zip;
 import com.android.apkzlib.utils.CachedFileContents;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.apkzlib.utils.IOExceptionRunnable;
+import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.apkzlib.zip.utils.ByteTracker;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
@@ -452,6 +453,8 @@ public class ZFile implements Closeable {
 
                 notify(ZFileExtension::open);
             }
+        } catch (Zip64NotSupportedException e) {
+            throw e;
         } catch (IOException e) {
             throw new IOException("Failed to read zip file '" + file.getAbsolutePath() + "'.", e);
         }
@@ -678,8 +681,8 @@ public class ZFile implements Closeable {
             directFullyRead(zip64LocatorStart, possibleZip64Locator);
             if (LittleEndianUtils.readUnsigned4Le(ByteBuffer.wrap(possibleZip64Locator)) ==
                     ZIP64_EOCD_LOCATOR_SIGNATURE) {
-                throw new IOException("Zip64 EOCD locator found but Zip64 format is not "
-                        + "supported.");
+                throw new Zip64NotSupportedException(
+                        "Zip64 EOCD locator found but Zip64 format is not supported.");
             }
         }
 
@@ -1447,6 +1450,14 @@ public class ZFile implements Closeable {
         raf = new RandomAccessFile(file, "rw");
         state = ZipFileState.OPEN_RW;
 
+        /*
+         * Now that we've open the zip and are ready to write, clear out any data descriptors
+         * in the zip since we don't need them and they take space in the archive.
+         */
+        for (StoredEntry entry : entries()) {
+            dirty |= entry.removeDataDescriptor();
+        }
+
         if (wasClosed) {
             notify(ZFileExtension::open);
         }
@@ -1907,6 +1918,10 @@ public class ZFile implements Closeable {
         boolean anyChanges = false;
         for (StoredEntry entry : entries()) {
             anyChanges |= entry.realign();
+        }
+
+        if (anyChanges) {
+            dirty = true;
         }
 
         return anyChanges;
@@ -2421,6 +2436,7 @@ public class ZFile implements Closeable {
             String name = entry.getCentralDirectoryHeader().getName();
             FileUseMapEntry<StoredEntry> positioned =
                     positionInFile(entry, PositionHint.LOWEST_OFFSET);
+
             entries.put(name, positioned);
         }
 

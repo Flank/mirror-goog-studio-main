@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="kotlin-language" name="Kotlin">
+      <configuration version="1">
+        <option name="compilerInfo">
+          <KotlinCompilerInfo>
+            <option name="compilerSettings" />
+            <option name="k2jsCompilerArguments" />
+            <option name="_commonCompilerArguments" />
+          </KotlinCompilerInfo>
+        </option>
+        <option name="versionInfo">
+          <KotlinVersionInfo>
+            <option name="apiLevel" />
+            <option name="languageLevel" />
+            <option name="targetPlatformName" value="" />
+          </KotlinVersionInfo>
+        </option>
+      </configuration>
+    </facet>
+  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../../out/build/base/integration-test/build/generated">
@@ -24,17 +44,6 @@
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="module" module-name="instant-run-common" />
     <orderEntry type="module" module-name="device-provider" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/commons-lang/commons-lang/2.6/commons-lang-2.6.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/commons-lang/commons-lang/2.6/commons-lang-2.6-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="module" module-name="testutils" />
     <orderEntry type="module" module-name="analytics-protos-base" scope="TEST" />
@@ -43,6 +52,25 @@
     <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="apkzlib" />
     <orderEntry type="module" module-name="instant-run-instrumentation" />
-    <orderEntry type="module" module-name="apksig" scope="TEST" />
+    <orderEntry type="module" module-name="apksig" />
+    <orderEntry type="library" name="commons-lang" level="project" />
+    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="module" module-name="gradle-core" />
+    <orderEntry type="library" name="gradle-api" level="project" />
+    <orderEntry type="module" module-name="sdk-common-base" />
+    <orderEntry type="module" module-name="layoutlib-api-base" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4/commons-io-2.4-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

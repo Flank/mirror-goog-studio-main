@@ -48,20 +48,17 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.Variant;
 import com.android.ddmlib.IDevice;
-import com.android.sdklib.AndroidVersion;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Range;
 import com.google.common.io.Resources;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.hamcrest.Matcher;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,7 +111,7 @@ public class SigningTest {
     }
 
     private static void createKeystoreFile(@NonNull String resourceName, @NonNull File keystore)
-            throws IOException {
+            throws Exception {
         byte[] keystoreBytes =
                 Resources.toByteArray(
                         Resources.getResource(SigningTest.class, "SigningTest/" + resourceName));
@@ -221,7 +218,7 @@ public class SigningTest {
 
     }
 
-    private void execute(String... tasks) {
+    private void execute(String... tasks) throws Exception {
         project.executor().run(tasks);
     }
 
@@ -365,44 +362,17 @@ public class SigningTest {
     }
 
     /**
-     * Runs the connected tests to make sure the APK can be successfully installed. To cover
-     * different scenarios, for every signature algorithm we need to build APKs with three different
-     * minimum SDK versions and run each one against three different phones (for ECDSA there are
-     * only two APKs and two phones).
+     * Runs the connected tests to make sure the APK can be successfully installed.
+     *
+     * <p>To cover different scenarios, for every signature algorithm we need to build APKs with
+     * three different minimum SDK versions and run each one against three different system images.
+     *
+     * <p>This method covers 24 and 19 devices. The test for a 17 device is a separate test method
+     * that will report as skipped if the device is not available.
      */
     @Test
     @Category(DeviceTests.class)
     public void shaAlgorithmChange_OnDevice() throws Exception {
-        List<Matcher<AndroidVersion>> matchers =
-                ImmutableList.of(
-                        AndroidVersionMatcher.forRange(
-                                Range.lessThan(DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA)),
-                        AndroidVersionMatcher.forRange(
-                                Range.closedOpen(
-                                        DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA,
-                                        DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS)),
-                        AndroidVersionMatcher.forRange(
-                                Range.atLeast(DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS)));
-
-        List<IDevice> devices =
-                matchers.stream().map(m -> adb.getDevice(m)).collect(Collectors.toList());
-
-        // Check APK with minimum SDK 1. Skip this for ECDSA.
-        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
-            for (IDevice device : devices) {
-                checkOnDevice(device);
-            }
-
-            TestFileUtils.searchAndReplace(
-                    project.getBuildFile(),
-                    "minSdkVersion \\d+",
-                    "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
-        }
-
-        // Check APK with minimum SDK 18. Build script was set to 18 from the start or was just
-        // changed above. Don't run on the oldest device, it's not compatible with the APK.
-        checkOnDevice(devices.get(1));
-        checkOnDevice(devices.get(2));
 
         // Check APK with minimum SDK 21.
         TestFileUtils.searchAndReplace(
@@ -410,10 +380,52 @@ public class SigningTest {
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
 
-        checkOnDevice(devices.get(2));
+        IDevice device24 = adb.getDevice(24);
+        checkOnDevice(device24);
+
+        // Check APK with minimum SDK 18.
+        // Don't run on the oldest device, it's not compatible with the APK.
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "minSdkVersion \\d+",
+                "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
+        checkOnDevice(device24);
+        IDevice device19 = adb.getDevice(19);
+        checkOnDevice(device19);
+
+        // Check APK with minimum SDK 1. Skip this for ECDSA.
+        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
+            TestFileUtils.searchAndReplace(
+                    project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion " + minSdkVersion);
+
+            checkOnDevice(device19);
+            checkOnDevice(device24);
+        }
     }
 
-    private void checkOnDevice(IDevice device) throws Exception {
+    /**
+     * Run the connected tests against an api 17 device.
+     *
+     * <p>This will be ignored, rather than fail, if no api 17 device is connected.
+     */
+    @Test
+    @Category(DeviceTests.class)
+    public void deployOnApi17() throws Exception {
+        if (minSdkVersion >= DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
+            // if min SDK is higher than the device, we cannot deploy.
+            return;
+        }
+        IDevice device17 =
+                adb.getDevice(
+                        AndroidVersionMatcher.exactly(17),
+                        error -> {
+                            throw new AssumptionViolatedException(error);
+                        });
+        assert device17 != null;
+        checkOnDevice(device17);
+    }
+
+    private void checkOnDevice(@NonNull IDevice device) throws Exception {
         device.uninstallPackage("com.example.helloworld");
         device.uninstallPackage("com.example.helloworld.test");
         project.executor()

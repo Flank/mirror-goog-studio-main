@@ -230,9 +230,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean useResourceShrinker() {
+        // Cases when resource shrinking is disabled despite the user setting the flag should
+        // be explained in TaskManager#maybeCreateShrinkResourcesTransform.
+
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
-                && (!buildType.isMinifyEnabled() || buildType.isUseProguard())
+                && buildType.isMinifyEnabled()
+                && !buildType.isUseProguard()
                 && !getInstantRunBuildContext().isInInstantRunMode();
     }
 
@@ -470,18 +474,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public Iterable<File> getJavaOutputs() {
-        return Iterables.concat(
-                getJavaClasspath(),
-                ImmutableList.of(
-                        getJavaOutputDir(),
-                        getJavaDependencyCache()));
-    }
-
-    @Override
-    @NonNull
-    public File getJavaDependencyCache() {
-        return new File(globalScope.getIntermediatesDir(), "/dependency-cache/" +
-                variantData.getVariantConfiguration().getDirName());
+        return Iterables.concat(getJavaClasspath(), ImmutableList.of(getJavaOutputDir()));
     }
 
     @Override
@@ -712,6 +705,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "javaResources/" + getVariantConfiguration().getDirName());
     }
 
+    @NonNull
+    @Override
+    public File getGeneratedJavaResourcesDir() {
+        return new File(
+                globalScope.getGeneratedDir(),
+                "javaResources/" + getVariantConfiguration().getDirName());
+    }
+
     @Override
     @NonNull
     public File getRClassSourceOutputDir() {
@@ -929,6 +930,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getManifestReportFile() {
+        // If you change this, please also update Lint#getManifestReportFile
         return FileUtils.join(getGlobalScope().getOutputsDir(),
                 "logs", "manifest-merger-" + variantData.getVariantConfiguration().getBaseName()
                         + "-report.txt");

@@ -56,12 +56,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${GRPC_INCLUDE_DIR})
 
-set(WARNING_FLAGS "-Wall -Werror")
+set(WARNING_FLAGS "-Wall -Werror -Wno-missing-braces")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} -std=c11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -std=c++11")
 
 # Add profiler components
+add_subdirectory(dex)
 add_subdirectory(perfa)
 add_subdirectory(perfd)
 add_subdirectory(proto)

@@ -16,7 +16,6 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
-import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
@@ -76,48 +75,53 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                                     .getBootClasspathAsStrings(false)));
         }
 
-        ConventionMappingHelper.map(javacTask, "classpath", new Callable<FileCollection>() {
-            @Override
-            public FileCollection call() {
-                FileCollection classpath = scope.getJavaClasspath();
-                Project project = scope.getGlobalScope().getProject();
-                if (keepDefaultBootstrap) {
-                    classpath = classpath.plus(project.files(
-                            scope.getGlobalScope().getAndroidBuilder().getBootClasspath(false)));
-                }
-
-                if (testedVariantData != null) {
-                    // For libraries, the classpath from androidBuilder includes the library
-                    // output (bundle/classes.jar) as a normal dependency. In unit tests we
-                    // don't want to package the jar at every run, so we use the *.class
-                    // files instead.
-                    if (!testedVariantData.getType().equals(LIBRARY)
-                            || scope.getVariantData().getType().equals(UNIT_TEST)) {
-                        classpath = classpath.plus(project.files(
-                                        testedVariantData.getScope().getJavaClasspath(),
-                                        testedVariantData.getScope().getJavaOutputDir(),
-                                        testedVariantData.getScope().getJavaDependencyCache()));
+        ConventionMappingHelper.map(
+                javacTask,
+                "classpath",
+                () -> {
+                    FileCollection classpath = scope.getJavaClasspath();
+                    Project project = scope.getGlobalScope().getProject();
+                    if (keepDefaultBootstrap) {
+                        classpath =
+                                classpath.plus(
+                                        project.files(
+                                                scope.getGlobalScope()
+                                                        .getAndroidBuilder()
+                                                        .getBootClasspath(false)));
                     }
 
-                    if (scope.getVariantData().getType().equals(UNIT_TEST)
-                            && testedVariantData.getType().equals(LIBRARY)) {
-                        // The bundled classes.jar may exist, but it's probably old. Don't
-                        // use it, we already have the *.class files in the classpath.
-                        AndroidDependency testedLibrary =
-                                testedVariantData.getVariantConfiguration().getOutput();
-                        if (testedLibrary != null) {
-                            File jarFile = testedLibrary.getJarFile();
-                            classpath = classpath.minus(project.files(jarFile));
+                    if (testedVariantData != null) {
+                        // For libraries, the classpath from androidBuilder includes the library
+                        // output (bundle/classes.jar) as a normal dependency. In unit tests we
+                        // don't want to package the jar at every run, so we use the *.class
+                        // files instead.
+                        if (!testedVariantData.getType().equals(LIBRARY)
+                                || scope.getVariantData().getType().equals(UNIT_TEST)) {
+                            classpath =
+                                    classpath.plus(
+                                            project.files(
+                                                    testedVariantData.getScope().getJavaClasspath(),
+                                                    testedVariantData
+                                                            .getScope()
+                                                            .getJavaOutputDir()));
+                        }
+
+                        if (scope.getVariantData().getType().equals(UNIT_TEST)
+                                && testedVariantData.getType().equals(LIBRARY)) {
+                            // The bundled classes.jar may exist, but it's probably old. Don't
+                            // use it, we already have the *.class files in the classpath.
+                            AndroidDependency testedLibrary =
+                                    testedVariantData.getVariantConfiguration().getOutput();
+                            if (testedLibrary != null) {
+                                File jarFile = testedLibrary.getJarFile();
+                                classpath = classpath.minus(project.files(jarFile));
+                            }
                         }
                     }
-                }
-                return classpath;
-            }
-        });
+                    return classpath;
+                });
 
         javacTask.setDestinationDir(scope.getJavaOutputDir());
-
-        javacTask.setDependencyCacheDir(scope.getJavaDependencyCache());
 
         CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
 

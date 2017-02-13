@@ -31,7 +31,6 @@ import com.android.builder.profile.Recorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,10 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -65,18 +65,28 @@ public class TransformTask extends StreamBasedTask implements Context {
     private Transform transform;
     private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
+    List<FileCollection> secondaryInputFiles = null;
 
     public Transform getTransform() {
         return transform;
     }
 
     @InputFiles
-    public Collection<File> getOtherFileInputs() {
+    @Optional
+    public Collection<File> getOldSecondaryInputs() {
         //noinspection deprecation: Needed for backward compatibility.
-        return Stream.concat(
-                        transform.getSecondaryFiles().stream().map(SecondaryFile::getFile),
-                        transform.getSecondaryFileInputs().stream())
-                .collect(Collectors.toList());
+        return transform.getSecondaryFileInputs();
+    }
+
+    @InputFiles
+    public List<FileCollection> getSecondaryFileInputs() {
+        if (secondaryInputFiles == null) {
+            secondaryInputFiles = transform.getSecondaryFiles().stream()
+                    .map(secondaryFile -> secondaryFile.getFileCollection(getProject()))
+                    .collect(Collectors.toList());
+        }
+
+        return secondaryInputFiles;
     }
 
     @OutputFiles
@@ -254,8 +264,7 @@ public class TransformTask extends StreamBasedTask implements Context {
             ImmutableList.Builder<SecondaryFile> builder = ImmutableList.builder();
             builder.addAll(transform.getSecondaryFiles());
             builder.addAll(
-                    Iterables.transform(
-                            transform.getSecondaryFileInputs(), SecondaryFile::nonIncremental));
+                    getOldSecondaryInputs().stream().map(SecondaryFile::nonIncremental).iterator());
             secondaryFiles = builder.build();
         }
         return secondaryFiles;

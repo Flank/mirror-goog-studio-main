@@ -28,10 +28,12 @@ import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceContext;
@@ -42,18 +44,29 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.intellij.psi.JavaElementVisitor;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiMethodCallExpression;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Checks for errors related to locale handling
  */
-public class LocaleFolderDetector extends Detector implements Detector.ResourceFolderScanner {
+public class LocaleFolderDetector extends Detector implements Detector.ResourceFolderScanner,
+        Detector.JavaPsiScanner, Detector.ClassScanner {
+
     private static final Implementation IMPLEMENTATION = new Implementation(
             LocaleFolderDetector.class,
             Scope.RESOURCE_FOLDER_SCOPE);
@@ -92,7 +105,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             "ISO 3166-1 for the region codes. In many cases, the language code and the " +
             "country where the language is spoken is the same, but it is also often not " +
             "the case. For example, while 'se' refers to Sweden, where Swedish is spoken, " +
-            "the language code for Swedish is *not* `se` (which refers to the Northern " +
+            "the language code for Swedish is **not** `se` (which refers to the Northern " +
             "Sami language), the language code is `sv`. And similarly the region code for " +
             "`sv` is El Salvador.\n" +
             "\n" +
@@ -143,7 +156,27 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             .addMoreInfo("http://developer.android.com/guide/topics/resources/providing-resources.html")
             .addMoreInfo("https://tools.ietf.org/html/bcp47");
 
+    /**
+     * Crashes if using 3-letter resources in an app *and* calling AssetManager#getLocales()
+     * directly or indirectly
+     */
+    public static final Issue GET_LOCALES = Issue.create(
+            "GetLocales",
+            "Locale crash",
+            "TODO",
+
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            new Implementation(
+                    LocaleFolderDetector.class,
+                    EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE, Scope.JAVA_LIBRARIES),
+                    // In IDE: won't have JAVA_LIBRARIES scope (no bytecode analysis)
+                    EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE)));
+
     private Map<String,File> mBcp47Folders;
+
+    private List<File> threeLetterLocales;
 
     /**
      * Constructs a new {@link LocaleFolderDetector}
@@ -164,14 +197,25 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         if (locale != null && locale.hasLanguage()) {
             final String language = locale.getLanguage();
             String replace = null;
-            if (language.equals("he")) {
-                replace = "iw";
-            } else if (language.equals("id")) {
-                replace = "in";
-            } else if (language.equals("yi")) {
-                replace = "ji";
+            switch (language) {
+                case "he":
+                    replace = "iw";
+                    break;
+                case "id":
+                    replace = "in";
+                    break;
+                case "yi":
+                    replace = "ji";
+                    break;
             }
             // Note: there is also fil⇒tl
+
+            if (language.length() >= 3) {
+                if (threeLetterLocales == null) {
+                    threeLetterLocales = Lists.newArrayList();
+                }
+                threeLetterLocales.add(context.file);
+            }
 
             if (replace != null) {
                 // TODO: Check for suppress somewhere other than lint.xml?
@@ -413,7 +457,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         List<String> sortedRegions = Lists.newArrayList(regions);
         final String primary = LocaleManager.getLanguageRegion(language);
         final String secondary = LocaleManager.getDefaultLanguageRegion(language);
-        Collections.sort(sortedRegions, (r1, r2) -> {
+        sortedRegions.sort((r1, r2) -> {
             int rank1 = r1.equals(primary) ? 1
                     : r1.equals(secondary) ? 2 : r1.equalsIgnoreCase(language) ? 3 : 4;
             int rank2 = r2.equals(primary) ? 1
@@ -425,5 +469,89 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
             return delta;
         });
         return sortedRegions;
+    }
+
+    // Implements JavaPsiScanner
+
+    @Nullable
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Collections.singletonList("getLocales");
+    }
+
+    @Override
+    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
+            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+        if (threeLetterLocales == null || context.getMainProject().getMinSdk() >= 21) {
+            return;
+        }
+
+        if (!context.getEvaluator().isMemberInSubClassOf(method,
+                "android.content.res.AssetManager", false)) {
+            return;
+        }
+
+        Location location = context.getLocation(call);
+        Location prev = location;
+        List<String> folderNames = Lists.newArrayListWithCapacity(threeLetterLocales.size());
+        Collections.sort(threeLetterLocales);
+        for (File file : threeLetterLocales) {
+            prev = Location.create(file).withSecondary(prev, "Locale folder here", false);
+            folderNames.add(file.getName());
+        }
+        String message = String.format("The app will crash on platforms older than v21 "
+                    + "(minSdkVersion is %1$d) because `AssetManager#getLocales` is called and it "
+                    + "contains one or more v21-style (3-letter or BCP47 locale) folders: %2$s",
+                context.getMainProject().getMinSdk(),
+                Joiner.on(", ").join(folderNames));
+        context.report(GET_LOCALES, call, location, message);
+    }
+
+    // Implements ClassScanner
+
+    private boolean foundGetLocaleCall;
+
+    @SuppressWarnings("rawtypes") // ASM API
+    @Override
+    public void checkClass(@NonNull final ClassContext context, @NonNull ClassNode classNode) {
+        if (threeLetterLocales == null || context.getMainProject().getMinSdk() >= 21 ||
+                foundGetLocaleCall) {
+            return;
+        }
+
+        List methodList = classNode.methods;
+        for (Object m : methodList) {
+            MethodNode method = (MethodNode) m;
+
+            InsnList nodes = method.instructions;
+
+            for (int i = 0, n = nodes.size(); i < n; i++) {
+                AbstractInsnNode instruction = nodes.get(i);
+                int type = instruction.getType();
+                if (type == AbstractInsnNode.METHOD_INSN) {
+                    MethodInsnNode node = (MethodInsnNode) instruction;
+                    if (node.owner.equals("android/content/res/AssetManager")
+                            && node.name.equals("getLocales")
+                            && node.desc.equals("()[Ljava/lang/String;")) {
+                        foundGetLocaleCall = true;
+
+                        // Report all the locations where this happens
+                        Collections.sort(threeLetterLocales);
+                        for (File file : threeLetterLocales) {
+                            String message = String.format("The app will crash on platforms older "
+                                    + "than v21 (minSdkVersion is %1$d) because"
+                                    + " `AssetManager#getLocales()` is called (from the library "
+                                    + "jar file %2$s) and this folder resource name only works "
+                                    + "on v21 or later with that call present in the app",
+                                    context.getMainProject().getMinSdk(),
+                                    context.getJarFile().getParentFile().getName()
+                                            + File.separator + context.getJarFile().getName());
+                            Location location = Location.create(file);
+                            context.report(GET_LOCALES, location, message);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

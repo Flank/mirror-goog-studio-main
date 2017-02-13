@@ -101,7 +101,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             "StringEscaping",
             "Invalid string escapes",
 
-            "Apostrophes (') must always be escaped (with a \\), unless they appear " +
+            "Apostrophes (') must always be escaped (with a \\\\), unless they appear " +
             "in a string which is itself escaped in double quotes (\").",
 
             Category.MESSAGES,
@@ -220,11 +220,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             }
         }
 
-        Set<String> names = mTypeMap.get(type);
-        if (names == null) {
-            names = Sets.newHashSetWithExpectedSize(40);
-            mTypeMap.put(type, names);
-        }
+        Set<String> names = mTypeMap.computeIfAbsent(type,
+                k -> Sets.newHashSetWithExpectedSize(40));
 
         String name = attribute.getValue();
         String originalName = name;
@@ -248,11 +245,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             context.report(ISSUE, attribute, location, message);
         } else {
             names.add(name);
-            List<Pair<String, Handle>> list = mLocations.get(type);
-            if (list == null) {
-                list = Lists.newArrayList();
-                mLocations.put(type, list);
-            }
+            List<Pair<String, Handle>> list = mLocations
+                    .computeIfAbsent(type, k -> Lists.newArrayList());
             Location.Handle handle = context.createLocationHandle(attribute);
             list.add(Pair.of(name, handle));
         }
@@ -351,7 +345,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     // such that the error is more visually prominent/evident in
                     // the source editor.
                     Location location = context.getLocation(textNode, p, len);
-                    context.report(STRING_ESCAPING, element, location, "Apostrophe not preceded by \\");
+                    context.report(STRING_ESCAPING, element, location, "Apostrophe not preceded by \\\\");
                     return;
                 }
                 p++;
@@ -396,7 +390,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                                             && (h < 'A' || h > 'F')) {
                                         Location location = context.getLocation(textNode, p, p + 1);
                                         context.report(STRING_ESCAPING, element, location,
-                                                       "Bad character in \\u unicode escape sequence");
+                                                       "Bad character in \\\\u unicode escape sequence");
                                         return;
                                     }
                                 }

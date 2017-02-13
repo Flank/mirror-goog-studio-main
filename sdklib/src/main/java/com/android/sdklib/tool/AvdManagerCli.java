@@ -24,6 +24,7 @@ import com.android.prefs.AndroidLocation;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkVersionInfo;
@@ -39,7 +40,6 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.sdklib.util.CommandLineParser;
 import com.android.utils.ILogger;
 import com.android.utils.IReaderLogger;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -293,7 +293,7 @@ class AvdManagerCli extends CommandLineParser {
         }
 
         if (mOsSdkFolder == null) {
-            String cmdName = "avdmanager" + (mSdkHandler.getFileOp().isWindows() ? ".bat" : "");
+            String cmdName = "avdmanager" + (FileOpUtils.create().isWindows() ? ".bat" : "");
 
             errorAndExit("The tools directory property is not set, please make sure you are " +
                     "executing %1$s", cmdName);
@@ -453,10 +453,18 @@ class AvdManagerCli extends CommandLineParser {
             if (details instanceof DetailsTypes.PlatformDetailsType) {
                 mSdkLog.info("  API: %s",
                         versionWithCodename);
-            } else {
+            } else if (details instanceof DetailsTypes.SysImgDetailsType) {
+                IdDisplay vendor = ((DetailsTypes.SysImgDetailsType) details).getVendor();
+                String vendorStr = "";
+                if (vendor != null) {
+                    vendorStr = " (" + vendor.getDisplay() + ")";
+                }
+                mSdkLog.info("  Target: %s%s\n", img.getTag().getDisplay(), vendorStr);
+                mSdkLog.info("          Based on: %s", versionWithCodename);
+            } else if (details instanceof DetailsTypes.AddonDetailsType) {
                 mSdkLog.info("  Target: %s (%s)\n", img.getPackage().getDisplayName(),
                         ((DetailsTypes.AddonDetailsType) details).getVendor().getDisplay());
-                mSdkLog.info("          Based on: %s", versionWithCodename);
+                mSdkLog.info("          Based on: %s\n", versionWithCodename);
             }
             mSdkLog.info(" Tag/ABI: %s/%s\n", info.getTag().getId(), info.getAbiType());
 
@@ -568,16 +576,29 @@ class AvdManagerCli extends CommandLineParser {
                 mSdkHandler.getFileOp());
     }
 
+    private String getValidImagePaths() {
+        return mSdkHandler.getSystemImageManager(new ProgressIndicatorAdapter() {
+            // don't log anything
+        }).getImages().stream()
+          .map(image -> image.getPackage().getPath())
+          .collect(Collectors.joining("\n"));
+    }
+
     /**
      * Creates a new AVD. This is a text based creation with command line prompt.
      */
     private void createAvd() {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
+        ProgressIndicator progress = new ConsoleProgressIndicator() {
+            @Override
+            public void logVerbose(@NonNull String s) {
+                // don't log verbose messages
+            }
+        };
         String packagePath = getParamPkgPath();
         LocalPackage imagePkg = mSdkHandler.getLocalPackage(packagePath, progress);
 
         if (imagePkg == null) {
-            errorAndExit("Package path is not valid.");
+            errorAndExit("Package path is not valid. Valid system image paths are:\n" + getValidImagePaths());
         }
         assert imagePkg != null;
 
@@ -585,8 +606,8 @@ class AvdManagerCli extends CommandLineParser {
                 .getImageMap().get(imagePkg);
 
         if (sysImgs.isEmpty()) {
-            errorAndExit("Package %$1s (%$2s) contains no system images.",
-                    imagePkg.getDisplayName(), imagePkg.getPath());
+            errorAndExit("Package %1$s (%2$s) contains no system images. Valid system image paths are:\n%3$s",
+                    imagePkg.getDisplayName(), imagePkg.getPath(), getValidImagePaths());
         }
 
         try {
@@ -1138,7 +1159,7 @@ class AvdManagerCli extends CommandLineParser {
                 "Name of the new AVD.", null);
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_AVD, "k", KEY_IMAGE_PACKAGE,
-                "Target ID of the new AVD.", null);
+                "Package path of the system image for this AVD (e.g. 'system-images;android-19;google_apis;x86').", null);
         define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_AVD, "c", KEY_SDCARD,
                 "Path to a shared SD card image, or size of a new sdcard for the new AVD.", null);

@@ -24,7 +24,7 @@ using profiler::proto::AllocationContextsResponse;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::DumpDataResponse;
-using profiler::proto::HeapDumpDataRequest;
+using profiler::proto::DumpDataRequest;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
 using profiler::proto::ListHeapDumpInfosResponse;
@@ -36,15 +36,17 @@ using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
 using profiler::proto::AllocationsInfo;
-using profiler::proto::GetAllocationsInfoStatusRequest;
-using profiler::proto::GetAllocationsInfoStatusResponse;
+using profiler::proto::AllocationEventsRequest;
+using profiler::proto::AllocationEventsResponse;
+using profiler::proto::ForceGarbageCollectionRequest;
+using profiler::proto::ForceGarbageCollectionResponse;
 
 namespace profiler {
 
 grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
                                                 const MemoryStartRequest* request,
                                                 MemoryStartResponse* response) {
-  GetCollector(request->app_id())->Start();
+  GetCollector(request->process_id())->Start();
   response->set_status(MemoryStartResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
@@ -52,7 +54,7 @@ grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* contex
 grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
                                                const MemoryStopRequest* request,
                                                MemoryStopResponse* response) {
-  auto got = collectors_.find(request->app_id());
+  auto got = collectors_.find(request->process_id());
   if (got != collectors_.end()) {
     got->second.Stop();
   }
@@ -64,7 +66,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
                                           const MemoryRequest* request,
                                           MemoryData* response) {
   Trace trace("MEM:GetData");
-  auto result = collectors_.find(request->app_id());
+  auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
     return ::grpc::Status(
         ::grpc::StatusCode::NOT_FOUND,
@@ -91,7 +93,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     ::grpc::ServerContext* context, const TriggerHeapDumpRequest* request,
     TriggerHeapDumpResponse* response) {
   Trace trace("MEM:TriggerHeapDump");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
@@ -107,16 +109,16 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 }
 
 ::grpc::Status MemoryServiceImpl::GetHeapDump(
-    ::grpc::ServerContext* context, const HeapDumpDataRequest* request,
+    ::grpc::ServerContext* context, const DumpDataRequest* request,
     DumpDataResponse* response) {
   Trace trace("MEM:GetHeapDump");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, DumpDataResponse::FAILURE_UNKNOWN)
 
-  (result->second).GetHeapDumpData(request->dump_id(), response);
+  (result->second).GetHeapDumpData(request->dump_time(), response);
   switch (response->status()) {
     case DumpDataResponse::NOT_READY:
     case DumpDataResponse::SUCCESS:
@@ -132,6 +134,13 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   }
 }
 
+::grpc::Status MemoryServiceImpl::GetAllocationDump(
+    ::grpc::ServerContext* context, const DumpDataRequest* request,
+    DumpDataResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
     ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
     ListHeapDumpInfosResponse* response) {
@@ -143,15 +152,14 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     ::grpc::ServerContext* context, const TrackAllocationsRequest* request,
     TrackAllocationsResponse* response) {
   Trace trace("MEM:TrackAllocations");
-  int32_t app_id = request->app_id();
+  int32_t app_id = request->process_id();
 
   auto result = collectors_.find(app_id);
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
   (result->second)
-      .TrackAllocations(request->enabled(), request->legacy_tracking(),
-                        response);
+      .TrackAllocations(request->enabled(), request->legacy(), response);
   switch (response->status()) {
     case TrackAllocationsResponse::SUCCESS:
     case TrackAllocationsResponse::IN_PROGRESS:
@@ -167,18 +175,22 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
 ::grpc::Status MemoryServiceImpl::ListAllocationContexts(
-    ::grpc::ServerContext* context,
-    const AllocationContextsRequest* request,
+    ::grpc::ServerContext* context, const AllocationContextsRequest* request,
     AllocationContextsResponse* response) {
-  return ::grpc::Status(
-      ::grpc::StatusCode::UNIMPLEMENTED,
-      "Listing allocation tracking environments is WIP.");
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Listing allocation tracking environments is WIP.");
 }
 
-::grpc::Status MemoryServiceImpl::GetAllocationsInfoStatus(
-    ::grpc::ServerContext* context,
-    const GetAllocationsInfoStatusRequest* request,
-    GetAllocationsInfoStatusResponse* response) {
+::grpc::Status MemoryServiceImpl::GetAllocationEvents(
+    ::grpc::ServerContext* context, const AllocationEventsRequest* request,
+    AllocationEventsResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::ForceGarbageCollection(
+    ::grpc::ServerContext* context, const ForceGarbageCollectionRequest* request,
+    ForceGarbageCollectionResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");
 }

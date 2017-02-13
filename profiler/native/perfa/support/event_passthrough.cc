@@ -42,7 +42,7 @@ const SteadyClock& GetClock() {
 void SendSystemEvent(SystemData* event, long jdownTime) {
   event->set_start_timestamp(GetClock().GetCurrentTime());
   event->set_end_timestamp(0);
-  event->set_app_id(getpid());
+  event->set_process_id(getpid());
   event->set_event_id(jdownTime);
 
   auto event_stub = Perfa::Instance().event_stub();
@@ -59,7 +59,7 @@ void SendActivityEvent(JNIEnv* env, const jstring& name,
   JStringWrapper activity_name(env, name);
   ActivityData activity;
   activity.set_name(activity_name.get());
-  activity.set_app_id(getpid());
+  activity.set_process_id(getpid());
   activity.set_hash(hash);
   ActivityStateData* state_data = activity.add_state_changes();
   state_data->set_state(state);
@@ -80,6 +80,15 @@ void SendFragmentEvent(JNIEnv* env, const jstring& name,
 
 extern "C" {
 // TODO: Create figure out how to autogenerate this class, to avoid typo errors.
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_event_InputConnectionWrapper_sendKeyboardEvent(
+    JNIEnv* env, jobject thiz, jstring jtext) {
+  SystemData event;
+  event.set_type(SystemData::KEY);
+  JStringWrapper text(env, jtext);
+  event.set_event_data(text.get());
+  SendSystemEvent(&event, GetClock().GetCurrentTime());
+}
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(

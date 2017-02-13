@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
-
 import java.io.Serializable;
 import java.util.Objects;
 

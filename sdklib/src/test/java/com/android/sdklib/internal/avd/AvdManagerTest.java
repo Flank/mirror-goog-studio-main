@@ -19,8 +19,6 @@ package com.android.sdklib.internal.avd;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import com.android.sdklib.internal.avd.AvdInfo;
-import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
@@ -30,9 +28,7 @@ import com.google.common.collect.Maps;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -92,8 +88,10 @@ public class AvdManagerTest extends TestCase {
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
         assertEquals("system-images/android-23/default/x86/", properties.get("image.sysdir.1"));
         assertEquals(null, properties.get("snapshot.present"));
-        assertTrue("Expected userdata.img in " + mAvdFolder,
-                mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
+        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
         assertFalse("Expected NO snapshots.img in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
     }
@@ -176,8 +174,10 @@ public class AvdManagerTest extends TestCase {
         properties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
         assertEquals("system-images/android-23/default/x86/", properties.get("image.sysdir.1"));
-        assertTrue("Expected userdata.img in " + mAvdFolder,
-                mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
+        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+                mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
 
         // Create an AVD that is the same, but with a different name
         String newName = this.getName() + "_renamed";
@@ -208,8 +208,10 @@ public class AvdManagerTest extends TestCase {
         Properties baseProperties = new Properties();
         baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
         assertEquals("system-images/android-23/default/x86/", baseProperties.get("image.sysdir.1"));
-        assertTrue("Expected userdata.img in " + mAvdFolder,
-                   mFileOp.exists(new File(mAvdFolder, "userdata.img")));
+        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+                   mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
+        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+                   mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
     }
 
     public void testDuplicateAvd() throws Exception {
@@ -268,8 +270,10 @@ public class AvdManagerTest extends TestCase {
         assertEquals("system-images/android-23/default/x86/", configProperties.get("image.sysdir.1"));
         assertEquals(newName, configProperties.get("AvdId"));
         assertEquals(newName, configProperties.get("avd.ini.displayname"));
-        assertTrue("Expected userdata.img in " + newFolder,
-                   mFileOp.exists(new File(newFolder, "userdata.img")));
+        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + newFolder,
+                   mFileOp.exists(new File(newFolder, AvdManager.USERDATA_IMG)));
+        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+                   mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
         // Quick check that the original AVD directory still exists
         assertTrue(mFileOp.exists(new File(mAvdFolder, "foo.bar")));
         assertTrue(mFileOp.exists(new File(mAvdFolder, "config.ini")));
@@ -281,7 +285,8 @@ public class AvdManagerTest extends TestCase {
 
     private static void recordSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/userdata.img");
+        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/"
+                        + AvdManager.USERDATA_IMG);
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/dummy");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
@@ -307,7 +312,8 @@ public class AvdManagerTest extends TestCase {
 
     private static void recordGoogleApisSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/userdata.img");
+        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/"
+                        + AvdManager.USERDATA_IMG);
 
         fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"

@@ -17,17 +17,16 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.OptionalCompilationStep;
-
 import com.android.builder.utils.FileCache;
-import java.util.Optional;
-import org.gradle.api.Project;
-
 import java.io.File;
-import java.util.EnumSet;
+import java.util.Set;
+import org.gradle.api.Project;
 
 /**
  * Implementation of the {@link TransformGlobalScope} for external build system integration
@@ -36,21 +35,22 @@ public class ExternalBuildGlobalScope implements TransformGlobalScope {
 
     private final Project project;
 
-    @NonNull
-    private final EnumSet<OptionalCompilationStep> optionalCompilationSteps;
+    @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
 
-    @NonNull
-    private final AndroidGradleOptions androidGradleOptions;
+    @NonNull private final ProjectOptions projectOptions;
 
-    @NonNull
-    private final Optional<FileCache> buildCache;
+    @Nullable
+    private final FileCache buildCache;
 
-    public ExternalBuildGlobalScope(Project project) {
+    public ExternalBuildGlobalScope(
+            @NonNull Project project, @NonNull ProjectOptions projectOptions) {
         this.project = project;
-        optionalCompilationSteps = AndroidGradleOptions.getOptionalCompilationSteps(project);
-        androidGradleOptions = new AndroidGradleOptions(project);
-        buildCache = GlobalScope.getBuildCache(project, androidGradleOptions);
-        GlobalScope.validateAndroidGradleOptions(project, androidGradleOptions, buildCache);
+        this.projectOptions = projectOptions;
+        optionalCompilationSteps = projectOptions.getOptionalCompilationSteps();
+        buildCache =
+                BuildCacheUtils.createBuildCacheIfEnabled(
+                        project.getRootProject()::file, projectOptions);
+        GlobalScope.validateAndroidGradleOptions(projectOptions, buildCache);
     }
 
     @Override
@@ -69,15 +69,16 @@ public class ExternalBuildGlobalScope implements TransformGlobalScope {
         return optionalCompilationSteps.contains(step);
     }
 
-    @NonNull
-    @Override
-    public AndroidGradleOptions getAndroidGradleOptions() {
-        return androidGradleOptions;
-    }
 
     @NonNull
     @Override
-    public Optional<FileCache> getBuildCache() {
+    public ProjectOptions getProjectOptions() {
+        return projectOptions;
+    }
+
+    @Nullable
+    @Override
+    public FileCache getBuildCache() {
         return buildCache;
     }
 }

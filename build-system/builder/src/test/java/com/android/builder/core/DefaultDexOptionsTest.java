@@ -17,7 +17,6 @@
 package com.android.builder.core;
 
 import com.android.testutils.internal.CopyOfTester;
-
 import org.junit.Test;
 
 public class DefaultDexOptionsTest {

@@ -24,9 +24,7 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;

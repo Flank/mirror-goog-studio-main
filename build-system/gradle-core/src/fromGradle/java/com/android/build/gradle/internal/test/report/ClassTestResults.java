@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.test.report;
 
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;

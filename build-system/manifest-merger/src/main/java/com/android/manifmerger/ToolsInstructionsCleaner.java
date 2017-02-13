@@ -25,14 +25,12 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Removes all "tools:" statements from the resulting xml.

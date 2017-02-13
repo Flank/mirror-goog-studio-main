@@ -4,7 +4,7 @@
     revision="2"
     name="Google Maps Activity"
     description="Creates a new activity with a Google Map"
-    minApi="9"
+    minApi="14"
     minBuildApi="14">
 
     <dependency name="android-support-v4" revision="8" />

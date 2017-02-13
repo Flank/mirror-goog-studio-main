@@ -144,12 +144,7 @@ public class JackGenerateDexTransform extends Transform {
                         .map(SecondaryFile::nonIncremental)
                         .collect(Collectors.toList()));
 
-        builder.addAll(
-                jackPluginsClassPath
-                        .getFiles()
-                        .stream()
-                        .map(SecondaryFile::nonIncremental)
-                        .collect(Collectors.toList()));
+        builder.add(SecondaryFile.nonIncremental(jackPluginsClassPath));
 
         return builder.build();
     }

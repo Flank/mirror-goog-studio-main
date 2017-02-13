@@ -17,6 +17,9 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ANDROID_VIEW_PKG;
+import static com.android.SdkConstants.ANDROID_WEBKIT_PKG;
+import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_XML;
@@ -53,6 +56,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
@@ -191,14 +195,11 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
                 return;
             }
             PsiType type = castTypeElement.getType();
-            String castType = null;
-            if (type instanceof PsiClassType) {
-                castType = type.getCanonicalText();
-            }
-            if (castType == null) {
+            if (!(type instanceof PsiClassType)) {
                 return;
             }
-
+            PsiClassType castType = (PsiClassType) type;
+            String castTypeClass = type.getCanonicalText();
             PsiExpression[] args = call.getArgumentList().getExpressions();
             if (args.length == 1) {
                 PsiExpression first = args[0];
@@ -227,18 +228,21 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
                             }
                             if (!compatible.isEmpty()) {
                                 ArrayList<String> layoutTypes = Lists.newArrayList(compatible);
-                                checkCompatible(context, castType, null, layoutTypes, cast);
+                                checkCompatible(context, castType, castTypeClass, null,
+                                        layoutTypes, cast);
                             }
                         }
                     } else {
                         Object types = mIdToViewTag.get(id);
                         if (types instanceof String) {
                             String layoutType = (String) types;
-                            checkCompatible(context, castType, layoutType, null, cast);
+                            checkCompatible(context, castType, castTypeClass, layoutType, null,
+                                    cast);
                         } else if (types instanceof List<?>) {
                             @SuppressWarnings("unchecked")
                             List<String> layoutTypes = (List<String>) types;
-                            checkCompatible(context, castType, null, layoutTypes, cast);
+                            checkCompatible(context, castType, castTypeClass, null, layoutTypes,
+                                    cast);
                         }
                     }
                 }
@@ -311,35 +315,96 @@ public class ViewTypeDetector extends ResourceXmlDetector implements JavaPsiScan
     }
 
     /** Check if the view and cast type are compatible */
-    private static void checkCompatible(JavaContext context, String castType, String layoutType,
-            List<String> layoutTypes, PsiTypeCastExpression node) {
-        assert layoutType == null || layoutTypes == null; // Should only specify one or the other
+    private static void checkCompatible(
+            @NonNull JavaContext context,
+            @NonNull PsiClassType castType,
+            @NonNull String castTypeClass,
+            @Nullable String tag,
+            @Nullable List<String> tags,
+            @NonNull PsiTypeCastExpression node) {
+        assert tag == null || tags == null; // Should only specify one or the other
+
+        // Common case: they match: quickly check for this and fail if not
+        if (castTypeClass.equals(tag) ||
+                tags != null && tags.contains(castTypeClass)) {
+            return;
+        }
+
+
+        PsiClass castClass = castType.resolve();
+
+
         boolean compatible = true;
-        if (layoutType != null) {
-            if (!layoutType.equals(castType)
-                    && !context.getSdkInfo().isSubViewOf(castType, layoutType)) {
+        if (tag != null) {
+            if (!tag.equals(castTypeClass)
+                    && !context.getSdkInfo().isSubViewOf(castTypeClass, tag)) {
                 compatible = false;
             }
         } else {
             compatible = false;
-            assert layoutTypes != null;
-            for (String type : layoutTypes) {
-                if (type.equals(castType)
-                        || context.getSdkInfo().isSubViewOf(castType, type)) {
+            assert tags != null;
+            for (String type : tags) {
+                if (type.equals(castTypeClass)
+                        || context.getSdkInfo().isSubViewOf(castTypeClass, type)) {
                     compatible = true;
                     break;
                 }
             }
         }
 
+        // Use real classes to handle checks
+        if (castClass != null && !compatible) {
+            if (tag != null) {
+                if (isCompatible(context, castClass, tag)) {
+                    return;
+                }
+            } else {
+                for (String t : tags) {
+                    if (isCompatible(context, castClass, t)) {
+                        return;
+                    }
+                }
+            }
+        }
+
         if (!compatible) {
-            if (layoutType == null) {
-                layoutType = Joiner.on("|").join(layoutTypes);
+            if (tag == null) {
+                tag = Joiner.on("|").join(tags);
             }
             String message = String.format(
                     "Unexpected cast to `%1$s`: layout tag was `%2$s`",
-                    castType.substring(castType.lastIndexOf('.') + 1), layoutType);
+                    castTypeClass.substring(castTypeClass.lastIndexOf('.') + 1), tag);
             context.report(ISSUE, node, context.getLocation(node), message);
         }
+    }
+
+    private static boolean isCompatible(
+            @NonNull JavaContext context,
+            @NonNull PsiClass castClass,
+            @NonNull String tag) {
+        PsiClass cls = null;
+        if (tag.indexOf('.') == -1) {
+            for (String prefix : new String[]{
+                    // See framework's PhoneLayoutInflater: these are the prefixes
+                    // that don't need fully qualified names in layouts
+                    ANDROID_WIDGET_PREFIX,
+                    ANDROID_VIEW_PKG,
+                    ANDROID_WEBKIT_PKG}) {
+                cls = context.getEvaluator().findClass(prefix + tag);
+                //noinspection VariableNotUsedInsideIf
+                if (cls != null) {
+                    break;
+                }
+            }
+        } else {
+            cls = context.getEvaluator().findClass(tag);
+        }
+
+        if (cls != null) {
+            return cls.isInheritor(castClass, true);
+        }
+
+        // Didn't find class - just assume it's compatible since we don't want false positives
+        return true;
     }
 }

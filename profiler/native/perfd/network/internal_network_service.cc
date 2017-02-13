@@ -23,15 +23,14 @@ using grpc::ServerContext;
 using grpc::Status;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    NetworkCache *network_cache)
-    : network_cache_(*network_cache) {
-}
+    Daemon::Utilities *utilities, NetworkCache *network_cache)
+    : file_cache_(*utilities->file_cache()), network_cache_(*network_cache) {}
 
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
     proto::EmptyNetworkReply *reply) {
   auto details =
-      network_cache_.AddConnection(httpData->conn_id(), httpData->app_id());
+      network_cache_.AddConnection(httpData->conn_id(), httpData->process_id());
   details->request.url = httpData->url();
   details->request.trace = httpData->trace();
   return Status::OK;
@@ -43,7 +42,7 @@ Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
   std::stringstream filename;
   filename << chunk->conn_id();
 
-  network_cache_.AddPayloadChunk(filename.str(), chunk->content());
+  file_cache_.AddChunk(filename.str(), chunk->content());
   return Status::OK;
 }
 
@@ -51,6 +50,14 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     ServerContext *context, const proto::HttpEventRequest *httpEvent,
     proto::EmptyNetworkReply *reply) {
   switch (httpEvent->event()) {
+    case proto::HttpEventRequest::CREATED: {
+      // TODO: Handle this case for now to avoid printing an error message to
+      // the user. We should probably remove this case later as it is already
+      // handled by |RegisterHttpData|.
+    }
+
+    break;
+
     case proto::HttpEventRequest::DOWNLOAD_STARTED: {
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->downloading_timestamp = httpEvent->timestamp();
@@ -64,7 +71,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       // don't have a hash function, so just keep the name.
       std::stringstream filename;
       filename << httpEvent->conn_id();
-      auto payload_file = network_cache_.FinishPayload(filename.str());
+      auto payload_file = file_cache_.Complete(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->response.payload_id = payload_file->name();
@@ -77,7 +84,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       std::stringstream filename;
       filename << httpEvent->conn_id();
 
-      network_cache_.AbortPayload(filename.str());
+      file_cache_.Abort(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       details->end_timestamp = httpEvent->timestamp();
@@ -91,16 +98,29 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
   return Status::OK;
 }
 
-Status InternalNetworkServiceImpl::SendHttpResponse(
+Status InternalNetworkServiceImpl::SendHttpRequest(
     ServerContext *context,
-    const proto::HttpResponseRequest *httpResponse,
+    const proto::HttpRequestRequest *httpRequest,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails* conn = network_cache_.GetDetails(httpResponse->conn_id());
+  ConnectionDetails* conn = network_cache_.GetDetails(httpRequest->conn_id());
   if (conn != nullptr) {
-    conn->response.fields = httpResponse->fields();
+    conn->request.fields = httpRequest->fields();
+    conn->request.method = httpRequest->method();
   }
   else {
-    Log::V("Unhandled http response (%ld)", (long) httpResponse->conn_id());
+    Log::V("Unhandled http request (%lld)", (long long) httpRequest->conn_id());
+  }
+  return Status::OK;
+}
+
+Status InternalNetworkServiceImpl::SendHttpResponse(
+    ServerContext *context, const proto::HttpResponseRequest *httpResponse,
+    proto::EmptyNetworkReply *reply) {
+  ConnectionDetails *conn = network_cache_.GetDetails(httpResponse->conn_id());
+  if (conn != nullptr) {
+    conn->response.fields = httpResponse->fields();
+  } else {
+    Log::V("Unhandled http response (%lld)", (long long) httpResponse->conn_id());
   }
   return Status::OK;
 }

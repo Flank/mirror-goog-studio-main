@@ -17,14 +17,23 @@
 package com.android.build.gradle.internal.externalBuild;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import org.gradle.api.Project;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -33,20 +42,40 @@ import org.mockito.MockitoAnnotations;
  */
 public class ExternalBuildGlobalScopeTest {
 
+    @Rule
+    public TemporaryFolder testDir = new TemporaryFolder();
+
     @Mock
     Project project;
 
     ExternalBuildGlobalScope scope;
 
+    private Path buildCacheDir;
+
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
+
+        // Set a custom build cache directory so that the plugin won't attempt to use the default
+        // build cache directory under the ".android" directory, which will fail in a testing
+        // environment
+        buildCacheDir = testDir.newFolder().toPath();
+        Project rootProject = mock(Project.class);
+        when(project.getRootProject()).thenReturn(rootProject);
+        when(rootProject.file(any())).thenAnswer(
+                invocation -> new File((String) invocation.getArguments()[0]));
     }
 
     @Test
     public void testBuildDir() {
         when(project.getBuildDir()).thenReturn(new File("/tmp/out/folder"));
-        scope = new ExternalBuildGlobalScope(project);
+        scope =
+                new ExternalBuildGlobalScope(
+                        project,
+                        new ProjectOptions(
+                                ImmutableMap.of(
+                                        StringOption.BUILD_CACHE_DIR.getPropertyName(),
+                                        buildCacheDir.toString())));
         assertThat(scope.getBuildDir().getPath()).isEqualTo(
                 "/tmp/out/folder".replace('/', File.separatorChar));
     }
@@ -54,9 +83,15 @@ public class ExternalBuildGlobalScopeTest {
 
     @Test
     public void testIsActive() {
-        when(project.hasProperty(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS)).thenReturn(true);
-        when(project.property(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS)).thenReturn("INSTANT_DEV");
-        scope = new ExternalBuildGlobalScope(project);
+        scope =
+                new ExternalBuildGlobalScope(
+                        project,
+                        new ProjectOptions(
+                                ImmutableMap.of(
+                                        StringOption.BUILD_CACHE_DIR.getPropertyName(),
+                                        buildCacheDir.toString(),
+                                        AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
+                                        "INSTANT_DEV")));
 
         assertThat(scope.isActive(OptionalCompilationStep.INSTANT_DEV)).isTrue();
         assertThat(scope.isActive(OptionalCompilationStep.RESTART_ONLY)).isFalse();

@@ -17,17 +17,18 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LibraryCache;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
@@ -59,13 +60,13 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
     public void init(
             @NonNull File bundle,
             @NonNull File explodedDir,
-            @NonNull Optional<FileCache> buildCache,
+            @Nullable FileCache buildCache,
             @NonNull MavenCoordinates mavenCoordinates) {
         this.bundle = bundle;
         this.explodedDir = explodedDir;
-        this.shouldUseBuildCache = shouldUseBuildCache(buildCache.isPresent(), mavenCoordinates);
+        this.shouldUseBuildCache = shouldUseBuildCache(buildCache != null, mavenCoordinates);
         if (shouldUseBuildCache) {
-            this.buildCache = buildCache.get();
+            this.buildCache = buildCache;
             this.mavenCoordinates = mavenCoordinates;
         } else {
             // If the build cache is used, we must not register the exploded directory as the output
@@ -91,9 +92,8 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
             Preconditions.checkNotNull(mavenCoordinates, "mavenCoordinates must not be null");
         }
 
-        Consumer<File> unzipAarAction = (File explodedDir) -> {
-            extract(bundle, explodedDir, getProject());
-        };
+        Consumer<File> unzipAarAction =
+                (File explodedDir) -> extract(bundle, explodedDir, getProject());
         prepareLibrary(
                 bundle,
                 explodedDir,
@@ -148,27 +148,24 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
                         String.format(
                                 "Unable to unzip '%1$s' to '%2$s' or find the cached output '%2$s'"
                                         + " using the build cache at '%3$s'.\n"
-                                        + "If you are unable to fix the underlying cause, please"
-                                        + " file a bug or disable the build cache by setting"
-                                        + " android.enableBuildCache=false in the gradle.properties"
-                                        + " file.",
+                                        + "%4$s",
                                 inputAar.getAbsolutePath(),
                                 outputDir.getAbsolutePath(),
-                                buildCache.getCacheDirectory().getAbsolutePath()),
+                                buildCache.getCacheDirectory().getAbsolutePath(),
+                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
                         exception);
             }
             if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                Verify.verifyNotNull(result.getCauseOfCorruption());
                 logger.info(
                         String.format(
                                 "The build cache at '%1$s' contained an invalid cache entry.\n"
                                         + "Cause: %2$s\n"
                                         + "We have recreated the cache entry.\n"
-                                        + "If this issue persists, please file a bug or disable the"
-                                        + " build cache by setting android.enableBuildCache=false"
-                                        + " in the gradle.properties file.",
+                                        + "%3$s",
                                 buildCache.getCacheDirectory().getAbsolutePath(),
-                                Throwables.getStackTraceAsString(
-                                        result.getCauseOfCorruption().get())));
+                                Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
+                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE));
             }
         } else {
             action.accept(outputDir);
@@ -191,8 +188,7 @@ public class PrepareLibraryTask extends DefaultAndroidTask {
      * prepare-library task to use the build cache.
      */
     @NonNull
-    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile)
-            throws IOException {
+    public static FileCache.Inputs getBuildCacheInputs(@NonNull File artifactFile) {
         return new FileCache.Inputs.Builder(FileCache.Command.PREPARE_LIBRARY)
                 .putFilePath(FileCacheInputParams.FILE_PATH.name(), artifactFile)
                 .putLong(FileCacheInputParams.FILE_SIZE.name(), artifactFile.length())

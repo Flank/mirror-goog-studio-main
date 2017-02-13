@@ -22,8 +22,7 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.util.ToHuman;
-import com.google.common.collect.MapMaker;
-
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -40,10 +39,8 @@ public final class RegisterSpec
      *
      * <p>The initial capacity is based on a medium-size project.
      */
-    private static final ConcurrentMap<RegisterSpec, RegisterSpec> theInterns = new MapMaker()
-            .concurrencyLevel(Main.CONCURRENCY_LEVEL)
-            .initialCapacity(100_000)
-            .makeMap();
+    private static final ConcurrentMap<RegisterSpec, RegisterSpec> theInterns =
+            new ConcurrentHashMap<>(100_000, 0.75f, Main.CONCURRENCY_LEVEL);
 
     /** {@code >= 0;} register number */
     private final int reg;

@@ -23,7 +23,6 @@ import static com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
@@ -33,7 +32,6 @@ import com.android.ide.common.process.ProcessResult;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -192,7 +190,7 @@ public class RenderScriptProcessor {
     public void build(
             @NonNull ProcessExecutor processExecutor,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws InterruptedException, ProcessException, LoggedErrorException, IOException {
+            throws InterruptedException, ProcessException, IOException {
 
         // gather the files to compile
         FileGatherer fileGatherer = new FileGatherer();
@@ -301,7 +299,7 @@ public class RenderScriptProcessor {
             @NonNull final ProcessExecutor processExecutor,
             @NonNull final ProcessOutputHandler processOutputHandler,
             @NonNull final Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+            throws IOException, InterruptedException, ProcessException {
         // get the generated BC files.
         int targetApi = mTargetApi < 11 ? 11 : mTargetApi;
         targetApi = (mSupportMode && targetApi < 18) ? 18 : targetApi;
@@ -325,7 +323,7 @@ public class RenderScriptProcessor {
             @NonNull final ProcessExecutor processExecutor,
             @NonNull final ProcessOutputHandler processOutputHandler,
             @NonNull final Map<String, String> env)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+            throws IOException, InterruptedException, ProcessException {
         SourceSearcher searcher = new SourceSearcher(
                 Collections.singletonList(rawFolder), EXT_BC);
         FileGatherer fileGatherer = new FileGatherer();

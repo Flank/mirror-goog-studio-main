@@ -44,7 +44,7 @@ void SendVmStats(int32_t alloc_count, int32_t free_count, int32_t gc_count) {
   EmptyMemoryReply reply;
 
   VmStatsRequest vm_stats_request;
-  vm_stats_request.set_app_id(kPid);
+  vm_stats_request.set_process_id(kPid);
 
   MemoryData::VmStatsSample* stats = vm_stats_request.mutable_vm_stats_sample();
   stats->set_timestamp(GetClock().GetCurrentTime());

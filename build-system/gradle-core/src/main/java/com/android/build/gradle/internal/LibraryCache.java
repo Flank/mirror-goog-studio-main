@@ -22,18 +22,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.GuardedBy;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-
+import groovy.lang.Closure;
+import java.io.File;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCopyDetails;
 import org.gradle.api.file.RelativePath;
-
-import java.io.File;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-
-import groovy.lang.Closure;
 
 /**
  * Cache to library prepareTask.

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.testutils.apk.Dex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
@@ -58,7 +59,7 @@ public class DexSubject extends Subject<DexSubject, Dex> {
         return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, null);
     }
 
-    public void containsClasses(@NonNull String... expected) throws IOException {
+    public void containsClassesIn(@NonNull Iterable<String> expected) throws IOException {
         for (String clazz : expected) {
             checkClassName(clazz);
         }
@@ -70,9 +71,54 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
             if (!missing.isEmpty()) {
                 failWithBadResults(
-                        "contains classes", Arrays.toString(expected), "is missing", missing);
+                        "contains classes", Iterables.toString(expected), "is missing", missing);
             }
         }
+    }
+
+    public void containsExactlyClassesIn(@NonNull Iterable<String> expected) throws IOException {
+        for (String clazz : expected) {
+            checkClassName(clazz);
+        }
+
+        if (assertSubjectIsNonNull()) {
+            Sets.SetView<String> missing =
+                    Sets.difference(
+                            ImmutableSet.copyOf(expected), getSubject().getClasses().keySet());
+
+            Sets.SetView<String> unexpectedElements =
+                    Sets.difference(
+                            getSubject().getClasses().keySet(), ImmutableSet.copyOf(expected));
+
+            if (!missing.isEmpty()) {
+                if (!unexpectedElements.isEmpty()) {
+                    failWithRawMessage(
+                            "Not true that %s %s <%s>. It is missing <%s> and has unexpected items <%s>",
+                            getDisplaySubject(),
+                            "contains exactly",
+                            expected,
+                            Iterables.toString(missing),
+                            Iterables.toString(unexpectedElements));
+                } else {
+                    failWithBadResults(
+                            "contains exactly classes",
+                            Iterables.toString(expected),
+                            "is missing",
+                            missing);
+                }
+            }
+            if (!unexpectedElements.isEmpty()) {
+                failWithBadResults(
+                        "contains exactly classes",
+                        Iterables.toString(expected),
+                        "has unexpected",
+                        unexpectedElements);
+            }
+        }
+    }
+
+    public void containsClasses(@NonNull String... expected) throws IOException {
+        containsClassesIn(Sets.newHashSet(expected));
     }
 
     public void doesNotContainClasses(@NonNull String... unexpected) throws IOException {

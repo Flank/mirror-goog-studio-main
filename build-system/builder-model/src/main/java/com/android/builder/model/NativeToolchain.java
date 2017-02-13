@@ -18,7 +18,6 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
 
 /**

@@ -26,7 +26,6 @@ import static com.android.utils.FileUtils.mkdirs;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -39,7 +38,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -57,7 +55,7 @@ public class LibDependencyTest {
                     .create();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createLibraryClass("Before");
     }
@@ -69,7 +67,7 @@ public class LibDependencyTest {
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
 
         // Check that original class is included.
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("clean", "assembleRelease", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -99,10 +97,10 @@ public class LibDependencyTest {
         ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
         createJavaLibraryClass("changed");
-        project.executor().withInstantRun(23, ColdswapMode.MULTIAPK)
+        project.executor().withInstantRun(23)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
@@ -123,7 +121,7 @@ public class LibDependencyTest {
 
         // Check that original class is included.
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("clean", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -134,7 +132,7 @@ public class LibDependencyTest {
         Files.write("changed java resource", resource, Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
@@ -154,7 +152,7 @@ public class LibDependencyTest {
         createLibraryClass("Hot swap change");
 
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK)
+                .withInstantRun(23)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -166,8 +164,7 @@ public class LibDependencyTest {
     }
 
 
-    private void createLibraryClass(String message)
-            throws IOException {
+    private void createLibraryClass(String message) throws Exception {
         String javaCompile = "package com.android.tests.libstest.lib;\n"
             +"public class Lib {\n"
                 +"public static String someString() {\n"
@@ -179,8 +176,7 @@ public class LibDependencyTest {
                 Charsets.UTF_8);
     }
 
-    private void createJavaLibraryClass(String message)
-            throws IOException {
+    private void createJavaLibraryClass(String message) throws Exception {
         File dir = project.file("javalib/src/main/java/com/example/javalib");
         mkdirs(dir);
         String java = "package com.example.javalib;\n"

@@ -25,12 +25,11 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.PackagingFileAction;
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions;
-import com.android.builder.packaging.ZipEntryFilter;
 import com.android.builder.packaging.ZipAbortException;
+import com.android.builder.packaging.ZipEntryFilter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;

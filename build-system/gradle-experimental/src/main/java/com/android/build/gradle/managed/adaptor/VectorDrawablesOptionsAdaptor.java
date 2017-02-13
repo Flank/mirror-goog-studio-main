@@ -19,7 +19,6 @@ package com.android.build.gradle.managed.adaptor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.VectorDrawablesOptions;
-
 import java.util.Set;
 
 /**

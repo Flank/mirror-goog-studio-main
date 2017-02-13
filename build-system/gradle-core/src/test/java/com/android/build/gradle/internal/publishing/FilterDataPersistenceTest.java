@@ -25,16 +25,14 @@ import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.SplitFileSupplier;
 import com.google.common.collect.ImmutableList;
-
-import org.gradle.api.Task;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import org.gradle.api.Task;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Tests for the {@kink FilterDataPersistence}

@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-/**
- * Object that can match objects of a given type.
- */
+/** Object that can match objects of a given type. */
 public interface Matcher<T> {
     boolean matches(T t);
 }

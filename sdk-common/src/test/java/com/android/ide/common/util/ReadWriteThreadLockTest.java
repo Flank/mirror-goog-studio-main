@@ -19,8 +19,12 @@ package com.android.ide.common.util;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.classloader.SingleClassLoader;
 import com.android.testutils.concurrency.ConcurrencyTester;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.function.Function;
 import org.junit.Rule;
 import org.junit.Test;
@@ -148,5 +152,57 @@ public class ReadWriteThreadLockTest {
         } finally {
             writeLock.unlock();
         }
+    }
+
+    @Test
+    public void testDifferentClassLoaders() throws Exception {
+        ReadWriteThreadLock originalLock = new ReadWriteThreadLock(new Integer(1));
+        originalLock.writeLock().lock();
+
+        // If another thread attempts to acquire the same write lock, it must not succeed
+        ReadWriteThreadLock lockWithSameClassLoader = new ReadWriteThreadLock(new Integer(1));
+        Thread thread1 = new Thread(() -> {
+            lockWithSameClassLoader.writeLock().lock();
+            lockWithSameClassLoader.writeLock().unlock();
+        });
+        thread1.start();
+        thread1.join(100);
+        assertThat(thread1.isAlive()).isTrue();
+
+        // Allow the thread to finish
+        originalLock.writeLock().unlock();
+        thread1.join();
+
+        // Acquire the write lock again
+        originalLock.writeLock().lock();
+
+        // If another thread attempts to acquire the same write lock, it must not succeed, even when
+        // the ReadWriteThreadLock class is loaded by a different class loader
+        SingleClassLoader classLoader = new SingleClassLoader(ReadWriteThreadLock.class.getName());
+        Class clazz = classLoader.load();
+        Constructor constructor = clazz.getConstructor(Object.class);
+        constructor.setAccessible(true);
+        Object lockWithDifferentClassLoader = constructor.newInstance(new Integer(1));
+        Method writeLockMethod = clazz.getMethod("writeLock");
+        Object lock = writeLockMethod.invoke(lockWithDifferentClassLoader);
+        Method lockMethod = lock.getClass().getMethod("lock");
+        Method unlockMethod = lock.getClass().getMethod("unlock");
+        lockMethod.setAccessible(true);
+        unlockMethod.setAccessible(true);
+        Thread thread2 = new Thread(() -> {
+            try {
+                lockMethod.invoke(lock);
+                unlockMethod.invoke(lock);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        thread2.start();
+        thread2.join(100);
+        assertThat(thread2.isAlive()).isTrue();
+
+        // Allow the thread to finish
+        originalLock.writeLock().unlock();
+        thread2.join();
     }
 }

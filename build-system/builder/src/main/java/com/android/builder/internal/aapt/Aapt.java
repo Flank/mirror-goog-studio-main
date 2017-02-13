@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.File;
 
 /**
  * Interface to the {@code aapt} tool. To obtain an instance, a concrete class, tied to a specific

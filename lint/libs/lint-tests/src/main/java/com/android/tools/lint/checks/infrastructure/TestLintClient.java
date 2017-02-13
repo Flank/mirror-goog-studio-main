@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,6 +54,7 @@ import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
+import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -72,6 +74,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.psi.EcjPsiBuilder;
+import com.android.tools.lint.psi.EcjPsiJavaEvaluator;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.StdLogger;
@@ -87,6 +90,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -119,6 +123,15 @@ public class TestLintClient extends LintCliClient {
     public TestLintClient() {
         super(new LintCliFlags(), "test");
         flags.getReporters().add(new TextReporter(this, flags, writer, false));
+    }
+
+    void setLintTask(@Nullable TestLintTask task) {
+        if (task != null && task.optionSetter != null) {
+            task.optionSetter.set(flags);
+        }
+        // Client should not be used outside of the check process
+        //noinspection ConstantConditions
+        this.task = task;
     }
 
     /**
@@ -295,7 +308,7 @@ public class TestLintClient extends LintCliClient {
     private StringBuilder output = null;
 
     public String analyze(List<File> files, List<Issue> issues) throws Exception {
-        driver = new LintDriver(new CustomIssueRegistry(issues), this);
+        driver = createDriver(new CustomIssueRegistry(issues));
 
         if (task.driverConfigurator != null) {
             task.driverConfigurator.configure(driver);
@@ -403,9 +416,47 @@ public class TestLintClient extends LintCliClient {
         return writer.toString();
     }
 
+    private static void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
+                    result.add(file);
+                } else if (file.isDirectory()) {
+                    gatherJavaFiles(file, result);
+                }
+            }
+        }
+    }
+
     @Override
     public JavaParser getJavaParser(@Nullable Project project) {
         return new EcjParser(this, project) {
+            @NonNull
+            @Override
+            public EcjPsiJavaEvaluator getEvaluator() {
+                EcjPsiJavaEvaluator evaluator = super.getEvaluator();
+                //noinspection ConstantConditions
+                if (evaluator == null) {
+                    // Running from unit tests
+                    List<File> sourceFolders = project.getJavaSourceFolders();
+                    List<File> sources = new ArrayList<>(100);
+                    for (File folder : sourceFolders) {
+                        gatherJavaFiles(folder, sources);
+                    }
+
+                    List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(sourceFolders.size());
+                    for (File file : sources) {
+                        if (file.isFile() && file.getPath().endsWith(DOT_JAVA)) {
+                            contexts.add(new JavaContext(driver, project, project, file, this));
+                        }
+                    }
+                    prepareJavaParse(contexts);
+                    evaluator = super.getEvaluator();
+                }
+                return evaluator;
+            }
+
             @Override
             public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
                 boolean success = super.prepareJavaParse(contexts);
@@ -462,14 +513,9 @@ public class TestLintClient extends LintCliClient {
             return;
         }
 
-        // Use plain ascii in the test golden files for now. (This also ensures
-        // that the markup is well-formed, e.g. if we have a ` without a matching
-        // closing `, the ` would show up in the plain text.)
-        message = format.convertTo(message, TextFormat.TEXT);
-
         if (task.messageChecker != null) {
             task.messageChecker.checkReportedError(context, issue, severity,
-                    location, message);
+                    location, format.convertTo(message, TextFormat.TEXT));
         }
 
         if (severity == Severity.FATAL) {
@@ -551,10 +597,11 @@ public class TestLintClient extends LintCliClient {
                 return null;
             }
             return file;
-        } else if (relativePath.equals("platform-tools/api/api-versions.xml")) {
-            File file = new File(getSdkHome(), relativePath);
-            if (!file.exists()) {
-                throw new RuntimeException("File " + file + " not found");
+        } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
+            File file = super.findResource(relativePath);
+            if (file == null || !file.exists()) {
+                throw new RuntimeException("File "
+                        + (file == null ? relativePath : file.getPath()) + " not found");
             }
             return file;
         }

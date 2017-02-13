@@ -77,6 +77,9 @@ public class ExifInterfaceDetector extends Detector implements Detector.JavaPsiS
     @Override
     public void visitReference(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
             @NonNull PsiJavaCodeReferenceElement reference, @NonNull PsiElement resolved) {
+        if (!reference.isQualified()) {
+            return;
+        }
         if (resolved instanceof PsiMethod || resolved instanceof PsiField) { // !PsiClass
             resolved = ((PsiMember) resolved).getContainingClass();
         }

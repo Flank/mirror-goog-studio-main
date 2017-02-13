@@ -19,9 +19,7 @@ package com.android.builder.symbols;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.dependency.HashCodeUtils;
-import com.google.common.base.Preconditions;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
  * A symbol is a 4-tuple containing a resource type, a name, a java type and a value. Symbols are

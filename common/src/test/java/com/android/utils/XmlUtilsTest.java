@@ -16,6 +16,7 @@
 package com.android.utils;
 
 import static com.android.SdkConstants.XMLNS;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.Nullable;
@@ -24,16 +25,6 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,11 +32,18 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import junit.framework.TestCase;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 @SuppressWarnings("javadoc")
 public class XmlUtilsTest extends TestCase {
@@ -515,5 +513,65 @@ public class XmlUtilsTest extends TestCase {
 
         //noinspection ResultOfMethodCallIgnored
         file.delete();
+    }
+
+    public void testGetSubTags() {
+        String xml = "<root><child1/><child2/><child3><grancdhild/></child3></root>";
+        Document document = XmlUtils.parseDocumentSilently(xml, true);
+        assertThat(document).isNotNull();
+        Element root = XmlUtils.getFirstSubTag(document);
+        assertThat(root).isNotNull();
+        assertThat(XmlUtils.getNextTag(root)).isNull();
+        Element child1 = XmlUtils.getFirstSubTag(root);
+        assertThat(child1).isNotNull();
+        Element child2 = XmlUtils.getNextTag(child1);
+        assertThat(child2).isNotNull();
+        Element child3 = XmlUtils.getNextTag(child2);
+        assertThat(child3).isNotNull();
+        Element grandchild = XmlUtils.getFirstSubTag(child3);
+        assertThat(grandchild).isNotNull();
+        assertThat(XmlUtils.getNextTag(child3)).isNull();
+        assertThat(XmlUtils.getNextTag(grandchild)).isNull();
+
+        assertThat(XmlUtils.getSubTags(grandchild).iterator().hasNext()).isFalse();
+        assertThat(XmlUtils.getSubTags(root).iterator().hasNext()).isTrue();
+        assertThat(XmlUtils.getSubTags(root).iterator().next()).isSameAs(child1);
+
+        Iterator<Element> iterator = XmlUtils.getSubTags(root).iterator();
+        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator.next()).isSameAs(child1);
+        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator.next()).isSameAs(child2);
+        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator.next()).isSameAs(child3);
+        assertThat(iterator.hasNext()).isFalse();
+    }
+
+    public void testGetSubTagsByName() {
+        String xml = "<root><child1/><child2/><child1/><child3><grancdhild/></child3></root>";
+        Document document = XmlUtils.parseDocumentSilently(xml, true);
+        assertThat(document).isNotNull();
+        Element root = XmlUtils.getFirstSubTag(document);
+        assertThat(root).isNotNull();
+        assertThat(XmlUtils.getNextTag(root)).isNull();
+        Element child1 = XmlUtils.getFirstSubTagTagByName(root, "child1");
+        assertThat(child1).isNotNull();
+        Element child2 = XmlUtils.getNextTagByName(child1, "child2");
+        assertThat(child2).isNotNull();
+        assertThat(XmlUtils.getFirstSubTagTagByName(root, "child2")).isSameAs(child2);
+        Element child3 = XmlUtils.getNextTagByName(child1, "child3");
+        assertThat(child3).isNotNull();
+        assertThat(XmlUtils.getFirstSubTagTagByName(root, "child2")).isSameAs(child2);
+        Element grandchild = XmlUtils.getFirstSubTag(child3);
+        assertThat(grandchild).isNotNull();
+        assertThat(XmlUtils.getNextTag(child3)).isNull();
+
+        Iterator<Element> iterator = XmlUtils.getSubTagsByName(root, "child1").iterator();
+        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator.next()).isSameAs(child1);
+        assertThat(iterator.hasNext()).isTrue();
+        Element next = iterator.next();
+        assertThat(next).isNotSameAs(child1);
+        assertThat(next.getTagName()).isEqualTo(child1.getTagName());
     }
 }

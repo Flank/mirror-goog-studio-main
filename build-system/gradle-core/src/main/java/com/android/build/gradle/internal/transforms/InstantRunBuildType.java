@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-
 import java.io.File;
 
 /**

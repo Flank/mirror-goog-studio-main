@@ -25,18 +25,15 @@ import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.CharBuffer;
+import junit.framework.TestCase;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Tests for {@link Merger} class

@@ -27,7 +27,7 @@ import org.junit.Test
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 
 /**
- * Assemble tests for libProguarConsumerFiles.
+ * Assemble tests for libProguardConsumerFiles.
  */
 @CompileStatic
 class LibProguardConsumerFilesTest {

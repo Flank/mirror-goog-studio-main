@@ -16,6 +16,7 @@ dependencies {
         // commons-cli is not needed as we're not using dexlib from the command line.
         exclude group: 'commons-cli', module: 'commons-cli'
     }
+    compile libs.asm
 }
 
 sourceSets {

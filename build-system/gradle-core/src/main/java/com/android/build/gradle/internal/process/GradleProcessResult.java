@@ -21,7 +21,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessResult;
 import com.google.common.base.Joiner;
-
 import org.gradle.process.ExecResult;
 import org.gradle.process.internal.ExecException;
 

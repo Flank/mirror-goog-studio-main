@@ -19,11 +19,8 @@ package com.android.builder.sdk;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.repository.api.Downloader;
-import com.android.repository.api.SettingsController;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.List;
 

@@ -1,10 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
-apply plugin: 'application'
-
-mainClassName = 'com.android.tools.lint.Main'
-applicationDefaultJvmArgs = ["-Xmx1024m"]
 
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint'
@@ -12,6 +8,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:lint-checks')
+    compile project(':base:manifest-merger')
     compile 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
 }
 
@@ -24,28 +21,39 @@ test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 }
 
-sdk {
-/*    common {
-        item(new File(buildDir, "libs")) {
-            into "lib"
-            notice null
-        }
-    }*/
-    common(mac, linux) {
-        item(new File(buildDir, "scripts/lint")) {
-            into "bin"
-            notice null
-        }
-    }
-    windows {
-        item(new File(buildDir, "scripts/lint.bat")) {
-            into "bin"
-            notice null
-        }
+task lintStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName("runtime"))
+    outputDir new File(project.getBuildDir(), "scripts")
+
+    description "Creates OS specific scripts to start the lint CLI"
+    mainClassName = 'com.android.tools.lint.Main'
+    applicationName = 'lint'
+    defaultJvmOpts = ["-Xmx1024m", "-Dcom.android.tools.lint.bindir=MY_APP_HOME"]
+
+    doLast {
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0\\..')
     }
 }
 
-sdkJar.dependsOn(startScripts)
+
+sdk {
+    common(mac, linux) {
+        item(new File(lintStartScripts.outputDir, "lint")) {
+            into "bin"
+            notice null
+            builtBy 'lintStartScripts'
+        }
+    }
+    windows {
+        item(new File(lintStartScripts.outputDir, "lint.bat")) {
+            into "bin"
+            notice null
+            builtBy 'lintStartScripts'
+        }
+    }
+}
 
 // configure the manifest of the sdkJar task.
 sdkJar.manifest.attributes("Main-Class": "com.android.tools.lint.Main")

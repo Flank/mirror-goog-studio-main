@@ -46,7 +46,7 @@ public class MultiProjectTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         modelContainer = project.model().getMulti();
     }
 
@@ -57,7 +57,7 @@ public class MultiProjectTest {
     }
 
     @Test
-    public void checkModel() {
+    public void checkModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 

@@ -28,18 +28,6 @@
         default="My Module" />
 
     <parameter
-        id="baseTheme"
-        name="Base Theme"
-        type="enum"
-        default="holo_light_darkactionbar"
-        help="The base user interface theme for the module">
-        <option id="none">None</option>
-        <option id="holo_dark" minBuildApi="11">Holo Dark</option>
-        <option id="holo_light" minBuildApi="11">Holo Light</option>
-        <option id="holo_light_darkactionbar" minBuildApi="14">Holo Light with Dark Action Bar</option>
-    </parameter>
-
-    <parameter
         id="minApi"
         name="Minimum API level"
         type="string"

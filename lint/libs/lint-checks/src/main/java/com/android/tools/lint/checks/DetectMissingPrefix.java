@@ -76,7 +76,7 @@ public class DetectMissingPrefix extends LayoutDetector {
             "MissingPrefix",
             "Missing Android XML namespace",
             "Most Android views have attributes in the Android namespace. When referencing " +
-            "these attributes you *must* include the namespace prefix, or your attribute will " +
+            "these attributes you **must** include the namespace prefix, or your attribute will " +
             "be interpreted by `aapt` as just a custom attribute.\n" +
             "\n" +
             "Similarly, in manifest files, nearly all attributes should be in the `android:` " +

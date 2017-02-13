@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.externalBuild;
 
 import com.android.builder.core.AndroidBuilder;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

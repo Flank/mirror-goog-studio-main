@@ -19,12 +19,14 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Profiler";
 
+import "profiler.proto";
+
 service ProfilerService {
   // Gets current timestamp that used in the device's profiling data.
   // A client may use this API to relate profiling data' timestamps to other
   // clocks such as the desktop's calendar time.
   // TODO(b/29223899): Add device's calendar time.
-  rpc GetTimes(TimesRequest) returns (TimesResponse) {
+  rpc GetCurrentTime(TimeRequest) returns (TimeResponse) {
   }
 
   // Gets version.
@@ -41,24 +43,21 @@ service ProfilerService {
   rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
   }
 
-  // Connect to remote profiler service
-  rpc Connect(ConnectRequest) returns (ConnectResponse) {
+  // Query for cached byte data associated with some ID. Other services may
+  // return an ID which can be used to fetch data using this central cache.
+  rpc GetBytes(BytesRequest) returns (BytesResponse) {
   }
 
-  // Disconnect from remote profiler service
-  rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {
-  }
-
-  // TODO: Workaround until perfd supports answering device information
-  // Will be removed once perfd is updated.
-  rpc SetProcesses(SetProcessesRequest) returns (SetProcessesResponse) {
+  // Query for whether perfa is alive.
+  rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
 }
 
-message TimesRequest {
+message TimeRequest {
+  Session session = 1;
 }
 
-message TimesResponse {
+message TimeResponse {
 
   // What's used as timestamps in all profiler data (unless otherwise specified).
   // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
@@ -70,6 +69,7 @@ message TimesResponse {
 }
 
 message VersionRequest {
+  Session session = 1;
 }
 
 message VersionResponse {
@@ -84,25 +84,42 @@ message GetDevicesResponse {
 }
 
 message GetProcessesRequest {
-  string serial = 1;
+  Session session = 1;
 }
 
 message GetProcessesResponse {
   repeated Process process = 2;
 }
 
-message ConnectRequest {
-  int32 port = 1;
+message BytesRequest {
+  // ID for fetching contents from a cache. The value will always be safe to use
+  // as a filename, if you want to cache the contents locally to disk for
+  // example.
+  string id = 1;
+  Session session = 2;
 }
 
-message ConnectResponse {
+message BytesResponse {
+  // Byte contents from a cache, or "" if no data was found associated with the
+  // cache key used to fetch it, or if the data was removed after some timeout.
+  bytes contents = 1;
 }
 
-message DisconnectRequest {
-  int32 port = 1;
+message AgentStatusRequest {
+  int32 process_id = 1;
+  Session session = 2;
 }
 
-message DisconnectResponse {
+message AgentStatusResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    ATTACHED = 1;
+    DETACHED = 2;
+  }
+  Status status = 1;
+  // The last time a heartbeat was received from the requested agent.
+  // If no heartbeat was ever detected, this returns INT64_MIN.
+  int64 last_timestamp = 2;
 }
 
 message DeviceProcesses {
@@ -110,22 +127,23 @@ message DeviceProcesses {
   repeated Process process = 2;
 }
 
-message SetProcessesRequest {
-  repeated DeviceProcesses device_processes = 1;
-}
-
-message SetProcessesResponse {
-}
-
 message Device {
   string manufacturer = 1;
   string model = 2;
   string serial = 3;
   string version = 4;
-  string api = 5;  
+  string api = 5;
+  string boot_id = 6;
 }
 
 message Process {
+  enum State {
+    UNSPECIFIED = 0;
+    ALIVE = 1;
+    DEAD = 2;
+  }
   string name = 1;
   int32 pid = 2;
+  State state = 3;
+  int64 start_timestamp_ns = 4;
 }

@@ -54,7 +54,7 @@ public class FragmentDetector extends Detector implements JavaPsiScanner {
         "Fragment not instantiatable",
 
         "From the Fragment documentation:\n" +
-        "*Every* fragment must have an empty constructor, so it can be instantiated when " +
+        "**Every** fragment must have an empty constructor, so it can be instantiated when " +
         "restoring its activity's state. It is strongly recommended that subclasses do not " +
         "have other constructors with parameters, since these constructors will not be " +
         "called when the fragment is re-instantiated; instead, arguments can be supplied " +

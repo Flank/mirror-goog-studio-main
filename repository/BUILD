@@ -12,7 +12,6 @@ iml_module(
     deps = [
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/.idea/libraries:guava-tools",
-        "//tools/idea/.idea/libraries:JUnit3[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:jimfs",
@@ -61,6 +60,6 @@ java_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

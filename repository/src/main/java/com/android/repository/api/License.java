@@ -16,6 +16,8 @@
 
 package com.android.repository.api;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
@@ -83,7 +85,7 @@ public abstract class License implements Comparable<License> {
      */
     @NonNull
     public String getLicenseHash() {
-        return Hashing.sha1().hashBytes(getValue().getBytes()).toString();
+        return Hashing.sha1().hashBytes(getValue().getBytes(UTF_8)).toString();
     }
 
     /**

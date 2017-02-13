@@ -25,9 +25,8 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Unit tests for {@link @InstrumentationResultParser}.
+ * Unit tests for {@link InstrumentationResultParser}.
  */
-@SuppressWarnings("unchecked")
 public class InstrumentationResultParserTest extends TestCase {
 
     private InstrumentationResultParser mParser;
@@ -87,6 +86,21 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
+     * Tests parsing output for a missing time stamp, meaning an invalid output from the runner.
+     */
+    public void testParse_missingTimeStamp() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
      * Tests parsing output for a single successful test execution.
      */
     public void testParse_singleTest() {
@@ -107,6 +121,7 @@ public class InstrumentationResultParserTest extends TestCase {
         StringBuilder output = buildCommonResult();
 
         addStatusKey(output, "randomKey", "randomValue");
+        addTimeStamp(output);
         addSuccessCode(output);
 
         final Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
@@ -141,6 +156,7 @@ public class InstrumentationResultParserTest extends TestCase {
         // add test end
         addCommonStatus(output);
         addStatusKey(output, "numiterations", "3");
+        addTimeStamp(output);
         addSuccessCode(output);
 
         final Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
@@ -160,6 +176,7 @@ public class InstrumentationResultParserTest extends TestCase {
      */
     public void testParse_testFailed() {
         StringBuilder output = buildCommonResult();
+        addTimeStamp(output);
         addStackTrace(output);
         addFailureCode(output);
 
@@ -300,6 +317,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addResultKey(output, "java_allocated", "2539");
         addResultKey(output, "foo", "bar");
         addResultKey(output, "stream", "should not be captured");
+        addTimeStamp(output);
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
         Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
@@ -415,7 +433,7 @@ public class InstrumentationResultParserTest extends TestCase {
                 "testPreconditions");
         mMockListener.testStarted(HELLO_WORLD);
         mMockListener.testEnded(HELLO_WORLD, Collections.EMPTY_MAP);
-        mMockListener.testRunEnded(EasyMock.eq(676L), EasyMock.anyObject(Map.class));
+        mMockListener.testRunEnded(EasyMock.eq(676L), EasyMock.anyObject());
 
         injectAndVerifyTestString(output.toString());
 }
@@ -438,6 +456,7 @@ public class InstrumentationResultParserTest extends TestCase {
      */
     private StringBuilder createSuccessTest() {
         StringBuilder output = buildCommonResult();
+        addTimeStamp(output);
         addSuccessCode(output);
         return output;
     }
@@ -498,6 +517,11 @@ public class InstrumentationResultParserTest extends TestCase {
      */
     private void addLineBreak(StringBuilder outputBuilder) {
         outputBuilder.append("\r\n");
+    }
+
+    private void addTimeStamp(StringBuilder outputBuilder) {
+        outputBuilder.append("Time: 0");
+        addLineBreak(outputBuilder);
     }
 
     private void addStartCode(StringBuilder outputBuilder) {

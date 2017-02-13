@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -47,7 +46,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -81,7 +79,7 @@ public class ExternalBuildPluginTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         IAndroidTarget target = SdkHelper.getTarget(23);
         TruthHelper.assertThat(target).isNotNull();
 
@@ -137,7 +135,7 @@ public class ExternalBuildPluginTest {
 + "  buildManifestPath = $/" + manifestFile.getAbsolutePath() + "/$\n"
 + "}\n");
 
-        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("clean", "process");
+        mProject.executor().withInstantRun(23).run("clean", "process");
 
         InstantRunBuildInfo info = loadBuildInfo();
 
@@ -181,7 +179,7 @@ public class ExternalBuildPluginTest {
             }
         }
 
-        mProject.executor().withInstantRun(23, ColdswapMode.MULTIAPK).run("process");
+        mProject.executor().withInstantRun(23).run("process");
 
         info = loadBuildInfo();
         assertThat(info.getVerifierStatus())
@@ -197,7 +195,7 @@ public class ExternalBuildPluginTest {
     }
 
     @NonNull
-    private InstantRunBuildInfo loadBuildInfo() throws IOException {
+    private InstantRunBuildInfo loadBuildInfo() throws Exception {
         File buildInfoFile =
                 new File(mProject.getTestDir(), "build/reload-dex/debug/build-info.xml");
         TruthHelper.assertThat(buildInfoFile).exists();

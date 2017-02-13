@@ -30,7 +30,6 @@ import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
@@ -39,7 +38,6 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assume;
@@ -53,7 +51,6 @@ import org.junit.experimental.categories.Category;
  */
 public class HotSwapTest {
 
-    private static final ColdswapMode COLDSWAP_MODE = ColdswapMode.MULTIAPK;
     private static final String LOG_TAG = "hotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
     private static final int CHANGES_COUNT = 3;
@@ -74,7 +71,7 @@ public class HotSwapTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void activityClass() throws IOException {
+    public void activityClass() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass(ORIGINAL_MESSAGE);
     }
@@ -84,7 +81,7 @@ public class HotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, 19, COLDSWAP_MODE);
+        InstantRunTestUtils.doInitialBuild(project, 19);
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         assertThat(apks).hasSize(1);
@@ -95,12 +92,12 @@ public class HotSwapTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunService;");
+        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunContentProvider;");
 
         createActivityClass("CHANGE");
 
         project.executor()
-                .withInstantRun(19, COLDSWAP_MODE)
+                .withInstantRun(19)
                 .run("assembleDebug");
 
         InstantRunArtifact artifact =
@@ -167,8 +164,7 @@ public class HotSwapTest {
                 changes);
     }
 
-    private void createActivityClass(String message)
-            throws IOException {
+    private void createActivityClass(String message) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "import android.app.Activity;\n"
                 + "import android.os.Bundle;\n"

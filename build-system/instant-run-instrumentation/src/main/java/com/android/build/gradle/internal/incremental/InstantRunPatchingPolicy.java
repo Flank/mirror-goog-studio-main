@@ -17,12 +17,9 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.base.Strings;
 
-import java.util.Locale;
 
 /**
  * Patching policy for delivering incremental code changes and triggering a cold start (application
@@ -38,7 +35,7 @@ public enum InstantRunPatchingPolicy {
     PRE_LOLLIPOP(DexPackagingPolicy.STANDARD, false /* useMultidex */),
 
     /**
-     * For N and above, each shard dex file described above will be packaged in a single pure
+     * For L and above, each shard dex file described above will be packaged in a single pure
      * split APK that will be pushed and installed on the device using adb install-multiple
      * commands.
      */
@@ -75,34 +72,16 @@ public enum InstantRunPatchingPolicy {
      * passed by Android Studio.
      *
      * @param featureLevel the feature level of the target device
-     * @param coldswapMode desired coldswap mode optionally provided.
      * @return a {@link InstantRunPatchingPolicy} instance.
      */
     @NonNull
     public static InstantRunPatchingPolicy getPatchingPolicy(
-            int featureLevel,
-            @Nullable String coldswapMode) {
+            int featureLevel) {
 
         if (featureLevel < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return PRE_LOLLIPOP;
         } else {
-            // whe dealing with Lollipop or above, use MULT_APK
-            InstantRunPatchingPolicy defaultModeForArchitecture = MULTI_APK;
-
-            if (Strings.isNullOrEmpty(coldswapMode)) {
-                return defaultModeForArchitecture;
-            }
-            // coldswap mode was provided, it trumps everything
-            ColdswapMode coldswap = ColdswapMode.valueOf(coldswapMode.toUpperCase(Locale.US));
-            switch(coldswap) {
-                case MULTIAPK: return MULTI_APK;
-                case AUTO:
-                    return defaultModeForArchitecture;
-                case DEFAULT:
-                    return defaultModeForArchitecture;
-                default:
-                    throw new RuntimeException("Cold-swap case not handled " + coldswap);
-            }
+            return MULTI_APK;
         }
     }
 

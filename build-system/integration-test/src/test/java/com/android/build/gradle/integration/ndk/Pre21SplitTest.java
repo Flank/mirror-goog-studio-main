@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.truth.MoreTruth;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -40,7 +39,7 @@ public class Pre21SplitTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "apply plugin: 'com.android.application'\n"
                 + "\n"
@@ -73,7 +72,7 @@ public class Pre21SplitTest {
     }
 
     @Test
-    public void checkSplitsDslWorksWithApiLevelLessThan21() throws IOException {
+    public void checkSplitsDslWorksWithApiLevelLessThan21() throws Exception {
         project.execute("assembleX86Debug");
 
         // Verify .so are built for all platform.

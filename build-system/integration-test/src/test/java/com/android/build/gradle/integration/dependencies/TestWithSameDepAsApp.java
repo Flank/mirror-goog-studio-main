@@ -24,9 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
@@ -112,7 +110,8 @@ public class TestWithSameDepAsApp {
             String testDependency,
             String className,
             String appUsage,
-            String testUsage) throws IOException, ProcessException {
+            String testUsage)
+            throws Exception {
         this.plugin = plugin;
         this.appDependency = appDependency;
         this.testDependency = testDependency;
@@ -126,7 +125,7 @@ public class TestWithSameDepAsApp {
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         appendToFile(project.getBuildFile(),
                 "\n" +
                 "dependencies {\n" +
@@ -147,17 +146,17 @@ public class TestWithSameDepAsApp {
 
         TestFileUtils.addMethod(
                 project.file("src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
-                        "\n" +
-                        "public void testDependency() {\n" +
-                        "    " + this.testUsage + "\n" +
-                        "}\n" +
-                        ""
-        );
+                "\n"
+                        + "public void testDependency() throws Exception {\n"
+                        + "    "
+                        + this.testUsage
+                        + "\n"
+                        + "}\n"
+                        + "");
     }
 
     @Test
-    public void testWithSamedepVersionThanTestedDoesNotEmbedDependency()
-            throws IOException, ProcessException {
+    public void testWithSamedepVersionThanTestedDoesNotEmbedDependency() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
 
         if (plugin.contains("application")) {
@@ -173,7 +172,7 @@ public class TestWithSameDepAsApp {
 
     @Test
     @Category(DeviceTests.class)
-    public void runTestsOnDevices() {
+    public void runTestsOnDevices() throws Exception {
         project.executeConnectedCheck();
     }
 }

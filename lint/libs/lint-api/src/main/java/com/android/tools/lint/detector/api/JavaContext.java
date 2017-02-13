@@ -27,7 +27,6 @@ import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
-import com.google.common.collect.Iterators;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
@@ -47,6 +46,7 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSwitchStatement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationMethodDeclaration;
@@ -582,7 +582,7 @@ public class JavaContext extends Context {
         } else if (call instanceof EnumConstant) {
             return ((EnumConstant) call).astArguments().iterator();
         } else {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
     }
 

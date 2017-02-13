@@ -106,7 +106,7 @@ public class PropertyFileDetector extends Detector {
         if (line.startsWith(prefix)) {
             String https = "https" + line.substring(prefix.length() - 1);
             String message = String.format("Replace HTTP with HTTPS for better security; use %1$s",
-              https);
+              https.replace("\\", "\\\\"));
             int startOffset = offset + valueStart;
             int endOffset = startOffset + 4; // 4: "http".length()
             Location location = Location.create(context.file, contents, startOffset, endOffset);
@@ -151,7 +151,8 @@ public class PropertyFileDetector extends Detector {
         String pathString = path.toString();
         String key = line.substring(0, valueStart);
         if (hadNonPathEscape && key.endsWith(".dir=") || new File(pathString).exists()) {
-            String escapedPath = suggestEscapes(line.substring(valueStart, line.length()));
+            String escapedPath = suggestEscapes(line.substring(valueStart, line.length()))
+                    .replace("\\", "\\\\");
 
             // NOTE: Keep in sync with {@link #getSuggestedEscape} below
             String message = "Windows file separators (`\\`) and drive letter "

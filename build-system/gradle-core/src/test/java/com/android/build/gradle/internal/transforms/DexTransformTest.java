@@ -17,7 +17,12 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Verify.verifyNotNull;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,21 +38,27 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
+import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.dexing.DexingMode;
+import com.android.builder.internal.FakeAndroidTarget;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.JavaProcessExecutor;
+import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.google.common.base.Charsets;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,33 +66,34 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import org.gradle.api.logging.Logger;
+import java.util.stream.Collectors;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /** Unit test for {@link DexTransform}. */
-@RunWith(MockitoJUnitRunner.class)
 public class DexTransformTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule public TemporaryFolder testDir = new TemporaryFolder();
 
-    @NonNull
-    private final AndroidBuilder fakeAndroidBuilder =
-            new FakeAndroidBuilder(
-                    "projectId",
-                    "createdBy",
-                    mock(ProcessExecutor.class),
-                    mock(JavaProcessExecutor.class),
-                    mock(ErrorReporter.class),
-                    mock(ILogger.class),
-                    false /* verboseExec */);
+    private FakeAndroidTarget androidTarget;
+    private File buildToolsFolder;
+
+    @Before
+    public void setUp() throws Exception {
+        androidTarget =
+                new FakeAndroidTarget(testDir.newFolder("platform").getPath(), "android-25");
+        buildToolsFolder = testDir.newFolder("build-tools");
+    }
 
     @Test
     public void testPreDexLibraries() throws IOException, TransformException, InterruptedException {
@@ -128,7 +140,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(
@@ -143,23 +155,33 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert pre-dex results, expect that all the inputs are pre-dexed
+        assertEquals(4, getFileCount(preDexOutputDir));
         File[] preDexOutputFiles = preDexOutputDir.listFiles();
-        assertEquals(4, preDexOutputFiles.length);
+        assertNotNull(preDexOutputFiles);
         File preDexedNonSnapshotExternalLibraryJarInput = null;
         File preDexedSnapshotExternalLibraryJarInput = null;
         File preDexedNonExternalLibraryJarInput = null;
         File preDexedDirectoryInput = null;
         for (int i = 0; i < 4; i++) {
-            if (preDexOutputFiles[i].getName().contains("nonSnapshotExtLibJar")) {
+            if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("nonSnapshotExtLibJar")) {
                 preDexedNonSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("snapshotExtLibJar")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("snapshotExtLibJar")) {
                 preDexedSnapshotExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("nonExtLibJar")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("nonExtLibJar")) {
                 preDexedNonExternalLibraryJarInput = preDexOutputFiles[i];
-            } else if (preDexOutputFiles[i].getName().contains("dirInput")) {
+            } else if (Files.readFirstLine(preDexOutputFiles[i], Charsets.UTF_8)
+                    .contains("dirInput")) {
                 preDexedDirectoryInput = preDexOutputFiles[i];
             }
         }
+        assertNotNull(preDexedSnapshotExternalLibraryJarInput);
+        assertNotNull(preDexedDirectoryInput);
+        assertNotNull(preDexedNonExternalLibraryJarInput);
+        assertNotNull(preDexedNonSnapshotExternalLibraryJarInput);
+
         assertThat(preDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
         assertThat(preDexedSnapshotExternalLibraryJarInput)
@@ -171,15 +193,20 @@ public class DexTransformTest {
 
         // Assert dex results, expect that all the pre-dexed outputs are merged into 1 file
         File[] dexOutputFiles = dexOutputDir.listFiles();
+        assertNotNull(dexOutputFiles);
         assertEquals(1, dexOutputFiles.length);
         File dexOutputFile = dexOutputFiles[0];
         assertThat(dexOutputFile).hasContents("Dexed content");
 
         // Assert cache results, expect that only the pre-dexed output of non-snapshot external
         // library jar file is cached
-        File[] cachedFiles = buildCache.getCacheDirectory().listFiles();
-        assertEquals(1, cachedFiles.length);
-        File cachedPreDexedNonSnapshotExternalLibraryJarInput = new File(cachedFiles[0], "output");
+        File[] files = buildCache.getCacheDirectory().listFiles();
+        assertNotNull(files);
+        List<File> cachedEntries =
+                Arrays.stream(files).filter(File::isDirectory).collect(Collectors.toList());
+        assertEquals(1, cachedEntries.size());
+        File cachedPreDexedNonSnapshotExternalLibraryJarInput =
+                new File(cachedEntries.get(0), "output");
         assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
@@ -206,7 +233,7 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert pre-dex results, expect that the contents are unchanged
-        assertEquals(4, preDexOutputDir.listFiles().length);
+        assertEquals(4, getFileCount(preDexOutputDir));
         assertThat(preDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
         assertThat(preDexedSnapshotExternalLibraryJarInput)
@@ -217,11 +244,11 @@ public class DexTransformTest {
                 .hasContents("Pre-dexed content of dirInput");
 
         // Assert dex results, expect that the contents are unchanged
-        assertEquals(1, dexOutputDir.listFiles().length);
+        assertEquals(1, getFileCount(dexOutputDir));
         assertThat(dexOutputFile).hasContents("Dexed content");
 
         // Assert cache results, expect that the contents are unchanged
-        assertEquals(1, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(1, countCacheEntries(buildCache));
         assertThat(cachedPreDexedNonSnapshotExternalLibraryJarInput)
                 .hasContents("Pre-dexed content of nonSnapshotExtLibJar");
 
@@ -258,7 +285,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithSingleProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(
@@ -270,7 +297,7 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
 
         // Assert cache results, expect that 2 entries are created
-        assertEquals(2, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(2, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files and build tools revision
         runDexing(
@@ -281,7 +308,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to remain the same
-        assertEquals(2, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(2, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files and different build tools revision
         runDexing(
@@ -292,7 +319,7 @@ public class DexTransformTest {
                 buildCache,
                 new Revision(AndroidBuilder.MIN_BUILD_TOOLS_REV.getMajor() + 1));
         // Expect the cache to contain 2 more entries
-        assertEquals(4, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(4, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files, with the contents of one file changed
         Files.write("New foo content", fooInput.getFile(), StandardCharsets.UTF_8);
@@ -305,7 +332,7 @@ public class DexTransformTest {
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
         // Expect the cache to contain 1 more entry
-        assertEquals(5, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(5, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with a new input file with the same contents
         JarInput bazInput =
@@ -319,7 +346,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(6, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(6, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with 2 exploded-aar files with the same contents as inputs
         File explodedAarFile1 =
@@ -346,7 +373,7 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(7, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(7, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with 2 instant-run.jar files with the same contents as inputs
         File instantRunFile1 = new File(testDir.newFolder(), "instant-run.jar");
@@ -365,7 +392,57 @@ public class DexTransformTest {
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
         // Expect the cache to contain 1 more entry
-        assertEquals(8, buildCache.getCacheDirectory().listFiles().length);
+        assertEquals(8, countCacheEntries(buildCache));
+    }
+
+    @Test
+    public void testBuildCacheFailure() throws Exception {
+        // Inputs for dexing
+        JarInput nonSnapshotExternalLibraryJarInput =
+                getJarInput(
+                        testDir.newFile("nonSnapshotExtLibJar"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        DirectoryInput directoryInput =
+                getDirectoryInput(
+                        testDir.newFolder("dirInput"),
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+
+        Files.write(
+                "nonSnapshotExtLibJar",
+                nonSnapshotExternalLibraryJarInput.getFile(),
+                StandardCharsets.UTF_8);
+        Files.write(
+                "dirInput",
+                new File(directoryInput.getFile(), "baz"),
+                StandardCharsets.UTF_8);
+
+        // Output directory of pre-dexing
+        File preDexOutputDir = testDir.newFolder("pre-dex");
+
+        // Output directory of dexing
+        File dexOutputDir = testDir.newFolder("dex");
+
+        // Let the build cache throw an exception when called
+        FileCache buildCache = mock(FileCache.class);
+        when(buildCache.createFile(any(), any(), any())).thenThrow(
+                new RuntimeException("Build cache error"));
+        when(buildCache.getCacheDirectory()).thenReturn(testDir.newFolder("cache"));
+
+        // Run dexing, expect it to fail
+        try {
+            runDexing(
+                    ImmutableList.of(nonSnapshotExternalLibraryJarInput),
+                    ImmutableList.of(directoryInput),
+                    preDexOutputDir,
+                    dexOutputDir,
+                    buildCache,
+                    AndroidBuilder.MIN_BUILD_TOOLS_REV);
+            fail("Expected TransformException");
+        } catch (TransformException exception) {
+            assertThat(exception.getMessage()).contains("Unable to pre-dex");
+            assertThat(Throwables.getRootCause(exception).getMessage())
+                    .contains("Build cache error");
+        }
     }
 
     private void runDexing(
@@ -376,25 +453,60 @@ public class DexTransformTest {
             @NonNull FileCache buildCache,
             @NonNull Revision buildToolsRevision)
             throws TransformException, InterruptedException, IOException {
-        BuildToolInfo mockBuildToolInfo = mock(BuildToolInfo.class);
-        when(mockBuildToolInfo.getRevision()).thenReturn(buildToolsRevision);
-        TargetInfo mockTargetInfo = mock(TargetInfo.class);
-        when(mockTargetInfo.getBuildTools()).thenReturn(mockBuildToolInfo);
-        fakeAndroidBuilder.setTargetInfo(mockTargetInfo);
 
+        TargetInfo targetInfo =
+                new TargetInfo(
+                        androidTarget,
+                        BuildToolInfo.fromStandardDirectoryLayout(
+                                buildToolsRevision, buildToolsFolder));
+
+        AndroidBuilder fakeAndroidBuilder =
+                new FakeAndroidBuilder(
+                        "projectId",
+                        "createdBy",
+                        mock(ProcessExecutor.class),
+                        mock(JavaProcessExecutor.class),
+                        mock(ErrorReporter.class),
+                        mock(ILogger.class),
+                        false /* verboseExec */);
+        fakeAndroidBuilder.setTargetInfo(targetInfo);
+
+        FakeDexByteCodeConverter byteCodeConverter =
+                new FakeDexByteCodeConverter(
+                        mock(ILogger.class), targetInfo, mock(JavaProcessExecutor.class), false);
+
+        // first we need to pre-dex
+        List<String> preDexNames =
+                ImmutableList.of("predex_0.jar", "predex_1.jar", "predex_2.jar", "predex_3.jar");
+        runPreDexing(
+                fakeAndroidBuilder,
+                jarInputs,
+                directoryInputs,
+                preDexOutputDir,
+                buildCache,
+                preDexNames);
+        List<JarInput> preDexedInputs =
+                preDexNames
+                        .stream()
+                        .map(
+                                name ->
+                                        getJarInput(
+                                                FileUtils.join(preDexOutputDir, name),
+                                                QualifiedContent.Scope.EXTERNAL_LIBRARIES))
+                        .collect(Collectors.toList());
+
+        // no merge dex files
         DexTransform dexTransform =
                 new DexTransform(
                         new DefaultDexOptions(),
-                        false, // debugMode
-                        false, // multiDex
+                        DexingMode.MONO_DEX,
+                        true,
                         null, // mainDexListFile
-                        preDexOutputDir,
-                        fakeAndroidBuilder,
-                        mock(Logger.class),
-                        mock(InstantRunBuildContext.class),
-                        Optional.of(buildCache));
+                        targetInfo,
+                        byteCodeConverter,
+                        mock(ErrorReporter.class));
 
-        TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
+        TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
                 .thenReturn(dexOutputDir);
@@ -405,6 +517,54 @@ public class DexTransformTest {
                         .build();
 
         dexTransform.transform(transformInvocation);
+    }
+
+    private static void runPreDexing(
+            @NonNull AndroidBuilder fakeAndroidBuilder,
+            @NonNull Collection<JarInput> jarInputs,
+            @NonNull Collection<DirectoryInput> directoryInputs,
+            @NonNull File preDexOutputDir,
+            @NonNull FileCache buildCache,
+            @NonNull List<String> preDexNames)
+            throws TransformException, InterruptedException, IOException {
+        PreDexTransform preDexTransform =
+                new PreDexTransform(
+                        new DefaultDexOptions(),
+                        fakeAndroidBuilder,
+                        buildCache,
+                        DexingMode.MONO_DEX,
+                        false);
+
+        TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
+        TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
+        when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
+                .thenReturn(
+                        FileUtils.join(preDexOutputDir, preDexNames.get(0)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(1)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(2)),
+                        FileUtils.join(preDexOutputDir, preDexNames.get(3)));
+        TransformInvocation transformInvocation =
+                new TransformInvocationBuilder(mock(Context.class))
+                        .addInputs(ImmutableList.of(transformInput))
+                        .addOutputProvider(mockTransformOutputProvider)
+                        .build();
+
+        preDexTransform.transform(transformInvocation);
+    }
+
+    public static int getFileCount(File directory) {
+        checkArgument(directory.isDirectory());
+        File[] files = directory.listFiles();
+        assertNotNull(files);
+        return files.length;
+    }
+
+    private static int countCacheEntries(FileCache buildCache) {
+        // The cache directory contains subdirectories which are cache entries, and lock files.
+        // Therefore, the number of cache entries equals the number of subdirectories.
+        File[] files = buildCache.getCacheDirectory().listFiles();
+        assertNotNull(files);
+        return (int) Arrays.stream(files).filter(File::isDirectory).count();
     }
 
     private static class FakeAndroidBuilder extends AndroidBuilder {
@@ -437,9 +597,21 @@ public class DexTransformTest {
                 throws IOException {
             String content =
                     inputFile.isDirectory()
-                            ? Files.toString(inputFile.listFiles()[0], StandardCharsets.UTF_8)
+                            ? Files.toString(
+                                    verifyNotNull(inputFile.listFiles())[0], StandardCharsets.UTF_8)
                             : Files.toString(inputFile, StandardCharsets.UTF_8);
             Files.write("Pre-dexed content of " + content, outFile, StandardCharsets.UTF_8);
+        }
+    }
+
+    private static class FakeDexByteCodeConverter extends DexByteCodeConverter {
+
+        public FakeDexByteCodeConverter(
+                ILogger logger,
+                TargetInfo targetInfo,
+                JavaProcessExecutor javaProcessExecutor,
+                boolean verboseExec) {
+            super(logger, targetInfo, javaProcessExecutor, verboseExec);
         }
 
         @Override
@@ -450,7 +622,7 @@ public class DexTransformTest {
                 @Nullable File mainDexList,
                 @NonNull DexOptions dexOptions,
                 @NonNull ProcessOutputHandler processOutputHandler)
-                throws IOException {
+                throws IOException, InterruptedException, ProcessException {
             Files.write(
                     "Dexed content", new File(outDexFolder, "classes.dex"), StandardCharsets.UTF_8);
         }

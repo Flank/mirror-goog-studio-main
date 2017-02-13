@@ -17,11 +17,9 @@
 package com.android.build.gradle.managed;
 
 import com.android.annotations.NonNull;
-
-import org.gradle.model.Managed;
-
 import java.util.List;
 import java.util.Set;
+import org.gradle.model.Managed;
 
 /**
  * DSL object for variant specific ndk-build settings.

@@ -37,7 +37,7 @@ public class DosLineEndingDetector extends LayoutDetector {
             "Mangled file line endings",
 
             "On Windows, line endings are typically recorded as carriage return plus " +
-            "newline: \\r\\n.\n" +
+            "newline: \\\\r\\\\n.\n" +
             "\n" +
             "This detector looks for invalid line endings with repeated carriage return " +
             "characters (without newlines). Previous versions of the ADT plugin could " +

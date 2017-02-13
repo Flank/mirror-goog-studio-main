@@ -20,11 +20,9 @@ import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.commons.lang.text.StrSubstitutor;
-
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.text.StrSubstitutor;
 
 /**
  * Builder class to assist in creating build files for both gradle and gradle-experimental plugin.

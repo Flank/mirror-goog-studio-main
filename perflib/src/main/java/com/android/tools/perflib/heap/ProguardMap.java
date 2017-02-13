@@ -29,6 +29,8 @@ import java.util.HashMap;
 // Class used to deobfuscate classes, fields, and stack frames.
 public class ProguardMap {
 
+    private static final String ARRAY_SYMBOL = "[]";
+
     private static class FrameData {
         public FrameData(String clearMethodName, int lineDelta) {
             this.clearMethodName = clearMethodName;
@@ -214,8 +216,18 @@ public class ProguardMap {
     // Returns the deobfuscated version of the given class name. If no
     // deobfuscated version is known, the original string is returned.
     public String getClassName(String obfuscatedClassName) {
-        ClassData classData = mClassesFromObfuscatedName.get(obfuscatedClassName);
-        return classData == null ? obfuscatedClassName : classData.getClearName();
+        // Class names for arrays may have trailing [] that need to be
+        // stripped before doing the lookup.
+        String baseName = obfuscatedClassName;
+        String arraySuffix = "";
+        while (baseName.endsWith(ARRAY_SYMBOL)) {
+            arraySuffix += ARRAY_SYMBOL;
+            baseName = baseName.substring(0, baseName.length() - ARRAY_SYMBOL.length());
+        }
+
+        ClassData classData = mClassesFromObfuscatedName.get(baseName);
+        String clearBaseName = classData == null ? baseName : classData.getClearName();
+        return clearBaseName + arraySuffix;
     }
 
     // Returns the deobfuscated version of the given field name for the given
@@ -262,7 +274,7 @@ public class ProguardMap {
             converted.append(')');
             converted.append(fromProguardSignature(sig.substring(end+1)));
             return converted.toString();
-        } else if (sig.endsWith("[]")) {
+        } else if (sig.endsWith(ARRAY_SYMBOL)) {
             return "[" + fromProguardSignature(sig.substring(0, sig.length()-2));
         } else if (sig.equals("boolean")) {
             return "Z";

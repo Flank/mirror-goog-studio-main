@@ -220,7 +220,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
           "Incorrect Interpolation",
 
           "To insert the value of a variable, you can use `${variable}` inside " +
-          "a string literal, but *only* if you are using double quotes!",
+          "a string literal, but **only** if you are using double quotes!",
 
           Category.CORRECTNESS,
           8,
@@ -237,7 +237,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             "This is similar to the `GradleDependency` check, which checks for newer versions " +
             "available in the Android SDK tools and libraries, but this works with any " +
             "MavenCentral dependency, and connects to the library every time, which makes " +
-            "it more flexible but also *much* slower.",
+            "it more flexible but also **much** slower.",
             Category.CORRECTNESS,
             4,
             Severity.WARNING,
@@ -265,7 +265,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             "Google Play services SDK's can be selectively included, which enables a smaller APK " +
             "size. Consider declaring dependencies on individual Google Play services SDK's. " +
             "If you are using Firebase API's (http://firebase.google.com/docs/android/setup), " +
-            "Android Studio's Tools \\u2192 Firebase assistant window can automatically add " +
+            "Android Studio's Tools \u2192 Firebase assistant window can automatically add " +
             "just the dependencies needed for each feature.",
 
             Category.PERFORMANCE,
@@ -1396,7 +1396,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     List<String> supportedWearableVersions = Lists.newArrayList(wearableVersions);
                     Collections.sort(supportedWearableVersions);
                     String message = String.format("The wearable libraries for %1$s and %2$s " +
-                                    "must use *exactly* the same versions; found %3$s " +
+                                    "must use **exactly** the same versions; found %3$s " +
                                     "and %4$s",
                             GOOGLE_SUPPORT_GROUP_ID,
                             ANDROID_WEAR_GROUP_ID,

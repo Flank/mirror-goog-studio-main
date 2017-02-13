@@ -37,7 +37,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -86,6 +85,8 @@ public class InstantRunVerifier {
                 return OBJECT_COMPARATOR.areEqual(first, second);
     };
 
+    private static final String KOTLIN_METADATA_ANNOTATION_DESC = "Lkotlin/Metadata;";
+
     public interface ClassBytesProvider {
         byte[] load() throws IOException;
     }
@@ -120,14 +121,9 @@ public class InstantRunVerifier {
 
         @Override
         public byte[] load() throws IOException {
-            InputStream is = jarFile.getInputStream(jarEntry);
-            try {
-                ByteStreams.toByteArray(is);
-            } finally {
-                Closeables.close(is, false /* swallowIOException */);
+            try (InputStream is = jarFile.getInputStream(jarEntry)) {
+                return ByteStreams.toByteArray(is);
             }
-
-            return new byte[0];
         }
     }
 
@@ -445,6 +441,21 @@ public class InstantRunVerifier {
 
             if (!STRING_COMPARATOR.areEqual(first.desc, second.desc)) {
                 return false;
+            }
+
+            // Kotlin adds a kotlin.Metadata annotation to each compiled class:
+            // https://github.com/JetBrains/kotlin/blob/master/core/runtime.jvm/src/kotlin/Metadata.kt
+            // The annotation contains information that cannot be represented in Java's
+            // class file format. It includes binary protocol buffers serialized as
+            // Java strings -- in particular, the "d1" and "d2" fields.  If you make any
+            // change to the class, e.g. adding a method, it can change the contents of
+            // the metadata annotation.  We don't try to compare them -- we rely only on
+            // overt changes to the classfile (e.g. METHOD_ADDED) for verification.
+            //
+            // Note that if it's ever necessary, we can implement an isKotlinClass(<class>)
+            // method by checking <class>.visibleAnnotations.get(0).desc against this value.
+            if (first.desc.equals(KOTLIN_METADATA_ANNOTATION_DESC)) {
+                return true;
             }
 
             List firstEntries = splitToEntries(first.values);

@@ -30,10 +30,8 @@ import com.android.build.gradle.managed.NativeSourceFile;
 import com.android.build.gradle.managed.NativeSourceFolder;
 import com.android.build.gradle.managed.NativeToolchain;
 import com.google.common.base.Strings;
-
-import org.gradle.model.internal.core.DuplicateModelException;
-
 import java.util.Map;
+import org.gradle.model.internal.core.DuplicateModelException;
 
 /**
  * Methods for converting Native*Value GSon structures to Native* gradle model structures.

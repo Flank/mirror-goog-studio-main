@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ndk;
 
 import com.android.annotations.NonNull;
-
 import java.io.File;
 import java.util.List;
 

@@ -29,10 +29,9 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -360,6 +359,16 @@ public final class FileUtils {
             path = path.replace(File.separatorChar, '/');
         }
         return path;
+    }
+
+    /** See {@link #toSystemIndependentPath(String)}. */
+    @NonNull
+    public static String toSystemIndependentPath(@NonNull Path path) {
+        String filePath = path.toString();
+        if (!path.getFileSystem().getSeparator().equals("/")) {
+            return filePath.replace(path.getFileSystem().getSeparator(), "/");
+        }
+        return filePath;
     }
 
     /**

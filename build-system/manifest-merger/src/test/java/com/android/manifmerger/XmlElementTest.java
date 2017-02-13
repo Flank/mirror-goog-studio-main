@@ -24,19 +24,15 @@ import com.android.SdkConstants;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.logging.Logger;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link XmlElement}

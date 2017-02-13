@@ -29,7 +29,10 @@ import com.android.io.FileWrapper;
 import com.android.manifmerger.ManifestProvider;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
@@ -37,11 +40,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
@@ -259,8 +257,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     new File(scope.getGlobalScope().getIntermediatesDir(), "manifest/tmp"));
 
             // get single output for now.
-            final BaseVariantOutputData variantOutputData =
-                    scope.getVariantData().getOutputs().get(0);
+            final BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
 
             variantOutputData.manifestProcessorTask = processTestManifestTask;
 

@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.shrinker.parser;
 
-/**
- * Exception used when the parser fails.
- */
+/** Exception used when the parser fails. */
 public class ProguardParserException extends RuntimeException {
     public ProguardParserException(String message) {
         super("ProGuard configuration parser error: " + message);

@@ -1,18 +1,15 @@
-load("//tools/base/bazel:jasmin.bzl", "jasmin_library")
-load(":instrumenter.bzl", "compile_and_instrument_base")
-load(":instrumenter.bzl", "compile_and_instrument_patch")
-load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:utils.bzl", "srcjar")
 
-fileset(
-    name = "sources",
-    srcs = glob(["src/main/java/**/*.java"]),
+srcjar(
+    name = "srcjar",
+    java_library = ":instant-run-instrumentation",
     visibility = ["//tools/base/build-system/gradle-core:__pkg__"],
 )
 
 java_library(
     name = "instant-run-instrumentation",
-    srcs = [":sources"],
-    visibility = ["//visibility:public"],
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//visibility:private"],  # These sources are compiled into gradle-core
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
@@ -27,9 +24,7 @@ java_library(
 
 java_library(
     name = "instant-run-test-instrumenter",
-    srcs = glob([
-        "src/instrumenter/java/**/*.java",
-    ]),
+    srcs = glob(["src/instrumenter/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         ":instant-run-instrumentation",
@@ -55,7 +50,11 @@ java_binary(
     runtime_deps = [":instant-run-test-instrumenter"],
 )
 
+load(":instrumenter.bzl", "compile_and_instrument_base")
+
 compile_and_instrument_base("incremental-support-visitor")
+
+load(":instrumenter.bzl", "compile_and_instrument_patch")
 
 compile_and_instrument_patch("changeBaseClass", "incremental-change-visitor")
 
@@ -99,7 +98,7 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-util",

@@ -39,21 +39,17 @@ import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
-import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionStatement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -154,6 +150,12 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
 
         String methodName = method.getName();
         if (methodName.equals("ofPropertyValuesHolder")) {
+            if (!evaluator.isMemberInClass(method, "android.animation.ObjectAnimator")) {
+                // *Don't* match ValueAnimator.ofPropertyValuesHolder(); for that method,
+                // arg0 is another PropertyValuesHolder, *not* the target object!
+                return;
+            }
+
             // Try to find the corresponding property value holder initializations
             // and validate each one
             checkPropertyValueHolders(context, targetClass, expressions);
@@ -261,45 +263,9 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
                 }
 
                 if (!(variable instanceof PsiField)) {
-                    PsiStatement statement = PsiTreeUtil.getParentOfType(arg, PsiStatement.class,
-                            false);
-                    if (statement != null) {
-                        PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                                PsiStatement.class);
-                        String targetName = variable.getName();
-                        if (targetName == null) {
-                            return null;
-                        }
-                        while (prev != null) {
-                            if (prev instanceof PsiDeclarationStatement) {
-                                for (PsiElement element : ((PsiDeclarationStatement) prev)
-                                        .getDeclaredElements()) {
-                                    if (variable.equals(element)) {
-                                        return findHolderConstruction(context,
-                                                variable.getInitializer());
-                                    }
-                                }
-                            } else if (prev instanceof PsiExpressionStatement) {
-                                PsiExpression expression = ((PsiExpressionStatement) prev)
-                                        .getExpression();
-                                if (expression instanceof PsiAssignmentExpression) {
-                                    PsiAssignmentExpression assign
-                                            = (PsiAssignmentExpression) expression;
-                                    PsiExpression lhs = assign.getLExpression();
-                                    if (lhs instanceof PsiReferenceExpression) {
-                                        PsiReferenceExpression reference =
-                                                (PsiReferenceExpression) lhs;
-                                        if (targetName.equals(reference.getReferenceName()) &&
-                                                reference.getQualifier() == null) {
-                                            return findHolderConstruction(context,
-                                                    assign.getRExpression());
-                                        }
-                                    }
-                                }
-                            }
-                            prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                                    PsiStatement.class);
-                        }
+                    PsiExpression last = ConstantEvaluator.findLastAssignment(arg, variable);
+                    if (last != null) {
+                        return findHolderConstruction(context, last);
                     }
                 }
             }
@@ -467,6 +433,15 @@ public class ObjectAnimatorDetector extends Detector implements JavaPsiScanner {
         } else if (methodLocation != null) {
             location = location.withSecondary(methodLocation, "Property setter here");
         }
+
+        // Allow suppressing at either the property binding site *or* the property site
+        // (we report errors on both)
+        PsiModifierListOwner owner = PsiTreeUtil.getParentOfType(propertyNameExpression,
+                PsiModifierListOwner.class,false);
+        if (owner != null && context.getDriver().isSuppressed(context, issue, owner)) {
+            return;
+        }
+
         context.report(issue, method, location, message);
     }
 

@@ -33,12 +33,10 @@ import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.gradle.api.Project;
 
 /**
  * Factory that creates instances of {@link com.android.builder.internal.aapt.Aapt} by looking

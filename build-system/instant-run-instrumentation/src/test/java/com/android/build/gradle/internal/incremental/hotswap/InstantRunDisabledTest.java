@@ -24,7 +24,6 @@ import com.ir.disable.InstantRunDisabledClass;
 import com.ir.disable.InstantRunDisabledMethod;
 import com.ir.disable.all.DisabledClassOne;
 import com.ir.disable.all.DisabledClassTwo;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 

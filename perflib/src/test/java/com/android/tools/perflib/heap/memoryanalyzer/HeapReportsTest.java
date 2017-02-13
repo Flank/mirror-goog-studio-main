@@ -1,20 +1,16 @@
 package com.android.tools.perflib.heap.memoryanalyzer;
 
-import com.android.tools.perflib.analyzer.AnalysisResultEntry;
 import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Snapshot;
-
+import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Tests for {@link HeapReports}.
@@ -41,6 +37,6 @@ public class HeapReportsTest {
         HeapReports.generateReport(mReportMock, new BasicAnalyzerTask(), mSnapshotMock);
 
         // assert
-        Mockito.verify(mReportMock).generate(Matchers.<List<AnalysisResultEntry<?>>>any());
+        Mockito.verify(mReportMock).generate(ArgumentMatchers.any());
     }
 }

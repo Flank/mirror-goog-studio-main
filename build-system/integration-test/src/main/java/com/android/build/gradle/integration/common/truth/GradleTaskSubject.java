@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.truth.TaskStateList.TaskInfo;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
-
 import com.google.common.truth.SubjectFactory;
 
 /**
@@ -72,6 +71,30 @@ public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
     public void wasNotUpToDate() {
         if (getSubject().isUpToDate()) {
             failWithRawMessage("Not true that %s was not " + UP_TO_DATE, getDisplaySubject());
+        }
+    }
+
+    public void failed() {
+        if (!getSubject().failed()) {
+            failWithRawMessage("Not true that %s failed ", getDisplaySubject());
+        }
+    }
+
+    public void didNotFail() {
+        if (getSubject().failed()) {
+            failWithRawMessage("Not true that %s did not fail", getDisplaySubject());
+        }
+    }
+
+    public void wasSkipped() {
+        if (!getSubject().isSkipped()) {
+            failWithRawMessage("Not true that %s was skipped", getDisplaySubject());
+        }
+    }
+
+    public void wasNotSkipped() {
+        if (getSubject().failed()) {
+            failWithRawMessage("Not true that %s was not skipped", getDisplaySubject());
         }
     }
 

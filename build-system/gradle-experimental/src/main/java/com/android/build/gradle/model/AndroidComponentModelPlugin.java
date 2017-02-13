@@ -19,8 +19,8 @@ package com.android.build.gradle.model;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.internal.ProductFlavorCombo;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
 import com.android.build.gradle.managed.ProductFlavor;
@@ -32,9 +32,10 @@ import com.android.builder.Version;
 import com.android.builder.core.BuilderConstants;
 import com.android.repository.Revision;
 import com.android.utils.StringHelper;
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
-
+import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.SourceDirectorySet;
@@ -55,11 +56,6 @@ import org.gradle.platform.base.TypeBuilder;
 import org.gradle.tooling.BuildException;
 import org.gradle.tooling.UnsupportedVersionException;
 
-import java.io.File;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /**
  * Plugin to set up infrastructure for other android plugins.
  */
@@ -79,7 +75,12 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     public void apply(Project project) {
         checkPluginVersion();
         checkGradleVersion(project);
+        TaskInputHelper.enableBypass();
+
         project.getPlugins().apply(ComponentModelBasePlugin.class);
+
+        project.getGradle().getTaskGraph().addTaskExecutionGraphListener(
+                taskGraph -> TaskInputHelper.disableBypass());
     }
 
     /**

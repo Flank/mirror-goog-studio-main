@@ -35,6 +35,7 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.Message;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -42,17 +43,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.stream.Collectors;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -64,9 +54,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 /**
@@ -76,6 +71,10 @@ import org.mockito.Mockito;
  * to allow for other tasks using the AndroidTaskRegistry directly.
  */
 public class TaskTestUtils {
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     private static final String FOLDER_TEST_PROJECTS = "test-projects";
 
     protected static final String TASK_NAME = "task name";
@@ -86,7 +85,7 @@ public class TaskTestUtils {
     protected FakeErrorReporter errorReporter;
 
     protected Supplier<RuntimeException> mTransformTaskFailed;
-    private Project project;
+    protected Project project;
 
     static class FakeErrorReporter extends ErrorReporter {
 
@@ -159,15 +158,17 @@ public class TaskTestUtils {
 
     @Before
     public void setUp() throws IOException {
-        project = ProjectBuilder.builder().withProjectDir(
-                new File(getRootDir(), FOLDER_TEST_PROJECTS + "/basic")).build();
-
+        File projectDirectory = temporaryFolder.newFolder();
+        FileUtils.mkdirs(projectDirectory);
+        project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
         errorReporter = new FakeErrorReporter(ErrorReporter.EvaluationMode.IDE);
         transformManager = new TransformManager(
                 project, new AndroidTaskRegistry(), errorReporter, new FakeRecorder());
         taskFactory = new TaskContainerAdaptor(project.getTasks());
-        mTransformTaskFailed = () -> new RuntimeException("Transform task creation failed.");
+        mTransformTaskFailed = () -> new RuntimeException(
+                String.format("Transform task creation failed.  Sync issue:\n %s",
+                        errorReporter.getSyncIssue().toString()));
     }
 
     protected StreamTester streamTester() {

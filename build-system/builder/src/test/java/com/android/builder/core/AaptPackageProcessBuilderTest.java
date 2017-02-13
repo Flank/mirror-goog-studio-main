@@ -32,16 +32,13 @@ import com.android.utils.StdLogger;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
-
-import junit.framework.TestCase;
-
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
+import junit.framework.TestCase;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Tests for {@link AaptPackageProcessBuilder} class

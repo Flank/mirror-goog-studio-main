@@ -3,9 +3,21 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 fileset(
     name = "resources",
-    srcs = ["//tools/buildSrc/base:version.properties"] + glob(["src/main/resources/**"]),
+    srcs = glob(["src/main/resources/**"]) + [
+        # TODO: figure out how to include all resources from aaptjlib automatically.
+        "//tools/base/aaptjlib:src/main/resources/linux32/libaapt2_jni.so",
+        "//tools/base/aaptjlib:src/main/resources/linux64/libaapt2_jni.so",
+        "//tools/base/aaptjlib:src/main/resources/linux64/libc++.so",
+        "//tools/base/aaptjlib:src/main/resources/mac64/libaapt2_jni.dylib",
+        "//tools/base/aaptjlib:src/main/resources/mac64/libc++.dylib",
+        "//tools/base/aaptjlib:src/main/resources/win32/libaapt2_jni.dll",
+        "//tools/base/aaptjlib:src/main/resources/win64/libaapt2_jni.dll",
+        "//tools/base/aaptjlib:src/main/resources/win64/libwinpthread-1.dll",
+        "//tools/buildSrc/base:version.properties",
+    ],
     mappings = {
         "//tools/buildSrc/base:": "com/android/builder/",
+        "//tools/base/aaptjlib:src/main/resources/": "",
         "src/main/resources/": "",
     },
 )
@@ -13,8 +25,10 @@ fileset(
 maven_java_library(
     name = "builder",
     srcs = glob(["src/main/java/**/*.java"]) + [
-        "//tools/base/apkzlib:sources",
-        "//tools/base/build-system/profile:sources",  # TODO: Implement this properly.
+        "//tools/base/apkzlib:srcjar",
+        "//tools/base/build-system/profile:srcjar",
+        "//tools/base/aaptjlib:srcjar",
+        "//tools/base/build-system/builder/src/dex:srcjar",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
@@ -38,7 +52,9 @@ maven_java_library(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:com.squareup_javawriter",
         "//tools/base/third_party:commons-codec_commons-codec",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
@@ -68,7 +84,7 @@ java_test(
     deps = [
         ":builder",
         "//tools/base/annotations",
-        "//tools/base/apkzlib",
+        "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
@@ -77,10 +93,11 @@ java_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.mockito_mockito-all",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

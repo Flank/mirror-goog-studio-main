@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
-import org.gradle.model.Managed;
-
 import java.io.File;
+import org.gradle.model.Managed;
 
 /**
  * Options for managing CMake external native builds.

@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class JackSyncIssueTest {
             .create();
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "apply plugin: 'com.android.application'\n"
                 + "android {\n"
@@ -51,7 +50,7 @@ public class JackSyncIssueTest {
     }
 
     @Test
-    public void testMismatchDependencyErrorIsInTheModel() {
+    public void testMismatchDependencyErrorIsInTheModel() throws Exception {
         // Query the model to get the mismatch dep sync error.
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 

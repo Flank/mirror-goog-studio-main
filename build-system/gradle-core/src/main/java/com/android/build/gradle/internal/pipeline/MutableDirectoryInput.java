@@ -22,7 +22,6 @@ import com.android.build.api.transform.Status;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;

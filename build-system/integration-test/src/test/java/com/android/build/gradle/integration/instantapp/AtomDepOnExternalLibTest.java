@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -33,7 +32,7 @@ public class AtomDepOnExternalLibTest {
             GradleTestProject.builder().fromTestProject("singleAtom").withoutNdk().create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         // Add an external library dependency.
         TestFileUtils.appendToFile(
                 sProject.getSubproject(":atom").getBuildFile(),
@@ -51,7 +50,7 @@ public class AtomDepOnExternalLibTest {
     }
 
     @Test
-    public void build() {
+    public void build() throws Exception {
         sProject.execute("clean", ":instantApp:assembleRelease");
     }
 }

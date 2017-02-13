@@ -45,6 +45,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
+import com.intellij.psi.PsiPolyadicExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +69,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
             "\"if (false)\" check, surrounding your logging calls with a check for " +
             "BuildConfig.DEBUG is a good idea.\n" +
             "\n" +
-            "If you *really* intend for the logging to be present in release mode, you can " +
+            "If you **really** intend for the logging to be present in release mode, you can " +
             "suppress this warning with a @SuppressLint annotation for the intentional " +
             "logging calls.",
 
@@ -184,7 +185,7 @@ public class LogDetector extends Detector implements JavaPsiScanner {
             if (argument instanceof PsiLiteral) {
                 return false;
             }
-            if (argument instanceof PsiBinaryExpression) {
+            if (argument instanceof PsiPolyadicExpression) {
                 String string = ConstantEvaluator.evaluateString(context, argument, false);
                 //noinspection VariableNotUsedInsideIf
                 if (string != null) { // does it resolve to a constant?

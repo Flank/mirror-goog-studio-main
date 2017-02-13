@@ -33,11 +33,11 @@ import com.android.build.gradle.internal.transforms.JarMerger;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -71,8 +71,7 @@ public class LibraryJarTransform extends Transform {
     @NonNull
     private final String packagePath;
     private final boolean packageBuildConfig;
-    @NonNull
-    private final File typedefRecipe;
+    @Nullable private final File typedefRecipe;
 
     @Nullable
     private List<ExcludeListProvider> excludeListProviders;
@@ -80,7 +79,7 @@ public class LibraryJarTransform extends Transform {
     public LibraryJarTransform(
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
-            @NonNull File typedefRecipe,
+            @Nullable File typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;
@@ -93,7 +92,7 @@ public class LibraryJarTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        if (typedefRecipe.isFile()) {
+        if (typedefRecipe != null) {
             return ImmutableList.of(SecondaryFile.nonIncremental(typedefRecipe));
         } else {
             return ImmutableList.of();
@@ -152,6 +151,10 @@ public class LibraryJarTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        // non incremental transform, need to clear out outputs.
+        // main class jar will get rewritten, just delete local jar folder content.
+        FileUtils.deleteDirectoryContents(localJarsLocation);
+
         List<String> excludes = Lists.newArrayListWithExpectedSize(5);
 
         // these must be regexp to match the zip entries

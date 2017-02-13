@@ -130,6 +130,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -167,6 +168,8 @@ public class LintDriver {
     private Map<Object,Object> properties;
     /** Whether we need to look for legacy (old Lombok-based Java API) detectors */
     private boolean runCompatChecks = true;
+    /** Whether we should run all normal checks on test sources */
+    private boolean checkTestSources;
     private LintBaseline baseline;
 
     /**
@@ -404,6 +407,26 @@ public class LintDriver {
      */
     public void setAbbreviating(boolean abbreviating) {
         this.abbreviating = abbreviating;
+    }
+
+    /**
+     * Sets whether lint should run all the normal checks on the test sources
+     * (instead of just the checks that have opted into considering tests).
+     *
+     * @param checkTestSources true to run all the checks on all test sources
+     */
+    public void setCheckTestSources(boolean checkTestSources) {
+        this.checkTestSources = checkTestSources;
+    }
+
+    /**
+     * Returns whether lint will run all the normal checks on the test sources
+     * (instead of just the checks that have opted into considering tests).
+     *
+     * @return true iff lint will run all the checks on test sources
+     */
+    public boolean isCheckTestSources() {
+        return checkTestSources;
     }
 
     /**
@@ -1643,20 +1666,21 @@ public class LintDriver {
         for (File folder : testSourceFolders) {
             gatherJavaFiles(folder, sources);
         }
+        List<JavaContext> testContexts = Lists.newArrayListWithExpectedSize(sources.size());
         for (File file : sources) {
             JavaContext context = new JavaContext(this, project, main, file, javaParser);
             context.setTestSource(true);
-            contexts.add(context);
+            testContexts.add(context);
         }
 
         // Visit all contexts
-        if (!contexts.isEmpty()) {
-            visitJavaFiles(checks, javaParser, contexts);
+        if (!contexts.isEmpty() || !testContexts.isEmpty()) {
+            visitJavaFiles(checks, javaParser, contexts, testContexts);
         }
     }
 
-    private void visitJavaFiles(@NonNull List<Detector> checks, JavaParser javaParser,
-            List<JavaContext> contexts) {
+    private void visitJavaFiles(@NonNull List<Detector> checks, @NonNull JavaParser javaParser,
+            @NonNull List<JavaContext> contexts, @NonNull List<JavaContext> testContexts) {
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
         //List<Detector> scanners = checks;
@@ -1671,12 +1695,50 @@ public class LintDriver {
         if (runCompatChecks) {
             visitor.setDisposeUnitsAfterUse(false);
         }
-        parserErrors = !visitor.prepare(contexts);
+
+        List<JavaContext> allContexts;
+        if (testContexts.isEmpty()) {
+            allContexts = contexts;
+        } else {
+            allContexts = Lists.newArrayListWithExpectedSize(
+                    contexts.size() + testContexts.size());
+            allContexts.addAll(contexts);
+            allContexts.addAll(testContexts);
+        }
+
+        // Force all test sources into the normal source check (where all checks apply) ?
+        if (checkTestSources) {
+            contexts = allContexts;
+            testContexts = Collections.emptyList();
+        }
+
+        parserErrors = !visitor.prepare(allContexts);
+
         for (JavaContext context : contexts) {
             fireEvent(EventType.SCANNING_FILE, context);
             visitor.visitFile(context);
             if (canceled) {
                 return;
+            }
+        }
+
+        // Run tests separately: most checks aren't going to apply for tests
+        JavaPsiVisitor testVisitor = null;
+        if (!testContexts.isEmpty()) {
+            List<Detector> testScanners = filterTestScanners(scanners);
+            if (!testScanners.isEmpty()) {
+                testVisitor = new JavaPsiVisitor(javaParser, testScanners);
+                if (runCompatChecks) {
+                    testVisitor.setDisposeUnitsAfterUse(false);
+                }
+
+                for (JavaContext context : testContexts) {
+                    fireEvent(EventType.SCANNING_FILE, context);
+                    testVisitor.visitFile(context);
+                    if (canceled) {
+                        return;
+                    }
+                }
             }
         }
 
@@ -1725,7 +1787,6 @@ public class LintDriver {
                         location, message, TextFormat.RAW);
                 */
 
-
                 JavaVisitor oldVisitor = new JavaVisitor(javaParser, filtered);
 
                 // NOTE: We do NOT call oldVisitor.prepare and dispose here since this
@@ -1738,10 +1799,44 @@ public class LintDriver {
                         return;
                     }
                 }
+
+                if (!testContexts.isEmpty()) {
+                    List<Detector> testScanners = filterTestScanners(filtered);
+                    JavaVisitor oldTestVisitor = new JavaVisitor(javaParser, testScanners);
+                    for (JavaContext context : testContexts) {
+                        fireEvent(EventType.SCANNING_FILE, context);
+                        oldTestVisitor.visitFile(context);
+                        if (canceled) {
+                            return;
+                        }
+                    }
+                }
             }
         }
 
         visitor.dispose();
+        if (testVisitor != null) {
+            testVisitor.dispose();
+        }
+    }
+
+    @NonNull
+    private List<Detector> filterTestScanners(@NonNull List<Detector> scanners) {
+        List<Detector> testScanners = Lists.newArrayListWithExpectedSize(scanners.size());
+        // Compute intersection of Java and test scanners
+        Collection<Detector> sourceScanners = scopeDetectors.get(Scope.TEST_SOURCES);
+        if (sourceScanners == null) {
+            return Collections.emptyList();
+        }
+        if (sourceScanners.size() > 15 && scanners.size() > 15) {
+            sourceScanners = Sets.newHashSet(sourceScanners);
+        }
+        for (Detector check : scanners) {
+            if (sourceScanners.contains(check)) {
+                testScanners.add(check);
+            }
+        }
+        return testScanners;
     }
 
     private void checkIndividualJavaFiles(
@@ -1767,7 +1862,11 @@ public class LintDriver {
             return;
         }
 
-        visitJavaFiles(checks, javaParser, contexts);
+        // We're not sure if these individual files are tests or non-tests; treat them
+        // as non-tests now. This gives you warnings if you're editing an individual
+        // test file for example.
+
+        visitJavaFiles(checks, javaParser, contexts, Collections.emptyList());
     }
 
     private static void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
@@ -2030,6 +2129,29 @@ public class LintDriver {
         public LintClientWrapper(@NonNull LintClient delegate) {
             super(getClientName());
             mDelegate = delegate;
+        }
+
+        @Nullable
+        @Override
+        public Document getMergedManifest(@NonNull Project project) {
+            return mDelegate.getMergedManifest(project);
+        }
+
+        @Override
+        public void resolveMergeManifestSources(@NonNull Document mergedManifest,
+                @NonNull File reportFile) {
+            mDelegate.resolveMergeManifestSources(mergedManifest, reportFile);
+        }
+
+        @Override
+        public boolean isMergeManifestNode(@NonNull org.w3c.dom.Node node) {
+            return mDelegate.isMergeManifestNode(node);
+        }
+
+        @Nullable
+        @Override
+        public org.w3c.dom.Node findManifestSourceNode(@NonNull org.w3c.dom.Node mergedNode) {
+            return mDelegate.findManifestSourceNode(mergedNode);
         }
 
         @Deprecated

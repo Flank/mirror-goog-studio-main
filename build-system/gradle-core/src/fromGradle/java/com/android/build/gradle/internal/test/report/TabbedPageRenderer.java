@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.reporting.ReportRenderer;
-import org.gradle.util.GradleVersion;
-
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
+import org.gradle.reporting.ReportRenderer;
+import org.gradle.util.GradleVersion;
 
 public abstract class TabbedPageRenderer<T> extends ReportRenderer<T, SimpleHtmlWriter> {
     private T model;

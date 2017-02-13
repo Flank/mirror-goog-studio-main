@@ -394,6 +394,32 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                         mSparseLongArray));
     }
 
+    public void testWildcards() throws Exception {
+        String expected = ""
+                + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
+                + "        Map<Integer, Long> myStringMap = new HashMap<>();\n"
+                + "                                         ~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import java.util.HashMap;\n"
+                        + "import java.util.Map;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "\n"
+                        + "public class SparseLongArray {\n"
+                        + "    public void test() { // but only minSdkVersion >= 18\n"
+                        + "        Map<Integer, Long> myStringMap = new HashMap<>();\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mLongSparseArray = java(""
             + "package test.pkg;\n"

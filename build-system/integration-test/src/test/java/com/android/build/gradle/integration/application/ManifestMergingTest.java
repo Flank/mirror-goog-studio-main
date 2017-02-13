@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -53,12 +52,12 @@ public class ManifestMergingTest {
             .create();
 
     @Test
-    public void simpleManifestMerger() {
+    public void simpleManifestMerger() throws Exception {
         simpleManifestMergingTask.execute("clean", "manifestMerger");
     }
 
     @Test
-    public void checkManifestMergingForLibraries() {
+    public void checkManifestMergingForLibraries() throws Exception {
         libsTest.execute("clean", "build");
         File fileOutput = libsTest.
                 file("libapp/build/" + FD_INTERMEDIATES + "/bundles/default/AndroidManifest.xml");
@@ -67,7 +66,7 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkManifestMergerReport() {
+    public void checkManifestMergerReport() throws Exception {
         flavors.execute("clean", "assemble");
 
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
@@ -76,7 +75,7 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkTestOnlyAttribute() {
+    public void checkTestOnlyAttribute() throws Exception {
         flavors.executor()
                 .run("clean", "assembleF1FaDebug");
 
@@ -92,11 +91,11 @@ public class ManifestMergingTest {
     }
 
     /**
-     * Check that setting targetSdkVersion to a preview version updates the minSdkVersion in
-     * the manifest.
+     * Check that setting targetSdkVersion to a preview version updates the minSdkVersion in the
+     * manifest.
      */
     @Test
-    public void checkPreviewTargetSdkVersion() throws IOException {
+    public void checkPreviewTargetSdkVersion() throws Exception {
         GradleTestProject appProject = libsTest.getSubproject("app");
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
@@ -116,11 +115,11 @@ public class ManifestMergingTest {
     }
 
     /**
-     * Check that setting minSdkVersion to a preview version updates the targetSdkVersion in
-     * the manifest.
+     * Check that setting minSdkVersion to a preview version updates the targetSdkVersion in the
+     * manifest.
      */
     @Test
-    public void checkPreviewMinSdkVersion() throws IOException {
+    public void checkPreviewMinSdkVersion() throws Exception {
         GradleTestProject appProject = libsTest.getSubproject("app");
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),

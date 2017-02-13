@@ -26,19 +26,16 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
-import org.junit.rules.TemporaryFolder;
 
 public class TransformManagerTest extends TaskTestUtils {
 
@@ -47,8 +44,6 @@ public class TransformManagerTest extends TaskTestUtils {
     private Project project;
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
     public void setUp() throws IOException {
@@ -245,6 +240,84 @@ public class TransformManagerTest extends TaskTestUtils {
                 .withScopes(Scope.PROJECT)
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
                 .withFileCollection(projectClassAndResources.getFiles())
+                .test();
+    }
+
+    @Test
+    public void splitStreamByScopesAndTypes() throws Exception {
+        // test the case where the input stream has more types than gets consumed,
+        // and more scopes than they get consumed.
+        // and we need to create two new stream with the unused types and scopes.
+        // (project+libs@classes+resources) -[project@classes] ->
+        // 1. (project@classes, transformed)
+        // 2. (libs@classes+resources, untouched)
+        // 3. (project+libs@resources, untouched)
+        project.getTasks().create(MY_FAKE_DEPENDENCY_TASK_NAME, DefaultTask.class);
+
+        // create streams and add them to the pipeline
+        IntermediateStream projectAndLibsClasses =
+                IntermediateStream.builder(project)
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                        .setRootLocation(temporaryFolder.newFolder("folder"))
+                        .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
+
+        transformManager.addStream(projectAndLibsClasses);
+
+        // add a new transform
+        Transform t =
+                TestTransform.builder()
+                        .setInputTypes(DefaultContentType.CLASSES)
+                        .setScopes(Scope.PROJECT)
+                        .build();
+
+        // add the transform
+        AndroidTask<TransformTask> task =
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
+
+        // get the new streams
+        List<TransformStream> streams = transformManager.getStreams();
+        assertThat(streams).hasSize(3);
+
+        // check the class stream was consumed.
+        assertThat(streams).doesNotContain(projectAndLibsClasses);
+
+        // check we now have 3 streams, one for classes and one for resources.
+        // the one for resources should match projectClassAndResources for location and dependency.
+        streamTester()
+                .withContentTypes(DefaultContentType.CLASSES)
+                .withScopes(Scope.PROJECT)
+                .withDependency(TASK_NAME)
+                .test();
+        streamTester()
+                .withContentTypes(DefaultContentType.RESOURCES)
+                .withScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
+                .test();
+        streamTester()
+                .withContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                .withScopes(Scope.EXTERNAL_LIBRARIES)
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
+                .test();
+
+        // we also check that the stream used by the transform only has the requested scopes.
+
+        // check the task contains the stream
+        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        assertThat(transformTask).isNotNull();
+        streamTester(transformTask.consumedInputStreams)
+                .withContentTypes(DefaultContentType.CLASSES)
+                .withScopes(Scope.PROJECT)
+                .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
+                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
     }
 
@@ -787,4 +860,5 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(TransformManager.getTaskNamePrefix(transform))
                 .isEqualTo("transformClassesEnhancedAndNativeLibsWithFooBarFor");
     }
+
 }

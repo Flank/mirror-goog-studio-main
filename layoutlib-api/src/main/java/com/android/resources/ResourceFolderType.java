@@ -16,6 +16,9 @@
 
 package com.android.resources;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Enum representing a type of resource folder.
  */
@@ -24,6 +27,7 @@ public enum ResourceFolderType {
     ANIMATOR(ResourceConstants.FD_RES_ANIMATOR),
     COLOR(ResourceConstants.FD_RES_COLOR),
     DRAWABLE(ResourceConstants.FD_RES_DRAWABLE),
+    FONT(ResourceConstants.FD_RES_FONT),
     INTERPOLATOR(ResourceConstants.FD_RES_INTERPOLATOR),
     LAYOUT(ResourceConstants.FD_RES_LAYOUT),
     MENU(ResourceConstants.FD_RES_MENU),
@@ -33,17 +37,28 @@ public enum ResourceFolderType {
     VALUES(ResourceConstants.FD_RES_VALUES),
     XML(ResourceConstants.FD_RES_XML);
 
-    private final String mName;
+    private final String name;
+
+    private static final Map<String, ResourceFolderType> nameToType;
+
+    static {
+        ResourceFolderType[] values = ResourceFolderType.values();
+        nameToType = new HashMap<>(2 * values.length);
+
+        for (ResourceFolderType type : values) {
+            nameToType.put(type.getName(), type);
+        }
+    }
 
     ResourceFolderType(String name) {
-        mName = name;
+        this.name = name;
     }
 
     /**
      * Returns the folder name for this resource folder type.
      */
     public String getName() {
-        return mName;
+        return name;
     }
 
     /**
@@ -53,12 +68,7 @@ public enum ResourceFolderType {
      */
     public static ResourceFolderType getTypeByName(String name) {
         assert name.indexOf('-') == -1 : name; // use #getFolderType instead
-        for (ResourceFolderType rType : values()) {
-            if (rType.mName.equals(name)) {
-                return rType;
-            }
-        }
-        return null;
+        return nameToType.get(name);
     }
 
     /**

@@ -7,13 +7,18 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="library" exported="" name="asm-tools" level="project" />
-    <orderEntry type="library" exported="" name="lombok-ast" level="project" />
-    <orderEntry type="module" module-name="android-annotations" exported="" />
-    <orderEntry type="library" exported="" name="guava-tools" level="project" />
+    <orderEntry type="library" name="asm-tools" level="project" />
+    <orderEntry type="library" name="lombok-ast" level="project" />
+    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="library" exported="" name="uast" level="project" />
+    <orderEntry type="library" name="uast" level="project" />
+    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="library" name="kxml2" level="project" />
+    <orderEntry type="module" module-name="manifest-merger-base" />
   </component>
 </module>

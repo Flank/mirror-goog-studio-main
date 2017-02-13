@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.Nullable;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
 /**

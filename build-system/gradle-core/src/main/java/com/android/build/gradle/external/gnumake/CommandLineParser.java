@@ -18,7 +18,6 @@ package com.android.build.gradle.external.gnumake;
 
 import com.android.utils.StringHelperPOSIX;
 import com.android.utils.StringHelperWindows;
-
 import java.util.ArrayList;
 import java.util.List;
 

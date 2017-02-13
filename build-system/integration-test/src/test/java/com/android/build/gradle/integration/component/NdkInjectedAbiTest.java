@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class NdkInjectedAbiTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getBuildFile(),
                 "apply plugin: 'com.android.model.application'\n"
@@ -58,7 +57,7 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkSingleBuildAbi() throws IOException {
+    public void checkSingleBuildAbi() throws Exception {
         sProject.executor()
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
@@ -70,7 +69,7 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkOnlyTheFirstAbiIsPackaged() throws IOException {
+    public void checkOnlyTheFirstAbiIsPackaged() throws Exception {
         sProject.executor()
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi,x86")
@@ -82,7 +81,7 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkEmptyListDoNotFilter() throws IOException {
+    public void checkEmptyListDoNotFilter() throws Exception {
         sProject.executor()
                 .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "")
@@ -94,7 +93,7 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkTargetAbiNeedsToBeEnabled() throws IOException {
+    public void checkTargetAbiNeedsToBeEnabled() throws Exception {
         sProject.executor()
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
                 .run("clean", "assembleDebug");

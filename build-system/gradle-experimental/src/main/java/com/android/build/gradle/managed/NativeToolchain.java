@@ -17,11 +17,9 @@
 package com.android.build.gradle.managed;
 
 import com.android.annotations.Nullable;
-
+import java.io.File;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
-
-import java.io.File;
 
 /**
  * A @Managed interface for {@link com.android.builder.model.NativeToolchain}.

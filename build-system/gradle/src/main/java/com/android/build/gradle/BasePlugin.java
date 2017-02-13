@@ -55,10 +55,12 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.Version;
@@ -67,7 +69,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -86,7 +87,6 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
@@ -131,6 +131,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private TaskManager taskManager;
 
     private Project project;
+
+    private ProjectOptions projectOptions;
 
     private SdkHandler sdkHandler;
 
@@ -191,6 +193,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     @NonNull
     protected abstract TaskManager createTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
@@ -227,13 +230,15 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     protected void apply(@NonNull Project project) {
         checkPluginVersion();
+        TaskInputHelper.enableBypass();
 
         this.project = project;
+        this.projectOptions = new ProjectOptions(project);
         ExecutionConfigurationUtil.setThreadPoolSize(project);
         checkPathForErrors();
         checkModulesForErrors();
 
-        ProfilerInitializer.init(project);
+        ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 
         ProcessProfileWriter.getProject(project.getPath())
@@ -258,28 +263,21 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 project.getPath(),
                 null,
                 this::createTasks);
-
-        // Apply additional plugins
-        for (String plugin : AndroidGradleOptions.getAdditionalPlugins(project)) {
-            project.apply(ImmutableMap.of("plugin", plugin));
-        }
     }
 
     private void configureProject() {
         extraModelInfo = new ExtraModelInfo(project);
         checkGradleVersion();
-        sdkHandler = new SdkHandler(project, getLogger());
 
-        project.afterEvaluate(p -> {
-            // TODO: Read flag from extension.
-            if (!p.getGradle().getStartParameter().isOffline()
-                    && AndroidGradleOptions.getUseSdkDownload(p)) {
-                SdkLibData sdkLibData =
-                        SdkLibData.download(getDownloader(), getSettingsController());
-                dependencyManager.setSdkLibData(sdkLibData);
-                sdkHandler.setSdkLibData(sdkLibData);
-            }
-        });
+        sdkHandler = new SdkHandler(project, getLogger());
+        dependencyManager = new DependencyManager(project, extraModelInfo, sdkHandler);
+
+        if (!project.getGradle().getStartParameter().isOffline()
+                && AndroidGradleOptions.getUseSdkDownload(project)) {
+            SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
+            dependencyManager.setSdkLibData(sdkLibData);
+            sdkHandler.setSdkLibData(sdkLibData);
+        }
 
         androidBuilder = new AndroidBuilder(
                 project == project.getRootProject() ? project.getName() : project.getPath(),
@@ -361,6 +359,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 .getTaskGraph()
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
+                            TaskInputHelper.disableBypass();
+
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
                                     Transform transform = ((TransformTask) task).getTransform();
@@ -421,11 +421,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         project.getConfigurations().create("default" + VariantDependencies.CONFIGURATION_METADATA)
                 .setDescription("Metadata for the produced APKs.");
 
-        dependencyManager = new DependencyManager(
-                project,
-                extraModelInfo,
-                sdkHandler);
-
         ndkHandler = new NdkHandler(
                 project.getRootDir(),
                 null, /* compileSkdVersion, this will be set in afterEvaluate */
@@ -435,6 +430,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         taskManager =
                 createTaskManager(
                         project,
+                        projectOptions,
                         androidBuilder,
                         dataBindingBuilder,
                         extension,
@@ -552,8 +548,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                 "As %s is set, continuing anyways.",
                                 AndroidGradleOptions.GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY);
             } else {
-                extraModelInfo.handleSyncError(
-                        GRADLE_MIN_VERSION.toString(), SyncIssue.TYPE_GRADLE_TOO_OLD, errorMessage);
+                throw new RuntimeException(errorMessage);
             }
         }
     }
@@ -680,6 +675,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     extension.getLibraryRequests(),
                     androidBuilder,
                     SdkHandler.useCachedSdk(project));
+
+            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo);
         }
     }
 

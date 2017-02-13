@@ -5,7 +5,6 @@
         name="Basic Activity"
         minApi="9"
         minBuildApi="14"
-        requireAppTheme="true"
         description="Creates a new basic activity with an app bar.">
 
     <category value="Activity"/>

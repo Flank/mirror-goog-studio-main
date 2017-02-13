@@ -117,6 +117,25 @@ public class SnapshotBuilder {
     }
 
     public Snapshot build() {
+        InMemoryBuffer buffer = new InMemoryBuffer(getByteBuffer());
+        Snapshot snapshot = Snapshot.createSnapshot(buffer);
+
+        // TODO: Should the parser be setting isSoftReference, not the builder?
+        for (Heap heap : snapshot.getHeaps()) {
+            ClassObj softClass = heap.getClass(SOFT_REFERENCE_ID);
+            if (softClass != null) {
+                softClass.setIsSoftReference();
+            }
+
+            ClassObj softAndHardClass = heap.getClass(SOFT_AND_HARD_REFERENCE_ID);
+            if (softAndHardClass != null) {
+                softAndHardClass.setIsSoftReference();
+            }
+        }
+        return snapshot;
+    }
+
+    public byte[] getByteBuffer() {
         HprofStringBuilder strings = new HprofStringBuilder(0);
         List<HprofRecord> records = new ArrayList<HprofRecord>();
         List<HprofDumpRecord> dump = new ArrayList<HprofDumpRecord>();
@@ -132,20 +151,20 @@ public class SnapshotBuilder {
 
         // The SoftReference class
         records.add(new HprofLoadClass( 0, 0, SOFT_REFERENCE_ID, 0,
-                    strings.get("java.lang.ref.Reference")));
+                                        strings.get("java.lang.ref.Reference")));
         dump.add(new HprofClassDump(SOFT_REFERENCE_ID, 0, 0, 0, 0, 0, 0, 0, 0,
-                    new HprofConstant[0], new HprofStaticField[0],
-                    new HprofInstanceField[]{
-                        new HprofInstanceField(strings.get("referent"), objType)}));
+                                    new HprofConstant[0], new HprofStaticField[0],
+                                    new HprofInstanceField[]{
+                                      new HprofInstanceField(strings.get("referent"), objType)}));
 
         // The SoftAndHardReference class
         records.add(new HprofLoadClass(0, 1, SOFT_AND_HARD_REFERENCE_ID, 0,
-                    strings.get("SoftAndHardReference")));
+                                       strings.get("SoftAndHardReference")));
         dump.add(new HprofClassDump(SOFT_AND_HARD_REFERENCE_ID, 0, 0, 0, 0, 0, 0, 0, 0,
-                    new HprofConstant[0], new HprofStaticField[0],
-                    new HprofInstanceField[]{
-                        new HprofInstanceField(strings.get("referent"), objType),
-                        new HprofInstanceField(strings.get("hardReference"), objType)}));
+                                    new HprofConstant[0], new HprofStaticField[0],
+                                    new HprofInstanceField[]{
+                                      new HprofInstanceField(strings.get("referent"), objType),
+                                      new HprofInstanceField(strings.get("hardReference"), objType)}));
 
         // Regular nodes and their classes
         for (int i = 1; i <= mNumNodes; i++) {
@@ -159,7 +178,7 @@ public class SnapshotBuilder {
             // Use same name classes on different loaders to extend test coverage
             records.add(new HprofLoadClass(0, 0, 100+i, 0, strings.get("Class" + (i/2))));
             dump.add(new HprofClassDump(100+i, 0, 0, i%2, 0, 0, 0, 0, i,
-                        new HprofConstant[0], new HprofStaticField[0], fields));
+                                        new HprofConstant[0], new HprofStaticField[0], fields));
 
             dump.add(new HprofInstanceDump(i, 0, 100+i, values.toByteArray()));
         }
@@ -189,29 +208,14 @@ public class SnapshotBuilder {
         actualRecords.addAll(strings.getStringRecords());
         actualRecords.addAll(records);
 
-        Snapshot snapshot = null;
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             Hprof hprof = new Hprof("JAVA PROFILE 1.0.3", 2, new Date(), actualRecords);
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
             hprof.write(os);
-            InMemoryBuffer buffer = new InMemoryBuffer(os.toByteArray());
-            snapshot = Snapshot.createSnapshot(buffer);
         } catch (IOException e) {
             fail("IOException when writing to byte output stream: " + e);
         }
 
-        // TODO: Should the parser be setting isSoftReference, not the builder?
-        for (Heap heap : snapshot.getHeaps()) {
-            ClassObj softClass = heap.getClass(SOFT_REFERENCE_ID);
-            if (softClass != null) {
-                softClass.setIsSoftReference();
-            }
-
-            ClassObj softAndHardClass = heap.getClass(SOFT_AND_HARD_REFERENCE_ID);
-            if (softAndHardClass != null) {
-                softAndHardClass.setIsSoftReference();
-            }
-        }
-        return snapshot;
+        return os.toByteArray();
     }
 }

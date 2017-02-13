@@ -48,7 +48,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
@@ -755,5 +758,207 @@ public class XmlUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the children elements of the given node
+     *
+     * @param parent the parent node
+     * @return a list of element children, never null
+     */
+    @NonNull
+    public static List<Element> getSubTagsAsList(@NonNull Node parent) {
+        NodeList childNodes = parent.getChildNodes();
+        List<Element> children = new ArrayList<>(childNodes.getLength());
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            Node child = childNodes.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                children.add((Element) child);
+            }
+        }
+
+        return children;
+    }
+
+    /**
+     * Returns an iterator for the children elements of the given node.
+     * If you want to access the children as a list, use
+     * {@link #getSubTagsAsList(Node)} instead.
+     * <p>
+     * <b>NOTE: The iterator() call can only be called once!</b>
+     */
+    @NonNull
+    public static Iterable<Element> getSubTags(@Nullable Node parent) {
+        return new SubTagIterator(parent);
+    }
+
+    /**
+     * Returns an iterator for the children elements of the given node matching the
+     * given tag name.
+     * <p>
+     * If you want to access the children as a list, use
+     * {@link #getSubTagsAsList(Node)} instead.
+     * <p>
+     * <b>NOTE: The iterator() call can only be called once!</b>
+     */
+    @NonNull
+    public static Iterable<Element> getSubTagsByName(@Nullable Node parent, @NonNull String tagName) {
+        return new NamedSubTagIterator(parent, tagName);
+    }
+
+    private static class SubTagIterator implements Iterator<Element>, Iterable<Element> {
+        private Element next;
+        private boolean used;
+
+        public SubTagIterator(@Nullable Node parent) {
+            this.next = getFirstSubTag(parent);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public Element next() {
+            Element ret = next;
+            next = getNextTag(next);
+            return ret;
+        }
+
+        @NonNull
+        @Override
+        public Iterator<Element> iterator() {
+            assert !used;
+            used = true;
+            return this;
+        }
+    }
+
+    private static class NamedSubTagIterator implements Iterator<Element>, Iterable<Element> {
+        private final String name;
+        private Element next;
+        private boolean used;
+
+        public NamedSubTagIterator(@Nullable Node parent, @NonNull String name) {
+            this.name = name;
+            this.next = getFirstSubTagTagByName(parent, name);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public Element next() {
+            Element ret = next;
+            next = getNextTagByName(next, name);
+            return ret;
+        }
+
+        @NonNull
+        @Override
+        public Iterator<Element> iterator() {
+            assert !used;
+            used = true;
+            return this;
+        }
+    }
+
+    /** Returns the first child element of the given node */
+    @Nullable
+    public static Element getFirstSubTag(@Nullable Node parent) {
+        if (parent == null) {
+            return null;
+        }
+        Node curr = parent.getFirstChild();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                return (Element) curr;
+            }
+
+            curr = curr.getNextSibling();
+        }
+
+        return null;
+    }
+
+    /** Returns the next sibling element from the given node */
+    @Nullable
+    public static Element getNextTag(@Nullable Node node) {
+        if (node == null) {
+            return null;
+        }
+        Node curr = node.getNextSibling();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                return (Element) curr;
+            }
+
+            curr = curr.getNextSibling();
+        }
+
+        return null;
+    }
+
+    /** Returns the next sibling element from the given node that matches the given name */
+    @Nullable
+    public static Element getFirstSubTagTagByName(@Nullable Node parent, @NonNull String name) {
+        if (parent == null) {
+            return null;
+        }
+        Node curr = parent.getFirstChild();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE &&
+                    name.equals(curr.getNodeName())) {
+                return (Element) curr;
+            }
+
+            curr = curr.getNextSibling();
+        }
+
+        return null;
+    }
+
+    /** Returns the next sibling element from the given node */
+    @Nullable
+    public static Element getNextTagByName(@Nullable Node node, @NonNull String name) {
+        if (node == null) {
+            return null;
+        }
+        Node curr = node.getNextSibling();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE &&
+                    name.equals(curr.getNodeName())) {
+                return (Element) curr;
+            }
+
+            curr = curr.getNextSibling();
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the <b>number</b> of children sub tags of the given node
+     *
+     * @param parent the parent node
+     * @return the count of element children
+     */
+    public static int getSubTagCount(@Nullable Node parent) {
+        if (parent == null) {
+            return 0;
+        }
+        NodeList childNodes = parent.getChildNodes();
+        int childCount = 0;
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            Node child = childNodes.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                childCount++;
+            }
+        }
+
+        return childCount;
     }
 }

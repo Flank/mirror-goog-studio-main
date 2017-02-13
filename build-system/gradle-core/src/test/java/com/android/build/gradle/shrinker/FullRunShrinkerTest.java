@@ -16,21 +16,21 @@
 
 package com.android.build.gradle.shrinker;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.build.api.transform.Status;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
+import java.io.File;
+import java.util.Collections;
+import java.util.Set;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
-
-/**
- * Tests for {@link FullRunShrinker}.
- */
+/** Tests for {@link FullRunShrinker}. */
+@SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
 public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
@@ -39,7 +39,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.SimpleScenario.aaa(), new File(mTestPackageDir, "Aaa.class"));
 
         // When:
-        run("Aaa", "aaa:()V");
+        fullRun("Aaa", "aaa:()V");
 
         // Then:
         assertMembersLeft("Aaa", "aaa:()V", "bbb:()V");
@@ -53,7 +53,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.SimpleScenario.ccc(), new File(mTestPackageDir, "Ccc.class"));
 
         // When:
-        run("Bbb", "bbb:(Ltest/Aaa;)V");
+        fullRun("Bbb", "bbb:(Ltest/Aaa;)V");
 
         // Then:
         assertMembersLeft("Aaa", "aaa:()V", "bbb:()V");
@@ -64,11 +64,13 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void virtualCalls_keepEntryPointsSuperclass() throws Exception {
         // Given:
-        Files.write(TestClasses.VirtualCalls.abstractClass(), new File(mTestPackageDir, "AbstractClass.class"));
+        Files.write(
+                TestClasses.VirtualCalls.abstractClass(),
+                new File(mTestPackageDir, "AbstractClass.class"));
         Files.write(TestClasses.VirtualCalls.impl(1), new File(mTestPackageDir, "Impl1.class"));
 
         // When:
-        run("Impl1", "abstractMethod:()V");
+        fullRun("Impl1", "abstractMethod:()V");
 
         // Then:
         assertMembersLeft("Impl1", "abstractMethod:()V");
@@ -79,14 +81,17 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void virtualCalls_abstractType() throws Exception {
         // Given:
         Files.write(
-                TestClasses.VirtualCalls.main_abstractType(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.VirtualCalls.abstractClass(), new File(mTestPackageDir, "AbstractClass.class"));
+                TestClasses.VirtualCalls.main_abstractType(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.VirtualCalls.abstractClass(),
+                new File(mTestPackageDir, "AbstractClass.class"));
         Files.write(TestClasses.VirtualCalls.impl(1), new File(mTestPackageDir, "Impl1.class"));
         Files.write(TestClasses.VirtualCalls.impl(2), new File(mTestPackageDir, "Impl2.class"));
         Files.write(TestClasses.VirtualCalls.impl(3), new File(mTestPackageDir, "Impl3.class"));
 
         // When:
-        run("Main", "main:([Ljava/lang/String;)V");
+        fullRun("Main", "main:([Ljava/lang/String;)V");
 
         // Then:
         assertMembersLeft("Main", "main:([Ljava/lang/String;)V");
@@ -100,14 +105,17 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void virtualCalls_concreteType() throws Exception {
         // Given:
         Files.write(
-                TestClasses.VirtualCalls.main_concreteType(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.VirtualCalls.abstractClass(), new File(mTestPackageDir, "AbstractClass.class"));
+                TestClasses.VirtualCalls.main_concreteType(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.VirtualCalls.abstractClass(),
+                new File(mTestPackageDir, "AbstractClass.class"));
         Files.write(TestClasses.VirtualCalls.impl(1), new File(mTestPackageDir, "Impl1.class"));
         Files.write(TestClasses.VirtualCalls.impl(2), new File(mTestPackageDir, "Impl2.class"));
         Files.write(TestClasses.VirtualCalls.impl(3), new File(mTestPackageDir, "Impl3.class"));
 
         // When:
-        run("Main", "main:([Ljava/lang/String;)V");
+        fullRun("Main", "main:([Ljava/lang/String;)V");
 
         // Then:
         assertMembersLeft("Main", "main:([Ljava/lang/String;)V");
@@ -121,12 +129,13 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void virtualCalls_methodFromParent() throws Exception {
         // Given:
         Files.write(
-                TestClasses.VirtualCalls.main_parentChild(), new File(mTestPackageDir, "Main.class"));
+                TestClasses.VirtualCalls.main_parentChild(),
+                new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.VirtualCalls.parent(), new File(mTestPackageDir, "Parent.class"));
         Files.write(TestClasses.VirtualCalls.child(), new File(mTestPackageDir, "Child.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -142,15 +151,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 TestClasses.SdkTypes.myException(), new File(mTestPackageDir, "MyException.class"));
 
         // When:
-        run("Main", "main:([Ljava/lang/String;)V");
+        fullRun("Main", "main:([Ljava/lang/String;)V");
 
         // Then:
         assertMembersLeft("Main", "main:([Ljava/lang/String;)V");
         assertMembersLeft(
-                "MyException",
-                "<init>:()V",
-                "hashCode:()I",
-                "getMessage:()Ljava/lang/String;");
+                "MyException", "<init>:()V", "hashCode:()I", "getMessage:()Ljava/lang/String;");
     }
 
     @Test
@@ -162,13 +168,15 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "buildMyCharSequence:()Ltest/MyCharSequence;",
                 "callCharSequence:(Ljava/lang/CharSequence;)V");
@@ -195,7 +203,9 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Given:
         Files.write(Interfaces.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
@@ -205,7 +215,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "buildNamedRunnableImpl:()Ltest/NamedRunnableImpl;",
                 "callRunnable:(Ljava/lang/Runnable;)V");
@@ -215,20 +225,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "Main",
                 "buildNamedRunnableImpl:()Ltest/NamedRunnableImpl;",
                 "callRunnable:(Ljava/lang/Runnable;)V");
-        assertMembersLeft(
-                "NamedRunnableImpl",
-                "run:()V",
-                "<init>:()V");
+        assertMembersLeft("NamedRunnableImpl", "run:()V", "<init>:()V");
 
         assertMembersLeft("NamedRunnable");
         assertImplements("NamedRunnableImpl", "test/NamedRunnable");
+
+        // TODO: Write proper fixture code that will make sure all cases stay the same after
+        // an empty incremental run for all test cases.
+        forceEmptyIncrementalRun();
+        assertMembersLeft("NamedRunnable");
     }
 
     @Test
     public void interfaces_sdkInterface_classUsed_concreteType() throws Exception {
         // Given:
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
@@ -239,7 +253,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "buildMyCharSequence:()Ltest/MyCharSequence;",
                 "callMyCharSequence:(Ltest/MyCharSequence;)V");
@@ -269,14 +283,16 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
                 "useMyInterface:(Ltest/MyInterface;)V");
@@ -287,19 +303,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
                 "useMyInterface:(Ltest/MyInterface;)V");
         assertMembersLeft("ImplementationFromSuperclass");
-        assertMembersLeft(
-                "MyInterface",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
         assertClassSkipped("MyImpl");
         assertClassSkipped("MyCharSequence");
 
         // This is the tricky part: this method should be kept, because a subclass is using it to
         // implement an interface.
-        assertMembersLeft(
-                "DoesSomething",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("DoesSomething", "doSomething:(Ljava/lang/Object;)V");
 
         assertImplements("ImplementationFromSuperclass", "test/MyInterface");
+
+        // Make sure we don't crash. TODO: do this for every test case here.
+        incrementalRun(ImmutableMap.of("ImplementationFromSuperclass", Status.CHANGED));
     }
 
     @Test
@@ -311,17 +326,20 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myCharSequence(), new File(mTestPackageDir, "MyCharSequence.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass_subInterface(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
-                "Main",
-                "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
-                "useMyInterface:(Ltest/MyInterface;)V");
+        ShrinkerGraph<String> graph =
+                fullRun(
+                        "Main",
+                        "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
+                        "useMyInterface:(Ltest/MyInterface;)V");
 
         // Then:
         assertMembersLeft(
@@ -329,21 +347,45 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
                 "useMyInterface:(Ltest/MyInterface;)V");
         assertMembersLeft("ImplementationFromSuperclass");
-        assertMembersLeft(
-                "MyInterface",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
 
         // This is the tricky part: this method should be kept, because a subclass is using it to
         // implement an interface.
-        assertMembersLeft(
-                "DoesSomething",
-                "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("DoesSomething", "doSomething:(Ljava/lang/Object;)V");
 
         assertMembersLeft("MySubInterface");
         assertClassSkipped("MyImpl");
         assertClassSkipped("MyCharSequence");
 
         assertImplements("ImplementationFromSuperclass", "test/MySubInterface");
+
+        // Check the graph for unexepcted edges:
+        assertThat(graph.getDependencies("test/MySubInterface"))
+                .containsExactly(
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
+        assertThat(graph.getDependencies("test/MyInterface"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/MySubInterface", DependencyType.SUPERINTERFACE_KEPT));
+        assertThat(graph.getDependencies("test/MyImpl"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/MyImpl.doSomething:(Ljava/lang/Object;)V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
+        assertThat(graph.getDependencies("test/ImplementationFromSuperclass"))
+                .containsExactly(
+                        new Dependency<>(
+                                "test/DoesSomething", DependencyType.REQUIRED_CLASS_STRUCTURE),
+                        new Dependency<>(
+                                "test/ImplementationFromSuperclass.anotherMethod:()V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>(
+                                "test/MySubInterface", DependencyType.INTERFACE_IMPLEMENTED),
+                        new Dependency<>(
+                                "test/ImplementationFromSuperclass.doSomething$shrinker_fake:(Ljava/lang/Object;)V",
+                                DependencyType.CLASS_IS_KEPT),
+                        new Dependency<>("test/MyInterface", DependencyType.INTERFACE_IMPLEMENTED));
     }
 
     @Test
@@ -354,21 +396,19 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
-                "Main",
-                "callCharSequence:(Ljava/lang/CharSequence;)V");
+        fullRun("Main", "callCharSequence:(Ljava/lang/CharSequence;)V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "callCharSequence:(Ljava/lang/CharSequence;)V");
+        assertMembersLeft("Main", "callCharSequence:(Ljava/lang/CharSequence;)V");
         assertClassSkipped("MyCharSequence");
         assertClassSkipped("MyInterface");
         assertClassSkipped("MyImpl");
@@ -382,30 +422,22 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run(
-                "Main",
-                "buildMyImpl:()Ltest/MyImpl;",
-                "useMyInterface:(Ltest/MyInterface;)V");
+        fullRun("Main", "buildMyImpl:()Ltest/MyImpl;", "useMyInterface:(Ltest/MyInterface;)V");
 
         // Then:
         assertMembersLeft(
-                "Main",
-                "buildMyImpl:()Ltest/MyImpl;",
-                "useMyInterface:(Ltest/MyInterface;)V");
-        assertMembersLeft(
-                "MyInterface",
-                "doSomething:(Ljava/lang/Object;)V");
-        assertMembersLeft(
-                "MyImpl",
-                "<init>:()V",
-                "doSomething:(Ljava/lang/Object;)V");
+                "Main", "buildMyImpl:()Ltest/MyImpl;", "useMyInterface:(Ltest/MyInterface;)V");
+        assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
+        assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertClassSkipped("MyCharSequence");
 
         assertImplements("MyImpl", "test/MyInterface");
@@ -419,24 +451,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run("Main", "useMyImpl_interfaceMethod:(Ltest/MyImpl;)V");
+        fullRun("Main", "useMyImpl_interfaceMethod:(Ltest/MyImpl;)V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "useMyImpl_interfaceMethod:(Ltest/MyImpl;)V");
+        assertMembersLeft("Main", "useMyImpl_interfaceMethod:(Ltest/MyImpl;)V");
         assertClassSkipped("MyInterface");
         assertMembersLeft("MyImpl", "doSomething:(Ljava/lang/Object;)V");
         assertClassSkipped("MyCharSequence");
 
-        assertDoesntImplement("MyImpl", "test/MyInterface");
+        assertDoesNotImplement("MyImpl", "test/MyInterface");
     }
 
     @Test
@@ -447,26 +479,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
         Files.write(Interfaces.myImpl(), new File(mTestPackageDir, "MyImpl.class"));
         Files.write(Interfaces.namedRunnable(), new File(mTestPackageDir, "NamedRunnable.class"));
-        Files.write(Interfaces.namedRunnableImpl(), new File(mTestPackageDir, "NamedRunnableImpl.class"));
+        Files.write(
+                Interfaces.namedRunnableImpl(),
+                new File(mTestPackageDir, "NamedRunnableImpl.class"));
         Files.write(Interfaces.doesSomething(), new File(mTestPackageDir, "DoesSomething.class"));
         Files.write(
                 Interfaces.implementationFromSuperclass(),
                 new File(mTestPackageDir, "ImplementationFromSuperclass.class"));
 
         // When:
-        run("Main", "useMyImpl_otherMethod:(Ltest/MyImpl;)V");
+        fullRun("Main", "useMyImpl_otherMethod:(Ltest/MyImpl;)V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "useMyImpl_otherMethod:(Ltest/MyImpl;)V");
+        assertMembersLeft("Main", "useMyImpl_otherMethod:(Ltest/MyImpl;)V");
         assertClassSkipped("MyInterface");
-        assertMembersLeft(
-                "MyImpl",
-                "someOtherMethod:()V");
+        assertMembersLeft("MyImpl", "someOtherMethod:()V");
         assertClassSkipped("MyCharSequence");
 
-        assertDoesntImplement("MyImpl", "test/MyInterface");
+        assertDoesNotImplement("MyImpl", "test/MyInterface");
     }
 
     @Test
@@ -474,16 +504,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Given:
         Files.write(TestClasses.Fields.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.Fields.myFields(), new File(mTestPackageDir, "MyFields.class"));
-        Files.write(TestClasses.Fields.myFieldsSubclass(), new File(mTestPackageDir, "MyFieldsSubclass.class"));
-        Files.write(TestClasses.emptyClass("MyFieldType"), new File(mTestPackageDir, "MyFieldType.class"));
+        Files.write(
+                TestClasses.Fields.myFieldsSubclass(),
+                new File(mTestPackageDir, "MyFieldsSubclass.class"));
+        Files.write(
+                TestClasses.emptyClass("MyFieldType"),
+                new File(mTestPackageDir, "MyFieldType.class"));
 
         // When:
-        run("Main", "main:()I");
+        fullRun("Main", "main:()I");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "main:()I");
+        assertMembersLeft("Main", "main:()I");
         assertMembersLeft(
                 "MyFields",
                 "<init>:()V",
@@ -501,16 +533,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Given:
         Files.write(TestClasses.Fields.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.Fields.myFields(), new File(mTestPackageDir, "MyFields.class"));
-        Files.write(TestClasses.Fields.myFieldsSubclass(), new File(mTestPackageDir, "MyFieldsSubclass.class"));
-        Files.write(TestClasses.emptyClass("MyFieldType"), new File(mTestPackageDir, "MyFieldType.class"));
+        Files.write(
+                TestClasses.Fields.myFieldsSubclass(),
+                new File(mTestPackageDir, "MyFieldsSubclass.class"));
+        Files.write(
+                TestClasses.emptyClass("MyFieldType"),
+                new File(mTestPackageDir, "MyFieldType.class"));
 
         // When:
-        run("Main", "main_subclass:()I");
+        fullRun("Main", "main_subclass:()I");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "main_subclass:()I");
+        assertMembersLeft("Main", "main_subclass:()I");
         assertMembersLeft(
                 "MyFields",
                 "<init>:()V",
@@ -518,9 +552,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "f1:I",
                 "f2:I",
                 "sString:Ljava/lang/String;");
-        assertMembersLeft(
-                "MyFieldsSubclass",
-                "<init>:()V");
+        assertMembersLeft("MyFieldsSubclass", "<init>:()V");
         assertClassSkipped("MyFieldType");
     }
 
@@ -528,18 +560,23 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_methodNotUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run("Main", "buildImplementation:()V");
+        fullRun("Main", "buildImplementation:()V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "buildImplementation:()V");
+        assertMembersLeft("Main", "buildImplementation:()V");
         assertClassSkipped("InterfaceOne");
         assertClassSkipped("InterfaceTwo");
         assertMembersLeft("Implementation", "<init>:()V");
@@ -549,13 +586,20 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_classNotUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "useInterfaceOne:(Ltest/InterfaceOne;)V",
                 "useInterfaceTwo:(Ltest/InterfaceTwo;)V");
@@ -574,22 +618,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_interfaceOneUsed_classUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run(
-                "Main",
-                "useInterfaceOne:(Ltest/InterfaceOne;)V",
-                "buildImplementation:()V");
+        fullRun("Main", "useInterfaceOne:(Ltest/InterfaceOne;)V", "buildImplementation:()V");
 
         // Then:
         assertMembersLeft(
-                "Main",
-                "useInterfaceOne:(Ltest/InterfaceOne;)V",
-                "buildImplementation:()V");
+                "Main", "useInterfaceOne:(Ltest/InterfaceOne;)V", "buildImplementation:()V");
         assertMembersLeft("InterfaceOne", "m:()V");
         assertClassSkipped("InterfaceTwo");
         assertMembersLeft("Implementation", "<init>:()V", "m:()V");
@@ -599,22 +645,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_interfaceTwoUsed_classUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run(
-                "Main",
-                "useInterfaceTwo:(Ltest/InterfaceTwo;)V",
-                "buildImplementation:()V");
+        fullRun("Main", "useInterfaceTwo:(Ltest/InterfaceTwo;)V", "buildImplementation:()V");
 
         // Then:
         assertMembersLeft(
-                "Main",
-                "useInterfaceTwo:(Ltest/InterfaceTwo;)V",
-                "buildImplementation:()V");
+                "Main", "useInterfaceTwo:(Ltest/InterfaceTwo;)V", "buildImplementation:()V");
         assertMembersLeft("InterfaceTwo", "m:()V");
         assertClassSkipped("InterfaceOne");
         assertMembersLeft("Implementation", "<init>:()V", "m:()V");
@@ -624,13 +672,20 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_twoInterfacesUsed_classUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run(
+        fullRun(
                 "Main",
                 "useInterfaceOne:(Ltest/InterfaceOne;)V",
                 "useInterfaceTwo:(Ltest/InterfaceTwo;)V",
@@ -651,22 +706,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void overrides_noInterfacesUsed_classUsed() throws Exception {
         // Given:
         Files.write(
-                TestClasses.MultipleOverriddenMethods.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceOne(), new File(mTestPackageDir, "InterfaceOne.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.interfaceTwo(), new File(mTestPackageDir, "InterfaceTwo.class"));
-        Files.write(TestClasses.MultipleOverriddenMethods.implementation(), new File(mTestPackageDir, "Implementation.class"));
+                TestClasses.MultipleOverriddenMethods.main(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceOne(),
+                new File(mTestPackageDir, "InterfaceOne.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.interfaceTwo(),
+                new File(mTestPackageDir, "InterfaceTwo.class"));
+        Files.write(
+                TestClasses.MultipleOverriddenMethods.implementation(),
+                new File(mTestPackageDir, "Implementation.class"));
 
         // When:
-        run(
-                "Main",
-                "useImplementation:(Ltest/Implementation;)V",
-                "buildImplementation:()V");
+        fullRun("Main", "useImplementation:(Ltest/Implementation;)V", "buildImplementation:()V");
 
         // Then:
         assertMembersLeft(
-                "Main",
-                "useImplementation:(Ltest/Implementation;)V",
-                "buildImplementation:()V");
+                "Main", "useImplementation:(Ltest/Implementation;)V", "buildImplementation:()V");
         assertClassSkipped("InterfaceOne");
         assertClassSkipped("InterfaceTwo");
         assertMembersLeft("Implementation", "<init>:()V", "m:()V");
@@ -675,20 +732,25 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void annotations_annotatedClass() throws Exception {
         // Given:
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "main:()V");
+        assertMembersLeft("Main", "main:()V");
         assertMembersLeft("SomeClass");
         assertMembersLeft("SomeOtherClass");
         assertMembersLeft(
@@ -703,20 +765,25 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void annotations_annotatedMethod() throws Exception {
         // Given:
-        Files.write(TestClasses.Annotations.main_annotatedMethod(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedMethod(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "main:()V");
+        assertMembersLeft("Main", "main:()V");
         assertMembersLeft("SomeClass");
         assertMembersLeft("SomeOtherClass");
         assertMembersLeft(
@@ -731,20 +798,25 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void annotations_annotationsStripped() throws Exception {
         // Given:
-        Files.write(TestClasses.Annotations.main_annotatedMethod(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedMethod(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
         // When:
-        run("Main", "notAnnotated:()V");
+        fullRun("Main", "notAnnotated:()V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "notAnnotated:()V");
+        assertMembersLeft("Main", "notAnnotated:()V");
         assertClassSkipped("SomeClass");
         assertClassSkipped("SomeOtherClass");
         assertClassSkipped("MyAnnotation");
@@ -753,28 +825,42 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
     public void annotations_keepRules_class() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep @test.MyAnnotation class **"));
+        fullRun(parseKeepRules("-keep @test.MyAnnotation class **"));
 
         assertMembersLeft("Main", "<init>:()V");
     }
 
     @Test
     public void annotations_keepRules_atInterface() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep @interface test.MyAnnotation"));
+        fullRun(parseKeepRules("-keep @interface test.MyAnnotation"));
 
         assertMembersLeft(
                 "MyAnnotation",
@@ -786,14 +872,21 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
     public void annotations_keepRules_interface() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep interface test.MyAnnotation"));
+        fullRun(parseKeepRules("-keep interface test.MyAnnotation"));
 
         assertMembersLeft(
                 "MyAnnotation",
@@ -805,14 +898,21 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
     public void annotations_keepRules_atClass() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep @class test.MyAnnotation"));
+        fullRun(parseKeepRules("-keep @class test.MyAnnotation"));
 
         assertMembersLeft(
                 "MyAnnotation",
@@ -824,28 +924,42 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
     public void annotations_keepRules_atEnum() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep @enum test.MyAnnotation"));
+        fullRun(parseKeepRules("-keep @enum test.MyAnnotation"));
 
         assertClassSkipped("MyAnnotation");
     }
 
     @Test
     public void annotations_keepRules_classRule() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep class test.MyAnnotation"));
+        fullRun(parseKeepRules("-keep class test.MyAnnotation"));
 
         assertMembersLeft(
                 "MyAnnotation",
@@ -857,14 +971,21 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
 
     @Test
     public void annotations_keepRules_wrongAtClass() throws Exception {
-        Files.write(TestClasses.Annotations.main_annotatedClass(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.Annotations.myAnnotation(), new File(mTestPackageDir, "MyAnnotation.class"));
+        Files.write(
+                TestClasses.Annotations.main_annotatedClass(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.Annotations.myAnnotation(),
+                new File(mTestPackageDir, "MyAnnotation.class"));
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
-        Files.write(TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
-        Files.write(TestClasses.emptyClass("SomeOtherClass"), new File(mTestPackageDir, "SomeOtherClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
+        Files.write(
+                TestClasses.emptyClass("SomeOtherClass"),
+                new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep @class test.SomeClass"));
+        fullRun(parseKeepRules("-keep @class test.SomeClass"));
 
         assertClassSkipped("SomeClass");
     }
@@ -880,13 +1001,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.Annotations.nested(), new File(mTestPackageDir, "Nested.class"));
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
         Files.write(
-                TestClasses.emptyClass("SomeClass"),
-                new File(mTestPackageDir, "SomeClass.class"));
+                TestClasses.emptyClass("SomeClass"), new File(mTestPackageDir, "SomeClass.class"));
         Files.write(
                 TestClasses.emptyClass("SomeOtherClass"),
                 new File(mTestPackageDir, "SomeOtherClass.class"));
 
-        run(parseKeepRules("-keep class ** { @test/MyAnnotation *(...);}"));
+        fullRun(parseKeepRules("-keep class ** { @test/MyAnnotation *(...);}"));
 
         assertMembersLeft("Main", "<init>:()V", "main:()V");
     }
@@ -900,12 +1020,10 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
 
         // When:
-        run("Main", "main:(Ltest/NamedMap;)V");
+        fullRun("Main", "main:(Ltest/NamedMap;)V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "main:(Ltest/NamedMap;)V");
+        assertMembersLeft("Main", "main:(Ltest/NamedMap;)V");
         assertMembersLeft("NamedMap");
         assertMembersLeft("Named");
         assertClassSkipped("HasAge");
@@ -920,12 +1038,10 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
 
         // When:
-        run("Main", "callMethod:(Ltest/NamedMap;)V");
+        fullRun("Main", "callMethod:(Ltest/NamedMap;)V");
 
         // Then:
-        assertMembersLeft(
-                "Main",
-                "callMethod:(Ltest/NamedMap;)V");
+        assertMembersLeft("Main", "callMethod:(Ltest/NamedMap;)V");
         assertMembersLeft("NamedMap", "method:(Ljava/util/Collection;)V");
         assertMembersLeft("Named");
         assertMembersLeft("HasAge");
@@ -939,7 +1055,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.SuperCalls.ccc(), new File(mTestPackageDir, "Ccc.class"));
 
         // When:
-        run("Ccc", "callBbbMethod:()V");
+        fullRun("Ccc", "callBbbMethod:()V");
 
         // Then:
         assertMembersLeft("Aaa");
@@ -955,7 +1071,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.SuperCalls.ccc(), new File(mTestPackageDir, "Ccc.class"));
 
         // When:
-        run("Ccc", "callAaaMethod:()V");
+        fullRun("Ccc", "callAaaMethod:()V");
 
         // Then:
         assertMembersLeft("Aaa", "onlyInAaa:()V");
@@ -971,7 +1087,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.SuperCalls.ccc(), new File(mTestPackageDir, "Ccc.class"));
 
         // When:
-        run("Ccc", "callOverriddenMethod:()V");
+        fullRun("Ccc", "callOverriddenMethod:()V");
 
         // Then:
         assertMembersLeft("Aaa");
@@ -985,11 +1101,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(InnerClasses.main_useOuterClass(), new File(mTestPackageDir, "Main.class"));
         Files.write(InnerClasses.outer(), new File(mTestPackageDir, "Outer.class"));
         Files.write(InnerClasses.inner(), new File(mTestPackageDir, "Outer$Inner.class"));
-        Files.write(InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
+        Files.write(
+                InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
         Files.write(InnerClasses.anonymous(), new File(mTestPackageDir, "Outer$1.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1010,19 +1127,17 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 new File(mTestPackageDir, "Main.class"));
         Files.write(InnerClasses.outer(), new File(mTestPackageDir, "Outer.class"));
         Files.write(InnerClasses.inner(), new File(mTestPackageDir, "Outer$Inner.class"));
-        Files.write(InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
+        Files.write(
+                InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
         Files.write(InnerClasses.anonymous(), new File(mTestPackageDir, "Outer$1.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
         assertMembersLeft("Outer", "makeRunnable:()V", "<init>:()V");
-        assertMembersLeft("Outer$1",
-                "run:()V",
-                "<init>:(Ltest/Outer;)V",
-                "this$0:Ltest/Outer;");
+        assertMembersLeft("Outer$1", "run:()V", "<init>:(Ltest/Outer;)V", "this$0:Ltest/Outer;");
         assertClassSkipped("Outer$Inner");
         assertClassSkipped("Outer$StaticInner");
 
@@ -1036,20 +1151,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(InnerClasses.main_useInnerClass(), new File(mTestPackageDir, "Main.class"));
         Files.write(InnerClasses.outer(), new File(mTestPackageDir, "Outer.class"));
         Files.write(InnerClasses.inner(), new File(mTestPackageDir, "Outer$Inner.class"));
-        Files.write(InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
+        Files.write(
+                InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
         Files.write(InnerClasses.anonymous(), new File(mTestPackageDir, "Outer$1.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
         assertMembersLeft("Outer", "<init>:()V");
         assertMembersLeft(
-                "Outer$Inner",
-                "innerMethod:()V",
-                "<init>:(Ltest/Outer;)V",
-                "this$0:Ltest/Outer;");
+                "Outer$Inner", "innerMethod:()V", "<init>:(Ltest/Outer;)V", "this$0:Ltest/Outer;");
         assertClassSkipped("Outer$StaticInner");
         assertClassSkipped("Outer$1");
 
@@ -1061,14 +1174,16 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void innerClasses_useStaticInner() throws Exception {
         // Given:
-        Files.write(InnerClasses.main_useStaticInnerClass(), new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                InnerClasses.main_useStaticInnerClass(), new File(mTestPackageDir, "Main.class"));
         Files.write(InnerClasses.outer(), new File(mTestPackageDir, "Outer.class"));
         Files.write(InnerClasses.inner(), new File(mTestPackageDir, "Outer$Inner.class"));
-        Files.write(InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
+        Files.write(
+                InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
         Files.write(InnerClasses.anonymous(), new File(mTestPackageDir, "Outer$1.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1088,11 +1203,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(InnerClasses.main_empty(), new File(mTestPackageDir, "Main.class"));
         Files.write(InnerClasses.outer(), new File(mTestPackageDir, "Outer.class"));
         Files.write(InnerClasses.inner(), new File(mTestPackageDir, "Outer$Inner.class"));
-        Files.write(InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
+        Files.write(
+                InnerClasses.staticInner(), new File(mTestPackageDir, "Outer$StaticInner.class"));
         Files.write(InnerClasses.anonymous(), new File(mTestPackageDir, "Outer$1.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1111,7 +1227,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.StaticMembers.utils(), new File(mTestPackageDir, "Utils.class"));
 
         // When:
-        run("Main", "callStaticMethod:()Ljava/lang/Object;");
+        fullRun("Main", "callStaticMethod:()Ljava/lang/Object;");
 
         // Then:
         assertMembersLeft("Main", "callStaticMethod:()Ljava/lang/Object;");
@@ -1125,7 +1241,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.StaticMembers.utils(), new File(mTestPackageDir, "Utils.class"));
 
         // When:
-        run("Main", "getStaticField:()Ljava/lang/Object;");
+        fullRun("Main", "getStaticField:()Ljava/lang/Object;");
 
         // Then:
         assertMembersLeft("Main", "getStaticField:()Ljava/lang/Object;");
@@ -1139,7 +1255,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.emptyClass("Foo"), new File(mTestPackageDir, "Foo.class"));
 
         // When:
-        run("Main", "main:(Ljava/lang/Object;)Z");
+        fullRun("Main", "main:(Ljava/lang/Object;)Z");
 
         // Then:
         assertMembersLeft("Main", "main:(Ljava/lang/Object;)Z");
@@ -1149,15 +1265,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void reflection_classForName() throws Exception {
         // Given:
+        Files.write(Reflection.main_classForName(), new File(mTestPackageDir, "Main.class"));
         Files.write(
-                Reflection.main_classForName(),
-                new File(mTestPackageDir, "Main.class"));
-        Files.write(
-                Reflection.classWithFields(),
-                new File(mTestPackageDir, "ClassWithFields.class"));
+                Reflection.classWithFields(), new File(mTestPackageDir, "ClassWithFields.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1168,14 +1281,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void reflection_classForName_dynamic() throws Exception {
         // Given:
         Files.write(
-                Reflection.main_classForName_dynamic(),
-                new File(mTestPackageDir, "Main.class"));
+                Reflection.main_classForName_dynamic(), new File(mTestPackageDir, "Main.class"));
         Files.write(
-                Reflection.classWithFields(),
-                new File(mTestPackageDir, "ClassWithFields.class"));
+                Reflection.classWithFields(), new File(mTestPackageDir, "ClassWithFields.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1189,11 +1300,10 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 Reflection.main_atomicIntegerFieldUpdater(),
                 new File(mTestPackageDir, "Main.class"));
         Files.write(
-                Reflection.classWithFields(),
-                new File(mTestPackageDir, "ClassWithFields.class"));
+                Reflection.classWithFields(), new File(mTestPackageDir, "ClassWithFields.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1204,14 +1314,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void reflection_atomicLongFieldUpdater() throws Exception {
         // Given:
         Files.write(
-                Reflection.main_atomicLongFieldUpdater(),
-                new File(mTestPackageDir, "Main.class"));
+                Reflection.main_atomicLongFieldUpdater(), new File(mTestPackageDir, "Main.class"));
         Files.write(
-                Reflection.classWithFields(),
-                new File(mTestPackageDir, "ClassWithFields.class"));
+                Reflection.classWithFields(), new File(mTestPackageDir, "ClassWithFields.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1225,27 +1333,24 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 Reflection.main_atomicReferenceFieldUpdater(),
                 new File(mTestPackageDir, "Main.class"));
         Files.write(
-                Reflection.classWithFields(),
-                new File(mTestPackageDir, "ClassWithFields.class"));
+                Reflection.classWithFields(), new File(mTestPackageDir, "ClassWithFields.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
         assertMembersLeft("ClassWithFields", "stringField:Ljava/lang/String;");
     }
 
-
     @Test
     public void reflection_classLiteral() throws Exception {
         // Given:
-        Files.write(
-                Reflection.main_classLiteral(), new File(mTestPackageDir, "Main.class"));
+        Files.write(Reflection.main_classLiteral(), new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.emptyClass("Foo"), new File(mTestPackageDir, "Foo.class"));
 
         // When:
-        run("Main", "main:()Ljava/lang/Object;");
+        fullRun("Main", "main:()Ljava/lang/Object;");
 
         // Then:
         assertMembersLeft("Main", "main:()Ljava/lang/Object;");
@@ -1256,10 +1361,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void testTryCatch() throws Exception {
         // Given:
         Files.write(TestClasses.TryCatch.main(), new File(mTestPackageDir, "Main.class"));
-        Files.write(TestClasses.TryCatch.customException(), new File(mTestPackageDir, "CustomException.class"));
+        Files.write(
+                TestClasses.TryCatch.customException(),
+                new File(mTestPackageDir, "CustomException.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V", "helper:()V");
@@ -1269,10 +1376,11 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void testTryFinally() throws Exception {
         // Given:
-        Files.write(TestClasses.TryCatch.main_tryFinally(), new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.TryCatch.main_tryFinally(), new File(mTestPackageDir, "Main.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V", "helper:()V");
@@ -1281,13 +1389,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void abstractClasses_callToInterfaceMethodInAbstractClass() throws Exception {
         // Given:
-        Files.write(TestClasses.AbstractClasses.myInterface(), new File(mTestPackageDir, "MyInterface.class"));
-        Files.write(TestClasses.AbstractClasses.abstractImpl(), new File(mTestPackageDir, "AbstractImpl.class"));
         Files.write(
-                TestClasses.AbstractClasses.realImpl(), new File(mTestPackageDir, "RealImpl.class"));
+                TestClasses.AbstractClasses.myInterface(),
+                new File(mTestPackageDir, "MyInterface.class"));
+        Files.write(
+                TestClasses.AbstractClasses.abstractImpl(),
+                new File(mTestPackageDir, "AbstractImpl.class"));
+        Files.write(
+                TestClasses.AbstractClasses.realImpl(),
+                new File(mTestPackageDir, "RealImpl.class"));
 
         // When:
-        run("RealImpl", "main:()V");
+        fullRun("RealImpl", "main:()V");
 
         // Then:
         assertMembersLeft("MyInterface", "m:()V");
@@ -1301,7 +1414,7 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         Files.write(TestClasses.Primitives.main(), new File(mTestPackageDir, "Main.class"));
 
         // When:
-        run("Main", "ldc:()Ljava/lang/Object;", "checkcast:(Ljava/lang/Object;)[I");
+        fullRun("Main", "ldc:()Ljava/lang/Object;", "checkcast:(Ljava/lang/Object;)[I");
 
         // Then:
         assertMembersLeft("Main", "ldc:()Ljava/lang/Object;", "checkcast:(Ljava/lang/Object;)[I");
@@ -1310,10 +1423,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void invalidReferences_sunMiscUnsafe() throws Exception {
         // Given:
-        Files.write(TestClasses.InvalidReferences.main_sunMiscUnsafe(), new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.InvalidReferences.main_sunMiscUnsafe(),
+                new File(mTestPackageDir, "Main.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Then:
         assertMembersLeft("Main", "main:()V");
@@ -1323,13 +1438,18 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     @Test
     public void invalidReferences_Instrumentation() throws Exception {
         // Given:
-        Files.write(TestClasses.InvalidReferences.main_javaInstrumentation(), new File(mTestPackageDir, "Main.class"));
+        Files.write(
+                TestClasses.InvalidReferences.main_javaInstrumentation(),
+                new File(mTestPackageDir, "Main.class"));
 
         // When:
-        run("Main", "main:()V");
+        fullRun("Main", "main:()V");
 
         // Make sure we kept the method, even though we encountered unrecognized classes.
-        assertMembersLeft("Main", "main:()V", "transform:(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[B)[B");
+        assertMembersLeft(
+                "Main",
+                "main:()V",
+                "transform:(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[B)[B");
         assertImplements("Main", "java/lang/instrument/ClassFileTransformer");
         mExpectedWarnings = 1;
     }
@@ -1344,15 +1464,76 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 TestClasses.classWithEmptyMethods("Foo", "b:()V"),
                 new File(mTestPackageDir, "Foo2.class"));
 
-        run("Foo", "a:()V", "b:()V");
+        fullRun("Foo", "a:()V", "b:()V");
 
         // Either 'a' or 'b'.
         Set<String> members = getMembers("Foo");
-        Truth.assertThat(members).hasSize(1);
+        assertThat(members).hasSize(1);
     }
 
-    private void run(String className, String... methods) throws IOException {
-        run(new TestKeepRules(className, methods));
+    @Test
+    public void commasInKeepRules() throws Exception {
+        Files.write(
+                TestClasses.classWithEmptyMethods("Aaa", "a:()V"),
+                new File(mTestPackageDir, "Aaa.class"));
+        Files.write(
+                TestClasses.classWithEmptyMethods("Bbb", "b:()V"),
+                new File(mTestPackageDir, "Bbb.class"));
+        Files.write(
+                TestClasses.classWithEmptyMethods("Ccc", "c:()V"),
+                new File(mTestPackageDir, "Ccc.class"));
+
+        fullRun(parseKeepRules("-keep class test.Aaa,**.Ccc"));
+
+        assertMembersLeft("Aaa", "<init>:()V");
+        assertMembersLeft("Ccc", "<init>:()V");
+        assertClassSkipped("Bbb");
     }
 
+    @Test
+    public void modifiers_volatile() throws Exception {
+        Files.write(TestClasses.Modifiers.main(), new File(mTestPackageDir, "Main.class"));
+
+        // Volatile and bridge use the same bitmask.
+        fullRun(parseKeepRules("-keep class test.Main { volatile *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "volatileField:I");
+    }
+
+    @Test
+    public void modifiers_bridge() throws Exception {
+        Files.write(TestClasses.Modifiers.main(), new File(mTestPackageDir, "Main.class"));
+
+        // Volatile and bridge use the same bitmask.
+        fullRun(parseKeepRules("-keep class test.Main { bridge *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "bridgeMethod:()V");
+    }
+
+    @Test
+    public void enums() throws Exception {
+        Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
+
+        KeepRules rules =
+                parseKeepRules(
+                        "-keep enum * { "
+                                + "public static **[] values(); "
+                                + "public static ** valueOf(java.lang.String);"
+                                + "}");
+        fullRun(rules);
+
+        assertMembersLeft(
+                "MyEnum",
+                "<clinit>:()V",
+                "<init>:(Ljava/lang/String;I)V",
+                "values:()[Ltest/MyEnum;",
+                "valueOf:(Ljava/lang/String;)Ltest/MyEnum;",
+                "ONE:Ltest/MyEnum;",
+                "TWO:Ltest/MyEnum;",
+                "$VALUES:[Ltest/MyEnum;");
+    }
+
+    private void forceEmptyIncrementalRun() throws Exception {
+        incrementalRun(Collections.emptyMap());
+    }
 }

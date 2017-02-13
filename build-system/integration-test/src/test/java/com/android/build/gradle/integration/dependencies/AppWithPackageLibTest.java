@@ -26,7 +26,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -44,7 +43,7 @@ public class AppWithPackageLibTest {
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
@@ -63,7 +62,7 @@ public class AppWithPackageLibTest {
     }
 
     @Test
-    public void checkModelFailedToLoad() {
+    public void checkModelFailedToLoad() throws Exception {
         assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_NON_JAR_PACKAGE_DEP,

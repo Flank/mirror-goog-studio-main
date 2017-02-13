@@ -19,7 +19,6 @@ package com.android.builder.dependency.level2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 

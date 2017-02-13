@@ -29,13 +29,12 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import org.w3c.dom.Element;
 
 /**
@@ -77,36 +76,43 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        int childCount = LintUtils.getChildCount(element);
-        if (childCount == 2) {
-            List<Element> children = LintUtils.getChildren(element);
-            Element first = children.get(0);
-            Element second = children.get(1);
-            if ((first.getTagName().equals(IMAGE_VIEW) &&
-                    second.getTagName().equals(TEXT_VIEW) &&
-                    !first.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)) ||
-                ((second.getTagName().equals(IMAGE_VIEW) &&
-                        first.getTagName().equals(TEXT_VIEW) &&
-                        !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
-                // If the layout has a background, ignore since it would disappear from
-                // the TextView
-                if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
-                    return;
-                }
+        // Look for exactly 2 children
+        Element first = XmlUtils.getFirstSubTag(element);
+        if (first == null) {
+            return;
+        }
+        Element second = XmlUtils.getNextTag(first);
+        if (second == null) {
+            return;
+        }
+        if (XmlUtils.getNextTag(second) != null) {
+            return;
+        }
 
-                // Certain scale types cannot be done with compound drawables
-                String scaleType = first.getTagName().equals(IMAGE_VIEW)
-                        ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
-                        : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
-                if (scaleType != null && !scaleType.isEmpty()) {
-                    // For now, ignore if any scale type is set
-                    return;
-                }
-
-                context.report(ISSUE, element, context.getLocation(element),
-                        "This tag and its children can be replaced by one `<TextView/>` and " +
-                                "a compound drawable");
+        if ((first.getTagName().equals(IMAGE_VIEW) &&
+                second.getTagName().equals(TEXT_VIEW) &&
+                !first.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)) ||
+            ((second.getTagName().equals(IMAGE_VIEW) &&
+                    first.getTagName().equals(TEXT_VIEW) &&
+                    !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
+            // If the layout has a background, ignore since it would disappear from
+            // the TextView
+            if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
+                return;
             }
+
+            // Certain scale types cannot be done with compound drawables
+            String scaleType = first.getTagName().equals(IMAGE_VIEW)
+                    ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
+                    : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
+            if (scaleType != null && !scaleType.isEmpty()) {
+                // For now, ignore if any scale type is set
+                return;
+            }
+
+            context.report(ISSUE, element, context.getLocation(element),
+                    "This tag and its children can be replaced by one `<TextView/>` and " +
+                            "a compound drawable");
         }
     }
 }

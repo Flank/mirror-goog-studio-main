@@ -13,7 +13,8 @@ dependencies {
     provided gradleApi()
 
     testCompile libs.junit
-    testRuntime gradleApi()
+    testCompile project(':base:testutils')
+    testCompile gradleApi()
 }
 
 sourceSets {

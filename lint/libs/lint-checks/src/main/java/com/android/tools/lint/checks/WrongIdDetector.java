@@ -30,7 +30,6 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.VALUE_ID;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintUtils.editDistance;
-import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.android.tools.lint.detector.api.LintUtils.isSameResourceFile;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 
@@ -54,6 +53,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -136,7 +136,7 @@ public class WrongIdDetector extends LayoutDetector {
     public static final Issue INVALID = Issue.create(
             "InvalidId",
             "Invalid ID declaration",
-            "An id definition *must* be of the form `@+id/yourname`. The tools have not " +
+            "An id definition **must** be of the form `@+id/yourname`. The tools have not " +
             "rejected strings of the form `@+foo/bar` in the past, but that was an error, " +
             "and could lead to tricky errors because of the way the id integers are assigned.\n" +
             "\n" +
@@ -204,9 +204,8 @@ public class WrongIdDetector extends LayoutDetector {
             }
 
             for (Element layout : mRelativeLayouts) {
-                List<Element> children = getChildren(layout);
-                Set<String> ids = Sets.newHashSetWithExpectedSize(children.size());
-                for (Element child : children) {
+                Set<String> ids = Sets.newHashSetWithExpectedSize(20);
+                for (Element child : XmlUtils.getSubTags(layout)) {
                     String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
                     if (id != null && !id.isEmpty()) {
                         ids.add(id);
@@ -215,7 +214,7 @@ public class WrongIdDetector extends LayoutDetector {
 
                 boolean isConstraintLayout = layout.getTagName().equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
 
-                for (Element element : children) {
+                for (Element element : XmlUtils.getSubTags(layout)) {
                     String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));
 
                     NamedNodeMap attributes = element.getAttributes();
@@ -421,7 +420,8 @@ public class WrongIdDetector extends LayoutDetector {
             int nameStart = id.startsWith(NEW_ID_PREFIX) ? NEW_ID_PREFIX.length() : 2;
             String suggested = NEW_ID_PREFIX + id.substring(nameStart).replace('/', '_');
             String message = String.format(
-                    "ID definitions *must* be of the form `@+id/name`; try using `%1$s`", suggested);
+                    "ID definitions **must** be of the form `@+id/name`; try using `%1$s`",
+                    suggested);
             context.report(INVALID, attribute, context.getLocation(attribute), message);
         }
     }

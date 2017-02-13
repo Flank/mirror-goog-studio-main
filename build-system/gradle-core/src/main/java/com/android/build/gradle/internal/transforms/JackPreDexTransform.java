@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -173,11 +172,7 @@ public class JackPreDexTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return jackPluginsClassPath
-                .getFiles()
-                .stream()
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList());
+        return ImmutableList.of(SecondaryFile.nonIncremental(jackPluginsClassPath));
     }
 
     @Override

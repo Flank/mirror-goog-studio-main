@@ -5,7 +5,9 @@
     <#if backwardsCompatibility!true>
         <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
     </#if>
+</#if>
 
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <#if unitTestsSupported>
         <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
     </#if>
@@ -21,8 +23,10 @@
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <instantiate from="root/build.gradle.ftl"
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+</#if>
 
 <#if !(isInstantApp!false) || (isBaseAtom!false)>
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
@@ -60,7 +64,7 @@
     <instantiate from="root/proguard-rules.txt.ftl"
                    to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
 </#if>
-<#if !(isLibraryProject!false) || (isBaseAtom!false)>
+<#if (!(isLibraryProject!false) && !(isInstantApp!false)) || (isBaseAtom!false)>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
     <#if buildApi gte 22>
@@ -74,12 +78,14 @@
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 </#if>
 
+<#if !(isInstantApp!false) || (isLibraryProject!false)>
     <instantiate from="root/test/app_package/ExampleInstrumentedTest.java.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.java" />
 
-<#if unitTestsSupported>
-    <instantiate from="root/test/app_package/ExampleUnitTest.java.ftl"
-                   to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.java" />
+    <#if unitTestsSupported>
+        <instantiate from="root/test/app_package/ExampleUnitTest.java.ftl"
+                       to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.java" />
+    </#if>
 </#if>
 <#if includeCppSupport!false>
     <instantiate from="root/CMakeLists.txt.ftl"

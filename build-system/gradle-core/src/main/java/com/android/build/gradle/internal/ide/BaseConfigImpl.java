@@ -23,7 +23,6 @@ import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

@@ -663,7 +663,6 @@ public abstract class PermissionRequirement {
             "android.permission.RECEIVE_WAP_PUSH",
             "android.permission.RECORD_AUDIO",
             "android.permission.SEND_SMS",
-            "android.permission.USE_FINGERPRINT",
             "android.permission.USE_SIP",
             "android.permission.WRITE_CALENDAR",
             "android.permission.WRITE_CALL_LOG",

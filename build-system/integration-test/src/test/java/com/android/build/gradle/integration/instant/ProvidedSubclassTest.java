@@ -24,10 +24,8 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.truth.Expect;
-import java.io.IOException;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,7 +59,7 @@ public class ProvidedSubclassTest {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
-    public void addProvidedLibrary() throws IOException {
+    public void addProvidedLibrary() throws Exception {
         Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -74,7 +72,7 @@ public class ProvidedSubclassTest {
     public void checkV() throws Exception {
         project.execute("clean");
         GradleBuildResult result = project.executor()
-                .withInstantRun(23, ColdswapMode.DEFAULT, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // Check we can find the parent class.

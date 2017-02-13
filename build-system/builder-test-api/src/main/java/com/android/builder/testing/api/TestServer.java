@@ -19,7 +19,6 @@ package com.android.builder.testing.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 
 /**

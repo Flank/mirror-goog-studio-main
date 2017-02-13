@@ -25,14 +25,9 @@ import com.android.builder.model.SyncIssue;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
 
@@ -108,7 +103,7 @@ public class AbstractCompilesUtil {
 
     public static boolean isIncremental(Project project, VariantScope variantScope,
             CompileOptions compileOptions, Configuration processorConfiguration, ILogger log) {
-        boolean incremental;
+        boolean incremental = true;
         if (compileOptions.getIncremental() != null) {
             incremental = compileOptions.getIncremental();
             log.verbose("Incremental flag set to %1$b in DSL", incremental);
@@ -121,32 +116,6 @@ public class AbstractCompilesUtil {
                 log.verbose("Incremental Java compilation disabled in variant %1$s "
                                 + "as you are using an incompatible plugin",
                         variantScope.getVariantConfiguration().getFullName());
-            } else if (variantScope.getTestedVariantData() != null) {
-                // Incremental javac is currently (Gradle 2.14-2.14.1) broken for invocations
-                // that have directories on their classpath.
-                incremental = false;
-            } else {
-                // For now, default to true, unless the use uses several source folders,
-                // in that case, we cannot guarantee that the incremental java works fine.
-
-                // some source folders may be configured but do not exist, in that case, don't
-                // use as valid source folders to determine whether or not we should turn on
-                // incremental compilation.
-                List<File> sourceFolders = new ArrayList<File>();
-                for (ConfigurableFileTree sourceFolder
-                        : variantScope.getVariantData().getUserJavaSources()) {
-
-                    if (sourceFolder.getDir().exists()) {
-                        sourceFolders.add(sourceFolder.getDir());
-                    }
-                }
-                incremental = sourceFolders.size() == 1;
-                if (sourceFolders.size() > 1) {
-                    log.verbose("Incremental Java compilation disabled in variant %1$s "
-                                    + "as you are using %2$d source folders : %3$s",
-                            variantScope.getVariantConfiguration().getFullName(),
-                            sourceFolders.size(), Joiner.on(',').join(sourceFolders));
-                }
             }
         }
 

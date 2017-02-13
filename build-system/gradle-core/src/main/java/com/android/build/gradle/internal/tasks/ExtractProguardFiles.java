@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.build.gradle.ProguardFiles;
-
+import java.io.IOException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.IOException;
 
 /**
  * Task to extract the default ProGuard rules from Java resources into files in the build directory.

@@ -23,10 +23,8 @@ import static com.android.utils.StringHelper.appendCamelCase;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
-
-import org.gradle.nativeplatform.NativeBinarySpec;
-
 import java.io.File;
+import org.gradle.nativeplatform.NativeBinarySpec;
 
 /**
  * Naming scheme for NdkPlugin's outputs.

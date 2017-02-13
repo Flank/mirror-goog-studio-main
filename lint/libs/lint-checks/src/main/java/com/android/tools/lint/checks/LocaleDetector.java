@@ -54,12 +54,12 @@ public class LocaleDetector extends Detector implements JavaPsiScanner {
             "DefaultLocale",
             "Implied default locale in case conversion",
 
-            "Calling `String#toLowerCase()` or `#toUpperCase()` *without specifying an " +
-            "explicit locale* is a common source of bugs. The reason for that is that those " +
+            "Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an " +
+            "explicit locale** is a common source of bugs. The reason for that is that those " +
             "methods will use the current locale on the user's device, and even though the " +
             "code appears to work correctly when you are developing the app, it will fail " +
             "in some locales. For example, in the Turkish locale, the uppercase replacement " +
-            "for `i` is *not* `I`.\n" +
+            "for `i` is **not** `I`.\n" +
             "\n" +
             "If you want the methods to just perform ASCII replacement, for example to convert " +
             "an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to " +

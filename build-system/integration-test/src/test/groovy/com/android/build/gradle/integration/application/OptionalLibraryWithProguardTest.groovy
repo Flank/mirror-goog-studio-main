@@ -26,7 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 /**
- * Test for the new optional library mechanism when a library dependency uses sone now optional
+ * Test for the new optional library mechanism when a library dependency uses some now optional
  * classes and runs proguard, in which case proguard needs to see the optional classes.
  */
 @RunWith(FilterableParameterized)

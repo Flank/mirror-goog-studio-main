@@ -85,7 +85,6 @@ bool MemoryCache::StartHeapDump(const std::string& dump_file_path,
       heap_dump_infos_[GetSampleIndex(next_heap_dump_sample_id_)];
   info.set_start_time(request_time);
   info.set_end_time(kUnfinishedTimestamp);
-  info.set_dump_id(next_heap_dump_sample_id_);
   info.set_file_path(dump_file_path);
   response->mutable_info()->CopyFrom(info);
 
@@ -130,10 +129,9 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
     int64_t timestamp = clock_.GetCurrentTime();
     if (enabled) {
       AllocationsInfo& info = allocations_info_[GetSampleIndex(next_allocations_info_id_)];
-      info.set_info_id(next_allocations_info_id_);
       info.set_start_time(timestamp);
       info.set_end_time(kUnfinishedTimestamp);
-      info.set_legacy_tracking(legacy);
+      info.set_legacy(legacy);
       info.set_status(AllocationsInfo::IN_PROGRESS);
 
       response->mutable_info()->CopyFrom(info);
@@ -143,18 +141,10 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
       int last_info_index = GetSampleIndex(next_allocations_info_id_ - 1);
       AllocationsInfo& info = allocations_info_[last_info_index];
       info.set_end_time(timestamp);
-      if (info.legacy_tracking()) {
-        // Legacy tracking requires post-proccessing on
-        // perfd-host upon arrival of jdwp data.
-        info.set_status(AllocationsInfo::POST_PROCESS);
-      } else {
-        info.set_status(AllocationsInfo::COMPLETED);
-      }
-
+      info.set_status(AllocationsInfo::COMPLETED);
       response->mutable_info()->CopyFrom(info);
     }
     response->set_status(TrackAllocationsResponse::SUCCESS);
-    response->set_timestamp(timestamp);
     is_allocation_tracking_enabled_ = enabled;
     // TODO enable/disable post-O allocation tracking
   }
@@ -237,22 +227,38 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   response->set_end_timestamp(end_timestamp);
 }
 
-void MemoryCache::ReadHeapDumpFileContents(int32_t dump_id,
+void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
                                            DumpDataResponse* response) {
   std::string heap_dump_file_path;
   {
     std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
-    int32_t index = GetSampleIndex(dump_id);
-    if (heap_dump_infos_[index].dump_id() != dump_id) {
+
+    bool found = false;
+    int32_t search_id =
+        std::max(next_heap_dump_sample_id_ - samples_capacity_, 0);
+    int32_t wrapped_index = -1;
+    while (search_id < next_heap_dump_sample_id_) {
+      wrapped_index = GetSampleIndex(search_id);
+      if (heap_dump_infos_[wrapped_index].start_time() == dump_time) {
+        found = true;
+        break;
+      }
+      search_id++;
+    }
+
+    if (found) {
+      if (heap_dump_infos_[wrapped_index].end_time() == kUnfinishedTimestamp) {
+        response->set_status(DumpDataResponse::NOT_READY);
+        return;
+      } else {
+        heap_dump_file_path.assign(heap_dump_infos_[wrapped_index].file_path());
+      }
+    } else {
       response->set_status(DumpDataResponse::NOT_FOUND);
       return;
-    } else if (heap_dump_infos_[index].end_time() == kUnfinishedTimestamp) {
-      response->set_status(DumpDataResponse::NOT_READY);
-      return;
-    } else {
-      heap_dump_file_path.assign(heap_dump_infos_[index].file_path());
     }
   }
+
   FileReader::Read(heap_dump_file_path, response->mutable_data());
   response->set_status(DumpDataResponse::SUCCESS);
 }

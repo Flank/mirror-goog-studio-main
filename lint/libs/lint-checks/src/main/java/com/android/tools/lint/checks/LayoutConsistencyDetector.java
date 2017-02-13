@@ -97,7 +97,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
             + "in a runtime crash for some resource configurations when a "
             + "`findViewById()` fails.\n"
             + "\n"
-            + "There *are* cases where this is intentional. For example, you "
+            + "There **are** cases where this is intentional. For example, you "
             + "may have a dedicated large tablet layout which adds some extra "
             + "widgets that are not present in the phone version of the layout. "
             + "As long as the code accessing the layout resource is careful to "

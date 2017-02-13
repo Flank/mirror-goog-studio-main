@@ -22,10 +22,8 @@ import com.android.build.gradle.managed.ScopedShaderOptions;
 import com.android.build.gradle.managed.ShaderOptions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-
-import org.gradle.model.ModelMap;
-
 import java.util.List;
+import org.gradle.model.ModelMap;
 
 /**
  * An adaptor to convert {@link ShaderOptions} to {@link CoreShaderOptions}

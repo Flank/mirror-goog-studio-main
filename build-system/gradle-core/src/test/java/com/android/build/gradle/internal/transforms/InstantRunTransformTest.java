@@ -52,9 +52,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import org.gradle.api.Project;
 import org.junit.Before;
@@ -64,12 +68,6 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Tests for the {@link InstantRunTransform} class

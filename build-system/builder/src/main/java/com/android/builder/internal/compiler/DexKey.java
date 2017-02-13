@@ -20,12 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
+import java.io.File;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.io.File;
 
 /**
  * Key to store Item/StoredItem in maps.

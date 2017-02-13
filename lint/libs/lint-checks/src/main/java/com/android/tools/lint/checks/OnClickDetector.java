@@ -16,25 +16,39 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
+import static com.android.SdkConstants.CLASS_ACTIVITY;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaEvaluator;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.ClassScanner;
+import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiKeyword;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifier;
+import com.intellij.psi.PsiModifierList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,50 +57,57 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
  * Checks for missing onClick handlers
  */
-public class OnClickDetector extends LayoutDetector implements ClassScanner {
-    /** Missing onClick handlers */
+public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiScanner {
+
+    /**
+     * Missing onClick handlers
+     */
     public static final Issue ISSUE = Issue.create(
             "OnClick",
             "`onClick` method does not exist",
 
             "The `onClick` attribute value should be the name of a method in this View's context " +
-            "to invoke when the view is clicked. This name must correspond to a public method " +
-            "that takes exactly one parameter of type `View`.\n" +
-            "\n" +
-            "Must be a string value, using '\\;' to escape characters such as '\\n' or " +
-            "'\\uxxxx' for a unicode character.",
+                    "to invoke when the view is clicked. This name must correspond to a public method "
+                    +
+                    "that takes exactly one parameter of type `View`.\n" +
+                    "\n" +
+                    "Must be a string value, using '\\\\;' to escape characters such as '\\\\n' or "
+                    +
+                    "'\\\\uxxxx' for a unicode character.",
             Category.CORRECTNESS,
             10,
             Severity.ERROR,
             new Implementation(
                     OnClickDetector.class,
-                    Scope.CLASS_AND_ALL_RESOURCE_FILES));
+                    Scope.JAVA_AND_RESOURCE_FILES,
+                    Scope.RESOURCE_FILE_SCOPE));
 
-    private Map<String, Location.Handle> mNames;
-    private Map<String, List<String>> mSimilar;
-    private boolean mHaveBytecode;
+    private Map<String, Location.Handle> names;
+    private Map<String, List<String>> similar;
 
-    /** Constructs a new {@link OnClickDetector} */
+    /**
+     * Constructs a new {@link OnClickDetector}
+     */
     public OnClickDetector() {
     }
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (mNames != null && !mNames.isEmpty() && mHaveBytecode) {
-            List<String> names = new ArrayList<>(mNames.keySet());
-            Collections.sort(names);
+        if (names != null && !names.isEmpty() &&
+                context.getScope().contains(Scope.JAVA_FILE)) {
+            List<String> missing = new ArrayList<>(names.keySet());
+            Collections.sort(missing);
             LintDriver driver = context.getDriver();
-            for (String name : names) {
-                Handle handle = mNames.get(name);
+            for (String name : missing) {
+                Handle handle = names.get(name);
 
                 Object clientData = handle.getClientData();
                 if (clientData instanceof Node) {
@@ -96,13 +117,13 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
                 }
 
                 Location location = handle.resolve();
-                String message = String.format(
-                    "Corresponding method handler '`public void %1$s(android.view.View)`' not found",
-                    name);
-                List<String> similar = mSimilar != null ? mSimilar.get(name) : null;
-                if (similar != null) {
-                    Collections.sort(similar);
-                  message += String.format(" (did you mean `%1$s` ?)", Joiner.on(", ").join(similar));
+                String message = String.format("Corresponding method handler '`public void "
+                        + "%1$s(android.view.View)`' not found", name);
+                List<String> matches = similar != null ? similar.get(name) : null;
+                if (matches != null) {
+                    Collections.sort(matches);
+                    message += String.format(" (did you mean `%1$s` ?)",
+                            Joiner.on(", ").join(matches));
                 }
                 context.report(ISSUE, location, message);
             }
@@ -116,29 +137,48 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
         return Collections.singletonList(ATTR_ON_CLICK);
     }
 
+    @Nullable
+    private static String validateJavaIdentifier(@NotNull String text) {
+        if (LintUtils.isJavaKeyword(text)) {
+            return "cannot be a Java keyword";
+        }
+
+        int len = text.length();
+        if (len == 0) {
+            return "cannot be empty";
+        }
+
+        if (!Character.isJavaIdentifierStart(text.charAt(0))) {
+            return "cannot start with the character '`" + text.charAt(0) + "`'";
+        }
+
+        for (int i = 1; i < len; i++) {
+            if (!Character.isJavaIdentifierPart(text.charAt(i))) {
+                return "cannot contain the character '`" + text.charAt(i) + "`'";
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
+        Project project = context.getProject();
+        if (!project.getReportIssues()) {
+            // If this is a library project not being analyzed, ignore it
+            return;
+        }
+
         String value = attribute.getValue();
         if (value.isEmpty() || value.trim().isEmpty()) {
             context.report(ISSUE, attribute, context.getLocation(attribute),
                     "`onClick` attribute value cannot be empty");
-        } else if (!value.equals(value.trim())) {
-            context.report(ISSUE, attribute, context.getLocation(attribute),
-                    "There should be no whitespace around attribute values");
+        } else if (value.contains(" ")) {
+            context.report(ISSUE, attribute, context.getValueLocation(attribute),
+                    "There should be no spaces in the `onClick` handler name");
         } else if (!value.startsWith(PREFIX_RESOURCE_REF)) { // Not resolved
-            if (!context.getProject().getReportIssues()) {
-                // If this is a library project not being analyzed, ignore it
-                return;
-            }
-
-            if (mNames == null) {
-                mNames = new HashMap<>();
-            }
-            Handle handle = context.createLocationHandle(attribute);
-            handle.setClientData(attribute);
-
             // Replace unicode characters with the actual value since that's how they
-            // appear in the ASM signatures
+            // appear in the method names
             if (value.contains("\\u")) {
                 Pattern pattern = Pattern.compile("\\\\u(\\d\\d\\d\\d)");
                 Matcher matcher = pattern.matcher(value);
@@ -155,32 +195,94 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
                 value = sb.toString();
             }
 
-            mNames.put(value, handle);
+            String validationError = validateJavaIdentifier(value);
+            if (validationError != null) {
+                context.report(ISSUE, attribute, context.getValueLocation(attribute),
+                        "`onClick` handler method name " + validationError);
+                return;
+            }
+
+            if (names == null) {
+                names = new HashMap<>();
+            }
+            Handle handle = context.createLocationHandle(attribute);
+            handle.setClientData(attribute);
+
+            names.put(value, handle);
+
+            if (!context.getScope().contains(Scope.JAVA_FILE)) {
+                // Incremental editing: Look to see if we know the immediate activity
+                Element root = attribute.getOwnerDocument().getDocumentElement();
+                String ctx = root.getAttributeNS(TOOLS_URI, ATTR_CONTEXT);
+                if (!ctx.isEmpty()) {
+                    if (ctx.startsWith(".") || !ctx.contains(".")) {
+                        String pkg = project.getPackage();
+                        if (pkg != null) {
+                            ctx = pkg + (ctx.startsWith(".") ? "" : ".") + ctx;
+                        }
+                    }
+                    JavaParser parser = context.getClient().getJavaParser(project);
+                    if (parser != null) {
+                        JavaEvaluator evaluator = parser.getEvaluator();
+                        PsiClass cls = evaluator.findClass(ctx);
+                        if (cls != null) {
+                            boolean found = false;
+                            PsiMethod[] methods = cls.findMethodsByName(value, false);
+                            for (PsiMethod method : methods) {
+                                boolean rightArguments =
+                                        method.getParameterList().getParametersCount() == 1
+                                                &&
+                                                evaluator.parameterHasType(method, 0,
+                                                        CLASS_VIEW);
+                                if (rightArguments) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found) {
+                                String message = String.format("Corresponding method handler "
+                                        + "'`public void %1$s(android.view.View)`' not "
+                                        + "found", value);
+                                context.report(ISSUE, attribute,
+                                        context.getValueLocation(attribute), message);
+
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // ---- Implements ClassScanner ----
+    // ---- Implements JavaPsiScanner ----
 
-    @SuppressWarnings("rawtypes")
+    @Nullable
     @Override
-    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        if (mNames == null) {
+    public List<String> applicableSuperClasses() {
+        return Collections.singletonList(CLASS_ACTIVITY);
+    }
+
+    @Override
+    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+        if (names == null) {
             // No onClick attributes in the XML files
             return;
         }
 
-        mHaveBytecode = true;
+        JavaEvaluator evaluator = context.getEvaluator();
 
-        List methodList = classNode.methods;
-        for (Object m : methodList) {
-            MethodNode method = (MethodNode) m;
-            boolean rightArguments = method.desc.equals("(Landroid/view/View;)V");
-            if (!mNames.containsKey(method.name)) {
+        for (PsiMethod method : declaration.getMethods()) {
+            // TODO: Remember methods of the same names if they don't have the right arguments?
+            String methodName = method.getName();
+            boolean rightArguments = method.getParameterList().getParametersCount() == 1 &&
+                    evaluator.parameterHasType(method, 0, CLASS_VIEW);
+            if (!names.containsKey(methodName)) {
                 if (rightArguments) {
                     // See if there's a possible typo instead
-                    for (String n : mNames.keySet()) {
-                        if (LintUtils.isEditableTo(n, method.name, 2)) {
-                            recordSimilar(n, classNode, method);
+                    for (String n : names.keySet()) {
+                        if (LintUtils.isEditableTo(n, methodName, 2)) {
+                            recordSimilar(n, declaration, method);
                             break;
                         }
                     }
@@ -188,48 +290,53 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
                 continue;
             }
 
-            // TODO: Validate class hierarchy: should extend a context method
-            // Longer term, also validate that it's in a layout that corresponds to
-            // the given activity
-
-            if (rightArguments){
+            if (rightArguments) {
                 // Found: remove from list to be checked
-                mNames.remove(method.name);
+                names.remove(methodName);
 
                 // Make sure the method is public
-                if ((method.access & Opcodes.ACC_PUBLIC) == 0) {
-                    Location location = context.getLocation(method, classNode);
+                if (!evaluator.isPublic(method)) {
+                    Location location = context.getLocation(method);
                     String message = String.format(
-                            "On click handler `%1$s(View)` must be public",
-                            method.name);
-                    context.report(ISSUE, location, message);
-                } else if ((method.access & Opcodes.ACC_STATIC) != 0) {
-                    Location location = context.getLocation(method, classNode);
+                            "`onClick` handler `%1$s(View)` must be public",
+                            methodName);
+                    context.report(ISSUE, method, location, message);
+                } else if (evaluator.isStatic(method)) {
+                    PsiElement locationNode = method;
+                    PsiModifierList modifierList = method.getModifierList();
+                    // Try to find the static modifier itself
+                    if (modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
+                        PsiElement child = modifierList.getFirstChild();
+                        while (child != null) {
+                            if (child instanceof PsiKeyword
+                                    && PsiKeyword.STATIC.equals(child.getText())) {
+                                locationNode = child;
+                                break;
+                            }
+                            child = child.getNextSibling();
+                        }
+                    }
+                    Location location = context.getLocation(locationNode);
                     String message = String.format(
-                            "On click handler `%1$s(View)` should not be static",
-                            method.name);
-                    context.report(ISSUE, location, message);
+                            "`onClick` handler `%1$s(View)` should not be static",
+                            methodName);
+                    context.report(ISSUE, method, location, message);
                 }
 
-                if (mNames.isEmpty()) {
-                    mNames = null;
+                if (names.isEmpty()) {
+                    names = null;
                     return;
                 }
             }
         }
     }
 
-    private void recordSimilar(String name, ClassNode classNode, MethodNode method) {
-        if (mSimilar == null) {
-            mSimilar = new HashMap<>();
+    private void recordSimilar(String name, PsiClass containingClass, PsiMethod method) {
+        if (similar == null) {
+            similar = new HashMap<>();
         }
-        List<String> list = mSimilar.get(name);
-        if (list == null) {
-            list = new ArrayList<>();
-            mSimilar.put(name, list);
-        }
-
-        String signature = ClassContext.createSignature(classNode.name, method.name, method.desc);
+        List<String> list = similar.computeIfAbsent(name, k -> new ArrayList<>());
+        String signature = containingClass.getName() + '#' + method.getName();
         list.add(signature);
     }
 }

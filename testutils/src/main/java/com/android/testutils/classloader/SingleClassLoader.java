@@ -26,8 +26,8 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 
 /**
- * A custom class loader that loads only one given class and delegates everything else to the
- * default class loaders.
+ * A custom class loader that loads only one given class (and its inner classes if any) and
+ * delegates everything else to the default class loaders.
  *
  * <p>Once the {@code SingleClassLoader} instance is initialized with the class to load, the client
  * should call {@link #load()} instead of {@link #loadClass(String)}.
@@ -49,7 +49,7 @@ public final class SingleClassLoader extends ClassLoader {
     @NonNull
     @Override
     public Class loadClass(@NonNull String name) throws ClassNotFoundException {
-        if (name.equals(classToLoad)) {
+        if (name.startsWith(classToLoad)) {
             Preconditions.checkState(findLoadedClass(name) == null);
             return defineClass(name);
         } else {

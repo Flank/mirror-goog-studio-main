@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
@@ -27,6 +28,10 @@ import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
+import com.android.manifmerger.ManifestMerger2.MergeType;
+import com.android.manifmerger.MergingReport;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
@@ -39,6 +44,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.XmlParser;
+import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -47,14 +53,19 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.utils.StdLogger;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import org.w3c.dom.Document;
 
 /**
  * Lint client for command line usage. Supports the flags in {@link LintCliFlags},
@@ -116,20 +128,8 @@ public class LintCliClient extends LintClient {
     public int run(@NonNull IssueRegistry registry, @NonNull List<File> files) throws IOException {
         assert !flags.getReporters().isEmpty();
         this.registry = registry;
-        driver = new LintDriver(registry, this);
 
-        driver.setAbbreviating(!flags.isShowEverything());
-
-        File baselineFile = flags.getBaselineFile();
-        LintBaseline baseline = null;
-        if (baselineFile != null) {
-            baseline = new LintBaseline(this, baselineFile);
-            driver.setBaseline(baseline);
-            if (flags.isRemoveFixedBaselineIssues()) {
-                baseline.setWriteOnClose(true);
-                baseline.setRemoveFixed(true);
-            }
-        }
+        driver = createDriver(registry);
 
         addProgressPrinter();
         driver.addLintListener((driver, type, context) -> {
@@ -147,6 +147,8 @@ public class LintCliClient extends LintClient {
         int baselineErrorCount = 0;
         int baselineWarningCount = 0;
         int fixedCount = 0;
+
+        LintBaseline baseline = driver.getBaseline();
         if (baseline != null) {
             baselineErrorCount = baseline.getFoundErrorCount();
             baselineWarningCount = baseline.getFoundWarningCount();
@@ -176,6 +178,7 @@ public class LintCliClient extends LintClient {
             System.out.println();
         }
 
+        File baselineFile = flags.getBaselineFile();
         if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
             File dir = baselineFile.getParentFile();
             boolean ok = true;
@@ -203,6 +206,25 @@ public class LintCliClient extends LintClient {
         }
 
         return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
+    }
+
+    @NonNull
+    protected LintDriver createDriver(@NonNull IssueRegistry registry) {
+        driver = new LintDriver(registry, this);
+        driver.setAbbreviating(!flags.isShowEverything());
+        driver.setCheckTestSources(flags.isCheckTestSources());
+
+        File baselineFile = flags.getBaselineFile();
+        if (baselineFile != null) {
+            LintBaseline baseline = new LintBaseline(this, baselineFile);
+            driver.setBaseline(baseline);
+            if (flags.isRemoveFixedBaselineIssues()) {
+                baseline.setWriteOnClose(true);
+                baseline.setRemoveFixed(true);
+            }
+        }
+
+        return driver;
     }
 
     protected void addProgressPrinter() {
@@ -239,7 +261,7 @@ public class LintCliClient extends LintClient {
 
     @Override
     public XmlParser getXmlParser() {
-        return new LintCliXmlParser();
+        return new LintCliXmlParser(this);
     }
 
     @NonNull
@@ -464,17 +486,26 @@ public class LintCliClient extends LintClient {
      * Consult the lint.xml file, but override with the --enable and --disable
      * flags supplied on the command line
      */
-    class CliConfiguration extends DefaultConfiguration {
+    protected class CliConfiguration extends DefaultConfiguration {
         private final boolean mFatalOnly;
 
-        CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
+        protected CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
                 boolean fatalOnly) {
             super(LintCliClient.this, project, parent);
             mFatalOnly = fatalOnly;
         }
 
-        CliConfiguration(File lintFile, boolean fatalOnly) {
-            super(LintCliClient.this, null /*project*/, null /*parent*/, lintFile);
+        protected CliConfiguration(File lintFile, boolean fatalOnly) {
+            super(LintCliClient.this, null, null, lintFile);
+            mFatalOnly = fatalOnly;
+        }
+
+        protected CliConfiguration(
+                @NonNull File lintFile,
+                @Nullable Configuration parent,
+                @Nullable Project project,
+                boolean fatalOnly) {
+            super(LintCliClient.this, project, parent, lintFile);
             mFatalOnly = fatalOnly;
         }
 
@@ -524,6 +555,24 @@ public class LintCliClient extends LintClient {
 
             Severity manual = flags.getSeverityOverrides().get(id);
             if (manual != null) {
+                if (this.severity != null && (this.severity.containsKey(id)
+                        || this.severity.containsKey(VALUE_ALL))) {
+                    // Ambiguity! We have a specific severity override provided
+                    // via lint options for the main app module, but a local lint.xml
+                    // file in the library (not a lintOptions definition) which also
+                    // specifies severity for the same issue.
+                    //
+                    // Who should win? Should the intent from the main app module
+                    // win, such that you have a global way to say "this is the severity
+                    // I want during this lint run?". Or should the library-local definition
+                    // win, to say "there's a local problem in this library; I need to
+                    // change things here?".
+                    //
+                    // Both are plausible, so for now I'm going with a middle ground: local
+                    // definitions should be used to turn of issues that don't work right.
+                    // Therefore, we'll take the minimum of the two severities!
+                    return Severity.min(severity, manual);
+                }
                 return manual;
             }
 
@@ -759,7 +808,7 @@ public class LintCliClient extends LintClient {
     private static Set<File> sAlreadyWarned;
 
     /** Returns the configuration used by this client */
-    Configuration getConfiguration() {
+    protected Configuration getConfiguration() {
         if (configuration == null) {
             File configFile = flags.getDefaultConfiguration();
             if (configFile != null) {
@@ -836,5 +885,63 @@ public class LintCliClient extends LintClient {
 
         projectDirs = Sets.newHashSet();
         dirToProject = null;
+    }
+
+    @Nullable
+    @Override
+    public Document getMergedManifest(@NonNull Project project) {
+        List<File> manifests = Lists.newArrayList();
+        for (Project dependency : project.getAllLibraries()) {
+            for (File manifest : dependency.getManifestFiles()) {
+                manifests.add(manifest);
+            }
+        }
+
+        List<File> projectManifests = project.getManifestFiles();
+        if (projectManifests.isEmpty()) {
+            return null;
+        }
+        File mainManifest = projectManifests.get(0);
+        for (int i = 1; i < projectManifests.size(); i++) {
+            manifests.add(projectManifests.get(i));
+        }
+
+        if (manifests.isEmpty()) {
+            // Only the main manifest: that's easy
+            return XmlUtils.parseDocumentSilently(readFile(mainManifest).toString(), true);
+        }
+
+        try {
+            StdLogger logger = new StdLogger(StdLogger.Level.INFO);
+            MergeType type = project.isLibrary() ? MergeType.LIBRARY : MergeType.APPLICATION;
+            MergingReport mergeReport = ManifestMerger2
+                    .newMerger(mainManifest, logger, type)
+                    .withFeatures(
+                            // TODO: How do we get the *opposite* of EXTRACT_FQCNS:
+                            // ensure that all names are made fully qualified?
+                            Feature.SKIP_BLAME,
+                            Feature.SKIP_XML_STRING,
+                            Feature.NO_PLACEHOLDER_REPLACEMENT)
+                    .addLibraryManifests(manifests.toArray(new File[manifests.size()]))
+                    .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
+                        @Override
+                        protected InputStream getInputStream(@NonNull File file) throws
+                                FileNotFoundException {
+                            CharSequence text = readFile(file);
+                            // TODO: Avoid having to convert back and forth
+                            return CharSequences.getInputStream(text);
+                        }
+                    })
+                    .merge();
+            String xml = mergeReport.getMergedDocument(MERGED);
+            if (xml != null) {
+                return XmlUtils.parseDocumentSilently(xml, true);
+            }
+        }
+        catch (ManifestMerger2.MergeFailureException e) {
+            log(Severity.ERROR, e, "Couldn't parse merged manifest");
+        }
+
+        return super.getMergedManifest(project);
     }
 }

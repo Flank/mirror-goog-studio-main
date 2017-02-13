@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import java.io.IOException;
 import org.gradle.tooling.BuildActionFailureException;
 import org.gradle.tooling.BuildException;
 import org.junit.AfterClass;
@@ -40,7 +39,7 @@ public class AppWithCompileLocalAarFromOlderIdeTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.application\"\n" +
@@ -62,7 +61,7 @@ public class AppWithCompileLocalAarFromOlderIdeTest {
     }
 
     @Test
-    public void checkModelFailedToLoad() {
+    public void checkModelFailedToLoad() throws Exception {
         try {
             project.model().asStudio1().getSingle();
             fail("should have failed");

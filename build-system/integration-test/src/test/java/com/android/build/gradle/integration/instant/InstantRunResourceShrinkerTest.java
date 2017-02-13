@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.OptionalCompilationStep;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +49,7 @@ public class InstantRunResourceShrinkerTest {
     public void checkPackaging() throws Exception {
         project.execute("clean");
         project.executor()
-                .withInstantRun(23, ColdswapMode.MULTIAPK, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
     }
 }

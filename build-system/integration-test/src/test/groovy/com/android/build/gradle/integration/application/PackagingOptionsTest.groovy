@@ -15,15 +15,15 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.utils.GradleExceptionsHelper
 import com.google.common.io.Files
 import groovy.transform.CompileStatic
-import org.gradle.tooling.GradleConnectionException
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -214,7 +214,7 @@ android{
         project.execute("clean", "assembleDebug")
         // files should be merged
         assertThat(project.getApk("debug")).
-                containsFileWithContent("conflict.txt", "foo\nproject-foo")
+                containsFileWithContent("conflict.txt", "project-foo\nfoo")
     }
 
     @Test
@@ -225,10 +225,8 @@ dependencies {
     compile files('jar2.jar')
 }
 """
-        GradleConnectionException exception =
-                project.executeExpectingFailure("clean", "assembleDebug")
-        assertThat(GradleExceptionsHelper.getTaskFailureMessage(exception))
-                .contains("Duplicate files copied in APK conflict.txt")
+        GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug")
+        assertThat(result.failureMessage).contains("conflict.txt")
     }
 
 

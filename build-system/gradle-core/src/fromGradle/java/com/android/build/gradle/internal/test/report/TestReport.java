@@ -16,13 +16,6 @@
 package com.android.build.gradle.internal.test.report;
 
 import com.google.common.io.Closeables;
-
-import org.gradle.api.GradleException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,10 +24,14 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+import org.gradle.api.GradleException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 /**
  * Custom test reporter based on Gradle's DefaultTestReport

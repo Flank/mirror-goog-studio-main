@@ -31,10 +31,10 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 /**
  * test for packaging of asset files.
  */
@@ -51,14 +51,14 @@ public class NativeSoPackagingTest {
     private GradleTestProject testProject;
     private GradleTestProject jarProject;
 
-    private void execute(String... tasks) throws IOException, InterruptedException {
+    private void execute(String... tasks) throws Exception {
         // TODO: Remove once we understand the cause of flakiness.
         TestUtils.waitForFileSystemTick();
         project.executor().run(tasks);
     }
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         appProject = project.getSubproject("app");
         libProject = project.getSubproject("library");
         libProject2 = project.getSubproject("library2");
@@ -124,14 +124,15 @@ public class NativeSoPackagingTest {
             @NonNull File projectFolder,
             @NonNull String dimension,
             @NonNull String filename,
-            @NonNull String content) throws IOException {
+            @NonNull String content)
+            throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86");
         FileUtils.mkdirs(assetFolder);
         Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
     }
 
     @Test
-    public void testNonIncrementalPackaging() throws IOException, InterruptedException {
+    public void testNonIncrementalPackaging() throws Exception {
         execute("clean", "assembleDebug", "assembleAndroidTest");
 
         // check the files are there. Start from the bottom of the dependency graph
@@ -492,7 +493,7 @@ public class NativeSoPackagingTest {
     /**
      * check an apk has (or not) the given asset file name.
      *
-     * If the content is non-null the file is expected to be there with the same content. If the
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
      *
      * @param project the project
@@ -500,9 +501,8 @@ public class NativeSoPackagingTest {
      * @param content the content
      */
     private static void checkApk(
-            @NonNull GradleTestProject project,
-            @NonNull String filename,
-            @Nullable String content) throws IOException, InterruptedException {
+            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
+            throws Exception {
         Apk apk = project.getApk("debug");
         check(assertThatApk(apk), "lib", filename, content);
         PackagingTests.checkZipAlign(apk);
@@ -511,7 +511,7 @@ public class NativeSoPackagingTest {
     /**
      * check a test apk has (or not) the given asset file name.
      *
-     * If the content is non-null the file is expected to be there with the same content. If the
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
      *
      * @param project the project
@@ -519,16 +519,15 @@ public class NativeSoPackagingTest {
      * @param content the content
      */
     private void checkTestApk(
-            @NonNull GradleTestProject project,
-            @NonNull String filename,
-            @Nullable String content) throws IOException {
+            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
+            throws Exception {
         check(TruthHelper.assertThat(project.getTestApk("debug")), "lib", filename, content);
     }
 
     /**
      * check an aat has (or not) the given asset file name.
      *
-     * If the content is non-null the file is expected to be there with the same content. If the
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
      *
      * @param project the project
@@ -536,9 +535,8 @@ public class NativeSoPackagingTest {
      * @param content the content
      */
     private static void checkAar(
-            @NonNull GradleTestProject project,
-            @NonNull String filename,
-            @Nullable String content) throws IOException {
+            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
+            throws Exception {
         check(TruthHelper.assertThat(project.getAar("debug")), "jni", filename, content);
     }
 
@@ -546,7 +544,8 @@ public class NativeSoPackagingTest {
             @NonNull AbstractAndroidSubject subject,
             @NonNull String folderName,
             @NonNull String filename,
-            @Nullable String content) throws IOException {
+            @Nullable String content)
+            throws Exception {
         if (content != null) {
             subject.containsFileWithContent(folderName + "/x86/" + filename, content);
         } else {

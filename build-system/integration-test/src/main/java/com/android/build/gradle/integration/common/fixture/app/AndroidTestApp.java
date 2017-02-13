@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.build.gradle.integration.common.fixture.TestProject;
-
 import java.util.Collection;
 
 /**

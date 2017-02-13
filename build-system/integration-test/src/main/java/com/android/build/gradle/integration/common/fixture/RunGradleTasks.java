@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.tasks.BooleanLatch;
@@ -37,21 +36,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
-import org.apache.commons.io.output.TeeOutputStream;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
+import org.gradle.tooling.events.OperationType;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.ProgressListener;
 
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     private final boolean isUseJack;
     @Nullable private final String buildToolsVersion;
-    private final boolean isImproveDependencyEnabled;
 
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
+    private Boolean useDexArchive = true;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -65,7 +67,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
-        isImproveDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     }
 
     /**
@@ -82,15 +83,13 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * Inject the instant run arguments.
      *
      * @param apiLevel The device api level.
-     * @param coldswapMode The cold swap strategy to use.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
             int apiLevel,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
-                new AndroidVersion(apiLevel, null), null /* density */, coldswapMode, flags);
+                new AndroidVersion(apiLevel, null), null /* density */, flags);
         return this;
     }
 
@@ -98,15 +97,13 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * Inject the instant run arguments.
      *
      * @param device The connected device.
-     * @param coldswapMode The cold swap strategy to use.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
             @NonNull IDevice device,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
-                device.getVersion(), Density.getEnum(device.getDensity()), coldswapMode, flags);
+                device.getVersion(), Density.getEnum(device.getDensity()), flags);
         return this;
     }
 
@@ -120,26 +117,24 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * <p>Uses deviceCheck in the background to support the device pool.
      */
-    public GradleBuildResult executeConnectedCheck() {
+    public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
         return run("deviceCheck");
     }
 
     /** Execute the specified tasks */
-    public GradleBuildResult run(@NonNull String... tasks) {
+    public GradleBuildResult run(@NonNull String... tasks)
+            throws IOException, InterruptedException {
         return run(ImmutableList.copyOf(tasks));
     }
 
-    public GradleBuildResult run(@NonNull List<String> tasksList) {
+    public GradleBuildResult run(@NonNull List<String> tasksList)
+            throws IOException, InterruptedException {
         assertThat(tasksList).named("tasks list").isNotEmpty();
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        try {
-            TestUtils.waitForFileSystemTick();
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        TestUtils.waitForFileSystemTick();
 
         List<String> args = Lists.newArrayList();
         args.addAll(getCommonArguments());
@@ -153,7 +148,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         args.add(
                 "-Pcom.android.build.gradle.integrationTest.useJack="
                         + Boolean.toString(isUseJack));
-        if (isImproveDependencyEnabled) {
+        if (GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION) {
             args.add(
                     "-P"
                             + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
@@ -169,21 +164,34 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             "-P%s=%s", AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD, "false"));
         }
 
+        if (useDexArchive != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            AndroidGradleOptions.PROPERTY_USE_DEX_ARCHIVE,
+                            Boolean.toString(useDexArchive)));
+        }
+
         args.addAll(arguments);
 
-        System.out.println(
+        String message =
                 "[GradleTestProject] Executing tasks: gradle "
                         + Joiner.on(' ').join(args)
                         + " "
-                        + Joiner.on(' ').join(tasksList));
+                        + Joiner.on(' ').join(tasksList);
+        stdout.write(message.getBytes());
 
         BuildLauncher launcher =
                 projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
 
-        launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
-        launcher.setStandardError(new TeeOutputStream(stderr, System.err));
+        launcher.setStandardOutput(stdout);
+        launcher.setStandardError(stderr);
+
+        CollectingProgressListener progressListener = new CollectingProgressListener();
+
+        launcher.addProgressListener(progressListener, OperationType.TASK);
 
         GradleConnectionException failure;
 
@@ -194,15 +202,35 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (isExpectingFailure && failure == null) {
+                throw new AssertionError("Expecting build to fail");
+            } else if (!isExpectingFailure && failure != null) {
+                throw failure;
+            }
+            return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
         }
-        if (isExpectingFailure && failure == null) {
-            throw new AssertionError("Expecting build to fail");
-        } else if (!isExpectingFailure && failure != null) {
-            throw failure;
+    }
+
+    private static class CollectingProgressListener implements ProgressListener {
+        ConcurrentLinkedQueue<ProgressEvent> events;
+
+        private CollectingProgressListener() {
+            events = new ConcurrentLinkedQueue<>();
         }
-        return new GradleBuildResult(stdout, stderr, failure);
+
+        @Override
+        public void statusChanged(ProgressEvent progressEvent) {
+            events.add(progressEvent);
+        }
+
+        ImmutableList<ProgressEvent> getEvents() {
+            return ImmutableList.copyOf(events);
+        }
+    }
+
+    public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
+        this.useDexArchive = useDexArchive;
+        return this;
     }
 
     private static class WaitingResultHandler implements ResultHandler<Void> {
@@ -227,12 +255,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
          * @return null if the build passed, the GradleConnectionException if the build failed.
          */
         @Nullable
-        private GradleConnectionException waitForResult() {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                throw new AssertionError(e);
-            }
+        private GradleConnectionException waitForResult() throws InterruptedException {
+            latch.await();
             return failure;
         }
     }
@@ -240,7 +264,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private void setInstantRunArgs(
             @Nullable AndroidVersion androidVersion,
             @Nullable Density density,
-            @NonNull ColdswapMode coldswapMode,
             @NonNull OptionalCompilationStep[] flags) {
         if (androidVersion != null) {
             withProperty(AndroidProject.PROPERTY_BUILD_API, androidVersion.getFeatureLevel());
@@ -249,8 +272,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         if (density != null) {
             withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, density.getResourceValue());
         }
-
-        withProperty(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, coldswapMode.name());
 
         StringBuilder optionalSteps =
                 new StringBuilder()

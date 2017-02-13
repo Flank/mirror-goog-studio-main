@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.build.gradle.api.AndroidSourceFile;
-
-import org.gradle.api.Project;
-
 import java.io.File;
+import org.gradle.api.Project;
 
 /**
  */

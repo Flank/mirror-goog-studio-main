@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static org.gradle.api.artifacts.Configuration.State.RESOLVED;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ConfigurationProvider;
@@ -25,21 +23,15 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyContainer;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.dependency.level2.DependencyNode;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-
 import java.util.Collection;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Object that represents the dependencies of a "config", in the sense of defaultConfigs, build
@@ -74,6 +66,8 @@ public class VariantDependencies {
     private final Configuration annotationProcessorConfiguration;
     @NonNull
     private final Configuration jackPluginConfiguration;
+    @NonNull
+    private final Configuration wearAppConfiguration;
 
     @Nullable
     private final Configuration mappingConfiguration;
@@ -126,6 +120,7 @@ public class VariantDependencies {
         private final Set<Configuration> apkConfigs = Sets.newHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newHashSet();
         private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
+        private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
 
         protected Builder(
             @NonNull Project project,
@@ -174,6 +169,7 @@ public class VariantDependencies {
                 apkConfigs.add(provider.getPackageConfiguration());
                 annotationConfigs.add(provider.getAnnotationProcessorConfiguration());
                 jackPluginConfigs.add(provider.getJackPluginConfiguration());
+                wearAppConfigs.add(provider.getWearAppConfiguration());
             }
 
             return this;
@@ -238,12 +234,17 @@ public class VariantDependencies {
                     project.getConfigurations()
                             .maybeCreate(
                                     variantType == VariantType.LIBRARY
+                                                    || variantType == VariantType.ATOM
                                             ? "_" + variantName + "Publish"
                                             : "_" + variantName + "Apk");
 
             apk.setVisible(false);
             apk.setDescription("## Internal use, do not manually configure ##");
             apk.setExtendsFrom(apkConfigs);
+
+            Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
+            wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
+            wearApp.setExtendsFrom(wearAppConfigs);
 
             Configuration publish = null;
             Configuration mapping = null;
@@ -254,10 +255,10 @@ public class VariantDependencies {
             if (publishVariant) {
                 publish = project.getConfigurations().maybeCreate(variantName);
                 publish.setDescription("Published Configuration for Variant " + variantName);
-                // if the variant is not a library, then the publishing configuration should
-                // not extend from the apkConfigs. It's mostly there to access the artifact from
-                // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
+                // if the variant is not a dependent bundle, then the publishing configuration
+                // should not extend from the apkConfigs. It's mostly there to access the artifact
+                // from another project but it shouldn't bring any dependencies with it.
+                if (variantType == VariantType.LIBRARY || variantType == VariantType.ATOM) {
                     publish.setExtendsFrom(apkConfigs);
                 }
 
@@ -296,6 +297,7 @@ public class VariantDependencies {
                     publish,
                     annotationProcessor,
                     jackPlugin,
+                    wearApp,
                     mapping,
                     classes,
                     metadata,
@@ -321,6 +323,7 @@ public class VariantDependencies {
             @Nullable Configuration publishConfiguration,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
+            @NonNull Configuration wearAppConfiguration,
             @Nullable Configuration mappingConfiguration,
             @Nullable Configuration classesConfiguration,
             @Nullable Configuration metadataConfiguration,
@@ -334,6 +337,7 @@ public class VariantDependencies {
         this.publishConfiguration = publishConfiguration;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
+        this.wearAppConfiguration = wearAppConfiguration;
         this.mappingConfiguration = mappingConfiguration;
         this.classesConfiguration = classesConfiguration;
         this.metadataConfiguration = metadataConfiguration;
@@ -369,6 +373,11 @@ public class VariantDependencies {
     @NonNull
     public Configuration getJackPluginConfiguration() {
         return jackPluginConfiguration;
+    }
+
+    @NonNull
+    public Configuration getWearAppConfiguration() {
+        return wearAppConfiguration;
     }
 
     @Nullable

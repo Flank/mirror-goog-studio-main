@@ -21,7 +21,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.QualifiedContent;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.util.Set;
 

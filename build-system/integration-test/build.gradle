@@ -28,7 +28,7 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')
-    testCompile project(':apksig')
+    compile project(':apksig')
 
     compile libs.junit
     compile libs.apache_commons_io
@@ -38,7 +38,7 @@ dependencies {
     compile libs.truth
     compile libs.google_api_client
     compile libs.google_storage_client
-    testCompile libs.mockito_all
+    testCompile libs.mockito_core
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.
@@ -73,6 +73,8 @@ def testEnvironment =
         System.getenv().findAll { entry ->
             String key = entry.key
             key.startsWith("CUSTOM_") ||
+                    key == "USE_GRADLE_NIGHTLY" ||
+                    key == "BENCHMARK_EXPERIMENT" ||
                     key == "DEBUG_INNER_TEST" ||
                     // For NDK tests on Windows. See init.mk.
                     key == "OS" ||
@@ -98,6 +100,7 @@ testEnvironment << [
 // rebuilding the plugin.
 task testPrebuilts(type: Test)
 task connectedIntegrationTestPrebuilts(type: Test)
+task connectedIntegrationTestPrebuiltsQuarantine(type: Test)
 
 File tempFile = new File(project.buildDir, 'tmp')
 tempFile.mkdirs()
@@ -125,6 +128,7 @@ configure([test, testPrebuilts]) {
         }
         excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
         excludeCategories "com.android.build.gradle.integration.common.category.OnlineTests"
+        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
     }
 
     exclude "com/android/build/gradle/integration/performance/**"
@@ -134,8 +138,6 @@ configure([test, testPrebuilts]) {
 
 task automaticTest(type: Test) {
     include "com/android/build/gradle/integration/automatic/**"
-
-    systemProperties['junit.parallel.threads'] = Runtime.runtime.availableProcessors() / 2
 
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
@@ -155,8 +157,17 @@ task onlineTest(type: Test) {
 check.dependsOn automaticTest
 
 task connectedIntegrationTest(type: Test)
+task connectedIntegrationTestQuarantine(type: Test)
 
-configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
+def allConnectedTestTasks = [
+        connectedIntegrationTest,
+        connectedIntegrationTestPrebuilts,
+        connectedIntegrationTestQuarantine,
+        connectedIntegrationTestPrebuiltsQuarantine,
+]
+
+
+configure(allConnectedTestTasks) {
     testClassesDir = sourceSets.test.output.classesDir
     classpath = sourceSets.test.runtimeClasspath
 
@@ -180,12 +191,23 @@ configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
     }
     maxParallelForks = count
 
-    useJUnit {
-        includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
-    }
     exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
 }
+
+configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
+        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
+    }
+}
+
+configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuiltsQuarantine]) {
+    useJUnit {
+        includeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
+    }
+}
+
 
 task performanceTest(type: Test) {
     include "com/android/build/gradle/integration/performance/**"
@@ -233,14 +255,15 @@ task('stopDevicePool').doLast {
 }
 
 startDevicePool.finalizedBy stopDevicePool
-stopDevicePool.mustRunAfter connectedIntegrationTestPrebuilts, connectedIntegrationTest
+allConnectedTestTasks.forEach({task -> stopDevicePool.mustRunAfter(task)})
 
 automaticTest.dependsOn ':publishLocal'
 onlineTest.dependsOn ':publishLocal'
 test.dependsOn buildTestDependencies, ':publishLocal'
 testPrebuilts.dependsOn buildTestDependencies
-connectedIntegrationTest.dependsOn buildTestDependencies, ':publishLocal', startDevicePool
-connectedIntegrationTestPrebuilts.dependsOn buildTestDependencies, startDevicePool
+allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool})
+connectedIntegrationTest.dependsOn ':publishLocal'
+connectedIntegrationTestQuarantine.dependsOn ':publishLocal'
 performanceTest.dependsOn ':publishLocal'
 
 

@@ -18,7 +18,6 @@ package com.android.builder.png;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Maps;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;

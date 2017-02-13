@@ -15,9 +15,13 @@
  */
 package com.android.ide.common.internal;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -43,29 +47,15 @@ import java.util.concurrent.Future;
  */
 public class WaitableExecutor<T> {
 
-    private final ExecutorService mExecutorService;
-    private final CompletionService<T> mCompletionService;
-    private final Set<Future<T>> mFutureSet = Sets.newHashSet();
+    @Nullable private final ExecutorService mExecutorService;
+    @NonNull private final CompletionService<T> mCompletionService;
+    @NonNull private final Set<Future<T>> mFutureSet = Sets.newConcurrentHashSet();
 
-    /**
-     * Creates an executor that will use at most <var>nThreads</var> threads.
-     * @param nThreads the number of threads, or zero for default count (which is number of core)
-     */
-    private WaitableExecutor(int nThreads) {
-        if (nThreads < 1) {
-            nThreads = Runtime.getRuntime().availableProcessors();
-        }
-
-        mExecutorService = Executors.newFixedThreadPool(nThreads);
-        mCompletionService = new ExecutorCompletionService<T>(mExecutorService);
-    }
-
-    /**
-     * Creates an executor that will use at most 1 thread per core.
-     */
-    private WaitableExecutor() {
-        mExecutorService = null;
-        mCompletionService = new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor());
+    private WaitableExecutor(
+            @Nullable ExecutorService mExecutorService,
+            @NonNull CompletionService<T> mCompletionService) {
+        this.mExecutorService = mExecutorService;
+        this.mCompletionService = mCompletionService;
     }
 
     /**
@@ -75,13 +65,14 @@ public class WaitableExecutor<T> {
      * this instance, but the tasks themselves will compete for threads with tasks submitted to
      * other {@link WaitableExecutor} instances created with this factory method.
      *
-     * <p>This is the recommended way of getting a {@link WaitableExecutor}, since it makes sure
-     * the total number of threads running doesn't exceed the value configured by the user.
+     * <p>This is the recommended way of getting a {@link WaitableExecutor}, since it makes sure the
+     * total number of threads running doesn't exceed the value configured by the user.
      *
-     * @see ExecutorSingleton
+     * @see ExecutorSingleton#sThreadPoolSize
      */
     public static <T> WaitableExecutor<T> useGlobalSharedThreadPool() {
-        return new WaitableExecutor<T>();
+        return new WaitableExecutor<>(
+                null, new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor()));
     }
 
     /**
@@ -93,7 +84,24 @@ public class WaitableExecutor<T> {
      * @see #useGlobalSharedThreadPool()
      */
     public static <T> WaitableExecutor<T> useNewFixedSizeThreadPool(int nThreads) {
-        return new WaitableExecutor<T>(nThreads);
+        Preconditions.checkArgument(
+                nThreads > 0, "Number of threads needs to be a positive number.");
+        ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+        return new WaitableExecutor<>(
+                executorService, new ExecutorCompletionService<T>(executorService));
+    }
+
+    /**
+     * Creates a new {@link WaitableExecutor} that executes all jobs on the thread that schedules
+     * them, removing any concurrency.
+     *
+     * @see MoreExecutors#newDirectExecutorService()
+     */
+    @VisibleForTesting
+    @SuppressWarnings("unused") // Temporarily used when debugging.
+    public static <T> WaitableExecutor<T> useDirectExecutor() {
+        return new WaitableExecutor<>(
+                null, new ExecutorCompletionService<T>(MoreExecutors.newDirectExecutorService()));
     }
 
     /**
@@ -107,21 +115,17 @@ public class WaitableExecutor<T> {
 
     /**
      * Waits for all tasks to be executed. If a tasks throws an exception, it will be thrown from
-     * this method inside a RuntimeException, preventing access to the result of the other
-     * threads.
+     * this method inside a RuntimeException, preventing access to the result of the other threads.
      *
-     * If you want to get the results of all tasks (result and/or exception), use
-     * {@link #waitForAllTasks()}
+     * <p>If you want to get the results of all tasks (result and/or exception), use {@link
+     * #waitForAllTasks()}
      *
      * @param cancelRemaining if true, and a task fails, cancel all remaining tasks.
-     *
      * @return a list of all the return values from the tasks.
-     *
-     * @throws InterruptedException if this thread was interrupted. Not if the tasks were interrupted.
-     * @throws LoggedErrorException
+     * @throws InterruptedException if this thread was interrupted. Not if the tasks were
+     *     interrupted.
      */
-    public List<T> waitForTasksWithQuickFail(boolean cancelRemaining) throws InterruptedException,
-            LoggedErrorException {
+    public List<T> waitForTasksWithQuickFail(boolean cancelRemaining) throws InterruptedException {
         List<T> results = Lists.newArrayListWithCapacity(mFutureSet.size());
         try {
             while (!mFutureSet.isEmpty()) {
@@ -140,12 +144,7 @@ public class WaitableExecutor<T> {
             }
 
             // get the original exception and throw that one.
-            Throwable cause = e.getCause();
-            if (cause instanceof LoggedErrorException) {
-                throw (LoggedErrorException) cause;
-            } else {
-                throw new RuntimeException(cause);
-            }
+            throw new RuntimeException(e.getCause());
         } finally {
             if (mExecutorService != null) {
                 mExecutorService.shutdownNow();
@@ -160,7 +159,7 @@ public class WaitableExecutor<T> {
         public Throwable exception;
 
         static <T> TaskResult<T> withValue(T value) {
-            TaskResult<T> result = new TaskResult<T>(null);
+            TaskResult<T> result = new TaskResult<>(null);
             result.value = value;
             return result;
         }
@@ -202,7 +201,7 @@ public class WaitableExecutor<T> {
                         // if the task was cancelled we probably don't care about its result.
                     } else {
                         // there was an error.
-                        results.add(new TaskResult<T>(cause));
+                        results.add(new TaskResult<>(cause));
                     }
                 }
             }

@@ -49,11 +49,51 @@ android {
 }
 dependencies {
     compile 'com.google.android.gms:play-services-base:$GradleTestProject.PLAY_SERVICES_VERSION'
-    compile 'com.android.support:support-v4:$GradleTestProject.SUPPORT_LIB_VERSION'
+    compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
 }
         """
 
-        models = project.executeAndReturnMultiModel("clean", "assemble")
+        File srcDir = project.getSubproject("app").getMainSrcDir();
+        srcDir = new File(srcDir, "foo");
+        srcDir.mkdirs();
+        new File(srcDir, "FooActivity.java") << """
+package foo;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.TextView;
+
+public class FooActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+}
+"""
+
+
+        project.getSubproject("test").getBuildFile() << """
+dependencies {
+    compile 'com.android.support.test:rules:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
+}
+        """
+
+        srcDir = project.getSubproject("test").getMainSrcDir();
+        srcDir = new File(srcDir, "foo");
+        srcDir.mkdirs();
+        new File(srcDir, "FooActivityTest.java") << """
+package foo;
+
+public class FooActivityTest {
+    @org.junit.Rule 
+    android.support.test.rule.ActivityTestRule<foo.FooActivity> activityTestRule =
+            new android.support.test.rule.ActivityTestRule<>(foo.FooActivity.class);
+}
+"""
+
+        models = project.executeAndReturnMultiModel("clean", "test:assembleDebug")
     }
 
     @AfterClass

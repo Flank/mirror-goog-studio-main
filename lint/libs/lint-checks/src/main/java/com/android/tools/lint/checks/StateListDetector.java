@@ -29,7 +29,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.util.HashMap;
+import com.google.common.collect.Maps;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +79,7 @@ public class StateListDetector extends ResourceXmlDetector {
         if (root != null && root.getTagName().equals("selector")) {
             List<Element> children = LintUtils.getChildren(root);
             Map<Element, Set<String>> states =
-                    new HashMap<>(children.size());
+                    Maps.newHashMapWithExpectedSize(children.size());
 
             for (Element child : children) {
                 NamedNodeMap attributes = child.getAttributes();

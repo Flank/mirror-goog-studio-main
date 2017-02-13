@@ -151,4 +151,49 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
                     + "    }\n"
                     + "}\n")));
     }
+
+    public void testObtainOnCall() throws Exception {
+        // Regression test for case where we're calling obtainStyledAttributes on a context via
+        // a call rather than a variable reference
+        String expected = ""
+                + "src/test/pkg/AppBulletView.java:16: Warning: By convention, the custom view (AppBulletView) and the declare-styleable (Bullet) should have the same name (various editor features rely on this convention) [CustomViewStyleable]\n"
+                + "        TypedArray array = getContext().obtainStyledAttributes(attrs, R.styleable.Bullet);\n"
+                + "                                                                      ~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "import android.content.res.TypedArray;\n"
+                        + "import android.util.AttributeSet;\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "@SuppressWarnings({\"unused\", \"FieldCanBeLocal\"})\n"
+                        + "public class AppBulletView extends View {\n"
+                        + "    public AppBulletView(Context context, AttributeSet attrs, int defStyle) {\n"
+                        + "        super(context, attrs, defStyle);\n"
+                        + "        parseAttributes(attrs);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private void parseAttributes(AttributeSet attrs) {\n"
+                        + "        TypedArray array = getContext().obtainStyledAttributes(attrs, R.styleable.Bullet);\n"
+                        + "        array.recycle();\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public final class R {\n"
+                        + "    public static final class styleable {\n"
+                        + "        public static final int[] Bullet = {\n"
+                        + "            0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003\n"
+                        + "        };\n"
+                        + "    };\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
+    }
 }

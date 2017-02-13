@@ -15,11 +15,10 @@
  */
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.internal.ErroringAction;
-import org.gradle.internal.IoActions;
-
 import java.io.File;
 import java.io.Writer;
+import org.gradle.internal.ErroringAction;
+import org.gradle.internal.IoActions;
 
 /**
  * Custom TextReportRenderer based on Gradle's TextReportRenderer

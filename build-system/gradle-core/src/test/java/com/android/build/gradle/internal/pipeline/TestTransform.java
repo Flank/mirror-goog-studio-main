@@ -17,11 +17,10 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.SecondaryFile;
-import com.android.build.api.transform.SecondaryInput;
-import com.android.build.api.transform.Context;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.SecondaryFile;
+import com.android.build.api.transform.SecondaryInput;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -31,9 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.junit.Assert;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -42,6 +38,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.junit.Assert;
 
 /**
  * Implementation of Transforms for testing.
@@ -212,12 +209,12 @@ public class TestTransform extends Transform {
             return this;
         }
 
-        Builder setSecondaryFile(@NonNull File file) {
+        Builder addSecondaryFile(@NonNull File file) {
             secondaryFileInputs.add(file);
             return this;
         }
 
-        Builder setSecondaryInput(@NonNull SecondaryFile secondaryFile) {
+        Builder addSecondaryInput(@NonNull SecondaryFile secondaryFile) {
             mSecondaryFiles.add(secondaryFile);
             return this;
         }

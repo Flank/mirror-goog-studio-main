@@ -21,9 +21,7 @@ import static com.android.manifmerger.MergingReport.Record.Severity;
 import com.android.ide.common.blame.SourceFile;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;

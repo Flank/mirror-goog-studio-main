@@ -33,7 +33,6 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,7 +109,7 @@ public class NdkJniLib2Test {
     }
 
     @Test
-    public void checkSoAreIncludedInBothAppAndLibrary() throws IOException, InterruptedException {
+    public void checkSoAreIncludedInBothAppAndLibrary() throws Exception {
         project.execute("clean", ":app:assembleDebug");
 
         Aar releaseAar = project.getSubproject("lib").getAar("release");
@@ -125,11 +124,9 @@ public class NdkJniLib2Test {
         assertThatNativeLib(lib).isStripped();
     }
 
-    /**
-     * Ensure prepareDependency task is executed before compilation task.
-     */
+    /** Ensure prepareDependency task is executed before compilation task. */
     @Test
-    public void checkTaskOrder() throws IOException {
+    public void checkTaskOrder() throws Exception {
         File emptyFile = project.getSubproject("app").file("src/main/jni/empty.c");
         FileUtils.createFile(emptyFile, "");
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),

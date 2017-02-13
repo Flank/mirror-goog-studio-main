@@ -3,7 +3,7 @@
     format="5"
     revision="5"
     name="Google AdMob Ads Activity"
-    minApi="7"
+    minApi="14"
     minBuildApi="14"
     description="Creates an activity with AdMob Ad fragment.">
 

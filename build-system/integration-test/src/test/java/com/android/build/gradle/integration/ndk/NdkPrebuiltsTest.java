@@ -45,7 +45,7 @@ public class NdkPrebuiltsTest {
     public static AndroidProject model;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
@@ -56,12 +56,12 @@ public class NdkPrebuiltsTest {
     }
 
     @Test
-    public void lint() {
+    public void lint() throws Exception {
         project.execute("lint");
     }
 
     @Test
-    public void checkAbiFilterInModel() {
+    public void checkAbiFilterInModel() throws Exception {
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 6, variants.size());
 

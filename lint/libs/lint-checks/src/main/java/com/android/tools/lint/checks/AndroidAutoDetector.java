@@ -36,12 +36,12 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
@@ -59,6 +59,8 @@ import org.w3c.dom.Element;
  */
 public class AndroidAutoDetector extends ResourceXmlDetector
         implements XmlScanner, JavaPsiScanner {
+
+    // TODO: Use the new merged manifest model
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPL = new Implementation(
@@ -242,7 +244,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
                 mAutomotiveResourceFileName != null
                 && mAutomotiveResourceFileName.equals(context.file.getName());
 
-        for (Element child : LintUtils.getChildren(element)) {
+        for (Element child : XmlUtils.getSubTags(element)) {
 
             if (TAG_USES.equals(child.getTagName())) {
                 String attrValue = child.getAttribute(ATTR_NAME);
@@ -295,10 +297,10 @@ public class AndroidAutoDetector extends ResourceXmlDetector
         if (TAG_SERVICE.equals(element.getTagName())
                 && !mMediaIntentFilterFound) {
 
-            for (Element child : LintUtils.getChildren(element)) {
+            for (Element child : XmlUtils.getSubTags(element)) {
                 String tagName = child.getTagName();
                 if (TAG_INTENT_FILTER.equals(tagName)) {
-                    for (Element filterChild : LintUtils.getChildren(child)) {
+                    for (Element filterChild : XmlUtils.getSubTags(child)) {
                         if (NODE_ACTION.equals(filterChild.getTagName())) {
                             String actionValue = filterChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                             if (ACTION_MEDIA_BROWSER_SERVICE.equals(actionValue)) {
@@ -315,7 +317,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
     private void checkForMediaSearchIntentFilter(Element element) {
         if (!mMediaSearchIntentFilterFound) {
 
-            for (Element filterChild : LintUtils.getChildren(element)) {
+            for (Element filterChild : XmlUtils.getSubTags(element)) {
                 if (NODE_ACTION.equals(filterChild.getTagName())) {
                     String actionValue = filterChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
                     if (ACTION_MEDIA_PLAY_FROM_SEARCH.equals(actionValue)) {

@@ -12,12 +12,12 @@ def _groovy_jar_impl(ctx):
   args, option_files = create_java_compiler_args(ctx, class_jar.path,
                                                  all_deps)
 
-  cmd = ctx.executable._groovy.path + " " + " ".join(args)
   ctx.action(
-      inputs = [ctx.executable._groovy] + ctx.files.srcs + list(all_deps) + option_files,
+      inputs = ctx.files.srcs + list(all_deps) + option_files,
       outputs = [class_jar],
       mnemonic = "groovyc",
-      command = cmd
+      arguments = args,
+      executable = ctx.executable._groovy
   )
 
 groovy_jar = rule(
@@ -43,11 +43,38 @@ groovy_jar = rule(
     implementation = _groovy_jar_impl,
 )
 
+def _groovy_srcs_list_impl(ctx):
+  file_list = ctx.outputs.file_list
+
+  ctx.file_action(
+    output = file_list,
+    content = "\n".join([src.path for src in ctx.files.srcs]),
+  )
+
+_groovy_srcs_list = rule(
+    attrs = {
+        "srcs": attr.label_list(
+            non_empty = True,
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "file_list": "lst%{name}.lst",
+    },
+    implementation = _groovy_srcs_list_impl,
+)
+
+
 def groovy_stubs(name, srcs=[]):
+  _groovy_srcs_list(
+    name = name + "_srcs",
+    srcs = srcs,
+  )
+
   native.genrule(
     name = name,
-    srcs = srcs,
+    srcs = srcs + [":" + name + "_srcs"],
     outs = [name + ".jar"],
-    cmd = "./$(location //tools/base/bazel:groovy_stub_gen) -o $(@D)/" + name + ".jar $(SRCS);",
+    cmd = "./$(location //tools/base/bazel:groovy_stub_gen) -o $(@D)/" + name + ".jar @$(location :" + name + "_srcs)",
     tools = ["//tools/base/bazel:groovy_stub_gen"],
   )

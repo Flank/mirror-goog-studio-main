@@ -38,7 +38,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
@@ -57,7 +56,7 @@ public class AppWithCompileIndirectJarTest {
             .create();
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getBuildFile(),
@@ -83,7 +82,7 @@ public class AppWithCompileIndirectJarTest {
     }
 
     @Test
-    public void checkLevel1Model() {
+    public void checkLevel1Model() throws Exception {
         Map<String, AndroidProject> models = project.model()
                 .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti().getModelMap();
 
@@ -120,7 +119,7 @@ public class AppWithCompileIndirectJarTest {
     }
 
     @Test
-    public void checkLevel2Model() {
+    public void checkLevel2Model() throws Exception {
         final ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_LATEST).getMulti();
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);

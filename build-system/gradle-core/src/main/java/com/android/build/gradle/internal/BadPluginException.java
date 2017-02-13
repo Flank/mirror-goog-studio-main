@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
-
 import org.gradle.api.GradleException;
 
 public class BadPluginException extends GradleException {

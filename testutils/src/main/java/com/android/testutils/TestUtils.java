@@ -43,19 +43,11 @@ public class TestUtils {
     private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
 
     /**
-     * returns a File for the subfolder of the test resource data.
+     * Returns a File for the subfolder of the test resource data.
      *
-     * <p>This is basically {@code src/test/resources/testData/$name"}.
-     *
-     * <p>Note that this folder is relative to the root project which is where gradle
-     * sets the current working dir when running the tests.
-     *
-     * <p>If you need a full folder path, use {@link #getCanonicalRoot(String...)}.
-     *
-     * @param names the names of the subfolders.
-     *
-     * @return a File
+     * @deprecated Use {@link #getWorkspaceRoot()} or {@link #getWorkspaceFile(String)} instead.
      */
+    @Deprecated
     @NonNull
     public static File getRoot(String... names) {
         File root = new File("src/test/resources/testData/");
@@ -82,21 +74,6 @@ public class TestUtils {
         return root;
     }
 
-    /**
-     * returns a File for the subfolder of the test resource data.
-     *
-     * The full path is canonized.
-     * This is basically ".../src/test/resources/testData/$name".
-     *
-     * @param names the names of the subfolders.
-     *
-     * @return a File
-     */
-    public static File getCanonicalRoot(String... names) throws IOException {
-        File root = getRoot(names);
-        return root.getCanonicalFile();
-    }
-
     public static void deleteFile(File dir) {
         if (dir.isDirectory()) {
             File[] files = dir.listFiles();
@@ -112,13 +89,7 @@ public class TestUtils {
 
     public static File createTempDirDeletedOnExit() {
         final File tempDir = Files.createTempDir();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                deleteFile(tempDir);
-            }
-        });
-
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteFile(tempDir)));
         return tempDir;
     }
 
@@ -222,6 +193,11 @@ public class TestUtils {
                     "File \"" + path + "\" not found in platform " + latestAndroidPlatform);
         }
         return file;
+    }
+
+    /** Checks if tests were started by Bazel. */
+    public static boolean runningFromBazel() {
+        return System.getenv().containsKey("TEST_WORKSPACE");
     }
 
     /**

@@ -16,14 +16,15 @@
 
 package com.android.tools.profiler.support.profilers;
 
-import com.android.tools.profiler.support.ProfilerService;
-import com.android.tools.profiler.support.event.WindowProfilerCallback;
-
 import android.app.*;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
-
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
+import com.android.tools.profiler.support.ProfilerService;
+import com.android.tools.profiler.support.event.InputConnectionWrapper;
+import com.android.tools.profiler.support.event.WindowProfilerCallback;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -44,6 +45,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
     public EventProfiler() {
         initialize();
+        initalizeInputConnection();
     }
 
     // Native activity functions to send activity events to perfd.
@@ -123,6 +125,14 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         } catch (ClassNotFoundException ex) {
             mSupportLibFragment = null;
         }
+    }
+
+    private void initalizeInputConnection() {
+        // This setups a thread to poll for an active InputConnection, once we have one
+        // We replace it with an override that acts as a passthorugh. This override allows us
+        // to intercept strings / keys sent from the softkeybaord to the application.
+        Thread inputConnectionPoller = new Thread(new InputConnectionHandler());
+        inputConnectionPoller.start();
     }
 
     private void overrideFragmentManager(Activity activity) {
@@ -243,6 +253,76 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
             }
             return super.set(index, fragment);
+        }
+    }
+
+    /**
+     * Input connection handler is a threaded class that polls for an Inputconnection. An
+     * InputConnection is only established if an editable (editorview) control is active, and the
+     * softkeyboard is active.
+     */
+    private class InputConnectionHandler implements Runnable {
+        private static final int SLEEP_TIME = 100;
+
+        @Override
+        public void run() {
+            try {
+                // Because we poll for if the InputConnection is wrapped, we
+                // set a flag after we wrap it so we do not need to run the reflection
+                // routine again. When the InputMethodManager no longer accepts input
+                // We reset this variable as we can no longer guarantee the InputConnection is
+                // set to the one we wrap.
+                boolean interceptSetForSoftkeyboard = false;
+                // First grab access to the InputMethodManager
+                Class clazz = InputMethodManager.class;
+                Method instance = clazz.getMethod("getInstance");
+                instance.setAccessible(true);
+                InputMethodManager imm = (InputMethodManager) instance.invoke(null);
+                while (true) {
+                    Thread.sleep(SLEEP_TIME);
+                    // If we are accepting text that means we have an input connection
+                    boolean acceptingText = imm.isAcceptingText();
+                    if (acceptingText && !interceptSetForSoftkeyboard) {
+                        // Grab the inputconnection wrapper internally
+                        Field wrapper = clazz.getDeclaredField("mServedInputConnectionWrapper");
+                        wrapper.setAccessible(true);
+                        Object connection = wrapper.get(imm);
+
+                        // Grab the lock and the input connection object
+                        Class connectionWrapper = connection.getClass().getSuperclass();
+                        Field lock = connectionWrapper.getDeclaredField("mLock");
+                        lock.setAccessible(true);
+                        Object lockObject = lock.get(connection);
+                        synchronized (lockObject) {
+                            Field ic = connectionWrapper.getDeclaredField("mInputConnection");
+                            ic.setAccessible(true);
+                            //Replace the object with a wrapper
+                            Object input = ic.get(connection);
+                            if (!input.getClass().isInstance(InputConnectionWrapper.class)) {
+                                ic.set(
+                                        connection,
+                                        new InputConnectionWrapper((InputConnection) input));
+                            }
+                            //Clean up and set state so we don't do this more than once.
+                            ic.setAccessible(false);
+                        }
+                        lock.setAccessible(false);
+                        interceptSetForSoftkeyboard = true;
+                    } else if (!acceptingText) {
+                        interceptSetForSoftkeyboard = false;
+                    }
+                }
+            } catch (InterruptedException ex) {
+                Log.e(ProfilerService.STUDIO_PROFILER, "InputConnectionHandler interrupted");
+            } catch (NoSuchMethodException ex) {
+                Log.e(ProfilerService.STUDIO_PROFILER, "No such method: " + ex.getMessage());
+            } catch (NoSuchFieldException ex) {
+                Log.e(ProfilerService.STUDIO_PROFILER, "No such field: " + ex.getMessage());
+            } catch (IllegalAccessException ex) {
+                Log.e(ProfilerService.STUDIO_PROFILER, "No Access: " + ex.getMessage());
+            } catch (InvocationTargetException ex) {
+                Log.e(ProfilerService.STUDIO_PROFILER, "Invalid object: " + ex.getMessage());
+            }
         }
     }
 }

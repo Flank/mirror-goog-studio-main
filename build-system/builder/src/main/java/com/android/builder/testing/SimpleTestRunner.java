@@ -22,19 +22,18 @@ import com.android.builder.internal.InstallUtils;
 import com.android.builder.internal.testing.CustomTestRunListener;
 import com.android.builder.internal.testing.ShardedTestCallable;
 import com.android.builder.internal.testing.SimpleTestCallable;
+import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.TestException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.testrunner.TestIdentifier;
-import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,11 +79,12 @@ public class SimpleTestRunner implements TestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) throws TestException, NoAuthorizedDeviceFoundException, InterruptedException {
-        int threadPoolSize = maxThreads;
+        WaitableExecutor<Boolean> executor;
         if (mEnableSharding) {
-            threadPoolSize = deviceList.size();
+            executor = WaitableExecutor.useNewFixedSizeThreadPool(deviceList.size());
+        } else {
+            executor = WaitableExecutor.useGlobalSharedThreadPool();
         }
-        WaitableExecutor<Boolean> executor = WaitableExecutor.useNewFixedSizeThreadPool(threadPoolSize);
 
         int totalDevices = deviceList.size();
         int unauthorizedDevices = 0;

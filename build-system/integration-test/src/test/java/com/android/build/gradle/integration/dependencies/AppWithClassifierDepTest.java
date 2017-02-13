@@ -49,7 +49,7 @@ public class AppWithClassifierDepTest {
     private static LibraryGraphHelper helper;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws Exception {
         model = project.model().getSingle();
         helper = new LibraryGraphHelper(model);
     }
@@ -62,7 +62,7 @@ public class AppWithClassifierDepTest {
     }
 
     @Test
-    public void checkDebugDepInModel() {
+    public void checkDebugDepInModel() throws Exception {
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
@@ -78,7 +78,7 @@ public class AppWithClassifierDepTest {
     }
 
     @Test
-    public void checkAndroidTestDepInModel() {
+    public void checkAndroidTestDepInModel() throws Exception {
         Variant debugVariant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
         AndroidArtifact androidTestArtifact = ModelHelper.getAndroidArtifact(

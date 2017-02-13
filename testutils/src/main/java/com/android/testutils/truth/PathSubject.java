@@ -16,17 +16,11 @@
 
 package com.android.testutils.truth;
 
-import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 /**
  * Truth support for validating java.nio.file.Path.
@@ -75,4 +69,9 @@ public class PathSubject extends Subject<PathSubject, Path> {
         }
     }
 
+    public void isExecutable() {
+        if (!Files.isExecutable(getSubject())) {
+            fail("is not executable");
+        }
+    }
 }

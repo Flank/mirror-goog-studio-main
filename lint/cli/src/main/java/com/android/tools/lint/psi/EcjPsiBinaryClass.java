@@ -414,14 +414,40 @@ class EcjPsiBinaryClass extends EcjPsiBinaryElement implements PsiClass, PsiModi
 
     @Nullable
     @Override
-    public PsiMethod findMethodBySignature(PsiMethod psiMethod, boolean b) {
+    public PsiMethod findMethodBySignature(PsiMethod psiMethod, boolean checkBases) {
         throw new UnimplementedLintPsiApiException();
     }
 
     @NonNull
     @Override
-    public PsiMethod[] findMethodsBySignature(PsiMethod psiMethod, boolean b) {
-        throw new UnimplementedLintPsiApiException();
+    public PsiMethod[] findMethodsBySignature(PsiMethod psiMethod, boolean checkBases) {
+        String name = psiMethod.getName();
+        PsiMethod[] candidates = findMethodsByName(name, checkBases);
+        if (candidates.length == 0 || candidates.length == 1 && candidates[0] == psiMethod) {
+            return candidates;
+        }
+
+        // Filter out methods that don't match
+        List<PsiMethod> matches = Lists.newArrayListWithCapacity(candidates.length + 2);
+        for (PsiMethod candidate : candidates) {
+            if (candidate.equals(psiMethod) || EcjPsiManager.sameSignature(psiMethod, candidate)) {
+                matches.add(candidate);
+            }
+        }
+
+        // Now need to find interface methods as well.
+        if (checkBases) {
+            for (PsiClass itf : getInterfaces()) {
+                candidates = itf.findMethodsBySignature(psiMethod, true);
+                for (PsiMethod candidate : candidates) {
+                    if (!matches.contains(candidate)) {
+                        matches.add(candidate);
+                    }
+                }
+            }
+        }
+
+        return matches.toArray(PsiMethod.EMPTY_ARRAY);
     }
 
     @NonNull

@@ -32,7 +32,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

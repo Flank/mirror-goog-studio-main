@@ -32,8 +32,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.JackProcessOptions;
+import com.android.builder.utils.PerformanceUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +42,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,11 +85,12 @@ public class JackOptionsUtils {
                 .setMultiDex(config.isMultiDexEnabled())
                 .setMinSdkVersion(config.getMinSdkVersion());
 
-        /* Dex generation only for non-minified, native multidex, variants. */
+        /* Dex generation only for non-minified, native multidex, w/o JarJar. */
         builder.setGenerateDex(
                 !config.isMinifyEnabled()
                         && config.isMultiDexEnabled()
-                        && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion()));
+                        && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion())
+                        && config.getJarJarRuleFiles().isEmpty());
 
         //noinspection ConstantConditions - there is a default value for jackInProcess
         builder.setRunInProcess(
@@ -141,22 +143,13 @@ public class JackOptionsUtils {
         builder.setSourceCompatibility(compileOptions.getSourceCompatibility().toString())
                 .setEncoding(compileOptions.getEncoding());
 
-        /* Set JarJar rules */
+        /* Incremental setup - disabled for: test coverage. */
         Project project = scope.getGlobalScope().getProject();
-        List<File> jarJarRuleFiles = Lists.newArrayList();
-        for (File file : config.getJarJarRuleFiles()) {
-            jarJarRuleFiles.add(project.file(file));
-        }
-        builder.setJarJarRuleFiles(jarJarRuleFiles);
-
-        /* Incremental setup - disabled for: test coverage, jarjar. */
         Configuration annotationConfig =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
-                                project, scope, compileOptions, annotationConfig, logger)
-                        && !config.isTestCoverageEnabled()
-                        && jarJarRuleFiles.isEmpty();
+                                project, scope, compileOptions, annotationConfig, logger);
         if (incremental) {
             builder.setIncrementalDir(getJackIncrementalDir(scope));
         }
@@ -179,9 +172,9 @@ public class JackOptionsUtils {
      * @return options for configuring Jack
      */
     public static JackProcessOptions forDexGeneration(@NonNull VariantScope scope) {
-        JackProcessOptions sourceCompilation = forPreDexing(scope);
+        JackProcessOptions preDexOptions = forPreDexing(scope);
 
-        JackProcessOptions.Builder builder = JackProcessOptions.builder(sourceCompilation);
+        JackProcessOptions.Builder builder = JackProcessOptions.builder(preDexOptions);
 
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
         Project project = scope.getGlobalScope().getProject();
@@ -213,9 +206,16 @@ public class JackOptionsUtils {
                     .setMappingFile(new File(scope.getProguardOutputFolder(), "mapping.txt"));
         }
 
+        /* Set JarJar rules */
+        List<File> jarJarRuleFiles = new ArrayList<>(config.getJarJarRuleFiles().size());
+        for (File file : config.getJarJarRuleFiles()) {
+            jarJarRuleFiles.add(project.file(file));
+        }
+        builder.setJarJarRuleFiles(jarJarRuleFiles);
+
         Map<String, String> additionalParameters = Maps.newHashMap();
         additionalParameters.put("jack.android.api-level.check", "false");
-        additionalParameters.putAll(sourceCompilation.getAdditionalParameters());
+        additionalParameters.putAll(preDexOptions.getAdditionalParameters());
         builder.setAdditionalParameters(additionalParameters);
 
         builder.setJackOutputFile(null).setIncrementalDir(null);
@@ -260,7 +260,7 @@ public class JackOptionsUtils {
             return false;
         }
         final long DEFAULT_SUGGESTED_HEAP_SIZE = 1536 * 1024 * 1024; // 1.5 GiB
-        long maxMemory = DexByteCodeConverter.getUserDefinedHeapSize();
+        long maxMemory = PerformanceUtils.getUserDefinedHeapSize();
 
         if (DEFAULT_SUGGESTED_HEAP_SIZE > maxMemory) {
             if (logWarning) {

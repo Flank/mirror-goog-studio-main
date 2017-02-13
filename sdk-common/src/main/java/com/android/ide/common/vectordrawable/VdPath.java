@@ -17,9 +17,6 @@
 package com.android.ide.common.vectordrawable;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.w3c.dom.NamedNodeMap;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -34,6 +31,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.NamedNodeMap;
 
 /**
  * Used to represent one VectorDrawble's path element.
@@ -473,6 +471,10 @@ class VdPath extends VdElement{
     }
 
     private void setNameValue(String name, String value) {
+        if (value.startsWith("@")) {
+            throw new ResourcesNotSupportedException(name, value);
+        }
+
         if (PATH_DESCRIPTION.equals(name)) {
             mNodeList = PathParser.parsePath(value);
         } else if (PATH_ID.equals(name)) {

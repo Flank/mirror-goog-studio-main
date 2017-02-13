@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.TestedTargetVariant;
-
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Objects;

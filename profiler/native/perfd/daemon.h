@@ -23,6 +23,7 @@
 
 #include "perfd/profiler_component.h"
 #include "utils/clock.h"
+#include "utils/file_cache.h"
 
 namespace profiler {
 
@@ -32,6 +33,26 @@ namespace profiler {
 // Studio) and 'internal' ones that talk to app processes.
 class Daemon {
  public:
+  class Utilities {
+   public:
+    // Returns a const reference to the daemon's clock, which is used to produce
+    // all timestamps in the deamon.
+    const Clock& clock() const { return clock_; }
+
+    // Shared cache available to all profiler services. Useful for storing data
+    // which is
+    // 1) large and needs to be cleaned up automatically, or
+    // 2) repetitive, and you'd rather send a key to the client each time
+    //    instead of the full byte string.
+    FileCache* file_cache() { return &file_cache_; }
+
+   private:
+    // Clock that timestamps profiling data.
+    SteadyClock clock_;
+    // A shared cache for all profiler services
+    FileCache file_cache_;
+  };
+
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
   // Assumes callers are from the same thread. |component| may not be null.
@@ -45,17 +66,17 @@ class Daemon {
   // be responsible for shutting down the server for this call to ever return.
   void RunServer(const std::string& server_address);
 
-  // Returns a const reference to the daemon's clock, which is used to produce
-  // all timestamps in the deamon.
-  const Clock& clock() const { return clock_; }
+  // Return daemon utilities that should be shared across all profilers.
+  Utilities& utilities() { return utilities_; }
 
  private:
-  // Clock that timestamps profiling data.
-  SteadyClock clock_;
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
   std::vector<ProfilerComponent*> components_{};
+
+  // Utility classes that should be shared across all profiler services.
+  Utilities utilities_;
 };
 
 }  // namespace profiler

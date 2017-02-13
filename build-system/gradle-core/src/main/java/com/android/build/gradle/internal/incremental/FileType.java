@@ -25,7 +25,7 @@ public enum FileType {
      */
     MAIN,
     /**
-     * Main APK file when application is using the {@link ColdswapMode#MULTIAPK} mode.
+     * Main APK file when application is using the Split APK mode.
      */
     SPLIT_MAIN,
     /**

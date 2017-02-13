@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.fixture;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.DeviceHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
@@ -33,6 +34,7 @@ import com.google.common.collect.Lists;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.junit.rules.TestRule;
@@ -76,10 +78,27 @@ public class Adb implements TestRule {
         }
     }
 
+    /** Reserves and returns a connected device that has a version that satisfies the matcher. */
+    @NonNull
+    public IDevice getDevice(@NonNull Matcher<AndroidVersion> matcher) {
+        IDevice device =
+                getDevice(
+                        matcher,
+                        error -> {
+                            throw new AssertionError(error);
+                        });
+        assert device != null;
+        return device;
+    }
+
     /**
      * Reserves and returns a connected device that has a version that satisfies the matcher.
+     *
+     * @param errorHandler called with a descriptive error message if a device cannot be allocated.
      */
-    public IDevice getDevice(@NonNull Matcher<AndroidVersion> matcher) {
+    @Nullable
+    public IDevice getDevice(
+            @NonNull Matcher<AndroidVersion> matcher, @NonNull Consumer<String> errorHandler) {
         if (exclusiveAccess) {
             throw new IllegalStateException("Cannot call both getDevice() and exclusiveAccess() "
                     + "in one test");
@@ -120,7 +139,8 @@ public class Adb implements TestRule {
             errorMessage.append(mismatch.toString()).append('\n');
         }
 
-        throw new AssertionError(errorMessage);
+        errorHandler.accept(errorMessage.toString());
+        return null;
     }
 
     public IDevice getDevice(int version) {

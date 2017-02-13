@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibVariantOutputData;
-
 import org.gradle.api.tasks.bundling.Zip;
 
 /**

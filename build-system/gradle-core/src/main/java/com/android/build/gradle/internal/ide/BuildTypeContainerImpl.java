@@ -25,7 +25,6 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;

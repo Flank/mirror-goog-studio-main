@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.GradleExceptionsHelper.getTaskFailureMessage;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -48,7 +47,7 @@ public class ResourceValidationTest {
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
 
         //noinspection ThrowableResultOfMethodCallIgnored
-        assertThat(getTaskFailureMessage(result.getException())).contains("file name must end with");
+        assertThat(result.getFailureMessage()).contains("file name must end with");
 
         assertThat(result.getStderr()).contains(FileUtils.join("src", "main", "res",
                 "drawable", "not_a_drawable.ext"));

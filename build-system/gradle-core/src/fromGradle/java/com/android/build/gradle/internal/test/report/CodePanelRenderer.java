@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.reporting.ReportRenderer;
-
 import java.io.IOException;
+import org.gradle.reporting.ReportRenderer;
 
 public class CodePanelRenderer extends ReportRenderer<String, SimpleHtmlWriter> {
     @Override

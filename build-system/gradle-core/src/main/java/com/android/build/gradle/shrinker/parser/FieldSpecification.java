@@ -19,9 +19,7 @@ package com.android.build.gradle.shrinker.parser;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
-/**
- * Represents field part of a ProGuard class specification.
- */
+/** Represents field part of a ProGuard class specification. */
 public class FieldSpecification {
 
     @NonNull private final NameSpecification mName;

@@ -11,7 +11,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -30,7 +29,7 @@ public class NdkPlatformVersionTest {
 
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "apply plugin: 'com.android.model.application'\n"
                         + "\n"
@@ -46,7 +45,7 @@ public class NdkPlatformVersionTest {
     }
 
     @Test
-    public void testDefaultPlatformVersion() throws IOException {
+    public void testDefaultPlatformVersion() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "model {\n"
                         + "    android {\n"
@@ -82,7 +81,7 @@ public class NdkPlatformVersionTest {
 
 
     @Test
-    public void testAbiSpecificPlatformVersion() throws IOException {
+    public void testAbiSpecificPlatformVersion() throws Exception {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "model {\n"
                         + "    android {\n"

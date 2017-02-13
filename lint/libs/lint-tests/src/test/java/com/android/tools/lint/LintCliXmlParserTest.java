@@ -63,7 +63,7 @@ public class LintCliXmlParserTest extends TestCase {
                 "        android:text=\"Button\" />\n" +
                 "\n" +
                 "</LinearLayout>\n";
-        LintCliXmlParser parser = new LintCliXmlParser();
+        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient());
         File file = File.createTempFile("parsertest", ".xml");
         //noinspection IOResourceOpenedButNotSafelyClosed
         Writer fw = new BufferedWriter(new FileWriter(file));
@@ -175,7 +175,7 @@ public class LintCliXmlParserTest extends TestCase {
                 "\r" +
                 "<LinearLayout></LinearLayout>\r\n" +
                 "</LinearLayout>\r\n";
-        LintCliXmlParser parser = new LintCliXmlParser();
+        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient());
         File file = File.createTempFile("parsertest2", ".xml");
         //noinspection IOResourceOpenedButNotSafelyClosed
         Writer fw = new BufferedWriter(new FileWriter(file));

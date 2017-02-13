@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.ndk.internal;
 
+import com.android.build.gradle.internal.core.Toolchain;
 import com.android.build.gradle.internal.ndk.NativeToolSpecification;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.core.Toolchain;
-
 import org.gradle.nativeplatform.platform.NativePlatform;
 
 /**

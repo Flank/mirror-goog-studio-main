@@ -21,6 +21,7 @@
 
 #include "utils/config.h"
 #include "utils/thread_name.h"
+#include "utils/stopwatch.h"
 
 namespace {
 using profiler::Perfa;
@@ -32,6 +33,7 @@ mutex perfa_mutex_;
 
 namespace profiler {
 
+using proto::HeartBeatResponse;
 using proto::InternalEnergyService;
 using proto::InternalEventService;
 using proto::InternalMemoryService;
@@ -69,6 +71,29 @@ Perfa::Perfa(const char* address) {
 
   // Open the component independent data stream
   data_stream_ = service_stub_->DataStream(&data_context_, &data_response_);
+
+  // Enable the heartbeat.
+  heartbeat_thread_ = std::thread(&Perfa::RunHeartbeatThread, this);
+}
+
+void Perfa::RunHeartbeatThread() {
+  SetThreadName("HeartbeatThread");
+  Stopwatch stopwatch;
+  while (true) {
+    int64_t start_ns = stopwatch.GetElapsed();
+    // TODO: handle erroneous status
+    // TODO: set deadline to check if perfd is alive.
+    HeartBeatResponse response;
+    grpc::ClientContext context;
+    CommonData data;
+    data.set_process_id(getpid());
+    grpc::Status status = service_stub_->HeartBeat(&context, data, &response);
+    int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
+    if (kHeartBeatIntervalNs > elapsed_ns) {
+      int64_t sleep_us = Clock::ns_to_us(kHeartBeatIntervalNs - elapsed_ns);
+      usleep(static_cast<uint64_t>(sleep_us));
+    }
+  }
 }
 
 void Perfa::RunControlThread() {

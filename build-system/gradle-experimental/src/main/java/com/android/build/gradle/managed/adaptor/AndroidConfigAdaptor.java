@@ -45,18 +45,16 @@ import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.model.ModelMap;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * An adaptor to convert a managed.AndroidConfig to an model.AndroidConfig.

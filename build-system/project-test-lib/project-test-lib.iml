@@ -8,19 +8,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="common" exported="" />
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/2.1/gradle-tooling-api-2.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/2.1/gradle-tooling-api-2.1-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module" module-name="builder-model" exported="" />
+    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="library" name="gradle-api" level="project" />
   </component>
 </module>
-

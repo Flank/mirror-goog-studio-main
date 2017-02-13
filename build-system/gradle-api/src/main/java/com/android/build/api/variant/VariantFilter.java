@@ -19,7 +19,6 @@ package com.android.build.api.variant;
 import com.android.annotations.NonNull;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
-
 import java.util.List;
 
 /**

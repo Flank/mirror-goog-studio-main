@@ -46,9 +46,6 @@ import com.android.utils.ILogger;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -59,6 +56,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
 
 /**
  * Transform to remove debug symbols from native libraries.
@@ -116,7 +114,7 @@ public class StripDebugSymbolTransform extends Transform {
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
         return stripExecutables.values().stream()
-                .map(f -> new SecondaryFile(f, false))
+                .map(SecondaryFile::nonIncremental)
                 .collect(Collectors.toList());
     }
 
@@ -164,7 +162,7 @@ public class StripDebugSymbolTransform extends Transform {
                                 }
                                 break;
                             case REMOVED:
-                                FileUtils.deleteIfExists(strippedLib);
+                                FileUtils.deletePath(new File(output, path));
                                 break;
                             default:
                                 break;

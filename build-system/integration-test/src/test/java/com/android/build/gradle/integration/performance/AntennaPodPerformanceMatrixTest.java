@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.performance;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -29,23 +28,19 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
-import com.android.build.gradle.internal.incremental.ColdswapMode;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,18 +51,18 @@ import org.junit.runners.Parameterized;
 public class AntennaPodPerformanceMatrixTest {
 
     @Rule public final GradleTestProject mainProject;
-    @NonNull private final Set<ProjectScenario> projectScenarios;
+    @NonNull private final ProjectScenario projectScenario;
     private int nonce = 0;
     private GradleTestProject project;
 
-    public AntennaPodPerformanceMatrixTest(@NonNull Set<ProjectScenario> projectScenarios) {
-        this.projectScenarios = projectScenarios;
+    public AntennaPodPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+        this.projectScenario = projectScenario;
         mainProject =
                 GradleTestProject.builder()
                         .fromExternalProject("AntennaPod")
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
-                                        Logging.Benchmark.ANTENNA_POD, projectScenarios))
+                                        Logging.Benchmark.ANTENNA_POD, projectScenario))
                         .withRelativeProfileDirectory(
                                 Paths.get("AntennaPod", "build", "android-profile"))
                         .withHeap("1536M")
@@ -75,23 +70,24 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Set[] getParameters() {
-        return new Set[] {
-            EnumSet.of(ProjectScenario.NORMAL),
-            EnumSet.of(ProjectScenario.NORMAL, ProjectScenario.JACK_ON),
-            EnumSet.of(ProjectScenario.DEX_OUT_OF_PROCESS),
-            EnumSet.of(ProjectScenario.JACK_OUT_OF_PROCESS),
+    public static ProjectScenario[] getParameters() {
+        return new ProjectScenario[] {
+            ProjectScenario.NORMAL,
+            ProjectScenario.JACK_ON,
+            ProjectScenario.DEX_ARCHIVE_MONODEX,
+            ProjectScenario.DEX_OUT_OF_PROCESS,
+            ProjectScenario.JACK_OUT_OF_PROCESS,
         };
     }
 
-    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws IOException {
+    private static void upgradeBuildToolsVersion(@NonNull File buildGradleFile) throws Exception {
         TestFileUtils.searchAndReplace(
                 buildGradleFile,
                 "buildToolsVersion( =)? \"\\d+.\\d+.\\d+\"",
                 "buildToolsVersion$1 \"25.0.0\"");
     }
 
-    private static void disableRetrolambda(@NonNull File buildGradleFile) throws IOException {
+    private static void disableRetrolambda(@NonNull File buildGradleFile) throws Exception {
         TestFileUtils.searchAndReplace(
                 buildGradleFile,
                 "apply plugin: \"me.tatarka.retrolambda\"",
@@ -99,55 +95,32 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @Before
-    public void initializeProject() throws IOException {
+    public void initializeProject() throws Exception {
+        PerformanceTestProjects.initializeAntennaPod(mainProject);
         project = mainProject.getSubproject("AntennaPod");
 
-        Files.move(
-                mainProject.file(SdkConstants.FN_LOCAL_PROPERTIES),
-                project.file(SdkConstants.FN_LOCAL_PROPERTIES));
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "classpath \"com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+\"",
-                "classpath \"com.android.tools.build:gradle:"
-                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
-                        + '"');
-
-        upgradeBuildToolsVersion(project.getBuildFile());
-        upgradeBuildToolsVersion(mainProject.file("afollestad/commons/build.gradle"));
-        upgradeBuildToolsVersion(mainProject.file("afollestad/core/build.gradle"));
-        upgradeBuildToolsVersion(mainProject.file("AudioPlayer/library/build.gradle"));
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "jcenter\\(\\)",
-                "maven { url '"
-                        + FileUtils.toSystemIndependentPath(System.getenv("CUSTOM_REPO"))
-                        + "'} \n"
-                        + "        jcenter()");
-
         File appBuildFile = project.file("app/build.gradle");
-        for (ProjectScenario projectScenario : projectScenarios) {
-            switch (projectScenario) {
-                case NORMAL:
-                    break;
-                case DEX_OUT_OF_PROCESS:
-                    DexInProcessHelper.disableDexInProcess(appBuildFile);
-                    break;
-                case JACK_ON:
-                    disableRetrolambda(appBuildFile);
-                    JackHelper.enableJack(appBuildFile);
-                    break;
-                case JACK_OUT_OF_PROCESS:
-                    disableRetrolambda(appBuildFile);
-                    // automatically enables Jack as well
-                    JackHelper.disableJackInProcess(appBuildFile);
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unknown project scenario" + projectScenario);
+        switch (projectScenario) {
+            case NORMAL:
+                break;
+            case DEX_OUT_OF_PROCESS:
+                DexInProcessHelper.disableDexInProcess(appBuildFile);
+                break;
+            case JACK_ON:
+                disableRetrolambda(appBuildFile);
+                JackHelper.enableJack(appBuildFile);
+                break;
+            case JACK_OUT_OF_PROCESS:
+                disableRetrolambda(appBuildFile);
+                // automatically enables Jack as well
+                JackHelper.disableJackInProcess(appBuildFile);
+                break;
+            case DEX_ARCHIVE_MONODEX:
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown project scenario" + projectScenario);
             }
-        }
     }
 
     @Test
@@ -177,9 +150,13 @@ public class AntennaPodPerformanceMatrixTest {
                     model().recordBenchmark(BenchmarkMode.SYNC).getMulti();
                     continue;
                 case BUILD__FROM_CLEAN:
+                    FileUtils.cleanOutputDir(executor().getBuildCacheDir());
                     executor().run("clean");
                     tasks = ImmutableList.of(":app:assembleDebug");
                     break;
+                case BUILD__FROM_CLEAN__POPULATED_BUILD_CACHE:
+                    // TODO
+                    continue;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
                 case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
                     tasks = ImmutableList.of(":app:assembleDebug");
@@ -205,7 +182,7 @@ public class AntennaPodPerformanceMatrixTest {
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
                     executor()
-                            .withInstantRun(24, ColdswapMode.MULTIAPK)
+                            .withInstantRun(24)
                             .withEnableInfoLogging(false)
                             .run(tasks);
                     isEdit = true;
@@ -261,7 +238,7 @@ public class AntennaPodPerformanceMatrixTest {
             if (instantRunModel != null) {
                 executor()
                         .recordBenchmark(benchmarkMode)
-                        .withInstantRun(24, ColdswapMode.MULTIAPK)
+                        .withInstantRun(24)
                         .run(tasks);
 
                 InstantRunTestUtils.loadContext(instantRunModel).getVerifierStatus();
@@ -281,12 +258,12 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .disablePreDexBuildCache()
                 .disableAaptV2()
-                .withoutOfflineFlag();
+                .withUseDexArchive(projectScenario.useDexArchive());
     }
 
     private boolean isJackOn() {
-        return projectScenarios.contains(ProjectScenario.JACK_ON)
-                || projectScenarios.contains(ProjectScenario.JACK_OUT_OF_PROCESS);
+        return projectScenario.getFlags().getCompiler()
+                == Logging.GradleBenchmarkResult.Flags.Compiler.JACK;
     }
 
     private boolean isInstantRunOn(BenchmarkMode benchmarkMode) {
@@ -309,7 +286,7 @@ public class AntennaPodPerformanceMatrixTest {
             @NonNull PerformanceTestUtil.SubProjectType subProjectType,
             @NonNull PerformanceTestUtil.EditType editType,
             int nonce)
-            throws IOException {
+            throws Exception {
 
         if (subProjectType != PerformanceTestUtil.SubProjectType.MAIN_PROJECT) {
             throw new UnsupportedOperationException("TODO: Cannot edit non main project yet.");

@@ -35,14 +35,12 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.gradle.api.GradleException;
-import org.gradle.api.InvalidUserDataException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 
 /**
  * CMake JSON generation logic. This is separated from the corresponding CMake task so that

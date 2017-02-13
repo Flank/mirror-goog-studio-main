@@ -21,9 +21,7 @@ import static org.objectweb.asm.Opcodes.ACC_ANNOTATION;
 import static org.objectweb.asm.Opcodes.ACC_ENUM;
 import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 
-/**
- * Represents the "class type" part of a ProGuard class specification.
- */
+/** Represents the "class type" part of a ProGuard class specification. */
 public class ClassTypeSpecification extends MatcherWithNegator<Integer> {
 
     private static final int CLASS_TYPE_FLAGS = ACC_INTERFACE | ACC_ENUM;

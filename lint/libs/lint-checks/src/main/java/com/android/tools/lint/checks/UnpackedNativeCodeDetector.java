@@ -78,7 +78,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
                     EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE, Scope.JAVA_LIBRARIES),
                     EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)
             )
-    );
+    ).setEnabledByDefault(false); // b.android.com/232158
 
     private static final String SYSTEM_CLASS = "java.lang.System";
     private static final String RUNTIME_CLASS = "java.lang.Runtime";

@@ -37,7 +37,7 @@ public class AppWithIvyDependencyTest {
     }
 
     @Test
-    public void checkCompilationDependingOnIvyJarFile() {
+    public void checkCompilationDependingOnIvyJarFile() throws Exception {
         project.execute("assembleDebug");
     }
 }

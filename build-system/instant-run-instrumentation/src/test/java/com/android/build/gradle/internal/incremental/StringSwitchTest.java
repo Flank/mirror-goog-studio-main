@@ -16,18 +16,15 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.Test;
-
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.commons.GeneratorAdapter;
-
-import java.lang.reflect.Method;
-
-import java.util.Arrays;
-import java.util.HashSet;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 
 /**

@@ -39,7 +39,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName);
+                AnalyticsUtil::getPotentialTaskExecutionTypeName,
+                "com.android.build.gradle.tasks.GenerateTestConfig");
     }
 
     @Test
@@ -49,8 +50,9 @@ public class AnalyticsUtilTest {
                 AnalyticsUtil::getTransformType,
                 AnalyticsUtil::getPotentialTransformTypeName,
                 "com.android.build.gradle.internal.pipeline.TestTransform",
-                "com.android.build.gradle.internal.transforms.JackGenerateDexTransform",
-                "com.android.build.gradle.internal.transforms.JackCompileTransform");
+                "com.android.build.gradle.internal.transforms.MainDexListTransform",
+                "com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform",
+                "com.android.build.gradle.internal.transforms.DexMergerTransform");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(

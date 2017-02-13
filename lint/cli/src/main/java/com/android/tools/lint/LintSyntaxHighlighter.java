@@ -21,10 +21,12 @@ import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.MaterialHtmlReporter.CODE_WINDOW_SIZE;
+import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.HtmlBuilder;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
@@ -86,7 +88,7 @@ public class LintSyntaxHighlighter {
         if (endsWithIgnoreCase(fileName, DOT_XML)) {
             tokenizeXml();
         } else if (endsWithIgnoreCase(fileName, DOT_JAVA)) {
-            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isJavaKeyword);
+            tokenizeJavaLikeLanguage(LintUtils::isJavaKeyword);
         } else if (endsWithIgnoreCase(fileName, DOT_GRADLE)) {
             tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isGroovyKeyword);
         } else if (endsWithIgnoreCase(fileName, ".kt")) {
@@ -402,67 +404,6 @@ public class LintSyntaxHighlighter {
             case "when":
             case "interface":
             case "typeof":
-                return true;
-        }
-
-        return false;
-    }
-
-    private static boolean isJavaKeyword(@NonNull String keyword) {
-        switch (keyword) {
-            case "abstract":
-            case "assert":
-            case "boolean":
-            case "break":
-            case "byte":
-            case "case":
-            case "catch":
-            case "char":
-            case "class":
-            case "const":
-            case "continue":
-            case "default":
-            case "do":
-            case "double":
-            case "else":
-            case "enum":
-            case "extends":
-            case "false":
-            case "final":
-            case "finally":
-            case "float":
-            case "for":
-            case "goto":
-            case "if":
-            case "implements":
-            case "import":
-            case "instanceof":
-            case "int":
-            case "interface":
-            case "long":
-            case "native":
-            case "new":
-            case "null":
-            case "package":
-            case "private":
-            case "protected":
-            case "public":
-            case "return":
-            case "short":
-            case "static":
-            case "strictfp":
-            case "super":
-            case "switch":
-            case "synchronized":
-            case "this":
-            case "throw":
-            case "throws":
-            case "transient":
-            case "true":
-            case "try":
-            case "void":
-            case "volatile":
-            case "while":
                 return true;
         }
 

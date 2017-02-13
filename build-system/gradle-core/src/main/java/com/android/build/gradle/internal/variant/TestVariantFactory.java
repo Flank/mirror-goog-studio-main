@@ -26,14 +26,12 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Map;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.internal.reflect.Instantiator;
-
-import java.util.Map;
 
 /**
  * Customization of ApplcationVariantFactory for test-only projects.

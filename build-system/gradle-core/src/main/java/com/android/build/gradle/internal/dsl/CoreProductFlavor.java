@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ProductFlavor;
-
 import org.gradle.api.Named;
 
 /**

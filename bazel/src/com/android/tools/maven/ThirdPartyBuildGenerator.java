@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -35,6 +36,10 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
+import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 
 /**
  * Binary that generates a BUILD file (most likely in //tools/base/third_party) which mimics the
@@ -185,8 +190,15 @@ public class ThirdPartyBuildGenerator {
 
         collectRequest.setRepositories(AetherUtils.REPOSITORIES);
 
-        mRepo.getmRepositorySystemSession()
-                .setDependencySelector(AetherUtils.buildDependencySelector(EXCLUSIONS));
+        DefaultRepositorySystemSession session = mRepo.getRepositorySystemSession();
+
+        session.setDependencyGraphTransformer(
+                new ConflictResolver(
+                        new HighestVersionSelector(artifacts),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver()));
+        session.setDependencySelector(AetherUtils.buildDependencySelector(EXCLUSIONS));
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(collectRequest, null));
 
@@ -200,6 +212,7 @@ public class ThirdPartyBuildGenerator {
                             public boolean visitEnter(DependencyNode node) {
                                 Artifact artifact = node.getArtifact();
                                 if (artifact != null) {
+
                                     versions.put(getRuleName(artifact), artifact);
                                     try {
                                         imports.generateImportRules(artifact);

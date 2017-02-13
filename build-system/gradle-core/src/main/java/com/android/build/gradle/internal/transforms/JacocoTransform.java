@@ -16,54 +16,45 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.transform.SecondaryInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.coverage.JacocoPlugin;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.api.transform.Context;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.jacoco.core.instr.Instrumenter;
-import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import org.jacoco.core.instr.Instrumenter;
+import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
 
 /**
  * Jacoco Transform
  */
 public class JacocoTransform extends Transform {
 
-    @NonNull
-    private final Supplier<Collection<File>> jacocoClasspath;
+    private final File jacocoAgent;
 
-    public JacocoTransform(@NonNull  final ConfigurationContainer configurations) {
-        this.jacocoClasspath = Suppliers.memoize(
-                () -> configurations.getByName(JacocoPlugin.AGENT_CONFIGURATION_NAME).getFiles());
+    public JacocoTransform(@NonNull  final File jacocoAgent) {
+        this.jacocoAgent = jacocoAgent;
     }
 
     @NonNull
@@ -87,8 +78,8 @@ public class JacocoTransform extends Transform {
 
     @NonNull
     @Override
-    public Collection<File> getSecondaryFileInputs() {
-        return jacocoClasspath.get();
+    public Collection<SecondaryFile> getSecondaryFiles() {
+        return ImmutableList.of(SecondaryFile.nonIncremental(jacocoAgent));
     }
 
     @Override
@@ -99,6 +90,9 @@ public class JacocoTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        // This task requires the jacocoagent.jar to be in the transform stream.  Checking the
+        // jacocoagent.jar exists indicates the tasks dependency is setup correctly.
+        checkState(jacocoAgent.isFile());
 
         checkNotNull(invocation.getOutputProvider(),
                 "Missing output object for transform " + getName());

@@ -19,28 +19,30 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "EnergyProfiler";
 
+import "profiler.proto";
+
 service EnergyService {
   // Requests energy data sampled between |start_time_excl| and |end_time_incl|
-  // for app specified by |app_id|. Note it is possible for the returned
+  // for app specified by |process_id|. Note it is possible for the returned
   // EnergyDataResponse to have have zero energy samples depending on the time
   // range specified.
   rpc GetEnergyData(EnergyDataRequest) returns (EnergyDataResponse) {
   }
 
   // Requests wake lock data between |start_time_excl| and |end_time_incl|
-  // for app specified by |app_id|. Note it is possible for the returned
+  // for app specified by |process_id|. Note it is possible for the returned
   // WakeLockDataResponse to have have zero wake lock events depending on the
   // time range specified.
   rpc GetWakeLockData(WakeLockDataRequest) returns (WakeLockDataResponse) {
   }
 
-  // Starts energy data collection for app specified by |app_id|. Returns a
+  // Starts energy data collection for app specified by |process_id|. Returns a
   // device |timestamp| of when the collection started.
   rpc StartCollection(StartEnergyCollectionRequest)
       returns (EnergyCollectionStatusResponse) {
   }
 
-  // Stops energy stats collection for the given |app_id|. Returns a device
+  // Stops energy stats collection for the given |process_id|. Returns a device
   // |timestamp| of when the collection stopped.
   rpc StopCollection(StopEnergyCollectionRequest)
       returns (EnergyCollectionStatusResponse) {
@@ -48,14 +50,16 @@ service EnergyService {
 }
 
 message EnergyDataRequest {
-  int32 app_id = 1;
-  int64 start_time_excl = 2;
-  int64 end_time_incl = 3;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time_excl = 3;
+  int64 end_time_incl = 4;
 }
 
 message EnergyDataResponse {
-  int32 app_id = 1;
-  repeated EnergySample energy_samples = 2;
+  int32 process_id = 1;
+  Session session = 2;
+  repeated EnergySample energy_samples = 3;
 }
 
 // Contains power usages of each system component.
@@ -69,14 +73,16 @@ message EnergySample {
 }
 
 message WakeLockDataRequest {
-  int32 app_id = 1;
-  int64 start_time_excl = 2;
-  int64 end_time_incl = 3;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time_excl = 3;
+  int64 end_time_incl = 4;
 }
 
 message WakeLockDataResponse {
-  int32 app_id = 1;
-  repeated WakeLockEvent wake_lock_events = 2;
+  int32 process_id = 1;
+  Session session = 2;
+  repeated WakeLockEvent wake_lock_events = 3;
 }
 
 // An event related to the use of wake locks.
@@ -102,14 +108,17 @@ message WakeLockEvent {
 }
 
 message StartEnergyCollectionRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 message StopEnergyCollectionRequest {
-  int32 app_id = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 message EnergyCollectionStatusResponse {
-  int32 app_id = 1;
-  int64 timestamp = 2;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 timestamp = 3;
 }

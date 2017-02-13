@@ -16,11 +16,9 @@
 
 package com.android.build.api.transform;
 
-import com.google.common.annotations.Beta;
-
-import org.gradle.api.logging.LoggingManager;
 
 import java.io.File;
+import org.gradle.api.logging.LoggingManager;
 
 /**
  * Context for the transform.

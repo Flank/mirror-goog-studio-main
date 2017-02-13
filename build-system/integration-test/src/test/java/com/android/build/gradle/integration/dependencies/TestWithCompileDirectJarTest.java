@@ -31,10 +31,8 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -54,7 +52,7 @@ public class TestWithCompileDirectJarTest {
     static ModelContainer<AndroidProject> models;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getSubproject("app").getBuildFile(),
@@ -72,13 +70,13 @@ public class TestWithCompileDirectJarTest {
     }
 
     @Test
-    public void checkCompiledJarIsPackaged() throws IOException, ProcessException {
+    public void checkCompiledJarIsPackaged() throws Exception {
         assertThat(project.getSubproject("app").getTestApk("debug"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 
     @Test
-    public void checkCompiledJarIsInTheTestArtifactModel() {
+    public void checkCompiledJarIsInTheTestArtifactModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
         Variant variant = ModelHelper.getVariant(models.getModelMap().get(":app").getVariants(), "debug");
 

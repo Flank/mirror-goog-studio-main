@@ -18,12 +18,10 @@ package com.android.build.gradle.shrinker;
 
 import com.android.build.gradle.ProguardFiles;
 import com.google.common.io.Files;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests that {@link com.android.build.gradle.shrinker.parser.ProguardParser} can parse the bundled
@@ -33,9 +31,7 @@ public class ProguardParserTest_DefaultRules extends AbstractShrinkerTest {
 
     @Before
     public void createMainMethod() throws Exception {
-        Files.write(
-                TestClasses.emptyClass("Main"),
-                new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.emptyClass("Main"), new File(mTestPackageDir, "Main.class"));
     }
 
     @Test
@@ -43,7 +39,7 @@ public class ProguardParserTest_DefaultRules extends AbstractShrinkerTest {
         for (String name : ProguardFiles.DEFAULT_PROGUARD_WHITELIST) {
             File rulesFile = tmpDir.newFile(name);
             ProguardFiles.extractBundledProguardFile(name, rulesFile);
-            run(parseKeepRules(Files.toString(rulesFile, StandardCharsets.UTF_8)));
+            fullRun(parseKeepRules(Files.toString(rulesFile, StandardCharsets.UTF_8)));
             assertClassSkipped("Main");
         }
     }

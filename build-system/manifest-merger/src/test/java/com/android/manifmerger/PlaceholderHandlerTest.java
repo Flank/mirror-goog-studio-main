@@ -29,16 +29,12 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.testutils.MockLog;
 import com.google.common.base.Optional;
-
+import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
-
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Tests for the {@link com.android.manifmerger.PlaceholderHandler}

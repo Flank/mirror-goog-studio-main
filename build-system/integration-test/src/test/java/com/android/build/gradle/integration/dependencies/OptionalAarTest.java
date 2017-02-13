@@ -33,12 +33,10 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -58,7 +56,7 @@ public class OptionalAarTest {
     private static LibraryGraphHelper helper;
 
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp() throws Exception {
         Files.write("include 'app', 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
 
         appendToFile(project.getSubproject("app").getBuildFile(),
@@ -87,21 +85,21 @@ public class OptionalAarTest {
     }
 
     @Test
-    public void checkAppDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
+    public void checkAppDoesNotContainProvidedLibsLayout() throws Exception {
         Apk apk = project.getSubproject("app").getApk("debug");
 
         assertThatApk(apk).doesNotContainResource("layout/lib2layout.xml");
     }
 
     @Test
-    public void checkAppDoesNotContainProvidedLibsCode() throws IOException, ProcessException {
+    public void checkAppDoesNotContainProvidedLibsCode() throws Exception {
         Apk apk = project.getSubproject("app").getApk("debug");
 
         assertThatApk(apk).doesNotContainClass("Lcom/example/android/multiproject/library2/PersonView2;");
     }
 
     @Test
-    public void checkLIbDoesNotContainProvidedLibsLayout() throws IOException, ProcessException {
+    public void checkLIbDoesNotContainProvidedLibsLayout() throws Exception {
         Aar aar = project.getSubproject("library").getAar("release");
 
         assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
@@ -110,7 +108,7 @@ public class OptionalAarTest {
     }
 
     @Test
-    public void checkAppModelDoesNotIncludeOptionalLibrary() {
+    public void checkAppModelDoesNotIncludeOptionalLibrary() throws Exception {
         Collection<Variant> variants = models.getModelMap().get(":app").getVariants();
 
         // get the main artifact of the debug artifact and its dependencies
@@ -129,7 +127,7 @@ public class OptionalAarTest {
     }
 
     @Test
-    public void checkLibraryModelIncludesOptionalLibrary() {
+    public void checkLibraryModelIncludesOptionalLibrary() throws Exception {
         Collection<Variant> variants = models.getModelMap().get(":library").getVariants();
 
         // get the main artifact of the debug artifact and its dependencies

@@ -45,6 +45,7 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
     private final HttpConnectionTracker myConnectionTracker;
 
     private boolean myConnectTracked;
+    private InputStream myTrackedInputStream;
 
     public HttpsURLConnection$(HttpsURLConnection wrapped, StackTraceElement[] callstack) {
         super(wrapped.getURL());
@@ -99,6 +100,14 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public void disconnect() {
+        // Close the input stream in case the user didn't explicitly themselves, ensuring any
+        // remaining data we want to track is flushed.
+        if (myTrackedInputStream != null) {
+            try {
+                myTrackedInputStream.close();
+            } catch (Exception ignored) {
+            }
+        }
         myWrapped.disconnect();
         myConnectionTracker.disconnect();
     }
@@ -115,11 +124,22 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public String getRequestMethod() {
+        if (myWrapped.getDoOutput() && myWrapped.getRequestMethod().equals("GET")) {
+            // Unfortunately, HttpURLConnection only updates its method to "POST" after connect is
+            // called. But for our tracking purposes, that's too late.
+            return "POST";
+        }
         return myWrapped.getRequestMethod();
     }
 
     @Override
     public int getResponseCode() throws IOException {
+        // Internally, HttpURLConnection#getResponseCode() calls HttpURLConnection#getInputStream(),
+        // but since we don't have hooks inside that class, we need to call it ourselves here, to
+        // ensure the event is tracked.
+        if (!myConnectTracked) {
+            getInputStream();
+        }
         return myWrapped.getResponseCode();
     }
 
@@ -290,7 +310,8 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
         try {
             InputStream stream = myWrapped.getInputStream();
             myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
-            return myConnectionTracker.trackResponseBody(stream);
+            myTrackedInputStream = myConnectionTracker.trackResponseBody(stream);
+            return myTrackedInputStream;
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
@@ -306,7 +327,17 @@ final class HttpsURLConnection$ extends HttpsURLConnection {
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        return myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+        if (!myConnectTracked) {
+            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+        }
+        try {
+            return myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+        } catch (IOException e) {
+            myConnectionTracker.error(e.toString());
+            throw e;
+        } finally {
+            myConnectTracked = true;
+        }
     }
 
     @Override

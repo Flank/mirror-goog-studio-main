@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
-import org.gradle.nativeplatform.NativeLibraryBinary;
-
 import java.util.List;
+import org.gradle.nativeplatform.NativeLibraryBinary;
 
 /**
  * Result of resolving dependencies for a native project.

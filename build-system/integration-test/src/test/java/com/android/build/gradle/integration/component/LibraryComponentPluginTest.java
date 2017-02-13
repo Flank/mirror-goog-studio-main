@@ -22,9 +22,7 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,7 +41,7 @@ public class LibraryComponentPluginTest {
 
 
     @Test
-    public void checkBuildConfigFileIsIncluded() throws IOException, ProcessException {
+    public void checkBuildConfigFileIsIncluded() throws Exception {
         appendToFile(project.getSubproject("app").getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
                 + "\n"
@@ -79,7 +77,7 @@ public class LibraryComponentPluginTest {
     }
 
     @Test
-    public void checkMultiFlavorDependencies() throws IOException {
+    public void checkMultiFlavorDependencies() throws Exception {
         appendToFile(project.getSubproject("app").getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
                 + "\n"

@@ -21,9 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.AtomBundle;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -60,7 +58,7 @@ public class DataBindingAtomTest {
     @Rule public final GradleTestProject project;
 
     @Test
-    public void checkDexContainsDataBindingClasses() throws IOException, ProcessException {
+    public void checkDexContainsDataBindingClasses() throws Exception {
         project.setBuildFile(mBuildFile);
         project.execute("assembleDebug");
 

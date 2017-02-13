@@ -16,7 +16,7 @@
 
 package com.android.builder.core;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -28,18 +28,19 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
+import com.android.builder.utils.PerformanceUtils;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
-
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-@RunWith(MockitoJUnitRunner.class)
 public class DexByteCodeConverterTest {
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     private ILogger logger;
 
@@ -60,13 +61,11 @@ public class DexByteCodeConverterTest {
 
     @Test
     public void checkSizeParser() {
-        assertEquals(123L, (long) DexByteCodeConverter.parseSizeToBytes("123").get());
-        assertEquals(2048L, (long) DexByteCodeConverter.parseSizeToBytes("2k").get());
-        assertEquals(2048L, (long) DexByteCodeConverter.parseSizeToBytes("2K").get());
-        assertEquals(1024L * 1024L * 7L, (long) DexByteCodeConverter.parseSizeToBytes("7M").get());
-        assertEquals(1024L * 1024L * 1024L * 17L,
-                (long) DexByteCodeConverter.parseSizeToBytes("17g").get());
-        assertFalse(DexByteCodeConverter.parseSizeToBytes("foo").isPresent());
+        assertThat(PerformanceUtils.parseSizeToBytes("123")).isEqualTo(123);
+        assertThat(PerformanceUtils.parseSizeToBytes("2k")).isEqualTo(2048);
+        assertThat(PerformanceUtils.parseSizeToBytes("7M")).isEqualTo(1024L * 1024 * 7);
+        assertThat(PerformanceUtils.parseSizeToBytes("17g")).isEqualTo(1024L * 1024 * 1024 * 17);
+        assertThat(PerformanceUtils.parseSizeToBytes("foo")).isNull();
     }
 
     @Test
@@ -89,15 +88,14 @@ public class DexByteCodeConverterTest {
 
         // a very large number to ensure dex in process is disabled due to memory needs.
         String heapSizeSetting = "10000G";
-        
         when(dexOptions.getJavaMaxHeapSize()).thenReturn(heapSizeSetting);
         assertFalse(dexByteCodeConverter.shouldDexInProcess(dexOptions));
-        verify(logger).warning(
-                contains("org.gradle.jvmargs=-Xmx"),
-                any(),
-                eq(10000 * 1024 + DexByteCodeConverter.NON_DEX_HEAP_SIZE / 1024 / 1024),
-                contains(heapSizeSetting));
+        verify(logger)
+                .warning(
+                        contains("org.gradle.jvmargs=-Xmx"),
+                        any(),
+                        eq(10000 * 1024 + PerformanceUtils.NON_DEX_HEAP_SIZE / 1024 / 1024),
+                        contains(heapSizeSetting));
         verifyNoMoreInteractions(logger);
     }
-
 }

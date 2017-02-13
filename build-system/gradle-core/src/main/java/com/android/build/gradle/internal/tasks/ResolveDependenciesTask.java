@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -27,12 +27,10 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
@@ -48,11 +46,10 @@ public class ResolveDependenciesTask extends BaseTask {
     private BaseVariantData<? extends BaseVariantOutputData> variantData;
     private DependencyManager dependencyManager;
     private String testedProjectPath;
-    private Optional<FileCache> buildCache;
+    @Nullable private FileCache buildCache;
 
     @TaskAction
-    public void resolveDependencies() throws LoggedErrorException, InterruptedException,
-            IOException {
+    public void resolveDependencies() throws InterruptedException, IOException {
         // Resolve variant dependencies.
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
@@ -69,8 +66,8 @@ public class ResolveDependenciesTask extends BaseTask {
     public static void extractAarInParallel(
             @NonNull Project project,
             @NonNull GradleVariantConfiguration config,
-            @NonNull Optional<FileCache> buildCache)
-            throws LoggedErrorException, InterruptedException, IOException {
+            @Nullable FileCache buildCache)
+            throws InterruptedException, IOException {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         Set<AndroidDependency> dependencies =
@@ -84,11 +81,11 @@ public class ResolveDependenciesTask extends BaseTask {
             }
             File input = androidDependency.getArtifactFile();
             File output = androidDependency.getExtractedFolder();
-            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache.isPresent(), androidDependency.getCoordinates());
+            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache != null, androidDependency.getCoordinates());
             PrepareLibraryTask.prepareLibrary(
                     input,
                     output,
-                    buildCache.isPresent() ? buildCache.get() : null,
+                    buildCache,
                     createAction(project, executor, input),
                     project.getLogger(),
                     useBuildCache);

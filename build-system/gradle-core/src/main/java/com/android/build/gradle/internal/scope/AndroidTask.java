@@ -20,12 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-
-import org.gradle.api.Action;
-import org.gradle.api.Task;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.gradle.api.Action;
+import org.gradle.api.Task;
 
 /**
  * Handle for a {@link Task} that may not yet been created.

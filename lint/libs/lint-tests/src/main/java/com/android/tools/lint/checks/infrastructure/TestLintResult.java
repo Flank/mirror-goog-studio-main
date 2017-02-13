@@ -18,7 +18,9 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -26,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -34,9 +37,11 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
+import org.intellij.lang.annotations.Language;
 
 /**
  * The result of running a {@link TestLintTask}.
@@ -64,15 +69,27 @@ public class TestLintResult {
      * @param expectedText the text to expect
      */
     public TestLintResult expect(@NonNull String expectedText) {
-        if (output == null && exception != null) {
-            StringWriter writer = new StringWriter();
-            exception.printStackTrace(new PrintWriter(writer));
-            assertEquals(expectedText, writer.toString());
-        } else {
-            assertEquals(expectedText, output);
-        }
+        assertEquals(expectedText, describeOutput());
 
         return this;
+    }
+
+    private String describeOutput() {
+        if (exception != null) {
+            StringWriter writer = new StringWriter();
+            exception.printStackTrace(new PrintWriter(writer));
+
+            if (output != null) {
+                writer.write(output);
+            }
+
+            return writer.toString();
+        } else {
+            if (output == null) {
+                return "";
+            }
+            return output;
+        }
     }
 
     /**
@@ -162,14 +179,21 @@ public class TestLintResult {
 
                         String startMarker;
                         String endMarker;
+                        String message = warning.message;
+
+                        // Use plain ascii in the test golden files for now. (This also ensures
+                        // that the markup is well-formed, e.g. if we have a ` without a matching
+                        // closing `, the ` would show up in the plain text.)
+                        message = TextFormat.RAW.convertTo(message, TextFormat.TEXT);
+
                         if (isXml) {
                             String tag = warning.severity.getDescription().toLowerCase(Locale.ROOT);
                             startMarker = "<?" + tag + " message=\""
-                                    + warning.message + "\"?>";
+                                    + message + "\"?>";
                             endMarker = "<?" + tag + "?>";
                         } else {
                             // Java, Gradle, Kotlin, ...
-                            startMarker = "/*" + warning.message + "*/";
+                            startMarker = "/*" + message + "*/";
                             endMarker = "/**/";
                         }
 
@@ -260,5 +284,14 @@ public class TestLintResult {
         matches.sort((o1, o2) -> o2.offset - o1.offset);
 
         return matches;
+    }
+
+    public void expectMatches(@Language("RegExp") @NonNull String regexp) {
+        String output = describeOutput();
+        Pattern pattern = Pattern.compile(regexp);
+        boolean found = pattern.matcher(output).find();
+        if (!found) {
+            fail("Did not find pattern\n  " + regexp + "\n in \n" + output);
+        }
     }
 }

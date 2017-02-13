@@ -53,7 +53,6 @@ import com.android.builder.sdk.TargetInfo;
 import com.android.builder.symbols.RGeneration;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
-import com.android.ide.common.internal.LoggedErrorException;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.JavaProcessInfo;
@@ -106,22 +105,28 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * This is the main builder class. It is given all the data to process the build (such as
- * {@link DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing specific
- * build steps.
+ * This is the main builder class. It is given all the data to process the build (such as {@link
+ * DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing
+ * specific build steps.
  *
- * To use:
- * create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor, JavaProcessExecutor, ErrorReporter, ILogger, boolean)}
+ * <p>To use: create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor,
+ * JavaProcessExecutor, ErrorReporter, ILogger, boolean)}
  *
- * then build steps can be done with
- * {@link #mergeManifestsForApplication(File, List, List, String, int, String, String, String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
- * {@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean, Boolean, String, File, List, Map, File, File)}
- * {@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
- * {@link #compileAllAidlFiles(List, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)}
- * {@link #getDexByteCodeConverter()}
+ * <p>then build steps can be done with:
  *
- * Java compilation is not handled but the builder provides the boot classpath with
- * {@link #getBootClasspath(boolean)}.
+ * <ol>
+ *   <li>{@link #mergeManifestsForApplication(File, List, List, String, int, String, String, String,
+ *       Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
+ *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
+ *       Boolean, String, File, List, Map, File, File)}
+ *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
+ *   <li>{@link #compileAllAidlFiles(Collection, File, File, Collection, Collection,
+ *       DependencyFileProcessor, ProcessOutputHandler)}
+ *   <li>{@link #getDexByteCodeConverter()}
+ * </ol>
+ *
+ * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
+ * #getBootClasspath(boolean)}.
  */
 public class AndroidBuilder {
 
@@ -995,10 +1000,8 @@ public class AndroidBuilder {
     }
 
     public static void generateApkDataEntryInManifest(
-            int minSdkVersion,
-            int targetSdkVersion,
-            @NonNull File manifestFile)
-            throws InterruptedException, LoggedErrorException, IOException {
+            int minSdkVersion, int targetSdkVersion, @NonNull File manifestFile)
+            throws InterruptedException, IOException {
 
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
@@ -1026,22 +1029,22 @@ public class AndroidBuilder {
      * @param sourceOutputDir the output dir in which to generate the source code
      * @param packagedOutputDir the output dir for the AIDL files that will be packaged in an aar
      * @param packageWhiteList a list of AIDL FQCNs that are not parcelable that should also be
-     *                         packaged in an aar
+     *     packaged in an aar
      * @param importFolders import folders
-     * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies
-     *                                of the compilation.
+     * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies of the
+     *     compilation.
      * @throws IOException failed
      * @throws InterruptedException failed
-     * @throws LoggedErrorException failed
      */
-    public void compileAllAidlFiles(@NonNull Collection<File> sourceFolders,
-                                    @NonNull File sourceOutputDir,
-                                    @Nullable File packagedOutputDir,
-                                    @Nullable Collection<String> packageWhiteList,
-                                    @NonNull Collection<File> importFolders,
-                                    @Nullable DependencyFileProcessor dependencyFileProcessor,
-                                    @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+    public void compileAllAidlFiles(
+            @NonNull Collection<File> sourceFolders,
+            @NonNull File sourceOutputDir,
+            @Nullable File packagedOutputDir,
+            @Nullable Collection<String> packageWhiteList,
+            @NonNull Collection<File> importFolders,
+            @Nullable DependencyFileProcessor dependencyFileProcessor,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws IOException, InterruptedException, ProcessException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
@@ -1084,21 +1087,21 @@ public class AndroidBuilder {
      * @param aidlFile the AIDL file to compile
      * @param sourceOutputDir the output dir in which to generate the source code
      * @param importFolders all the import folders, including the source folders.
-     * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies
-     *                                of the compilation.
+     * @param dependencyFileProcessor the dependencyFileProcessor to record the dependencies of the
+     *     compilation.
      * @throws IOException failed
      * @throws InterruptedException failed
-     * @throws LoggedErrorException failed
      */
-    public void compileAidlFile(@NonNull File sourceFolder,
-                                @NonNull File aidlFile,
-                                @NonNull File sourceOutputDir,
-                                @Nullable File packagedOutputDir,
-                                @Nullable Collection<String> packageWhitelist,
-                                @NonNull List<File> importFolders,
-                                @Nullable DependencyFileProcessor dependencyFileProcessor,
-                                @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+    public void compileAidlFile(
+            @NonNull File sourceFolder,
+            @NonNull File aidlFile,
+            @NonNull File sourceOutputDir,
+            @Nullable File packagedOutputDir,
+            @Nullable Collection<String> packageWhitelist,
+            @NonNull List<File> importFolders,
+            @Nullable DependencyFileProcessor dependencyFileProcessor,
+            @NonNull ProcessOutputHandler processOutputHandler)
+            throws IOException, InterruptedException, ProcessException {
         checkNotNull(aidlFile, "aidlFile cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
@@ -1135,7 +1138,6 @@ public class AndroidBuilder {
      * @param outputDir the output dir in which to generate the output
      * @throws IOException failed
      * @throws InterruptedException failed
-     * @throws LoggedErrorException failed
      */
     public void compileAllShaderFiles(
             @NonNull File sourceFolder,
@@ -1144,7 +1146,7 @@ public class AndroidBuilder {
             @NonNull Map<String, List<String>> scopedArgs,
             @Nullable File nkdLocation,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+            throws IOException, InterruptedException, ProcessException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
         checkState(mTargetInfo != null,
@@ -1179,7 +1181,6 @@ public class AndroidBuilder {
      * @param outputDir the output dir
      * @throws IOException failed
      * @throws InterruptedException failed
-     * @throws LoggedErrorException failed
      */
     public void compileShaderFile(
             @NonNull File sourceFolder,
@@ -1189,7 +1190,7 @@ public class AndroidBuilder {
             @NonNull Map<String, List<String>> scopedArgs,
             @Nullable File nkdLocation,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, LoggedErrorException, ProcessException {
+            throws IOException, InterruptedException, ProcessException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(shaderFile, "aidlFile cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
@@ -1210,10 +1211,10 @@ public class AndroidBuilder {
     /**
      * Compiles all the renderscript files found in the given source folders.
      *
-     * Right now this is the only way to compile them as the renderscript compiler requires all
+     * <p>Right now this is the only way to compile them as the renderscript compiler requires all
      * renderscript files to be passed for all compilation.
      *
-     * Therefore whenever a renderscript file or header changes, all must be recompiled.
+     * <p>Therefore whenever a renderscript file or header changes, all must be recompiled.
      *
      * @param sourceFolders all the source folders to find files to compile
      * @param importFolders all the import folders.
@@ -1227,7 +1228,6 @@ public class AndroidBuilder {
      * @param abiFilters ABI filters in case of support mode
      * @throws IOException failed
      * @throws InterruptedException failed
-     * @throws LoggedErrorException failed
      */
     public void compileAllRenderscriptFiles(
             @NonNull List<File> sourceFolders,
@@ -1243,7 +1243,7 @@ public class AndroidBuilder {
             boolean supportMode,
             @Nullable Set<String> abiFilters,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws InterruptedException, ProcessException, LoggedErrorException, IOException {
+            throws InterruptedException, ProcessException, IOException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
@@ -1299,10 +1299,7 @@ public class AndroidBuilder {
                 LeafFolderGatherer processor = new LeafFolderGatherer();
                 try {
                     searcher.search(processor);
-                } catch (InterruptedException
-                        | IOException
-                        | ProcessException
-                        | LoggedErrorException e) {
+                } catch (InterruptedException | IOException | ProcessException e) {
                     // wont happen as we're not using the executor, and our processor
                     // doesn't throw those.
                 }
@@ -1316,38 +1313,14 @@ public class AndroidBuilder {
 
     @NonNull
     public DexByteCodeConverter getDexByteCodeConverter() {
-        checkState(mDexByteCodeConverter != null,
+        checkState(
+                mDexByteCodeConverter != null,
                 "Cannot call getDexByteCodeConverter() before setTargetInfo() is called.");
         return mDexByteCodeConverter;
     }
 
-    /**
-     * Converts the bytecode to Dalvik format
-     * @param inputs the input files
-     * @param outDexFolder the location of the output folder
-     * @param dexOptions dex options
-     * @throws IOException failed
-     * @throws InterruptedException failed
-     * @throws ProcessException failed
-     */
-    public void convertByteCode(
-            @NonNull Collection<File> inputs,
-            @NonNull File outDexFolder,
-            boolean multidex,
-            @Nullable File mainDexList,
-            @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, ProcessException {
-        getDexByteCodeConverter().convertByteCode(inputs,
-                outDexFolder,
-                multidex,
-                mainDexList,
-                dexOptions,
-                processOutputHandler);
-    }
-
     public enum MainDexListOption {
-        DISABLE_ANNOTATION_RESOLUTION_WORKAROUND;
+        DISABLE_ANNOTATION_RESOLUTION_WORKAROUND,
     }
 
     public Set<String> createMainDexList(
@@ -1460,9 +1433,7 @@ public class AndroidBuilder {
         getDexByteCodeConverter().runDexer(builder, dexOptions, processOutputHandler);
 
         if (multiDex) {
-            File[] files = outFile.listFiles((file, name) -> {
-                return name.endsWith(DOT_DEX);
-            });
+            File[] files = outFile.listFiles((file, name) -> name.endsWith(DOT_DEX));
 
             if (files == null || files.length == 0) {
                 throw new RuntimeException("No dex files created at " + outFile.getAbsolutePath());
