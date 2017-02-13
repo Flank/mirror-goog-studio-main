@@ -57,12 +57,6 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-
-    externalNativeBuild {
-      cmake {
-        path "CMakeLists.txt"
-      }
-    }
 }
 """
         project.execute("clean", "assembleDebug",

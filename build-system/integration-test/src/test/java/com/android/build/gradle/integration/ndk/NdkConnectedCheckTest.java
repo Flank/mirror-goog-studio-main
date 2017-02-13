@@ -27,12 +27,14 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Test AndroidTest with NDK.
- */
+/** Test AndroidTest with NDK. */
+@Ignore(
+        "NDK Compile is being deprecated and external native build "
+                + "doesn't support assembleAndroidTest")
 public class NdkConnectedCheckTest {
 
     private static AndroidTestApp app = new HelloWorldJniApp();

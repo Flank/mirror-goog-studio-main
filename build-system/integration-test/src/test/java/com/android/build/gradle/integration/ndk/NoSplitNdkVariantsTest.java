@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
+import java.io.File;
 import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,48 +47,61 @@ public class NoSplitNdkVariantsTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(new HelloWorldJniApp())
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
-                + "apply plugin: 'com.android.application'\n"
-                + "\n"
-                + "android {\n"
-                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
-                + "    defaultConfig {\n"
-                + "        ndk {\n"
-                + "            moduleName 'hello-jni'\n"
-                + "        }\n"
-                + "    }\n"
-                + "    buildTypes {\n"
-                + "        release\n"
-                + "        debug {\n"
-                + "            jniDebuggable true\n"
-                + "        }\n"
-                + "    }\n"
-                + "    flavorDimensions 'abi'\n"
-                + "    productFlavors {\n"
-                + "        x86 {\n"
-                + "            ndk {\n"
-                + "                abiFilter 'x86'\n"
-                + "            }\n"
-                + "        }\n"
-                + "        arm {\n"
-                + "            ndk {\n"
-                + "                abiFilters 'armeabi-v7a', 'armeabi'\n"
-                + "            }\n"
-                + "        }\n"
-                + "        mips {\n"
-                + "            ndk {\n"
-                + "                abiFilter 'mips'\n"
-                + "            }\n"
-                + "        }\n"
-                + "    }\n"
-                + "}");
-
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path 'Android.mk'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    buildTypes {\n"
+                        + "        release\n"
+                        + "        debug {\n"
+                        + "            jniDebuggable true\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    flavorDimensions 'abi'\n"
+                        + "    productFlavors {\n"
+                        + "        x86 {\n"
+                        + "            ndk {\n"
+                        + "                abiFilter 'x86'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "        arm {\n"
+                        + "            ndk {\n"
+                        + "                abiFilters 'armeabi-v7a', 'armeabi'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "        mips {\n"
+                        + "            ndk {\n"
+                        + "                abiFilter 'mips'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}");
+        TestFileUtils.appendToFile(
+                new File(project.getBuildFile().getParentFile(), "Android.mk"),
+                "LOCAL_PATH := $(call my-dir)\n"
+                        + "include $(CLEAR_VARS)\n"
+                        + "\n"
+                        + "LOCAL_MODULE := hello-jni\n"
+                        + "LOCAL_SRC_FILES := src/main/jni/hello-jni.c\n"
+                        + "\n"
+                        + "include $(BUILD_SHARED_LIBRARY)");
     }
 
     @AfterClass
