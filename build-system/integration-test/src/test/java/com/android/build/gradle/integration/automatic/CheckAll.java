@@ -102,6 +102,7 @@ public class CheckAll {
                     "renderscriptNdk",
 
                     // These are all right:
+                    "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.
                     "duplicateNameImport", // Fails on purpose.
                     "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.
                     "instant-unit-tests", // Specific to testing instant run, not a "real" project.

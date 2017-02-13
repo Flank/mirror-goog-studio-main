@@ -53,7 +53,8 @@ public class NativeLibraryFactoryImpl implements NativeLibraryFactory {
             @NonNull VariantScope scope,
             @NonNull String toolchainName, @NonNull Abi abi) {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        if (!AndroidGradleOptions.useDeprecatedNdk(scope.getGlobalScope().getProject())) {
+        if (AndroidGradleOptions.isDeprecatedNdkCompileLeaseExpired(
+                scope.getGlobalScope().getProject())) {
             return Optional.empty();
         }
 

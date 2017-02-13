@@ -1,14 +1,11 @@
 apply plugin: 'com.android.library'
 
-project.ext['android.useDeprecatedNdk'] = true
-
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-
-    defaultConfig {
-        ndk {
-            moduleName "hello-jni"
+    externalNativeBuild {
+        ndkBuild {
+             path "Android.mk"
         }
     }
 }

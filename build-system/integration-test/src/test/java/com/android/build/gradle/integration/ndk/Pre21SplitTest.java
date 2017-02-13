@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.truth.MoreTruth;
+import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -35,35 +36,53 @@ import org.junit.experimental.categories.Category;
 public class Pre21SplitTest {
     @ClassRule public static GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(new HelloWorldJniApp())
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(),
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
                 "apply plugin: 'com.android.application'\n"
-                + "\n"
-                + "android {\n"
-                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "\n"
-                + "    generatePureSplits false\n"
-                + "\n"
-                + "    defaultConfig {\n"
-                + "        minSdkVersion 15\n"
-                + "        ndk {\n"
-                + "            moduleName \"hello-jni\"\n"
-                + "        }\n"
-                + "    }\n"
-                + "\n"
-                + "    splits {\n"
-                + "        abi {\n"
-                + "            enable true\n"
-                + "            reset()\n"
-                + "            include 'x86', 'armeabi-v7a', 'mips'\n"
-                + "        }\n"
-                + "    }\n"
-                + "}\n");
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "\n"
+                        + "    generatePureSplits false\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        ndk {\n"
+                        + "            moduleName \"hello-jni\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path \"Android.mk\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    splits {\n"
+                        + "        abi {\n"
+                        + "            enable true\n"
+                        + "            reset()\n"
+                        + "            include 'x86', 'armeabi-v7a', 'mips'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        TestFileUtils.appendToFile(
+                new File(project.getBuildFile().getParent(), "Android.mk"),
+                "LOCAL_PATH := $(call my-dir)\n"
+                        + "include $(CLEAR_VARS)\n"
+                        + "\n"
+                        + "LOCAL_MODULE := hello-jni\n"
+                        + "LOCAL_SRC_FILES := \\\n"
+                        + "  src/main/jni/hello-jni.c \\\n"
+                        + "\n"
+                        + "include $(BUILD_SHARED_LIBRARY)");
     }
 
     @AfterClass

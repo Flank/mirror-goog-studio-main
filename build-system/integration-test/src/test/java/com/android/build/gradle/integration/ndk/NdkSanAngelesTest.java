@@ -45,7 +45,6 @@ import org.junit.experimental.categories.Category;
 public class NdkSanAngelesTest {
     @ClassRule public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("ndkSanAngeles")
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create();
 
     public static AndroidProject model;

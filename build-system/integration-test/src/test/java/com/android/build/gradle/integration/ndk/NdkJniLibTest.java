@@ -31,7 +31,6 @@ public class NdkJniLibTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("ndkJniLib")
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create();
 
     @BeforeClass

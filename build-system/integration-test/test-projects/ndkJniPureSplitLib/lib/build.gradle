@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 
-project.ext['android.useDeprecatedNdk'] = true
-
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
