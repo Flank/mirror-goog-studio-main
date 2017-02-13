@@ -12,3 +12,13 @@ cc_binary(
         "//tools/base/profiler/native/dex/slicer",
     ],
 )
+
+py_test(
+    name = "dexter_tests",
+    srcs = ["dexter_tests.py"],
+    args = ["-cmd=$(location dexter)"],
+    data = [
+        "//tools/base/profiler/native/dex/dexter",
+        "//tools/base/profiler/native/testdata:dex",
+    ],
+)
