@@ -384,7 +384,7 @@ public final class GradleTestProject implements TestRule {
                 boolean testFailed = false;
                 try {
                     base.evaluate();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     testFailed = true;
                     throw e;
                 } finally {
@@ -914,6 +914,10 @@ public final class GradleTestProject implements TestRule {
     /** Returns the latest build result. */
     public GradleBuildResult getBuildResult() {
         return lastBuildResult;
+    }
+
+    public void setLastBuildResult(GradleBuildResult lastBuildResult) {
+        this.lastBuildResult = lastBuildResult;
     }
 
     /**
