@@ -20,6 +20,9 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import org.junit.Test;
 
@@ -37,6 +40,38 @@ public class UnitTest {
         for (Object key : properties.keySet()) {
             File file = new File(properties.get(key).toString());
             assertTrue(file.getPath(), file.exists());
+        }
+    }
+
+    @Test
+    public void idsAreConsistent() throws Exception {
+        Map<String, Integer> seenIds = new HashMap<>();
+        Class<?> mainRClass = com.android.tests.R.id.class;
+
+        for (Field field : android.support.v7.appcompat.R.id.class.getFields()) {
+            String name = field.getName();
+            int appCompatId = (Integer) field.get(null);
+            seenIds.put(name, appCompatId);
+
+            // Make sure the "main" R class uses the same numbers.
+            int idInMainClass = (Integer) mainRClass.getField(name).get(null);
+            assertEquals(name, appCompatId, idInMainClass);
+        }
+
+        for (Field field : android.support.constraint.R.id.class.getFields()) {
+            String name = field.getName();
+            int constraintId = (Integer) field.get(null);
+
+            // Make sure we are using fresh ints for fresh ids but reusing the same ints
+            // for ids with name clashing with main code (or other libs).
+            if (seenIds.containsKey(name)) {
+                assertEquals(name, (int) seenIds.get(name), constraintId);
+            } else {
+                assertFalse(String.format("%x", constraintId), seenIds.containsValue(constraintId));
+            }
+
+            int idInMainClass = (Integer) mainRClass.getField(name).get(null);
+            assertEquals(name, constraintId, idInMainClass);
         }
     }
 }
