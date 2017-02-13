@@ -6,7 +6,7 @@ cc_library(
         "dex_format.cc",
         "dex_ir.cc",
         "dex_utf8.cc",
-        "reader.cc",
+        "slicer.cc",
     ],
     hdrs = [
         "arrayview.h",
@@ -19,7 +19,7 @@ cc_library(
         "dex_leb128.h",
         "dex_utf8.h",
         "memview.h",
-        "reader.h",
+        "slicer.h",
     ],
     visibility = ["//visibility:public"],
 )
