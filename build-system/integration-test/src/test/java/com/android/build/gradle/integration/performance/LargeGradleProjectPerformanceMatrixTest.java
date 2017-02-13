@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.JackHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -65,10 +64,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     public static ProjectScenario[] getParameters() {
         return new ProjectScenario[]{
                 ProjectScenario.NATIVE_MULTIDEX,
-                // TODO: re-enable Jack scenarios
-                //ProjectScenario.JACK_NATIVE_MULTIDEX
                 ProjectScenario.LEGACY_MULTIDEX,
-                //ProjectScenario.JACK_LEGACY_MULTIDEX
         };
     }
 
@@ -133,16 +129,6 @@ public class LargeGradleProjectPerformanceMatrixTest {
                         "minSdkVersion : 21,");
                 break;
             case LEGACY_MULTIDEX:
-                break;
-            case JACK_NATIVE_MULTIDEX:
-                JackHelper.enableJack(project.getBuildFile());
-                TestFileUtils.searchAndReplace(
-                        project.file("dependencies.gradle"),
-                        "minSdkVersion( )*: \\d+,",
-                        "minSdkVersion : 21,");
-                break;
-            case JACK_LEGACY_MULTIDEX:
-                JackHelper.enableJack(project.getBuildFile());
                 break;
             default:
                 throw new IllegalArgumentException(
