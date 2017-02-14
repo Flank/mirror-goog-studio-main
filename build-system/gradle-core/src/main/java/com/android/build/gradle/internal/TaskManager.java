@@ -1139,9 +1139,6 @@ public abstract class TaskManager {
                 .getFileCollection()
                 .builtBy(splitsDiscoveryAndroidTask.getName());
 
-        ConfigurableFileCollection processedResources = project.files(resPackageOutputFolder);
-        scope.addTaskOutput(VariantScope.TaskOutputType.PROCESSED_RES, processedResources);
-
         AndroidTask<ProcessAndroidResources> processAndroidResources =
                 androidTasks.create(
                         tasks,
@@ -1149,12 +1146,14 @@ public abstract class TaskManager {
                                 scope,
                                 symbolLocation,
                                 resPackageOutputFolder,
-                                processedResources,
                                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                                 mergeType,
                                 baseName));
-        processedResources.builtBy(processAndroidResources.getName());
 
+        scope.addTaskOutput(
+                VariantScope.TaskOutputType.PROCESSED_RES,
+                resPackageOutputFolder,
+                processAndroidResources.getName());
         scope.setProcessResourcesTask(processAndroidResources);
 
         // FIX ME : replace with FileCollection
@@ -1225,7 +1224,7 @@ public abstract class TaskManager {
 
         List<Split> fullSplits =
                 variantData.getSplitScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
-        if (fullSplits.size() != 0) {
+        if (!fullSplits.isEmpty()) {
             throw new RuntimeException(
                     "In release 21 and later, there cannot be full splits and pure splits, "
                             + "found "
