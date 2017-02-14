@@ -82,6 +82,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:build-tools/24.0.3",
     "//prebuilts/studio/sdk:build-tools/minimum",
     "//prebuilts/studio/sdk:cmake",
+    "//prebuilts/studio/sdk:constraint-layout_latest",
     "//prebuilts/studio/sdk:databinding_latest",
     "//prebuilts/studio/sdk:espresso_latest",
     "//prebuilts/studio/sdk:gms_latest",
