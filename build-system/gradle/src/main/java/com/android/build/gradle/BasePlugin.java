@@ -703,6 +703,11 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 split.setVersionName(versionName);
             }
 
+            @Override
+            public void setOutputFileName(String outputFileName) {
+                split.setOutputFileName(outputFileName);
+            }
+
             @NonNull
             @Override
             public List<FilterData> getFilters() {

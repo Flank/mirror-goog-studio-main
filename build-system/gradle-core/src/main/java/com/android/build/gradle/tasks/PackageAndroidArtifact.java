@@ -326,7 +326,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         }
 
         FileUtils.mkdirs(getOutputDirectory());
-        File outputFile = outputFileProvider.getOutputFile(split);
+        // TO DO : move ALL output file name calculations to Split.
+        String splitOutputFileName = split.getOutputFileName();
+        File outputFile =
+                splitOutputFileName == null
+                        ? outputFileProvider.getOutputFile(split)
+                        : new File(outputDirectory, splitOutputFileName);
+
         /*
          * Additionally, make sure we have no previous package, if it exists.
          */
@@ -622,7 +628,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         cacheByPath,
                         cacheUpdates);
 
-        File outputFile = outputFileProvider.getOutputFile(split);
+        // TO DO : move ALL output file name calculations to Split.
+        String splitOutputFileName = split.getOutputFileName();
+        File outputFile =
+                splitOutputFileName == null
+                        ? outputFileProvider.getOutputFile(split)
+                        : new File(outputDirectory, splitOutputFileName);
 
         doTask(
                 split,

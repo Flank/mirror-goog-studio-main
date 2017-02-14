@@ -20,7 +20,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -33,6 +35,7 @@ import java.util.Properties;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -46,20 +49,31 @@ public class GenerateTestConfig extends DefaultTask {
     Path assetsDirectory;
     Path sdkHome;
     Path generatedJavaResourcesDirectory;
-    Path mergeManifest;
+    SplitScope splitScope;
+    FileCollection manifests;
+
+    @InputFiles
+    FileCollection getManifests() {
+        return manifests;
+    }
 
     @TaskAction
     public void generateTestConfig() throws IOException {
         checkNotNull(resourcesDirectory);
         checkNotNull(assetsDirectory);
         checkNotNull(sdkHome);
-        checkNotNull(mergeManifest);
+        splitScope.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests);
+        SplitScope.SplitOutput splitOutput =
+                splitScope.getOutput(
+                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                        splitScope.getMainSplit());
+        checkNotNull(splitOutput);
 
         Properties properties = new Properties();
         properties.put("android_sdk_home", sdkHome.toAbsolutePath().toString());
         properties.put("android_merged_resources", resourcesDirectory.toAbsolutePath().toString());
         properties.put("android_merged_assets", assetsDirectory.toAbsolutePath().toString());
-        properties.put("android_merged_manifest", mergeManifest.toAbsolutePath().toString());
+        properties.put("android_merged_manifest", splitOutput.getOutputFile().toPath().toString());
 
         Path output = getOutputPath();
         Files.createDirectories(output.getParent());
@@ -135,13 +149,9 @@ public class GenerateTestConfig extends DefaultTask {
             task.generatedJavaResourcesDirectory = scope.getGeneratedJavaResourcesDir().toPath();
             task.resourcesDirectory = testedScope.getMergeResourcesOutputDir().toPath();
             task.assetsDirectory = assets.getSingleFile().toPath();
-            task.mergeManifest =
-                    testedScope
-                            .getVariantData()
-                            .getMainOutput()
-                            .getScope()
-                            .getManifestOutputFile()
-                            .toPath();
+            task.manifests =
+                    testedScope.getOutputs(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+            task.splitScope = testedScope.getSplitScope();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
         }

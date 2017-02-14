@@ -45,6 +45,7 @@ public abstract class Split implements VariantOutput, Serializable {
     private String versionName;
     private int versionCode;
     private AtomicBoolean enabled = new AtomicBoolean(true);
+    private String outputFileName;
 
     @NonNull
     @Override
@@ -94,6 +95,10 @@ public abstract class Split implements VariantOutput, Serializable {
         this.versionName = versionName;
     }
 
+    public void setOutputFileName(String outputFileName) {
+        this.outputFileName = outputFileName;
+    }
+
     @Override
     public int getVersionCode() {
         return versionCode;
@@ -101,6 +106,11 @@ public abstract class Split implements VariantOutput, Serializable {
 
     public String getVersionName() {
         return versionName;
+    }
+
+    @Nullable
+    public String getOutputFileName() {
+        return outputFileName;
     }
 
     @Override
@@ -162,12 +172,13 @@ public abstract class Split implements VariantOutput, Serializable {
         }
         Split that = (Split) o;
         return versionCode == that.versionCode
+                && Objects.equals(outputFileName, that.outputFileName)
                 && Objects.equals(versionName, that.versionName)
                 && Objects.equals(enabled.get(), that.enabled.get());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(versionCode, enabled.get(), versionName);
+        return Objects.hash(versionCode, enabled.get(), versionName, outputFileName);
     }
 }

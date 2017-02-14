@@ -15,5 +15,8 @@ android {
 }
 
 android.applicationVariants.all { variant ->
-    variant.outputs[0].outputFile = file("$project.buildDir/${variant.name}.apk")
+    variant.registerSplitCustomizer { split ->
+        // set the versionCode on the output.
+        split.outputFileName = "${variant.name}.apk"
+    }
 }
