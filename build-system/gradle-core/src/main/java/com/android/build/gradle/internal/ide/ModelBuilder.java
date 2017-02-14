@@ -73,7 +73,6 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.ide.common.build.Split;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -169,10 +168,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             modelLevel = modelLevelInt;
         }
         modelWithFullDependency = AndroidGradleOptions.buildModelWithFullDependencies(project);
-
-        // FIXME: support model with full dependency
-        Preconditions.checkState(
-                !modelWithFullDependency, "modelWithFullDependency is not yet implemented");
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
@@ -378,7 +373,8 @@ public class ModelBuilder implements ToolingModelBuilder {
             dependencies = DependenciesConverter.getEmpty();
 
             dependencyGraphs =
-                    ArtifactDependencyGraph.createLevel2DependencyGraph(variantData.getScope());
+                    ArtifactDependencyGraph.createLevel2DependencyGraph(
+                            variantData.getScope(), modelWithFullDependency);
         } else {
             dependencies = ArtifactDependencyGraph.createDependencies(variantData.getScope());
 
@@ -610,7 +606,9 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
             dependencies = DependenciesConverter.getEmpty();
 
-            dependencyGraphs = ArtifactDependencyGraph.createLevel2DependencyGraph(scope);
+            dependencyGraphs =
+                    ArtifactDependencyGraph.createLevel2DependencyGraph(
+                            scope, modelWithFullDependency);
         } else {
             dependencies = ArtifactDependencyGraph.createDependencies(scope);
 
