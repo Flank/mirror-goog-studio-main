@@ -1,33 +1,16 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-
-configurations {
-    provided
-}
-
-sourceSets {
-    main { compileClasspath += configurations.provided }
-}
-
-
 dependencies {
-    provided project(":base:builder")
-    provided project(":base:builder-test-api")
-    provided project(":base:gradle-core")
-    provided project(":base:gradle-experimental")
-    provided libs.guava
-}
-
-javadoc {
-    classpath += configurations.provided
+    compile gradleApi()
+    compileOnly project(":base:builder")
+    compileOnly project(":base:builder-test-api")
+    compileOnly project(":base:gradle-core")
+    compileOnly project(":base:gradle-experimental")
+    compileOnly libs.guava
 }
 
 group = 'com.android.tools.internal.build.test'
 archivesBaseName = 'devicepool'
 version = '0.1'
 
-// set classpath with provided files.
-tasks.withType(Javadoc) {
-    classpath += configurations.provided
-}
