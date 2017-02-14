@@ -60,6 +60,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
+                gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
@@ -202,12 +203,15 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
+            GradleBuildResult result =
+                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+            lastBuildResultConsumer.accept(result);
             if (isExpectingFailure && failure == null) {
                 throw new AssertionError("Expecting build to fail");
             } else if (!isExpectingFailure && failure != null) {
                 throw failure;
             }
-            return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+            return result;
         }
     }
 
