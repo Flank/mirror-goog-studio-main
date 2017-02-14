@@ -81,6 +81,11 @@ java_test(
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        # Need to put this on the classpath before TestRunner_deploy.jar which contains
+        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
+        "//tools/base/third_party:junit_junit",
+    ],
     deps = [
         ":builder",
         "//tools/base/annotations",
