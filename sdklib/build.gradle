@@ -178,7 +178,7 @@ task initSdkForConnectedTests(type: JavaExec) {
     main = "com.android.sdklib.tool.SdkManagerCli"
 
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
-            '--channel=3',
+            '--channel=0',
             '--verbose',
             'system-images;android-24;default;x86',
             'system-images;android-23;default;x86',
