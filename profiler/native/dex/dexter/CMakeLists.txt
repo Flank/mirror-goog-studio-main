@@ -4,6 +4,8 @@ add_executable(dexter
 
 include_directories ("${PROJECT_SOURCE_DIR}/dex")
 
+set(LINK_DEPENDENCIES zlibstatic)
+
 if(ANDROID)
   set(LINK_DEPENDENCIES ${LINK_DEPENDENCIES}
                         gnustl_static)

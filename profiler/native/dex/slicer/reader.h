@@ -56,9 +56,10 @@ class Reader {
   const dex::MapList* DexMapList() const;
 
   // IR creation interface
-  std::shared_ptr<ir::DexFile> GetIR() const { return dex_ir_; }
-  void CreateFullIR();
-  void CreateClassIR(dex::u4 index);
+  std::shared_ptr<ir::DexFile> GetIr() const { return dex_ir_; }
+  void CreateFullIr();
+  void CreateClassIr(dex::u4 index);
+  dex::u4 FindClassIndex(const char* class_descriptor) const;
 
  private:
   // Internal access to IR nodes for indexed .dex structures

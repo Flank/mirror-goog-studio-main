@@ -17,6 +17,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 
 // Definitions for .dex file format structures and helpers.
 //
@@ -278,5 +279,8 @@ struct AnnotationItem {
 
 // Compute DEX checksum
 u4 ComputeChecksum(const Header* header);
+
+// Converts a type descriptor to a human-readable declaration
+std::string DescriptorToDecl(const char* desc);
 
 }  // namespace dex

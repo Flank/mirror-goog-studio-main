@@ -15,8 +15,10 @@
  */
 
 #include "dex_format.h"
+#include "common.h"
 
 #include <zlib.h>
+#include <sstream>
 
 namespace dex {
 
@@ -29,6 +31,54 @@ u4 ComputeChecksum(const Header* header) {
 
   return static_cast<u4>(
       adler32(adler, start + nonSum, header->file_size - nonSum));
+}
+
+// Returns the human-readable name for a primitive type
+static const char* PrimitiveTypeName(char typeChar) {
+  switch (typeChar) {
+    case 'B': return "byte";
+    case 'C': return "char";
+    case 'D': return "double";
+    case 'F': return "float";
+    case 'I': return "int";
+    case 'J': return "long";
+    case 'S': return "short";
+    case 'V': return "void";
+    case 'Z': return "boolean";
+  }
+  CHECK(!"unexpected type");
+  return nullptr;
+}
+
+// Converts a type descriptor to human-readable "dotted" form.  For
+// example, "Ljava/lang/String;" becomes "java.lang.String", and
+// "[I" becomes "int[]".
+std::string DescriptorToDecl(const char* desc) {
+  std::stringstream ss;
+
+  int array_dimensions = 0;
+  while (*desc == '[') {
+    ++array_dimensions;
+    ++desc;
+  }
+
+  if (*desc == 'L') {
+    for (++desc; *desc != ';'; ++desc) {
+      CHECK(*desc != '\0');
+      ss << (*desc == '/' ? '.' : *desc);
+    }
+  } else {
+    ss << PrimitiveTypeName(*desc);
+  }
+
+  CHECK(desc[1] == '\0');
+
+  // add the array brackets
+  for (int i = 0; i < array_dimensions; ++i) {
+    ss << "[]";
+  }
+
+  return ss.str();
 }
 
 }  // namespace dex

@@ -42,7 +42,10 @@ class Dexter {
   char** argv_ = nullptr;
 
   // parsed options
+  const char* extract_class_ = nullptr;
+  bool stats_ = false;
   bool verbose_ = false;
+  bool list_classes_ = false;
   const char* out_dex_filename_ = nullptr;
   const char* dex_filename_ = nullptr;
   bool print_map_ = false;
