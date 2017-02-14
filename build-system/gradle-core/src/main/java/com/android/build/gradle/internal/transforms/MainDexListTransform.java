@@ -29,6 +29,8 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.dexing.RuntimeAnnotatedClassCollector;
+import com.android.builder.dexing.RuntimeAnnotatedClassDetector;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.multidex.MainDexListBuilder;
@@ -246,34 +248,39 @@ public class MainDexListTransform extends BaseProguardAction {
             @NonNull File jarOfRoots,
             @Nullable File userMainDexKeepFile,
             boolean keepRuntimeAnnotatedClasses)
-            throws ProcessException, IOException {
+            throws ProcessException, IOException, InterruptedException {
+        ImmutableSet.Builder<String> mainDexClasses = ImmutableSet.builder();
+
         // manifest components plus immediate dependencies must be in the main dex.
-        ImmutableSet<String> mainDexClasses =
-                callDx(allClasses, jarOfRoots, keepRuntimeAnnotatedClasses);
-        if (userMainDexKeepFile == null) {
-            return mainDexClasses;
+        mainDexClasses.addAll(callDx(allClasses, jarOfRoots));
+
+        if (userMainDexKeepFile != null) {
+            mainDexClasses.addAll(Files.readAllLines(userMainDexKeepFile.toPath(), Charsets.UTF_8));
         }
 
-        return ImmutableSet.<String>builder()
-                .addAll(mainDexClasses)
-                .addAll(Files.readAllLines(userMainDexKeepFile.toPath(), Charsets.UTF_8))
-                .build();
+        if (keepRuntimeAnnotatedClasses) {
+            RuntimeAnnotatedClassCollector collector =
+                    new RuntimeAnnotatedClassCollector(
+                            RuntimeAnnotatedClassDetector::hasRuntimeAnnotations);
+            mainDexClasses.addAll(
+                    collector.collectClasses(
+                            allClasses.stream().map(File::toPath).collect(Collectors.toList())));
+        }
+
+        return mainDexClasses.build();
     }
 
     @NonNull
     private static ImmutableSet<String> callDx(
-            @NonNull Collection<File> allClasses,
-            @NonNull File jarOfRoots,
-            boolean keepRuntimeAnnotatedClasses)
-            throws IOException {
+            @NonNull Collection<File> allClasses, @NonNull File jarOfRoots) throws IOException {
         String pathList =
                 allClasses
                         .stream()
                         .map(File::getAbsolutePath)
                         .collect(Collectors.joining(File.pathSeparator));
+        // RuntimeAnnotatedClassDetector replaces MainDexListBuilder's keepAnnotated.
         MainDexListBuilder builder =
-                new MainDexListBuilder(
-                        keepRuntimeAnnotatedClasses, jarOfRoots.getAbsolutePath(), pathList);
+                new MainDexListBuilder(false, jarOfRoots.getAbsolutePath(), pathList);
         Set<String> mainDexList =
                 builder.getMainDexList()
                         .stream()
