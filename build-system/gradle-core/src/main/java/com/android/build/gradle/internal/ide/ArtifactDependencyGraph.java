@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FD_JARS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
@@ -102,17 +103,24 @@ public class ArtifactDependencyGraph {
         return map;
     }
 
-    private static String getVariant(ResolvedArtifactResult artifact) {
-        return artifact.getVariant().getAttributes().getAttribute(VariantAttr.ATTRIBUTE).getName();
+
+    @Nullable
+    private static String getVariant(@NonNull ResolvedArtifactResult artifact) {
+        VariantAttr variantAttr =
+                artifact.getVariant().getAttributes().getAttribute(VariantAttr.ATTRIBUTE);
+        return variantAttr == null ? null : variantAttr.getName();
     }
 
-    private static String computeAddress(ResolvedArtifactResult artifact) {
+    private static String computeAddress(@NonNull ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         if (id instanceof ProjectComponentIdentifier) {
-            return (((ProjectComponentIdentifier) id).getProjectPath()
-                            + "::"
-                            + getVariant(artifact))
-                    .intern();
+            String variant = getVariant(artifact);
+            if (variant == null) {
+                return ((ProjectComponentIdentifier) id).getProjectPath().intern();
+            } else {
+                return (((ProjectComponentIdentifier) id).getProjectPath() + "::" + variant)
+                        .intern();
+            }
         } else if (id instanceof ModuleComponentIdentifier
                 || Files.getFileExtension(artifact.getFile().getName()).equals(EXT_JAR)) {
             MavenCoordinates coordinates =
@@ -227,7 +235,7 @@ public class ArtifactDependencyGraph {
                                 new File(
                                         artifact.getFile(),
                                         FD_JARS), // TODO: This should not be hard-coded.
-                                null, //@Nullable String variant,   FIXME: Waiting for Gradle to provide a way to get variant information.
+                                getVariant(artifact),
                                 false, /* dependencyItem.isProvided() */
                                 false, /* dependencyItem.isSkipped() */
                                 ImmutableList.of(), /* androidLibraries */
