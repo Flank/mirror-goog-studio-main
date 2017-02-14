@@ -69,7 +69,7 @@ android {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk(GradleTestProject.DefaultApkType.DEBUG, "debug_armeabi-v7a", "free")).hasVersionCode(123)
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
         assertThat(app.getApk("mips", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
         assertThat(app.getApk("x86", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
         assertThat(app.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "paid")).hasVersionCode(123)
