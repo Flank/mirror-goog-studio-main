@@ -42,7 +42,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -66,6 +66,25 @@ public class BasicTest2 {
             .fromTestProject("basic")
             .create();
 
+    private static final Set<String> coordinates =
+            ImmutableSet.of(
+                    "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION + "@aar",
+                    "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.google.android.gms:play-services-tasks:" + PLAY_SERVICES_VERSION + "@aar",
+                    "com.google.android.gms:play-services-basement:"
+                            + PLAY_SERVICES_VERSION
+                            + "@aar",
+                    "com.google.android.gms:play-services-basement:"
+                            + PLAY_SERVICES_VERSION
+                            + "@aar",
+                    "com.android.support:support-fragment:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-media-compat:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-core-ui:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-core-utils:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-compat:" + SUPPORT_LIB_VERSION + "@aar");
+
+
     @Rule
     public Adb adb = new Adb();
 
@@ -83,7 +102,7 @@ public class BasicTest2 {
     }
 
     @Test
-    public void checkVariantDetails() throws Exception {
+    public void checkDebugVariant() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         AndroidProject model = modelContainer.getOnlyModel();
 
@@ -145,18 +164,14 @@ public class BasicTest2 {
         DependencyGraphs compileGraph = debugMainInfo.getDependencyGraphs();
         assertThat(compileGraph).named("debug compile graph").isNotNull();
 
-        assertThat(helper.on(compileGraph).withType(JAVA).asList())
+        assertThat(helper.on(compileGraph).withType(JAVA).mapTo(COORDINATES))
                 .named("debug compile java libs")
-                .isEmpty();
+                .containsExactly(
+                        "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(compileGraph).withType(ANDROID);
 
-        Map<String, Integer> coordinates = ImmutableMap.of(
-                "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION + "@aar", 0,
-                "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar", 0,
-                "com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar", 0);
-
-        Set<String> coordinateCopies = Sets.newHashSet(coordinates.keySet());
+        Set<String> coordinateCopies = Sets.newHashSet(coordinates);
 
         assertThat(androidItems.mapTo(COORDINATES))
                 .named("debug compile android libs")
@@ -164,15 +179,9 @@ public class BasicTest2 {
 
         for (Library androidLibrary : androidItems.asLibraries()) {
             assertThat(androidLibrary).isNotNull();
-            assertThat(androidLibrary.getArtifact())
-                    .named("Artifact for " + androidLibrary.getArtifactAddress())
-                    .isNotNull();
             assertThat(androidLibrary.getFolder())
                     .named("Folder for " + androidLibrary.getArtifactAddress())
-                    .isNotNull();
-            assertThat(androidLibrary.getArtifactAddress())
-                    .named("coordinates for " + androidLibrary.getArtifactAddress())
-                    .isIn(coordinateCopies);
+                    .isDirectory();
             coordinateCopies.remove(androidLibrary.getArtifactAddress());
         }
 
@@ -248,6 +257,14 @@ public class BasicTest2 {
 
         resValues = mergedFlavor.getResValues();
         testMap(resValues, "mergedFlavor resValues", ClassField::getValue, "foo", "foo");
+    }
+
+    @Test
+    public void checkReleaseVariant() throws Exception {
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+        AndroidProject model = modelContainer.getOnlyModel();
+
+        Collection<Variant> variants = model.getVariants();
 
         // release variant, not tested.
         Variant releaseVariant = ModelHelper.getVariant(variants, "release");
@@ -298,12 +315,13 @@ public class BasicTest2 {
         DependencyGraphs releaseGraph = relMainInfo.getDependencyGraphs();
         assertThat(releaseGraph).named("release compile graph").isNotNull();
 
-        assertThat(helper.on(releaseGraph).withType(JAVA).asList())
+        assertThat(helper.on(releaseGraph).withType(JAVA).mapTo(COORDINATES))
                 .named("release compile java libs")
-                .isEmpty();
+                .containsExactly(
+                        "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar");
 
-        androidItems = helper.on(releaseGraph).withType(ANDROID);
-        coordinateCopies = Sets.newHashSet(coordinates.keySet());
+        LibraryGraphHelper.Items androidItems = helper.on(releaseGraph).withType(ANDROID);
+        Set<String> coordinateCopies = Sets.newHashSet(coordinates);
 
         assertThat(androidItems.mapTo(COORDINATES))
                 .named("release compile android libs")
@@ -311,9 +329,6 @@ public class BasicTest2 {
 
         for (Library androidLibrary : androidItems.asLibraries()) {
             assertThat(androidLibrary).isNotNull();
-            assertThat(androidLibrary.getArtifact())
-                    .named("Artifact for " + androidLibrary.getArtifactAddress())
-                    .isNotNull();
             assertThat(androidLibrary.getFolder())
                     .named("Folder for " + androidLibrary.getArtifactAddress())
                     .isNotNull();
@@ -321,9 +336,9 @@ public class BasicTest2 {
                     .named("coordinates for " + androidLibrary.getArtifactAddress())
                     .isIn(coordinateCopies);
             coordinateCopies.remove(androidLibrary.getArtifactAddress());
-            assertThat(androidLibrary.getLocalJars().size())
+            assertThat(androidLibrary.getLocalJars())
                     .named("local jar count for " + androidLibrary.getArtifactAddress())
-                    .isEqualTo(coordinates.get(androidLibrary.getArtifactAddress()));
+                    .isEmpty();
         }
     }
 
