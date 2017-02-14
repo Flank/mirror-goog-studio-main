@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.SplitScope;
@@ -109,7 +108,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private static final Logger LOG = Logging.getLogger(ProcessAndroidResources.class);
 
-    private File resDir;
+    private Supplier<File> resDir;
 
     private String buildTargetAbi;
     private Set<String> supportedAbis;
@@ -161,7 +160,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     private String buildTargetDensity;
 
     private File resPackageOutputFolder;
-    private FileCollection outputProcessedResources;
 
     private String projectBaseName;
 
@@ -175,7 +173,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @NonNull
     @InputDirectory
     public File getResDir() {
-        return resDir;
+        return resDir.get();
     }
 
     @Input
@@ -286,7 +284,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     VariantScope.TaskOutputType.PROCESSED_RES,
                                     split,
                                     splitOutputFile);
-                            outputProcessedResources.plus(getProject().files(splitOutputFile));
                             return null;
                         });
             }
@@ -608,7 +605,6 @@ public class ProcessAndroidResources extends IncrementalTask {
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
         @NonNull private final File resPackageOutputFolder;
-        @NonNull private final FileCollection outputProcessedResources;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         private final TaskManager.MergeType mergeType;
         private final String baseName;
@@ -617,7 +613,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
                 @NonNull File resPackageOutputFolder,
-                @NonNull FileCollection outputProcessedResources,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String baseName) {
@@ -626,7 +621,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             this.resPackageOutputFolder = resPackageOutputFolder;
             this.generateLegacyMultidexMainDexProguardRules = generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
-            this.outputProcessedResources = outputProcessedResources;
             this.mergeType = mergeType;
         }
 
@@ -653,7 +647,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
-            processResources.outputProcessedResources = outputProcessedResources;
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -735,10 +728,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             // FIX ME : we should not have both a file collection and a resDir plus, we should
             // express the dependency on the databinding task through a file collection.
             processResources.mergedResources = variantScope.getOutputs(mergeType.getOutputType());
-            ConventionMappingHelper.map(
-                    processResources,
-                    "resDir",
-                    variantScope::getFinalResourcesDir);
+            processResources.resDir = TaskInputHelper.memoize(variantScope::getFinalResourcesDir);
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -759,8 +749,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setAtomResourcePackages(
                     variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG));
 
-            ConventionMappingHelper.map(
-                    processResources, "libInfoFile", variantScope::getLibInfoFile);
+            processResources.libInfoFile = variantScope.getLibInfoFile();
             processResources.projectBaseName = baseName;
             processResources.buildTargetAbi = AndroidGradleOptions.getBuildTargetAbi(project);
             processResources.supportedAbis = config.getSupportedAbis();
