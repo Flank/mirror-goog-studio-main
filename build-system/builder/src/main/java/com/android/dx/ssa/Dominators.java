@@ -72,7 +72,7 @@ public final class Dominators {
         this.postdom = postdom;
         this.blocks = meth.getBlocks();
         this.info = new DFSInfo[blocks.size() + 2];
-        this.vertex = new ArrayList<SsaBasicBlock>();
+        this.vertex = new ArrayList<SsaBasicBlock>(blocks.size() + 2);
     }
 
     /**
