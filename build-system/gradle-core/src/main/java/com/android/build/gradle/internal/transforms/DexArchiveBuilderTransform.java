@@ -76,23 +76,22 @@ public class DexArchiveBuilderTransform extends Transform {
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
     @NonNull private final DexOptions dexOptions;
-
     @NonNull private final ErrorReporter errorReporter;
-
-    @Nullable private final FileCache buildCache;
-
+    @Nullable private final FileCache userLevelCache;
+    @Nullable private final FileCache projectLevelCache;
     private boolean instantRunMode;
-
     @NonNull private final WaitableExecutor<Void> executor;
 
     public DexArchiveBuilderTransform(
             @NonNull DexOptions dexOptions,
             @NonNull ErrorReporter errorReporter,
-            @Nullable FileCache buildCache,
+            @Nullable FileCache userLevelCache,
+            @Nullable FileCache projectLevelCache,
             boolean instantRunMode) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
-        this.buildCache = buildCache;
+        this.userLevelCache = userLevelCache;
+        this.projectLevelCache = projectLevelCache;
         this.instantRunMode = instantRunMode;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
     }
@@ -288,8 +287,13 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull Set<String> hashes,
             @NonNull ProcessOutput processOutput)
             throws Exception {
-        FileCache buildCacheToUse =
-                PreDexTransform.getBuildCache(input.getFile(), isExternalLib(input), buildCache);
+        // use only for external libs
+        FileCache userCache =
+                PreDexTransform.getBuildCache(
+                        input.getFile(), isExternalLib(input), userLevelCache);
+        // use only for jars
+        FileCache projectCache = input.getFile().isFile() ? projectLevelCache : null;
+
         DexArchiveBuilderTransformCallable converter =
                 new DexArchiveBuilderTransformCallable(
                         input.getFile().toPath(),
@@ -298,7 +302,8 @@ public class DexArchiveBuilderTransform extends Transform {
                         preDexFile,
                         hashes,
                         processOutput,
-                        buildCacheToUse,
+                        userCache,
+                        projectCache,
                         dexOptions);
         executor.execute(converter);
     }
