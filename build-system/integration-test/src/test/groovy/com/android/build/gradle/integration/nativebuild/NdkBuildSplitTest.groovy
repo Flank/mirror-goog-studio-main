@@ -115,9 +115,9 @@ android {
 
     @Test
     void "check apk content"() {
-        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "current")).hasVersionCode(3000123);
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "current")).hasVersionCode(3100123);
         assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "current")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(project.getApk("mips64", GradleTestProject.DefaultApkType.DEBUG, "current")).hasVersionCode(3000123);
+        assertThatApk(project.getApk("mips64", GradleTestProject.DefaultApkType.DEBUG, "current")).hasVersionCode(3400123);
         assertThatApk(project.getApk("mips64", GradleTestProject.DefaultApkType.DEBUG, "current")).contains("lib/mips64/libhello-jni.so");
     }
 

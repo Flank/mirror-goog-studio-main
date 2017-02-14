@@ -170,6 +170,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File libInfoFile;
 
+    private VariantScope variantScope;
+
     @NonNull
     @InputDirectory
     public File getResDir() {
@@ -319,6 +321,11 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     Split configurationSplit =
                                             splitFactory.addConfigurationSplit(
                                                     filterType, filterValue);
+
+                                    variantScope
+                                            .getVariantData()
+                                            .customizeSplit(configurationSplit);
+
                                     // in case we generated pure splits, we may have more than one resource AP_ in
                                     // the output directory. reconcile with the splits list and save it for downstream
                                     // tasks.
@@ -708,6 +715,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         variantScope.getManifestKeepListProguardFile());
             }
 
+            processResources.variantScope = variantScope;
             processResources.splitScope = variantData.getSplitScope();
             processResources.splitFactory = variantData.getSplitFactory();
             processResources.originalApplicationId =

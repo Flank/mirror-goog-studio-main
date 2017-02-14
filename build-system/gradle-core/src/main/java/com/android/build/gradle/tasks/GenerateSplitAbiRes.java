@@ -55,7 +55,10 @@ public class GenerateSplitAbiRes extends BaseTask {
     private String applicationId;
     private String outputBaseName;
 
-    // FIXME : make those overridable.
+    // these are the default values set in the variant's configuration, although they
+    // are not directly use in this task, they will be used when versionName and versionCode
+    // is not changed by the user's scripts. Therefore, if those values change, this task
+    // should be considered out of date.
     private String versionName;
     private int versionCode;
 
@@ -116,6 +119,10 @@ public class GenerateSplitAbiRes extends BaseTask {
         splitScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
         for (String split : getSplits()) {
             Split abiSplit = splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
+
+            // call user's script for the newly discovered ABI pure split.
+            variantScope.getVariantData().customizeSplit(abiSplit);
+
             File resPackageFile = getOutputFileForSplit(split);
 
             File tmpDirectory = new File(outputDirectory, getOutputBaseName());
@@ -123,9 +130,9 @@ public class GenerateSplitAbiRes extends BaseTask {
 
             File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
 
-            String versionNameToUse = getVersionName();
+            String versionNameToUse = abiSplit.getVersionName();
             if (versionNameToUse == null) {
-                versionNameToUse = String.valueOf(getVersionCode());
+                versionNameToUse = String.valueOf(abiSplit.getVersionCode());
             }
 
             try (OutputStreamWriter fileWriter =
@@ -146,7 +153,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                                 + applicationId
                                 + "\"\n"
                                 + "      android:versionCode=\""
-                                + getVersionCode()
+                                + abiSplit.getVersionCode()
                                 + "\"\n"
                                 + "      android:versionName=\""
                                 + versionNameToUse
@@ -222,7 +229,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateSplitAbiRes.setVariantName(config.getFullName());
 
-            // FIXME : make those overridable.
+            // not used directly, but considered as input for the task.
             generateSplitAbiRes.versionCode = config.getVersionCode();
             generateSplitAbiRes.versionName = config.getVersionName();
 
