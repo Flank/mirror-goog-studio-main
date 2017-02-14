@@ -83,12 +83,12 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_USE_DEX_ARCHIVE = "android.useDexArchive";
 
     /**
-     * Build cache is used for dependency resolution, and when pre-dexing. Setting this property
-     * to {@code false} will disable it when pre-dexing external dependencies. This is useful for
-     * e.g. plugin performance benchmarks.
+     * Build cache is used for dependency resolution, and for keeping the intermediate artifacts,
+     * such as pre-dexed libraries. Setting this property to {@code false} disables it, which is
+     * useful for e.g. performance benchmarks.
      */
-    public static final String PROPERTY_ENABLE_PREDEX_BUILD_CACHE =
-            "android.enabledPreDexBuildCache";
+    public static final String ENABLE_INTERMEDIATE_ARTIFACTS_CACHE =
+            "android.enableIntermediateArtifactsCache";
 
     /**
      * Set to true to delay dependency resolution to task execution.
@@ -357,8 +357,8 @@ public class AndroidGradleOptions {
         return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
     }
 
-    public static boolean isPreDexBuildCacheEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_PREDEX_BUILD_CACHE, true);
+    public static boolean isIntermediateArtifactsCacheEnabled(@NonNull Project project) {
+        return getBoolean(project, ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, true);
     }
 
     @Nullable

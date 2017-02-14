@@ -946,6 +946,9 @@ public class FileCache {
 
         /** Pre-dexing library to a dex archive. */
         PREDEX_LIBRARY_TO_DEX_ARCHIVE,
+
+        /** Desugar library. */
+        DESUGAR_LIBRARY,
     }
 
     /**

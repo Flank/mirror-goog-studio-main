@@ -22,7 +22,7 @@ import com.android.dex.Dex;
 import com.android.dex.DexIndexOverflowException;
 import com.android.dx.merge.DexMerger;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
@@ -207,7 +207,7 @@ public class DexArchiveMerger {
                 // check if this should go to the main dex
                 Path classFile =
                         DexArchiveEntry.withClassExtension(entry.getRelativePathInArchive());
-                String unixClassFile = FileUtils.toSystemIndependentPath(classFile);
+                String unixClassFile = PathUtils.toSystemIndependentPath(classFile);
                 if (mainDexClasses.contains(unixClassFile)) {
                     toMergeInMain.add(dex);
                     continue;

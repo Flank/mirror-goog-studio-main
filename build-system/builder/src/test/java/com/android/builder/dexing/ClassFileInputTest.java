@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
@@ -176,7 +177,7 @@ public class ClassFileInputTest {
         ClassFileInputs.fromPath(rootPath.toPath(), e -> true)
                 .forEach(
                         entry -> {
-                            String path = FileUtils.toSystemIndependentPath(entry.relativePath);
+                            String path = PathUtils.toSystemIndependentPath(entry.relativePath);
                             filesRead.add(path);
                         });
         assertThat(filesRead).containsExactlyElementsIn(fileNames);
