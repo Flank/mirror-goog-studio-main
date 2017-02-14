@@ -4,6 +4,11 @@ add_executable(dexter
 
 include_directories ("${PROJECT_SOURCE_DIR}/dex")
 
-target_link_libraries(dexter slicer)
+if(ANDROID)
+  set(LINK_DEPENDENCIES ${LINK_DEPENDENCIES}
+                        gnustl_static)
+endif()
+
+target_link_libraries(dexter slicer ${LINK_DEPENDENCIES})
 
 install_executable(dexter)
