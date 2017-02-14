@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 297;
+    static final int INITIAL_CAPACITY = 300;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -158,6 +158,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InefficientWeightDetector.NESTED_WEIGHTS);
         issues.add(InefficientWeightDetector.ORIENTATION);
         issues.add(InefficientWeightDetector.WRONG_0DP);
+        issues.add(InstantAppDetector.ISSUE);
         issues.add(ItemDecoratorDetector.ISSUE);
         issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(InvalidPackageDetector.ISSUE);
