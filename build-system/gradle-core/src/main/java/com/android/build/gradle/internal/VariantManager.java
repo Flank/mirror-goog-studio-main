@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.BuildTypeAttr;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
+import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -506,6 +507,9 @@ public class VariantManager implements VariantModel {
         schema.attribute(BuildTypeAttr.ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
         // and for the Usage attribute
         schema.attribute(Usage.USAGE_ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
+        schema.attribute(VariantAttr.ATTRIBUTE)
+                .getCompatibilityRules()
+                .assumeCompatibleWhenMissing();
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching

@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FD_JARS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl;
@@ -77,8 +78,8 @@ public class ArtifactDependencyGraph {
             return new ModuleLibraryImpl(
                     address,
                     artifact.getFile(),
-                    address,
-                    null /* variant */); // FIXME: Waiting for Gradle to provide a way to get variant information.
+                    ((ProjectComponentIdentifier) id).getProjectPath(),
+                    getVariant(artifact));
         } else if (Files.getFileExtension(artifact.getFile().getName()).equals(EXT_JAR)) {
             return new com.android.build.gradle.internal.ide.level2.JavaLibraryImpl(
                     address, artifact.getFile());
@@ -101,11 +102,17 @@ public class ArtifactDependencyGraph {
         return map;
     }
 
+    private static String getVariant(ResolvedArtifactResult artifact) {
+        return artifact.getVariant().getAttributes().getAttribute(VariantAttr.ATTRIBUTE).getName();
+    }
+
     private static String computeAddress(ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         if (id instanceof ProjectComponentIdentifier) {
-            // FIXME: Project address needs to contain variant name.
-            return ((ProjectComponentIdentifier) id).getProjectPath().intern();
+            return (((ProjectComponentIdentifier) id).getProjectPath()
+                            + "::"
+                            + getVariant(artifact))
+                    .intern();
         } else if (id instanceof ModuleComponentIdentifier
                 || Files.getFileExtension(artifact.getFile().getName()).equals(EXT_JAR)) {
             MavenCoordinates coordinates =

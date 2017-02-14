@@ -299,6 +299,8 @@ public class VariantDependencies {
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap2 =
                         getFlavorAttributes(null);
                 applyVariantAttributes(runtimeElements, buildType, flavorMap2);
+                VariantAttr variantNameAttr = VariantAttr.of(variantName);
+                runtimeElements.getAttributes().attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 runtimeElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
                 // if the variant is not a library, then the publishing configuration should
@@ -312,6 +314,7 @@ public class VariantDependencies {
                 apiElements.setDescription("API elements for " + variantName);
                 apiElements.setCanBeResolved(false);
                 applyVariantAttributes(apiElements, buildType, flavorMap2);
+                apiElements.getAttributes().attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 apiElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
