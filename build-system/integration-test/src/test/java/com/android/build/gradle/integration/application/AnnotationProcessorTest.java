@@ -32,14 +32,12 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,19 +50,15 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(FilterableParameterized.class)
 public class AnnotationProcessorTest {
-    @Parameterized.Parameters(name = "forJack={0}, forComponentPlugin={1}")
+    @Parameterized.Parameters(name = "forComponentPlugin={0}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                // forJack       forComponentPlugin
-                {true,           false},
-                {false,          false},
-                {true,           true},
-                {false,          true},
-        });
+        return Arrays.asList(
+                new Object[][] {
+                    {false}, {true},
+                });
     }
 
 
-    private final boolean forJack;
     private final boolean forComponentPlugin;
 
     @Rule
@@ -73,8 +67,7 @@ public class AnnotationProcessorTest {
     @Rule
     public Adb adb = new Adb();
 
-    public AnnotationProcessorTest(boolean forJack, boolean forComponentPlugin) {
-        this.forJack = forJack;
+    public AnnotationProcessorTest(boolean forComponentPlugin) {
         this.forComponentPlugin = forComponentPlugin;
 
         project = GradleTestProject.builder()
@@ -157,9 +150,6 @@ public class AnnotationProcessorTest {
                         + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
                         + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
                         + "    defaultConfig {\n"
-                        + "        jackOptions {\n"
-                        + "            enabled " + forJack + "\n"
-                        + "        }\n"
                         + "        javaCompileOptions {\n"
                         + "            annotationProcessorOptions {\n"
                         + "                ${argument}\n"
@@ -234,47 +224,5 @@ public class AnnotationProcessorTest {
                         + "    annotationProcessor project(':lib-compiler')\n"
                         + "}\n");
         project.executeConnectedCheck();
-    }
-
-    @Test
-    public void checkBuildscriptDependencyNotUsedForJackAP() throws Exception {
-        // check for jack and non-component plugin
-        Assume.assumeTrue(forJack && !forComponentPlugin);
-
-        TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "dependencies {\n"
-                        + "    compile project(':lib')\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "}\n");
-
-        GradleTestProject proc = project.getSubproject("lib-compiler");
-        TestFileUtils.appendToFile(
-                proc.getBuildFile(),
-                "apply from: '../../commonLocalRepo.gradle'"
-                        + "\n"
-                        + "dependencies {\n"
-                        + "    compile 'com.google.dagger:dagger:2.6'\n"
-                        + "}\n");
-
-        // update the annotation processor the reference enum that exists in 2.6 but not in 1.2.2
-        TestFileUtils.searchAndReplace(
-                FileUtils.join(
-                        proc.getMainSrcDir(), "com", "example", "annotation", "Processor.java"),
-                "\n}\\s*$",
-                "String s = dagger.Provides.Type.MAP.toString();" + "\n\n}");
-
-
-        // add older dagger to the buildscript classpath
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.squareup.dagger:dagger:1.2.2'\n"
-                        + "    }\n"
-                        + "}\n");
-
-        // make sure we resolve used class to the 2.6 version
-        project.execute("assembleDebug");
     }
 }
