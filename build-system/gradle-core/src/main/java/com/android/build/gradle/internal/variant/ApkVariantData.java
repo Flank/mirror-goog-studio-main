@@ -41,14 +41,6 @@ public abstract class ApkVariantData extends InstallableVariantData<ApkVariantOu
 
     @Override
     @NonNull
-    protected ApkVariantOutputData doCreateOutput(
-            OutputFile.OutputType outputType,
-            Collection<FilterData> filters) {
-        return new ApkVariantOutputData(outputType, filters, this, taskManager);
-    }
-
-    @Override
-    @NonNull
     public String getDescription() {
         if (getVariantConfiguration().hasFlavors()) {
             return String.format("%s%s build",

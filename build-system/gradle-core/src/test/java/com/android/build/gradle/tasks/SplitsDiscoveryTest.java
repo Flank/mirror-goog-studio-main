@@ -64,6 +64,7 @@ public class SplitsDiscoveryTest {
         task.mergedResourcesFolders = mergedFolders;
         task.persistedList = outputFile;
         task.splitList = splitList;
+        task.resourceConfigs = ImmutableSet.of();
     }
 
     @After
@@ -79,10 +80,13 @@ public class SplitsDiscoveryTest {
         task.densityFilters = ImmutableSet.of("hdpi", "xhdpi");
 
         task.taskAction();
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of("hdpi", "xhdpi")),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of("hdpi", "xhdpi")),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -91,10 +95,13 @@ public class SplitsDiscoveryTest {
         task.languageFilters = ImmutableSet.of("en", "fr", "de");
 
         task.taskAction();
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of("en", "fr", "de")),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of("en", "fr", "de")),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -102,10 +109,13 @@ public class SplitsDiscoveryTest {
         task.abiFilters = ImmutableSet.of("x86", "arm", "arm-v4");
 
         task.taskAction();
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of("x86", "arm", "arm-v4")));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of("x86", "arm", "arm-v4")),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -117,10 +127,13 @@ public class SplitsDiscoveryTest {
         task.abiFilters = ImmutableSet.of("x86", "arm", "arm-v4");
 
         task.taskAction();
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of("hdpi", "xhdpi")),
-                eq(ImmutableSet.of("en", "fr", "de")),
-                eq(ImmutableSet.of("x86", "arm", "arm-v4")));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of("hdpi", "xhdpi")),
+                        eq(ImmutableSet.of("en", "fr", "de")),
+                        eq(ImmutableSet.of("x86", "arm", "arm-v4")),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -136,10 +149,13 @@ public class SplitsDiscoveryTest {
         task.densityAuto = true;
         task.taskAction();
 
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of("hdpi", "xhdpi")),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of("hdpi", "xhdpi")),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -156,10 +172,13 @@ public class SplitsDiscoveryTest {
         task.languageAuto = true;
         task.taskAction();
 
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of("fr", "de", "fr_be")),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of("fr", "de", "fr_be")),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -181,10 +200,13 @@ public class SplitsDiscoveryTest {
         task.languageAuto = true;
         task.taskAction();
 
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of("hdpi", "xhdpi")),
-                eq(ImmutableSet.of("fr", "de", "fr_be")),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of("hdpi", "xhdpi")),
+                        eq(ImmutableSet.of("fr", "de", "fr_be")),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 
     @Test
@@ -196,9 +218,12 @@ public class SplitsDiscoveryTest {
 
         task.taskAction();
 
-        Mockito.verify(splitList).save(eq(task.persistedList),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of()),
-                eq(ImmutableSet.of()));
+        Mockito.verify(splitList)
+                .save(
+                        eq(task.persistedList),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()),
+                        eq(ImmutableSet.of()));
     }
 }

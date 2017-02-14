@@ -100,25 +100,25 @@ public class NdkComponentSplitTest {
         project.execute("assembleDebug");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.DefaultApkType.DEBUG);
         assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so");
         SigningHelper.assertApkSignaturesVerify(apk);
 
-        Apk armApk = project.getApk("debug_armeabi-v7a");
+        Apk armApk = project.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG);
         assertThat(armApk).contains("lib/armeabi-v7a/libhello-jni.so");
         assertThat(armApk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(armApk).doesNotContain("lib/x86/libhello-jni.so");
         SigningHelper.assertApkSignaturesVerify(armApk);
 
-        Apk mipsApk = project.getApk("debug_mips");
+        Apk mipsApk = project.getApk("mips", GradleTestProject.DefaultApkType.DEBUG);
         assertThat(mipsApk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(mipsApk).contains("lib/mips/libhello-jni.so");
         assertThat(mipsApk).doesNotContain("lib/x86/libhello-jni.so");
         SigningHelper.assertApkSignaturesVerify(mipsApk);
 
-        Apk x86Apk = project.getApk("debug_x86");
+        Apk x86Apk = project.getApk("x86", GradleTestProject.DefaultApkType.DEBUG);
         assertThat(x86Apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThat(x86Apk).doesNotContain("lib/mips/libhello-jni.so");
         assertThat(x86Apk).contains("lib/x86/libhello-jni.so");

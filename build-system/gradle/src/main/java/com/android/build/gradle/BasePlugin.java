@@ -25,7 +25,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.FilterData;
+import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.api.CustomizableSplit;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.DependencyManager;
@@ -65,6 +69,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.VariantConfiguration;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
@@ -74,6 +79,7 @@ import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.dx.command.dexer.Main;
+import com.android.ide.common.build.Split;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.repository.api.Channel;
@@ -86,6 +92,8 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
@@ -94,6 +102,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -599,6 +608,15 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                     androidBuilder, extension, variantFactory, instantiator);
                     for (BaseVariantData variantData : variantManager.getVariantDataList()) {
                         apiObjectFactory.create(variantData);
+                        variantData
+                                .getSplitScope()
+                                .getSplits()
+                                .forEach(
+                                        split ->
+                                                customizeSplit(
+                                                        variantData,
+                                                        variantData.getVariantConfiguration(),
+                                                        split));
                     }
                 });
 
@@ -650,6 +668,65 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     });
         }
     }
+
+    private void customizeSplit(
+            BaseVariantData<?> variantData,
+            VariantConfiguration<?, ?, ?> variantConfiguration,
+            Split split) {
+        split.setVersionCode(variantConfiguration.getVersionCode());
+        split.setVersionName(variantConfiguration.getVersionName());
+        variantData.customizeApk(getCustomizableSplit(variantData, split));
+    }
+
+    private static CustomizableSplit getCustomizableSplit(
+            BaseVariantData variantData, Split split) {
+        return new CustomizableSplit() {
+            @NonNull
+            @Override
+            public String getName() {
+                return variantData.getName();
+            }
+
+            @NonNull
+            @Override
+            public OutputFile.OutputType getType() {
+                return split.getType();
+            }
+
+            @Override
+            public void setVersionCode(int version) {
+                split.setVersionCode(version);
+            }
+
+            @Override
+            public void setVersionName(String versionName) {
+                split.setVersionName(versionName);
+            }
+
+            @NonNull
+            @Override
+            public List<FilterData> getFilters() {
+                return ImmutableList.copyOf(split.getFilters());
+            }
+
+            @Override
+            @Nullable
+            public String getFilter(String filterType) {
+                return split.getFilter(VariantOutput.FilterType.valueOf(filterType));
+            }
+
+            @Override
+            public String toString() {
+                return MoreObjects.toStringHelper(this)
+                        .add("split", split)
+                        .add("versionCode", split.getVersionCode())
+                        .add("versionName", split.getVersionName())
+                        .add("filters", getFilters())
+                        .toString();
+            }
+        };
+    }
+
 
     private boolean isVerbose() {
         return project.getLogger().isEnabled(LogLevel.INFO);

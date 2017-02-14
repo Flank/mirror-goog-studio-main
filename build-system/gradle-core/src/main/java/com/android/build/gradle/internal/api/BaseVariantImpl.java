@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.CustomizableSplit;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -36,6 +37,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
@@ -282,5 +284,10 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public boolean getOutputsAreSigned() {
         return getVariantData().outputsAreSigned;
+    }
+
+    @Override
+    public void registerSplitCustomizer(Action<CustomizableSplit> customizer) {
+        getVariantData().registerSplitCustomizer(customizer);
     }
 }

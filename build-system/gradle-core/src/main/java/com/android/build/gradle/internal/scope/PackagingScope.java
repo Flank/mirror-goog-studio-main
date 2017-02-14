@@ -18,15 +18,14 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.Split;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -40,12 +39,6 @@ public interface PackagingScope extends TaskOutputHolder {
      */
     @NonNull
     AndroidBuilder getAndroidBuilder();
-
-    /**
-     * Location of the *.ap_ file with processed resources.
-     */
-    @NonNull
-    File getFinalResourcesFile();
 
     /**
      * Full name of the variant.
@@ -89,9 +82,6 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     Set<String> getAbiFilters();
 
-    @NonNull
-    ApkOutputFile getMainOutputFile();
-
     @Nullable
     Set<String> getSupportedAbis();
 
@@ -114,17 +104,12 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     Project getProject();
 
-    /**
-     * Returns the output package file.
-     */
+    /** Returns the output package file. */
     @NonNull
-    File getOutputPackage();
+    File getOutputPackageFile(File destinationDir, String projectBaseName, Split split);
 
-    /**
-     * Returns the intermediate APK file.
-     */
-    @NonNull
-    File getIntermediateApk();
+    /** Returns the project base name */
+    String getProjectBaseName();
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();
@@ -140,9 +125,5 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     AaptOptions getAaptOptions();
 
-    @NonNull
-    VariantType getVariantType();
-
-    @NonNull
-    File getManifestFile();
+    SplitScope getSplitScope();
 }

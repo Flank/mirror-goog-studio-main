@@ -17,17 +17,20 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.ide.common.build.Split;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
@@ -35,14 +38,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -53,33 +53,73 @@ import org.gradle.api.tasks.TaskAction;
 public class GenerateSplitAbiRes extends BaseTask {
 
     private String applicationId;
-
     private String outputBaseName;
 
+    // FIXME : make those overridable.
+    private String versionName;
+    private int versionCode;
+
     private Set<String> splits;
-
     private File outputDirectory;
-
     private boolean debuggable;
-
     private AaptOptions aaptOptions;
+    private SplitScope splitScope;
+    private SplitFactory splitFactory;
+    private VariantType variantType;
+    private VariantScope variantScope;
 
-    private ApkVariantOutputData variantOutputData;
-
-    @OutputFiles
-    public List<File> getOutputFiles() {
-        return getSplits().stream()
-                .map(this::getOutputFileForSplit).collect(Collectors.toList());
+    @Input
+    public String getApplicationId() {
+        return applicationId;
     }
+
+    @Input
+    public int getVersionCode() {
+        return versionCode;
+    }
+
+    @Input
+    @Optional
+    public String getVersionName() {
+        return versionName;
+    }
+
+    @Input
+    public String getOutputBaseName() {
+        return outputBaseName;
+    }
+
+    @Input
+    public Set<String> getSplits() {
+        return splits;
+    }
+
+    @OutputDirectory
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
+
+    @Input
+    public boolean isDebuggable() {
+        return debuggable;
+    }
+
+    @Nested
+    public AaptOptions getAaptOptions() {
+        return aaptOptions;
+    }
+
 
     @TaskAction
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
 
+        splitScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
         for (String split : getSplits()) {
-            String resPackageFileName = getOutputFileForSplit(split).getAbsolutePath();
+            Split abiSplit = splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
+            File resPackageFile = getOutputFileForSplit(split);
 
-            File tmpDirectory = new File(getOutputDirectory(), getOutputBaseName());
-            tmpDirectory.mkdirs();
+            File tmpDirectory = new File(outputDirectory, getOutputBaseName());
+            FileUtils.mkdirs(tmpDirectory);
 
             File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
 
@@ -99,121 +139,68 @@ public class GenerateSplitAbiRes extends BaseTask {
                         .or(CharMatcher.is('.'))
                         .negate()
                         .replaceFrom(split + "_" + getOutputBaseName(), '_');
-                fileWriter.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\"" + getApplicationId() + "\"\n"
-                        + "      android:versionCode=\"" + getVersionCode() + "\"\n"
-                        + "      android:versionName=\"" + versionNameToUse + "\"\n"
-                        + "      split=\"lib_" + splitName + "\">\n"
-                        + "       <uses-sdk android:minSdkVersion=\"21\"/>\n" + "</manifest> ");
+                fileWriter.append(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "      package=\""
+                                + applicationId
+                                + "\"\n"
+                                + "      android:versionCode=\""
+                                + getVersionCode()
+                                + "\"\n"
+                                + "      android:versionName=\""
+                                + versionNameToUse
+                                + "\"\n"
+                                + "      split=\"lib_"
+                                + splitName
+                                + "\">\n"
+                                + "       <uses-sdk android:minSdkVersion=\"21\"/>\n"
+                                + "</manifest> ");
                 fileWriter.flush();
             }
 
             Aapt aapt =
                     AaptGradleFactory.make(
                             getBuilder(),
-                            variantOutputData.getScope().getVariantScope(),
+                            variantScope,
                             FileUtils.mkdirs(
                                     new File(
-                                            variantOutputData
-                                                    .getScope()
-                                                    .getVariantScope()
-                                                    .getIncrementalDir(getName()),
+                                            variantScope.getIncrementalDir(getName()),
                                             "aapt-temp")));
             AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
             aaptConfig
                     .setManifestFile(tmpFile)
-                    .setOptions(getAaptOptions())
-                    .setDebuggable(isDebuggable())
-                    .setResourceOutputApk(new File(resPackageFileName))
-                    .setVariantType(
-                            variantOutputData.getScope()
-                                    .getVariantScope().getVariantConfiguration().getType());
+                    .setOptions(aaptOptions)
+                    .setDebuggable(debuggable)
+                    .setResourceOutputApk(resPackageFile)
+                    .setVariantType(variantType);
 
             getBuilder().processResources(
                     aapt,
                     aaptConfig,
                     false /* enforceUniquePackageName */);
+            splitScope.addOutputForSplit(
+                    VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, abiSplit, resPackageFile);
         }
+
+        splitScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);
     }
 
+    // FIX ME : this calculation should move to SplitScope.Split interface
     private File getOutputFileForSplit(final String split) {
-        return new File(getOutputDirectory(),
-                "resources-" + getOutputBaseName() + "-" + split + ".ap_");
-    }
-
-    @Input
-    public String getApplicationId() {
-        return applicationId;
-    }
-
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-    }
-
-    @Input
-    public int getVersionCode() {
-        return variantOutputData.getVersionCode();
-    }
-
-    @Input
-    @Optional
-    public String getVersionName() {
-        return variantOutputData.getVersionName();
-    }
-
-    @Input
-    public String getOutputBaseName() {
-        return outputBaseName;
-    }
-
-    public void setOutputBaseName(String outputBaseName) {
-        this.outputBaseName = outputBaseName;
-    }
-
-    @Input
-    public Set<String> getSplits() {
-        return splits;
-    }
-
-    public void setSplits(Set<String> splits) {
-        this.splits = splits;
-    }
-
-    public File getOutputDirectory() {
-        return outputDirectory;
-    }
-
-    public void setOutputDirectory(File outputDirectory) {
-        this.outputDirectory = outputDirectory;
-    }
-
-    @Input
-    public boolean isDebuggable() {
-        return debuggable;
-    }
-
-    public void setDebuggable(boolean debuggable) {
-        this.debuggable = debuggable;
-    }
-
-    @Nested
-    public AaptOptions getAaptOptions() {
-        return aaptOptions;
-    }
-
-    public void setAaptOptions(AaptOptions aaptOptions) {
-        this.aaptOptions = aaptOptions;
+        return new File(outputDirectory, "resources-" + getOutputBaseName() + "-" + split + ".ap_");
     }
 
     // ----- ConfigAction -----
 
     public static class ConfigAction implements TaskConfigAction<GenerateSplitAbiRes> {
 
-        private VariantScope scope;
+        @NonNull private final VariantScope scope;
+        @NonNull private final File outputDirectory;
 
-        public ConfigAction(VariantScope scope) {
+        public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDirectory) {
             this.scope = scope;
+            this.outputDirectory = outputDirectory;
         }
 
         @Override
@@ -231,31 +218,27 @@ public class GenerateSplitAbiRes extends BaseTask {
         @Override
         public void execute(@NonNull GenerateSplitAbiRes generateSplitAbiRes) {
             final VariantConfiguration config = scope.getVariantConfiguration();
-            Set<String> filters = AbiSplitOptions.getAbiFilters(
-                    scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
 
             generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateSplitAbiRes.setVariantName(config.getFullName());
 
-            generateSplitAbiRes.setOutputDirectory(scope.getGenerateSplitAbiResOutputDirectory());
-            generateSplitAbiRes.setSplits(filters);
-            generateSplitAbiRes.setOutputBaseName(config.getBaseName());
-            generateSplitAbiRes.setApplicationId(config.getApplicationId());
-            generateSplitAbiRes.variantOutputData =
-                    (ApkVariantOutputData) scope.getVariantData().getMainOutput();
-            ConventionMappingHelper.map(generateSplitAbiRes, "debuggable", new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return config.getBuildType().isDebuggable();
-                }
-            });
-            ConventionMappingHelper.map(generateSplitAbiRes, "aaptOptions",
-                    new Callable<AaptOptions>() {
-                        @Override
-                        public AaptOptions call() throws Exception {
-                            return scope.getGlobalScope().getExtension().getAaptOptions();
-                        }
-                    });
+            // FIXME : make those overridable.
+            generateSplitAbiRes.versionCode = config.getVersionCode();
+            generateSplitAbiRes.versionName = config.getVersionName();
+
+            generateSplitAbiRes.variantScope = scope;
+            generateSplitAbiRes.variantType = config.getType();
+            generateSplitAbiRes.outputDirectory = outputDirectory;
+            generateSplitAbiRes.splits =
+                    AbiSplitOptions.getAbiFilters(
+                            scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
+            generateSplitAbiRes.outputBaseName = config.getBaseName();
+            generateSplitAbiRes.applicationId = config.getApplicationId();
+            generateSplitAbiRes.debuggable = config.getBuildType().isDebuggable();
+            generateSplitAbiRes.aaptOptions =
+                    scope.getGlobalScope().getExtension().getAaptOptions();
+            generateSplitAbiRes.splitScope = scope.getSplitScope();
+            generateSplitAbiRes.splitFactory = scope.getVariantData().getSplitFactory();
         }
     }
 }

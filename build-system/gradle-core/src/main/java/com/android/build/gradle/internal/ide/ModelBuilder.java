@@ -18,13 +18,14 @@ package com.android.build.gradle.internal.ide;
 
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
+import com.android.build.FilterData;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -39,8 +40,9 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -50,7 +52,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
@@ -69,10 +70,10 @@ import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
+import com.android.ide.common.build.Split;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -423,6 +424,35 @@ public class ModelBuilder implements ToolingModelBuilder {
         return nativeLibraries;
     }
 
+    private static final class ConfigurationSplitCreator implements SplitScope.SplitCreator {
+
+        private final String baseName;
+        private final String fullName;
+        private final String dirName;
+
+        ConfigurationSplitCreator(String baseName, String fullName, String dirName) {
+            this.baseName = baseName;
+            this.fullName = fullName;
+            this.dirName = dirName;
+        }
+
+        @Nullable
+        @Override
+        public Split create(
+                @NonNull VariantOutput.OutputType outputType,
+                @NonNull Collection<FilterData> filters) {
+            String filterName = SplitFactory.getFilterNameForSplits(filters);
+            return new SplitFactory.DefaultSplit(
+                    outputType,
+                    filterName,
+                    baseName,
+                    fullName,
+                    dirName,
+                    ImmutableList.copyOf(filters));
+        }
+    }
+
+
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
@@ -437,9 +467,114 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
+        ConfigurationSplitCreator splitCreator =
+                new ConfigurationSplitCreator(
+                        variantConfiguration.getBaseName(),
+                        variantConfiguration.getFullName(),
+                        variantConfiguration.getDirName());
+
         // get the outputs
-        List<? extends BaseVariantOutputData> variantOutputs = variantData.getOutputs();
-        List<AndroidArtifactOutput> outputs = Lists.newArrayListWithCapacity(variantOutputs.size());
+        SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsProxy = null;
+        SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestsProxy = null;
+        switch (variantData.getType()) {
+            case DEFAULT:
+                splitOutputsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(
+                                        VariantScope.TaskOutputType.APK,
+                                        VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
+                                        VariantScope.TaskOutputType
+                                                .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                                ImmutableList.of(
+                                        new File(
+                                                variantData
+                                                        .getScope()
+                                                        .getGlobalScope()
+                                                        .getApkLocation(),
+                                                variantData
+                                                        .getVariantConfiguration()
+                                                        .getDirName())));
+
+                manifestsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                                ImmutableList.of(
+                                        variantData.getScope().getManifestOutputDirectory()));
+                break;
+            case LIBRARY:
+                Split mainSplit =
+                        splitCreator.create(VariantOutput.OutputType.MAIN, ImmutableList.of());
+                splitOutputsProxy =
+                        new SerializableSupplier.Default<>(
+                                ImmutableList.of(
+                                        new SplitScope.SplitOutput(
+                                                VariantScope.TaskOutputType.AAR,
+                                                mainSplit,
+                                                scope.getOutputBundleFile())));
+                manifestsProxy =
+                        new SerializableSupplier.Default<>(
+                                ImmutableList.of(
+                                        new SplitScope.SplitOutput(
+                                                VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                                mainSplit,
+                                                new File(
+                                                        scope.getManifestOutputDirectory(),
+                                                        SdkConstants.ANDROID_MANIFEST_XML))));
+                break;
+            case ATOM:
+            case INSTANTAPP:
+                splitOutputsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(VariantScope.TaskOutputType.APKB),
+                                ImmutableList.of(
+                                        new File(
+                                                variantData
+                                                        .getScope()
+                                                        .getGlobalScope()
+                                                        .getApkLocation(),
+                                                variantData
+                                                        .getVariantConfiguration()
+                                                        .getDirName())));
+                manifestsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                                ImmutableList.of(
+                                        variantData.getScope().getManifestOutputDirectory()));
+                break;
+            case ANDROID_TEST:
+                splitOutputsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(VariantScope.TaskOutputType.APK),
+                                ImmutableList.of(
+                                        new File(
+                                                variantData
+                                                        .getScope()
+                                                        .getGlobalScope()
+                                                        .getApkLocation(),
+                                                variantData
+                                                        .getVariantConfiguration()
+                                                        .getDirName())));
+                manifestsProxy =
+                        new SplitOutputsSupplier(
+                                variantData.getSplitScope(),
+                                splitCreator,
+                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                                ImmutableList.of(
+                                        variantData.getScope().getManifestOutputDirectory()));
+                break;
+            default:
+                throw new RuntimeException("Unhandled build type " + variantData.getType());
+        }
 
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
         Collection<NativeLibrary> nativeLibraries = ImmutableList.of();
@@ -463,44 +598,11 @@ public class ModelBuilder implements ToolingModelBuilder {
             }
         }
 
-        for (BaseVariantOutputData variantOutputData : variantOutputs) {
-            int intVersionCode;
-            if (variantOutputData instanceof ApkVariantOutputData) {
-                intVersionCode =  variantOutputData.getVersionCode();
-            } else {
-                Integer versionCode = variantConfiguration.getMergedFlavor().getVersionCode();
-                intVersionCode = versionCode != null ? versionCode : 1;
-            }
-
-            ImmutableCollection.Builder<OutputFile> outputFiles = ImmutableList.builder();
-
-            // add the main APK
-            outputFiles.add(new OutputFileImpl(
-                    variantOutputData.getMainOutputFile().getFilters(),
-                    variantOutputData.getMainOutputFile().getType().name(),
-                    variantOutputData.getOutputFile()));
-
-            for (ApkOutputFile splitApk : variantOutputData.getOutputs()) {
-                if (splitApk.getType() == OutputFile.OutputType.SPLIT) {
-                    outputFiles.add(new OutputFileImpl(
-                            splitApk.getFilters(), OutputFile.SPLIT, splitApk.getOutputFile()));
-                }
-            }
-
-            // add the main APK.
-            outputs.add(new AndroidArtifactOutputImpl(
-                    outputFiles.build(),
-                    "assemble" + variantOutputData.getFullName(),
-                    variantOutputData.getScope().getManifestOutputFile(),
-                    intVersionCode));
-        }
-
         InstantRunImpl instantRun = new InstantRunImpl(
                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
                 variantConfiguration.getInstantRunSupportStatus());
 
         VariantDependencies variantDependency = variantData.getVariantDependency();
-
 
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
@@ -517,20 +619,25 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         return new AndroidArtifactImpl(
                 name,
-                outputs,
-                variantData.assembleVariantTask == null ? scope.getTaskName("assemble") : variantData.assembleVariantTask.getName(),
+                variantData.assembleVariantTask == null
+                        ? scope.getTaskName("assemble")
+                        : variantData.assembleVariantTask.getName(),
                 variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 variantConfiguration.getApplicationId(),
                 // TODO: Need to determine the tasks' name when the tasks may not be created
                 // in component plugin.
-                scope.getSourceGenTask() == null ? scope.getTaskName("generate", "Sources") : scope.getSourceGenTask().getName(),
-                scope.getCompileTask() == null ? scope.getTaskName("compile", "Sources") : scope.getCompileTask().getName(),
+                scope.getSourceGenTask() == null
+                        ? scope.getTaskName("generate", "Sources")
+                        : scope.getSourceGenTask().getName(),
+                scope.getCompileTask() == null
+                        ? scope.getTaskName("compile", "Sources")
+                        : scope.getCompileTask().getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
-                (variantData.javacTask != null) ?
-                        variantData.javacTask.getDestinationDir() :
-                        scope.getJavaOutputDir(),
+                (variantData.javacTask != null)
+                        ? variantData.javacTask.getDestinationDir()
+                        : scope.getJavaOutputDir(),
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies,
                 dependencyGraphs,
@@ -540,7 +647,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 nativeLibraries,
                 variantConfiguration.getMergedBuildConfigFields(),
                 variantConfiguration.getMergedResValues(),
-                instantRun);
+                instantRun,
+                splitOutputsProxy,
+                manifestsProxy);
     }
 
     private static Collection<Abi> createAbiList(Collection<String> abiNames) {

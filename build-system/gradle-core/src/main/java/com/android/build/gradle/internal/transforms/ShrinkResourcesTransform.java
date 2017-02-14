@@ -26,6 +26,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -41,8 +42,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.InputFiles;
 
 /**
  * Implementation of Resource Shrinking as a transform.
@@ -91,6 +94,7 @@ public class ShrinkResourcesTransform extends Transform {
     private final File mergedManifest;
     @Nullable
     private final File mappingFile;
+    @NonNull private final SplitList splitList;
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantOutputData variantOutputData,
@@ -103,6 +107,8 @@ public class ShrinkResourcesTransform extends Transform {
         this.compressedResources = compressedResources;
         this.androidBuilder = androidBuilder;
         this.logger = logger;
+        this.splitList =
+                variantOutputData.getScope().getVariantScope().getVariantData().getSplitList();
 
         BaseVariantData<?> variantData = variantOutputData.variantData;
         sourceDir = variantData.getScope().getRClassSourceOutputDir();
@@ -168,6 +174,11 @@ public class ShrinkResourcesTransform extends Transform {
         return ImmutableList.of(compressedResources);
     }
 
+    @InputFiles
+    public FileCollection getSplitListResource() {
+        return splitList.getFileCollection();
+    }
+
     @Override
     public boolean isIncremental() {
         return false;
@@ -183,7 +194,9 @@ public class ShrinkResourcesTransform extends Transform {
         File minifiedOutJar = Iterables.getOnlyElement(input.getJarInputs()).getFile();
 
         BaseVariantData<?> variantData = variantOutputData.variantData;
-        ProcessAndroidResources processResourcesTask = variantData.generateRClassTask;
+        // FIX ME !
+        ProcessAndroidResources processResourcesTask =
+                variantData.getScope().getProcessResourcesTask().get(null);
 
         File reportFile = null;
         if (mappingFile != null) {
@@ -232,17 +245,20 @@ public class ShrinkResourcesTransform extends Transform {
                                         new File(
                                                 invocation.getContext().getTemporaryDir(),
                                                 "temp-aapt")));
-                AaptPackageConfig.Builder aaptPackageConfig = new AaptPackageConfig.Builder()
-                        .setManifestFile(mergedManifest)
-                        .setOptions(processResourcesTask.getAaptOptions())
-                        .setResourceOutputApk(destination)
-                        .setLibraries(processResourcesTask.getLibraryInfoList())
-                        .setCustomPackageForR(processResourcesTask.getPackageForR())
-                        .setSourceOutputDir(new File(sourceOutputPath))
-                        .setVariantType(processResourcesTask.getType())
-                        .setDebuggable(processResourcesTask.getDebuggable())
-                        .setResourceConfigs(processResourcesTask.getResourceConfigs())
-                        .setSplits(processResourcesTask.getSplits());
+                AaptPackageConfig.Builder aaptPackageConfig =
+                        new AaptPackageConfig.Builder()
+                                .setManifestFile(mergedManifest)
+                                .setOptions(processResourcesTask.getAaptOptions())
+                                .setResourceOutputApk(destination)
+                                .setLibraries(processResourcesTask.getLibraryInfoList())
+                                // FIX ME : this does not seem to have ever worked.
+                                //.setCustomPackageForR(processResourcesTask.getPackageForR())
+                                .setSourceOutputDir(new File(sourceOutputPath))
+                                .setVariantType(processResourcesTask.getType())
+                                .setDebuggable(processResourcesTask.getDebuggable())
+                                .setResourceConfigs(
+                                        splitList.getFilters(SplitList.RESOURCE_CONFIGS))
+                                .setSplits(processResourcesTask.getSplits());
 
                 androidBuilder.processResources(
                         aapt,

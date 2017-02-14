@@ -1022,15 +1022,16 @@ public class DependencyManager {
                         } else if (EXT_ANDROID_PACKAGE.equals(artifact.getExtension())) {
                             String name = computeArtifactName(moduleVersion, artifact);
 
-                            configDependencies.getChecker().handleIssue(
-                                    name,
-                                    SyncIssue.TYPE_DEPENDENCY_IS_APK,
-                                    SyncIssue.SEVERITY_ERROR,
-                                    String.format(
-                                            "Dependency %s on project %s resolves to an APK archive "
-                                                    +
-                                                    "which is not supported as a compilation dependency. File: %s",
-                                            name, project.getName(), artifact.getFile()));
+                            configDependencies
+                                    .getChecker()
+                                    .handleIssue(
+                                            name,
+                                            SyncIssue.TYPE_DEPENDENCY_IS_APK,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            String.format(
+                                                    "Dependency %s on project %s resolves to an APK archive "
+                                                            + "which is not supported as a compilation dependency. File: %s",
+                                                    name, project.getName(), artifact.getFile()));
                         } else if ("apklib".equals(artifact.getExtension())) {
                             String name = computeArtifactName(moduleVersion, artifact);
 

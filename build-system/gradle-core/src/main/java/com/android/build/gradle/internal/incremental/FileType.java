@@ -20,13 +20,9 @@ package com.android.build.gradle.internal.incremental;
  * Enumeration of the possible file types produced by a build.
  */
 public enum FileType {
-    /**
-     * Main APK file for 19, and below.
-     */
+    /** Main APK file for 19, and below. */
     MAIN,
-    /**
-     * Main APK file when application is using the Split APK mode.
-     */
+    /** Main APK file when application is using the Split APK mode. */
     SPLIT_MAIN,
     /**
      * Reload dex file that can be used to patch application live.
@@ -44,8 +40,6 @@ public enum FileType {
      * Android Library files.
      */
     AAR,
-    /**
-     * Full split (main APK with reduced sets of resources).
-     */
+    /** Full split (main APK with reduced sets of resources). */
     FULL_SPLIT
 }

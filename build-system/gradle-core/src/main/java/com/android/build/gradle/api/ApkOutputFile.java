@@ -23,7 +23,6 @@ import com.android.build.OutputFile;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -42,11 +41,13 @@ public class ApkOutputFile implements OutputFile, Serializable {
     @NonNull private final Collection<String> filterTypes;
     @NonNull private final OutputFile.OutputType outputType;
     @NonNull private final Callable<File> outputFile;
+    private final int versionCode;
 
     public ApkOutputFile(
             @NonNull OutputType outputType,
             @NonNull Collection<FilterData> filters,
-            @NonNull Callable<File> outputFile) {
+            @NonNull Callable<File> outputFile,
+            int versionCode) {
         this.outputType = outputType;
         this.outputFile = outputFile;
         this.filters = filters;
@@ -55,6 +56,19 @@ public class ApkOutputFile implements OutputFile, Serializable {
             filterTypes.add(filter.getFilterType());
         }
         this.filterTypes = filterTypes.build();
+        this.versionCode = versionCode;
+    }
+
+    @NonNull
+    @Override
+    public OutputFile getMainOutputFile() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @NonNull
+    @Override
+    public Collection<? extends OutputFile> getOutputs() {
+        throw new RuntimeException("Not implemented");
     }
 
     @NonNull
@@ -72,21 +86,6 @@ public class ApkOutputFile implements OutputFile, Serializable {
         }
     }
 
-    /**
-     * String identifying the splits within all the filters dimension. For instance, for a {@link
-     * com.android.build.OutputFile.FilterType#DENSITY}, a split identifier can be "xxhdpi". Each
-     * split identifier will be separated with the passed separator
-     *
-     * @param separatorChar separator for each filter's value.
-     * @return the split identifier (bounded by its split type).
-     */
-    @NonNull
-    public String getSplitIdentifiers(char separatorChar) {
-
-        return Joiner.on(separatorChar)
-                .join(Iterables.transform(filters, FilterData::getIdentifier));
-    }
-
     @Override
     @NonNull
     public Collection<FilterData> getFilters() {
@@ -97,14 +96,18 @@ public class ApkOutputFile implements OutputFile, Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("OutputType", outputType)
-                .add("Filters", Joiner.on(',').join(filters, new Function<FilterData, String>() {
-
-                    @Override
-                    public String apply(FilterData splitData) {
-                        return '[' + splitData.getFilterType()
-                                + ':' + splitData.getIdentifier() + ']';
-                    }
-                }))
+                .add(
+                        "Filters",
+                        Joiner.on(',')
+                                .join(
+                                        filters,
+                                        (Function<FilterData, String>)
+                                                splitData ->
+                                                        '['
+                                                                + splitData.getFilterType()
+                                                                + ':'
+                                                                + splitData.getIdentifier()
+                                                                + ']'))
                 .add("File", getOutputFile().getAbsolutePath())
                 .toString();
     }
@@ -140,5 +143,10 @@ public class ApkOutputFile implements OutputFile, Serializable {
     @Nullable
     public String getFilter(String filterType) {
         return getFilterByType(FilterType.valueOf(filterType));
+    }
+
+    @Override
+    public int getVersionCode() {
+        return versionCode;
     }
 }

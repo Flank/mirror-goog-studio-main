@@ -73,7 +73,7 @@ public class BasicTest2 {
 
     @BeforeClass
     public static void getModel() throws Exception {
-        modelContainer = project.executeAndReturnModel("clean");
+        modelContainer = project.executeAndReturnModel("clean", "assemble", "assembleAndroidTest");
     }
 
     @AfterClass
@@ -134,7 +134,7 @@ public class BasicTest2 {
         assertThat(debugMainOutput.getMainOutputFile())
                 .named("debug output assemble task name")
                 .isNotNull();
-        assertThat(debugMainOutput.getMainOutputFile())
+        assertThat(debugMainOutput.getGeneratedManifest())
                 .named("debug output generate manifest task name")
                 .isNotNull();
         assertThat(debugMainOutput.getVersionCode())
@@ -212,10 +212,7 @@ public class BasicTest2 {
         assertThat(debugTestOutput.getMainOutputFile())
                 .named("test output file")
                 .isNotNull();
-        assertThat(debugTestOutput.getMainOutputFile())
-                .named("test output assemble task name")
-                .isNotNull();
-        assertThat(debugTestOutput.getMainOutputFile())
+        assertThat(debugTestOutput.getGeneratedManifest())
                 .named("test output generate manifest task name")
                 .isNotNull();
 

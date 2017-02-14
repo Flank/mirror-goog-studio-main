@@ -160,7 +160,8 @@ public class ExternalTestProjectTest {
                 SyncIssue.TYPE_DEPENDENCY_IS_APK,
                 "project:app1:unspecified");
 
-        String expectedMsg = "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:";
+        String expectedMsg =
+                "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:";
         assertThat(issue.getMessage()).startsWith(expectedMsg);
     }
 }

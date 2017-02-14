@@ -102,7 +102,7 @@ public class NdkConnectedCheckTest {
 
     @Test
     public void checkTestLibIsPackaged() throws Exception {
-        Apk apk = project.getTestApk("debug");
+        Apk apk = project.getTestApk();
         assertThat(apk).contains("lib/x86/libhello-jni_test.so");
     }
 

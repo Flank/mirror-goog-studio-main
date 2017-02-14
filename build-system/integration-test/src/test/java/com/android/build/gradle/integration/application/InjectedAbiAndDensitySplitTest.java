@@ -70,13 +70,18 @@ public class InjectedAbiAndDensitySplitTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .run("clean", "assembleDebug");
 
-        assertThat(sProject.getApk("armeabi-v7a", "debug")).exists();
-        assertThat(sProject.getApk("armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libprebuilt.so");
-        assertThat(sProject.getApk("ldpiArmeabi-v7a", "debug")).doesNotExist();
-        assertThat(sProject.getApk("hdpiArmeabi-v7a", "debug")).doesNotExist();
-        assertThat(sProject.getApk("x86", "debug")).doesNotExist();
-        assertThat(sProject.getApk("ldpiX86", "debug")).doesNotExist();
-        assertThat(sProject.getApk("hdpiX86", "debug")).doesNotExist();
+        assertThat(sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG)).exists();
+        assertThat(sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .contains("lib/armeabi-v7a/libprebuilt.so");
+        assertThat(sProject.getApk("ldpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApk("hdpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApk("x86", GradleTestProject.DefaultApkType.DEBUG)).doesNotExist();
+        assertThat(sProject.getApk("ldpiX86", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApk("hdpiX86", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
     }
 
     @Test
@@ -88,19 +93,24 @@ public class InjectedAbiAndDensitySplitTest {
 
         Apk apk;
         // Either ldpi or universal density can match the injected density.
-        if (sProject.getApk("armeabi-v7a", "debug").exists()) {
-            apk = sProject.getApk("armeabi-v7a", "debug");
-            assertThat(sProject.getApk("ldpiArmeabi-v7a", "debug")).doesNotExist();
+        if (sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG).exists()) {
+            apk = sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG);
+            assertThat(sProject.getApk("ldpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                    .doesNotExist();
         } else {
-            apk = sProject.getApk("ldpiArmeabi-v7a", "debug");
-            assertThat(sProject.getApk("armeabi-v7a", "debug")).doesNotExist();
+            apk = sProject.getApk("ldpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG);
+            assertThat(sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                    .doesNotExist();
         }
         assertThat(apk).exists();
         assertThat(apk).contains("lib/armeabi-v7a/libprebuilt.so");
-        assertThat(sProject.getApk("hdpiArmeabi-v7a", "debug")).doesNotExist();
-        assertThat(sProject.getApk("x86", "debug")).doesNotExist();
-        assertThat(sProject.getApk("ldpiX86", "debug")).doesNotExist();
-        assertThat(sProject.getApk("hdpiX86", "debug")).doesNotExist();
+        assertThat(sProject.getApk("hdpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApk("x86", GradleTestProject.DefaultApkType.DEBUG)).doesNotExist();
+        assertThat(sProject.getApk("ldpiX86", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApk("hdpiX86", GradleTestProject.DefaultApkType.DEBUG))
+                .doesNotExist();
     }
 
     /** All splits are built if only density is present. */
@@ -110,12 +120,14 @@ public class InjectedAbiAndDensitySplitTest {
                 .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
                 .run("clean", "assembleDebug");
 
-        assertThat(sProject.getApk("armeabi-v7a", "debug").exists());
-        assertThat(sProject.getApk("ldpiArmeabi-v7a", "debug")).exists();
-        assertThat(sProject.getApk("hdpiArmeabi-v7a", "debug")).exists();
-        assertThat(sProject.getApk("x86", "debug")).exists();
-        assertThat(sProject.getApk("ldpiX86", "debug")).exists();
-        assertThat(sProject.getApk("hdpiX86", "debug")).exists();
+        assertThat(sProject.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG).exists());
+        assertThat(sProject.getApk("ldpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .exists();
+        assertThat(sProject.getApk("hdpiArmeabi-v7a", GradleTestProject.DefaultApkType.DEBUG))
+                .exists();
+        assertThat(sProject.getApk("x86", GradleTestProject.DefaultApkType.DEBUG)).exists();
+        assertThat(sProject.getApk("ldpiX86", GradleTestProject.DefaultApkType.DEBUG)).exists();
+        assertThat(sProject.getApk("hdpiX86", GradleTestProject.DefaultApkType.DEBUG)).exists();
     }
 
     @Test

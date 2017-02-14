@@ -40,13 +40,6 @@ public class InstantAppVariantData extends InstallableVariantData<InstantAppVari
 
     @NonNull
     @Override
-    protected InstantAppVariantOutputData doCreateOutput(OutputFile.OutputType outputType,
-            Collection<FilterData> filters) {
-        return new InstantAppVariantOutputData(outputType, filters, this);
-    }
-
-    @NonNull
-    @Override
     public String getDescription() {
         if (getVariantConfiguration().hasFlavors()) {
             return String.format("%s build for flavor %s",

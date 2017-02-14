@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -155,26 +154,29 @@ public class AtomTaskManager extends TaskManager {
                     createProcessResTask(
                             tasks,
                             variantScope,
-                            () -> variantBundleDir,
-                            BaseVariantOutputData::getProcessResourcePackageOutputFile);
+                            () ->
+                                    new File(
+                                            variantScope.getGlobalScope().getIntermediatesDir(),
+                                            "symbols/"
+                                                    + variantScope
+                                                            .getVariantData()
+                                                            .getVariantConfiguration()
+                                                            .getDirName()),
+                            variantScope.getProcessResourcePackageOutputDirectory(),
+                            MergeType.MERGE,
+                            variantScope.getGlobalScope().getArchivesBaseName());
 
                     // process java resources
                     createProcessJavaResTask(tasks, variantScope);
                     createMergeJavaResTransform(tasks, variantScope);
 
-                    // Get the single output.
-                    final VariantOutputScope variantOutputScope =
-                            variantData.getOutputs().get(0).getScope();
-
                     variantScope.publishIntermediateArtifact(
-                            variantOutputScope
-                                    .getVariantOutputData()
-                                    .getProcessResourcePackageOutputFile(),
-                            variantOutputScope.getProcessResourcesTask().getName(),
+                            variantScope.getProcessResourcePackageOutputDirectory(),
+                            variantScope.getProcessResourcesTask().getName(),
                             AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG);
                     variantScope.publishIntermediateArtifact(
                             variantScope.getLibInfoFile(),
-                            variantOutputScope.getProcessResourcesTask().getName(),
+                            variantScope.getProcessResourcesTask().getName(),
                             AndroidArtifacts.ArtifactType.ATOM_LIB_INFO);
                 });
 
@@ -315,25 +317,21 @@ public class AtomTaskManager extends TaskManager {
             @NonNull final VariantScope variantScope) {
         final AtomVariantData variantData = (AtomVariantData) variantScope.getVariantData();
 
-        // Get the single output.
-        final VariantOutputScope variantOutputScope = variantData.getMainOutput().getScope();
-        variantOutputScope.setAssembleTask(variantScope.getAssembleTask());
-
         // Create the bundle task.
         AndroidTask<BundleAtom> bundleAtom =
                 getAndroidTasks().create(tasks,
                         new BundleAtom.ConfigAction(variantScope));
-        variantOutputScope.getVariantOutputData().bundleAtomTask = bundleAtom.get(tasks);
+        variantData.bundleAtomTask = bundleAtom.get(tasks);
 
         bundleAtom.dependsOn(tasks, variantScope.getMergeAssetsTask());
-        bundleAtom.dependsOn(tasks, variantOutputScope.getProcessResourcesTask());
+        bundleAtom.dependsOn(tasks, variantScope.getProcessResourcesTask());
         bundleAtom.dependsOn(tasks, variantData.binaryFileProviderTask);
 
         bundleAtom.optionalDependsOn(
                 tasks,
-                variantOutputScope.getShrinkResourcesTask(),
+                variantScope.getShrinkResourcesTask(),
                 // TODO: When Jack is converted, add activeDexTask to VariantScope.
-                variantOutputScope.getVariantScope().getJavaCompilerTask(),
+                variantScope.getJavaCompilerTask(),
                 // TODO: Remove when Jack is converted to AndroidTask.
                 variantData.javaCompilerTask);
 

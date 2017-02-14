@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.test;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -95,12 +97,19 @@ public class TestDataImpl extends AbstractTestDataImpl {
                 (BaseVariantData) testVariantData.getTestedVariantData();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();
-        apks.addAll(SplitOutputMatcher.computeBestOutput(
-                processExecutor,
-                splitSelectExe,
-                deviceConfigProvider,
-                testedVariantData.getOutputs(),
-                testedVariantData.getVariantConfiguration().getSupportedAbis()));
+        apks.addAll(
+                SplitOutputMatcher.computeBestOutput(
+                        processExecutor,
+                        splitSelectExe,
+                        deviceConfigProvider,
+                        // FIX ME : there has to be a better way...
+                        testedVariantData
+                                .getSplitScope()
+                                .getOutputs(VariantScope.TaskOutputType.APK)
+                                .stream()
+                                .map(splitOutput -> splitOutput)
+                                .collect(Collectors.toList()),
+                        testedVariantData.getVariantConfiguration().getSupportedAbis()));
         return apks.build();
     }
 

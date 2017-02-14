@@ -78,7 +78,8 @@ public class GenerateApkDataTask extends BaseTask {
             }
 
             if (files.size() > 1) {
-                throw new IllegalStateException("Wear App dependency resolve to more than one APK: " + files);
+                throw new IllegalStateException(
+                        "Wear App dependency resolve to more than one APK: " + files);
             }
 
             apk = Iterables.getOnlyElement(files);

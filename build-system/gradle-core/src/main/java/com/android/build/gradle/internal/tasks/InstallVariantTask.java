@@ -19,6 +19,7 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.OutputFile;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -26,7 +27,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.sdk.SdkInfo;
@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
@@ -75,7 +76,7 @@ public class InstallVariantTask extends BaseTask {
 
     private Collection<String> installOptions;
 
-    private BaseVariantData<? extends BaseVariantOutputData> variantData;
+    private BaseVariantData<?> variantData;
 
     public InstallVariantTask() {
         this.getOutputs().upToDateWhen(task -> {
@@ -91,8 +92,17 @@ public class InstallVariantTask extends BaseTask {
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
-        BaseVariantData<? extends BaseVariantOutputData> variantData = getVariantData();
+        BaseVariantData<?> variantData = getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
+        List<OutputFile> outputs =
+                variantData
+                        .getSplitScope()
+                        .getOutputs(VariantScope.TaskOutputType.APK)
+                        .stream()
+                        .map(splitOutput -> splitOutput)
+                        .collect(Collectors.toList());
+
         install(
                 getProjectName(),
                 variantConfig.getFullName(),
@@ -100,7 +110,7 @@ public class InstallVariantTask extends BaseTask {
                 variantConfig.getMinSdkVersion(),
                 getProcessExecutor(),
                 getSplitSelectExe(),
-                variantData.getOutputs(),
+                outputs,
                 variantConfig.getSupportedAbis(),
                 getInstallOptions(),
                 getTimeOutInMs(),
@@ -114,7 +124,7 @@ public class InstallVariantTask extends BaseTask {
             @NonNull ApiVersion minSkdVersion,
             @NonNull ProcessExecutor processExecutor,
             @NonNull File splitSelectExe,
-            @NonNull List<? extends BaseVariantOutputData> outputs,
+            @NonNull List<OutputFile> outputs,
             @Nullable Set<String> supportedAbis,
             @NonNull Collection<String> installOptions,
             int timeOutInMs,
@@ -222,12 +232,11 @@ public class InstallVariantTask extends BaseTask {
         this.installOptions = installOptions;
     }
 
-    public BaseVariantData<? extends BaseVariantOutputData> getVariantData() {
+    public BaseVariantData<?> getVariantData() {
         return variantData;
     }
 
-    public void setVariantData(
-            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    public void setVariantData(BaseVariantData<?> variantData) {
         this.variantData = variantData;
     }
 

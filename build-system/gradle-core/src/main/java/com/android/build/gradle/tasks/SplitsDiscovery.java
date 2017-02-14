@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.Set;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -53,33 +55,52 @@ public class SplitsDiscovery extends BaseTask {
     Set<String> languageFilters;
     boolean languageAuto;
     Set<String> abiFilters;
+    Collection<String> resourceConfigs;
+    // FIX ME : use mergedResourcesFolders.
+    Set<File> resourceFolders;
 
     @InputFiles
     FileCollection getMergedResourcesFolders() {
         return mergedResourcesFolders;
     }
+
+    @InputFiles
+    Set<File> getResourceFolders() {
+        return resourceFolders;
+    }
+
     @Input
+    @Optional
     Set<String> getDensityFilters() {
         return densityFilters;
     }
 
     @Input
+    @Optional
     boolean isDensityAuto() {
         return densityAuto;
     }
 
     @Input
+    @Optional
     Set<String> getLanguageFilters() {
         return languageFilters;
     }
 
     @Input
+    @Optional
     boolean isLanguageAuto() {
         return languageAuto;
     }
     @Input
+    @Optional
     Set<String> getAbiFilters() {
         return abiFilters;
+    }
+
+    @Input
+    Collection<String> getResourceConfigs() {
+        return resourceConfigs;
     }
 
     File persistedList;
@@ -95,11 +116,18 @@ public class SplitsDiscovery extends BaseTask {
     void taskAction() throws IOException {
 
         Set<File> mergedResourcesFolderFiles = getMergedResourcesFolders().getFiles();
-        splitList.save(getPersistedList(),
+        Collection<String> resConfigs = resourceConfigs;
+        if (resourceConfigs.size() == 1
+                && Iterators.getOnlyElement(resourceConfigs.iterator()).equals("auto")) {
+            resConfigs = discoverListOfResourceConfigsNotDensities();
+        }
+        splitList.save(
+                getPersistedList(),
                 getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.DENSITY),
                 getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.LANGUAGE),
                 // no need to pass the source folders, we don't support Auto for ABI splits so far.
-                getFilters(ImmutableList.of(), DiscoverableFilterType.ABI));
+                getFilters(ImmutableList.of(), DiscoverableFilterType.ABI),
+                resConfigs);
     }
 
     /**
@@ -123,6 +151,13 @@ public class SplitsDiscovery extends BaseTask {
         return filtersList;
     }
 
+    @NonNull
+    public List<String> discoverListOfResourceConfigsNotDensities() {
+        List<String> resFoldersOnDisk = new ArrayList<String>();
+        resFoldersOnDisk.addAll(
+                getAllFilters(resourceFolders, DiscoverableFilterType.LANGUAGE.folderPrefix));
+        return resFoldersOnDisk;
+    }
 
     /**
      * Discover all sub-folders of all the resource folders which names are
@@ -248,15 +283,29 @@ public class SplitsDiscovery extends BaseTask {
         public void execute(@NonNull SplitsDiscovery task) {
             task.setVariantName(variantScope.getFullVariantName());
             Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
-            task.splitList = variantScope.getSplitList();
+            task.splitList = variantScope.getVariantData().getSplitList();
             task.persistedList = persistedList;
-            task.densityFilters = splits.getDensityFilters();
-            task.densityAuto = splits.getDensity().isAuto();
-            task.languageFilters = splits.getLanguageFilters();
-            task.languageAuto = splits.getLanguage().isAuto();
-            task.abiFilters = splits.getAbiFilters();
+            if (splits.getDensity().isEnable()) {
+                task.densityFilters = splits.getDensityFilters();
+                task.densityAuto = splits.getDensity().isAuto();
+            }
+            if (splits.getLanguage().isEnable()) {
+                task.languageFilters = splits.getLanguageFilters();
+                task.languageAuto = splits.getLanguage().isAuto();
+            }
+            if (splits.getAbi().isEnable()) {
+                task.abiFilters = splits.getAbiFilters();
+            }
             task.mergedResourcesFolders =
                     variantScope.getOutputs(VariantScope.TaskOutputType.MERGED_RES);
+            task.resourceConfigs =
+                    variantScope
+                            .getVariantConfiguration()
+                            .getMergedFlavor()
+                            .getResourceConfigurations();
+            // TODO: make sure this is known at configuration.
+            task.resourceFolders = variantScope.getVariantConfiguration().getResourceFolders();
+
         }
     }
 }

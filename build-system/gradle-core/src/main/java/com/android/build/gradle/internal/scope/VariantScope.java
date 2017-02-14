@@ -38,6 +38,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -47,7 +48,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
@@ -312,28 +312,31 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getMappingFile();
 
     @NonNull
+    File getGenerateSplitDensityOrLanguagesResOutputDirectory();
+
+    @NonNull
     File getGenerateSplitAbiResOutputDirectory();
+
+    @NonNull
+    File getSplitDensityOrLanguagesPackagesOutputDirectory();
+
+    @NonNull
+    File getSplitAbiPackagesOutputDirectory();
+
+    @NonNull
+    File getFullApkPackagesOutputDirectory();
 
     @NonNull
     File getSplitSupportDirectory();
 
     @NonNull
-    File getSplitOutputDirectory();
-
-    @NonNull
-    List<File> getSplitAbiResOutputFiles();
-
-    @NonNull
-    List<File> getPackageSplitAbiOutputFiles();
-
-    @NonNull
     File getPackageAtom(@NonNull String atomName);
 
     @NonNull
-    File getAaptFriendlyManifestOutputFile();
+    File getAaptFriendlyManifestOutputDirectory();
 
     @NonNull
-    File getInstantRunManifestOutputFile();
+    File getInstantRunManifestOutputDirectory();
 
     @NonNull
     File  getManifestReportFile();
@@ -357,6 +360,17 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getMainJarOutputDir();
 
     @NonNull
+    File getCompatibleScreensManifestDirectory();
+
+    @NonNull
+    File getManifestOutputDirectory();
+
+    AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask();
+
+    void setManifestProcessorTask(
+            AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask);
+
+    @NonNull
     File getLibInfoFile();
 
     AndroidTask<DefaultTask> getAssembleTask();
@@ -371,10 +385,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<ResolveDependenciesTask> getResolveDependenciesTask();
 
     void setResolveDependenciesTask(AndroidTask<ResolveDependenciesTask> resolveDependenciesTask);
-
-    AndroidTask<ProcessAndroidResources> getGenerateRClassTask();
-
-    void setGenerateRClassTask(AndroidTask<ProcessAndroidResources> generateRClassTask);
 
     AndroidTask<Task> getSourceGenTask();
 
@@ -482,7 +492,15 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     InstantRunTaskManager getInstantRunTaskManager();
     void setInstantRunTaskManager(InstantRunTaskManager taskManager);
 
-    @Nullable
-    SplitList getSplitList();
-    void setSplitList(@NonNull SplitList splitList);
+    @NonNull
+    File getProcessResourcePackageOutputDirectory();
+
+    void setProcessResourcesTask(
+            AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask);
+
+    AndroidTask<ProcessAndroidResources> getProcessResourcesTask();
+
+    AndroidTask<?> getShrinkResourcesTask();
+
+    void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask);
 }

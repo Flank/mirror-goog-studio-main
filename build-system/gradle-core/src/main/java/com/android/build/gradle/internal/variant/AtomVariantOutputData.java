@@ -39,13 +39,6 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
         super(outputType, filters, variantData);
     }
 
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        if (bundleAtomTask != null) {
-            bundleAtomTask.setBundleFile(file);
-        }
-    }
-
     @NonNull
     @Override
     public File getOutputFile() {
@@ -68,11 +61,4 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
     public String getVersionName() {
         return variantData.getVariantConfiguration().getVersionName();
     }
-
-    @NonNull
-    @Override
-    public File getProcessResourcePackageOutputFile() {
-        return new File(getScope().getVariantScope().getBaseBundleDir(), FN_RES_BASE + DOT_RES);
-    }
-
 }

@@ -783,7 +783,7 @@ public class ResPackagingTest {
     private static void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getTestApk("debug")), filename, content);
+        check(assertThat(project.getTestApk()), filename, content);
     }
 
     /**

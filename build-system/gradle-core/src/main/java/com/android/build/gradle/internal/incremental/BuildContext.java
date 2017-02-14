@@ -531,14 +531,14 @@ public class BuildContext {
                 fileType = FileType.SPLIT_MAIN;
             }
 
-            // because of signing/aligning, we can be notified several times of the main APK
+            // because of signing/aligning, we can be notified several times of the main FULL_APK
             // construction, last one wins.
             Artifact previousArtifact = currentBuild.getArtifactForType(fileType);
             if (previousArtifact != null) {
                 currentBuild.artifacts.remove(previousArtifact);
             }
 
-            // since the main APK is produced, no need to keep the RESOURCES record around.
+            // since the main FULL_APK is produced, no need to keep the RESOURCES record around.
             Artifact resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
             while (resourcesApFile != null) {
                 currentBuild.artifacts.remove(resourcesApFile);

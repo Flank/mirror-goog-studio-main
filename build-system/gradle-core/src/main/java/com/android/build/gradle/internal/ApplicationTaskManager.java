@@ -260,6 +260,7 @@ public class ApplicationTaskManager extends TaskManager {
         createStripNativeLibraryTask(tasks, variantScope);
 
         if (variantData
+                .getSplitScope()
                 .getSplitHandlingPolicy()
                 .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY)) {
             if (getExtension().getBuildToolsRevision().getMajor() < 21) {
@@ -327,8 +328,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
 
-            BaseVariantOutputData outputData = variantScope.getVariantData().getMainOutput();
-            PackagingScope packagingScope = new DefaultGradlePackagingScope(outputData.getScope());
+            PackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
 
             // create the transforms that will create the dependencies apk.
             InstantRunDependenciesApkBuilder dependenciesApkBuilder =
@@ -351,7 +351,7 @@ public class ApplicationTaskManager extends TaskManager {
             dependenciesApkBuilderTask.ifPresent(
                     task -> task.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope)));
 
-            // and now the transform that will create a split APK for each slice.
+            // and now the transform that will create a split FULL_APK for each slice.
             InstantRunSliceSplitApkBuilder slicesApkBuilder =
                     new InstantRunSliceSplitApkBuilder(
                             getLogger(),

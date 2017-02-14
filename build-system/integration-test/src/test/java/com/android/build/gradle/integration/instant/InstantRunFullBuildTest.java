@@ -75,12 +75,13 @@ public class InstantRunFullBuildTest {
 
     @Test
     public void testVersionCode() throws Exception {
-        TestFileUtils.appendToFile(mProject.getBuildFile(),
-                "android.applicationVariants.all { v ->\n"
-                        + "    v.outputs.each { o ->\n"
-                        + "        o.versionCodeOverride = 42\n"
-                        + "    }\n"
-                        + "}\n");
+        TestFileUtils.appendToFile(
+                mProject.getBuildFile(),
+                "android.applicationVariants.all { variant ->\n"
+                        + " variant.registerSplitCustomizer { split ->\n"
+                        + "    split.versionCode = 42\n"
+                        + "  }\n"
+                        + "}");
         doTest(24);
         assertThat(mProject.file("build/intermediates/instant-run-support/debug/slice_0/AndroidManifest.xml"))
                 .contains("android:versionCode=\"42\"");

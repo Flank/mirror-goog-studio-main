@@ -25,11 +25,9 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
@@ -44,10 +42,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.List;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -103,17 +98,16 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 variantData.getVariantDependency().getCompileClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
-        // TODO: replace hack below with a FileCollection that will contain the testing APK,
-        // obtained from the scope anchor types.
-        ImmutableList<ApkOutputFile> outputs = variantData.getMainOutput().getOutputs();
-        Preconditions.checkState(outputs.size() == 1, "There must be exactly one output");
-        File testingApk = outputs.get(0).getOutputFile();
+        FileCollection testingApk =
+                variantData.getScope().getOutputs(VariantScope.TaskOutputType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
-        // APK is published only to the runtime configuration
-        FileCollection testedApks = incomingRuntimeClasspath.artifactView()
-                .attributes(container -> container.attribute(ARTIFACT_TYPE,
-                        APK.getType())).getFiles();
+        // FULL_APK is published only to the runtime configuration
+        FileCollection testedApks =
+                incomingRuntimeClasspath
+                        .artifactView()
+                        .attributes(container -> container.attribute(ARTIFACT_TYPE, APK.getType()))
+                        .getFiles();
 
         // same for the metadata
         FileCollection testTargetMetadata = incomingCompileClasspath.artifactView()
@@ -201,13 +195,25 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         return mTargetManifestConfiguration;
     }
 
+    /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected TaskConfigAction<? extends ManifestProcessorTask> getMergeManifestConfig(
-            @NonNull VariantOutputScope scope,
-            @NonNull List<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        return new ProcessTestManifest.ConfigAction(
-                scope.getVariantScope(),
-                getTestTargetMetadata(scope.getVariantScope().getVariantData()));
+    protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
+            @NonNull TaskFactory taskFactory,
+            @NonNull VariantScope variantScope,
+            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
+        AndroidTask<ProcessTestManifest> processTestManifestAndroidTask =
+                getAndroidTasks()
+                        .create(
+                                taskFactory,
+                                new ProcessTestManifest.ConfigAction(
+                                        variantScope,
+                                        getTestTargetMetadata(variantScope.getVariantData())));
+
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                variantScope.getManifestOutputDirectory(),
+                processTestManifestAndroidTask.getName());
+        return processTestManifestAndroidTask;
     }
 }

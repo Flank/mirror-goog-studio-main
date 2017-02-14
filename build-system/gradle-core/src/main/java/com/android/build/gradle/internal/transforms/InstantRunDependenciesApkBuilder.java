@@ -43,7 +43,7 @@ import org.gradle.api.logging.Logger;
  * Transform to generate the dependencies APK when deploying instant-run enabled application in
  * multi-apk mode.
  *
- * In this context, the transform will consume all external dependencies and package them in a
+ * <p>In this context, the transform will consume all external dependencies and package them in a
  * single split apk file.
  */
 public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder {

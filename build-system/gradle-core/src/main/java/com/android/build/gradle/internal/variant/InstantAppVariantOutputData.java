@@ -34,12 +34,6 @@ public class InstantAppVariantOutputData extends BaseVariantOutputData {
         super(outputType, filters, variantData);
     }
 
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        packageInstantAppTask.setDestinationDir(file.getParentFile());
-        packageInstantAppTask.setArchiveName(file.getName());
-    }
-
     @NonNull
     @Override
     public File getOutputFile() {

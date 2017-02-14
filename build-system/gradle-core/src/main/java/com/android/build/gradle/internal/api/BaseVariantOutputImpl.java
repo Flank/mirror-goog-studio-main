@@ -18,14 +18,14 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
+import java.util.Collection;
 import org.gradle.api.Task;
 
 /**
@@ -39,17 +39,6 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull
     protected abstract BaseVariantOutputData getVariantOutputData();
-
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        getVariantOutputData().setOutputFile(file);
-    }
-
-    @NonNull
-    @Override
-    public File getOutputFile() {
-        return getVariantOutputData().getOutputFile();
-    }
 
     @NonNull
     @Override
@@ -71,12 +60,6 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Override
     public ProcessAndroidResources getProcessResources() {
         return getVariantOutputData().processResourcesTask;
-    }
-
-    @NonNull
-    @Override
-    public ManifestProcessorTask getProcessManifest() {
-        return getVariantOutputData().manifestProcessorTask;
     }
 
     @Nullable
@@ -105,7 +88,19 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull
     @Override
-    public File getSplitFolder() {
-        return getOutputFile().getParentFile();
+    public String getOutputType() {
+        return getVariantOutputData().getOutputType();
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        return getVariantOutputData().getFilterTypes();
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return getVariantOutputData().getFilters();
     }
 }

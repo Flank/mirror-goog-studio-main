@@ -18,17 +18,14 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.tasks.BundleAtom;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -37,6 +34,7 @@ import java.util.Map;
 public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutputData> implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
+    public BundleAtom bundleAtomTask;
 
     public AtomVariantData(
             @NonNull AndroidConfig androidConfig,
@@ -48,15 +46,7 @@ public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutpu
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
-        createOutput(OutputFile.OutputType.MAIN,
-                Collections.<FilterData>emptyList());
-    }
-    @NonNull
-    @Override
-    protected AtomVariantOutputData doCreateOutput(
-            OutputFile.OutputType splitOutput,
-            Collection<FilterData> filters) {
-        return new AtomVariantOutputData(splitOutput, filters, this);
+        getSplitFactory().addMainApk();
     }
 
     @Override

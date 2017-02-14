@@ -17,98 +17,63 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.tasks.FileSupplier;
-import com.android.build.gradle.tasks.SplitZipAlign;
-import com.android.build.gradle.tasks.ZipAlign;
-import com.google.common.base.Supplier;
+import com.android.build.gradle.internal.ide.FilterDataImpl;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import org.gradle.api.Task;
+import java.util.stream.Collectors;
 
-/**
- * Base output data for a variant that generates an APK file.
- */
+/** Base output data for a variant that generates an APK file. */
 public class ApkVariantOutputData extends BaseVariantOutputData {
 
-    public ZipAlign zipAlignTask;
-    public SplitZipAlign splitZipAlign;
-
-    private TaskManager taskManager;
     private int versionCodeOverride = -1;
     private String versionNameOverride = null;
 
     public ApkVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
             @NonNull Collection<FilterData> filters,
-            @NonNull BaseVariantData variantData,
-            @NonNull TaskManager taskManager) {
+            @NonNull BaseVariantData variantData) {
         super(outputType, filters, variantData);
-        this.taskManager = taskManager;
-    }
-
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        if (zipAlignTask != null) {
-            zipAlignTask.setOutputFile(file);
-        } else {
-            packageAndroidArtifactTask.setOutputFile(file);
-        }
-    }
-
-    @NonNull
-    @Override
-    public File getOutputFile() {
-        if (zipAlignTask != null) {
-            return zipAlignTask.getOutputFile();
-        }
-
-        return packageAndroidArtifactTask == null
-                ? getScope().getFinalPackage()
-                : packageAndroidArtifactTask.getOutputFile();
     }
 
     @NonNull
     @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
-        ImmutableList.Builder<ApkOutputFile> outputs = ImmutableList.builder();
-        outputs.add(getMainOutputFile());
-        if (splitZipAlign != null) {
-            outputs.addAll(splitZipAlign.getOutputSplitFiles());
-        } else {
-            if (packageSplitResourcesTask != null) {
-                outputs.addAll(packageSplitResourcesTask.getOutputSplitFiles());
-            }
-        }
-        return outputs.build();
+        return ImmutableList.copyOf(
+                getScope()
+                        .getSplitScope()
+                        .getOutputs(VariantScope.TaskOutputType.APK)
+                        .stream()
+                        .map(
+                                splitOutput ->
+                                        new ApkOutputFile(
+                                                splitOutput.getSplit().getType(),
+                                                splitOutput
+                                                        .getSplit()
+                                                        .getFilters()
+                                                        .stream()
+                                                        .map(
+                                                                filter ->
+                                                                        new FilterDataImpl(
+                                                                                filter
+                                                                                        .getFilterType(),
+                                                                                filter
+                                                                                        .getIdentifier()))
+                                                        .collect(Collectors.toList()),
+                                                splitOutput::getOutputFile,
+                                                splitOutput.getSplit().getVersionCode()))
+                        .collect(Collectors.toList()));
     }
 
     @NonNull
-    public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
-            @NonNull File outputFile) {
-        //noinspection VariableNotUsedInsideIf
-        if (zipAlignTask != null) {
-            throw new RuntimeException(String.format(
-                    "ZipAlign task for variant '%s' already exists.", variantData.getName()));
-        }
-
-        zipAlignTask =
-                taskManager.createZipAlignTask(
-                        taskName,
-                        inputFile,
-                        outputFile,
-                        getScope());
-
-        // setup dependencies
-        assembleTask.dependsOn(zipAlignTask);
-
-        return zipAlignTask;
+    @Override
+    public File getOutputFile() {
+        // FIX ME !
+        return getOutputs().get(0).getOutputFile();
     }
 
     @Override
@@ -118,12 +83,6 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
         }
 
         return variantData.getVariantConfiguration().getVersionCode();
-    }
-
-    @NonNull
-    @Override
-    public File getSplitFolder() {
-        return getOutputFile().getParentFile();
     }
 
     public String getVersionName() {
@@ -150,42 +109,5 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
         return versionNameOverride;
     }
 
-    /**
-     * Returns the list of {@link Supplier} for this variant. Some variant can produce more
-     * than one file when dealing with pure splits.
-     * @return the complete list of tasks producing an APK for this variant.
-     */
-    public List<FileSupplier> getSplitOutputFileSuppliers() {
-        ImmutableList.Builder<FileSupplier> tasks = ImmutableList.builder();
-        if (splitZipAlign != null || packageSplitResourcesTask != null) {
-            tasks.addAll(splitZipAlign == null ? packageSplitResourcesTask.getOutputFileSuppliers()
-                : splitZipAlign.getOutputFileSuppliers());
-        }
-        // ABI splits zip are aligned together with the other densities in the splitZipAlign task
-        // so only add the ABI splits from the package task if there was no splitZipAlign task.
-        if (packageSplitAbiTask != null && splitZipAlign == null) {
-            tasks.addAll(packageSplitAbiTask.getOutputFileSuppliers());
-        }
-        return tasks.build();
-    }
 
-    @Nullable
-    public FileSupplier getMetadataFile() {
-
-        if (splitZipAlign == null) {
-            return null;
-        }
-        return new FileSupplier() {
-            @NonNull
-            @Override
-            public Task getTask() {
-                return splitZipAlign;
-            }
-
-            @Override
-            public File get() {
-                return splitZipAlign.getApkMetadataFile();
-            }
-        };
-    }
 }
