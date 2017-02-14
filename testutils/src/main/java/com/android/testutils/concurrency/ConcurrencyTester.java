@@ -55,10 +55,12 @@ import org.junit.Assert;
  * for (...) {
  *     Function actionUnderTest = (input) -> { ... };
  *     tester.addMethodInvocationFromNewThread(
- *             (Function anActionUnderTest) -> {
- *                 // ConcurrencyTester requires using anActionUnderTest instead of actionUnderTest
- *                 // when calling methodUnderTest
- *                 methodUnderTest(..., anActionUnderTest);
+ *             (Function instrumentedActionUnderTest) -> {
+ *                 // instrumentedActionUnderTest is actionUnderTest plus the instrumented code by
+ *                 // ConcurrencyTester, so that the tester can perform necessary concurrency
+ *                 // checks when the action starts and finishes.
+ *                 // The client will need to call methodUnderTest with this instrumented action.
+ *                 methodUnderTest(..., instrumentedActionUnderTest);
  *             },
  *             actionUnderTest);
  * }
@@ -186,13 +188,13 @@ public final class ConcurrencyTester<F, T> {
         for (int i = 0; i < methodInvocationList.size(); i++) {
             Consumer<Function<F, T>> methodInvocation = methodInvocationList.get(i);
             Function<F, T> actionUnderTest = actionUnderTestList.get(i);
-            runnables.add(() -> {
-                methodInvocation.accept(
-                        (input) -> {
-                            executedActions.getAndIncrement();
-                            return actionUnderTest.apply(input);
-                        });
-            });
+            runnables.add(
+                    () ->
+                            methodInvocation.accept(
+                                    (input) -> {
+                                        executedActions.getAndIncrement();
+                                        return actionUnderTest.apply(input);
+                                    }));
         }
 
         Map<Thread, Optional<Throwable>> threads = executeRunnablesInThreads(runnables);
@@ -221,9 +223,7 @@ public final class ConcurrencyTester<F, T> {
         BlockingQueue<Thread> startedActionQueue = Queues.newLinkedBlockingQueue();
         BlockingQueue<CountDownLatch> finishRequestQueue = Queues.newLinkedBlockingQueue();
 
-        Runnable actionStartedHandler = () -> {
-            startedActionQueue.add(Thread.currentThread());
-        };
+        Runnable actionStartedHandler = () -> startedActionQueue.add(Thread.currentThread());
 
         Runnable actionFinishedHandler = () -> {
             CountDownLatch finishRequest = new CountDownLatch(1);
@@ -287,6 +287,7 @@ public final class ConcurrencyTester<F, T> {
 
             // If a new action has started, let it run but do not let it finish. Instead, we keep
             // waiting for more actions to start (repeat the loop).
+            //noinspection VariableNotUsedInsideIf
             if (startedAction != null) {
                 remainingActions--;
                 CountDownLatch finishRequest;
@@ -305,14 +306,14 @@ public final class ConcurrencyTester<F, T> {
                 // actions are blocking the new actions, or the new actions are taking too long to
                 // start. Since we cannot distinguish these two cases, we let all the running
                 // actions finish and repeat the loop.
-                while (finishRequests.size() > 0) {
+                while (!finishRequests.isEmpty()) {
                     finishRequests.removeFirst().countDown();
                 }
             }
         }
 
         // Let all the running actions finish
-        while (finishRequests.size() > 0) {
+        while (!finishRequests.isEmpty()) {
             finishRequests.removeFirst().countDown();
         }
 
@@ -335,15 +336,15 @@ public final class ConcurrencyTester<F, T> {
      * Executes the runnables in separate threads and returns immediately after all the threads have
      * started execution (this method does not wait until all the threads have terminated).
      *
-     * This methods returns a map from the threads to any exceptions thrown during the execution of
-     * the threads. Note that the map's values (if any) are not available immediately but only after
-     * the threads have terminated.
+     * <p>This methods returns a map from the threads to any exceptions thrown during the execution
+     * of the threads. Note that the map's values (if any) are not available immediately but only
+     * after the threads have terminated.
      *
      * @param runnables the runnables to be executed
      * @return a map from the threads to any exceptions thrown during the execution of the threads
      */
     @NonNull
-    private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
+    private static Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
             @NonNull List<Runnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
         CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
@@ -372,10 +373,8 @@ public final class ConcurrencyTester<F, T> {
         return threads;
     }
 
-    /**
-     * Waits for all the threads to finish.
-     */
-    private void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
+    /** Waits for all the threads to finish. */
+    private static void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
         // Wait for the threads to finish
         for (Thread thread : threads.keySet()) {
             try {
@@ -386,6 +385,7 @@ public final class ConcurrencyTester<F, T> {
         }
 
         // Throw any exceptions that occurred during the execution of the threads
+        //noinspection OptionalUsedAsFieldOrParameterType
         for (Optional<Throwable> throwable : threads.values()) {
             if (throwable.isPresent()) {
                 throw new RuntimeException(throwable.get());
