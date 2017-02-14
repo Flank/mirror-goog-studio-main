@@ -27,8 +27,6 @@ import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,23 +35,20 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 
-    @Parameterized.Parameters(name="library={0},forExperimentalPlugin={1},withoutAdapters={2},jack={3}")
+    @Parameterized.Parameters(name = "library={0},forExperimentalPlugin={1},withoutAdapters={2}")
     public static Collection<Object[]> getParameters() {
         List<Object[]> options = new ArrayList<>();
-        for (int i = 0 ; i < 16; i ++) {
-            options.add(new Object[]{
-                (i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0
-            });
+        for (int i = 0; i < 8; i++) {
+            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0, (i & 4) != 0});
         }
         return options;
     }
     private final boolean myWithoutAdapters;
     private final boolean myLibrary;
-    private final boolean myUseJack;
     private final String buildFile;
 
-    public DataBindingTest(boolean library, boolean forExperimentalPlugin, boolean withoutAdapters,
-            boolean useJack) {
+    public DataBindingTest(
+            boolean library, boolean forExperimentalPlugin, boolean withoutAdapters) {
         myWithoutAdapters = withoutAdapters;
         myLibrary = library;
         List<String> options = new ArrayList<>();
@@ -66,13 +61,9 @@ public class DataBindingTest {
         if (forExperimentalPlugin) {
             options.add("forexperimental");
         }
-        myUseJack = useJack;
         project = GradleTestProject.builder()
                 .fromTestProject("databinding")
                 .useExperimentalGradleVersion(forExperimentalPlugin)
-                .withJack(myUseJack)
-                .withBuildToolsVersion(
-                        useJack ? GradleTestProject.UPCOMING_BUILD_TOOL_VERSION : null)
                 .create();
         buildFile = options.isEmpty()
                 ? null
@@ -81,11 +72,6 @@ public class DataBindingTest {
 
     @Rule
     public final GradleTestProject project;
-
-    @Before
-    public void skipLibraryJack() {
-        Assume.assumeTrue(!myUseJack || !myLibrary);
-    }
 
     @Test
     public void checkApkContainsDataBindingClasses() throws Exception {

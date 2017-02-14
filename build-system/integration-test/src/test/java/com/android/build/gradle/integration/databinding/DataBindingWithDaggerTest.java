@@ -41,15 +41,15 @@ public class DataBindingWithDaggerTest {
 
     private final String buildSuffix;
 
-    @Parameterized.Parameters(name = "specify_processor_class_{0} use_jack_{1}")
+    @Parameterized.Parameters(name = "specify_processor_class_{0}")
     public static List<Object[]> parameters() {
-        return Arrays.asList(new Object[]{true, true},
-                new Object[]{true, false},
-                new Object[]{false, true},
-                new Object[]{false, false});
+        return Arrays.asList(
+                new Object[][] {
+                    {false}, {true},
+                });
     }
 
-    public DataBindingWithDaggerTest(boolean specifyProcessor, boolean useJack) {
+    public DataBindingWithDaggerTest(boolean specifyProcessor) {
         if (specifyProcessor) {
             buildSuffix = ".specifyprocessor.gradle";
         } else {
@@ -59,7 +59,6 @@ public class DataBindingWithDaggerTest {
         project = GradleTestProject.builder()
                 .fromTestProject("databindingAndDagger")
                 .useExperimentalGradleVersion(false)
-                .withJack(useJack)
                 .create();
     }
 
