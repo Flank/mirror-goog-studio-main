@@ -96,6 +96,7 @@ public class BuildContext {
     static final String ATTR_BUILD_MODE = "build-mode";
     static final String ATTR_FILTER_TYPE = "type";
     static final String ATTR_FILTER_VALUE = "value";
+    static final String ATTR_IR_ELIGIBILITY = "ir-eligibility";
 
     // Keep roughly in sync with InstantRunBuildInfo#isCompatibleFormat:
     //
@@ -124,16 +125,19 @@ public class BuildContext {
 
         private final long buildId;
         @NonNull private InstantRunVerifierStatus verifierStatus;
+        @Nullable private InstantRunVerifierStatus eligibilityStatus;
         private InstantRunBuildMode buildMode;
         private final List<Artifact> artifacts = new ArrayList<>();
 
         public Build(
                 long buildId,
                 @NonNull InstantRunVerifierStatus verifierStatus,
-                @NonNull InstantRunBuildMode buildMode) {
+                @NonNull InstantRunBuildMode buildMode,
+                @Nullable InstantRunVerifierStatus eligibilityStatus) {
             this.buildId = buildId;
             this.verifierStatus = verifierStatus;
             this.buildMode = buildMode;
+            this.eligibilityStatus = eligibilityStatus;
         }
 
         @Nullable
@@ -156,6 +160,9 @@ public class BuildContext {
             element.setAttribute(ATTR_TIMESTAMP, String.valueOf(buildId));
             element.setAttribute(ATTR_VERIFIER, verifierStatus.name());
             element.setAttribute(ATTR_BUILD_MODE, buildMode.name());
+            if (eligibilityStatus != null) {
+                element.setAttribute(ATTR_IR_ELIGIBILITY, eligibilityStatus.name());
+            }
             for (Artifact artifact : artifacts) {
                 element.appendChild(artifact.toXml(document));
             }
@@ -166,11 +173,17 @@ public class BuildContext {
             NamedNodeMap attributes = buildNode.getAttributes();
             Node verifierAttribute = attributes.getNamedItem(ATTR_VERIFIER);
             Node buildModeAttribute = attributes.getNamedItem(ATTR_BUILD_MODE);
+            Node eligibilityAttribute = attributes.getNamedItem(ATTR_IR_ELIGIBILITY);
+            InstantRunVerifierStatus eligibility =
+                    eligibilityAttribute == null
+                            ? null
+                            : InstantRunVerifierStatus.valueOf(eligibilityAttribute.getNodeValue());
             Build build =
                     new Build(
                             Long.parseLong(attributes.getNamedItem(ATTR_TIMESTAMP).getNodeValue()),
                             InstantRunVerifierStatus.valueOf(verifierAttribute.getNodeValue()),
-                            InstantRunBuildMode.valueOf(buildModeAttribute.getNodeValue()));
+                            InstantRunBuildMode.valueOf(buildModeAttribute.getNodeValue()),
+                            eligibility);
             NodeList childNodes = buildNode.getChildNodes();
             for (int i = 0; i < childNodes.getLength(); i++) {
                 Node artifactNode = childNodes.item(i);
@@ -204,6 +217,11 @@ public class BuildContext {
         @NonNull
         public InstantRunBuildMode getBuildMode() {
             return buildMode;
+        }
+
+        @Nullable
+        public InstantRunVerifierStatus getEligibilityStatus() {
+            return eligibilityStatus;
         }
     }
 
@@ -319,10 +337,12 @@ public class BuildContext {
 
     @VisibleForTesting
     BuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
-        currentBuild =  new Build(
-                buildIdAllocator.allocatedBuildId(),
-                InstantRunVerifierStatus.NO_CHANGES,
-                InstantRunBuildMode.HOT_WARM);
+        currentBuild =
+                new Build(
+                        buildIdAllocator.allocatedBuildId(),
+                        InstantRunVerifierStatus.NO_CHANGES,
+                        InstantRunBuildMode.HOT_WARM,
+                        null /* eligibilityStatus */);
     }
 
 
@@ -404,10 +424,26 @@ public class BuildContext {
                 currentBuild.buildMode);
     }
 
+    /**
+     * Records the actual result of the verification pass, even if a cold swap was requested. This
+     * is status is reported to the IDE via build-info.xml, so the IDE can notify the user if their
+     * last build was eligible for a hot or warm swap (to encourage people to use it.)
+     *
+     * @param verifierStatus - the actual status recorded by the verifier
+     */
+    public void setInstantRunEligibilityStatus(@NonNull InstantRunVerifierStatus verifierStatus) {
+        currentBuild.eligibilityStatus = verifierStatus;
+    }
+
     /** Returns the verifier status if set for the current build being executed. */
     @NonNull
     public InstantRunVerifierStatus getVerifierResult() {
         return currentBuild.getVerifierStatus();
+    }
+
+    @Nullable
+    public InstantRunVerifierStatus getInstantRunEligibilityStatus() {
+        return currentBuild.getEligibilityStatus();
     }
 
     /**

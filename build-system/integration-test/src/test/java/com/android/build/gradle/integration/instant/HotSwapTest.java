@@ -30,11 +30,14 @@ import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
@@ -107,6 +110,27 @@ public class HotSwapTest {
                 .containsClass("Lcom/example/helloworld/HelloWorld$1$override;")
                 .that()
                 .hasMethod("call");
+    }
+
+    @Test
+    public void testBuildEligibilityWithColdSwapRequested() throws Exception {
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+
+        InstantRunTestUtils.doInitialBuild(project, 19);
+
+        createActivityClass("CHANGE");
+
+        project.executor()
+                .withInstantRun(19, OptionalCompilationStep.RESTART_ONLY)
+                .run("assembleDebug");
+
+        InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
+        assertThat(context.getVerifierStatus())
+                .isEqualTo(InstantRunVerifierStatus.COLD_SWAP_REQUESTED.toString());
+
+        assertThat(context.getBuildInstantRunEligibility())
+                .isEqualTo(InstantRunVerifierStatus.COMPATIBLE.toString());
     }
 
     @Test
