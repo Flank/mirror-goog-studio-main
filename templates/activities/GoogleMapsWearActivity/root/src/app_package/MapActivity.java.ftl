@@ -7,14 +7,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.DismissOverlayView;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.FrameLayout;
 
-public class ${activityClass} extends Activity implements OnMapReadyCallback,
+public class ${activityClass} extends WearableActivity implements OnMapReadyCallback,
         GoogleMap.OnMapLongClickListener {
 
     /**
@@ -32,6 +32,8 @@ public class ${activityClass} extends Activity implements OnMapReadyCallback,
 
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
+
+        setAmbientEnabled();
 
         // Set the layout. It only contains a MapFragment and a DismissOverlay.
         setContentView(R.layout.${layoutName});
