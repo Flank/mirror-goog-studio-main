@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
@@ -117,25 +116,13 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
-        // Remove dependencyResolutionChecker.
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n");
-
         RunGradleTasks executor =
                 project.executor()
                         .withProperty("android.enableBuildCache", "false")
                         .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
 
-        // Improved dependency resolution must be disabled if build cache is disabled.
-        executor.withProperty(
-                AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, "false");
-
-        executor.run("clean", "assembleDebug");
-        assertThat(buildCacheDir).doesNotExist();
-
-        GradleBuildResult result = executor.expectFailure().run("cleanBuildCache");
+        GradleBuildResult result = executor.expectFailure().run("clean", "assembleDebug");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Task 'cleanBuildCache' not found in root project");
+                .contains("aar transform can only work with the build cache");
     }
 }
