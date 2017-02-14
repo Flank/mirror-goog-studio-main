@@ -173,13 +173,14 @@ public class WaitableExecutor<T> {
      * Waits for all tasks to be executed, and returns a {@link TaskResult} for each, containing
      * either the result or the exception thrown by the task.
      *
-     * If a task is cancelled (and it threw InterruptedException) then the result for the task
-     * is *not* included.
+     * <p>If a task is cancelled (and it threw InterruptedException) then the result for the task is
+     * *not* included.
      *
      * @return a list of all the return values from the tasks.
-     *
-     * @throws InterruptedException if this thread was interrupted. Not if the tasks were interrupted.
+     * @throws InterruptedException if this thread was interrupted. Not if the tasks were
+     *     interrupted.
      */
+    @NonNull
     public List<TaskResult<T>> waitForAllTasks() throws InterruptedException {
         List<TaskResult<T>> results = Lists.newArrayListWithCapacity(mFutureSet.size());
         try {
