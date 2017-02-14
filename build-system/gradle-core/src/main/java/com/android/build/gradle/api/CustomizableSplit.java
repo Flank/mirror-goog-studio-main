@@ -76,4 +76,11 @@ public interface CustomizableSplit {
      * @param versionName the new split version name.
      */
     void setVersionName(String versionName);
+
+    /**
+     * Sets the output file name to use for this split
+     *
+     * @param outputFileName
+     */
+    void setOutputFileName(String outputFileName);
 }

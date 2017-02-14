@@ -21,7 +21,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.core.AndroidBuilder;
@@ -31,9 +33,11 @@ import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import org.apache.tools.ant.BuildException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -52,6 +56,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
+    private SplitScope splitScope;
 
     private File reportFile;
 
@@ -85,6 +90,16 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 Collections.emptyList(),
                                 getReportFile());
         buildContext.setPackageId(mergingReport.getPackageName());
+        splitScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                splitScope.getMainSplit(),
+                outputManifestFile);
+        try {
+            splitScope.save(
+                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+        } catch (IOException e) {
+            throw new BuildException("Exception while saving build metadata : ", e);
+        }
     }
 
     @Input
@@ -237,6 +252,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
                     scope.getAaptFriendlyManifestOutputDirectory());
+            processManifest.splitScope = scope.getSplitScope();
 
         }
     }
