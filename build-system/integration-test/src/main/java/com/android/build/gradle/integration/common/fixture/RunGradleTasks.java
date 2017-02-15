@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.tasks.BooleanLatch;
@@ -54,6 +55,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
     private Boolean useDexArchive = true;
+    private Boolean useNewResourceProcessing = true;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -173,6 +175,14 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             Boolean.toString(useDexArchive)));
         }
 
+        if (useNewResourceProcessing != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING.getPropertyName(),
+                            useNewResourceProcessing));
+        }
+
         args.addAll(arguments);
 
         String message =
@@ -234,6 +244,11 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
         this.useDexArchive = useDexArchive;
+        return this;
+    }
+
+    public RunGradleTasks withNewResourceProcessing(boolean useNewResourceProcessing) {
+        this.useNewResourceProcessing = useNewResourceProcessing;
         return this;
     }
 
