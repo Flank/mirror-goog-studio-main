@@ -58,11 +58,11 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
                 "}\n" +
                 "\n" +
                 "configurations {\n" +
-                "  _debugCompile\n" +
-                "  _debugApk\n" +
+                "  debugCompileClasspath\n" +
+                "  debugRuntimeClasspath\n" +
                 "}\n" +
                 "\n" +
-                "configurations._debugCompile {\n" +
+                "configurations.debugCompileClasspath {\n" +
                 "  resolutionStrategy {\n" +
                 "    eachDependency { DependencyResolveDetails details ->\n" +
                 "      if (details.requested.name == \"jdeferred-android-aar\") {\n" +
@@ -71,7 +71,7 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
                 "    }\n" +
                 "  }\n" +
                 "}\n" +
-                "configurations._debugApk {\n" +
+                "configurations.debugRuntimeClasspath {\n" +
                 "  resolutionStrategy {\n" +
                 "    eachDependency { DependencyResolveDetails details ->\n" +
                 "      if (details.requested.name == \"jdeferred-android-aar\") {\n" +
