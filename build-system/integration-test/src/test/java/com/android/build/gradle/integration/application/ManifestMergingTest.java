@@ -90,10 +90,7 @@ public class ManifestMergingTest {
                 .contains("android:testOnly=\"true\"");
     }
 
-    /**
-     * Check that setting targetSdkVersion to a preview version updates the minSdkVersion in the
-     * manifest.
-     */
+    /** Check that setting targetSdkVersion to a preview version mark the manifest with testOnly. */
     @Test
     public void checkPreviewTargetSdkVersion() throws Exception {
         GradleTestProject appProject = libsTest.getSubproject("app");
@@ -110,14 +107,12 @@ public class ManifestMergingTest {
         assertThat(
                 appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
+                        "android:minSdkVersion=\"15\"",
                         "android:targetSdkVersion=\"N\"",
-                        "android:minSdkVersion=\"N\"");
+                        "android:testOnly=\"true\"");
     }
 
-    /**
-     * Check that setting minSdkVersion to a preview version updates the targetSdkVersion in the
-     * manifest.
-     */
+    /** Check that setting minSdkVersion to a preview version mark the manifest with testOnly */
     @Test
     public void checkPreviewMinSdkVersion() throws Exception {
         GradleTestProject appProject = libsTest.getSubproject("app");
@@ -134,8 +129,9 @@ public class ManifestMergingTest {
         assertThat(
                 appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
-                        "android:targetSdkVersion=\"N\"",
-                        "android:minSdkVersion=\"N\"");
+                        "android:minSdkVersion=\"N\"",
+                        "android:targetSdkVersion=\"15\"",
+                        "android:testOnly=\"true\"");
     }
 
 }

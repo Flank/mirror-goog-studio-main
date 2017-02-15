@@ -265,22 +265,15 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.setVariantName(config.getFullName());
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
 
-            ConventionMappingHelper.map(processTestManifestTask, "minSdkVersion", () -> {
-                        if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                            return scope.getGlobalScope().getAndroidBuilder()
-                                    .getTargetCodename();
-                        }
-                        return config.getMinSdkVersion().getApiString();
-                    });
+            ConventionMappingHelper.map(
+                    processTestManifestTask,
+                    "minSdkVersion",
+                    config.getMinSdkVersion()::getApiString);
 
-            ConventionMappingHelper.map(processTestManifestTask, "targetSdkVersion", () -> {
-                        if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                            return scope.getGlobalScope().getAndroidBuilder()
-                                    .getTargetCodename();
-                        }
-
-                        return config.getTargetSdkVersion().getApiString();
-                    });
+            ConventionMappingHelper.map(
+                    processTestManifestTask,
+                    "targetSdkVersion",
+                    config.getTargetSdkVersion()::getApiString);
 
             if (targetManifestConfiguration != null){
                 // it is a task for the test module, get the tested application id from its manifest

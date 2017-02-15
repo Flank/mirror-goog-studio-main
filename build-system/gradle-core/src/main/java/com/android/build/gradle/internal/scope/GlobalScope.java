@@ -29,10 +29,7 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.IntegerOption;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -40,7 +37,6 @@ import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
@@ -254,29 +250,6 @@ public class GlobalScope implements TransformGlobalScope {
     @Override
     public ProjectOptions getProjectOptions() {
         return projectOptions;
-    }
-
-    /**
-     * Determine if a produced APK should be marked as testOnly to prevent uploading to Play store.
-     *
-     * <p>Uploading to Play store is disallowed if:
-     *
-     * <ul>
-     *   <li>An injected option is set (usually by the IDE for testing purposes).
-     * </ul>
-     *
-     * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
-     */
-    public boolean isTestOnly() {
-        Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
-
-        if (isTestOnlyOverride != null) {
-            return isTestOnlyOverride;
-        }
-
-        return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
-                || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY))
-                || projectOptions.get(IntegerOption.IDE_TARGET_FEATURE_LEVEL) != null;
     }
 
     @Nullable
