@@ -145,6 +145,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 case NO_OP:
                     executor().run("assembleVanillaDebug");
                     executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    break;
                 default:
                     throw new UnsupportedOperationException(benchmarkMode.toString());
             }
