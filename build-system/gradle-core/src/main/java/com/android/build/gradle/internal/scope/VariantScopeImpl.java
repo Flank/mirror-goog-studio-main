@@ -1205,7 +1205,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getInstantRunManifestOutputDirectory() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "manifests", "instant-run");
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "manifests",
+                "instant-run",
+                getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -1253,7 +1257,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getManifestOutputDirectory() {
         switch (getVariantConfiguration().getType()) {
             case DEFAULT:
-                return FileUtils.join(getGlobalScope().getIntermediatesDir(), "manifests", "full");
             case INSTANTAPP:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
