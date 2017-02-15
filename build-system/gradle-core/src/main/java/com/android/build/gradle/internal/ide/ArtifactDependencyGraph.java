@@ -62,9 +62,12 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 public class ArtifactDependencyGraph {
+
+    private static final String LOCAL_AAR_GROUPID = "__local_aars__";
 
     private static final CreatingCache<ResolvedArtifactResult, MavenCoordinates>
             sMavenCoordinatesCache =
@@ -127,8 +130,7 @@ public class ArtifactDependencyGraph {
                 return (((ProjectComponentIdentifier) id).getProjectPath() + "::" + variant)
                         .intern();
             }
-        } else if (id instanceof ModuleComponentIdentifier
-                || Files.getFileExtension(artifact.getFile().getName()).equals(EXT_JAR)) {
+        } else if (id instanceof ModuleComponentIdentifier || id instanceof OpaqueComponentArtifactIdentifier) {
             MavenCoordinates coordinates =
                     sMavenCoordinatesCache.get(new HashableResolvedArtifactResult(artifact));
             checkNotNull(coordinates);
@@ -145,7 +147,8 @@ public class ArtifactDependencyGraph {
     private static MavenCoordinates computeMavenCoordinates(ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
 
-        final String fileName = artifact.getFile().getName();
+        final File artifactFile = artifact.getFile();
+        final String fileName = artifactFile.getName();
         String extension = Files.getFileExtension(fileName);
         if (id instanceof ModuleComponentIdentifier) {
             ModuleComponentIdentifier moduleComponentId = (ModuleComponentIdentifier) id;
@@ -172,10 +175,17 @@ public class ArtifactDependencyGraph {
         } else if (id instanceof ProjectComponentIdentifier) {
             return new MavenCoordinatesImpl(
                     "artifacts", ((ProjectComponentIdentifier) id).getProjectPath(), "unspecified");
-        } else if (extension.equals(EXT_JAR)) {
-            // We have a local jar.
-            return JavaDependency.getCoordForLocalJar(artifact.getFile());
+        } else if (id instanceof OpaqueComponentArtifactIdentifier) {
+            // We have a file based dependency
+            if (extension.equals(EXT_JAR)) {
+                return JavaDependency.getCoordForLocalJar(artifactFile);
+            } else {
+                // local aar?
+                assert artifactFile.isDirectory();
+                return new MavenCoordinatesImpl(LOCAL_AAR_GROUPID, artifactFile.getPath(), "unspecified");
+            }
         }
+
         throw new RuntimeException(
                 "Don't know how to compute maven coordinate for artifact '"
                         + artifact.getId().getDisplayName()
