@@ -23,7 +23,7 @@ import com.android.build.OutputFile;
 import java.util.List;
 
 /**
- * Interface for customizing output splits. Registers and {@see Action} on {@see
+ * Interface for customizing output splits. Registers an {@link org.gradle.api.Action} on {@link
  * BaseVariant#registerSplitCustomizer} to get notified by the build system of a split creation.
  */
 public interface CustomizableSplit {

@@ -82,7 +82,7 @@ public interface Recorder {
 
     /**
      * Records the time elapsed while executing a {@link VoidBlock} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProcessRecorder}.
+     * GradleBuildProfileSpan} to {@link ProfileRecordWriter}.
      *
      * @param executionType the task type, so aggregation can be performed.
      * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")

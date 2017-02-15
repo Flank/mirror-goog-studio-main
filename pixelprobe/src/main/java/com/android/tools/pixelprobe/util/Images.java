@@ -16,13 +16,23 @@
 
 package com.android.tools.pixelprobe.util;
 
-import com.android.tools.pixelprobe.*;
+import com.android.tools.pixelprobe.ColorMode;
 import com.android.tools.pixelprobe.color.Colors;
 import com.android.tools.pixelprobe.color.CsIndexColorModel;
-
-import java.awt.*;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.color.ColorSpace;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ByteLookupTable;
+import java.awt.image.ColorConvertOp;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DirectColorModel;
+import java.awt.image.LookupOp;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
@@ -634,13 +644,11 @@ public final class Images {
     }
 
     /**
-     * Creates a copy of the specified image in the sRGB color space. If the
-     * source image is already in the sRGB space, a copy is also returned.
-     * Callers can use {@link #isColorSpace_sRGB()} to decide whether to invoke
-     * this method.
+     * Creates a copy of the specified image in the sRGB color space. If the source image is already
+     * in the sRGB space, a copy is also returned. Callers can use {@link
+     * #isColorSpace_sRGB(BufferedImage)} to decide whether to invoke this method.
      *
      * @param image The image to copy and convert. Cannot be null.
-     *
      * @return A {@link BufferedImage} whose color space is {@link ColorSpace#CS_sRGB}
      */
     public static BufferedImage copyTo_sRGB(BufferedImage image) {
