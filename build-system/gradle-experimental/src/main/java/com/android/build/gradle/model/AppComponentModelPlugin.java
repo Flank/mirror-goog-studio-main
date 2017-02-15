@@ -74,6 +74,7 @@ public class AppComponentModelPlugin implements Plugin<Project> {
         public static TaskManager createTaskManager(
                 AndroidConfig androidExtension,
                 Project project,
+                ProjectOptions projectOptions,
                 AndroidBuilder androidBuilder,
                 DataBindingBuilder dataBindingBuilder,
                 SdkHandler sdkHandler,
@@ -87,6 +88,7 @@ public class AppComponentModelPlugin implements Plugin<Project> {
 
             return new ApplicationComponentTaskManager(
                     project,
+                    projectOptions,
                     androidBuilder,
                     dataBindingBuilder,
                     androidExtension,

@@ -18,10 +18,10 @@ package com.android.build.gradle.integration.component;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import org.junit.BeforeClass;
@@ -59,7 +59,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkSingleBuildAbi() throws Exception {
         sProject.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -71,7 +70,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkOnlyTheFirstAbiIsPackaged() throws Exception {
         sProject.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi,x86")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -83,7 +81,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkEmptyListDoNotFilter() throws Exception {
         sProject.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -93,8 +90,9 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkTargetAbiNeedsToBeEnabled() throws Exception {
+    public void checkBuildOnlyTargetAbiCanBeDisabled() throws Exception {
         sProject.executor()
+                .withProperty(BooleanOption.BUILD_ONLY_TARGET_ABI.getPropertyName(), "false")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");

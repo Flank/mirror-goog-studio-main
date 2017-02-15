@@ -121,8 +121,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private File ndkObjFolder;
     @NonNull
     private Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
-    @NonNull
-    private List<String> annotationProcessorArguments = Lists.newArrayList();
 
     @Nullable
     private File mergeResourceOutputDir;

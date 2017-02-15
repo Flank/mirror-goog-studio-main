@@ -140,7 +140,6 @@ android {
         // it is not valid for the build . The second (x86) should be the one chosen to build.
         // Finally, armeabi is valid but it will be ignored because x86 is "preferred".
         project.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "invalid-abi,x86,armeabi")
                 .run("clean", "assembleDebug")
         Apk apk = project.getApk("debug");
@@ -151,6 +150,9 @@ android {
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
+
+        assertThat(project.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+                .contains("android:testOnly=\"true\"");
     }
 
     @Test

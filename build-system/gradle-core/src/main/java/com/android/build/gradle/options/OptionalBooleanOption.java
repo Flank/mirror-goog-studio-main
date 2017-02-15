@@ -23,6 +23,7 @@ import com.android.builder.model.AndroidProject;
 public enum OptionalBooleanOption implements Option<Boolean> {
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED),
+    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY),
     ;
 
     @NonNull private final String propertyName;

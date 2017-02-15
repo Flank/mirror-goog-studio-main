@@ -73,6 +73,7 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
         public static TaskManager createTaskManager(
                 AndroidConfig androidExtension,
                 Project project,
+                ProjectOptions projectOptions,
                 AndroidBuilder androidBuilder,
                 DataBindingBuilder dataBindingBuilder,
                 SdkHandler sdkHandler,
@@ -86,6 +87,7 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
 
             return new LibraryComponentTaskManager(
                     project,
+                    projectOptions,
                     androidBuilder,
                     dataBindingBuilder,
                     androidExtension,

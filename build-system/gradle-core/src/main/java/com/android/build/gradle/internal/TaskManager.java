@@ -123,6 +123,7 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -668,7 +669,7 @@ public abstract class TaskManager {
                     variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
                 optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
             }
-            if (AndroidGradleOptions.getTestOnly(project)) {
+            if (globalScope.isTestOnly()) {
                 optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
             }
 
@@ -1358,13 +1359,19 @@ public abstract class TaskManager {
 
         generateTask.dependsOn(tasks, scope.getPreBuildTask());
 
-        boolean buildOnlyTargetAbi = AndroidGradleOptions.isBuildOnlyTargetAbiEnabled(project);
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
+
+        String targetAbi =
+                projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+                        ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
+                        : null;
+
         // Set up build tasks
-        AndroidTask<ExternalNativeBuildTask> buildTask = androidTasks.create(
-                tasks,
-                new ExternalNativeBuildTask.ConfigAction(
-                        buildOnlyTargetAbi ? AndroidGradleOptions.getBuildTargetAbi(project) : null,
-                        generator, scope, androidBuilder));
+        AndroidTask<ExternalNativeBuildTask> buildTask =
+                androidTasks.create(
+                        tasks,
+                        new ExternalNativeBuildTask.ConfigAction(
+                                targetAbi, generator, scope, androidBuilder));
 
         buildTask.dependsOn(tasks, generateTask);
         scope.setExternalNativeBuildTask(buildTask);
