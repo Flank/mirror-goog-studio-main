@@ -17,6 +17,8 @@
 package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
+import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonWriter;
@@ -173,26 +175,19 @@ public class ChromeTracingProfileConverter {
                 }
                 switch (span.getType()) {
                     case TASK_EXECUTION:
-                        writer
-                                .name("name")
-                                .value("task: " + pretty(span.getTask().getType()));
+                        writer.name("name").value("task: " + taskName(span));
                         args.put("task", span.getTask());
                         break;
                     case TASK_TRANSFORM:
-                        writer
-                                .name("name")
-                                .value("transform: " + pretty(span.getTransform().getType()));
+                        writer.name("name").value("transform: " + transformName(span));
                         args.put("transform", span.getTransform());
                         break;
                     case TASK_TRANSFORM_PREPARATION:
-                        writer
-                                .name("name")
-                                .value("transform prep: " + pretty(span.getTransform().getType()));
+                        writer.name("name").value("transform prep: " + transformName(span));
                         args.put("transform", span.getTransform());
                         break;
                     default:
-                        writer
-                                .name("name").value(pretty(span.getType()));
+                        writer.name("name").value(pretty(span.getType()));
                         break;
                 }
 
@@ -223,6 +218,16 @@ public class ChromeTracingProfileConverter {
                 project.getVariantList().stream()
                     .collect(Collectors.toMap(GradleBuildVariant::getId, Function.identity()));
         }
+    }
+
+    @NonNull
+    private static String taskName(@NonNull GradleBuildProfileSpan span) {
+        return pretty(GradleTaskExecutionType.forNumber(span.getTask().getType()));
+    }
+
+    @NonNull
+    private static String transformName(@NonNull GradleBuildProfileSpan span) {
+        return pretty(GradleTransformExecutionType.forNumber(span.getTransform().getType()));
     }
 
     private static String pretty(Enum theEnum) {
