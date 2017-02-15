@@ -261,13 +261,5 @@ public class GlobalScope extends TaskOutputHolderImpl
     /** Validate flag options. */
     public static void validateAndroidGradleOptions(
             @NonNull ProjectOptions projectOptions, @Nullable FileCache buildCache) {
-        if (projectOptions.get(BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION)
-                && buildCache == null) {
-            throw new InvalidUserDataException("Build cache must be enabled to use improved "
-                    + "dependency resolution.  Set -Pandroid.enableBuildCache=true to continue.  "
-                    + "If enabling build cache is not possible, improved dependency resolution can "
-                    + "be disabled by setting "
-                    + "-Pandroid.enableImprovedDependenciesResolution=false.");
-        }
     }
 }

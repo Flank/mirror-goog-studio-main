@@ -33,7 +33,6 @@ public enum BooleanOption implements Option<Boolean> {
     OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
-    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi"),
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
