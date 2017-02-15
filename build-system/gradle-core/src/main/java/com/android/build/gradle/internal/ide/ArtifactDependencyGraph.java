@@ -52,6 +52,8 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -143,15 +145,30 @@ public class ArtifactDependencyGraph {
     private static MavenCoordinates computeMavenCoordinates(ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
 
-        String extension = Files.getFileExtension(artifact.getFile().getName());
+        final String fileName = artifact.getFile().getName();
+        String extension = Files.getFileExtension(fileName);
         if (id instanceof ModuleComponentIdentifier) {
             ModuleComponentIdentifier moduleComponentId = (ModuleComponentIdentifier) id;
+            final String module = moduleComponentId.getModule();
+            final String version = moduleComponentId.getVersion();
+            String classifier = null;
+
+            // if there's no extension, then it's an exploded aar.
+            extension = extension.isEmpty() ? EXT_AAR : extension;
+
+            if (!artifact.getFile().isDirectory()) {
+                // attempts to compute classifier based on the filename.
+                String pattern = "^" + module + "-" + version + "-(.+)\\." + extension + "$";
+
+                Pattern p = Pattern.compile(pattern);
+                Matcher m = p.matcher(fileName);
+                if (m.matches()) {
+                    classifier = m.group(1);
+                }
+            }
+
             return new MavenCoordinatesImpl(
-                    moduleComponentId.getGroup(),
-                    moduleComponentId.getModule(),
-                    moduleComponentId.getVersion(),
-                    extension.isEmpty() ? EXT_AAR : extension,
-                    null);
+                    moduleComponentId.getGroup(), module, version, extension, classifier);
         } else if (id instanceof ProjectComponentIdentifier) {
             return new MavenCoordinatesImpl(
                     "artifacts", ((ProjectComponentIdentifier) id).getProjectPath(), "unspecified");
