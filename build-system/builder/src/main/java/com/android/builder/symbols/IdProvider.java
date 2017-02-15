@@ -18,10 +18,8 @@ package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
 
-/**
- * Provides IDs for resource assignment. It is essentially a supplier of unique integer values.
- */
-interface IdProvider {
+/** Provides IDs for resource assignment. It is essentially a supplier of unique integer values. */
+public interface IdProvider {
 
     /**
      * Provides another unique ID.

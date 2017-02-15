@@ -15,47 +15,58 @@
  */
 package com.android.ide.common.res2;
 
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_LAYOUT;
+
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
-import static com.android.SdkConstants.*;
-
 /**
- * Parser for scanning id-generating XML files (layout or menu).
+ * This class is deprecated and it's usages will soon move to a new parser in the Symbols package
+ * {@link com.android.builder.symbols.ResourceExtraXmlParser}.
  *
- * Does not handle data-binding files (throws an exception if parsed).
+ * <p>Parser for scanning id-generating XML files (layout or menu).
+ *
+ * <p>Does not handle data-binding files (throws an exception if parsed).
  */
+@Deprecated
 class IdGeneratingResourceParser {
 
     private ResourceItem mFileResourceItem;
     private List<ResourceItem> mIdResourceItems;
 
     /**
-     * Parse the file for new IDs, given the source document's name and type.
-     * After this completes, the getters can be used to grab the items
-     * (the items for the IDs, and the item for the file itself).
+     * Parse the file for new IDs, given the source document's name and type. After this completes,
+     * the getters can be used to grab the items (the items for the IDs, and the item for the file
+     * itself).
      *
      * @param file the file to parse
      * @param sourceName the name of the file-based resource (derived from xml filename)
      * @param sourceType the type of the file-based resource (e.g., menu).
      * @throws MergingException if given a data-binding file, or fails to parse.
      */
-    IdGeneratingResourceParser(@NonNull File file,
-                               @NonNull String sourceName, @NonNull ResourceType sourceType) throws MergingException {
+    IdGeneratingResourceParser(
+            @NonNull File file, @NonNull String sourceName, @NonNull ResourceType sourceType)
+            throws MergingException {
         Document mDocument = readDocument(file);
         if (hasDataBindings(mDocument)) {
             throw MergingException.withMessage("Does not handle data-binding files").build();
