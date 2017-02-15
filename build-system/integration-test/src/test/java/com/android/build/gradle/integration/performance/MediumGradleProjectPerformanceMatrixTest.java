@@ -157,7 +157,9 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 project.getSubproject("WordPrcess")
                         .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java"),
                 "protected void onStart\\(\\) \\{",
-                "protected void onStart() {\n" + "        Log.d(TAG, \"onStart called " + "\");");
+                "protected void onStart() {\n"
+                        + "        android.util.Log.d(\"WPMainActivity\", \"onStart called "
+                        + "\");");
     }
 
     private void changeJavaApi(@NonNull String newMethodName) throws IOException {
@@ -173,7 +175,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                 "private void "
                         + newMethodName
                         + "() {\n"
-                        + "        Log.d(TAG, \""
+                        + "        android.util.Log.d(\"WPMainActivity\", \""
                         + newMethodName
                         + " called\");\n"
                         + "    }\n");
