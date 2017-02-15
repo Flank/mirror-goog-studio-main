@@ -163,6 +163,13 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private String projectBaseName;
 
+    private TaskOutputHolder.TaskOutputType taskInputType;
+
+    @Input
+    public TaskOutputHolder.TaskOutputType getTaskInputType() {
+        return taskInputType;
+    }
+
     @Input
     public String getProjectBaseName() {
         return projectBaseName;
@@ -203,14 +210,9 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
 
-        VariantScope.TaskOutputType taskOutputType =
-                buildContext.isInInstantRunMode()
-                        ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-                        : VariantScope.TaskOutputType.MERGED_MANIFESTS;
-
         File mergedManifestsOutput = splitScope.getOutputFile(manifestFiles);
         if (mergedManifestsOutput != null) {
-            splitScope.load(taskOutputType, new FileReader(mergedManifestsOutput));
+            splitScope.load(taskInputType, new FileReader(mergedManifestsOutput));
         }
 
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
@@ -281,7 +283,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 codeGenNecessary.set(false);
                             }
                             File splitOutputFile =
-                                    invokeAaptForSplit(taskOutputType, split, codeGen);
+                                    invokeAaptForSplit(taskInputType, split, codeGen);
                             splitScope.addOutputForSplit(
                                     VariantScope.TaskOutputType.PROCESSED_RES,
                                     split,
@@ -724,14 +726,14 @@ public class ProcessAndroidResources extends IncrementalTask {
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope.hasOutput(
                             TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+            processResources.taskInputType =
+                    aaptFriendlyManifestsFilePresent
+                            ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
+                            : variantScope.getBuildContext().isInInstantRunMode()
+                                    ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
+                                    : VariantScope.TaskOutputType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
-                    variantScope.getOutputs(
-                            aaptFriendlyManifestsFilePresent
-                                    ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                                    : variantScope.getBuildContext().isInInstantRunMode()
-                                            ? VariantScope.TaskOutputType
-                                                    .INSTANT_RUN_MERGED_MANIFESTS
-                                            : VariantScope.TaskOutputType.MERGED_MANIFESTS));
+                    variantScope.getOutputs(processResources.taskInputType));
 
             // FIX ME : we should not have both a file collection and a resDir plus, we should
             // express the dependency on the databinding task through a file collection.

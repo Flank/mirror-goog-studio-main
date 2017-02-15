@@ -94,9 +94,16 @@ public class ProcessManifest extends ManifestProcessorTask {
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                 splitScope.getMainSplit(),
                 outputManifestFile);
+        splitScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                splitScope.getMainSplit(),
+                aaptFriendlyManifestOutputFile);
         try {
             splitScope.save(
                     TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+            splitScope.save(
+                    TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                    getAaptFriendlyManifestOutputDirectory());
         } catch (IOException e) {
             throw new BuildException("Exception while saving build metadata : ", e);
         }
