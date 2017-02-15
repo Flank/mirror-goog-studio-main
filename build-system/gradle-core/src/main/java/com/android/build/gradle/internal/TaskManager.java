@@ -1961,19 +1961,17 @@ public abstract class TaskManager {
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
         // non Library test are running as native multi-dex
         if (isMultiDexEnabled && isLegacyMultiDexMode) {
-            if (!variantData.getVariantConfiguration().getBuildType().isUseProguard()) {
-                throw new IllegalStateException(
-                        "Build-in class shrinker and multidex are not supported yet.");
-            }
+            boolean proguardInPipeline = isMinifyEnabled && config.getBuildType().isUseProguard();
 
-            // ----------
-            // create a transform to jar the inputs into a single jar.
-            if (!isMinifyEnabled
+            // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
+            // new dexing pipeline, we'll use the new MainDexListTransform below, so there's no need
+            // for merging all classes into a single jar.
+            if (!proguardInPipeline
                     && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
-                // merge the classes only, no need to package the resources since they are
-                // not used during the computation.
-                JarMergingTransform jarMergingTransform = new JarMergingTransform(
-                        TransformManager.SCOPE_FULL_PROJECT);
+                // Create a transform to jar the inputs into a single jar. Merge the classes only,
+                // no need to package the resources since they are not used during the computation.
+                JarMergingTransform jarMergingTransform =
+                        new JarMergingTransform(TransformManager.SCOPE_FULL_PROJECT);
                 transformManager
                         .addTransform(tasks, variantScope, jarMergingTransform)
                         .ifPresent(variantScope::addColdSwapBuildTask);
