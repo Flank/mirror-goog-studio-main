@@ -17,12 +17,17 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.AfterClass;
@@ -66,10 +71,17 @@ public class AppWithJarDependOnLibTest {
     }
 
     @Test
-    public void checkModelFailedToLoad() throws Exception {
-        assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_JAR_DEPEND_ON_AAR,
-                "projectWithModules:jar:unspecified@jar");
+    public void checkModelContainsBothSubProjects() throws Exception {
+        AndroidProject model = modelContainer.getModelMap().get(":app");
+
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
+        assertThat(debug).isNotNull();
+
+        DependencyGraphs dependencyGraph = debug.getMainArtifact().getDependencyGraphs();
+
+        assertThat(helper.on(dependencyGraph).withType(MODULE).mapTo(GRADLE_PATH))
+                .containsExactly(":jar", ":library");
     }
 }
