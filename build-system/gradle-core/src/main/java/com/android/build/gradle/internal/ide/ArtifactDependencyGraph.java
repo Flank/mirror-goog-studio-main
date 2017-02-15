@@ -19,12 +19,15 @@ package com.android.build.gradle.internal.ide;
 import static com.android.SdkConstants.EXT_AAR;
 import static com.android.SdkConstants.EXT_JAR;
 import static com.android.SdkConstants.FD_JARS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
+import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
@@ -39,6 +42,7 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
+import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -164,32 +168,57 @@ public class ArtifactDependencyGraph {
     }
 
     /** Return an Iterable of all artifact a variant depends on. */
-    private static Iterable<ResolvedArtifactResult> getAllArtifacts(VariantScope variantScope) {
+    private static Iterable<ResolvedArtifactResult> getAllArtifacts(
+            @NonNull VariantScope variantScope,
+            AndroidArtifacts.ConsumedConfigType consumedConfigType) {
         // FIXME: This is returning all aar artifacts first and then jar artifacts instead of the
         // order that the variant would actually see.
         ArtifactCollection aarArtifacts =
                 variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        consumedConfigType,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.EXPLODED_AAR);
         ArtifactCollection jarArtifacts =
                 variantScope.getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        consumedConfigType,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.JAR);
         return Iterables.concat(aarArtifacts, jarArtifacts);
     }
 
     /** Create a level 2 dependency graph. */
-    public static DependencyGraphs createLevel2DependencyGraph(VariantScope variantScope) {
+    public static DependencyGraphs createLevel2DependencyGraph(
+            @NonNull VariantScope variantScope, boolean withFullDependency) {
         List<GraphItem> compileItems = Lists.newArrayList();
 
-        for (ResolvedArtifactResult artifact : getAllArtifacts(variantScope)) {
+        for (ResolvedArtifactResult artifact : getAllArtifacts(variantScope, COMPILE_CLASSPATH)) {
             compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
             sLibraryCache.get(new HashableResolvedArtifactResult(artifact));
         }
 
-        return new SimpleDependencyGraphsImpl(compileItems);
+        if (!withFullDependency) {
+            return new SimpleDependencyGraphsImpl(compileItems);
+        }
+
+        // FIXME: when full dependency is enabled, this should return a full graph instead of a
+        // flat list.
+
+        List<GraphItem> runtimeItems = Lists.newArrayList();
+        for (ResolvedArtifactResult artifact : getAllArtifacts(variantScope, RUNTIME_CLASSPATH)) {
+            runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
+            sLibraryCache.get(new HashableResolvedArtifactResult(artifact));
+        }
+        List<GraphItem> providedItems = Lists.newArrayList(compileItems);
+        providedItems.removeAll(runtimeItems);
+
+        return new FullDependencyGraphsImpl(
+                compileItems,
+                runtimeItems,
+                providedItems
+                        .stream()
+                        .map(GraphItem::getArtifactAddress)
+                        .collect(ImmutableCollectors.toImmutableList()),
+                ImmutableList.of()); // FIXME: actually get skip list
     }
 
     /** Create a level 1 dependency list. */
@@ -199,7 +228,7 @@ public class ArtifactDependencyGraph {
         ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
 
-        for (ResolvedArtifactResult artifact : getAllArtifacts(variantScope)) {
+        for (ResolvedArtifactResult artifact : getAllArtifacts(variantScope, COMPILE_CLASSPATH)) {
             ComponentIdentifier id = artifact.getId().getComponentIdentifier();
 
             boolean isSubproject = id instanceof ProjectComponentIdentifier;
