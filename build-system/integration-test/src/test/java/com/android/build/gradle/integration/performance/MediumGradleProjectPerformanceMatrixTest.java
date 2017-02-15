@@ -28,9 +28,14 @@ import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableSet;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,39 +93,106 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @Test
     public void runBenchmarks() throws Exception {
         // Warm up
-        model().getMulti();
-        executor().run("assemble");
+        Map<String, AndroidProject> models = model().getMulti().getModelMap();
         executor().run("clean");
+        executor().run("assembleVanillaDebug");
 
-        executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
+        for (BenchmarkMode benchmarkMode : getBenchmarks()) {
+            switch (benchmarkMode) {
+                case EVALUATION:
+                    executor().recordBenchmark(benchmarkMode).run("tasks");
+                    break;
+                case SYNC:
+                    Map<String, AndroidProject> model =
+                            model().recordBenchmark(BenchmarkMode.SYNC).getMulti().getModelMap();
+                    assertThat(model.keySet()).contains(":WordPress");
+                    continue;
+                case BUILD__FROM_CLEAN:
+                    FileUtils.cleanOutputDir(executor().getBuildCacheDir());
+                    clean();
+                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    break;
+                case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
+                    clean();
+                    changeJavaImplementation();
+                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    break;
+                case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
+                    clean();
+                    changeJavaApi("newMethod");
+                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    break;
+                case BUILD_ANDROID_TESTS_FROM_CLEAN:
+                    clean();
+                    executor()
+                            .recordBenchmark(benchmarkMode)
+                            .run("assembleVanillaDebugAndroidTest");
+                    break;
+                case GENERATE_SOURCES:
+                    clean();
+                    List<String> generateSourcesCommands =
+                            ModelHelper.getGenerateSourcesCommands(
+                                    models,
+                                    project ->
+                                            project.equals(":WordPress")
+                                                    ? "vanillaDebug"
+                                                    : "debug");
+                    executor()
+                            .recordBenchmark(benchmarkMode)
+                            .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                            .run(generateSourcesCommands);
+                    break;
+                case NO_OP:
+                    executor().run("assembleVanillaDebug");
+                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                default:
+                    throw new UnsupportedOperationException(benchmarkMode.toString());
+            }
+        }
+    }
 
-        Map<String, AndroidProject> model =
-                model().recordBenchmark(BenchmarkMode.SYNC).getMulti().getModelMap();
-        assertThat(model.keySet()).contains(":WordPress");
+    private void changeJavaImplementation() throws IOException {
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("WordPrcess")
+                        .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java"),
+                "public void onStart\\(\\) \\{",
+                "public void onStart() {\n" + "        Log.d(TAG, \"onStart called " + "\");");
+    }
 
+    private void changeJavaApi(@NonNull String newMethodName) throws IOException {
+        File mainActivity =
+                project.getSubproject("WordPress")
+                        .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java");
+        TestFileUtils.searchAndReplace(
+                mainActivity,
+                "public void onStart\\(\\) \\{",
+                "public void onStart() {\n" + "        " + newMethodName + "();");
+        TestFileUtils.addMethod(
+                mainActivity,
+                "private void "
+                        + newMethodName
+                        + "() {\n"
+                        + "        Log.d(TAG, \""
+                        + newMethodName
+                        + " called\");\n"
+                        + "    }\n");
+    }
 
-        executor()
-                .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
-                .withArgument("-Pandroid.injected.generateSourcesOnly=true")
-                .run(
-                        ModelHelper.getGenerateSourcesCommands(
-                                model,
-                                project ->
-                                        project.equals(":WordPress") ? "vanillaDebug" : "debug"));
+    @NonNull
+    private Set<BenchmarkMode> getBenchmarks() {
+        return ImmutableSet.of(
+                BenchmarkMode.EVALUATION,
+                BenchmarkMode.SYNC,
+                BenchmarkMode.GENERATE_SOURCES,
+                BenchmarkMode.BUILD__FROM_CLEAN,
+                BenchmarkMode.NO_OP,
+                BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN,
+                BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
+                BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE);
+    }
 
+    private void clean() throws IOException, InterruptedException {
         executor().run("clean");
-
-        FileUtils.cleanOutputDir(project.executor().getBuildCacheDir());
-
-        executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleVanillaDebug");
-
-        executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleVanillaDebug");
-
-        executor().run("clean");
-
-        executor()
-                .recordBenchmark(BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN)
-                .run("assembleVanillaDebugAndroidTest");
     }
 
     @NonNull
