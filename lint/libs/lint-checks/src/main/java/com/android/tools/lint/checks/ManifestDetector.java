@@ -30,6 +30,7 @@ import static com.android.SdkConstants.DRAWABLE_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.TAG_CATEGORY;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TAG_PERMISSION;
 import static com.android.SdkConstants.TAG_PROVIDER;
@@ -48,6 +49,7 @@ import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
@@ -1045,24 +1047,31 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
-    private static boolean isLaunchableActivity(@NonNull Element element) {
-        if (!TAG_ACTIVITY.equals(element.getTagName())) {
-            return false;
+    static boolean isLaunchableActivity(@NonNull Element activity) {
+        return findLaunchableCategoryNode(activity) != null;
+    }
+
+    @Nullable
+    static Attr findLaunchableCategoryNode(@NonNull Element activity) {
+        if (!TAG_ACTIVITY.equals(activity.getTagName())) {
+            return null;
         }
 
-        for (Element child : XmlUtils.getSubTags(element)) {
-            if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                for (Element innerChild : XmlUtils.getSubTags(child)) {
-                    if (innerChild.getTagName().equals("category")) {
-                        String categoryString = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                        return "android.intent.category.LAUNCHER".equals(categoryString);
-                    }
+        Element child = XmlUtils.getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
+        while (child != null) {
+            Element innerChild = XmlUtils.getFirstSubTagTagByName(child, TAG_CATEGORY);
+            while (innerChild != null) {
+                Attr attribute = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                if (attribute != null &&
+                        attribute.getValue().equals("android.intent.category.LAUNCHER")) {
+                    return attribute;
                 }
+                innerChild = XmlUtils.getNextTagByName(innerChild, TAG_CATEGORY);
             }
+            child = XmlUtils.getNextTagByName(child, TAG_INTENT_FILTER);
         }
 
-        return false;
+        return null;
     }
 
     /** Returns true iff the given manifest file is the main manifest file */

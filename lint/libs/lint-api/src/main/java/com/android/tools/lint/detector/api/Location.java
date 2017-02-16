@@ -49,6 +49,7 @@ public class Location {
     private Object clientData;
     private boolean visible = true;
     private boolean selfExplanatory = true;
+    private Object source;
 
     /**
      * Special marker location which means location not available, or not applicable, or filtered
@@ -123,7 +124,8 @@ public class Location {
      * sense.
      * <p>
      * This attribute is ignored for the primary location for an issue (e.g. the location
-     * passed to {@link LintClient#report(Context, Issue, Severity, Location, String, TextFormat)},
+     * passed to
+     * {@link LintClient#report(Context, Issue, Severity, Location, String, TextFormat, Object)},
      * and it applies for all the secondary locations linked from that location.
      *
      * @return whether this secondary location should be shown on its own in the editor.
@@ -231,6 +233,45 @@ public class Location {
         setSecondary(secondary);
         return this;
     }
+
+    /**
+     * Returns the source element for this location, if applicable
+     *
+     * @return the source element or null
+     */
+    @Nullable
+    public Object getSource() {
+        return source;
+    }
+
+    /**
+     * Returns the source element for this location provided it's of the given type, if applicable
+     *
+     * @param clz the type of the source
+     * @return the source element or null
+     */
+    @Nullable
+    public <T> T getSource(@NonNull Class<T> clz) {
+        //if (source instanceof T) {
+        if (source != null && clz.isAssignableFrom(source.getClass())) {
+            //noinspection unchecked
+            return (T) source;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the source element applicable for this location, if any
+     *
+     * @param source the source
+     * @return this, for constructor chaining
+     */
+    public Location setSource(@Nullable Object source) {
+        this.source = source;
+        return this;
+    }
+
     /**
      * Sets a custom message for this location. This is typically used for
      * secondary locations, to describe the significance of this alternate

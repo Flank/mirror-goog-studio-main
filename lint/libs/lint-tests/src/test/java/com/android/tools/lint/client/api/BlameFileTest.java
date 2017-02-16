@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.XmlTestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintClient;
+import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -32,6 +33,7 @@ import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 public class BlameFileTest {
     @Rule
@@ -41,7 +43,7 @@ public class BlameFileTest {
     public void test() throws IOException {
         File root = folder.getRoot();
 
-        XmlTestFile.create("app/src/main/AndroidManifest.xml", ""
+        File sourceManifest = XmlTestFile.create("app/src/main/AndroidManifest.xml", ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "    package=\"test.pkg.myapplication\">\n"
@@ -185,7 +187,7 @@ public class BlameFileTest {
         BlameFile.XmlVisitor.accept(document, new BlameFile.XmlVisitor() {
             @Override
             public boolean visitAttribute(Attr attribute) {
-                Attr source = file.findSourceAttribute(client, attribute);
+                Pair<File,Node> source = file.findSourceAttribute(client, attribute);
                 if (source == null) {
                     String name = attribute.getName();
                     // Injected
@@ -195,6 +197,8 @@ public class BlameFileTest {
                             || name.equals("android:targetSdkVersion")) {
                         return false;
                     }
+                } else {
+                    assertThat(source.getFirst()).isEqualTo(sourceManifest);
                 }
                 assertThat(source).named(attribute.getName()).isNotNull();
                 return false;
@@ -202,7 +206,7 @@ public class BlameFileTest {
 
             @Override
             public boolean visitTag(Element element, String tag) {
-                Element source = file.findSourceElement(client, element);
+                Pair<File,Node> source = file.findSourceElement(client, element);
 
                 // Injected
                 if (tag.equals("uses-sdk")) {
@@ -210,6 +214,7 @@ public class BlameFileTest {
                 }
 
                 assertThat(source).named(tag).isNotNull();
+                assertThat(source.getFirst()).isEqualTo(sourceManifest);
                 return false;
             }
         });

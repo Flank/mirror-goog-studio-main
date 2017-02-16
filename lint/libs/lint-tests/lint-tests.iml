@@ -29,5 +29,6 @@
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="lombok-ast" level="project" />
+    <orderEntry type="module" module-name="manifest-merger-base" scope="TEST" />
   </component>
 </module>

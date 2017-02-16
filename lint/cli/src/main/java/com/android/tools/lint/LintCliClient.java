@@ -28,10 +28,14 @@ import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.builder.model.ApiVersion;
+import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.SourceProvider;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestMerger2.MergeType;
 import com.android.manifmerger.MergingReport;
+import com.android.manifmerger.XmlDocument;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
@@ -54,7 +58,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.StdLogger;
-import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -75,7 +78,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Lint client for command line usage. Supports the flags in {@link LintCliFlags},
@@ -259,6 +264,7 @@ public class LintCliClient extends LintClient {
         }
     }
 
+    @NonNull
     @Override
     public XmlParser getXmlParser() {
         return new LintCliXmlParser(this);
@@ -892,23 +898,75 @@ public class LintCliClient extends LintClient {
     public Document getMergedManifest(@NonNull Project project) {
         List<File> manifests = Lists.newArrayList();
         for (Project dependency : project.getAllLibraries()) {
-            for (File manifest : dependency.getManifestFiles()) {
-                manifests.add(manifest);
+            manifests.addAll(dependency.getManifestFiles());
+        }
+
+        File injectedFile = new File("injected-from-gradle");
+        StringBuilder injectedXml = new StringBuilder();
+        if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
+            ProductFlavor mergedFlavor = project.getCurrentVariant().getMergedFlavor();
+            ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
+            ApiVersion minSdkVersion = mergedFlavor.getMinSdkVersion();
+            if (targetSdkVersion != null || minSdkVersion != null) {
+                injectedXml.append(""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <uses-sdk ");
+                if (minSdkVersion != null) {
+                    injectedXml.append("android:minSdkVersion=\"")
+                            .append(minSdkVersion.getApiString()).append("\"");
+                }
+                if (targetSdkVersion != null) {
+                    injectedXml.append("android:targetSdkVersion=\"")
+                            .append(targetSdkVersion.getApiString()).append("\"");
+                }
+                injectedXml.append(" />\n"
+                        + "</manifest>\n");
+                manifests.add(injectedFile);
             }
         }
 
-        List<File> projectManifests = project.getManifestFiles();
-        if (projectManifests.isEmpty()) {
-            return null;
-        }
-        File mainManifest = projectManifests.get(0);
-        for (int i = 1; i < projectManifests.size(); i++) {
-            manifests.add(projectManifests.get(i));
+        File mainManifest = null;
+
+        if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
+            for (SourceProvider provider : LintUtils.getSourceProviders(
+                    project.getGradleProjectModel(), project.getCurrentVariant())) {
+                File manifestFile = provider.getManifestFile();
+                if (manifestFile.exists()) { // model returns path whether or not it exists
+                    if (mainManifest == null) {
+                        mainManifest = manifestFile;
+                    } else {
+                        manifests.add(manifestFile);
+                    }
+                }
+            }
+            if (mainManifest == null) {
+                return null;
+            }
+        } else {
+            List<File> projectManifests;
+            projectManifests = project.getManifestFiles();
+            if (projectManifests.isEmpty()) {
+                return null;
+            }
+            mainManifest = projectManifests.get(0);
+            for (int i = 1; i < projectManifests.size(); i++) {
+                manifests.add(projectManifests.get(i));
+            }
         }
 
         if (manifests.isEmpty()) {
             // Only the main manifest: that's easy
-            return XmlUtils.parseDocumentSilently(readFile(mainManifest).toString(), true);
+            try {
+                Document document = getXmlParser().parseXml(mainManifest);
+                if (document != null) {
+                    resolveMergeManifestSources(document, mainManifest);
+                }
+                return document;
+            } catch (IOException | SAXException | ParserConfigurationException e) {
+                log(Severity.WARNING, e, "Could not parse %1$s", mainManifest);
+            }
+
+            return null;
         }
 
         try {
@@ -927,15 +985,23 @@ public class LintCliClient extends LintClient {
                         @Override
                         protected InputStream getInputStream(@NonNull File file) throws
                                 FileNotFoundException {
+                            if (injectedFile.equals(file)) {
+                                return CharSequences.getInputStream(injectedXml.toString());
+                            }
                             CharSequence text = readFile(file);
                             // TODO: Avoid having to convert back and forth
                             return CharSequences.getInputStream(text);
                         }
                     })
                     .merge();
-            String xml = mergeReport.getMergedDocument(MERGED);
-            if (xml != null) {
-                return XmlUtils.parseDocumentSilently(xml, true);
+
+            XmlDocument xmlDocument = mergeReport.getMergedXmlDocument(MERGED);
+            if (xmlDocument != null) {
+                Document document = xmlDocument.getXml();
+                if (document != null) {
+                    resolveMergeManifestSources(document, mergeReport.getActions());
+                    return document;
+                }
             }
         }
         catch (ManifestMerger2.MergeFailureException e) {

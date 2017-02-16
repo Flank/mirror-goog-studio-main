@@ -12,14 +12,11 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -294,39 +291,7 @@ public class LintGradleProject extends Project {
 
         private List<SourceProvider> getSourceProviders() {
             if (mProviders == null) {
-                List<SourceProvider> providers = Lists.newArrayList();
-                AndroidArtifact mainArtifact = mVariant.getMainArtifact();
-
-                providers.add(mProject.getDefaultConfig().getSourceProvider());
-
-                for (String flavorName : mVariant.getProductFlavors()) {
-                    for (ProductFlavorContainer flavor : mProject.getProductFlavors()) {
-                        if (flavorName.equals(flavor.getProductFlavor().getName())) {
-                            providers.add(flavor.getSourceProvider());
-                            break;
-                        }
-                    }
-                }
-
-                SourceProvider multiProvider = mainArtifact.getMultiFlavorSourceProvider();
-                if (multiProvider != null) {
-                    providers.add(multiProvider);
-                }
-
-                String buildTypeName = mVariant.getBuildType();
-                for (BuildTypeContainer buildType : mProject.getBuildTypes()) {
-                    if (buildTypeName.equals(buildType.getBuildType().getName())) {
-                        providers.add(buildType.getSourceProvider());
-                        break;
-                    }
-                }
-
-                SourceProvider variantProvider = mainArtifact.getVariantSourceProvider();
-                if (variantProvider != null) {
-                    providers.add(variantProvider);
-                }
-
-                mProviders = providers;
+                mProviders = LintUtils.getSourceProviders(mProject, mVariant);
             }
 
             return mProviders;
@@ -334,42 +299,7 @@ public class LintGradleProject extends Project {
 
         private List<SourceProvider> getTestSourceProviders() {
             if (mTestProviders == null) {
-                List<SourceProvider> providers = Lists.newArrayList();
-
-                ProductFlavorContainer defaultConfig = mProject.getDefaultConfig();
-                for (SourceProviderContainer extra : defaultConfig.getExtraSourceProviders()) {
-                    String artifactName = extra.getArtifactName();
-                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
-                        providers.add(extra.getSourceProvider());
-                    }
-                }
-
-                for (String flavorName : mVariant.getProductFlavors()) {
-                    for (ProductFlavorContainer flavor : mProject.getProductFlavors()) {
-                        if (flavorName.equals(flavor.getProductFlavor().getName())) {
-                            for (SourceProviderContainer extra : flavor.getExtraSourceProviders()) {
-                                String artifactName = extra.getArtifactName();
-                                if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
-                                    providers.add(extra.getSourceProvider());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                String buildTypeName = mVariant.getBuildType();
-                for (BuildTypeContainer buildType : mProject.getBuildTypes()) {
-                    if (buildTypeName.equals(buildType.getBuildType().getName())) {
-                        for (SourceProviderContainer extra : buildType.getExtraSourceProviders()) {
-                            String artifactName = extra.getArtifactName();
-                            if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
-                                providers.add(extra.getSourceProvider());
-                            }
-                        }
-                    }
-                }
-
-                mTestProviders = providers;
+                mTestProviders = LintUtils.getTestSourceProviders(mProject, mVariant);
             }
 
             return mTestProviders;

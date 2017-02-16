@@ -60,6 +60,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.Pair;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -1119,30 +1120,28 @@ public class LintDriver {
         if (project.isAndroidProject()) {
             for (File manifestFile : project.getManifestFiles()) {
                 XmlParser parser = client.getXmlParser();
-                if (parser != null) {
-                    XmlContext context = new XmlContext(this, project, main, manifestFile, null,
-                            parser);
-                    context.document = parser.parseXml(context);
-                    if (context.document != null) {
-                        try {
-                            project.readManifest(context.document);
+                XmlContext context = new XmlContext(this, project, main, manifestFile, null,
+                        parser);
+                context.document = parser.parseXml(context);
+                if (context.document != null) {
+                    try {
+                        project.readManifest(context.document);
 
-                            if ((!project.isLibrary() || (main != null
-                                    && main.isMergingManifests()))
-                                    && scope.contains(Scope.MANIFEST)) {
-                                List<Detector> detectors = scopeDetectors.get(Scope.MANIFEST);
-                                if (detectors != null) {
-                                    ResourceVisitor v = new ResourceVisitor(parser, detectors,
-                                            null);
-                                    fireEvent(EventType.SCANNING_FILE, context);
-                                    v.visitFile(context, manifestFile);
-                                }
+                        if ((!project.isLibrary() || (main != null
+                                && main.isMergingManifests()))
+                                && scope.contains(Scope.MANIFEST)) {
+                            List<Detector> detectors = scopeDetectors.get(Scope.MANIFEST);
+                            if (detectors != null) {
+                                ResourceVisitor v = new ResourceVisitor(parser, detectors,
+                                        null);
+                                fireEvent(EventType.SCANNING_FILE, context);
+                                v.visitFile(context, manifestFile);
                             }
-                        } finally {
-                          if (context.document != null) { // else: freed by XmlVisitor above
-                              parser.dispose(context, context.document);
-                          }
                         }
+                    } finally {
+                      if (context.document != null) { // else: freed by XmlVisitor above
+                          parser.dispose(context, context.document);
+                      }
                     }
                 }
             }
@@ -1929,12 +1928,8 @@ public class LintDriver {
             }
 
             XmlParser parser = client.getXmlParser();
-            if (parser != null) {
-                currentVisitor = new ResourceVisitor(parser, applicableXmlChecks,
-                        applicableBinaryChecks);
-            } else {
-                currentVisitor = null;
-            }
+            currentVisitor = new ResourceVisitor(parser, applicableXmlChecks,
+                    applicableBinaryChecks);
         }
 
         return currentVisitor;
@@ -2139,7 +2134,7 @@ public class LintDriver {
 
         @Override
         public void resolveMergeManifestSources(@NonNull Document mergedManifest,
-                @NonNull File reportFile) {
+                @NonNull Object reportFile) {
             mDelegate.resolveMergeManifestSources(mergedManifest, reportFile);
         }
 
@@ -2150,8 +2145,15 @@ public class LintDriver {
 
         @Nullable
         @Override
-        public org.w3c.dom.Node findManifestSourceNode(@NonNull org.w3c.dom.Node mergedNode) {
+        public Pair<File,org.w3c.dom.Node> findManifestSourceNode(
+                @NonNull org.w3c.dom.Node mergedNode) {
             return mDelegate.findManifestSourceNode(mergedNode);
+        }
+
+        @Nullable
+        @Override
+        public Location findManifestSourceLocation(@NonNull org.w3c.dom.Node mergedNode) {
+            return mDelegate.findManifestSourceLocation(mergedNode);
         }
 
         @Deprecated
@@ -2308,7 +2310,7 @@ public class LintDriver {
         }
 
         @Override
-        @Nullable
+        @NonNull
         public XmlParser getXmlParser() {
             return mDelegate.getXmlParser();
         }

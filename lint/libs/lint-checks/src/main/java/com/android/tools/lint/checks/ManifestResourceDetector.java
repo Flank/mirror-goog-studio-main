@@ -318,7 +318,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     }
 
     private void reportIfFound(@NonNull XmlContext context, @NonNull  String qualifiers,
-            @NonNull  String name, @NonNull  ResourceType type, @Nullable Node secondary) {
+            @NonNull String name, @NonNull ResourceType type, @Nullable Node secondary) {
         Multimap<ResourceType, Location> typeMap = mManifestLocations.get(name);
         if (typeMap != null) {
             Collection<Location> locations = typeMap.get(type);
