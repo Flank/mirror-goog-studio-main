@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <recipe>
 
-    <dependency mavenUrl="com.google.android.support:wearable:1.1.+" />
+    <dependency mavenUrl="com.google.android.support:wearable:+" />
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
@@ -11,6 +11,9 @@
     <merge from="root/AndroidManifestPermissions.xml"
              to="${escapeXmlAttribute(appManifestOut)}/AndroidManifest.xml" />
 </#if>
+
+    <merge from="root/build.gradle.ftl"
+             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
