@@ -101,6 +101,7 @@ java_test(
     deps = [
         ":gradle-core",
         "//tools/analytics-library/protos:analytics-protos",
+        "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
         "//tools/base/build-system:tools.builder-test-api",
