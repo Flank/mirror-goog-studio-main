@@ -154,7 +154,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     private void changeJavaImplementation() throws IOException {
         TestFileUtils.searchAndReplace(
-                project.getSubproject("WordPrcess")
+                project.getSubproject("WordPress")
                         .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java"),
                 "protected void onStart\\(\\) \\{",
                 "protected void onStart() {\n"
