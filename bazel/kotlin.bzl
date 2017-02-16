@@ -1,4 +1,4 @@
-load(":functions.bzl", "create_java_compiler_args")
+load(":functions.bzl", "create_java_compiler_args_srcs")
 load(":functions.bzl", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
@@ -13,8 +13,14 @@ def _kotlin_jar_impl(ctx):
     if hasattr(this_dep, "java"):
       all_deps += this_dep.java.transitive_runtime_deps
 
-  args, option_files = create_java_compiler_args(ctx, class_jar.path,
+  merged = [src.path for src in ctx.files.srcs]
+  if ctx.attr.package_prefixes:
+    merged = [ a + ":" + b if b else a for (a,b) in zip(merged, ctx.attr.package_prefixes)]
+  content = "\n".join(merged)
+
+  args, option_files = create_java_compiler_args_srcs(ctx, content, class_jar.path,
                                                  all_deps)
+
 
   ctx.action(
     inputs = ctx.files.srcs + list(all_deps) + option_files,
@@ -30,6 +36,7 @@ kotlin_jar = rule(
             non_empty = True,
             allow_files = True,
         ),
+        "package_prefixes": attr.string_list(),
         "deps": attr.label_list(
             mandatory = False,
             allow_files = FileType([".jar"]),
