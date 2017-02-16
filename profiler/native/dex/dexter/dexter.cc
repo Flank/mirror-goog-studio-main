@@ -22,11 +22,27 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <memory>
+#include <sstream>
+
+// Converts a class name to a type descriptor
+// (ex. "java.lang.String" to "Ljava/lang/String;")
+static std::string ClassNameToDescriptor(const char* class_name) {
+  std::stringstream ss;
+  ss << "L";
+  for (auto p = class_name; *p != '\0'; ++p) {
+    ss << (*p == '.' ? '/' : *p);
+  }
+  ss << ";";
+  return ss.str();
+}
 
 void Dexter::PrintHelp() {
   printf("\nDex manipulation tool %s\n\n", VERSION);
-  printf("dexter [flags...] [-o outfile] <dexfile>\n");
+  printf("dexter [flags...] [-e classname] [-o outfile] <dexfile>\n");
   printf(" -h : help\n");
+  printf(" -s : print stats\n");
+  printf(" -e : extract a single class\n");
+  printf(" -l : list the classes defined in the dex file\n");
   printf(" -v : verbose output\n");
   printf(" -o : output a new .dex file\n");
   printf(" -m : print .dex layout map\n");
@@ -36,10 +52,19 @@ void Dexter::PrintHelp() {
 int Dexter::Run() {
   bool show_help = false;
   int opt = 0;
-  while ((opt = ::getopt(argc_, argv_, "hvmo:")) != -1) {
+  while ((opt = ::getopt(argc_, argv_, "hlsvmo:e:")) != -1) {
     switch (opt) {
+      case 's':
+        stats_ = true;
+        break;
       case 'v':
         verbose_ = true;
+        break;
+      case 'l':
+        list_classes_ = true;
+        break;
+      case 'e':
+        extract_class_ = ::optarg;
         break;
       case 'm':
         print_map_ = true;
@@ -62,7 +87,7 @@ int Dexter::Run() {
   return ProcessDex();
 }
 
-// print the layout map of the .dex sections
+// Print the layout map of the .dex sections
 static void PrintDexMap(const dex::Reader& reader) {
   printf("\nSections summary: name, offset, size [count]\n");
 
@@ -136,6 +161,64 @@ static void PrintDexMap(const dex::Reader& reader) {
   }
 }
 
+// Print .dex IR stats
+static void PrintDexIrStats(std::shared_ptr<const ir::DexFile> dex_ir) {
+  printf("\n.dex IR statistics:\n");
+  printf("  strings                       : %zu\n", dex_ir->strings.size());
+  printf("  types                         : %zu\n", dex_ir->types.size());
+  printf("  protos                        : %zu\n", dex_ir->protos.size());
+  printf("  fields                        : %zu\n", dex_ir->fields.size());
+  printf("  encoded_fields                : %zu\n", dex_ir->encoded_fields.size());
+  printf("  methods                       : %zu\n", dex_ir->methods.size());
+  printf("  encoded_methods               : %zu\n", dex_ir->encoded_methods.size());
+  printf("  classes                       : %zu\n", dex_ir->classes.size());
+  printf("  type_lists                    : %zu\n", dex_ir->type_lists.size());
+  printf("  code                          : %zu\n", dex_ir->code.size());
+  printf("  debug_info                    : %zu\n", dex_ir->debug_info.size());
+  printf("  encoded_values                : %zu\n", dex_ir->encoded_values.size());
+  printf("  encoded_arrays                : %zu\n", dex_ir->encoded_arrays.size());
+  printf("  annotations                   : %zu\n", dex_ir->annotations.size());
+  printf("  annotation_elements           : %zu\n", dex_ir->annotation_elements.size());
+  printf("  annotation_sets               : %zu\n", dex_ir->annotation_sets.size());
+  printf("  annotation_set_ref_lists      : %zu\n", dex_ir->annotation_set_ref_lists.size());
+  printf("  annotations_directories       : %zu\n", dex_ir->annotations_directories.size());
+  printf("  field_annotations             : %zu\n", dex_ir->field_annotations.size());
+  printf("  method_annotations            : %zu\n", dex_ir->method_annotations.size());
+  printf("  param_annotations             : %zu\n", dex_ir->param_annotations.size());
+  printf("\n");
+}
+
+// Print .dex file stats
+static void PrintDexFileStats(const dex::Reader& reader) {
+  auto header = reader.Header();
+  auto map_list = reader.DexMapList();
+  printf("\n.dex file statistics:\n");
+  printf("  file_size                     : %u\n", header->file_size);
+  printf("  data_size                     : %u\n", header->data_size);
+  printf("  link_size                     : %u\n", header->link_size);
+  printf("  class_defs_size               : %u\n", header->class_defs_size);
+  printf("  string_ids_size               : %u\n", header->string_ids_size);
+  printf("  type_ids_size                 : %u\n", header->type_ids_size);
+  printf("  proto_ids_size                : %u\n", header->proto_ids_size);
+  printf("  field_ids_size                : %u\n", header->field_ids_size);
+  printf("  method_ids_size               : %u\n", header->method_ids_size);
+  printf("  map_list_size                 : %u\n", map_list->size);
+  printf("\n");
+}
+
+// List all the classes defined in the dex file
+static void ListClasses(const dex::Reader& reader) {
+  printf("\nClass definitions:\n");
+  auto classes = reader.ClassDefs();
+  auto types = reader.TypeIds();
+  for (dex::u4 i = 0; i < classes.size(); ++i) {
+    auto typeId = types[classes[i].class_idx];
+    const char* descriptor = reader.GetStringMUTF8(typeId.descriptor_idx);
+    printf("  %s\n", dex::DescriptorToDecl(descriptor).c_str());
+  }
+  printf("\n");
+}
+
 int Dexter::ProcessDex() {
   if (verbose_) {
     printf("\nReading: %s\n", dex_filename_);
@@ -144,7 +227,7 @@ int Dexter::ProcessDex() {
   // open input file
   FILE* in_file = fopen(dex_filename_, "rb");
   if (in_file == nullptr) {
-    printf("Can't open input .dex file (%s)\n", dex_filename_);
+    printf("ERROR: Can't open input .dex file (%s)\n", dex_filename_);
     return 1;
   }
 
@@ -159,21 +242,47 @@ int Dexter::ProcessDex() {
   fseek(in_file, 0, SEEK_SET);
   CHECK(fread(in_buff.get(), 1, in_size, in_file) == in_size);
 
+  // initialize the .dex reader
+  dex::Reader reader(in_buff.get(), in_size);
+
+  // print the .dex map?
+  if (print_map_) {
+    PrintDexMap(reader);
+  }
+
+  // list classes?
+  if (list_classes_) {
+    ListClasses(reader);
+  }
+
   double reader_time = 0;
 
   // parse the .dex image
   {
     slicer::Chronometer chrono(reader_time);
 
-    dex::Reader reader(in_buff.get(), in_size);
-
-    // print the .dex map?
-    if (print_map_) {
-      PrintDexMap(reader);
+    if (extract_class_ != nullptr) {
+      // extract the specified class only
+      std::string descriptor = ClassNameToDescriptor(extract_class_);
+      dex::u4 class_idx = reader.FindClassIndex(descriptor.c_str());
+      if (class_idx != dex::kNoIndex) {
+        reader.CreateClassIr(class_idx);
+      } else {
+        printf("ERROR: Can't find class (%s)\n", extract_class_);
+        return 1;
+      }
+    } else {
+      // build the full .dex IR
+      reader.CreateFullIr();
     }
+  }
 
-    // build the full .dex IR
-    reader.CreateFullIR();
+  auto dex_ir = reader.GetIr();
+
+  // stats?
+  if (stats_) {
+    PrintDexFileStats(reader);
+    PrintDexIrStats(dex_ir);
   }
 
   if (verbose_) {

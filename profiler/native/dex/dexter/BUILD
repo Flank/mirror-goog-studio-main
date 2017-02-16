@@ -10,6 +10,7 @@ cc_binary(
     ],
     deps = [
         "//tools/base/profiler/native/dex/slicer",
+        "@zlib_repo//:zlib",
     ],
 )
 

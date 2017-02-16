@@ -79,16 +79,31 @@ const char* Reader::GetStringMUTF8(dex::u4 index) const {
   return reinterpret_cast<const char*>(strData);
 }
 
-void Reader::CreateFullIR() {
+void Reader::CreateFullIr() {
   size_t classCount = ClassDefs().size();
   for (size_t i = 0; i < classCount; ++i) {
-    CreateClassIR(i);
+    CreateClassIr(i);
   }
 }
 
-void Reader::CreateClassIR(dex::u4 index) {
+void Reader::CreateClassIr(dex::u4 index) {
   auto irClass = GetClass(index);
   CHECK(irClass != nullptr);
+}
+
+// Returns the index of the class with the specified
+// descriptor, or kNoIndex if not found
+dex::u4 Reader::FindClassIndex(const char* class_descriptor) const {
+  auto classes = ClassDefs();
+  auto types = TypeIds();
+  for (dex::u4 i = 0; i < classes.size(); ++i) {
+    auto typeId = types[classes[i].class_idx];
+    const char* descriptor = GetStringMUTF8(typeId.descriptor_idx);
+    if (strcmp(class_descriptor, descriptor) == 0) {
+      return i;
+    }
+  }
+  return dex::kNoIndex;
 }
 
 // map a .dex index to corresponding .dex IR node

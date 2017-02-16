@@ -17,7 +17,10 @@ data_root = 'tools/base/profiler/native/testdata/dex'
 # list of test cases
 # ( <test_name> : { <test_case_config> } )
 test_cases = {
-  'map' : { 'args' : '-m', 'input' : '*.dex' }
+  'map'             : { 'args' : '-m', 'input' : '*.dex' },
+  'stats'           : { 'args' : '-s', 'input' : '*.dex' },
+  'hello_stats'     : { 'args' : '-s -e Hello', 'input' : 'hello.dex' },
+  'am_stats'        : { 'args' : '-s -e android.app.ActivityManager', 'input' : 'large.dex' },
 }
 
 # run a shell command and returns the stdout content
