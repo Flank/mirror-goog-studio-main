@@ -28,6 +28,8 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.BytecodeVersion;
+import com.android.build.gradle.shrinker.tracing.Trace;
+import com.android.build.gradle.shrinker.tracing.Tracer;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Stopwatch;
@@ -163,14 +165,21 @@ public abstract class AbstractShrinker<T> {
      * @param node node to increment
      * @param dependencyType type of counter to increment
      * @param counterSet set of counters to work on
+     * @param tracer tracer for recording paths to nodes
+     * @param trace trace of how we got here
      */
     protected void incrementCounter(
             @NonNull T node,
             @NonNull DependencyType dependencyType,
-            @NonNull CounterSet counterSet) {
+            @NonNull CounterSet counterSet,
+            @NonNull Tracer<T> tracer,
+            @NonNull Trace<T> trace) {
         if (mGraph.incrementAndCheck(node, dependencyType, counterSet)) {
+            trace = trace.with(node, dependencyType);
+            tracer.nodeReached(node, trace);
+
             for (Dependency<T> dependency : mGraph.getDependencies(node)) {
-                incrementCounter(dependency.target, dependency.type, counterSet);
+                incrementCounter(dependency.target, dependency.type, counterSet, tracer, trace);
             }
         }
     }
@@ -280,13 +289,17 @@ public abstract class AbstractShrinker<T> {
     /**
      * Walks the entire graph, starting from the roots, and increments counters for reachable nodes.
      */
-    protected void setCounters(@NonNull final CounterSet counterSet) {
+    protected void setCounters(@NonNull final CounterSet counterSet, @NonNull Tracer<T> tracer) {
         Map<T, DependencyType> roots = mGraph.getRoots(counterSet);
         for (final Map.Entry<T, DependencyType> toIncrementEntry : roots.entrySet()) {
             mExecutor.execute(
                     () -> {
                         incrementCounter(
-                                toIncrementEntry.getKey(), toIncrementEntry.getValue(), counterSet);
+                                toIncrementEntry.getKey(),
+                                toIncrementEntry.getValue(),
+                                counterSet,
+                                tracer,
+                                tracer.startTrace());
                         return null;
                     });
         }

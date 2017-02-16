@@ -38,6 +38,8 @@ public class Flags {
 
     @NonNull private final List<FilterSpecification> dontWarnSpecs = Lists.newArrayList();
 
+    @NonNull private final List<ClassSpecification> whyAreYouKeepingSpecs = Lists.newArrayList();
+
     private BytecodeVersion bytecodeVersion = null;
 
     private boolean ignoreWarnings;
@@ -67,6 +69,10 @@ public class Flags {
 
     public void addKeepClassMembers(@NonNull ClassSpecification classSpecification) {
         keepClassMembersSpecs.add(classSpecification);
+    }
+
+    public void whyAreYouKeeping(@NonNull ClassSpecification classSpecification) {
+        whyAreYouKeepingSpecs.add(classSpecification);
     }
 
     public void dontWarn(@NonNull List<FilterSpecification> classSpec) {
@@ -114,6 +120,11 @@ public class Flags {
     @NonNull
     public List<FilterSpecification> getDontWarnSpecs() {
         return dontWarnSpecs;
+    }
+
+    @NonNull
+    public List<ClassSpecification> getWhyAreYouKeepingSpecs() {
+        return whyAreYouKeepingSpecs;
     }
 
     public void setIgnoreWarnings(boolean ignoreWarnings) {

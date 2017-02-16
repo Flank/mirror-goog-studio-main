@@ -23,6 +23,7 @@ import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
 import com.android.utils.FileUtils;
+import com.android.utils.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.DataInputStream;
@@ -346,9 +347,10 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // When:
         ShrinkerGraph<String> graph =
                 fullRun(
-                        "Main",
-                        "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
-                        "useMyInterface:(Ltest/MyInterface;)V");
+                                "Main",
+                                "useImplementationFromSuperclass:(Ltest/ImplementationFromSuperclass;)V",
+                                "useMyInterface:(Ltest/MyInterface;)V")
+                        .graph;
 
         // Then:
         assertMembersLeft(
@@ -1054,8 +1056,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Then:
         assertMembersLeft("Main", "<init>:()V", "main:(Ltest/NamedMap;)V");
         assertMembersLeft("NamedMap", "<init>:()V");
-        assertMembersLeft("Named");
         assertClassSkipped("HasAge");
+
+        // Named is kept, because it's mentioned in the signature. For now we don't support rewriting
+        // signatures, so we have to kepp it, otherwise we would create invalid class files that make
+        // reflection crash.
+        assertMembersLeft("Named");
     }
 
     @Test
@@ -1548,13 +1554,9 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
     public void enums() throws Exception {
         Files.write(TestClasses.Annotations.myEnum(), new File(mTestPackageDir, "MyEnum.class"));
 
-        KeepRules rules =
+        fullRun(
                 parseKeepRules(
-                        "-keep enum * { "
-                                + "public static **[] values(); "
-                                + "public static ** valueOf(java.lang.String);"
-                                + "}");
-        fullRun(rules);
+                        "-keep enum * { public static **[] values(); public static ** valueOf(java.lang.String); }"));
 
         assertMembersLeft(
                 "MyEnum",
@@ -1580,6 +1582,31 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         mFullRunShrinker = createFullRunShrinker(config.getFlags().getBytecodeVersion());
         fullRun("Aaa", "aaa:()V");
         checkBytecodeVersion(outputClassFile, Opcodes.V1_8);
+    }
+
+    @Test
+    public void whyAreYouKeeping() throws Exception {
+        // Given:
+        Files.write(
+                TestClasses.VirtualCalls.main_parentChild(),
+                new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.VirtualCalls.parent(), new File(mTestPackageDir, "Parent.class"));
+        Files.write(TestClasses.VirtualCalls.child(), new File(mTestPackageDir, "Child.class"));
+
+        // When:
+        FullRunShrinker<String>.Result result =
+                fullRun(
+                        parseKeepRules(
+                                "-keep class test.Main { *; }\n -whyareyoukeeping class test.Parent { void onlyInParent(); }"));
+
+        // Then:
+        assertThat(result.traces.get("test/Parent.onlyInParent:()V").toList())
+                .containsExactly(
+                        Pair.of(
+                                "test/Parent.onlyInParent:()V",
+                                DependencyType.REQUIRED_CODE_REFERENCE),
+                        Pair.of("test/Main.main:()V", DependencyType.REQUIRED_KEEP_RULES))
+                .inOrder();
     }
 
     protected static void checkBytecodeVersion(File classFile, int version) throws IOException {

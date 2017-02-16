@@ -317,6 +317,10 @@ public class GrammarActions {
         flags.target(target);
     }
 
+    static void whyAreYouKeeping(Flags flags, ClassSpecification classSpecification) {
+        flags.whyAreYouKeeping(classSpecification);
+    }
+
     @NonNull
     private static String convertNameToPattern(
             @NonNull String name, @NonNull FilterSeparator separator) {

@@ -80,4 +80,8 @@ public class ShrinkerLogger {
     public int getWarningsCount() {
         return mWarningsEmitted.size();
     }
+
+    synchronized void warn(String message, Object... args) {
+        mLogger.warn(message, args);
+    }
 }

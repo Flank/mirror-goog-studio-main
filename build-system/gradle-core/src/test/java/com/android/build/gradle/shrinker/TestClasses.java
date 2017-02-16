@@ -1746,6 +1746,10 @@ class TestClasses implements Opcodes {
             FieldVisitor fv;
             MethodVisitor mv;
 
+            // This is equivalent to "public class NamedMap<T extends Serializable & Named> {}".
+            // Because there are two bounds on T, the field below (called 'instance') after
+            // erasure ends up with type Serializable, which makes Named reachable only
+            // through the signature.
             cw.visit(
                     V1_6,
                     ACC_PUBLIC + ACC_SUPER,

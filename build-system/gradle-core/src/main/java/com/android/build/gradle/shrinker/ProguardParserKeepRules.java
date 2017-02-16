@@ -39,33 +39,65 @@ import java.util.Map;
  * Implementation of {@link KeepRules} that uses {@link Flags} obtained from parsing a ProGuard
  * config file.
  */
-public class ProguardFlagsKeepRules implements KeepRules {
+public class ProguardParserKeepRules implements KeepRules {
 
-    private final Flags mFlags;
-    private final ShrinkerLogger mShrinkerLogger;
+    @NonNull private final List<ClassSpecification> keepClassSpecs;
+    @NonNull private final List<ClassSpecification> keepClassMembersSpecs;
+    @NonNull private final List<ClassSpecification> keepClassesWithMembersSpecs;
+    @NonNull private final ShrinkerLogger shrinkerLogger;
 
-    public ProguardFlagsKeepRules(Flags flags, ShrinkerLogger shrinkerLogger) {
-        mFlags = flags;
-        mShrinkerLogger = shrinkerLogger;
+    private ProguardParserKeepRules(
+            @NonNull List<ClassSpecification> keepClassSpecs,
+            @NonNull List<ClassSpecification> keepClassMembersSpecs,
+            @NonNull List<ClassSpecification> keepClassesWithMembersSpecs,
+            @NonNull ShrinkerLogger shrinkerLogger) {
+        this.keepClassSpecs = keepClassSpecs;
+        this.keepClassMembersSpecs = keepClassMembersSpecs;
+        this.keepClassesWithMembersSpecs = keepClassesWithMembersSpecs;
+        this.shrinkerLogger = shrinkerLogger;
+    }
+
+    @NonNull
+    public static ProguardParserKeepRules keepRules(
+            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+        return new ProguardParserKeepRules(
+                flags.getKeepClassSpecs(),
+                flags.getKeepClassMembersSpecs(),
+                flags.getKeepClassesWithMembersSpecs(),
+                shrinkerLogger);
+    }
+
+    @Nullable
+    public static ProguardParserKeepRules whyAreYouKeepingRules(
+            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+        if (flags.getWhyAreYouKeepingSpecs().isEmpty()) {
+            return null;
+        } else {
+            return new ProguardParserKeepRules(
+                    flags.getWhyAreYouKeepingSpecs(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    shrinkerLogger);
+        }
     }
 
     @Override
     public <T> Map<T, DependencyType> getSymbolsToKeep(T klass, ShrinkerGraph<T> graph) {
         Map<T, DependencyType> result = Maps.newHashMap();
 
-        for (ClassSpecification spec : mFlags.getKeepClassSpecs()) {
+        for (ClassSpecification spec : keepClassSpecs) {
             if (matchesClass(klass, spec, graph)) {
-                result.put(klass, DependencyType.REQUIRED_CLASS_STRUCTURE);
+                result.put(klass, DependencyType.REQUIRED_KEEP_RULES);
                 result.put(
                         graph.getMemberReference(graph.getClassName(klass), "<init>", "()V"),
                         DependencyType.REQUIRED_CLASS_STRUCTURE);
                 for (T member : findMatchingMembers(klass, spec, graph)) {
-                    result.put(member, DependencyType.REQUIRED_CLASS_STRUCTURE);
+                    result.put(member, DependencyType.REQUIRED_KEEP_RULES);
                 }
             }
         }
 
-        for (ClassSpecification spec : mFlags.getKeepClassMembersSpecs()) {
+        for (ClassSpecification spec : keepClassMembersSpecs) {
             if (matchesClass(klass, spec, graph)) {
                 for (T member : findMatchingMembers(klass, spec, graph)) {
                     result.put(member, DependencyType.IF_CLASS_KEPT);
@@ -74,10 +106,10 @@ public class ProguardFlagsKeepRules implements KeepRules {
             }
         }
 
-        for (ClassSpecification spec : mFlags.getKeepClassesWithMembersSpecs()) {
+        for (ClassSpecification spec : keepClassesWithMembersSpecs) {
             if (matchesClass(klass, spec, graph)) {
                 for (T t : handleKeepClassesWithMembers(spec, klass, graph)) {
-                    result.put(t, DependencyType.REQUIRED_CLASS_STRUCTURE);
+                    result.put(t, DependencyType.REQUIRED_KEEP_RULES);
                 }
             }
         }
@@ -210,7 +242,7 @@ public class ProguardFlagsKeepRules implements KeepRules {
         }
 
         FluentIterable<T> superTypes =
-                TypeHierarchyTraverser.superclassesAndInterfaces(graph, mShrinkerLogger)
+                TypeHierarchyTraverser.superclassesAndInterfaces(graph, shrinkerLogger)
                         .preOrderTraversal(klass)
                         .skip(1); // Skip the class itself.
 

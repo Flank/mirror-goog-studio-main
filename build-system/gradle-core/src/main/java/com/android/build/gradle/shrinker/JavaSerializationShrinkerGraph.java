@@ -556,6 +556,7 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
                 case REQUIRED_CLASS_STRUCTURE:
                 case REQUIRED_CODE_REFERENCE:
                 case REQUIRED_CODE_REFERENCE_REFLECTION:
+                case REQUIRED_KEEP_RULES:
                     required++;
                     break;
                 case IF_CLASS_KEPT:
