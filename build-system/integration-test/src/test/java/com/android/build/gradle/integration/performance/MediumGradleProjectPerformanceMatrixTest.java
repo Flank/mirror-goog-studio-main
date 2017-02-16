@@ -155,27 +155,27 @@ public class MediumGradleProjectPerformanceMatrixTest {
     private void changeJavaImplementation() throws IOException {
         TestFileUtils.searchAndReplace(
                 project.getSubproject("WordPress")
-                        .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java"),
-                "protected void onStart\\(\\) \\{",
-                "protected void onStart() {\n"
-                        + "        android.util.Log.d(\"WPMainActivity\", \"onStart called "
+                        .file("src/main/java/org/wordpress/android/ui/WebViewActivity.java"),
+                "protected void onPause\\(\\) \\{",
+                "protected void onPause() {\n"
+                        + "        android.util.Log.d(\"TAG\", \"onPause called "
                         + "\");");
     }
 
     private void changeJavaApi(@NonNull String newMethodName) throws IOException {
         File mainActivity =
                 project.getSubproject("WordPress")
-                        .file("src/main/java/org/wordpress/android/ui/main/WPMainActivity.java");
+                        .file("src/main/java/org/wordpress/android/ui/WebViewActivity.java");
         TestFileUtils.searchAndReplace(
                 mainActivity,
-                "protected void onStart\\(\\) \\{",
-                "protected void onStart() {\n" + "        " + newMethodName + "();");
+                "protected void onPause\\(\\) \\{",
+                "protected void onPause() {\n" + "        " + newMethodName + "();");
         TestFileUtils.addMethod(
                 mainActivity,
-                "private void "
+                "protected void "
                         + newMethodName
                         + "() {\n"
-                        + "        android.util.Log.d(\"WPMainActivity\", \""
+                        + "        android.util.Log.d(\"TAG\", \""
                         + newMethodName
                         + " called\");\n"
                         + "    }\n");
