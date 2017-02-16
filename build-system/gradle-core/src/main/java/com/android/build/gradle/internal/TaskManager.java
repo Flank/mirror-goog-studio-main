@@ -96,6 +96,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
+import com.android.build.gradle.internal.tasks.PreBuildTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -3377,11 +3378,7 @@ public abstract class TaskManager {
     }
 
     private void createPreBuildTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        scope.setPreBuildTask(androidTasks.create(tasks,
-                scope.getTaskName("pre", "Build"), task -> {
-                    variantData.preBuildTask = task;
-                }));
+        scope.setPreBuildTask(androidTasks.create(tasks, new PreBuildTask.ConfigAction(scope)));
         scope.getPreBuildTask().dependsOn(tasks, MAIN_PREBUILD);
 
         if (isMinifyEnabled(scope)) {
