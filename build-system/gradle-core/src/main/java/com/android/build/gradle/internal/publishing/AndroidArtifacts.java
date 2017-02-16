@@ -118,17 +118,24 @@ public class AndroidArtifacts {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
         JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
 
+        // manifest is published to both to compare and detect provided-only library dependencies.
+        MANIFEST(TYPE_MANIFEST, API_AND_RUNTIME_ELEMENTS),
+
+        // this is used only for the models.
+        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
+
         // TODO: ANDROID_JAR is created as Gradle's JavaCompile has trouble with using class
         // directory with annotation processors instead of jar files.  It should not be necessary
         // and should be removed when it is fixed.
         ANNOTATION_JAR(TYPE_ANNOTATION_JAR, RUNTIME_ELEMENTS_ONLY),
 
+        // API only elements.
         AIDL(TYPE_AIDL, API_ELEMENTS_ONLY),
         RENDERSCRIPT(TYPE_RENDERSCRIPT, API_ELEMENTS_ONLY),
         DATA_BINDING(TYPE_DATA_BINDING, API_ELEMENTS_ONLY),
 
+        // runtime only elements
         JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY, RUNTIME_ELEMENTS_ONLY),
-        MANIFEST(TYPE_MANIFEST, RUNTIME_ELEMENTS_ONLY),
         ANDROID_RES(TYPE_ANDROID_RES, RUNTIME_ELEMENTS_ONLY),
         ASSETS(TYPE_ASSETS, RUNTIME_ELEMENTS_ONLY),
         SYMBOL_LIST(TYPE_SYMBOL, RUNTIME_ELEMENTS_ONLY),
@@ -136,7 +143,6 @@ public class AndroidArtifacts {
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS, RUNTIME_ELEMENTS_ONLY),
         PUBLIC_RES(TYPE_PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
         PROGUARD_RULES(TYPE_PROGUARD_RULES, RUNTIME_ELEMENTS_ONLY),
-        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
 
         // FIXME: we need a different publishing config with a CHECK Usage for this.
         LINT(TYPE_LINT_JAR, API_AND_RUNTIME_ELEMENTS),
