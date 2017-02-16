@@ -52,6 +52,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,48 +87,46 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
- * Class responsible for searching through a Gradle built tree (after resource merging,
- * compilation and ProGuarding has been completed, but before final .apk assembly), which
- * figures out which resources if any are unused, and removes them.
- * <p>
- * It does this by examining
+ * Class responsible for searching through a Gradle built tree (after resource merging, compilation
+ * and shrinking has been completed, but before final .apk assembly), which figures out which
+ * resources if any are unused, and removes them.
+ *
+ * <p>It does this by examining
+ *
  * <ul>
- *     <li>The merged manifest, to find root resource references (such as drawables
- *         used for activity icons)</li>
- *     <li>The merged R class (to find the actual integer constants assigned to resources)</li>
- *     <li>The ProGuard log files (to find the mapping from original symbol names to
- *         short names)*</li>
- *     <li>The merged resources (to find which resources reference other resources, e.g.
- *         drawable state lists including other drawables, or layouts including other
- *         layouts, or styles referencing other drawables, or menus items including action
- *         layouts, etc.)</li>
- *     <li>The ProGuard output classes (to find resource references in code that are
- *         actually reachable)</li>
+ *   <li>The merged manifest, to find root resource references (such as drawables used for activity
+ *       icons)
+ *   <li>The merged R class (to find the actual integer constants assigned to resources)
+ *   <li>The ProGuard mapping files (to find the mapping from original symbol names to short names)*
+ *   <li>The merged resources (to find which resources reference other resources, e.g. drawable
+ *       state lists including other drawables, or layouts including other layouts, or styles
+ *       referencing other drawables, or menus items including action layouts, etc.)
+ *   <li>The shrinked output classes (to find resource references in code that are actually
+ *       reachable)
  * </ul>
- * From all this, it builds up a reference graph, and based on the root references (e.g.
- * from the manifest and from the remaining code) it computes which resources are actually
- * reachable in the app, and anything that is not reachable is then marked for deletion.
- * <p>
- * A resource is referenced in code if either the field R.type.name is referenced (which
- * is the case for non-final resource references, e.g. in libraries), or if the corresponding
- * int value is referenced (for final resource values). We check this by looking at the
- * ProGuard output classes with an ASM visitor. One complication is that code can also
- * call {@code Resources#getIdentifier(String,String,String)} where they can pass in the names
- * of resources to look up. To handle this scenario, we use the ClassVisitor to see if
- * there are any calls to the specific {@code Resources#getIdentifier} method. If not,
- * great, the usage analysis is completely accurate. If we <b>do</b> find one, we check
- * <b>all</b> the string constants found anywhere in the app, and look to see if any look
- * relevant. For example, if we find the string "string/foo" or "my.pkg:string/foo", we
- * will then mark the string resource named foo (if any) as potentially used. Similarly,
- * if we find just "foo" or "/foo", we will mark <b>all</b> resources named "foo" as
- * potentially used. However, if the string is "bar/foo" or " foo " these strings are
- * ignored. This means we can potentially miss resources usages where the resource name
- * is completed computed (e.g. by concatenating individual characters or taking substrings
- * of strings that do not look like resource names), but that seems extremely unlikely
- * to be a real-world scenario.
- * <p>
- * For now, for reasons detailed in the code, this only applies to file-based resources
- * like layouts, menus and drawables, not value-based resources like strings and dimensions.
+ *
+ * From all this, it builds up a reference graph, and based on the root references (e.g. from the
+ * manifest and from the remaining code) it computes which resources are actually reachable in the
+ * app, and anything that is not reachable is then marked for deletion.
+ *
+ * <p>A resource is referenced in code if either the field R.type.name is referenced (which is the
+ * case for non-final resource references, e.g. in libraries), or if the corresponding int value is
+ * referenced (for final resource values). We check this by looking at the shrinked output classes
+ * with an ASM visitor. One complication is that code can also call {@code
+ * Resources#getIdentifier(String,String,String)} where they can pass in the names of resources to
+ * look up. To handle this scenario, we use the ClassVisitor to see if there are any calls to the
+ * specific {@code Resources#getIdentifier} method. If not, great, the usage analysis is completely
+ * accurate. If we <b>do</b> find one, we check <b>all</b> the string constants found anywhere in
+ * the app, and look to see if any look relevant. For example, if we find the string "string/foo" or
+ * "my.pkg:string/foo", we will then mark the string resource named foo (if any) as potentially
+ * used. Similarly, if we find just "foo" or "/foo", we will mark <b>all</b> resources named "foo"
+ * as potentially used. However, if the string is "bar/foo" or " foo " these strings are ignored.
+ * This means we can potentially miss resources usages where the resource name is completed computed
+ * (e.g. by concatenating individual characters or taking substrings of strings that do not look
+ * like resource names), but that seems extremely unlikely to be a real-world scenario.
+ *
+ * <p>For now, for reasons detailed in the code, this only applies to file-based resources like
+ * layouts, menus and drawables, not value-based resources like strings and dimensions.
  */
 public class ResourceUsageAnalyzer {
     private static final String ANDROID_RES = "android_res/";
@@ -191,7 +190,7 @@ public class ResourceUsageAnalyzer {
 
     private final File mResourceClassDir;
     private final File mProguardMapping;
-    private final File mClasses;
+    private final Iterable<File> mClasses;
     private final File mMergedManifest;
     private final File mMergedResourceDir;
 
@@ -222,7 +221,7 @@ public class ResourceUsageAnalyzer {
 
     public ResourceUsageAnalyzer(
             @NonNull File rDir,
-            @NonNull File classes,
+            @NonNull Iterable<File> classes,
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull File resources,
@@ -268,7 +267,11 @@ public class ResourceUsageAnalyzer {
     public void analyze() throws IOException, ParserConfigurationException, SAXException {
         gatherResourceValues(mResourceClassDir);
         recordMapping(mProguardMapping);
-        recordClassUsages(mClasses);
+
+        for (File jarOrDir : mClasses) {
+            recordClassUsages(jarOrDir);
+        }
+
         recordManifestUsages(mMergedManifest);
         recordResources(mMergedResourceDir);
         keepPossiblyReferencedResources();
@@ -381,117 +384,42 @@ public class ResourceUsageAnalyzer {
             }
         }
 
-        JarInputStream zis = null;
-        try {
-            FileInputStream fis = new FileInputStream(source);
-            try {
-                FileOutputStream fos = new FileOutputStream(dest);
-                zis = new JarInputStream(fis);
-                JarOutputStream zos = new JarOutputStream(new BufferedOutputStream(fos));
-                try {
-                    // Rather than using Deflater.DEFAULT_COMPRESSION we use 9 here,
-                    // since that seems to match the compressed sizes we observe in source
-                    // .ap_ files encountered by the resource shrinker:
-                    zos.setLevel(9);
+        try (JarInputStream zis =
+                        new JarInputStream(new BufferedInputStream(new FileInputStream(source)));
+                JarOutputStream zos =
+                        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(dest)))) {
 
-                    ZipEntry entry = zis.getNextEntry();
-                    while (entry != null) {
-                        String name = entry.getName();
-                        boolean directory = entry.isDirectory();
-                        Resource resource = getResourceByJarPath(name);
-                        if (resource == null || resource.isReachable()) {
-                            // We can't just compress all files; files that are not
-                            // compressed in the source .ap_ file must be left uncompressed
-                            // here, since for example RAW files need to remain uncompressed in
-                            // the APK such that they can be mmap'ed at runtime.
-                            // Preserve the STORED method of the input entry.
-                            JarEntry outEntry;
-                            if (entry.getMethod() == JarEntry.STORED) {
-                                outEntry = new JarEntry(entry);
-                            } else {
-                                // Create a new entry so that the compressed len is recomputed.
-                                outEntry = new JarEntry(name);
-                                if (entry.getTime() != -1L) {
-                                    outEntry.setTime(entry.getTime());
-                                }
-                            }
+            // Rather than using Deflater.DEFAULT_COMPRESSION we use 9 here,
+            // since that seems to match the compressed sizes we observe in source
+            // .ap_ files encountered by the resource shrinker:
+            zos.setLevel(9);
 
-                            zos.putNextEntry(outEntry);
+            ZipEntry entry = zis.getNextEntry();
+            while (entry != null) {
+                String name = entry.getName();
+                boolean directory = entry.isDirectory();
+                Resource resource = getResourceByJarPath(name);
+                if (resource == null || resource.isReachable()) {
+                    copyToOutput(zis, zos, entry, name, directory);
 
-                            if (!directory) {
-                                byte[] bytes = ByteStreams.toByteArray(zis);
-                                if (bytes != null) {
-                                    zos.write(bytes);
-                                }
-                            }
-
-                            zos.closeEntry();
-                        } else //noinspection PointlessBooleanExpression
-                            if (REPLACE_DELETED_WITH_EMPTY && !directory
-                                // Canonical name for resource file that only contains keep rules
-                                && !name.equals("res/raw/keep.xml")) {
-                            // Create a new entry so that the compressed len is recomputed.
-                            byte[] bytes;
-                            long crc;
-                            if (name.endsWith(DOT_9PNG)) {
-                                bytes = TINY_9PNG;
-                                crc = TINY_9PNG_CRC;
-                            } else if (name.endsWith(DOT_PNG)) {
-                                bytes = TINY_PNG;
-                                crc = TINY_PNG_CRC;
-                            } else if (name.endsWith(DOT_XML)) {
-                                bytes = TINY_XML;
-                                crc = TINY_XML_CRC;
-                            } else {
-                                bytes = new byte[0];
-                                crc = 0L;
-                            }
-                            JarEntry outEntry = new JarEntry(name);
-                            if (entry.getTime() != -1L) {
-                                outEntry.setTime(entry.getTime());
-                            }
-                            if (entry.getMethod() == JarEntry.STORED) {
-                                outEntry.setMethod(JarEntry.STORED);
-                                outEntry.setSize(bytes.length);
-                                outEntry.setCrc(crc);
-                            }
-                            zos.putNextEntry(outEntry);
-                            zos.write(bytes);
-                            zos.closeEntry();
-
-                            if (isVerbose() || mDebugPrinter != null) {
-                                String message = "Skipped unused resource " + name + ": " + entry
-                                        .getSize()
-                                        + " bytes (replaced with small dummy file of size "
-                                        + bytes.length + " bytes)";
-                                if (isVerbose()) {
-                                    System.out.println(message);
-                                }
-                                if (mDebugPrinter != null) {
-                                    mDebugPrinter.println(message);
-                                }
-                            }
-                        } else if (isVerbose() || mDebugPrinter != null) {
-                            String message = "Skipped unused resource " + name + ": "
-                                    + entry.getSize() + " bytes";
-                            if (isVerbose()) {
-                                System.out.println(message);
-                            }
-                            if (mDebugPrinter != null) {
-                                mDebugPrinter.println(message);
-                            }
-                        }
-                        entry = zis.getNextEntry();
+                } else if (REPLACE_DELETED_WITH_EMPTY
+                        && !directory
+                        // Canonical name for resource file that only contains keep rules
+                        && !name.equals("res/raw/keep.xml")) {
+                    replaceWithDummyEntry(zos, entry, name);
+                } else if (isVerbose() || mDebugPrinter != null) {
+                    String message =
+                            "Skipped unused resource " + name + ": " + entry.getSize() + " bytes";
+                    if (isVerbose()) {
+                        System.out.println(message);
                     }
-                    zos.flush();
-                } finally {
-                    Closeables.close(zos, false);
+                    if (mDebugPrinter != null) {
+                        mDebugPrinter.println(message);
+                    }
                 }
-            } finally {
-                Closeables.close(fis, true);
+                entry = zis.getNextEntry();
             }
-        } finally {
-            Closeables.close(zis, false);
+            zos.flush();
         }
 
         // If net negative, copy original back. This is unusual, but can happen
@@ -516,36 +444,117 @@ public class ResourceUsageAnalyzer {
     }
 
     /**
+     * Replaces the given entry with a minimal valid file of that type.
+     *
+     * @see #REPLACE_DELETED_WITH_EMPTY
+     */
+    private void replaceWithDummyEntry(JarOutputStream zos, ZipEntry entry, String name)
+            throws IOException {
+        // Create a new entry so that the compressed len is recomputed.
+        byte[] bytes;
+        long crc;
+        if (name.endsWith(DOT_9PNG)) {
+            bytes = TINY_9PNG;
+            crc = TINY_9PNG_CRC;
+        } else if (name.endsWith(DOT_PNG)) {
+            bytes = TINY_PNG;
+            crc = TINY_PNG_CRC;
+        } else if (name.endsWith(DOT_XML)) {
+            bytes = TINY_XML;
+            crc = TINY_XML_CRC;
+        } else {
+            bytes = new byte[0];
+            crc = 0L;
+        }
+        JarEntry outEntry = new JarEntry(name);
+        if (entry.getTime() != -1L) {
+            outEntry.setTime(entry.getTime());
+        }
+        if (entry.getMethod() == JarEntry.STORED) {
+            outEntry.setMethod(JarEntry.STORED);
+            outEntry.setSize(bytes.length);
+            outEntry.setCrc(crc);
+        }
+        zos.putNextEntry(outEntry);
+        zos.write(bytes);
+        zos.closeEntry();
+
+        if (isVerbose() || mDebugPrinter != null) {
+            String message =
+                    "Skipped unused resource "
+                            + name
+                            + ": "
+                            + entry.getSize()
+                            + " bytes (replaced with small dummy file of size "
+                            + bytes.length
+                            + " bytes)";
+            if (isVerbose()) {
+                System.out.println(message);
+            }
+            if (mDebugPrinter != null) {
+                mDebugPrinter.println(message);
+            }
+        }
+    }
+
+    private static void copyToOutput(
+            JarInputStream zis, JarOutputStream zos, ZipEntry entry, String name, boolean directory)
+            throws IOException {
+        // We can't just compress all files; files that are not
+        // compressed in the source .ap_ file must be left uncompressed
+        // here, since for example RAW files need to remain uncompressed in
+        // the APK such that they can be mmap'ed at runtime.
+        // Preserve the STORED method of the input entry.
+        JarEntry outEntry;
+        if (entry.getMethod() == JarEntry.STORED) {
+            outEntry = new JarEntry(entry);
+        } else {
+            // Create a new entry so that the compressed len is recomputed.
+            outEntry = new JarEntry(name);
+            if (entry.getTime() != -1L) {
+                outEntry.setTime(entry.getTime());
+            }
+        }
+
+        zos.putNextEntry(outEntry);
+
+        if (!directory) {
+            byte[] bytes = ByteStreams.toByteArray(zis);
+            if (bytes != null) {
+                zos.write(bytes);
+            }
+        }
+
+        zos.closeEntry();
+    }
+
+    /**
      * Remove resources (already identified by {@link #analyze()}).
      *
-     * This task will copy all remaining used resources over from the full resource
-     * directory to a new reduced resource directory. However, it can't just
-     * delete the resources, because it has no way to tell aapt to continue to use
-     * the same id's for the resources. When we re-run aapt on the stripped resource
-     * directory, it will assign new id's to some of the resources (to fill the gaps)
-     * which means the resource id's no longer match the constants compiled into the
-     * dex files, and as a result, the app crashes at runtime.
-     * <p>
-     * Therefore, it needs to preserve all id's by actually keeping all the resource
-     * names. It can still save a lot of space by making these resources tiny; e.g.
-     * all strings are set to empty, all styles, arrays and plurals are set to not contain
-     * any children, and most importantly, all file based resources like bitmaps and
-     * layouts are replaced by simple resource aliases which just point to @null.
+     * <p>This task will copy all remaining used resources over from the full resource directory to
+     * a new reduced resource directory. However, it can't just delete the resources, because it has
+     * no way to tell aapt to continue to use the same id's for the resources. When we re-run aapt
+     * on the stripped resource directory, it will assign new id's to some of the resources (to fill
+     * the gaps) which means the resource id's no longer match the constants compiled into the dex
+     * files, and as a result, the app crashes at runtime.
+     *
+     * <p>Therefore, it needs to preserve all id's by actually keeping all the resource names. It
+     * can still save a lot of space by making these resources tiny; e.g. all strings are set to
+     * empty, all styles, arrays and plurals are set to not contain any children, and most
+     * importantly, all file based resources like bitmaps and layouts are replaced by simple
+     * resource aliases which just point to @null.
      *
      * @param destination directory to copy resources into; if null, delete resources in place
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws SAXException
      */
-    public void removeUnused(@Nullable File destination) throws IOException,
-            ParserConfigurationException, SAXException {
+    public void removeUnused(@Nullable File destination)
+            throws IOException, ParserConfigurationException, SAXException {
         if (TWO_PASS_AAPT) {
             assert mUnused != null; // should always call analyze() first
 
             int resourceCount = mUnused.size()
                     * 4; // *4: account for some resource folder repetition
             boolean inPlace = destination == null;
-            Set<File> skip = inPlace ? null : Sets.<File>newHashSetWithExpectedSize(resourceCount);
+            Set<File> skip = inPlace ? null : Sets.newHashSetWithExpectedSize(resourceCount);
             Set<File> rewrite = Sets.newHashSetWithExpectedSize(resourceCount);
             for (Resource resource : mUnused) {
                 if (resource.declarations != null) {
@@ -1040,6 +1049,8 @@ public class ResourceUsageAnalyzer {
             String pattern = ".*";
             String conversion = matcher.group(6);
             String timePrefix = matcher.group(5);
+
+            //noinspection VariableNotUsedInsideIf,StatementWithEmptyBody: for readability.
             if (timePrefix != null) {
                 // date notation; just use .* to match these
             } else if (conversion != null && conversion.length() == 1) {
@@ -1658,6 +1669,7 @@ public class ResourceUsageAnalyzer {
                 Integer value = (Integer) cst;
                 Resource resource = mModel.getResource(value);
                 if (ResourceUsageModel.markReachable(resource) && mDebug) {
+                    assert mDebugPrinter != null : "mDebug is true, but mDebugPrinter is null.";
                     mDebugPrinter.println("Marking " + resource + " reachable: referenced from " +
                             context + " in " + mJarFile + ":" + mCurrentClass);
                 }
@@ -1666,6 +1678,7 @@ public class ResourceUsageAnalyzer {
                 for (int value : values) {
                     Resource resource = mModel.getResource(value);
                     if (ResourceUsageModel.markReachable(resource) && mDebug) {
+                        assert mDebugPrinter != null : "mDebug is true, but mDebugPrinter is null.";
                         mDebugPrinter.println("Marking " + resource + " reachable: referenced from " +
                                 context + " in " + mJarFile + ":" + mCurrentClass);
                     }

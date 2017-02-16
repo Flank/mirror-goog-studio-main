@@ -19,15 +19,13 @@ android {
             shrinkResources false
             minifyEnabled false
         }
-        proguardNoShrink {
-            shrinkResources false
+        minifyDontShrink {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
+            initWith minifyDontShrink
             shrinkResources true
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
