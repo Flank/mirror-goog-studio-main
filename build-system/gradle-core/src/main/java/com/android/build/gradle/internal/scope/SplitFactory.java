@@ -53,10 +53,14 @@ public class SplitFactory {
 
     public Split addMainApk() {
         Split mainApk =
+                // the main output basename comes from the variant configuration.
+                // the main output should not have a dirName set as all the getXXXOutputDirectory
+                // in variant scope already include the variant name.
+                // TODO : we probably should clean this up, having the getXXXOutputDirectory APIs
+                // return the top level folder and have all users use the getDirName() as part of
+                // the task output folder configuration.
                 new Main(
-                        variantConfiguration.getBaseName(),
-                        variantConfiguration.getFullName(),
-                        variantConfiguration.getDirName());
+                        variantConfiguration.getBaseName(), variantConfiguration.getFullName(), "");
         checkNoDuplicate(mainApk);
         splitScope.addSplit(mainApk);
         return mainApk;
