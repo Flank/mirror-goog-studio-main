@@ -56,6 +56,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private boolean isSdkAutoDownload = false;
     private Boolean useDexArchive = true;
     private Boolean useNewResourceProcessing = true;
+    private Boolean enableAapt2 = false;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -180,7 +181,15 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                     String.format(
                             "-P%s=%s",
                             BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING.getPropertyName(),
-                            useNewResourceProcessing));
+                            Boolean.toString(useNewResourceProcessing)));
+        }
+
+        if (enableAapt2 != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            BooleanOption.ENABLE_AAPT2.getPropertyName(),
+                            Boolean.toString(enableAapt2)));
         }
 
         args.addAll(arguments);
@@ -249,6 +258,19 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     public RunGradleTasks withNewResourceProcessing(boolean useNewResourceProcessing) {
         this.useNewResourceProcessing = useNewResourceProcessing;
+        return this;
+    }
+
+    /**
+     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
+     *
+     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
+     * {@code true}. To run AAPT2 without new resource processing, after this method also call
+     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
+     */
+    public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
+        this.enableAapt2 = enableAapt2;
+        this.useNewResourceProcessing = enableAapt2 ? true : useNewResourceProcessing;
         return this;
     }
 
