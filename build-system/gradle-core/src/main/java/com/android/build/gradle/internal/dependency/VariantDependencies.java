@@ -239,7 +239,10 @@ public class VariantDependencies {
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap =
                     getFlavorAttributes(flavorMatching);
 
-            Configuration compileClasspath = project.getConfigurations().maybeCreate(variantName + "CompileClasspath");
+            final ConfigurationContainer configurations = project.getConfigurations();
+
+            final String compileClasspathName = variantName + "CompileClasspath";
+            Configuration compileClasspath = configurations.maybeCreate(compileClasspathName);
             compileClasspath.setVisible(false);
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
@@ -249,7 +252,7 @@ public class VariantDependencies {
             compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
 
             Configuration annotationProcessor =
-                    project.getConfigurations().maybeCreate("_" + variantName + "AnnotationProcessor");
+                    configurations.maybeCreate("_" + variantName + "AnnotationProcessor");
             annotationProcessor.setVisible(false);
             annotationProcessor.setDescription("Resolved configuration for annotation-processor for variant: " + variantName);
             annotationProcessor.setExtendsFrom(annotationConfigs);
@@ -259,8 +262,7 @@ public class VariantDependencies {
             annotationProcessor.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             applyVariantAttributes(annotationProcessor, buildType, flavorMap);
 
-            Configuration jackPlugin =
-                    project.getConfigurations().maybeCreate("_" + variantName + "JackPlugin");
+            Configuration jackPlugin = configurations.maybeCreate("_" + variantName + "JackPlugin");
             jackPlugin.setVisible(false);
             jackPlugin.setDescription("Resolved configuration for jack plugins for variant: " + variantName);
             jackPlugin.setExtendsFrom(jackPluginConfigs);
@@ -269,7 +271,8 @@ public class VariantDependencies {
             // all the runtime graph.
             jackPlugin.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
-            Configuration runtimeClasspath = project.getConfigurations().maybeCreate(variantName + "RuntimeClasspath");
+            final String runtimeClasspathName = variantName + "RuntimeClasspath";
+            Configuration runtimeClasspath = configurations.maybeCreate(runtimeClasspathName);
             runtimeClasspath.setVisible(false);
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
@@ -278,7 +281,7 @@ public class VariantDependencies {
             runtimeClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
 
-            Configuration wearApp = project.getConfigurations().maybeCreate(variantName + "WearBundling");
+            Configuration wearApp = configurations.maybeCreate(variantName + "WearBundling");
             wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
             wearApp.setExtendsFrom(wearAppConfigs);
             wearApp.setCanBeConsumed(false);
@@ -292,7 +295,7 @@ public class VariantDependencies {
             if (publishVariant) {
                 // this is the configuration that contains the artifacts for inter-module
                 // dependencies.
-                runtimeElements = project.getConfigurations().maybeCreate(variantName + "RuntimeElements");
+                runtimeElements = configurations.maybeCreate(variantName + "RuntimeElements");
                 runtimeElements.setDescription("Runtime elements for " + variantName);
                 runtimeElements.setCanBeResolved(false);
 
@@ -310,7 +313,7 @@ public class VariantDependencies {
                     runtimeElements.setExtendsFrom(runtimeClasspaths);
                 }
 
-                apiElements = project.getConfigurations().maybeCreate(variantName + "ApiElements");
+                apiElements = configurations.maybeCreate(variantName + "ApiElements");
                 apiElements.setDescription("API elements for " + variantName);
                 apiElements.setCanBeResolved(false);
                 applyVariantAttributes(apiElements, buildType, flavorMap2);
@@ -319,6 +322,13 @@ public class VariantDependencies {
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
             }
+
+            // TODO remove after a while?
+            checkOldConfigurations(
+                    configurations, "_" + variantName + "Compile", compileClasspathName);
+            checkOldConfigurations(configurations, "_" + variantName + "Apk", runtimeClasspathName);
+            checkOldConfigurations(
+                    configurations, "_" + variantName + "Publish", runtimeClasspathName);
 
             DependencyChecker checker = new DependencyChecker(
                     project.getPath().equals(":") ? project.getName() : project.getPath(),
@@ -339,6 +349,18 @@ public class VariantDependencies {
                     wearApp,
                     testedVariantDependencies,
                     testedVariantOutput);
+        }
+
+        private static void checkOldConfigurations(
+                @NonNull ConfigurationContainer configurations,
+                @NonNull String oldConfigName,
+                @NonNull String newConfigName) {
+            if (configurations.findByName(oldConfigName) != null) {
+                throw new RuntimeException(
+                        String.format(
+                                "Configuration with old name %s found. Use new name %s instead.",
+                                oldConfigName, newConfigName));
+            }
         }
 
         /**
