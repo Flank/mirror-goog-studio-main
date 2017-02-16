@@ -70,7 +70,7 @@ def _iml_resources(name, resources, srcs):
     return []
 
 
-def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], javacopts=[], **kwargs):
+def _iml_library(name, srcs=[], package_prefixes=[], exclude=[], deps=[], exports=[], visibility=[], javacopts=[], **kwargs):
 
   kotlins = native.glob([src + "/**/*.kt" for src in srcs], exclude=exclude)
   groovies = native.glob([src + "/**/*.groovy" for src in srcs], exclude=exclude)
@@ -83,6 +83,7 @@ def _iml_library(name, srcs=[], exclude=[], deps=[], exports=[], visibility=[], 
     kotlin_jar(
         name = name + ".kotlins",
         srcs = srcs,
+        package_prefixes = package_prefixes,
         deps = ["@local_jdk//:langtools-neverlink"] + deps,
     )
     deps += ["//tools/base/bazel:kotlin-runtime", "lib" + name + ".kotlins.jar"]
@@ -183,6 +184,7 @@ def _get_label_and_tags(label):
 # "module_name_tests": A java test rule that runs the tests found in "libmodule_name_testlib.jar"
 def iml_module(name,
     srcs=[],
+    package_prefixes={},
     test_srcs=[],
     exclude=[],
     resources=[],
@@ -216,9 +218,11 @@ def iml_module(name,
     if label in exports:
       test_exports += new_test_deps
 
+  prefixes = [package_prefixes[src] if src in package_prefixes else "" for src in srcs]
   _iml_library(
     name = name,
     srcs = srcs,
+    package_prefixes = prefixes,
     exclude = exclude,
     exports = exports,
     deps = main_deps,
@@ -231,6 +235,7 @@ def iml_module(name,
   _iml_library(
     name = name + "_testlib",
     srcs = test_srcs,
+    package_prefixes = prefixes,
     deps = test_deps,
     visibility = visibility,
     exports = test_exports,
