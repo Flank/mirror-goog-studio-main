@@ -196,7 +196,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
-
         launcher.setStandardOutput(stdout);
         launcher.setStandardError(stderr);
 
@@ -216,6 +215,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             GradleBuildResult result =
                     new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
             lastBuildResultConsumer.accept(result);
+            if (VERBOSE) {
+                stderr.writeTo(System.err);
+                stdout.writeTo(System.out);
+            }
             if (isExpectingFailure && failure == null) {
                 throw new AssertionError("Expecting build to fail");
             } else if (!isExpectingFailure && failure != null) {
