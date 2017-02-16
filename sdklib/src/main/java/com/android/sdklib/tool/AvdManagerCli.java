@@ -73,13 +73,13 @@ class AvdManagerCli extends CommandLineParser {
      *   or optional) for the given action.
      */
 
-    private final static String VERB_LIST = "list";
+    private static final String VERB_LIST = "list";
 
-    private final static String VERB_CREATE = "create";
+    private static final String VERB_CREATE = "create";
 
-    private final static String VERB_MOVE = "move";
+    private static final String VERB_MOVE = "move";
 
-    private final static String VERB_DELETE = "delete";
+    private static final String VERB_DELETE = "delete";
 
     private static final String OBJECT_AVDS = "avds";
 
@@ -119,20 +119,18 @@ class AvdManagerCli extends CommandLineParser {
 
     private static final String KEY_DEVICE = "device";
 
-    /**
-     * Java property that defines the location of the sdk/tools directory.
-     */
-    private final static String TOOLSDIR = "com.android.sdkmanager.toolsdir";
+    /** Java property that defines the location of the sdk/tools directory. */
+    private static final String TOOLSDIR = "com.android.sdkmanager.toolsdir";
 
     /**
      * Java property that defines the working directory. On Windows the current working directory is
      * actually the tools dir, in which case this is used to get the original CWD.
      */
-    private final static String WORKDIR = "com.android.sdkmanager.workdir";
+    private static final String WORKDIR = "com.android.sdkmanager.workdir";
 
-    private final static String[] BOOLEAN_YES_REPLIES = new String[]{"yes", "y"};
+    private static final String[] BOOLEAN_YES_REPLIES = new String[] {"yes", "y"};
 
-    private final static String[] BOOLEAN_NO_REPLIES = new String[]{"no", "n"};
+    private static final String[] BOOLEAN_NO_REPLIES = new String[] {"no", "n"};
 
     /**
      * Regex used to validate characters that compose an AVD name.
@@ -163,34 +161,28 @@ class AvdManagerCli extends CommandLineParser {
 
     /**
      * Action definitions for AvdManager command line.
-     * <p/>
-     * This list serves two purposes: first it is used to know which verb/object actions are
+     *
+     * <p>This list serves two purposes: first it is used to know which verb/object actions are
      * acceptable on the command-line; second it provides a summary for each action that is printed
      * in the help.
-     * <p/>
-     * Each entry is a string array with: <ul> <li> the verb. <li> an object (use #NO_VERB_OBJECT if
-     * there's no object). <li> a description. <li> an alternate form for the object (e.g. plural).
+     *
+     * <p>Each entry is a string array with:
+     *
+     * <ul>
+     *   <li> the verb.
+     *   <li> an object (use #NO_VERB_OBJECT if there's no object).
+     *   <li> a description.
+     *   <li> an alternate form for the object (e.g. plural).
      * </ul>
      */
-    private final static String[][] ACTIONS = {
-
-            {VERB_LIST, NO_VERB_OBJECT,
-                    "Lists existing targets or virtual devices."},
-            {VERB_LIST, OBJECT_AVD,
-                    "Lists existing Android Virtual Devices.",
-                    OBJECT_AVDS},
-            {VERB_LIST, OBJECT_TARGET,
-                    "Lists existing targets.",
-                    OBJECT_TARGETS},
-            {VERB_LIST, OBJECT_DEVICE,
-                    "Lists existing devices.",
-                    OBJECT_DEVICES},
-            {VERB_CREATE, OBJECT_AVD,
-                    "Creates a new Android Virtual Device."},
-            {VERB_MOVE, OBJECT_AVD,
-                    "Moves or renames an Android Virtual Device."},
-            {VERB_DELETE, OBJECT_AVD,
-                    "Deletes an Android Virtual Device."},
+    private static final String[][] ACTIONS = {
+        {VERB_LIST, NO_VERB_OBJECT, "Lists existing targets or virtual devices."},
+        {VERB_LIST, OBJECT_AVD, "Lists existing Android Virtual Devices.", OBJECT_AVDS},
+        {VERB_LIST, OBJECT_TARGET, "Lists existing targets.", OBJECT_TARGETS},
+        {VERB_LIST, OBJECT_DEVICE, "Lists existing devices.", OBJECT_DEVICES},
+        {VERB_CREATE, OBJECT_AVD, "Creates a new Android Virtual Device."},
+        {VERB_MOVE, OBJECT_AVD, "Moves or renames an Android Virtual Device."},
+        {VERB_DELETE, OBJECT_AVD, "Deletes an Android Virtual Device."},
     };
 
     public static void main(String[] args) {
@@ -913,8 +905,7 @@ class AvdManagerCli extends CommandLineParser {
         String result;
         String defaultAnswer = "no";
 
-        mSdkLog.info("Do you wish to create a custom hardware profile [%s]",
-                defaultAnswer);
+        mSdkLog.info("Do you wish to create a custom hardware profile? [%s] ", defaultAnswer);
 
         result = readLine(readLineBuffer).trim();
         // handle default:
@@ -930,8 +921,18 @@ class AvdManagerCli extends CommandLineParser {
         mSdkLog.info("\n"); // empty line
 
         // get the list of possible hardware properties
-        File hardwareDefs = new File(mOsSdkFolder + File.separator +
-                SdkConstants.OS_SDK_TOOLS_LIB_FOLDER, SdkConstants.FN_HARDWARE_INI);
+        // The file is in the emulator component
+        LocalPackage emulatorPackage =
+                mSdkHandler.getLocalPackage(
+                        SdkConstants.FD_EMULATOR,
+                        new ProgressIndicatorAdapter() {
+                            // don't log anything
+                        });
+        if (emulatorPackage == null) {
+            errorAndExit("\"emulator\" package must be installed!");
+        }
+        File libDir = new File(emulatorPackage.getLocation(), SdkConstants.FD_LIB);
+        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
         Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
                 .parseHardwareDefinitions(
                         hardwareDefs, null /*sdkLog*/);
