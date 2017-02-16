@@ -6,7 +6,7 @@ def create_option_file(ctx, path, content):
   ctx.file_action(output=options_file, content=content)
   return options_file
 
-def create_java_compiler_args(ctx, path, deps):
+def create_java_compiler_args_srcs(ctx, srcs, path, deps):
   args = []
   option_files = []
 
@@ -21,12 +21,20 @@ def create_java_compiler_args(ctx, path, deps):
   args += ["-o", path]
 
   # Source files
-  source_file = create_option_file(ctx, path + ".lst",
-    "\n".join([src.path for src in ctx.files.srcs]))
+  source_file = create_option_file(ctx, path + ".lst", srcs)
   option_files += [source_file]
   args += ["@" + source_file.path]
 
   return (args, option_files)
+
+
+def create_java_compiler_args(ctx, path, deps):
+  return create_java_compiler_args_srcs(
+      ctx,
+      "\n".join([src.path for src in ctx.files.srcs]),
+      path,
+      deps)
+
 
 # Adds an explict target-name part if label doesn't have it.
 def explicit_target(label):
