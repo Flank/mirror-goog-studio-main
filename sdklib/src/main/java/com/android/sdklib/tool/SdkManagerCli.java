@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.Dependency;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
 import com.android.repository.api.License;
@@ -32,6 +33,7 @@ import com.android.repository.api.SettingsController;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.api.UpdatablePackage;
 import com.android.repository.impl.meta.RepositoryPackages;
+import com.android.repository.impl.meta.RevisionType;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileSystemFileOp;
 import com.android.repository.util.InstallerUtil;
@@ -155,11 +157,121 @@ public class SdkManagerCli {
 
         RepositoryPackages packages = mRepoManager.getPackages();
 
-        Collection<LocalPackage> locals = new TreeSet<>(packages.getLocalPackages().values());
-        Collection<LocalPackage> localObsoletes = new TreeSet<>(locals);
-        locals.removeIf(RepoPackage::obsolete);
-        localObsoletes.removeAll(locals);
+        Collection<LocalPackage> locals = new TreeSet<>();
+        Collection<LocalPackage> localObsoletes = new TreeSet<>();
+        for (LocalPackage local : packages.getLocalPackages().values()) {
+            if (local.obsolete()) {
+                localObsoletes.add(local);
+            }
+            else {
+                locals.add(local);
+            }
+        }
 
+
+        Collection<RemotePackage> remotes = new TreeSet<>();
+        Collection<RemotePackage> remoteObsoletes = new TreeSet<>();
+        for (RemotePackage remote : packages.getRemotePackages().values()) {
+            if (remote.obsolete()) {
+                remoteObsoletes.add(remote);
+            }
+            else {
+                remotes.add(remote);
+            }
+        }
+
+        Set<UpdatablePackage> updates = new TreeSet<>(packages.getUpdatedPkgs());
+
+        if (mSettings.isVerbose()) {
+            printListVerbose(locals, localObsoletes, remotes, remoteObsoletes, updates);
+        }
+        else {
+            printList(locals, localObsoletes, remotes, remoteObsoletes, updates);
+        }
+    }
+
+    private void printListVerbose(@NonNull Collection<LocalPackage> locals,
+            @NonNull Collection<LocalPackage> localObsoletes,
+            @NonNull Collection<RemotePackage> remotes,
+            @NonNull Collection<RemotePackage> remoteObsoletes,
+            @NonNull Set<UpdatablePackage> updates) {
+
+        if (!locals.isEmpty()) {
+            mOut.println("Installed packages:");
+            mOut.println("--------------------------------------");
+
+            verboseListLocal(locals);
+        }
+
+        if (mSettings.includeObsolete() && !localObsoletes.isEmpty()) {
+            mOut.println("Installed Obsolete Packages:");
+            mOut.println("--------------------------------------");
+            verboseListLocal(locals);
+        }
+
+        if (!remotes.isEmpty()) {
+            mOut.println("Available Packages:");
+            mOut.println("--------------------------------------");
+            verboseListRemote(remotes);
+        }
+
+        if (mSettings.includeObsolete() && !remoteObsoletes.isEmpty()) {
+            mOut.println();
+            mOut.println("Available Obsolete Packages:");
+            mOut.println("--------------------------------------");
+            verboseListRemote(remoteObsoletes);
+        }
+
+        if (!updates.isEmpty()) {
+            mOut.println("Available Updates:");
+            mOut.println("--------------------------------------");
+            for (UpdatablePackage update : updates) {
+                mOut.println(update.getPath());
+                mOut.println("    Local Version:  " + update.getLocal().getVersion());
+                mOut.println("    Remote Version: " + update.getRemote().getVersion());
+                if (update.getRemote().obsolete()) {
+                    mOut.println("    (Obsolete)");
+                }
+            }
+        }
+    }
+
+    private void verboseListLocal(@NonNull Collection<LocalPackage> locals) {
+        for (LocalPackage local : locals) {
+            mOut.println(local.getPath());
+            mOut.println("    Description:        " + local.getDisplayName());
+            mOut.println("    Version:            " + local.getVersion());
+            mOut.println("    Installed Location: " + local.getLocation());
+            mOut.println();
+        }
+    }
+
+    private void verboseListRemote(@NonNull Collection<RemotePackage> remotes) {
+        for (RemotePackage remote : remotes) {
+            mOut.println(remote.getPath());
+            mOut.println("    Description:        " + remote.getDisplayName());
+            mOut.println("    Version:            " + remote.getVersion());
+            if (!remote.getAllDependencies().isEmpty()) {
+                mOut.println("    Dependencies:");
+                for (Dependency dependency : remote.getAllDependencies()) {
+                    RevisionType minRevision = dependency.getMinRevision();
+                    mOut.print("        " + dependency.getPath());
+                    if (minRevision != null) {
+                        mOut.println(" Revision " + minRevision.toRevision());
+                    } else {
+                        mOut.println();
+                    }
+                }
+            }
+            mOut.println();
+        }
+    }
+
+    private void printList(@NonNull Collection<LocalPackage> locals,
+            @NonNull Collection<LocalPackage> localObsoletes,
+            @NonNull Collection<RemotePackage> remotes,
+            @NonNull Collection<RemotePackage> remoteObsoletes,
+            @NonNull Set<UpdatablePackage> updates) {
         TableFormatter<LocalPackage> localTable = new TableFormatter<>();
         localTable.addColumn("Path", RepoPackage::getPath, 15, 15);
         localTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
@@ -179,11 +291,6 @@ public class SdkManagerCli {
             localTable.print(localObsoletes, mOut);
         }
 
-        Collection<RemotePackage> remotes = new TreeSet<>(packages.getRemotePackages().values());
-        Collection<RemotePackage> remoteObsoletes = new TreeSet<>(remotes);
-        remotes.removeIf(RepoPackage::obsolete);
-        remoteObsoletes.removeAll(remotes);
-
         TableFormatter<RemotePackage> remoteTable = new TableFormatter<>();
         remoteTable.addColumn("Path", RepoPackage::getPath, 15, 15);
         remoteTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
@@ -200,7 +307,6 @@ public class SdkManagerCli {
             remoteTable.print(remoteObsoletes, mOut);
         }
 
-        Set<UpdatablePackage> updates = new TreeSet<>(packages.getUpdatedPkgs());
         if (!updates.isEmpty()) {
             mOut.println();
             mOut.println("Available Updates:");
