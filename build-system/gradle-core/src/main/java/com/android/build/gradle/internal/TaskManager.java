@@ -2227,19 +2227,16 @@ public abstract class TaskManager {
             dexOptions = extension.getDexOptions();
         }
 
-        boolean cachePreDex = dexOptions.getPreDexLibraries() && !isMinifyEnabled(variantScope);
-        FileCache buildCache;
-        if (cachePreDex && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
-            buildCache = globalScope.getBuildCache();
-        } else {
-            buildCache = null;
-        }
-
+        boolean minified = isMinifyEnabled(variantScope);
+        FileCache userLevelCache = getUserLevelCache(minified, dexOptions.getPreDexLibraries());
+        FileCache projectLevelCache =
+                getProjectLevelCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
-                        buildCache,
+                        userLevelCache,
+                        projectLevelCache,
                         variantScope.getBuildContext().isInInstantRunMode());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
@@ -2259,6 +2256,26 @@ public abstract class TaskManager {
                     t.optionalDependsOn(tasks, multiDexClassListTask);
                     variantScope.addColdSwapBuildTask(t);
                 });
+    }
+
+    @Nullable
+    private FileCache getUserLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
+        if (preDexLibraries
+                && !isMinifiedEnabled
+                && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+            return globalScope.getBuildCache();
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    private FileCache getProjectLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
+        if (preDexLibraries && !isMinifiedEnabled) {
+            return globalScope.getProjectLevelCache();
+        } else {
+            return null;
+        }
     }
 
     /** Creates the pre-dexing task if needed, and task for producing the final DEX file(s). */

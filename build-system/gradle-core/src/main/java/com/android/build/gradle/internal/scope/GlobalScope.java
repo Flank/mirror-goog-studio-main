@@ -77,6 +77,8 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Nullable
     private final FileCache buildCache;
 
+    @Nullable private FileCache projectLevelCache = null;
+
     public GlobalScope(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
@@ -256,6 +258,20 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Override
     public FileCache getBuildCache() {
         return buildCache;
+    }
+
+    @NonNull
+    public synchronized FileCache getProjectLevelCache() {
+        if (projectLevelCache == null) {
+            projectLevelCache =
+                    FileCache.getInstanceWithSingleProcessLocking(
+                            FileUtils.join(
+                                    project.getRootProject().getBuildDir(),
+                                    FD_INTERMEDIATES,
+                                    "project-cache"));
+        }
+
+        return projectLevelCache;
     }
 
     /** Validate flag options. */
