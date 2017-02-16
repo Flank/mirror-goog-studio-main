@@ -160,7 +160,7 @@ public class SynchronizedFileTest {
             }
             synchronizedFile.read(
                     file -> {
-                        assertThat(file).isEqualTo(new File(testDir.getRoot(), "foo"));
+                        assertThat(file).isEqualTo(fileToSynchronize.getCanonicalFile());
                         return true;
                     });
         }
@@ -328,8 +328,8 @@ public class SynchronizedFileTest {
             fileToSynchronize = FileUtils.join(testDir.getRoot(), "foo", "bar");
             try {
                 SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
-                fail("Expected IllegalStateException");
-            } catch (IllegalStateException e) {
+                fail("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
                 assertThat(e.getMessage()).contains("must exist but does not");
             }
         }
@@ -350,8 +350,8 @@ public class SynchronizedFileTest {
             Files.write("Some text", lockFile, StandardCharsets.UTF_8);
             try {
                 SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
-                fail("Expected IllegalStateException");
-            } catch (IllegalStateException e) {
+                fail("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
                 assertThat(e.getMessage()).contains("Unexpected lock file found");
             }
         }
