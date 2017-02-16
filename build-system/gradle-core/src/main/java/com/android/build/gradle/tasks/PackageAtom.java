@@ -264,6 +264,15 @@ public class PackageAtom extends IncrementalTask {
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs)
             throws IOException {
+        // This is a no-op, exit early.
+        if (changedDex.isEmpty()
+                && changedJavaResources.isEmpty()
+                && changedAssets.isEmpty()
+                && changedAndroidResources.isEmpty()
+                && changedNLibs.isEmpty()) {
+            return;
+        }
+
         ImmutableMap.Builder<RelativeFile, FileStatus> javaResourcesForApk = ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
 
