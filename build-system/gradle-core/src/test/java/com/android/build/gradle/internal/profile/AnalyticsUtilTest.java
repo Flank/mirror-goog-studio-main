@@ -22,10 +22,10 @@ import com.android.build.gradle.tasks.CopyOutputs;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.ProtocolMessageEnum;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -41,7 +41,6 @@ public class AnalyticsUtilTest {
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
                 AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                "com.android.build.gradle.tasks.GenerateTestConfig",
                 CopyOutputs.class.getName());
     }
 
@@ -51,12 +50,9 @@ public class AnalyticsUtilTest {
                 Transform.class,
                 AnalyticsUtil::getTransformType,
                 AnalyticsUtil::getPotentialTransformTypeName,
-                "com.android.build.gradle.internal.pipeline.TestTransform",
-                "com.android.build.gradle.internal.transforms.MainDexListTransform",
                 "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
                 "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
-                "com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform",
-                "com.android.build.gradle.internal.transforms.DexMergerTransform");
+                "com.android.build.gradle.internal.pipeline.TestTransform");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
@@ -90,28 +86,27 @@ public class AnalyticsUtilTest {
 
         // Now generate a descriptive error message.
 
-        Class<? extends ProtocolMessageEnum> protoEnum =
-                mappingFunction.apply(missingTasks.get(0)).getClass();
+        Descriptors.EnumDescriptor protoEnum =
+                mappingFunction.apply(missingTasks.get(0)).getDescriptorForType();
 
         int maxNumber =
-                Arrays.stream(protoEnum.getEnumConstants())
-                        .map(ProtocolMessageEnum::getNumber)
-                        .mapToInt(Integer::intValue)
+                protoEnum
+                        .getValues()
+                        .stream()
+                        .mapToInt(Descriptors.EnumValueDescriptor::getNumber)
                         .max()
                         .orElseThrow(() -> new IllegalStateException("Empty enum?"));
 
         StringBuilder error =
-                new StringBuilder(
-                        "Some "
-                                + itemClass.getSimpleName()
-                                + "s do not have corresponding logging proto "
-                                + "enum values.\n"
-                                + "See logs/proto/wireless/android/sdk/stats/studio_stats.proto "
-                                + protoEnum.getEnumConstants()[0]
-                                        .getDescriptorForType()
-                                        .getFullName()
-                                + ".\n"
-                                + "Add the following and re-run the import script.\n");
+                new StringBuilder()
+                        .append("Some ")
+                        .append(itemClass.getSimpleName())
+                        .append(
+                                "s do not have corresponding logging proto enum values.\n"
+                                        + "See tools/analytics-library/protos/src/main/proto/"
+                                        + "analytics_enums.proto")
+                        .append(protoEnum.getFullName())
+                        .append(".\n");
         List<String> suggestions =
                 missingTasks
                         .stream()
