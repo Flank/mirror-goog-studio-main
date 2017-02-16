@@ -52,7 +52,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         fullRun("Main", "main:()V");
 
         assertTrue(new File(mIncrementalDir, "shrinker.bin").exists());
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertMembersLeft("Aaa", "<init>:()V", "m1:()V");
         assertMembersLeft("Bbb", "<init>:()V");
         assertClassSkipped("NotUsed");
@@ -65,7 +65,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
         // Then:
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertMembersLeft("Aaa", "<init>:()V", "m2:()V");
         assertMembersLeft("Bbb", "<init>:()V");
         assertClassSkipped("NotUsed");
@@ -94,7 +94,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         incrementalRun(ImmutableMap.of("NotUsed", Status.CHANGED));
 
         // Then:
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertMembersLeft("Aaa", "<init>:()V", "m1:()V");
         assertMembersLeft("Bbb", "<init>:()V");
         assertClassSkipped("NotUsed");
@@ -399,7 +399,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         fullRun("Main", "main:()V");
 
         assertTrue(new File(mIncrementalDir, "shrinker.bin").exists());
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertMembersLeft("CycleOne", "<init>:()V");
         assertMembersLeft("CycleTwo", "<init>:()V");
         assertClassSkipped("NotUsed");
@@ -410,7 +410,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
         // Then:
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertClassSkipped("CycleOne");
         assertClassSkipped("CycleTwo");
         assertClassSkipped("NotUsed");
@@ -419,7 +419,7 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         Files.write(Cycle.main1(), new File(mTestPackageDir, "Main.class"));
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
-        assertMembersLeft("Main", "main:()V");
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
         assertMembersLeft("CycleOne", "<init>:()V");
         assertMembersLeft("CycleTwo", "<init>:()V");
         assertClassSkipped("NotUsed");
@@ -433,7 +433,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
 
         fullRun("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
 
-        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft(
+                "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertImplements("MyImpl", "test/MyInterface");
@@ -442,7 +443,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
         assertClassSkipped("MyInterface");
-        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft(
+                "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertDoesNotImplement("MyImpl", "test/MyInterface");
     }
@@ -456,7 +458,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         fullRun("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
 
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
-        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft(
+                "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertDoesNotImplement("MyImpl", "test/MyInterface");
         assertClassSkipped("MyInterface");
@@ -464,7 +467,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         Files.write(Interfaces.main(true), new File(mTestPackageDir, "Main.class"));
         incrementalRun(ImmutableMap.of("Main", Status.CHANGED));
 
-        assertMembersLeft("Main", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
+        assertMembersLeft(
+                "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
         assertImplements("MyImpl", "test/MyInterface");

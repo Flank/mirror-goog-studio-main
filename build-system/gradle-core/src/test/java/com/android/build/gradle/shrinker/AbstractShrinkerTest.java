@@ -189,7 +189,9 @@ public abstract class AbstractShrinkerTest {
 
     protected void assertMembersLeft(String className, String... expectedMembers)
             throws IOException {
-        assertThat(getMembers(className)).containsExactlyElementsIn(Arrays.asList(expectedMembers));
+        assertThat(getMembers(className))
+                .named(className + " members")
+                .containsExactlyElementsIn(Arrays.asList(expectedMembers));
     }
 
     protected Set<String> getMembers(String className) throws IOException {
