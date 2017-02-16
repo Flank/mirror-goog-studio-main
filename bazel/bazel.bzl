@@ -84,6 +84,7 @@ def _iml_library(name, srcs=[], package_prefixes=[], exclude=[], deps=[], export
         name = name + ".kotlins",
         srcs = srcs,
         package_prefixes = package_prefixes,
+        inputs = kotlins + javas,
         deps = ["@local_jdk//:langtools-neverlink"] + deps,
     )
     deps += ["//tools/base/bazel:kotlin-runtime", "lib" + name + ".kotlins.jar"]
@@ -232,10 +233,11 @@ def iml_module(name,
     visibility = visibility,
   )
 
+  test_prefixes = [package_prefixes[src] if src in package_prefixes else "" for src in test_srcs]
   _iml_library(
     name = name + "_testlib",
     srcs = test_srcs,
-    package_prefixes = prefixes,
+    package_prefixes = test_prefixes,
     deps = test_deps,
     visibility = visibility,
     exports = test_exports,

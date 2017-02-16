@@ -23,7 +23,7 @@ def _kotlin_jar_impl(ctx):
 
 
   ctx.action(
-    inputs = ctx.files.srcs + list(all_deps) + option_files,
+    inputs = ctx.files.inputs + ctx.files.srcs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     arguments = args,
@@ -34,6 +34,9 @@ kotlin_jar = rule(
     attrs = {
         "srcs": attr.label_list(
             non_empty = True,
+            allow_files = True,
+        ),
+        "inputs": attr.label_list(
             allow_files = True,
         ),
         "package_prefixes": attr.string_list(),
