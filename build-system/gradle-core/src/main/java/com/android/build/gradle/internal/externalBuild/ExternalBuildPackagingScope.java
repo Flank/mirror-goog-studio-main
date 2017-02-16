@@ -32,7 +32,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import java.io.File;
@@ -82,7 +82,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputPackageFile(File destinationDir, String projectBaseName, Split split) {
+    public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
         return getMainOutputFile().getOutputFile();
     }
 

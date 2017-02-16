@@ -21,7 +21,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -40,7 +39,6 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -70,7 +68,7 @@ import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkInfo;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableList;
@@ -420,35 +418,6 @@ public class ModelBuilder implements ToolingModelBuilder {
         return nativeLibraries;
     }
 
-    private static final class ConfigurationSplitCreator implements SplitScope.SplitCreator {
-
-        private final String baseName;
-        private final String fullName;
-        private final String dirName;
-
-        ConfigurationSplitCreator(String baseName, String fullName, String dirName) {
-            this.baseName = baseName;
-            this.fullName = fullName;
-            this.dirName = dirName;
-        }
-
-        @Nullable
-        @Override
-        public Split create(
-                @NonNull VariantOutput.OutputType outputType,
-                @NonNull Collection<FilterData> filters) {
-            String filterName = SplitFactory.getFilterNameForSplits(filters);
-            return new SplitFactory.DefaultSplit(
-                    outputType,
-                    filterName,
-                    baseName,
-                    fullName,
-                    dirName,
-                    ImmutableList.copyOf(filters));
-        }
-    }
-
-
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
@@ -463,12 +432,6 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
-        ConfigurationSplitCreator splitCreator =
-                new ConfigurationSplitCreator(
-                        variantConfiguration.getBaseName(),
-                        variantConfiguration.getFullName(),
-                        variantConfiguration.getDirName());
-
         // get the outputs
         SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsProxy = null;
         SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestsProxy = null;
@@ -476,8 +439,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             case DEFAULT:
                 splitOutputsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(
                                         VariantScope.TaskOutputType.APK,
                                         VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
@@ -495,28 +456,26 @@ public class ModelBuilder implements ToolingModelBuilder {
 
                 manifestsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));
                 break;
             case LIBRARY:
-                Split mainSplit =
-                        splitCreator.create(VariantOutput.OutputType.MAIN, ImmutableList.of());
+                ApkInfo mainApkInfo =
+                        ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 splitOutputsProxy =
-                        new SerializableSupplier.Default<>(
+                        SerializableSupplier.of(
                                 ImmutableList.of(
                                         new SplitScope.SplitOutput(
                                                 VariantScope.TaskOutputType.AAR,
-                                                mainSplit,
+                                                mainApkInfo,
                                                 scope.getOutputBundleFile())));
                 manifestsProxy =
-                        new SerializableSupplier.Default<>(
+                        SerializableSupplier.of(
                                 ImmutableList.of(
                                         new SplitScope.SplitOutput(
                                                 VariantScope.TaskOutputType.MERGED_MANIFESTS,
-                                                mainSplit,
+                                                mainApkInfo,
                                                 new File(
                                                         scope.getManifestOutputDirectory(),
                                                         SdkConstants.ANDROID_MANIFEST_XML))));
@@ -525,8 +484,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             case INSTANTAPP:
                 splitOutputsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(VariantScope.TaskOutputType.APKB),
                                 ImmutableList.of(
                                         new File(
@@ -539,8 +496,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                         .getDirName())));
                 manifestsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));
@@ -548,8 +503,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             case ANDROID_TEST:
                 splitOutputsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(VariantScope.TaskOutputType.APK),
                                 ImmutableList.of(
                                         new File(
@@ -562,8 +515,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                         .getDirName())));
                 manifestsProxy =
                         new SplitOutputsSupplier(
-                                variantData.getSplitScope(),
-                                splitCreator,
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));

@@ -81,8 +81,8 @@ public class CopyOutputs extends BaseTask {
     }
 
     private void parallelCopy(TaskOutputType inputType, FileCollection inputs) {
-        splitScope.load(inputType, inputs);
         splitScope.parallelForEachOutput(
+                SplitScope.load(inputType, inputs),
                 inputType,
                 TaskOutputType.APK,
                 (split, output) -> {

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.model.AaptOptions;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -58,13 +58,13 @@ import org.gradle.api.Project;
             @NonNull ExternalBuildContext externalBuildContext,
             @NonNull AaptOptions aaptOptions,
             @NonNull ManifestAttributeSupplier manifestAttributeSupplier,
-            @NonNull Collection<Split> splits) {
+            @NonNull Collection<ApkData> apkDatas) {
         this.globalScope = globalScope;
         this.outputRootFolder = outputRootFolder;
         this.externalBuildContext = externalBuildContext;
         this.aaptOptions = aaptOptions;
         this.manifestAttributeSupplier = manifestAttributeSupplier;
-        this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, splits);
+        this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, apkDatas);
     }
 
     @NonNull

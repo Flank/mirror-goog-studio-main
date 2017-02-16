@@ -53,6 +53,7 @@ public class AndroidArtifacts {
 
     // types for AAR/ATOM content
     private static final String TYPE_MANIFEST = "android-manifest";
+    private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
     private static final String TYPE_ASSETS = "android-assets";
     private static final String TYPE_JNI = "android-jni";
@@ -120,6 +121,7 @@ public class AndroidArtifacts {
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST, API_AND_RUNTIME_ELEMENTS),
+        MANIFEST_METADATA(TYPE_MANIFEST_METADATA, API_ELEMENTS_ONLY),
 
         // this is used only for the models.
         EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),

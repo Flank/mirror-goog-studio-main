@@ -40,7 +40,6 @@ public interface TaskOutputHolder {
         PACKAGED_RES,
         MERGED_RES,
         MERGED_ASSETS,
-        APK_METADATA,
         MOCKABLE_JAR,
         COMPATIBLE_SCREEN_MANIFEST,
         MERGED_MANIFESTS,

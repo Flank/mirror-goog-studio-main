@@ -19,19 +19,10 @@ package com.android.build.gradle.internal.ide;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-/** Specia; */
+/** Specialized version of {@link Supplier} that's serializable */
 public interface SerializableSupplier<T> extends Supplier<T>, Serializable {
 
-    class Default<U> implements SerializableSupplier<U> {
-        private final U value;
-
-        public Default(U value) {
-            this.value = value;
-        }
-
-        @Override
-        public U get() {
-            return value;
-        }
+    static <U> SerializableSupplier<U> of(U value) {
+        return (SerializableSupplier<U>) () -> value;
     }
 }

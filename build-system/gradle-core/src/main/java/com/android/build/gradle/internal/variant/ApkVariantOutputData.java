@@ -51,9 +51,9 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
                         .map(
                                 splitOutput ->
                                         new ApkOutputFile(
-                                                splitOutput.getSplit().getType(),
+                                                splitOutput.getApkInfo().getType(),
                                                 splitOutput
-                                                        .getSplit()
+                                                        .getApkInfo()
                                                         .getFilters()
                                                         .stream()
                                                         .map(
@@ -65,7 +65,7 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
                                                                                         .getIdentifier()))
                                                         .collect(Collectors.toList()),
                                                 splitOutput::getOutputFile,
-                                                splitOutput.getSplit().getVersionCode()))
+                                                splitOutput.getApkInfo().getVersionCode()))
                         .collect(Collectors.toList()));
     }
 

@@ -22,6 +22,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.ide.common.build.ApkInfo;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -36,20 +37,14 @@ import java.util.List;
 public class SplitOutputsSupplier
         implements SerializableSupplier<Collection<SplitScope.SplitOutput>> {
 
-    @NonNull private final SplitScope splitScope;
     @NonNull private final List<File> outputFolders;
     @NonNull private final List<VariantScope.OutputType> outputTypes;
-    @NonNull private final SplitScope.SplitCreator splitCreator;
 
     public SplitOutputsSupplier(
-            @NonNull SplitScope splitScope,
-            @NonNull SplitScope.SplitCreator splitCreator,
             @NonNull List<VariantScope.OutputType> outputTypes,
             @NonNull List<File> outputFolders) {
         this.outputFolders = outputFolders;
-        this.splitScope = splitScope;
         this.outputTypes = outputTypes;
-        this.splitCreator = splitCreator;
     }
 
     @Override
@@ -61,8 +56,9 @@ public class SplitOutputsSupplier
                     if (!outputFolder.exists()) {
                         return;
                     }
-                    boolean loaded = splitScope.load(outputTypes, outputFolder, splitCreator);
-                    if (!loaded) {
+                    Collection<SplitScope.SplitOutput> previous =
+                            SplitScope.load(outputTypes, outputFolder);
+                    if (previous.isEmpty()) {
                         outputTypes.forEach(
                                 taskOutputType -> {
                                     // take the FileCollection content as face value.
@@ -75,15 +71,14 @@ public class SplitOutputsSupplier
                                         }
                                     }
                                 });
+                    } else {
+                        outputs.addAll(previous);
                     }
                 });
-        outputTypes.forEach(
-                taskOutputType -> outputs.addAll(splitScope.getOutputs(taskOutputType)));
-
         return outputs.build();
     }
 
-    private void processFile(
+    private static void processFile(
             VariantScope.OutputType taskOutputType,
             File file,
             ImmutableList.Builder<SplitScope.SplitOutput> outputs) {
@@ -92,8 +87,7 @@ public class SplitOutputsSupplier
                 outputs.add(
                         new SplitScope.SplitOutput(
                                 taskOutputType,
-                                splitCreator.create(
-                                        VariantOutput.OutputType.MAIN, ImmutableList.of()),
+                                ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0),
                                 file));
             }
         } else {
@@ -106,7 +100,7 @@ public class SplitOutputsSupplier
             outputs.add(
                     new SplitScope.SplitOutput(
                             taskOutputType,
-                            splitCreator.create(fileOutputType, ImmutableList.of()),
+                            ApkInfo.of(fileOutputType, ImmutableList.of(), 0),
                             file));
         }
     }

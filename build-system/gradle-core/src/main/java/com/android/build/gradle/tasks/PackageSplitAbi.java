@@ -33,7 +33,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SigningException;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
@@ -89,9 +89,9 @@ public class PackageSplitAbi extends BaseTask {
     @Input
     public Set<String> getSplits() {
         return splitScope
-                .getSplits()
+                .getApkDatas()
                 .stream()
-                .map(Split::getFilterName)
+                .map(ApkData::getFilterName)
                 .collect(Collectors.toSet());
     }
 
@@ -127,9 +127,10 @@ public class PackageSplitAbi extends BaseTask {
             throws SigningException, KeytoolException, PackagerException, IOException {
 
         FileUtils.cleanOutputDir(incrementalDir);
-        splitScope.load(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources);
 
         splitScope.parallelForEachOutput(
+                SplitScope.load(
+                        VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources),
                 VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
                 VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
                 (split, output) -> {
@@ -164,9 +165,9 @@ public class PackageSplitAbi extends BaseTask {
         splitScope.save(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
     }
 
-    private String getApkName(final Split split) {
+    private String getApkName(final ApkData apkData) {
         String archivesBaseName = (String) getProject().getProperties().get("archivesBaseName");
-        String apkName = archivesBaseName + "-" + split.getBaseName();
+        String apkName = archivesBaseName + "-" + apkData.getBaseName();
         return apkName
                 + (getSigningConfig() == null ? "-unsigned" : "")
                 + SdkConstants.DOT_ANDROID_PACKAGE;

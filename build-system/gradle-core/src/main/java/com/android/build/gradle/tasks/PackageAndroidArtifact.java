@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
@@ -47,7 +48,7 @@ import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.packaging.PackagingUtils;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -276,7 +277,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     interface OutputFileProvider {
-        File getOutputFile(Split split);
+        File getOutputFile(ApkData apkData);
     }
 
     public OutputFileProvider outputFileProvider;
@@ -286,20 +287,21 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
 
-        // TO DO : clean past APK production from splitScope.
-        splitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
+        Collection<SplitScope.SplitOutput> mergedResources =
+                SplitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
         splitScope.load(manifestType, manifests);
         splitScope.parallelForEachOutput(
+                mergedResources,
                 VariantScope.TaskOutputType.PROCESSED_RES,
                 getTaskOutputType(),
                 this::splitFullAction);
         splitScope.save(getTaskOutputType(), outputDirectory);
     }
 
-    public File splitFullAction(@NonNull Split split, @Nullable File processedResources)
+    public File splitFullAction(@NonNull ApkData apkData, @Nullable File processedResources)
             throws IOException {
 
-        File incrementalDirForSplit = new File(getIncrementalFolder(), split.getDirName());
+        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getDirName());
 
         /*
          * Clear the intermediate build directory. We don't know if anything is in there and
@@ -327,10 +329,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         FileUtils.mkdirs(getOutputDirectory());
         // TO DO : move ALL output file name calculations to Split.
-        String splitOutputFileName = split.getOutputFileName();
+        String splitOutputFileName = apkData.getOutputFileName();
         File outputFile =
                 splitOutputFileName == null
-                        ? outputFileProvider.getOutputFile(split)
+                        ? outputFileProvider.getOutputFile(apkData)
                         : new File(outputDirectory, splitOutputFileName);
 
         /*
@@ -363,11 +365,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
 
+        Collection<SplitScope.SplitOutput> manifestOutputs =
+                SplitScope.load(manifestType, manifests);
         doTask(
-                split,
+                apkData,
                 incrementalDirForSplit,
                 outputFile,
                 cacheByPath,
+                manifestOutputs,
                 updatedDex,
                 updatedJavaResources,
                 updatedAssets,
@@ -434,7 +439,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
      * Packages the application incrementally. In case of instant run packaging, this is not a
      * perfectly incremental task as some files are always rewritten even if no change has occurred.
      *
-     * @param split the split being built
+     * @param apkData the split being built
      * @param outputFile expected output package file
      * @param changedDex incremental dex packaging data
      * @param changedJavaResources incremental java resources
@@ -444,10 +449,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
      * @throws IOException failed to package the APK
      */
     private void doTask(
-            @NonNull Split split,
+            @NonNull ApkData apkData,
             @NonNull File incrementalDirForSplit,
             @NonNull File outputFile,
             @NonNull FileCacheByPath cacheByPath,
+            @NonNull Collection<SplitScope.SplitOutput> manifestOutputs,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedDex,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
@@ -470,14 +476,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         }
         final ImmutableMap<RelativeFile, FileStatus> dexFilesToPackage = changedDex;
 
-        String abiFilter = split.getFilter(com.android.build.OutputFile.FilterType.ABI);
+        String abiFilter = apkData.getFilter(com.android.build.OutputFile.FilterType.ABI);
 
         // find the manifest file for this split.
-        SplitScope.SplitOutput manifestForSplit = splitScope.getOutput(manifestType, split);
+        SplitScope.SplitOutput manifestForSplit =
+                SplitScope.getOutput(manifestOutputs, manifestType, apkData);
+
         if (manifestForSplit == null || manifestForSplit.getOutputFile() == null) {
             throw new RuntimeException(
                     "Found a .ap_ for split "
-                            + split
+                            + apkData
                             + " but no "
                             + manifestType
                             + " associated manifest file");
@@ -551,10 +559,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
         checkNotNull(changedInputs, "changedInputs == null");
-        splitScope.load(getTaskOutputType(), outputDirectory);
-        splitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
-        splitScope.load(manifestType, manifests);
         splitScope.parallelForEachOutput(
+                SplitScope.load(TaskOutputHolder.TaskOutputType.PROCESSED_RES, resourceFiles),
                 VariantScope.TaskOutputType.PROCESSED_RES,
                 getTaskOutputType(),
                 (split, output) -> splitIncrementalAction(split, output, changedInputs));
@@ -562,7 +568,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     private File splitIncrementalAction(
-            Split split, @Nullable File resourceFile, Map<File, FileStatus> changedInputs)
+            ApkData apkData, @Nullable File resourceFile, Map<File, FileStatus> changedInputs)
             throws IOException {
 
         Set<File> androidResources = new HashSet<>();
@@ -570,7 +576,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             androidResources.add(resourceFile);
         }
 
-        File incrementalDirForSplit = new File(getIncrementalFolder(), split.getDirName());
+        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getDirName());
 
         File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
         if (!cacheByPathDir.exists()) {
@@ -629,17 +635,21 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         cacheUpdates);
 
         // TO DO : move ALL output file name calculations to Split.
-        String splitOutputFileName = split.getOutputFileName();
+        String splitOutputFileName = apkData.getOutputFileName();
         File outputFile =
                 splitOutputFileName == null
-                        ? outputFileProvider.getOutputFile(split)
+                        ? outputFileProvider.getOutputFile(apkData)
                         : new File(outputDirectory, splitOutputFileName);
 
+        Collection<SplitScope.SplitOutput> manifestOutputs =
+                SplitScope.load(manifestType, manifests);
+
         doTask(
-                split,
+                apkData,
                 incrementalDirForSplit,
                 outputFile,
                 cacheByPath,
+                manifestOutputs,
                 changedDexFiles,
                 changedJavaResources,
                 changedAssets,

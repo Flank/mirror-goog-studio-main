@@ -82,7 +82,6 @@ public class BuildContext {
     static final String TAG_TASK = "task";
     static final String ATTR_PLUGIN_VERSION = "plugin-version";
     static final String ATTR_NAME = "name";
-    static final String ATTR_PACKAGE_NAME = "package";
     static final String ATTR_DURATION = "duration";
     static final String ATTR_TIMESTAMP = "timestamp";
     static final String ATTR_VERIFIER = "verifier";
@@ -324,7 +323,6 @@ public class BuildContext {
 
     private String density = null;
     private String abi = null;
-    private String packageId = null;
     private final Build currentBuild;
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private boolean isInstantRunMode = false;
@@ -360,14 +358,6 @@ public class BuildContext {
 
     public boolean getBuildHasFailed() {
         return buildHasFailed;
-    }
-
-    public String getPackageId() {
-        return packageId;
-    }
-
-    public void setPackageId(String packageId) {
-        this.packageId = packageId;
     }
 
     /**
@@ -756,7 +746,6 @@ public class BuildContext {
         if (!Strings.isNullOrEmpty(tokenString)) {
             token.set(Long.parseLong(tokenString));
         }
-        setPackageId(instantRun.getAttributeNode(ATTR_PACKAGE_NAME).getNodeValue());
 
         Build lastBuild = Build.fromXml(instantRun);
         previousBuilds.put(lastBuild.buildId, lastBuild);
@@ -903,7 +892,6 @@ public class BuildContext {
         }
         currentBuild.toXml(document, instantRun);
 
-        instantRun.setAttribute(ATTR_PACKAGE_NAME, packageId);
         instantRun.setAttribute(ATTR_FORMAT, CURRENT_FORMAT);
         instantRun.setAttribute(ATTR_PLUGIN_VERSION, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 

@@ -33,7 +33,7 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.StdLogger;
@@ -64,12 +64,10 @@ public class InstallVariantTaskTest {
     private static SplitScope.SplitOutput createSingleMainApkOutput(
             @NonNull File mainOutputFileApk) {
 
-        Split split = mock(Split.class);
-        when(split.getOutputType()).thenReturn(OutputFile.MAIN);
-        SplitScope.SplitOutput mainApk =
-                new SplitScope.SplitOutput(
-                        VariantScope.TaskOutputType.APK, split, mainOutputFileApk);
-        return mainApk;
+        ApkInfo apkInfo = mock(ApkInfo.class);
+        when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
+        return new SplitScope.SplitOutput(
+                VariantScope.TaskOutputType.APK, apkInfo, mainOutputFileApk);
     }
 
     @Before

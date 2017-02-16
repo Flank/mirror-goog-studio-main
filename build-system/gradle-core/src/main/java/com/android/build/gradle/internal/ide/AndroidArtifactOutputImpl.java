@@ -109,7 +109,7 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
 
     @Override
     public int getVersionCode() {
-        return splitOutput.getSplit().getVersionCode();
+        return splitOutput.getApkInfo().getVersionCode();
     }
 
     @Override

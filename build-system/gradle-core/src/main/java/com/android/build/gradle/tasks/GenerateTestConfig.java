@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -62,11 +63,16 @@ public class GenerateTestConfig extends DefaultTask {
         checkNotNull(resourcesDirectory);
         checkNotNull(assetsDirectory);
         checkNotNull(sdkHome);
-        splitScope.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests);
-        SplitScope.SplitOutput splitOutput =
-                splitScope.getOutput(
+        generateTestConfigForOutput(
+                SplitScope.getOutput(
+                        SplitScope.load(
+                                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests),
                         TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                        splitScope.getMainSplit());
+                        splitScope.getMainSplit()));
+    }
+
+    @VisibleForTesting
+    void generateTestConfigForOutput(SplitScope.SplitOutput splitOutput) throws IOException {
         checkNotNull(splitOutput);
 
         Properties properties = new Properties();

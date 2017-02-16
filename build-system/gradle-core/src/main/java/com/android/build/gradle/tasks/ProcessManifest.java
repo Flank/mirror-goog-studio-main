@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -32,6 +31,8 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
+import com.android.manifmerger.XmlDocument;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -60,8 +61,6 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     private File reportFile;
 
-    private BuildContext buildContext;
-
     @Override
     protected void doFullTaskAction() {
         File outputManifestFile =
@@ -89,15 +88,27 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 variantConfiguration.getManifestPlaceholders(),
                                 Collections.emptyList(),
                                 getReportFile());
-        buildContext.setPackageId(mergingReport.getPackageName());
+
+        XmlDocument mergedXmlDocument =
+                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);
+
+        ImmutableMap<String, String> properties =
+                mergedXmlDocument != null
+                        ? ImmutableMap.of(
+                                "packageId", mergedXmlDocument.getPackageName(),
+                                "split", mergedXmlDocument.getSplitName())
+                        : ImmutableMap.of();
+
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                 splitScope.getMainSplit(),
-                outputManifestFile);
+                outputManifestFile,
+                properties);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 splitScope.getMainSplit(),
-                aaptFriendlyManifestOutputFile);
+                aaptFriendlyManifestOutputFile,
+                properties);
         try {
             splitScope.save(
                     TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
@@ -213,7 +224,6 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
-            processManifest.buildContext = scope.getBuildContext();
 
             processManifest.variantConfiguration = config;
 

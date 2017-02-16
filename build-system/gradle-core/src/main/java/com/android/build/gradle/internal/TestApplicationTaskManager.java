@@ -19,7 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_METADATA;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -91,10 +91,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         super.createTasksForVariantData(tasks, variantData);
 
-        final Configuration compileClasspath =
-                variantData.getVariantDependency().getCompileClasspath();
-        final ResolvableDependencies incomingCompileClasspath = compileClasspath.getIncoming();
-
         final Configuration runtimeClasspath =
                 variantData.getVariantDependency().getCompileClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
@@ -110,10 +106,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         .attributes(container -> container.attribute(ARTIFACT_TYPE, APK.getType()))
                         .getFiles();
 
-        // same for the metadata
-        FileCollection testTargetMetadata = incomingCompileClasspath.artifactView()
-                .attributes(container -> container.attribute(
-                        ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
+        // same for the manifests.
+        FileCollection testedManifestMetadata = getTestedManifestMetadata(variantData);
 
         TestApplicationTestData testData = new TestApplicationTestData(
                 variantData.getVariantConfiguration(),
@@ -125,22 +119,27 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         // create the test connected check task.
         AndroidTask<DeviceProviderInstrumentTestTask> instrumentTestTask =
-                getAndroidTasks().create(
-                        tasks,
-                        new DeviceProviderInstrumentTestTask.ConfigAction(
-                                variantData.getScope(),
-                                new ConnectedDeviceProvider(
-                                        sdkHandler.getSdkInfo().getAdb(),
-                                        getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs(),
-                                        new LoggerWrapper(getLogger())),
-                                testData,
-                                testTargetMetadata) {
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return super.getName() + VariantType.ANDROID_TEST.getSuffix();
-                            }
-                        });
+                getAndroidTasks()
+                        .create(
+                                tasks,
+                                new DeviceProviderInstrumentTestTask.ConfigAction(
+                                        variantData.getScope(),
+                                        new ConnectedDeviceProvider(
+                                                sdkHandler.getSdkInfo().getAdb(),
+                                                getGlobalScope()
+                                                        .getExtension()
+                                                        .getAdbOptions()
+                                                        .getTimeOutInMs(),
+                                                new LoggerWrapper(getLogger())),
+                                        testData,
+                                        testedManifestMetadata) {
+                                    @NonNull
+                                    @Override
+                                    public String getName() {
+                                        return super.getName()
+                                                + VariantType.ANDROID_TEST.getSuffix();
+                                    }
+                                });
 
         Task connectedAndroidTest = tasks.named(BuilderConstants.CONNECTED
                 + VariantType.ANDROID_TEST.getSuffix());
@@ -184,13 +183,20 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestTargetMetadata(
+    private FileCollection getTestedManifestMetadata(
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (mTargetManifestConfiguration == null){
-            mTargetManifestConfiguration = variantData.getVariantDependency()
-                    .getCompileClasspath().getIncoming().artifactView()
-                    .attributes(container -> container.attribute(
-                            ARTIFACT_TYPE, APK_METADATA.getType())).getFiles();
+            mTargetManifestConfiguration =
+                    variantData
+                            .getVariantDependency()
+                            .getCompileClasspath()
+                            .getIncoming()
+                            .artifactView()
+                            .attributes(
+                                    container ->
+                                            container.attribute(
+                                                    ARTIFACT_TYPE, MANIFEST_METADATA.getType()))
+                            .getFiles();
         }
 
         return mTargetManifestConfiguration;
@@ -209,7 +215,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                                 taskFactory,
                                 new ProcessTestManifest.ConfigAction(
                                         variantScope,
-                                        getTestTargetMetadata(variantScope.getVariantData())));
+                                        getTestedManifestMetadata(variantScope.getVariantData())));
 
         variantScope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,

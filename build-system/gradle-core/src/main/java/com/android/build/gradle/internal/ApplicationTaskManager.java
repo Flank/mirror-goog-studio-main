@@ -286,9 +286,6 @@ public class ApplicationTaskManager extends TaskManager {
                     @NonNull
                     AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = createBuildInfoWriterTask(
                             tasks, variantScope);
-                    variantScope.addTaskOutput(VariantScope.TaskOutputType.APK_METADATA,
-                            BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
-                            buildInfoWriterTask.getName());
 
                     createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
                     createPackagingTask(

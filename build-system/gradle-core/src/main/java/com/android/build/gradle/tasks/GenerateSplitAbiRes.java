@@ -30,7 +30,7 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
@@ -118,10 +118,11 @@ public class GenerateSplitAbiRes extends BaseTask {
 
         splitScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
         for (String split : getSplits()) {
-            Split abiSplit = splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
+            ApkData abiApkData =
+                    splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
 
             // call user's script for the newly discovered ABI pure split.
-            variantScope.getVariantData().customizeSplit(abiSplit);
+            variantScope.getVariantData().customizeSplit(abiApkData);
 
             File resPackageFile = getOutputFileForSplit(split);
 
@@ -130,9 +131,9 @@ public class GenerateSplitAbiRes extends BaseTask {
 
             File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
 
-            String versionNameToUse = abiSplit.getVersionName();
+            String versionNameToUse = abiApkData.getVersionName();
             if (versionNameToUse == null) {
-                versionNameToUse = String.valueOf(abiSplit.getVersionCode());
+                versionNameToUse = String.valueOf(abiApkData.getVersionCode());
             }
 
             try (OutputStreamWriter fileWriter =
@@ -153,7 +154,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                                 + applicationId
                                 + "\"\n"
                                 + "      android:versionCode=\""
-                                + abiSplit.getVersionCode()
+                                + abiApkData.getVersionCode()
                                 + "\"\n"
                                 + "      android:versionName=\""
                                 + versionNameToUse
@@ -187,7 +188,9 @@ public class GenerateSplitAbiRes extends BaseTask {
                     aaptConfig,
                     false /* enforceUniquePackageName */);
             splitScope.addOutputForSplit(
-                    VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, abiSplit, resPackageFile);
+                    VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
+                    abiApkData,
+                    resPackageFile);
         }
 
         splitScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);

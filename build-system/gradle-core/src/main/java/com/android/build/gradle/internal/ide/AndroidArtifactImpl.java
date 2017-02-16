@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
@@ -29,7 +30,6 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.build.Split;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -134,7 +134,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 outputs.stream()
                         .filter(
                                 splitOutput ->
-                                        splitOutput.getSplit().getType()
+                                        splitOutput.getApkInfo().getType()
                                                 == OutputFile.OutputType.SPLIT)
                         .collect(Collectors.toList());
         if (splitApksOutput.isEmpty()) {
@@ -144,14 +144,18 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                             splitOutput ->
                                     new AndroidArtifactOutputImpl(
                                             splitOutput,
-                                            getOutput(manifests, splitOutput.getSplit())))
+                                            SplitScope.getOutput(
+                                                    manifests,
+                                                    TaskOutputHolder.TaskOutputType
+                                                            .MERGED_MANIFESTS,
+                                                    splitOutput.getApkInfo())))
                     .collect(Collectors.toList());
         } else {
             List<SplitScope.SplitOutput> mainApks =
                     outputs.stream()
                             .filter(
                                     splitOutput ->
-                                            splitOutput.getSplit().getType()
+                                            splitOutput.getApkInfo().getType()
                                                     == OutputFile.OutputType.MAIN)
                             .collect(Collectors.toList());
             if (mainApks.size() != 1) {
@@ -161,21 +165,13 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             return ImmutableList.of(
                     new AndroidArtifactOutputImpl(
                             mainApks.get(0),
-                            getOutput(manifests, mainApks.get(0).getSplit()),
+                            SplitScope.getOutput(
+                                    manifests,
+                                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                                    mainApks.get(0).getApkInfo()),
                             splitApksOutput));
         }
     }
-
-    private static SplitScope.SplitOutput getOutput(
-            Collection<SplitScope.SplitOutput> splitOutputs, Split split) {
-        for (SplitScope.SplitOutput splitOutput : splitOutputs) {
-            if (splitOutput.getSplit().equals(split)) {
-                return splitOutput;
-            }
-        }
-        return null;
-    }
-
 
     @Override
     public boolean isSigned() {

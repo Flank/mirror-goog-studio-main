@@ -22,7 +22,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -52,10 +52,10 @@ public class SplitScopeTest {
     @Test
     public void testPersistence() throws IOException {
         SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-        SplitFactory splitFactory = new SplitFactory(globalScope, variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
 
         splitFactory.addUniversalApk();
-        Split densitySplit =
+        ApkData densityApkData =
                 splitFactory.addFullSplit(
                         ImmutableList.of(Pair.of(OutputFile.FilterType.DENSITY, "xxhdpi")));
 
@@ -63,7 +63,7 @@ public class SplitScopeTest {
         File outputForSplit = temporaryFolder.newFile();
         splitScope.addOutputForSplit(
                 VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
-                densitySplit,
+                densityApkData,
                 outputForSplit);
 
         String persistedState =
@@ -72,19 +72,18 @@ public class SplitScopeTest {
 
         // load the persisted state.
         StringReader reader = new StringReader(persistedState);
-        SplitScope loadedSplitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-        loadedSplitScope.addSplit(densitySplit);
-        loadedSplitScope.load(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST, reader);
+        Collection<SplitScope.SplitOutput> splitOutputs =
+                SplitScope.load(
+                        ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
+                        reader);
 
         // check that persisted was loaded correctly.
-        Collection<SplitScope.SplitOutput> splitOutputs =
-                loadedSplitScope.getOutputs(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST);
         assertThat(splitOutputs).hasSize(1);
         SplitScope.SplitOutput splitOutput = Iterators.getOnlyElement(splitOutputs.iterator());
         assertThat(splitOutput.getOutputFile()).isEqualTo(outputForSplit);
-        assertThat(splitOutput.getSplit().getFilters()).hasSize(1);
+        assertThat(splitOutput.getApkInfo().getFilters()).hasSize(1);
         FilterData filter =
-                Iterators.getOnlyElement(splitOutput.getSplit().getFilters().iterator());
+                Iterators.getOnlyElement(splitOutput.getApkInfo().getFilters().iterator());
         assertThat(filter.getIdentifier()).isEqualTo("xxhdpi");
         assertThat(filter.getFilterType()).isEqualTo(OutputFile.FilterType.DENSITY.name());
     }

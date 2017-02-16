@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -106,7 +106,7 @@ public interface PackagingScope extends TaskOutputHolder {
 
     /** Returns the output package file. */
     @NonNull
-    File getOutputPackageFile(File destinationDir, String projectBaseName, Split split);
+    File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData);
 
     /** Returns the project base name */
     String getProjectBaseName();

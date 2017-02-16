@@ -26,7 +26,7 @@ import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -70,13 +70,13 @@ public abstract class BaseVariantOutputData implements VariantOutput {
             @NonNull Collection<FilterData> filters,
             @NonNull BaseVariantData<?> variantData) {
         this.variantData = variantData;
-        Split mainSplit = variantData.getSplitScope().getMainSplit();
+        ApkData mainApkData = variantData.getSplitScope().getMainSplit();
         this.mainApkOutputFile =
                 new ApkOutputFile(
                         outputType,
                         filters,
                         this::getOutputFile,
-                        mainSplit != null ? mainSplit.getVersionCode() : -1);
+                        mainApkData != null ? mainApkData.getVersionCode() : -1);
 
         scope = new VariantOutputScope(variantData.getScope(), this);
     }
