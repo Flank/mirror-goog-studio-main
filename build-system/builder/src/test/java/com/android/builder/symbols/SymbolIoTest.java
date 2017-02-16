@@ -37,8 +37,7 @@ public class SymbolIoTest {
 
     @Test
     public void testSingleInt() throws Exception {
-        String r = "" +
-                "int xml authenticator 0x7f040000\n";
+        String r = "int xml authenticator 0x7f040000\n";
         File file = mTemporaryFolder.newFile();
         Files.write(r, file, Charsets.UTF_8);
 
@@ -53,11 +52,11 @@ public class SymbolIoTest {
 
     @Test
     public void testStyleables() throws Exception {
-        String r = "" +
-                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }\n" +
-                "int styleable LimitedSizeLinearLayout_max_height 1\n" +
-                "int styleable LimitedSizeLinearLayout_max_width 0\n" +
-                "int xml authenticator 0x7f040000\n";
+        String r =
+                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }\n"
+                        + "int styleable LimitedSizeLinearLayout_max_height 1\n"
+                        + "int styleable LimitedSizeLinearLayout_max_width 0\n"
+                        + "int xml authenticator 0x7f040000\n";
         File file = mTemporaryFolder.newFile();
         Files.write(r, file, Charsets.UTF_8);
 
@@ -92,8 +91,8 @@ public class SymbolIoTest {
     public void writeReadSymbolFile() throws Exception {
         SymbolTable original =
                 SymbolTable.builder()
-                        .add(new Symbol("a", "b", "c", "d"))
-                        .add(new Symbol("e", "f", "g", "h"))
+                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(new Symbol("string", "f", "g", "h"))
                         .build();
 
         File f = mTemporaryFolder.newFile();

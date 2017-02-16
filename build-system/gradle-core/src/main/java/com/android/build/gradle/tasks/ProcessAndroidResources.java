@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING;
 
 import android.databinding.tool.util.StringUtils;
 import com.android.SdkConstants;
@@ -55,6 +56,10 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
+import com.android.builder.symbols.IdProvider;
+import com.android.builder.symbols.ResourceDirectoryParser;
+import com.android.builder.symbols.SymbolTable;
+import com.android.builder.symbols.SymbolUtils;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -204,7 +209,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     private SplitScope splitScope;
+
     private SplitFactory splitFactory;
+
+    private boolean enableNewResourceProcessing;
 
     // FIX-ME : make me incremental !
     @Override
@@ -328,9 +336,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                                             .getVariantData()
                                             .customizeSplit(configurationSplit);
 
-                                    // in case we generated pure splits, we may have more than one resource AP_ in
-                                    // the output directory. reconcile with the splits list and save it for downstream
-                                    // tasks.
+                                    // in case we generated pure splits, we may have more than one
+                                    // resource AP_ in the output directory. reconcile with the
+                                    // splits list and save it for downstream tasks.
                                     File packagedResForSplit =
                                             findPackagedResForSplit(
                                                     resPackageOutputFolder, configurationSplit);
@@ -349,7 +357,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 });
                     });
         }
-
         // and save the metadata file.
         splitScope.save(
                 ImmutableList.of(
@@ -438,39 +445,64 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 : null;
 
         try {
-            Aapt aapt =
-                    AaptGradleFactory.make(
-                            builder,
-                            processOutputHandler,
-                            true,
-                            getProject(),
-                            FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
-                            aaptOptions.getCruncherProcesses());
+            // If the new resources flag is enabled and if we are dealing with a library process
+            // resources through the new parsers
+            if (enableNewResourceProcessing && this.type.equals(VariantType.LIBRARY)) {
 
-            AaptPackageConfig.Builder config =
-                    new AaptPackageConfig.Builder()
-                            .setManifestFile(manifestFile)
-                            .setOptions(getAaptOptions())
-                            .setResourceDir(getResDir())
-                            .setLibraries(generateCode ? getLibraryInfoList() : ImmutableList.of())
-                            .setCustomPackageForR(packageForR)
-                            .setSymbolOutputDir(getTextSymbolOutputDir())
-                            .setSourceOutputDir(srcOut)
-                            .setResourceOutputApk(resOutBaseNameFile)
-                            .setProguardOutputFile(getProguardOutputFile())
-                            .setMainDexListProguardOutputFile(getMainDexListProguardOutputFile())
-                            .setVariantType(getType())
-                            .setDebuggable(getDebuggable())
-                            .setPseudoLocalize(getPseudoLocalesEnabled())
-                            .setResourceConfigs(splitList.getFilters(SplitList.RESOURCE_CONFIGS))
-                            .setSplits(getSplits())
-                            .setPreferredDensity(preferredDensity)
-                            .setBaseFeature(baseAtomPackage);
+                // Get symbol table of resources of the library
+                SymbolTable symbolTable =
+                        ResourceDirectoryParser
+                                .parseDirectory(getResDir(), IdProvider.sequential());
 
-            builder.processResources(aapt, config, generateCode && getEnforceUniquePackageName());
+                SymbolUtils.processLibraryMainSymbolTable(
+                        symbolTable,
+                        generateCode ? getLibraryInfoList() : ImmutableList.of(),
+                        getEnforceUniquePackageName(),
+                        getPackageForR(),
+                        manifestFile,
+                        srcOut,
+                        getTextSymbolOutputDir(),
+                        getProguardOutputFile());
+            } else {
 
-            if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
-                LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
+                Aapt aapt =
+                        AaptGradleFactory.make(
+                                builder,
+                                processOutputHandler,
+                                true,
+                                getProject(),
+                                FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
+                                aaptOptions.getCruncherProcesses());
+
+                AaptPackageConfig.Builder config =
+                        new AaptPackageConfig.Builder()
+                                .setManifestFile(manifestFile)
+                                .setOptions(getAaptOptions())
+                                .setResourceDir(getResDir())
+                                .setLibraries(
+                                        generateCode ? getLibraryInfoList() : ImmutableList.of())
+                                .setCustomPackageForR(packageForR)
+                                .setSymbolOutputDir(getTextSymbolOutputDir())
+                                .setSourceOutputDir(srcOut)
+                                .setResourceOutputApk(resOutBaseNameFile)
+                                .setProguardOutputFile(getProguardOutputFile())
+                                .setMainDexListProguardOutputFile(
+                                        getMainDexListProguardOutputFile())
+                                .setVariantType(getType())
+                                .setDebuggable(getDebuggable())
+                                .setPseudoLocalize(getPseudoLocalesEnabled())
+                                .setResourceConfigs(
+                                        splitList.getFilters(SplitList.RESOURCE_CONFIGS))
+                                .setSplits(getSplits())
+                                .setPreferredDensity(preferredDensity)
+                                .setBaseFeature(baseAtomPackage);
+
+                builder.processResources(aapt, config,
+                        generateCode && getEnforceUniquePackageName());
+
+                if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
+                    LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
+                }
             }
 
             // Output the library information for non-base atoms.
@@ -628,7 +660,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
             this.resPackageOutputFolder = resPackageOutputFolder;
-            this.generateLegacyMultidexMainDexProguardRules = generateLegacyMultidexMainDexProguardRules;
+            this.generateLegacyMultidexMainDexProguardRules
+                    = generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
             this.mergeType = mergeType;
         }
@@ -656,6 +689,12 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
+
+            processResources.setEnableNewResourceProcessing(
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(ENABLE_NEW_RESOURCE_PROCESSING));
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -982,5 +1021,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setLibInfoFile(File libInfoFile) {
         this.libInfoFile = libInfoFile;
+    }
+
+    @Input
+    public boolean isEnabledNewResourceProcessing() {
+        return enableNewResourceProcessing;
+    }
+
+    public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
+        this.enableNewResourceProcessing = enableNewResourceProcessing;
     }
 }

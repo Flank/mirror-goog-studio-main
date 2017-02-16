@@ -97,8 +97,33 @@ public final class FolderTypeRelationship {
     }
 
     /**
-     * Returns a list of {@link ResourceFolderType} that can contain files generating resources
-     * of the specified type.
+     * Returns a single ResourceType that can be generated from files inside a folder of the
+     * specified type and which is not {@link ResourceType#ID}.
+     *
+     * @param folderType The folder type.
+     * @return a single non-ID {@link ResourceType}.
+     */
+    public static ResourceType getNonIdRelatedResourceType(ResourceFolderType folderType) {
+        List<ResourceType> resourceTypes = getRelatedResourceTypes(folderType);
+        if (resourceTypes.isEmpty()) {
+            throw new IllegalArgumentException(
+                    // {@link FolderTypeRelationshipTest#testResourceFolderType} guarantees this
+                    // should never happen
+                    String.format(
+                            "No resource types defined for given folder type: %s",
+                            folderType.getName()));
+        }
+        ResourceType resourceType = resourceTypes.get(0);
+        if (resourceTypes.size() > 1 && resourceType == ResourceType.ID) {
+            resourceType = resourceTypes.get(1);
+        }
+        return resourceType;
+    }
+
+    /**
+     * Returns a list of {@link ResourceFolderType} that can contain files generating resources of
+     * the specified type.
+     *
      * @param resType the type of resource.
      * @return a list of {@link ResourceFolderType}, possibly empty but never null.
      */

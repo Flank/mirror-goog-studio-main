@@ -16,9 +16,7 @@
 
 package com.android.builder.symbols;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -28,110 +26,139 @@ import org.junit.Test;
 public class SymbolTest {
 
     @Test
+    public void checkMakeValidName() {
+        // Copy aapt's behaviour
+        assertThat("android_a_b_c")
+                .isEqualTo(SymbolUtils.canonicalizeValueResourceName("android:a.b.c"));
+    }
+
+    @Test
     public void symbolData() {
-        Symbol s = new Symbol("d", "a", "b", "c");
-        assertEquals("a", s.getName());
-        assertEquals("b", s.getJavaType());
-        assertEquals("c", s.getValue());
-        assertEquals("d", s.getResourceType());
+        Symbol s = new Symbol("attr", "a", "b", "c");
+        assertThat("a").isEqualTo(s.getName());
+        assertThat("b").isEqualTo(s.getJavaType());
+        assertThat("c").isEqualTo(s.getValue());
+        assertThat("attr").isEqualTo(s.getResourceType());
     }
 
     @Test
     public void namesCannotContainSpaces() {
         try {
-            new Symbol("d", "a a", "b", "c");
+            new Symbol("attr", "a a", "b", "c");
             fail();
         } catch (IllegalArgumentException e) {
-            // Expected
+            assertThat("Error: ' ' is not a valid resource name character")
+                    .isEqualTo(e.getMessage());
         }
     }
 
     @Test
     public void valuesCanContainSpaces() {
-        new Symbol("d", "a", "b", "c c");
+        new Symbol("attr", "a", "b", "c c");
     }
 
     @Test
     public void nameCannotBeEmpty() {
         try {
-            new Symbol("d", "", "b", "c");
+            new Symbol("attr", "", "b", "c");
             fail();
         } catch (IllegalArgumentException e) {
-            // Expected
+            assertThat("Error: The resource name shouldn't be empty").isEqualTo(e.getMessage());
         }
     }
 
     @Test
     public void nameCannotBeNull() {
         try {
-            new Symbol("a", null, "", "");
+            new Symbol("attr", null, "", "");
             fail();
         } catch (IllegalArgumentException e) {
-            // Expected
+            assertThat("Resource name cannot be null").isEqualTo(e.getMessage());
+        }
+    }
+
+    @Test
+    public void nameCannotContainDots() {
+        try {
+            new Symbol("attr", "b.c", "d", "e");
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertThat("Resource name cannot contain dots: b.c").isEqualTo(e.getMessage());
+        }
+    }
+
+    @Test
+    public void nameCannotContainColons() {
+        try {
+            new Symbol("attr", "b:c", "d", "e");
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertThat("Error: ':' is not a valid resource name character")
+                    .isEqualTo(e.getMessage());
         }
     }
 
     @Test
     public void equalsTest() {
-        Symbol sa = new Symbol("a", "b", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
+        Symbol sa = new Symbol("attr", "b", "c", "d");
+        Symbol sb = new Symbol("attr", "b", "c", "d");
 
-        assertEquals(sa, sb);
-        assertEquals(sa.hashCode(), sb.hashCode());
+        assertThat(sa).isEqualTo(sb);
+        assertThat(sa.hashCode()).isEqualTo(sb.hashCode());
     }
 
     @Test
     public void notEqualsClass() {
-        Symbol sa = new Symbol("aa", "b", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
+        Symbol sa = new Symbol("attr", "b", "c", "d");
+        Symbol sb = new Symbol("string", "b", "c", "d");
 
-        assertNotEquals(sa, sb);
+        assertThat(sa).isNotEqualTo(sb);
     }
 
     @Test
     public void notEqualsName() {
-        Symbol sa = new Symbol("a", "bb", "c", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
+        Symbol sa = new Symbol("attr", "bb", "c", "d");
+        Symbol sb = new Symbol("attr", "b", "c", "d");
 
-        assertNotEquals(sa, sb);
+        assertThat(sa).isNotEqualTo(sb);
         // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
+        assertThat(sa.hashCode()).isNotEqualTo(sb.hashCode());
     }
 
     @Test
     public void notEqualsType() {
-        Symbol sa = new Symbol("a", "b", "cc", "d");
-        Symbol sb = new Symbol("a", "b", "c", "d");
+        Symbol sa = new Symbol("attr", "b", "cc", "d");
+        Symbol sb = new Symbol("attr", "b", "c", "d");
 
-        assertNotEquals(sa, sb);
+        assertThat(sa).isNotEqualTo(sb);
         // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
+        assertThat(sa.hashCode()).isNotEqualTo(sb.hashCode());
     }
 
     @Test
     public void notEqualsValue() {
-        Symbol sa = new Symbol("a", "b", "c", "dd");
-        Symbol sb = new Symbol("a", "b", "c", "d");
+        Symbol sa = new Symbol("attr", "b", "c", "dd");
+        Symbol sb = new Symbol("attr", "b", "c", "d");
 
-        assertNotEquals(sa, sb);
+        assertThat(sa).isNotEqualTo(sb);
         // Tricky, but should work if Symbol does not get very complex.
-        assertNotEquals(sa.hashCode(), sb.hashCode());
+        assertThat(sa.hashCode()).isNotEqualTo(sb.hashCode());
     }
 
     @Test
     public void equalsNull() {
-        assertFalse(new Symbol("a", "b", "c", "d").equals(null));
+        assertThat(new Symbol("attr", "b", "c", "d")).isNotEqualTo(null);
     }
 
     @Test
     public void equalsNonSymbol() {
-        assertFalse(new Symbol("a", "b", "c", "d").equals(3));
+        assertThat(new Symbol("attr", "b", "c", "d")).isNotEqualTo(3);
     }
 
     @Test
     public void equalItself() {
-        Symbol sa = new Symbol("a", "b", "c", "d");
-        assertEquals(sa, sa);
+        Symbol sa = new Symbol("attr", "b", "c", "d");
+        assertThat(sa).isEqualTo(sa);
     }
 
     @Test
