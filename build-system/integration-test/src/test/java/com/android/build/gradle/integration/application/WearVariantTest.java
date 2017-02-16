@@ -19,14 +19,16 @@ package com.android.build.gradle.integration.application;
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.RELEASE;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
-import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.Lists;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -35,6 +37,23 @@ import org.junit.Test;
  * Assemble tests for embedded.
  */
 public class WearVariantTest {
+
+    static class VariantInfo {
+        ApkType apkType;
+        String[] flavors;
+
+        static VariantInfo of(ApkType apkType, String... flavors) {
+            return new VariantInfo(apkType, flavors);
+        }
+
+        public VariantInfo(ApkType apkType, String[] flavors) {
+            this.apkType = apkType;
+            this.flavors = flavors;
+        }
+    }
+
+    private static final ApkType CUSTOM = ApkType.of("custom", false);
+
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("embedded")
@@ -57,32 +76,46 @@ public class WearVariantTest {
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.
-        List<List<String>> variantData = Lists.newArrayList(
-                //Output apk name             Version name
-                //---------------             ------------
-                Lists.newArrayList( "flavor1-release-unsigned", "flavor1" ),
-                Lists.newArrayList( "flavor2-release-unsigned", "default" ),
-                Lists.newArrayList( "flavor1-custom-unsigned",  "custom" ),
-                Lists.newArrayList( "flavor2-custom-unsigned",  "custom" ),
-                Lists.newArrayList( "flavor1-debug",            null ),
-                Lists.newArrayList( "flavor2-debug",            null )
-        );
+        // Apk Type           Version name
+        //---------------     ------------
 
-        for (List<String> data : variantData) {
-            String apkName = data.get(0);
-            String versionName = data.get(1);
-            Apk fullApk = project.getSubproject("main").getApk(apkName);
-            assertNotNull(fullApk);
+        Map<VariantInfo, String> variants = new HashMap<>();
+        variants.put(VariantInfo.of(RELEASE, "flavor1"), "flavor1");
+        variants.put(VariantInfo.of(RELEASE, "flavor2"), "default");
+        variants.put(VariantInfo.of(CUSTOM, "flavor1"), "custom");
+        variants.put(VariantInfo.of(CUSTOM, "flavor1"), "custom");
+        variants.put(VariantInfo.of(DEBUG, "flavor1"), null);
+        variants.put(VariantInfo.of(DEBUG, "flavor2"), null);
+
+        //List<List<String>> variantData = Lists.newArrayList(
+        //        //Output apk name             Version name
+        //        //---------------             ------------
+        //        Lists.newArrayList( "flavor1-release-unsigned", "flavor1" ),
+        //        Lists.newArrayList( "flavor2-release-unsigned", "default" ),
+        //        Lists.newArrayList( "flavor1-custom-unsigned",  "custom" ),
+        //        Lists.newArrayList( "flavor2-custom-unsigned",  "custom" ),
+        //        Lists.newArrayList( "flavor1-debug",            null ),
+        //        Lists.newArrayList( "flavor2-debug",            null )
+        //);
+
+        for (Map.Entry<VariantInfo, String> variant : variants.entrySet()) {
+            VariantInfo apkInfo = variant.getKey();
+            String versionName = variant.getValue();
+            Apk fullApk = project.getSubproject("main").getApk(apkInfo.apkType, apkInfo.flavors);
+            assertThat(fullApk).isNotNull();
+            assertThat(fullApk.getFile()).isFile();
 
             if (versionName == null) {
                 assertThat(fullApk).doesNotContain(embeddedApkPath);
-                break;
+            } else {
+                Apk embeddedApk = new Apk(fullApk.getEntryAsZip(embeddedApkPath).getFile());
+                assertThat(embeddedApk)
+                        .named("Embedded apk '" + embeddedApkPath + "' for:" + fullApk.getFile())
+                        .isNotNull();
+
+                // check for the versionName
+                assertThat(embeddedApk).hasVersionName(versionName);
             }
-
-            Apk embeddedApk = new Apk(fullApk.getEntryAsZip(embeddedApkPath).getFile());
-
-            // check for the versionName
-            assertThat(embeddedApk).hasVersionName(versionName);
         }
     }
 }

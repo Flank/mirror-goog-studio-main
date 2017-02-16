@@ -40,6 +40,7 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY
 import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.google.common.truth.Truth.assertThat
@@ -87,9 +88,9 @@ class ShrinkResourcesTest {
         // The proguardNoShrink target has proguard but no shrinking enabled.
         // The debug target has neither proguard nor shrinking enabled.
 
-        Apk apkRelease = project.getApk(GradleTestProject.DefaultApkType.RELEASE);
+        Apk apkRelease = project.getApk(ApkType.RELEASE);
         Apk apkDebug = project.getApk("debug");
-        Apk apkProguardOnly = project.getApk(new GradleTestProject.CustomApk("proguardNoShrink", false));
+        Apk apkProguardOnly = project.getApk(ApkType.of("proguardNoShrink", false));
 
         assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
         assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));

@@ -68,9 +68,9 @@ android {
     @Test
     public void "check application id"() {
         project.execute("assembleF1");
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1.debug")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1")
 
         searchAndReplace(
@@ -80,9 +80,9 @@ android {
 
         project.execute("assembleF1");
 
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1.foo")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1")
     }
 

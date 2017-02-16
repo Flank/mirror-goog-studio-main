@@ -68,19 +68,19 @@ android {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
-        assertThat(app.getApk("mips", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
 
-        assertThat(app.getApk("x86", GradleTestProject.DefaultApkType.DEBUG, "free")).hasVersionCode(123)
-        assertThat(app.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "paid")).hasVersionCode(123)
-        assertThat(app.getApk("mips", GradleTestProject.DefaultApkType.DEBUG, "paid")).hasVersionCode(123)
-        assertThat(app.getApk("x86", GradleTestProject.DefaultApkType.DEBUG, "paid")).hasVersionCode(123)
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
     }
 
     @Test
     void "check so"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk("armeabi-v7a", GradleTestProject.DefaultApkType.DEBUG, "free")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThat(app.getApk("mips", GradleTestProject.DefaultApkType.DEBUG, "paid")).contains("lib/mips/libhello-jni.so");
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).contains("lib/mips/libhello-jni.so");
     }
 }

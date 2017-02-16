@@ -158,12 +158,12 @@ android{
     public void "check version name with buildTypes only suffix"() throws Exception{
         addBuildTypesVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1", "fa")).hasVersionName("1.0-debug")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1", "fb")).hasVersionName("1.0-debug")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fa")).hasVersionName("1.0-debug")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb")).hasVersionName("1.0-debug")
 
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1", "fa"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0release")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1", "fb"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fb"))
                 .hasVersionName("1.0release")
     }
 
@@ -171,12 +171,12 @@ android{
     public void "check version name  with productFlavors only suffix"() throws Exception{
         addProductFlavorsVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1", "fb")).hasVersionName("1.0f1fb")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1", "fa")).hasVersionName("1.0f1-fa")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb")).hasVersionName("1.0f1fb")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fa")).hasVersionName("1.0f1-fa")
 
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1", "fb"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fb"))
                 .hasVersionName("1.0f1fb")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1", "fa"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0f1-fa")
     }
 
@@ -186,14 +186,14 @@ android{
         addProductFlavorsVersionNameSuffixes()
 
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f1", "fb"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb"))
                 .hasVersionName("1.0f1fb-debug")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "f2", "fb"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f2", "fb"))
                 .hasVersionName("1.0-f2fb-debug")
 
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f2", "fa"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f2", "fa"))
                 .hasVersionName("1.0-f2-farelease")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.RELEASE, "f1", "fa"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0f1-farelease")
     }
 }

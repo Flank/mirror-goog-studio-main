@@ -19,17 +19,19 @@ package com.android.build.gradle.integration.application;
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.RELEASE;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
-import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -51,6 +53,7 @@ public class WearSimpleTest {
                 "dependencies {\n"
                 + "  wearApp project(':wear')\n"
                 + "}\n");
+
     }
 
     @AfterClass
@@ -61,35 +64,35 @@ public class WearSimpleTest {
     @Test
     public void checkDefaultEmbedding() throws Exception {
         project.execute("clean", ":main:assemble");
-
         String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
                 DOT_ANDROID_PACKAGE;
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.
-        List<List<String>> variantData = Lists.newArrayList(
-                //Output apk name     Version name
-                //---------------     ------------
-                Lists.newArrayList("release-unsigned", "default" ),
-                Lists.newArrayList("debug",            null));
+        Map<ApkType, String> variants = new HashMap<>();
+        // Apk Type           Version name
+        //---------------     ------------
+        variants.put(RELEASE, "default");
+        variants.put(DEBUG, null);
 
-        for (List<String> data : variantData) {
-            String apkName = data.get(0);
-            String versionName = data.get(1);
-            Apk fullApk = project.getSubproject("main").getApk(apkName);
-            assertNotNull(fullApk);
+        for (Map.Entry<ApkType, String> variantData : variants.entrySet()) {
+            Apk fullApk = project.getSubproject("main").getApk(variantData.getKey());
+            assertThat(fullApk).isNotNull();
+            assertThat(fullApk.getFile()).isFile();
+
+            String versionName = variantData.getValue();
 
             if (versionName == null) {
                 assertThat(fullApk).doesNotContain(embeddedApkPath);
-                break;
+            } else {
+                Apk embeddedApk = new Apk(fullApk.getEntryAsZip(embeddedApkPath).getFile());
+                assertThat(embeddedApk)
+                        .named("Embedded apk '" + embeddedApkPath + "' for:" + fullApk.getFile())
+                        .isNotNull();
+
+                // check for the versionName
+                assertThat(embeddedApk).hasVersionName(versionName);
             }
-
-            Apk embeddedApk = new Apk(fullApk.getEntryAsZip(embeddedApkPath).getFile());
-
-            assertNotNull("Failed to find embedded micro app for " + apkName, embeddedApk);
-
-            // check for the versionName
-            assertThat(embeddedApk).hasVersionName(versionName);
         }
     }
 
