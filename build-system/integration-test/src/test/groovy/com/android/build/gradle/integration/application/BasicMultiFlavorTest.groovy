@@ -89,10 +89,10 @@ class BasicMultiFlavorTest {
         project.execute("assembleFreeBetaDebug")
 
         // Make sure "beta" overrides "free" and "defaultConfig".
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "free" , "beta")).hasMaxSdkVersion(18)
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free" , "beta")).hasMaxSdkVersion(18)
 
         // Make sure the suffixes are applied in the right order.
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "free", "beta"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
                 .hasVersionName("com.example.default.free.beta.debug")
     }
 
@@ -113,7 +113,7 @@ class BasicMultiFlavorTest {
     @Test
     void "check resources resolution"() {
         project.execute("assembleFreeBetaDebug")
-        assertThat(project.getApk(GradleTestProject.DefaultApkType.DEBUG, "free", "beta")).containsResource("drawable/free.png")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta")).containsResource("drawable/free.png")
     }
 
     private void addResValuesAndPlaceholders() {

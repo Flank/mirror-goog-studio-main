@@ -65,7 +65,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -721,50 +720,26 @@ public final class GradleTestProject implements TestRule {
     }
 
     public interface ApkType {
+        ApkType DEBUG = of("debug", true);
+        ApkType RELEASE = of("release", false);
+
         String getName();
 
         boolean isSigned();
-    }
 
-    public enum DefaultApkType implements ApkType {
-        DEBUG(true),
-        RELEASE(false);
+        static ApkType of(String name, boolean isSigned) {
+            return new ApkType() {
 
-        private final boolean isSigned;
+                @Override
+                public String getName() {
+                    return name;
+                }
 
-        DefaultApkType(boolean isSigned) {
-            this.isSigned = isSigned;
-        }
-
-        @Override
-        public String getName() {
-            return name().toLowerCase(Locale.ENGLISH);
-        }
-
-        @Override
-        public boolean isSigned() {
-            return isSigned;
-        }
-    }
-
-    public static class CustomApk implements ApkType {
-
-        private final String name;
-        private final boolean isSigned;
-
-        public CustomApk(String name, boolean isSigned) {
-            this.name = name;
-            this.isSigned = isSigned;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public boolean isSigned() {
-            return isSigned;
+                @Override
+                public boolean isSigned() {
+                    return isSigned;
+                }
+            };
         }
     }
 

@@ -779,10 +779,6 @@ public abstract class TaskManager {
         if (variantScope.getMicroApkTask() != null) {
             processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
         }
-        variantScope.publishIntermediateArtifact(
-                variantScope.getManifestOutputDirectory(),
-                processManifestTask.getName(),
-                AndroidArtifacts.ArtifactType.MANIFEST);
     }
 
     /** Creates the merge manifests task. */
