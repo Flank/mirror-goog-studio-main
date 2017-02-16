@@ -9,12 +9,12 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/base/annotations:studio.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/.idea/libraries:truth[test]",
