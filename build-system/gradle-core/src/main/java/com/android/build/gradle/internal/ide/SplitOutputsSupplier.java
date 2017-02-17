@@ -35,7 +35,7 @@ import java.util.List;
  * artifacts.
  */
 public class SplitOutputsSupplier
-        implements SerializableSupplier<Collection<SplitScope.SplitOutput>> {
+        implements BuildOutputSupplier<Collection<SplitScope.SplitOutput>> {
 
     @NonNull private final List<File> outputFolders;
     @NonNull private final List<VariantScope.OutputType> outputTypes;
@@ -76,6 +76,11 @@ public class SplitOutputsSupplier
                     }
                 });
         return outputs.build();
+    }
+
+    @Override
+    public File guessOutputFile(String relativeFileName) {
+        return new File(outputFolders.get(0), relativeFileName);
     }
 
     private static void processFile(

@@ -16,13 +16,18 @@
 
 package com.android.build.gradle.internal.ide;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
 /** Specialized version of {@link Supplier} that's serializable */
-public interface SerializableSupplier<T> extends Supplier<T>, Serializable {
+public interface BuildOutputSupplier<T> extends Supplier<T>, Serializable {
 
-    static <U> SerializableSupplier<U> of(U value) {
-        return (SerializableSupplier<U>) () -> value;
+    default File guessOutputFile(String relativeFileName) {
+        return new File(relativeFileName);
+    }
+
+    static <U> BuildOutputSupplier<U> of(U value) {
+        return (BuildOutputSupplier<U>) () -> value;
     }
 }
