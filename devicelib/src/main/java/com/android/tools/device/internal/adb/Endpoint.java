@@ -17,20 +17,13 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
+import java.io.IOException;
 
 /**
- * Commands that can be sent to the adb server.
- *
- * <p>The list of commands and the protocol are described in adb's sources at
- * system/core/adb/OVERVIEW.TXT.
+ * An {@link Endpoint} refers to the location where an ADB Server may be listening, and is able to
+ * provide new connections to that server.
  */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
-
+interface Endpoint {
     @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
-    }
+    Connection newConnection() throws IOException;
 }
