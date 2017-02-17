@@ -19,6 +19,7 @@ package com.android.ide.common.build;
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -64,6 +65,15 @@ public interface ApkInfo extends Serializable {
             @Override
             public int getVersionCode() {
                 return versionCode;
+            }
+
+            @Override
+            public String toString() {
+                return MoreObjects.toStringHelper(this)
+                        .add("type", outputType)
+                        .add("versionCode", versionCode)
+                        .add("filters", filters)
+                        .toString();
             }
         };
     }

@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.ide;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -30,6 +32,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -71,13 +74,16 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     private final InstantRun instantRun;
     @NonNull
-    private final SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier;
+    private final BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier;
+    @NonNull
+    private final String baseName;
 
     @NonNull
-    private final SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier;
+    private final BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier;
 
     AndroidArtifactImpl(
             @NonNull String name,
+            @NonNull String baseName,
             @NonNull String assembleTaskName,
             boolean isSigned,
             @Nullable String signingConfigName,
@@ -97,14 +103,15 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
             @NonNull InstantRun instantRun,
-            @NonNull SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier,
-            @NonNull SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier) {
+            @NonNull BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier,
+            @NonNull BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier) {
         super(name, assembleTaskName, compileTaskName,
                 classesFolder, javaResourcesFolder,
                 compileDependencies, dependencyGraphs,
                 variantSourceProvider, multiFlavorSourceProviders,
                 generatedSourceFolders);
 
+        this.baseName = baseName;
         this.isSigned = isSigned;
         this.signingConfigName = signingConfigName;
         this.applicationId = applicationId;
@@ -122,14 +129,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     @Override
     public Collection<AndroidArtifactOutput> getOutputs() {
+        Collection<SplitScope.SplitOutput> manifests = manifestSupplier.get();
         Collection<SplitScope.SplitOutput> outputs = splitOutputsSupplier.get();
         if (outputs.isEmpty()) {
-            return ImmutableList.of();
+            return manifests.isEmpty()
+                    ? guessOutputsBasedOnNothing()
+                    : guessOutputsBaseOnManifests();
         }
-        Collection<SplitScope.SplitOutput> manifests = manifestSupplier.get();
-        System.out.println("for " + getName());
-        System.out.println("splitsOutput " + Joiner.on(",").join(outputs));
-        System.out.println("Manifests " + Joiner.on(",").join(manifests));
+
         List<SplitScope.SplitOutput> splitApksOutput =
                 outputs.stream()
                         .filter(
@@ -171,6 +178,36 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                                     mainApks.get(0).getApkInfo()),
                             splitApksOutput));
         }
+    }
+
+    private Collection<AndroidArtifactOutput> guessOutputsBasedOnNothing() {
+        ApkInfo mainApkInfo = ApkInfo.of(OutputFile.OutputType.MAIN, ImmutableList.of(), -1);
+
+        return ImmutableList.of(new AndroidArtifactOutputImpl(
+
+                new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK, mainApkInfo,
+                        splitOutputsSupplier.guessOutputFile(
+                                baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
+                new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK, mainApkInfo,
+                        manifestSupplier.guessOutputFile(SdkConstants.ANDROID_MANIFEST_XML))
+                ));
+    }
+
+    private Collection<AndroidArtifactOutput> guessOutputsBaseOnManifests() {
+
+        return manifestSupplier.get().stream().map(manifestOutput ->
+            new AndroidArtifactOutputImpl(
+                    new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK,
+                            manifestOutput.getApkInfo(),
+                            splitOutputsSupplier.guessOutputFile(
+                                    baseName
+                                            + Joiner.on("-").join(
+                                                    manifestOutput.getApkInfo().getFilters()
+                                                            .stream().map(FilterData::getIdentifier)
+                                                            .collect(Collectors.toList()))
+                                            + SdkConstants.DOT_ANDROID_PACKAGE)),
+                    manifestOutput)
+        ).collect(Collectors.toList());
     }
 
     @Override

@@ -433,8 +433,8 @@ public class ModelBuilder implements ToolingModelBuilder {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
         // get the outputs
-        SerializableSupplier<Collection<SplitScope.SplitOutput>> splitOutputsProxy = null;
-        SerializableSupplier<Collection<SplitScope.SplitOutput>> manifestsProxy = null;
+        BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsProxy = null;
+        BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestsProxy = null;
         switch (variantData.getType()) {
             case DEFAULT:
                 splitOutputsProxy =
@@ -464,14 +464,14 @@ public class ModelBuilder implements ToolingModelBuilder {
                 ApkInfo mainApkInfo =
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 splitOutputsProxy =
-                        SerializableSupplier.of(
+                        BuildOutputSupplier.of(
                                 ImmutableList.of(
                                         new SplitScope.SplitOutput(
                                                 VariantScope.TaskOutputType.AAR,
                                                 mainApkInfo,
                                                 scope.getOutputBundleFile())));
                 manifestsProxy =
-                        SerializableSupplier.of(
+                        BuildOutputSupplier.of(
                                 ImmutableList.of(
                                         new SplitScope.SplitOutput(
                                                 VariantScope.TaskOutputType.MERGED_MANIFESTS,
@@ -568,6 +568,8 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         return new AndroidArtifactImpl(
                 name,
+                scope.getGlobalScope().getProjectBaseName()
+                        + "-" + variantConfiguration.getBaseName(),
                 variantData.assembleVariantTask == null
                         ? scope.getTaskName("assemble")
                         : variantData.assembleVariantTask.getName(),
