@@ -16,7 +16,10 @@
 
 #pragma once
 
+#include "slicer/dex_ir.h"
+
 #include <stdlib.h>
+#include <memory>
 
 // Encapsulates the state (command line switches, stats, ...) and
 // the interface of the command line .dex manipulation tool.
@@ -35,6 +38,7 @@ class Dexter {
  private:
   int ProcessDex();
   void PrintHelp();
+  bool CreateNewImage(std::shared_ptr<ir::DexFile> dex_ir);
 
  private:
   // command line
@@ -49,4 +53,8 @@ class Dexter {
   const char* out_dex_filename_ = nullptr;
   const char* dex_filename_ = nullptr;
   bool print_map_ = false;
+
+  // basic timing stats
+  double reader_time_ = 0;
+  double writer_time_ = 0;
 };
