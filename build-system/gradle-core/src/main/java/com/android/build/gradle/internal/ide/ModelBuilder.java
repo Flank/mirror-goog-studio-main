@@ -160,14 +160,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                     variantData.getVariantDependency(),
                     testedProjectPath,
                     taskManager.getGlobalScope().getBuildCache());
-            try {
-                ResolveDependenciesTask.extractAarInParallel(
-                        project,
-                        variantData.getVariantConfiguration(),
-                        taskManager.getGlobalScope().getBuildCache());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            variantData
+                    .getVariantConfiguration()
+                    .setResolvedDependencies(
+                            variantData.getVariantDependency().getCompileDependencies(),
+                            variantData.getVariantDependency().getPackageDependencies());
         }
     }
 
@@ -181,15 +178,26 @@ public class ModelBuilder implements ToolingModelBuilder {
             return buildAndroidProject(project);
         }
 
-        return buildGlobalLibraryMap(project);
-
+        return buildGlobalLibraryMap();
     }
 
-    private static Object buildGlobalLibraryMap(Project project) {
+    private static Object buildGlobalLibraryMap() {
         return new GlobalLibraryMapImpl(DependenciesLevel2Converter.getGlobalLibMap());
     }
 
     private Object buildAndroidProject(Project project) {
+        // Extract AARs
+        for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+            try {
+                ResolveDependenciesTask.extractAarInParallel(
+                        project,
+                        variantData.getVariantConfiguration(),
+                        taskManager.getGlobalScope().getBuildCache());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         Integer modelLevelInt = AndroidGradleOptions.buildModelOnlyVersion(project);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;

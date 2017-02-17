@@ -77,8 +77,8 @@ public class LocalJarInAarInModelTest {
     }
 
     @Test
-    public void checkModelBeforeBuild() throws Exception {
-        //clean the project and get the model. The aar won"t be exploded for this sync event.
+    public void checkAarsExplodedAfterSync() throws Exception {
+        // clean the project and get the model. The aar should be exploded during this sync event.
         ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean");
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
@@ -89,37 +89,11 @@ public class LocalJarInAarInModelTest {
         assertThat(androidItems.mapTo(COORDINATES))
                 .containsExactly("com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar");
 
-        // now build the project.
-        project.execute("prepareDebugDependencies");
-
-        // now check the model validity
-        Library androidLibrary = model.getGlobalLibraryMap().getLibraries()
-                .get(androidItems.asSingleGraphItem().getArtifactAddress());
-
-        File rootFolder = androidLibrary.getFolder();
-        assertThat(new File(rootFolder, androidLibrary.getJarFile())).isFile();
-        for (String localJar : androidLibrary.getLocalJars()) {
-            assertThat(new File(rootFolder, localJar)).isFile();
-        }
-    }
-
-    @Test
-    public void checkModelAfterBuild() throws Exception {
-        //build the project and get the model. The aar is exploded for this sync event.
-        ModelContainer<AndroidProject> model = project.executeAndReturnModel("clean",
-                "prepareDebugDependencies");
-        LibraryGraphHelper helper = new LibraryGraphHelper(model);
-
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
-
-        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
-        LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
-        assertThat(androidItems.mapTo(COORDINATES))
-                .containsExactly("com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar");
-
-        // now check the model validity
-        Library androidLibrary = model.getGlobalLibraryMap().getLibraries()
-                .get(androidItems.asSingleGraphItem().getArtifactAddress());
+        // check that the aar was exploded
+        Library androidLibrary =
+                model.getGlobalLibraryMap()
+                        .getLibraries()
+                        .get(androidItems.asSingleGraphItem().getArtifactAddress());
 
         File rootFolder = androidLibrary.getFolder();
         assertThat(new File(rootFolder, androidLibrary.getJarFile())).isFile();
