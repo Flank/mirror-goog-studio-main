@@ -52,7 +52,9 @@ public class AnalyticsUtilTest {
                 AnalyticsUtil::getPotentialTransformTypeName,
                 "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
                 "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
-                "com.android.build.gradle.internal.pipeline.TestTransform");
+                "com.android.build.gradle.internal.pipeline.TestTransform",
+                "com.android.build.gradle.internal.tasks.AppPreBuildTask",
+                "com.android.build.gradle.internal.tasks.TestPreBuildTask");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(

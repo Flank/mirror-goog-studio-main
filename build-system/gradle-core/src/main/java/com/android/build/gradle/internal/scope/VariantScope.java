@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -380,11 +379,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<? extends DefaultTask> getPreBuildTask();
 
     void setPreBuildTask(AndroidTask<? extends DefaultTask> preBuildTask);
-
-    @Nullable
-    AndroidTask<ResolveDependenciesTask> getResolveDependenciesTask();
-
-    void setResolveDependenciesTask(AndroidTask<ResolveDependenciesTask> resolveDependenciesTask);
 
     AndroidTask<Task> getSourceGenTask();
 

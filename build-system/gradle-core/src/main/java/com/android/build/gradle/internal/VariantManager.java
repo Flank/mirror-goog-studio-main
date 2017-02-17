@@ -462,9 +462,6 @@ public class VariantManager implements VariantModel {
                         () ->
                                 taskManager.resolveDependencies(
                                         variantDep, null /*testedProjectPath*/));
-                testVariantConfig.setResolvedDependencies(
-                        variantDep.getCompileDependencies(),
-                        variantDep.getPackageDependencies());
             }
 
             switch (variantType) {
@@ -694,10 +691,6 @@ public class VariantManager implements VariantModel {
                     project.getPath(),
                     variantConfig.getFullName(),
                     () -> taskManager.resolveDependencies(variantDep, testedProjectPath));
-
-            variantConfig.setResolvedDependencies(
-                    variantDep.getCompileDependencies(),
-                    variantDep.getPackageDependencies());
         }
 
         return variantData;

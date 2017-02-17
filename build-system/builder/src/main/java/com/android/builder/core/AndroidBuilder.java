@@ -377,29 +377,6 @@ public class AndroidBuilder {
      * @return a non null, but possibly empty list.
      */
     @NonNull
-    public Set<File> getAllPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> packagedJars = Sets.newHashSet(variantConfiguration.getAllPackagedJars());
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            if (renderScriptSupportJar != null) {
-                packagedJars.add(renderScriptSupportJar);
-            }
-        }
-
-        return packagedJars;
-    }
-
-    /**
-     * Returns the list of packaged jars for this config. If the config tests a library, this
-     * will include the jars of the tested config
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
     public Set<File> getAdditionalPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
 
         if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
@@ -630,7 +607,6 @@ public class AndroidBuilder {
      * @see VariantConfiguration#getHandleProfiling()
      * @see VariantConfiguration#getFunctionalTest()
      * @see VariantConfiguration#getTestLabel()
-     * @see VariantConfiguration#getFlatCompileAndroidLibraries() ()
      */
     public void mergeManifestsForTestVariant(
             @NonNull String testApplicationId,

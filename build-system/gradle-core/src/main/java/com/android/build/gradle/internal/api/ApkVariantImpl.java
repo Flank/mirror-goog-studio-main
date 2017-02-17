@@ -55,16 +55,4 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
                 + "1.4.0 introduces a new Transform API allowing manipulation of the .class files.\n"
                 + "See more information: https://developer.android.com/studio/plugins/index.html");
     }
-
-    @Override
-    @NonNull
-    public FileCollection getCompileLibraries() {
-        return getApkVariantData().getScope().getJavaClasspath();
-    }
-
-    @Override
-    @NonNull
-    public Collection<File> getApkLibraries() {
-        return androidBuilder.getAllPackagedJars(getVariantData().getVariantConfiguration());
-    }
 }

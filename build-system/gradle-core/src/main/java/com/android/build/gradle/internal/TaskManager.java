@@ -96,7 +96,6 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -3305,25 +3304,6 @@ public abstract class TaskManager {
                     task.setVariants(variantDataList);
                     task.setGroup(ANDROID_GROUP);
                 });
-
-        // TODO remove this completely when unnecessary
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-            for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
-                VariantScope scope = variantData.getScope();
-                scope.setResolveDependenciesTask(
-                        androidTasks.create(
-                                tasks,
-                                new ResolveDependenciesTask.ConfigAction(
-                                        scope,
-                                        dependencyManager)));
-                if (scope.getTestedVariantData() != null) {
-                    scope.getResolveDependenciesTask().dependsOn(tasks, scope.getTestedVariantData().getScope().getResolveDependenciesTask());
-                }
-                dependencyReportTask.dependsOn(
-                        tasks,
-                        scope.getResolveDependenciesTask());
-            }
-        }
 
         androidTasks.create(tasks, "signingReport", SigningReportTask.class,
                 task -> {
