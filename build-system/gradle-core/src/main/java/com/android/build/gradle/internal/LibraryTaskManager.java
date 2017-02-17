@@ -579,7 +579,7 @@ public class LibraryTaskManager extends TaskManager {
                 variantScope.getOutputBundleFile(),
                 bundle.getName());
 
-        variantData.packageLibTask = bundle;
+        libVariantData.packageLibTask = bundle;
 
         variantScope.getBuildContext().addChangedFile(FileType.AAR, bundle.getArchivePath());
         variantScope.getAssembleTask().dependsOn(tasks, bundle);

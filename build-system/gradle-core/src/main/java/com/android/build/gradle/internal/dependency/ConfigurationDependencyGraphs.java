@@ -17,11 +17,12 @@
 package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
-import com.android.builder.dependency.level2.Dependency;
-import com.android.builder.dependency.level2.JavaDependency;
+import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
+import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -43,7 +44,7 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
 
     @NonNull
     private List<GraphItem> graphItems;
-    private List<Dependency>  dependencies;
+    private List<Library> libraries;
 
 
     public ConfigurationDependencyGraphs(@NonNull Configuration configuration) {
@@ -52,9 +53,9 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
     }
 
     @NonNull
-    public List<Dependency> getDependencyObjects() {
+    public List<Library> getLibraries() {
         init();
-        return dependencies;
+        return libraries;
     }
 
     @NonNull
@@ -92,18 +93,22 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
         Set<File> files = configuration.getFiles();
         if (files.isEmpty()) {
             graphItems = Collections.emptyList();
-            dependencies = Collections.emptyList();
+            libraries = Collections.emptyList();
             return;
         }
 
         graphItems = Lists.newArrayListWithCapacity(files.size());
-        dependencies = Lists.newArrayListWithCapacity(files.size());
+        libraries = Lists.newArrayListWithCapacity(files.size());
 
         for (File file : files) {
-            JavaDependency dependency = new JavaDependency(file);
-            dependencies.add(dependency);
-            graphItems.add(new GraphItemImpl(
-                    dependency.getAddress().toString(), ImmutableList.of()));
+            Library javaLib =
+                    new JavaLibraryImpl(
+                            ArtifactDependencyGraph.getMavenCoordForLocalFile(file)
+                                    .toString()
+                                    .intern(),
+                            file);
+            libraries.add(javaLib);
+            graphItems.add(new GraphItemImpl(javaLib.getArtifactAddress(), ImmutableList.of()));
         }
     }
 }

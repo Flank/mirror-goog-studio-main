@@ -42,7 +42,8 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
     @Nullable
     private final File mockablePlatformJar;
 
-    public static JavaArtifactImpl clone(@NonNull JavaArtifact javaArtifact) {
+    public static JavaArtifactImpl clone(
+            @NonNull JavaArtifact javaArtifact, int modelLevel, boolean modelWithFullDependency) {
         SourceProvider variantSP = javaArtifact.getVariantSourceProvider();
         SourceProvider flavorsSP = javaArtifact.getMultiFlavorSourceProvider();
 
@@ -55,8 +56,9 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getClassesFolder(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                javaArtifact.getDependencies(),
-                javaArtifact.getDependencyGraphs(),
+                ArtifactDependencyGraph.clone(javaArtifact.getDependencies(), modelLevel),
+                ArtifactDependencyGraph.clone(
+                        javaArtifact.getDependencyGraphs(), modelLevel, modelWithFullDependency),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }

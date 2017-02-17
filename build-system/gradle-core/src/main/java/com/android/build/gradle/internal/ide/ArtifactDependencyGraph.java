@@ -19,12 +19,15 @@ package com.android.build.gradle.internal.ide;
 import static com.android.SdkConstants.EXT_AAR;
 import static com.android.SdkConstants.EXT_JAR;
 import static com.android.SdkConstants.FD_JARS;
+import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
+import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCY_GRAPH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
@@ -35,7 +38,10 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.JavaDependency;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -44,12 +50,15 @@ import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -75,6 +84,7 @@ public class ArtifactDependencyGraph {
 
     private static final CreatingCache<ResolvedArtifactResult, Library> sLibraryCache =
             new CreatingCache<>(ArtifactDependencyGraph::instantiateLibrary);
+    private static final Map<String, Library> sGlobalLibrary = Maps.newHashMap();
 
     public static void clearCaches() {
         sMavenCoordinatesCache.clear();
@@ -82,36 +92,42 @@ public class ArtifactDependencyGraph {
     }
 
     private static Library instantiateLibrary(@NonNull ResolvedArtifactResult artifact) {
+        Library library;
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         String address = ArtifactDependencyGraph.computeAddress(artifact);
         if (id instanceof ProjectComponentIdentifier) {
-            return new ModuleLibraryImpl(
-                    address,
-                    artifact.getFile(),
-                    ((ProjectComponentIdentifier) id).getProjectPath(),
-                    getVariant(artifact));
+            library =
+                    new ModuleLibraryImpl(
+                            address,
+                            artifact.getFile(),
+                            ((ProjectComponentIdentifier) id).getProjectPath(),
+                            getVariant(artifact));
         } else if (Files.getFileExtension(artifact.getFile().getName()).equals(EXT_JAR)) {
-            return new com.android.build.gradle.internal.ide.level2.JavaLibraryImpl(
-                    address, artifact.getFile());
+            library =
+                    new com.android.build.gradle.internal.ide.level2.JavaLibraryImpl(
+                            address, artifact.getFile());
         } else {
-            return new AndroidLibraryImpl(
-                    address,
-                    null, /* artifactFile */
-                    artifact.getFile(),
-                    new File(artifact.getFile(), FD_JARS), // TODO: This should not be hard-coded.
-                    ImmutableList.of()); // FIXME: get local jar override
+            library =
+                    new AndroidLibraryImpl(
+                            address,
+                            null, /* artifactFile */
+                            artifact.getFile(),
+                            new File(
+                                    artifact.getFile(),
+                                    FD_JARS), // TODO: This should not be hard-coded.
+                            ImmutableList.of()); // FIXME: get local jar override
         }
+
+        synchronized (sGlobalLibrary) {
+            sGlobalLibrary.put(library.getArtifactAddress(), library);
+        }
+
+        return library;
     }
 
     public static Map<String, Library> getGlobalLibMap() {
-        List<Library> values = sLibraryCache.values();
-        Map<String, Library> map = Maps.newHashMapWithExpectedSize(values.size());
-        for (Library library : values) {
-            map.put(library.getArtifactAddress(), library);
-        }
-        return map;
+        return ImmutableMap.copyOf(sGlobalLibrary);
     }
-
 
     @Nullable
     private static String getVariant(@NonNull ResolvedArtifactResult artifact) {
@@ -182,7 +198,7 @@ public class ArtifactDependencyGraph {
             } else {
                 // local aar?
                 assert artifactFile.isDirectory();
-                return new MavenCoordinatesImpl(LOCAL_AAR_GROUPID, artifactFile.getPath(), "unspecified");
+                return getMavenCoordForLocalFile(artifactFile);
             }
         }
 
@@ -192,6 +208,11 @@ public class ArtifactDependencyGraph {
                         + "' with component identifier of type '"
                         + id.getClass()
                         + "'.");
+    }
+
+    @NonNull
+    public static MavenCoordinatesImpl getMavenCoordForLocalFile(File artifactFile) {
+        return new MavenCoordinatesImpl(LOCAL_AAR_GROUPID, artifactFile.getPath(), "unspecified");
     }
 
     /** Return an Iterable of all artifact a variant depends on. */
@@ -306,6 +327,55 @@ public class ArtifactDependencyGraph {
                 javaLibrary.build(),
                 projects.build(),
                 null); /* baseAtom */
+    }
+
+    @NonNull
+    public static Dependencies clone(@NonNull Dependencies dependencies, int modelLevel) {
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+            return EMPTY_DEPENDENCIES_IMPL;
+        }
+
+        // these items are already ready for serializable, all we need to clone is
+        // the Dependencies instance.
+        List<AndroidAtom> atoms = Collections.emptyList();
+        List<AndroidLibrary> libraries = Collections.emptyList();
+        List<JavaLibrary> javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
+        List<String> projects = Collections.emptyList();
+
+        return new DependenciesImpl(
+                atoms, libraries, javaLibraries, projects, dependencies.getBaseAtom());
+    }
+
+    public static DependencyGraphs clone(
+            @NonNull DependencyGraphs dependencyGraphs,
+            int modelLevel,
+            boolean modelWithFullDependency) {
+        if (modelLevel < AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+            return EMPTY_DEPENDENCY_GRAPH;
+        }
+
+        Preconditions.checkState(dependencyGraphs instanceof ConfigurationDependencyGraphs);
+        ConfigurationDependencyGraphs cdg = (ConfigurationDependencyGraphs) dependencyGraphs;
+
+        // these items are already ready for serializable, all we need to clone is
+        // the DependencyGraphs instance.
+
+        List<Library> libs = cdg.getLibraries();
+        synchronized (sGlobalLibrary) {
+            for (Library library : libs) {
+                sGlobalLibrary.put(library.getArtifactAddress(), library);
+            }
+        }
+
+        final List<GraphItem> nodes = cdg.getCompileDependencies();
+
+        if (modelWithFullDependency) {
+            return new FullDependencyGraphsImpl(
+                    nodes, nodes, ImmutableList.of(), ImmutableList.of());
+        }
+
+        // just need to register the libraries in the global libraries.
+        return new SimpleDependencyGraphsImpl(nodes);
     }
 
     private static class HashableResolvedArtifactResult implements ResolvedArtifactResult {

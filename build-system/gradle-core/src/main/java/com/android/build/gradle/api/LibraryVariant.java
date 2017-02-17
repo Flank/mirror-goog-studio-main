@@ -16,9 +16,14 @@
 
 package com.android.build.gradle.api;
 
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.TestedVariant;
+import org.gradle.api.tasks.bundling.Zip;
 
-/**
- * A Build variant and all its public data.
- */
-public interface LibraryVariant extends BaseVariant, TestedVariant {}
+/** A Build variant and all its public data. */
+public interface LibraryVariant extends BaseVariant, TestedVariant {
+
+    /** Returns the Library AAR packaging task. */
+    @Nullable
+    Zip getPackageLibrary();
+}

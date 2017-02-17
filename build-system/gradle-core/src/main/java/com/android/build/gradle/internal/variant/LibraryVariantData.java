@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Data about a variant that produce a Library bundle (.aar)
@@ -36,6 +37,8 @@ import org.gradle.api.Task;
 public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
+
+    public Zip packageLibTask;
 
     @Nullable
     public ExtractAnnotations generateAnnotationsTask = null;

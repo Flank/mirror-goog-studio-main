@@ -24,6 +24,7 @@ import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * implementation of the {@link LibraryVariant} interface around a
@@ -76,4 +77,12 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     public void setUnitTestVariant(@Nullable UnitTestVariant unitTestVariant) {
         this.unitTestVariant = unitTestVariant;
     }
+
+    /** Returns the Library AAR packaging task. */
+    @Override
+    @Nullable
+    public Zip getPackageLibrary() {
+        return variantData.packageLibTask;
+    }
+
 }

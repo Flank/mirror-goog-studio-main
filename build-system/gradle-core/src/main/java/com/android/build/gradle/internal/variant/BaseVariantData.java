@@ -120,9 +120,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     public AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
     public AndroidTask<? extends PackageAndroidArtifact> packageAndroidArtifactTask;
 
-    // FIX ME : should this really be here ?
-    public Zip packageLibTask;
-
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
     public MergeResources mergeResourcesTask;

@@ -295,8 +295,13 @@ public class ModelBuilder implements ToolingModelBuilder {
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
         // Make sure all extra artifacts are serializable.
         List<JavaArtifact> clonedExtraJavaArtifacts =
-                extraModelInfo.getExtraJavaArtifacts(variantName).stream()
-                        .map(JavaArtifactImpl::clone)
+                extraModelInfo
+                        .getExtraJavaArtifacts(variantName)
+                        .stream()
+                        .map(
+                                javaArtifact ->
+                                        JavaArtifactImpl.clone(
+                                                javaArtifact, modelLevel, modelWithFullDependency))
                         .collect(Collectors.toList());
 
         if (variantData instanceof TestedVariantData) {

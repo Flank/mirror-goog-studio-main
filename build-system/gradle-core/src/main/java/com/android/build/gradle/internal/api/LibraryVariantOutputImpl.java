@@ -46,7 +46,8 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        return variantOutputData.packageLibTask;
+        throw new RuntimeException(
+                "packageLibrary is now available directly on the variant since there is always a single output for libraries");
     }
 
     @Override

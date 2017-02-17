@@ -23,14 +23,11 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Output Data about a variant that produce a Library bundle (.aar)
  */
 public class LibVariantOutputData extends BaseVariantOutputData {
-
-    public Zip packageLibTask;
 
     LibVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
@@ -48,9 +45,8 @@ public class LibVariantOutputData extends BaseVariantOutputData {
     @NonNull
     @Override
     public File getOutputFile() {
-        return packageLibTask == null
-                ? getScope().getVariantScope().getOutputBundleFile()
-                : packageLibTask.getArchivePath();
+        throw new RuntimeException(
+                "Call to VariantOutput.getOutputFile is deprecated for Libraries");
     }
 
     @Override

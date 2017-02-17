@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.builder.model.AndroidProject;
@@ -134,9 +136,22 @@ public class LibraryGraphHelper {
 
         public Items withType(Type type) {
             Map<String, Library> map = container.getGlobalLibraryMap().getLibraries();
-            return new Items(dependencyGraphs, items.stream()
-                    .filter(item -> map.get(item.getArtifactAddress()).getType() == type.getValue())
-                    .collect(Collectors.toList()));
+            return new Items(
+                    dependencyGraphs,
+                    items.stream()
+                            .filter(
+                                    item -> {
+                                        String address = item.getArtifactAddress();
+                                        assertThat(address)
+                                                .named("artifact address for " + item)
+                                                .isNotNull();
+                                        Library lib = map.get(address);
+                                        assertThat(lib)
+                                                .named("library from address: " + address)
+                                                .isNotNull();
+                                        return lib.getType() == type.getValue();
+                                    })
+                            .collect(Collectors.toList()));
         }
 
         public Items filter(Filter type) {
