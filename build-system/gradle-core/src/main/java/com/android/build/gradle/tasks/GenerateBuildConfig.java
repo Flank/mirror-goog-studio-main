@@ -17,7 +17,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -58,7 +57,7 @@ public class GenerateBuildConfig extends BaseTask {
 
     // ----- PRIVATE TASK API -----
 
-    private String buildConfigPackageName;
+    private Supplier<String> buildConfigPackageName;
 
     private Supplier<String> appPackageName;
 
@@ -78,11 +77,7 @@ public class GenerateBuildConfig extends BaseTask {
 
     @Input
     public String getBuildConfigPackageName() {
-        return buildConfigPackageName;
-    }
-
-    public void setBuildConfigPackageName(String buildConfigPackageName) {
-        this.buildConfigPackageName = buildConfigPackageName;
+        return buildConfigPackageName.get();
     }
 
     @Input
@@ -227,20 +222,20 @@ public class GenerateBuildConfig extends BaseTask {
             generateBuildConfigTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateBuildConfigTask.setVariantName(scope.getVariantConfiguration().getFullName());
 
-            ConventionMappingHelper.map(
-                    generateBuildConfigTask,
-                    "buildConfigPackageName",
-                    () -> {
-                        // For atoms, the package name is applicationId.SplitName.
-                        // Non-atom projects should never set a split name.
-                        String splitName = variantConfiguration.getSplitFromManifest();
-                        String applicationId = variantConfiguration.getOriginalApplicationId();
-                        if (splitName == null) {
-                            return applicationId;
-                        } else {
-                            return applicationId + "." + splitName;
-                        }
-                    });
+            generateBuildConfigTask.buildConfigPackageName =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                // For atoms, the package name is applicationId.SplitName.
+                                // Non-atom projects should never set a split name.
+                                String splitName = variantConfiguration.getSplitFromManifest();
+                                String applicationId =
+                                        variantConfiguration.getOriginalApplicationId();
+                                if (splitName == null) {
+                                    return applicationId;
+                                } else {
+                                    return applicationId + "." + splitName;
+                                }
+                            });
 
             generateBuildConfigTask.appPackageName =
                     TaskInputHelper.memoize(variantConfiguration::getApplicationId);

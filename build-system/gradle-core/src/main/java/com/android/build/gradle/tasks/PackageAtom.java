@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -538,15 +537,10 @@ public class PackageAtom extends IncrementalTask {
             FileUtils.mkdirs(cacheByPathDir);
             packageAtom.cacheByPath = new FileCacheByPath(cacheByPathDir);
 
-            ConventionMappingHelper.map(
-                    packageAtom, "debugBuild", config.getBuildType()::isDebuggable);
-            ConventionMappingHelper.map(
-                    packageAtom, "jniDebugBuild", config.getBuildType()::isJniDebuggable);
+            packageAtom.debugBuild = config.getBuildType().isDebuggable();
+            packageAtom.jniDebugBuild = config.getBuildType().isJniDebuggable();
             packageAtom.setSigningConfig(config.getSigningConfig());
-            ConventionMappingHelper.map(
-                    packageAtom,
-                    "packagingOptions",
-                    globalScope.getExtension()::getPackagingOptions);
+            packageAtom.packagingOptions = globalScope.getExtension().getPackagingOptions();
             packageAtom.setMinSdkVersion(scope.getMinSdkVersion());
             packageAtom.aaptOptions = globalScope.getExtension().getAaptOptions();
 

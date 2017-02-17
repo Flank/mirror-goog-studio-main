@@ -26,10 +26,10 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
@@ -46,12 +46,13 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -88,7 +89,7 @@ public class NdkCompile extends NdkTask {
                 urlSuffix, generatedAndridMk);
     }
 
-    private List<File> sourceFolders;
+    private FileCollection sourceFolders;
     private File generatedMakefile;
 
     private boolean debuggable;
@@ -104,14 +105,6 @@ public class NdkCompile extends NdkTask {
     private boolean ndkCygwinMode;
 
     private boolean isForTesting;
-
-    public List<File> getSourceFolders() {
-        return sourceFolders;
-    }
-
-    public void setSourceFolders(List<File> sourceFolders) {
-        this.sourceFolders = sourceFolders;
-    }
 
     @OutputFile
     public File getGeneratedMakefile() {
@@ -189,12 +182,7 @@ public class NdkCompile extends NdkTask {
     @SkipWhenEmpty
     @InputFiles
     public FileTree getSource() {
-        FileTree src = null;
-        List<File> sources = getSourceFolders();
-        if (!sources.isEmpty()) {
-            src = getProject().files(new ArrayList<Object>(sources)).getAsFileTree();
-        }
-        return src == null ? getProject().files().getAsFileTree() : src;
+        return sourceFolders.getAsFileTree();
     }
 
     private static String getAlternativesAndLeaseNotice(File generatedMakefile, String urlSuffix) {
@@ -344,7 +332,7 @@ public class NdkCompile extends NdkTask {
         }
         sb.append('\n');
 
-        for (File sourceFolder : getSourceFolders()) {
+        for (File sourceFolder : sourceFolders.getFiles()) {
             sb.append("LOCAL_C_INCLUDES += ").append(sourceFolder.getAbsolutePath()).append('\n');
         }
 
@@ -470,15 +458,22 @@ public class NdkCompile extends NdkTask {
                 ndkCompile.setNdkRenderScriptMode(false);
             }
 
-            ConventionMappingHelper.map(ndkCompile, "sourceFolders", () -> {
-                List<File> sourceList = variantConfig.getJniSourceList();
-                if (Boolean.TRUE.equals(
-                        variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-                    sourceList.add(variantData.renderscriptCompileTask.getSourceOutputDir());
-                }
+            final Callable<Collection<File>> callable =
+                    TaskInputHelper.bypassFileCallable(
+                            () -> {
+                                List<File> sourceList = variantConfig.getJniSourceList();
+                                if (Boolean.TRUE.equals(
+                                        variantConfig
+                                                .getMergedFlavor()
+                                                .getRenderscriptNdkModeEnabled())) {
+                                    sourceList.add(
+                                            variantData.renderscriptCompileTask
+                                                    .getSourceOutputDir());
+                                }
 
-                return sourceList;
-            });
+                                return sourceList;
+                            });
+            ndkCompile.sourceFolders = variantScope.getGlobalScope().getProject().files(callable);
 
             ndkCompile.setGeneratedMakefile(
                     new File(
@@ -487,8 +482,7 @@ public class NdkCompile extends NdkTask {
                                     + variantData.getVariantConfiguration().getDirName()
                                     + "/Android.mk"));
 
-            ConventionMappingHelper.map(ndkCompile, "ndkConfig", variantConfig::getNdkConfig);
-
+            ndkCompile.setNdkConfig(variantConfig.getNdkConfig());
             ndkCompile.setDebuggable(variantConfig.getBuildType().isJniDebuggable());
 
             ndkCompile.setObjFolder(

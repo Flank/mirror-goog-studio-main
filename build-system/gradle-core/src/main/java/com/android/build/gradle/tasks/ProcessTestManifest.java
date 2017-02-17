@@ -29,13 +29,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.core.VariantConfiguration;
-import com.android.builder.core.VariantType;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
@@ -47,6 +46,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
@@ -78,17 +78,16 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     private File tmpDir;
     private String testApplicationId;
-    private String minSdkVersion;
-    private String targetSdkVersion;
-    private String instrumentationRunner;
-    private Boolean handleProfiling;
-    private Boolean functionalTest;
-    private Map<String, Object> placeholdersValues;
+    private Supplier<String> minSdkVersion;
+    private Supplier<String> targetSdkVersion;
+    private Supplier<String> instrumentationRunner;
+    private Supplier<Boolean> handleProfiling;
+    private Supplier<Boolean> functionalTest;
+    private Supplier<Map<String, Object>> placeholdersValues;
 
     private ArtifactCollection manifests;
 
-    @Nullable
-    private String testLabel;
+    private Supplier<String> testLabel;
 
     private SplitScope splitScope;
 
@@ -187,67 +186,46 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @Input
     public String getMinSdkVersion() {
-        return minSdkVersion;
+        return minSdkVersion.get();
     }
 
     public void setMinSdkVersion(String minSdkVersion) {
-        this.minSdkVersion = minSdkVersion;
+        this.minSdkVersion = () -> minSdkVersion;
     }
 
     @Input
     public String getTargetSdkVersion() {
-        return targetSdkVersion;
+        return targetSdkVersion.get();
     }
 
     public void setTargetSdkVersion(String targetSdkVersion) {
-        this.targetSdkVersion = targetSdkVersion;
+        this.targetSdkVersion = () -> targetSdkVersion;
     }
 
     @Input
     public String getInstrumentationRunner() {
-        return instrumentationRunner;
-    }
-
-    public void setInstrumentationRunner(String instrumentationRunner) {
-        this.instrumentationRunner = instrumentationRunner;
+        return instrumentationRunner.get();
     }
 
     @Input
     public Boolean getHandleProfiling() {
-        return handleProfiling;
-    }
-
-    public void setHandleProfiling(Boolean handleProfiling) {
-        this.handleProfiling = handleProfiling;
+        return handleProfiling.get();
     }
 
     @Input
     public Boolean getFunctionalTest() {
-        return functionalTest;
-    }
-
-    public void setFunctionalTest(Boolean functionalTest) {
-        this.functionalTest = functionalTest;
+        return functionalTest.get();
     }
 
     @Input
     @Optional
     public String getTestLabel() {
-        return testLabel;
-    }
-
-    public void setTestLabel(String testLabel) {
-        this.testLabel = testLabel;
+        return testLabel.get();
     }
 
     @Input
     public Map<String, Object> getPlaceholdersValues() {
-        return placeholdersValues;
-    }
-
-    public void setPlaceholdersValues(
-            Map<String, Object> placeholdersValues) {
-        this.placeholdersValues = placeholdersValues;
+        return placeholdersValues.get();
     }
 
     @InputFiles
@@ -326,42 +304,46 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             // will only be used if testTargetMetadata is null.
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
 
-            ConventionMappingHelper.map(processTestManifestTask, "minSdkVersion", () -> {
-                        if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                            return scope.getGlobalScope().getAndroidBuilder()
-                                    .getTargetCodename();
-                        }
-                        return config.getMinSdkVersion().getApiString();
-                    });
+            processTestManifestTask.minSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
+                                    return scope.getGlobalScope()
+                                            .getAndroidBuilder()
+                                            .getTargetCodename();
+                                }
+                                return config.getMinSdkVersion().getApiString();
+                            });
 
-            ConventionMappingHelper.map(processTestManifestTask, "targetSdkVersion", () -> {
-                        if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                            return scope.getGlobalScope().getAndroidBuilder()
-                                    .getTargetCodename();
-                        }
+            processTestManifestTask.targetSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
+                                    return scope.getGlobalScope()
+                                            .getAndroidBuilder()
+                                            .getTargetCodename();
+                                }
 
-                        return config.getTargetSdkVersion().getApiString();
-                    });
+                                return config.getTargetSdkVersion().getApiString();
+                            });
 
             processTestManifestTask.testTargetMetadata = testTargetMetadata;
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "instrumentationRunner",
-                    config::getInstrumentationRunner);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "handleProfiling", config::getHandleProfiling);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "functionalTest", config::getFunctionalTest);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "testLabel", config::getTestLabel);
+            processTestManifestTask.instrumentationRunner =
+                    TaskInputHelper.memoize(config::getInstrumentationRunner);
+            processTestManifestTask.handleProfiling =
+                    TaskInputHelper.memoize(config::getHandleProfiling);
+            processTestManifestTask.functionalTest =
+                    TaskInputHelper.memoize(config::getFunctionalTest);
+            processTestManifestTask.testLabel = TaskInputHelper.memoize(config::getTestLabel);
 
             processTestManifestTask.manifests = scope.getArtifactCollection(
                     RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             processTestManifestTask.setManifestOutputDirectory(scope.getManifestOutputDirectory());
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "placeholdersValues", config::getManifestPlaceholders);
+            processTestManifestTask.placeholdersValues =
+                    TaskInputHelper.memoize(config::getManifestPlaceholders);
         }
     }
 }

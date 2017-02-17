@@ -22,10 +22,10 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
@@ -35,6 +35,8 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -61,11 +63,11 @@ public class RenderscriptCompile extends NdkTask {
 
     // ----- PRIVATE TASK API -----
 
-    private List<File> sourceDirs;
+    private FileCollection sourceDirs;
 
     private FileCollection importDirs;
 
-    private Integer targetApi;
+    private Supplier<Integer> targetApi;
 
     private boolean supportMode;
 
@@ -117,12 +119,8 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @InputFiles
-    public List<File> getSourceDirs() {
+    public FileCollection getSourceDirs() {
         return sourceDirs;
-    }
-
-    public void setSourceDirs(List<File> sourceDirs) {
-        this.sourceDirs = sourceDirs;
     }
 
     @InputFiles
@@ -136,11 +134,7 @@ public class RenderscriptCompile extends NdkTask {
 
     @Input
     public Integer getTargetApi() {
-        return targetApi;
-    }
-
-    public void setTargetApi(Integer targetApi) {
-        this.targetApi = targetApi;
+        return targetApi.get();
     }
 
     @Input
@@ -194,25 +188,28 @@ public class RenderscriptCompile extends NdkTask {
         File libDestDir = getLibOutputDir();
         FileUtils.cleanOutputDir(libDestDir);
 
+        Set<File> sourceDirectories = sourceDirs.getFiles();
+
         // get the import folders. If the .rsh files are not directly under the import folders,
         // we need to get the leaf folders, as this is what llvm-rs-cc expects.
-        List<File> importFolders = AndroidBuilder.getLeafFolders("rsh",
-                getImportDirs().getFiles(), getSourceDirs());
+        List<File> importFolders =
+                AndroidBuilder.getLeafFolders("rsh", getImportDirs().getFiles(), sourceDirectories);
 
-        getBuilder().compileAllRenderscriptFiles(
-                getSourceDirs(),
-                importFolders,
-                sourceDestDir,
-                resDestDir,
-                objDestDir,
-                libDestDir,
-                getTargetApi(),
-                isDebugBuild(),
-                getOptimLevel(),
-                isNdkMode(),
-                isSupportMode(),
-                getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
-                new LoggedProcessOutputHandler(getILogger()));
+        getBuilder()
+                .compileAllRenderscriptFiles(
+                        sourceDirectories,
+                        importFolders,
+                        sourceDestDir,
+                        resDestDir,
+                        objDestDir,
+                        libDestDir,
+                        getTargetApi(),
+                        isDebugBuild(),
+                        getOptimLevel(),
+                        isNdkMode(),
+                        isSupportMode(),
+                        getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
+                        new LoggedProcessOutputHandler(getILogger()));
     }
 
     // ----- ConfigAction -----
@@ -248,16 +245,19 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             renderscriptTask.setVariantName(config.getFullName());
 
-            ConventionMappingHelper.map(renderscriptTask, "targetApi",
-                    config::getRenderscriptTarget);
+            renderscriptTask.targetApi = TaskInputHelper.memoize(config::getRenderscriptTarget);
 
             renderscriptTask.supportMode = config.getRenderscriptSupportModeEnabled();
             renderscriptTask.ndkMode = ndkMode;
             renderscriptTask.debugBuild = config.getBuildType().isRenderscriptDebuggable();
             renderscriptTask.optimLevel = config.getBuildType().getRenderscriptOptimLevel();
 
-            ConventionMappingHelper.map(renderscriptTask, "sourceDirs",
-                    config::getRenderscriptSourceList);
+            renderscriptTask.sourceDirs =
+                    scope.getGlobalScope()
+                            .getProject()
+                            .files(
+                                    TaskInputHelper.bypassFileCallable(
+                                            config::getRenderscriptSourceList));
             renderscriptTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
 
@@ -266,8 +266,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
             renderscriptTask.setLibOutputDir(scope.getRenderscriptLibOutputDir());
 
-            ConventionMappingHelper.map(renderscriptTask, "ndkConfig",
-                    config::getNdkConfig);
+            renderscriptTask.setNdkConfig(config.getNdkConfig());
         }
     }
 }
