@@ -45,6 +45,9 @@ import org.gradle.tooling.ProjectConnection;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
+    static final boolean VERBOSE =
+            !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
+
     @NonNull
     final ProjectConnection projectConnection;
     @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
