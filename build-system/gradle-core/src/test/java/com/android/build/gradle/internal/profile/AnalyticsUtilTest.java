@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.tasks.AppPreBuildTask;
+import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.tasks.CopyOutputs;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
@@ -41,7 +43,9 @@ public class AnalyticsUtilTest {
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
                 AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                CopyOutputs.class.getName());
+                CopyOutputs.class.getName(),
+                AppPreBuildTask.class.getName(),
+                TestPreBuildTask.class.getName());
     }
 
     @Test
@@ -53,8 +57,7 @@ public class AnalyticsUtilTest {
                 "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
                 "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
                 "com.android.build.gradle.internal.pipeline.TestTransform",
-                "com.android.build.gradle.internal.tasks.AppPreBuildTask",
-                "com.android.build.gradle.internal.tasks.TestPreBuildTask");
+                "com.android.build.gradle.internal.tasks.AppPreBuildTask");
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
