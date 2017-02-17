@@ -21,9 +21,8 @@ def _kotlin_jar_impl(ctx):
   args, option_files = create_java_compiler_args_srcs(ctx, content, class_jar.path,
                                                  all_deps)
 
-
   ctx.action(
-    inputs = ctx.files.inputs + ctx.files.srcs + list(all_deps) + option_files,
+    inputs = ctx.files.srcs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     arguments = args,
