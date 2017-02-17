@@ -30,14 +30,9 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.dependency.DependencyGraph;
 import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
@@ -54,7 +49,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -66,7 +60,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.CircularReferenceException;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -110,43 +103,6 @@ public class DependencyManager {
         this.extraModelInfo = extraModelInfo;
         this.sdkHandler = sdkHandler;
         logger = new LoggerWrapper(Logging.getLogger(DependencyManager.class));
-    }
-
-    public void addDependenciesToPrepareTask(
-            @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask) {
-        VariantDependencies variantDeps = variantData.getVariantDependency();
-
-        final AndroidTask<? extends DefaultTask> preBuildTask =
-                variantData.getScope().getPreBuildTask();
-
-        final ImmutableList<AndroidDependency> compileLibraries = variantDeps
-                .getCompileDependencies().getAllAndroidDependencies();
-        final ImmutableList<AndroidDependency> packageLibraries = variantDeps
-                .getPackageDependencies().getAllAndroidDependencies();
-
-
-        // gather all the libraries first, then make the task depend on the list in a single
-        // pass.
-        List<PrepareLibraryTask> prepareLibraryTasks = Lists
-                .newArrayListWithCapacity(compileLibraries.size() + packageLibraries.size());
-
-        for (AndroidDependency dependency : Iterables.concat(compileLibraries, packageLibraries)) {
-            // skip sub-module since we don't extract them anymore.
-            if (dependency.getProjectPath() == null) {
-                PrepareLibraryTask prepareLibTask = prepareLibTaskMap
-                        .get(dependency.getCoordinates().toString());
-                if (prepareLibTask != null) {
-                    prepareLibraryTasks.add(prepareLibTask);
-                    prepareLibTask.dependsOn(preBuildTask.getName());
-                }
-            }
-        }
-
-        if (!prepareLibraryTasks.isEmpty()) {
-            prepareDependenciesTask.dependsOn(tasks, prepareLibraryTasks.toArray());
-        }
     }
 
     public Set<AndroidDependency> resolveDependencies(
@@ -262,9 +218,9 @@ public class DependencyManager {
         Set<String> artifactSet = Sets.newHashSet();
 
         // start with package dependencies, record the artifacts
-        DependencyGraph packagedGraph;
         if (needPackageScope) {
-            packagedGraph = resolveConfiguration(
+            // packageGraph=
+            resolveConfiguration(
                     packageClasspath,
                     variantDeps,
                     libsToExplodeOut,
@@ -273,8 +229,6 @@ public class DependencyManager {
                     artifactSet,
                     ScopeType.PACKAGE,
                     buildCache);
-        } else {
-            packagedGraph = DependencyGraph.getEmpty();
         }
 
         // then the compile dependencies, comparing against the record package dependencies
@@ -283,7 +237,8 @@ public class DependencyManager {
         // provided bits. This disables the checks on impossible provided libs (provided aar in
         // apk project).
         ScopeType scopeType = needPackageScope ? ScopeType.COMPILE : ScopeType.COMPILE_ONLY;
-        DependencyGraph compileDependencies = resolveConfiguration(
+        //DependencyGraph compileDependencies =
+        resolveConfiguration(
                 compileClasspath,
                 variantDeps,
                 libsToExplodeOut,
@@ -304,8 +259,6 @@ public class DependencyManager {
                                 dependency));
             }
         }
-
-        variantDeps.setDependencies(compileDependencies, packagedGraph, needPackageScope);
 
         // Resolve annotationProcessorConfiguration.
         Configuration annotationProcessorConfiguration =
@@ -377,7 +330,7 @@ public class DependencyManager {
     }
 
     @NonNull
-    private DependencyGraph resolveConfiguration(
+    private void resolveConfiguration(
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
             @NonNull Set<AndroidDependency> libsToExplodeOut,
@@ -490,11 +443,11 @@ public class DependencyManager {
                 }
             }
         }
-
-        return new DependencyGraph(
-                dependencyMap,
-                dependencies,
-                mutableDependencyContainer);
+        //
+        //return new DependencyGraph(
+        //        dependencyMap,
+        //        dependencies,
+        //        mutableDependencyContainer);
     }
 
     /**

@@ -32,9 +32,8 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
-import com.android.build.gradle.internal.ide.DependenciesConverter.DependenciesImpl;
+import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
@@ -54,6 +53,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.NativeLibrary;
@@ -95,7 +95,17 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
 public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
-    private final AndroidBuilder androidBuilder;
+    static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
+            new DependenciesImpl(
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    null);
+
+    @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
+
+    @NonNull private final AndroidBuilder androidBuilder;
     @NonNull
     private final AndroidConfig config;
     @NonNull
@@ -364,11 +374,11 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
 
-        DependenciesImpl dependencies;
+        Dependencies dependencies;
         DependencyGraphs dependencyGraphs;
 
         if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
-            dependencies = DependenciesConverter.getEmpty();
+            dependencies = EMPTY_DEPENDENCIES_IMPL;
 
             dependencyGraphs =
                     ArtifactDependencyGraph.createLevel2DependencyGraph(
@@ -376,7 +386,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         } else {
             dependencies = ArtifactDependencyGraph.createDependencies(variantData.getScope());
 
-            dependencyGraphs = DependenciesLevel2Converter.getEmpty();
+            dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
         }
 
         return new JavaArtifactImpl(
@@ -549,13 +559,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
                 variantConfiguration.getInstantRunSupportStatus());
 
-        VariantDependencies variantDependency = variantData.getVariantDependency();
-
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
 
         if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
-            dependencies = DependenciesConverter.getEmpty();
+            dependencies = EMPTY_DEPENDENCIES_IMPL;
 
             dependencyGraphs =
                     ArtifactDependencyGraph.createLevel2DependencyGraph(
@@ -563,7 +571,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         } else {
             dependencies = ArtifactDependencyGraph.createDependencies(scope);
 
-            dependencyGraphs = DependenciesLevel2Converter.getEmpty();
+            dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
         }
 
         return new AndroidArtifactImpl(

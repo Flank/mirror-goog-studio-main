@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.android.build.gradle.internal.ide.DependenciesConverter.cloneDependenciesForJavaArtifacts;
-import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraphForJavaArtifacts;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
@@ -58,8 +55,8 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getClassesFolder(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                cloneDependenciesForJavaArtifacts(javaArtifact.getDependencies()),
-                cloneGraphForJavaArtifacts(javaArtifact.getDependencyGraphs()),
+                javaArtifact.getDependencies(),
+                javaArtifact.getDependencyGraphs(),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }

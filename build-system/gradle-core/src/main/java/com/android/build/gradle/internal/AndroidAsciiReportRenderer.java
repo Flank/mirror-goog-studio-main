@@ -24,11 +24,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.dependency.level2.Dependency;
-import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -89,19 +87,22 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
     public void render(BaseVariantData variantData) throws IOException {
         VariantDependencies variantDependency = variantData.getVariantDependency();
 
-        renderNow(variantDependency.getCompileDependencies());
+        renderNow();
     }
 
-    void renderNow(@NonNull DependencyContainer compileDependencies) {
-        final ImmutableList<DependencyNode> dependencies = compileDependencies.getDependencies();
-
-        if (dependencies.isEmpty()) {
-            getTextOutput().withStyle(Info).text("No dependencies");
-            getTextOutput().println();
-            return;
-        }
-
-        renderChildren(dependencies, compileDependencies.getDependencyMap());
+    void renderNow() {
+        //if (compileDependencies != null) {
+        //    final ImmutableList<DependencyNode> dependencies = compileDependencies
+        //            .getDependencies();
+        //
+        //    if (dependencies.isEmpty()) {
+        //        getTextOutput().withStyle(Info).text("No dependencies");
+        //        getTextOutput().println();
+        //        return;
+        //    }
+        //
+        //    renderChildren(dependencies, compileDependencies.getDependencyMap());
+        //}
     }
 
     @Override
