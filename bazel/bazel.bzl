@@ -70,7 +70,7 @@ def _iml_resources(name, resources, srcs):
     return []
 
 
-def _iml_library(name, srcs=[], package_prefixes=[], exclude=[], deps=[], exports=[], visibility=[], javacopts=[], **kwargs):
+def _iml_library(name, srcs=[], package_prefixes=[], res_zips=[], exclude=[], deps=[], exports=[], visibility=[], javacopts=[], **kwargs):
 
   kotlins = native.glob([src + "/**/*.kt" for src in srcs], exclude=exclude)
   groovies = native.glob([src + "/**/*.groovy" for src in srcs], exclude=exclude)
@@ -123,7 +123,7 @@ def _iml_library(name, srcs=[], package_prefixes=[], exclude=[], deps=[], export
   singlejar_name = name + ".single"
   singlejar(
       name = singlejar_name,
-      srcs = jars,
+      srcs = jars + res_zips,
   )
 
   native.java_library(
@@ -189,6 +189,7 @@ def iml_module(name,
     test_srcs=[],
     exclude=[],
     resources=[],
+    res_zips=[],
     test_resources=[],
     deps=[],
     test_runtime_deps=[],
@@ -230,6 +231,7 @@ def iml_module(name,
     javacopts = javacopts,
     resource_strip_prefix = PACKAGE_NAME + "/" + name + ".res.root",
     resources = _iml_resources(name, resources, srcs),
+    res_zips = res_zips,
     visibility = visibility,
   )
 
