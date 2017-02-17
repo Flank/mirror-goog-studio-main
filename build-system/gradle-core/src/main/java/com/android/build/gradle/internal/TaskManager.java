@@ -3359,6 +3359,11 @@ public abstract class TaskManager {
     protected AndroidTask<? extends DefaultTask> createVariantPreBuildTask(
             @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
         // default pre-built task.
+        return createDefaultPreBuildTask(tasks, scope);
+    }
+
+    protected AndroidTask<? extends DefaultTask> createDefaultPreBuildTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
         return getAndroidTasks()
                 .create(
                         tasks,

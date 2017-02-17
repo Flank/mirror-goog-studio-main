@@ -43,6 +43,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
 import com.google.common.collect.ImmutableList;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -215,5 +216,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 variantScope.getManifestOutputDirectory(),
                 processTestManifestAndroidTask.getName());
         return processTestManifestAndroidTask;
+    }
+
+    @Override
+    protected AndroidTask<? extends DefaultTask> createVariantPreBuildTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        return createDefaultPreBuildTask(tasks, scope);
     }
 }
