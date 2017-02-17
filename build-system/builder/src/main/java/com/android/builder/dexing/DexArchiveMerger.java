@@ -24,13 +24,15 @@ import com.android.dx.merge.DexMerger;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -111,10 +113,13 @@ public class DexArchiveMerger {
             return;
         }
 
+        // sort paths so we produce deterministic output
+        List<Path> inputPaths = Ordering.natural().sortedCopy(inputs);
+
         if (config.getDexingMode() == DexingMode.MONO_DEX) {
-            mergeMonoDex(inputs, outputDir);
+            mergeMonoDex(inputPaths, outputDir);
         } else {
-            mergeMultidex(inputs, outputDir, mainDexClasses);
+            mergeMultidex(inputPaths, outputDir, mainDexClasses);
         }
     }
 
@@ -127,29 +132,40 @@ public class DexArchiveMerger {
      */
     private void mergeMonoDex(@NonNull Collection<Path> inputs, @NonNull Path output)
             throws IOException {
-        Set<Dex> dexes = Sets.newConcurrentHashSet();
+        Map<Path, List<Dex>> dexesFromArchives = Maps.newConcurrentMap();
         // counts how many inputs are yet to be processed
         AtomicInteger inputsToProcess = new AtomicInteger(inputs.size());
         for (Path archivePath : inputs) {
             executor.execute(
                     () -> {
                         try (DexArchive dexArchive = DexArchives.fromInput(archivePath)) {
-
-                            Set<DexArchiveEntry> entries = dexArchive.getFiles();
-                            Set<Dex> result = new HashSet<>(entries.size());
+                            List<DexArchiveEntry> entries = dexArchive.getFiles();
+                            List<Dex> dexes = new ArrayList<>(entries.size());
                             for (DexArchiveEntry e : entries) {
-                                result.add(new Dex(e.getDexFileContent()));
+                                dexes.add(new Dex(e.getDexFileContent()));
                             }
-                            dexes.addAll(result);
+
+                            dexesFromArchives.put(dexArchive.getRootPath(), dexes);
                         }
 
                         if (inputsToProcess.decrementAndGet() == 0) {
-                            // we have processed them all, trigger merging
-                            submitForMerging(dexes, output.resolve(getDexFileName(0)));
+                            mergeMonoDexEntries(output, dexesFromArchives);
                         }
                         return null;
                     });
         }
+    }
+
+    private void mergeMonoDexEntries(
+            @NonNull Path output, @NonNull Map<Path, List<Dex>> dexesFromArchives) {
+        List<Path> sortedPaths = Ordering.natural().sortedCopy(dexesFromArchives.keySet());
+        int numberOfDexFiles = dexesFromArchives.values().stream().mapToInt(List::size).sum();
+        List<Dex> sortedDexes = new ArrayList<>(numberOfDexFiles);
+        for (Path p : sortedPaths) {
+            sortedDexes.addAll(dexesFromArchives.get(p));
+        }
+        // trigger merging with sorted set
+        submitForMerging(sortedDexes, output.resolve(getDexFileName(0)));
     }
 
     /**
@@ -229,12 +245,12 @@ public class DexArchiveMerger {
             throws IOException {
         return inputs.stream()
                 .map(this::getEntriesFromSingleArchive)
-                .flatMap(Set::stream)
+                .flatMap(List::stream)
                 .iterator();
     }
 
     @NonNull
-    private Set<DexArchiveEntry> getEntriesFromSingleArchive(@NonNull Path archivePath) {
+    private List<DexArchiveEntry> getEntriesFromSingleArchive(@NonNull Path archivePath) {
         try (DexArchive archive = DexArchives.fromInput(archivePath)) {
             return archive.getFiles();
         } catch (IOException e) {
@@ -243,7 +259,7 @@ public class DexArchiveMerger {
         }
     }
 
-    private void submitForMerging(@NonNull Collection<Dex> dexes, @NonNull Path dexOutputPath) {
+    private void submitForMerging(@NonNull List<Dex> dexes, @NonNull Path dexOutputPath) {
         executor.execute(new DexArchiveMergerCallable(dexes, dexOutputPath, config.getDxContext()));
     }
 

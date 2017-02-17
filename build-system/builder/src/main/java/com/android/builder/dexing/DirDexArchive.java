@@ -18,14 +18,14 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Directory representing a dex archive. All dex entries, {@link DexArchiveEntry}, are stored under
@@ -64,8 +64,8 @@ final class DirDexArchive implements DexArchive {
 
     @Override
     @NonNull
-    public Set<DexArchiveEntry> getFiles() throws IOException {
-        ImmutableSet.Builder<DexArchiveEntry> builder = ImmutableSet.builder();
+    public List<DexArchiveEntry> getFiles() throws IOException {
+        ImmutableList.Builder<DexArchiveEntry> builder = ImmutableList.builder();
 
         Iterator<Path> files =
                 Files.walk(getRootPath()).filter(DexArchives.DEX_ENTRY_FILTER).iterator();
