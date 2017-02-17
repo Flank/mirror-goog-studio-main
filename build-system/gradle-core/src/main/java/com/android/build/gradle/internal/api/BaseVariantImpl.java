@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -134,6 +135,24 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public List<SourceProvider> getSourceSets() {
         return getVariantData().getVariantConfiguration().getSortedSourceProviders();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getCompileClasspath() {
+        return getVariantData().getVariantDependency().getCompileClasspath();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getRuntimeClasspath() {
+        return getVariantData().getVariantDependency().getRuntimeClasspath();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getAnnotationProcessorClasspath() {
+        return getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
     }
 
     @Override
