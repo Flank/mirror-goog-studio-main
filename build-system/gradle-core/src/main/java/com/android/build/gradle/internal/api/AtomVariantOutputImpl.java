@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AtomVariantOutput;
 import com.android.build.gradle.internal.variant.AtomVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.tasks.BundleAtom;
 
 /**
  * Implementation of variant output for atom variants.
@@ -41,12 +39,6 @@ public class AtomVariantOutputImpl extends BaseVariantOutputImpl implements Atom
     @Override
     protected BaseVariantOutputData getVariantOutputData() {
         return variantOutputData;
-    }
-
-    @Nullable
-    @Override
-    public BundleAtom getBundleAtom() {
-        return variantOutputData.bundleAtomTask;
     }
 
     @Override

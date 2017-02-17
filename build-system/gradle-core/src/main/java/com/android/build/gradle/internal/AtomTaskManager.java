@@ -35,8 +35,8 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
-import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -78,7 +78,6 @@ public class AtomTaskManager extends TaskManager {
         assert variantData instanceof AtomVariantData;
 
         final VariantScope variantScope = variantData.getScope();
-        final File variantBundleDir = variantScope.getBaseBundleDir();
 
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
@@ -155,13 +154,13 @@ public class AtomTaskManager extends TaskManager {
                             tasks,
                             variantScope,
                             () ->
-                                    new File(
+                                    FileUtils.join(
                                             variantScope.getGlobalScope().getIntermediatesDir(),
-                                            "symbols/"
-                                                    + variantScope
-                                                            .getVariantData()
-                                                            .getVariantConfiguration()
-                                                            .getDirName()),
+                                            "symbols",
+                                            variantScope
+                                                    .getVariantData()
+                                                    .getVariantConfiguration()
+                                                    .getDirName()),
                             variantScope.getProcessResourcePackageOutputDirectory(),
                             MergeType.MERGE,
                             variantScope.getGlobalScope().getArchivesBaseName());

@@ -37,9 +37,10 @@ public class InstantAppVariantOutputData extends BaseVariantOutputData {
     @NonNull
     @Override
     public File getOutputFile() {
-        return packageInstantAppTask == null
-                ? getScope().getFinalPackage()
-                : packageInstantAppTask.getArchivePath();
+        InstantAppVariantData instantAppVariantData = (InstantAppVariantData) variantData;
+        return instantAppVariantData.bundleInstantAppTask == null
+                ? getScope().getVariantScope().getInstantAppPackage()
+                : instantAppVariantData.bundleInstantAppTask.getBundleFile();
     }
 
     @NonNull

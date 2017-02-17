@@ -16,8 +16,15 @@
 
 package com.android.build.gradle.api;
 
+import com.android.annotations.Nullable;
+import com.android.build.gradle.tasks.BundleInstantApp;
+
 /**
  * An InstantApp Build variant and all its public data.
  */
 public interface InstantAppVariant extends BaseVariant, InstallableVariant, AndroidArtifactVariant {
+
+    /** Returns the InstantApp packaging task */
+    @Nullable
+    BundleInstantApp getBundleInstantApp();
 }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -28,7 +27,6 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
@@ -172,21 +170,8 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @NonNull
     @Override
     public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
-        if (mVariantScope.getVariantData().getType() == VariantType.INSTANTAPP) {
-            return buildPackagePath(destinationDir, projectBaseName, apkData, SdkConstants.DOT_ZIP);
-        } else {
-            ApkVariantData apkVariantData = (ApkVariantData) mVariantScope.getVariantData();
-            return buildPackagePath(
-                    destinationDir,
-                    projectBaseName,
-                    apkData,
-                    apkVariantData.isSigned() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
-        }
-    }
-
-    @NonNull
-    private File buildPackagePath(
-            File destinationDir, String projectBaseName, ApkData apkData, String suffix) {
+        ApkVariantData apkVariantData = (ApkVariantData) mVariantScope.getVariantData();
+        String suffix = apkVariantData.isSigned() ? DOT_ANDROID_PACKAGE : "-unsigned.apk";
         return new File(destinationDir, projectBaseName + "-" + apkData.getBaseName() + suffix);
     }
 

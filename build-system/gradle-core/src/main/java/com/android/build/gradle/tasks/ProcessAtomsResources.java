@@ -25,15 +25,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -80,10 +77,10 @@ public class ProcessAtomsResources extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
         // Find the base atom package.
-        File baseAtomPackage = null;
-        for (File atomPackage : atomResourcePackages.getArtifactFiles()) {
-            if (atomPackage.exists()) {
-                baseAtomPackage = atomPackage;
+        @Nullable File baseAtomPackage = null;
+        for (AtomConfig.AtomInfo atomInfo : atomConfigTask.getAtomInfoCollection()) {
+            if (atomInfo.getResourcePackageFile() != null) {
+                baseAtomPackage = atomInfo.getResourcePackageFile();
                 break;
             }
         }
@@ -93,13 +90,12 @@ public class ProcessAtomsResources extends IncrementalTask {
             File resOutBaseNameFile = atomInfo.getPackageOutputFile();
 
             // Base atom, copy the resource package over.
-            if (atomInfo.getResourcePackageFile().exists()) {
+            if (atomInfo.getResourcePackageFile() != null) {
                 FileUtils.copyFile(atomInfo.getResourcePackageFile(), resOutBaseNameFile);
                 continue;
             }
 
             File srcOut = atomInfo.getSourceOutputDir();
-            assert srcOut != null;
             FileUtils.cleanOutputDir(srcOut);
 
             AndroidBuilder builder = getBuilder();
@@ -131,7 +127,7 @@ public class ProcessAtomsResources extends IncrementalTask {
                 AaptPackageConfig.Builder config =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(atomInfo.getManifestFile())
-                                .setOptions(getAaptOptions())
+                                .setOptions(aaptOptions)
                                 .setResourceDir(atomInfo.getResourceDir())
                                 .setLibraries(getLibraryInfoList(atomInfo.getLibInfoFile()))
                                 .setCustomPackageForR(packageForR)
@@ -139,10 +135,8 @@ public class ProcessAtomsResources extends IncrementalTask {
                                 .setSourceOutputDir(srcOut)
                                 .setResourceOutputApk(resOutBaseNameFile)
                                 .setVariantType(VariantType.INSTANTAPP)
-                                .setDebuggable(isDebuggable())
-                                .setPseudoLocalize(isPseudoLocalesEnabled())
-                                .setResourceConfigs(getResourceConfigs())
-                                .setPreferredDensity(getPreferredDensity())
+                                .setDebuggable(debuggable)
+                                .setPseudoLocalize(pseudoLocalesEnabled)
                                 .setBaseFeature(baseAtomPackage)
                                 .setPreviousFeatures(previousAtoms);
                 builder.processResources(aapt, config, true);
@@ -193,7 +187,7 @@ public class ProcessAtomsResources extends IncrementalTask {
 
     @InputFiles
     @NonNull
-    public FileCollection getAtomManifestFilesCollection() {
+    public FileCollection getAtomManifestDirsCollection() {
         return atomManifests.getArtifactFiles();
     }
 
@@ -234,42 +228,13 @@ public class ProcessAtomsResources extends IncrementalTask {
     }
 
     @Input
-    @NonNull
-    public Collection<String> getResourceConfigs() {
-        return resourceConfigs;
-    }
-
-    public void setResourceConfigs(@NonNull Collection<String> resourceConfigs) {
-        this.resourceConfigs = resourceConfigs;
-    }
-
-    @Input
-    @Optional
-    @Nullable
-    public String getPreferredDensity() {
-        return preferredDensity;
-    }
-
-    public void setPreferredDensity(@Nullable String preferredDensity) {
-        this.preferredDensity = preferredDensity;
-    }
-
-    @Input
     public boolean isDebuggable() {
         return debuggable;
-    }
-
-    public void setDebuggable(boolean debuggable) {
-        this.debuggable = debuggable;
     }
 
     @Input
     public boolean isPseudoLocalesEnabled() {
         return pseudoLocalesEnabled;
-    }
-
-    public void setPseudoLocalesEnabled(boolean pseudoLocalesEnabled) {
-        this.pseudoLocalesEnabled = pseudoLocalesEnabled;
     }
 
     @Nested
@@ -287,8 +252,6 @@ public class ProcessAtomsResources extends IncrementalTask {
     }
 
     private AaptGeneration aaptGeneration;
-    private Collection<String> resourceConfigs;
-    private String preferredDensity;
     private boolean debuggable;
     private boolean pseudoLocalesEnabled;
     private AaptOptions aaptOptions;
@@ -300,9 +263,9 @@ public class ProcessAtomsResources extends IncrementalTask {
 
     public static class ConfigAction implements TaskConfigAction<ProcessAtomsResources> {
 
-        private final VariantOutputScope scope;
+        private final VariantScope scope;
 
-        public ConfigAction(@NonNull VariantOutputScope scope) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 
@@ -320,42 +283,33 @@ public class ProcessAtomsResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull ProcessAtomsResources processAtomsResources) {
-            final VariantScope variantScope = scope.getVariantScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    variantScope.getVariantData();
+                    scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             final GlobalScope globalScope = scope.getGlobalScope();
 
             processAtomsResources.aaptGeneration =
                     AaptGeneration.fromProjectOptions(globalScope.getProjectOptions());
-            processAtomsResources.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
+            processAtomsResources.atomConfigTask = scope.getVariantData().atomConfigTask;
+
             processAtomsResources.setAndroidBuilder(globalScope.getAndroidBuilder());
             processAtomsResources.setVariantName(config.getFullName());
-            processAtomsResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
-            processAtomsResources.setDebuggable(config.getBuildType().isDebuggable());
-            processAtomsResources.setAaptOptions(globalScope.getExtension().getAaptOptions());
-            processAtomsResources.setPseudoLocalesEnabled(
-                    config.getBuildType().isPseudoLocalesEnabled());
+            processAtomsResources.setIncrementalFolder(scope.getIncrementalDir(getName()));
+            processAtomsResources.debuggable = config.getBuildType().isDebuggable();
+            processAtomsResources.aaptOptions = globalScope.getExtension().getAaptOptions();
+            processAtomsResources.pseudoLocalesEnabled =
+                    config.getBuildType().isPseudoLocalesEnabled();
 
             processAtomsResources.atomManifests =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             processAtomsResources.atomResourcePackages =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
             processAtomsResources.atomResDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
             processAtomsResources.atomLibInfos =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
 
-            // FIX ME : use SplitDiscovery task.
-            ConventionMappingHelper.map(
-                    processAtomsResources,
-                    "resourceConfigs",
-                    variantData::discoverListOfResourceConfigs);
-
-            ConventionMappingHelper.map(
-                    processAtomsResources,
-                    "preferredDensity",
-                    () -> AndroidGradleOptions.getBuildTargetDensity(globalScope.getProject()));
+            // FIXME: Reset preferred density here.
         }
     }
 }

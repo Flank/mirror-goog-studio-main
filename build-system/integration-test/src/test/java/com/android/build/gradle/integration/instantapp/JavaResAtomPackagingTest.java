@@ -25,11 +25,9 @@ import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Tests atoms with Java Resources are packaged properly. */
-@Ignore
 public class JavaResAtomPackagingTest {
     @ClassRule
     public static GradleTestProject sProject =

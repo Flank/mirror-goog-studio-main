@@ -69,8 +69,7 @@ public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutpu
 
     @Override
     public void setTestVariantData(
-            @NonNull TestVariantData testVariantData,
-            VariantType type) {
+            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
         testVariants.put(type, testVariantData);
     }
 

@@ -30,11 +30,9 @@ import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Atom assemble tests for Cmake. */
-@Ignore
 public class CMakeAtomTest {
     @ClassRule
     public static GradleTestProject sProject =

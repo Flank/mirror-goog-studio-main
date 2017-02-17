@@ -337,7 +337,11 @@ public final class SdkConstants {
     public static final String FD_AIDL = "aidl"; //$NON-NLS-1$
     /** aar libs folder */
     public static final String FD_AAR_LIBS = "libs"; //$NON-NLS-1$
-    /** atoms output folder for atom files */
+    /** symbols output folder */
+    public static final String FD_SYMBOLS = "symbols"; //$NON-NLS-1$
+    /** resource blame output folder */
+    public static final String FD_BLAME = "blame"; //$NON-NLS-1$
+    /** atom files output folder */
     public static final String FD_ATOMS = "atoms"; //$NON-NLS-1$
 
     /** rs Libs output folder for support mode */

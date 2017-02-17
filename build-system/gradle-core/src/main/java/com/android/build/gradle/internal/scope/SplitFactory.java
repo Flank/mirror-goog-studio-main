@@ -28,6 +28,7 @@ import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -224,7 +225,7 @@ public class SplitFactory {
             }
             StringBuilder sb = new StringBuilder();
             for (FilterData filter : getFilters()) {
-                sb.append(filter.getIdentifier()).append('/');
+                sb.append(filter.getIdentifier()).append(File.separatorChar);
             }
             return sb.toString();
         }
@@ -303,7 +304,7 @@ public class SplitFactory {
         public String getDirName() {
             StringBuilder sb = new StringBuilder();
             for (FilterData filter : getFilters()) {
-                sb.append(filter.getIdentifier()).append('/');
+                sb.append(filter.getIdentifier()).append(File.separatorChar);
             }
             return sb.toString();
         }

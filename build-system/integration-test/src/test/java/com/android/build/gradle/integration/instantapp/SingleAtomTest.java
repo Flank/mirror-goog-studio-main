@@ -16,22 +16,22 @@
 
 package com.android.build.gradle.integration.instantapp;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.truth.ZipFileSubject;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Basic instantApp test with a single atom. */
 @Category(SmokeTests.class)
-@Ignore
 public class SingleAtomTest {
     @ClassRule
     public static GradleTestProject sProject = GradleTestProject.builder()
@@ -56,6 +56,12 @@ public class SingleAtomTest {
         atomBundle.containsClass("Lcom/android/tests/singleatom/R;");
         atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/atom/BuildConfig;");
         atomBundle.doesNotContainClass("Lcom/android/tests/singleatom/atom/R;");
+
+        // Check the atom contains expected APK contents.
+        ApkSubject atom =
+                assertThatApk(sProject.getSubproject("instantApp").getAtom("atom", "release"));
+        atom.contains("AndroidManifest.xml");
+        atom.contains("resources.arsc");
 
         // Check that the output bundle file contains the one atom.
         ZipFileSubject outputPackage =

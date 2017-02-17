@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.transforms.JackCompileTransform;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -55,7 +56,6 @@ import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.ErrorReporter;
@@ -88,7 +88,6 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
-import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
@@ -109,7 +108,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     public Task preBuildTask;
     public PrepareDependenciesTask prepareDependenciesTask;
-    public ProcessAndroidResources generateRClassTask;
 
     public Task sourceGenTask;
     public Task resourceGenTask;
@@ -132,6 +130,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     public Sync processJavaResourcesTask;
     public NdkCompile ndkCompileTask;
+    public AtomConfig atomConfigTask;
 
     /** Can be JavaCompile or JackTask depending on user's settings. */
     public Task javaCompilerTask;

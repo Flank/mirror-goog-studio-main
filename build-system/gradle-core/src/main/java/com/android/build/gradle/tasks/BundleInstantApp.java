@@ -18,9 +18,10 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -65,10 +66,6 @@ public class BundleInstantApp extends DefaultAndroidTask implements FileSupplier
         return bundleFile;
     }
 
-    public void setBundleFile(File bundleFile) {
-        this.bundleFile = bundleFile;
-    }
-
     private File bundleFile;
     private AtomConfig atomConfigTask;
 
@@ -86,9 +83,9 @@ public class BundleInstantApp extends DefaultAndroidTask implements FileSupplier
     }
 
     public static class ConfigAction implements TaskConfigAction<BundleInstantApp> {
-        private final VariantOutputScope scope;
+        private final VariantScope scope;
 
-        public ConfigAction(@NonNull VariantOutputScope scope) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 
@@ -107,9 +104,12 @@ public class BundleInstantApp extends DefaultAndroidTask implements FileSupplier
         @Override
         public void execute(@NonNull BundleInstantApp bundleInstantApp) {
             bundleInstantApp.setVariantName(scope.getFullVariantName());
-            bundleInstantApp.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
+            bundleInstantApp.atomConfigTask = scope.getVariantData().atomConfigTask;
+            bundleInstantApp.bundleFile = scope.getInstantAppPackage();
 
-            bundleInstantApp.setBundleFile(scope.getFinalPackage());
+            InstantAppVariantData instantAppVariantData =
+                    (InstantAppVariantData) scope.getVariantData();
+            instantAppVariantData.bundleInstantAppTask = bundleInstantApp;
         }
     }
 }

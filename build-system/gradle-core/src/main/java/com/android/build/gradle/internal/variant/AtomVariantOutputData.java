@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.SdkConstants.DOT_RES;
-import static com.android.SdkConstants.FN_RES_BASE;
-
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
@@ -42,9 +39,10 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
     @NonNull
     @Override
     public File getOutputFile() {
-        return bundleAtomTask == null
+        AtomVariantData atomVariantData = (AtomVariantData) variantData;
+        return atomVariantData.bundleAtomTask == null
                 ? getScope().getVariantScope().getOutputBundleFile()
-                : bundleAtomTask.getBundleFile();
+                : atomVariantData.bundleAtomTask.getBundleFile();
     }
 
     @NonNull

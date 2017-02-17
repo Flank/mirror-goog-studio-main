@@ -16,13 +16,10 @@
 
 package com.android.build.gradle.internal.scope;
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
-import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantType;
 import com.android.utils.StringHelper;
@@ -107,35 +104,6 @@ public class VariantOutputScope implements TransformVariantScope {
             suffix = ATOM_SUFFIX + suffix;
         return prefix + StringHelper.capitalize(getVariantOutputData().getFullName()) + suffix;
     }
-
-    /**
-     * Final package file, signed and zipaligned (if enabled), ready to be installed on the device.
-     */
-    @NonNull
-    public File getFinalPackage() {
-        if (getVariantScope().getVariantData().getType() == VariantType.INSTANTAPP) {
-            return buildPackagePath(DOT_ZIP);
-        } else {
-            return buildPackagePath(isSignedApk() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
-        }
-    }
-
-
-    @NonNull
-    private File buildPackagePath(String suffix) {
-        return new File(
-                getGlobalScope().getApkLocation(),
-                getGlobalScope().getProjectBaseName()
-                        + "-"
-                        + variantOutputData.getBaseName()
-                        + suffix);
-    }
-
-    private boolean isSignedApk() {
-        ApkVariantData apkVariantData = (ApkVariantData) variantScope.getVariantData();
-        return apkVariantData.isSigned();
-    }
-
 
     @NonNull
     public File getManifestOutputFile() {
