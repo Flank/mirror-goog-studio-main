@@ -319,6 +319,7 @@ public class NdkSampleTest {
 
             builder.addCommands(
                     "echo build command",
+                    "echo clean command",
                     variantName,
                     variantBuildOutputText,
                     true);

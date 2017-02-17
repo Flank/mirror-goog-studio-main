@@ -116,15 +116,24 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         //
         // NOTE: CMake doesn't have the same issue because CMake JSON generation happens fully
         // within the Exec call which has 'project/app' as the current directory.
-        NativeBuildConfigValue buildConfig = new NativeBuildConfigValueBuilder(
-                    getMakeFile(),
-                    projectDir)
-                .addCommands(
-                        getBuildCommand(abi, abiPlatformVersion, applicationMk),
-                        variantName,
-                        buildOutput,
-                        isWindows())
-                .build();
+        NativeBuildConfigValue buildConfig =
+                new NativeBuildConfigValueBuilder(getMakeFile(), projectDir)
+                        .addCommands(
+                                getBuildCommand(
+                                        abi,
+                                        abiPlatformVersion,
+                                        applicationMk,
+                                        false /* removeJobsFlag */),
+                                getBuildCommand(
+                                                abi,
+                                                abiPlatformVersion,
+                                                applicationMk,
+                                                true /* removeJobsFlag */)
+                                        + " clean",
+                                variantName,
+                                buildOutput,
+                                isWindows())
+                        .build();
 
         if (applicationMk.exists()) {
             diagnostic("found application make file %s", applicationMk.getAbsolutePath());
@@ -157,7 +166,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.setExecutable(getNdkBuild())
-                .addArgs(getBaseArgs(abi, abiPlatformVersion, applicationMk))
+                .addArgs(
+                        getBaseArgs(
+                                abi, abiPlatformVersion, applicationMk, false /* removeJobsFlag */))
                 // Disable response files so we can parse the command line.
                 .addArgs("APP_SHORT_COMMANDS=false")
                 .addArgs("LOCAL_SHORT_COMMANDS=false")
@@ -230,12 +241,13 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         }
     }
 
-    /**
-     * Get the base list of arguments for invoking ndk-build.
-     */
+    /** Get the base list of arguments for invoking ndk-build. */
     @NonNull
-    private List<String> getBaseArgs(@NonNull String abi, int abiPlatformVersion,
-            @NonNull File applicationMk) {
+    private List<String> getBaseArgs(
+            @NonNull String abi,
+            int abiPlatformVersion,
+            @NonNull File applicationMk,
+            boolean removeJobsFlag) {
         List<String> result = Lists.newArrayList();
         result.add("NDK_PROJECT_PATH=null");
         result.add("APP_BUILD_SCRIPT=" + getMakeFile());
@@ -283,21 +295,49 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             result.add(String.format("APP_CPPFLAGS+=\"%s\"", flag));
         }
 
+        boolean skipNextArgument = false;
         for (String argument : getBuildArguments()) {
+            // Jobs flag is removed for clean command because Make has issues running
+            // cleans in parallel. See b.android.com/214558
+            if (removeJobsFlag && argument.equals("-j")) {
+                // This is the arguments "-j" "4" case. We need to skip the current argument
+                // which is "-j" as well as the next argument, "4".
+                skipNextArgument = true;
+                continue;
+            }
+            if (removeJobsFlag && argument.equals("--jobs")) {
+                // This is the arguments "--jobs" "4" case. We need to skip the current argument
+                // which is "--jobs" as well as the next argument, "4".
+                skipNextArgument = true;
+                continue;
+            }
+            if (skipNextArgument) {
+                // Skip the argument following "--jobs" or "-j"
+                skipNextArgument = false;
+                continue;
+            }
+            if (removeJobsFlag && (argument.startsWith("-j") || argument.startsWith("--jobs="))) {
+                // This is the "-j4" or "--jobs=4" case.
+                continue;
+            }
+
             result.add(argument);
         }
 
         return result;
     }
 
-    /**
-     * Get the build command
-     */
+    /** Get the build command */
     @NonNull
-    private String getBuildCommand(@NonNull String abi, int abiPlatformVersion,
-            @NonNull File applicationMk) {
-        return getNdkBuild() + " " + Joiner.on(" ").join(getBaseArgs(abi, abiPlatformVersion,
-                applicationMk));
+    private String getBuildCommand(
+            @NonNull String abi,
+            int abiPlatformVersion,
+            @NonNull File applicationMk,
+            boolean removeJobsFlag) {
+        return getNdkBuild()
+                + " "
+                + Joiner.on(" ")
+                        .join(getBaseArgs(abi, abiPlatformVersion, applicationMk, removeJobsFlag));
     }
 
     /**
