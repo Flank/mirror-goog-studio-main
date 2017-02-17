@@ -96,7 +96,6 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.tasks.PreBuildTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -3377,53 +3376,26 @@ public abstract class TaskManager {
         createCompileAnchorTask(tasks, scope);
     }
 
+    protected AndroidTask<? extends DefaultTask> createVariantPreBuildTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        // default pre-built task.
+        return getAndroidTasks()
+                .create(
+                        tasks,
+                        scope.getTaskName("pre", "Build"),
+                        task -> {
+                            scope.getVariantData().preBuildTask = task;
+                        });
+    }
+
     private void createPreBuildTasks(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        scope.setPreBuildTask(androidTasks.create(tasks, new PreBuildTask.ConfigAction(scope)));
+        scope.setPreBuildTask(createVariantPreBuildTask(tasks, scope));
+
         scope.getPreBuildTask().dependsOn(tasks, MAIN_PREBUILD);
 
         if (isMinifyEnabled(scope)) {
             scope.getPreBuildTask().dependsOn(tasks, EXTRACT_PROGUARD_FILES);
         }
-
-        // for all libraries required by the configurations of this variant, make this task
-        // depend on all the tasks preparing these libraries.
-//        VariantDependencies variantDependencies = variantData.getVariantDependency();
-
-        // TODO we dont want the prepare dependencies task anymore.
-        //AndroidTask<PrepareDependenciesTask> prepareDependenciesTask = androidTasks.create(tasks,
-        //        new PrepareDependenciesTask.ConfigAction(scope, variantDependencies));
-        //scope.setPrepareDependenciesTask(prepareDependenciesTask);
-        //
-        //prepareDependenciesTask.dependsOn(tasks, scope.getPreBuildTask());
-        //prepareDependenciesTask.dependsOn(tasks, variantDependencies.getCompileConfiguration());
-        //prepareDependenciesTask.dependsOn(tasks, variantDependencies.getPackageConfiguration());
-
-        // TODO completely remove this when it's not needed anymore.
-        //if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-        //    AndroidTask<ResolveDependenciesTask> resolveDependenciesTask =
-        //            androidTasks.create(
-        //                    tasks,
-        //                    new ResolveDependenciesTask.ConfigAction(scope, dependencyManager));
-        //    scope.setResolveDependenciesTask(resolveDependenciesTask);
-        //    scope.getPreBuildTask().dependsOn(tasks, resolveDependenciesTask);
-        //    resolveDependenciesTask.dependsOn(
-        //            tasks,
-        //            variantDependencies.getCompileConfiguration(),
-        //            variantDependencies.getPackageConfiguration());
-        //
-        //    // Dependency of the tested variant must be resolved before test variant.
-        //    if (variantData instanceof TestVariantData) {
-        //        BaseVariantData testedVariantData =
-        //                (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
-        //        VariantScope testedScope = testedVariantData.getScope();
-        //        resolveDependenciesTask.dependsOn(tasks, testedScope.getResolveDependenciesTask());
-        //    }
-        //} else {
-        //    dependencyManager.addDependenciesToPrepareTask(
-        //            tasks,
-        //            variantData,
-        //            prepareDependenciesTask);
-        //}
     }
 
     private void createCompileAnchorTask(

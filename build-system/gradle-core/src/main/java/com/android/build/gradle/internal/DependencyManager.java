@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.dependency.DependencyGraph;
 import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.tasks.PreBuildTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -67,6 +66,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.CircularReferenceException;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -118,7 +118,8 @@ public class DependencyManager {
             @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask) {
         VariantDependencies variantDeps = variantData.getVariantDependency();
 
-        final AndroidTask<PreBuildTask> preBuildTask = variantData.getScope().getPreBuildTask();
+        final AndroidTask<? extends DefaultTask> preBuildTask =
+                variantData.getScope().getPreBuildTask();
 
         final ImmutableList<AndroidDependency> compileLibraries = variantDeps
                 .getCompileDependencies().getAllAndroidDependencies();

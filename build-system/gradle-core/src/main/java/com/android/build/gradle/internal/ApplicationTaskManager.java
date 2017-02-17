@@ -33,6 +33,8 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.AppPreBuildTask;
+import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
@@ -48,6 +50,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -377,6 +380,19 @@ public class ApplicationTaskManager extends TaskManager {
             // if the assembleVariant task run, make sure it also runs the task to generate
             // the build-info.xml.
             variantScope.getAssembleTask().dependsOn(tasks, buildInfoGeneratorTask);
+        }
+    }
+
+    @Override
+    protected AndroidTask<? extends DefaultTask> createVariantPreBuildTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        switch (scope.getVariantConfiguration().getType()) {
+            case DEFAULT:
+                return getAndroidTasks().create(tasks, new AppPreBuildTask.ConfigAction(scope));
+            case ANDROID_TEST:
+                return getAndroidTasks().create(tasks, new TestPreBuildTask.ConfigAction(scope));
+            default:
+                return super.createVariantPreBuildTask(tasks, scope);
         }
     }
 

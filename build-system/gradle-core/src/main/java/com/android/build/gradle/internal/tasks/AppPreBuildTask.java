@@ -24,7 +24,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.VariantType;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -32,47 +31,47 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.tasks.TaskAction;
 
-/** Prebuild task that does some checks */
-public class PreBuildTask extends DefaultAndroidTask {
+/** Pre build task that does some checks for application variants */
+public class AppPreBuildTask extends DefaultAndroidTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection compileClasspath;
     private ArtifactCollection runtimeClasspath;
-    private VariantType variantType;
+    private VariantScope variantScope;
 
     @TaskAction
     void run() {
+        compileClasspath = variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
+        runtimeClasspath = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+
         checkAppWithAndroidLibAsCompileOnly();
     }
 
     private void checkAppWithAndroidLibAsCompileOnly() {
-        // only check for apps.
-        if (variantType == VariantType.DEFAULT) {
-            Set<ResolvedArtifactResult> compileArtifacts = compileClasspath.getArtifacts();
-            Set<ResolvedArtifactResult> runtimeArtifacts = runtimeClasspath.getArtifacts();
+        Set<ResolvedArtifactResult> compileArtifacts = compileClasspath.getArtifacts();
+        Set<ResolvedArtifactResult> runtimeArtifacts = runtimeClasspath.getArtifacts();
 
-            Set<ComponentIdentifier> runtimeIds =
-                    Sets.newHashSetWithExpectedSize(runtimeArtifacts.size());
+        Set<ComponentIdentifier> runtimeIds =
+                Sets.newHashSetWithExpectedSize(runtimeArtifacts.size());
 
-            // build a list of the runtime artifacts
-            for (ResolvedArtifactResult artifact : runtimeArtifacts) {
-                runtimeIds.add(artifact.getId().getComponentIdentifier());
-            }
+        // build a list of the runtime artifacts
+        for (ResolvedArtifactResult artifact : runtimeArtifacts) {
+            runtimeIds.add(artifact.getId().getComponentIdentifier());
+        }
 
-            // run through the compile ones to check for provided only.
-            for (ResolvedArtifactResult artifact : compileArtifacts) {
-                if (!runtimeIds.contains(artifact.getId().getComponentIdentifier())) {
-                    String display = artifact.getId().getComponentIdentifier().getDisplayName();
-                    throw new RuntimeException(
-                            "Android dependency '"
-                                    + display
-                                    + "' is set to compileOnly/provided which is not supported");
-                }
+        // run through the compile ones to check for provided only.
+        for (ResolvedArtifactResult artifact : compileArtifacts) {
+            if (!runtimeIds.contains(artifact.getId().getComponentIdentifier())) {
+                String display = artifact.getId().getComponentIdentifier().getDisplayName();
+                throw new RuntimeException(
+                        "Android dependency '"
+                                + display
+                                + "' is set to compileOnly/provided which is not supported");
             }
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<PreBuildTask> {
+    public static class ConfigAction implements TaskConfigAction<AppPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 
@@ -88,21 +87,15 @@ public class PreBuildTask extends DefaultAndroidTask {
 
         @NonNull
         @Override
-        public Class<PreBuildTask> getType() {
-            return PreBuildTask.class;
+        public Class<AppPreBuildTask> getType() {
+            return AppPreBuildTask.class;
         }
 
         @Override
-        public void execute(@NonNull PreBuildTask task) {
+        public void execute(@NonNull AppPreBuildTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
-            task.variantType = variantScope.getVariantConfiguration().getType();
-
-            task.compileClasspath =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
-            task.runtimeClasspath =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
-
+            task.variantScope = variantScope;
             variantScope.getVariantData().preBuildTask = task;
         }
     }

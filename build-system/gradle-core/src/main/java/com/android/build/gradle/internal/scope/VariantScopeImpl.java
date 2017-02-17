@@ -62,7 +62,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.PreBuildTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -163,7 +162,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     // Tasks
     private AndroidTask<DefaultTask> assembleTask;
-    private AndroidTask<PreBuildTask> preBuildTask;
+    private AndroidTask<? extends DefaultTask> preBuildTask;
     private AndroidTask<PrepareDependenciesTask> prepareDependenciesTask;
     @Nullable
     private AndroidTask<ResolveDependenciesTask> resolveDependenciesTask;
@@ -1368,12 +1367,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public AndroidTask<PreBuildTask> getPreBuildTask() {
+    public AndroidTask<? extends DefaultTask> getPreBuildTask() {
         return preBuildTask;
     }
 
     @Override
-    public void setPreBuildTask(AndroidTask<PreBuildTask> preBuildTask) {
+    public void setPreBuildTask(AndroidTask<? extends DefaultTask> preBuildTask) {
         this.preBuildTask = preBuildTask;
     }
 

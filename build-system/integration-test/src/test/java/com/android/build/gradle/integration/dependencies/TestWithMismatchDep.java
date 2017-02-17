@@ -19,11 +19,8 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,27 +40,15 @@ public class TestWithMismatchDep {
                 project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    androidTestCompile 'com.google.guava:guava:18.0'\n"
+                        + "    androidTestImplementation 'com.google.guava:guava:19.0'\n"
                         + "}\n");
     }
 
     private static final String ERROR_MSG =
             "Conflict with dependency \'com.google.guava:guava\' in"
-                    + " project 'testDependency'."
-                    + " Resolved versions for app (19.0) and test app (18.0) differ."
+                    + " project ':'."
+                    + " Resolved versions for app (18.0) and test app (19.0) differ."
                     + " See http://g.co/androidstudio/app-test-app-conflict for details.";
-
-    @Test
-    public void testMismatchDependencyErrorIsInTheModel() throws Exception {
-        // Query the model to get the mismatch dep sync error.
-        ModelContainer<AndroidProject> model = project.model().ignoreSyncIssues().getSingle();
-
-        assertThat(model.getOnlyModel()).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_MISMATCH_DEP,
-                "com.google.guava:guava",
-                ERROR_MSG);
-    }
 
     @Test
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
@@ -79,12 +64,10 @@ public class TestWithMismatchDep {
         // looks like we can't actually test the instance t against GradleException
         // due to it coming through the tooling API from a different class loader.
         assertThat(t.getClass().getCanonicalName()).isEqualTo("org.gradle.api.GradleException");
-        assertThat(t.getMessage()).isEqualTo("Dependency Error. See console for details.");
-
+        assertThat(t.getMessage()).isEqualTo(ERROR_MSG);
 
         // check there is a version of the error, after the task name:
         assertThat(result.getStderr()).named("stderr").contains(ERROR_MSG);
-
     }
 
     @Test
@@ -103,11 +86,5 @@ public class TestWithMismatchDep {
         // it's important to be able to run the dependencies task to
         // investigate dependency issues.
         GradleBuildResult result = project.executor().run("dependencies");
-
-        // check there is a log output
-        if (!project.isImprovedDependencyEnabled()) {
-            // There won't be an error message if dependency is not resolved on configuration.
-            assertThat(result.getStdout()).named("stdout").contains(ERROR_MSG);
-        }
     }
 }
