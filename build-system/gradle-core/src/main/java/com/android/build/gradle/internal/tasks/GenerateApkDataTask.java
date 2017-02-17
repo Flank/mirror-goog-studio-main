@@ -101,9 +101,6 @@ public class GenerateApkDataTask extends BaseTask {
         FileUtils.cleanOutputDir(outDir);
 
         if (apkDirectory != null) {
-            // strategy doesn't matter, it's not used in this case.
-            SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-
             Collection<SplitScope.SplitOutput> apks = SplitScope.load(APK, apkDirectory);
 
             if (apks.isEmpty()) {

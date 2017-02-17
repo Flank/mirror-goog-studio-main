@@ -24,8 +24,6 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.DependencyContainer;
-import com.android.builder.dependency.level2.DependencyNode;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -96,11 +94,6 @@ public class VariantDependencies {
     private final VariantDependencies testedVariantDependencies;
     @Nullable
     private final AndroidDependency testedVariantOutput;
-
-    private DependencyGraph compileGraph;
-    private DependencyGraph packageGraph;
-    private DependencyContainer compileContainer;
-    private DependencyContainer packageContainer;
 
     /**
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
@@ -471,60 +464,6 @@ public class VariantDependencies {
         return wearAppConfiguration;
     }
 
-    public void setDependencies(
-            @NonNull DependencyGraph compileGraph,
-            @NonNull DependencyGraph packageGraph,
-            boolean validate) {
-        this.compileGraph = compileGraph;
-        this.packageGraph = packageGraph;
-
-        FlatDependencyContainer flatCompileContainer = compileGraph.flatten(
-                testedVariantOutput,
-                testedVariantDependencies != null
-                        ? testedVariantDependencies.getCompileDependencies() : null);
-        FlatDependencyContainer flatPackageContainer = packageGraph.flatten(
-                testedVariantOutput,
-                testedVariantDependencies != null
-                        ? testedVariantDependencies.getPackageDependencies() : null);
-
-        if (validate) {
-            //noinspection VariableNotUsedInsideIf
-            if (testedVariantOutput != null) {
-                // in this case (test of a library module), we don't want to compare to the tested
-                // variant. it's guaranteed that the current and tested graphs have common dependencies
-                // because the former extends the latter. We don't want to start removing (skipping)
-                // items because they are not going to be installed via the 1st of 2 apk (there is
-                // only one apk for the test + aar)
-                checker.validate(flatCompileContainer, flatPackageContainer, null);
-            } else {
-                checker.validate(
-                        flatCompileContainer,
-                        flatPackageContainer,
-                        testedVariantDependencies);
-            }
-        }
-
-        compileContainer = flatCompileContainer.filterSkippedLibraries();
-        packageContainer = flatPackageContainer.filterSkippedLibraries();
-    }
-
-
-    DependencyGraph getCompileGraph() {
-        return compileGraph;
-    }
-
-    DependencyGraph getPackageGraph() {
-        return packageGraph;
-    }
-
-    public DependencyContainer getCompileDependencies() {
-        return compileContainer;
-    }
-
-    public DependencyContainer getPackageDependencies() {
-        return packageContainer;
-    }
-
     @NonNull
     public DependencyChecker getChecker() {
         return checker;
@@ -536,14 +475,6 @@ public class VariantDependencies {
 
     public boolean isAnnotationsPresent() {
         return annotationsPresent;
-    }
-
-    public boolean hasNonOptionalLibraries() {
-        // non optional libraries mean that there is some libraries in the package
-        // dependencies
-        // TODO this will go away when the user of this is removed.
-        return packageGraph.getDependencies().stream()
-                .anyMatch(node -> node.getNodeType() == DependencyNode.NodeType.ANDROID);
     }
 
     @Override

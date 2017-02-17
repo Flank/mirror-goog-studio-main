@@ -646,13 +646,10 @@ public class LibraryTaskManager extends TaskManager {
                 mergeResourceTask.getName(),
                 AndroidArtifacts.ArtifactType.ANDROID_RES);
 
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                || variantData.getVariantDependency().hasNonOptionalLibraries()) {
-            // Add a task to merge the resource folders, including the libraries, in order to
-            // generate the R.txt file with all the symbols, including the ones from
-            // the dependencies.
-            createMergeResourcesTask(tasks, variantScope, false /*processResources*/);
-        }
+        // Add a task to merge the resource folders, including the libraries, in order to
+        // generate the R.txt file with all the symbols, including the ones from
+        // the dependencies.
+        createMergeResourcesTask(tasks, variantScope, false /*processResources*/);
 
         File publicTxt = new File(variantBundleDir, FN_PUBLIC_TXT);
 

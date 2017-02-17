@@ -249,8 +249,7 @@ public class ArtifactDependencyGraph {
     }
 
     /** Create a level 1 dependency list. */
-    public static DependenciesConverter.DependenciesImpl createDependencies(
-            VariantScope variantScope) {
+    public static DependenciesImpl createDependencies(VariantScope variantScope) {
         ImmutableList.Builder<String> projects = ImmutableList.builder();
         ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
@@ -301,7 +300,7 @@ public class ArtifactDependencyGraph {
         }
 
         // FIXME: Get atom libraries.
-        return new DependenciesConverter.DependenciesImpl(
+        return new DependenciesImpl(
                 ImmutableList.of(), /* atoms */
                 androidLibraries.build(),
                 javaLibrary.build(),
