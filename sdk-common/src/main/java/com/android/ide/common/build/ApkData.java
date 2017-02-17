@@ -23,7 +23,6 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,7 +38,7 @@ import java.util.stream.Collectors;
  * <p>this is used to model outputs of a variant during configuration and it is sometimes altered at
  * execution when new pure splits are discovered.
  */
-public abstract class Split implements VariantOutput, Serializable {
+public abstract class ApkData implements ApkInfo, VariantOutput {
 
     // TO DO : move it to a subclass, we cannot override versions for SPLIT
     private String versionName;
@@ -63,7 +62,7 @@ public abstract class Split implements VariantOutput, Serializable {
     // so far, we will return things like "fr,fr-rCA" for a single value.
     @Nullable
     public String getFilter(FilterType filterType) {
-        return Split.getFilter(getFilters(), filterType);
+        return ApkData.getFilter(getFilters(), filterType);
     }
 
     public boolean requiresAapt() {
@@ -76,6 +75,7 @@ public abstract class Split implements VariantOutput, Serializable {
 
     public abstract String getFullName();
 
+    @Override
     public abstract OutputType getType();
 
     /**
@@ -170,7 +170,7 @@ public abstract class Split implements VariantOutput, Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Split that = (Split) o;
+        ApkData that = (ApkData) o;
         return versionCode == that.versionCode
                 && Objects.equals(outputFileName, that.outputFileName)
                 && Objects.equals(versionName, that.versionName)

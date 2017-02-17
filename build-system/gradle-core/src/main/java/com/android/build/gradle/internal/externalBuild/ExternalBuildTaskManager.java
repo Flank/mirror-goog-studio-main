@@ -54,7 +54,7 @@ import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -141,8 +141,8 @@ class ExternalBuildTaskManager {
                 new File(externalBuildContext.getExecutionRoot(),
                         externalBuildContext.getBuildManifest().getResourceApk().getExecRootPath());
 
-        Split mainSplit =
-                new SplitFactory.DefaultSplit(
+        ApkData mainApkData =
+                new SplitFactory.DefaultApkData(
                         VariantOutput.OutputType.MAIN,
                         "",
                         "main",
@@ -157,7 +157,7 @@ class ExternalBuildTaskManager {
                         externalBuildContext,
                         new AaptOptionsImpl(null, null, false, null),
                         new DefaultManifestParser(androidManifestFile),
-                        ImmutableList.of(mainSplit));
+                        ImmutableList.of(mainApkData));
 
         // massage the manifest file.
 
@@ -209,14 +209,14 @@ class ExternalBuildTaskManager {
 
         SplitScope splitScope = packagingScope.getSplitScope();
         splitScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, mainSplit, androidManifestFile);
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, mainApkData, androidManifestFile);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                mainSplit,
+                mainApkData,
                 androidManifestFile);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.PROCESSED_RES,
-                mainSplit,
+                mainApkData,
                 processedAndroidResourcesFile);
 
         packagingScope.addTaskOutput(

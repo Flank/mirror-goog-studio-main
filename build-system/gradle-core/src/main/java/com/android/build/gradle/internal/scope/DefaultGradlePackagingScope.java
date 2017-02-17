@@ -31,7 +31,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -171,23 +171,23 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputPackageFile(File destinationDir, String projectBaseName, Split split) {
+    public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
         if (mVariantScope.getVariantData().getType() == VariantType.INSTANTAPP) {
-            return buildPackagePath(destinationDir, projectBaseName, split, SdkConstants.DOT_ZIP);
+            return buildPackagePath(destinationDir, projectBaseName, apkData, SdkConstants.DOT_ZIP);
         } else {
             ApkVariantData apkVariantData = (ApkVariantData) mVariantScope.getVariantData();
             return buildPackagePath(
                     destinationDir,
                     projectBaseName,
-                    split,
+                    apkData,
                     apkVariantData.isSigned() ? DOT_ANDROID_PACKAGE : "-unsigned.apk");
         }
     }
 
     @NonNull
     private File buildPackagePath(
-            File destinationDir, String projectBaseName, Split split, String suffix) {
-        return new File(destinationDir, projectBaseName + "-" + split.getBaseName() + suffix);
+            File destinationDir, String projectBaseName, ApkData apkData, String suffix) {
+        return new File(destinationDir, projectBaseName + "-" + apkData.getBaseName() + suffix);
     }
 
     @Override
@@ -210,9 +210,9 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @Override
     public int getVersionCode() {
         // FIX ME : DELETE this API and have everyone use the concept of mainSplit.
-        Split mainSplit = mVariantScope.getSplitScope().getMainSplit();
-        if (mainSplit != null) {
-            return mainSplit.getVersionCode();
+        ApkData mainApkData = mVariantScope.getSplitScope().getMainSplit();
+        if (mainApkData != null) {
+            return mainApkData.getVersionCode();
         }
         return mVariantScope.getVariantConfiguration().getVersionCode();
     }

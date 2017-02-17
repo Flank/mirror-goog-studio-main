@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.incremental.BuildContext;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.model.SourceProvider;
@@ -36,7 +36,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,7 +52,7 @@ import org.xml.sax.SAXException;
 public class TestApplicationTestData extends  AbstractTestDataImpl {
 
     private final String testApplicationId;
-    private final BuildContext testedBuildContext;
+    private final Map<String, String> testedProperties;
     private final FileCollection testApk;
     private final FileCollection testedApks;
     private final GradleVariantConfiguration variantConfiguration;
@@ -62,7 +64,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             FileCollection testedApks) {
         super(variantConfiguration);
         this.variantConfiguration = variantConfiguration;
-        this.testedBuildContext = new BuildContext();
+        this.testedProperties = new HashMap<>();
         this.testApplicationId = testApplicationId;
         this.testApk = testApk;
         this.testedApks = testedApks;
@@ -71,10 +73,16 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @Override
     public void loadFromMetadataFile(File metadataFile)
             throws ParserConfigurationException, SAXException, IOException {
-        testedBuildContext.loadFromXmlFile(metadataFile);
-        if (testedBuildContext.getLastBuild() == null) {
-            throw new RuntimeException("No build information in build-info.xml" +
-                    metadataFile.getAbsolutePath());
+        Collection<SplitScope.SplitOutput> testedManifests =
+                SplitScope.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, metadataFile);
+        // all published manifests have the same package so first one will do.
+        Optional<SplitScope.SplitOutput> splitOutput = testedManifests.stream().findFirst();
+
+        if (splitOutput.isPresent()) {
+            testedProperties.putAll(splitOutput.get().getProperties());
+        } else {
+            throw new RuntimeException(
+                    "No merged manifest metadata at " + metadataFile.getAbsolutePath());
         }
     }
 
@@ -87,7 +95,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @Nullable
     @Override
     public String getTestedApplicationId() {
-        return testedBuildContext.getPackageId();
+        return testedProperties.get("packageId");
     }
 
     @Override
@@ -104,18 +112,22 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             @NonNull ILogger logger) throws ProcessException {
 
         // use a Set to remove duplicate entries.
-        ImmutableList.Builder<File> testedApks = ImmutableList.builder();
+        ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
         Set<File> testedApkFiles = this.testedApks.getFiles();
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
 
-            List<String> testedSplitApksPath = getSplitApks();
-            testedApks.addAll(
-                    SplitOutputMatcher.computeBestOutput(processExecutor,
+            SplitScope testedSplitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
+            testedSplitScope.load(VariantScope.TaskOutputType.APK, testedApks);
+
+            List<String> testedSplitApksPath = getSplitApks(testedSplitScope);
+            selectedApks.addAll(
+                    SplitOutputMatcher.computeBestOutput(
+                            processExecutor,
                             splitSelectExe,
                             deviceConfigProvider,
-                            getMainApk(),
+                            getMainApk(testedSplitScope),
                             testedSplitApksPath));
         } else {
             // if we have only one or no split-select tool available, just install them all
@@ -123,9 +135,9 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             if (testedApkFiles.size() > 1) {
                 logger.warning("split-select tool unavailable, all split APKs will be installed");
             }
-            testedApks.addAll(testedApkFiles);
+            selectedApks.addAll(testedApkFiles);
         }
-        return testedApks.build();
+        return selectedApks.build();
     }
 
     @NonNull
@@ -159,9 +171,15 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     }
 
     @NonNull
-    public List<String> getSplitApks() {
-        return testedBuildContext.getAllArtifactsOfAllBuild(FileType.SPLIT)
-                .map(artifact -> artifact.getLocation().getAbsolutePath())
+    public static List<String> getSplitApks(SplitScope splitScope) {
+        return splitScope
+                .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                .stream()
+                .filter(
+                        splitOutput ->
+                                splitOutput.getApkInfo().getType()
+                                        == VariantOutput.OutputType.SPLIT)
+                .map(splitOutput -> splitOutput.getOutputFile().getAbsolutePath())
                 .collect(Collectors.toList());
     }
 
@@ -172,15 +190,21 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
      * @return the tested main APK
      */
     @NonNull
-    private File getMainApk() {
-        Optional<BuildContext.Artifact> mainApk = testedBuildContext
-                .getAllArtifactsOfAllBuild(FileType.SPLIT_MAIN).findFirst();
+    private static File getMainApk(SplitScope splitScope) {
+
+        Optional<File> mainApk =
+                splitScope
+                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                        .stream()
+                        .filter(
+                                splitOutput ->
+                                        splitOutput.getApkInfo().getType()
+                                                != VariantOutput.OutputType.SPLIT)
+                        .map(SplitScope.SplitOutput::getOutputFile)
+                        .findFirst();
+
         if (mainApk.isPresent()) {
-            return mainApk.get().getLocation();
-        }
-        mainApk = testedBuildContext.getAllArtifactsOfAllBuild(FileType.MAIN).findFirst();
-        if (mainApk.isPresent()) {
-            return mainApk.get().getLocation();
+            return mainApk.get();
         }
         throw new RuntimeException("Cannot retrieve main APK");
     }

@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
@@ -105,11 +104,7 @@ public class GenerateApkDataTask extends BaseTask {
             // strategy doesn't matter, it's not used in this case.
             SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
 
-            if (!splitScope.load(ImmutableList.of(APK), apkDirectory)) {
-                throw new RuntimeException("Failed to load APK data from: " + apkDirectory);
-            }
-
-            Collection<SplitScope.SplitOutput> apks = splitScope.getOutputs(APK);
+            Collection<SplitScope.SplitOutput> apks = SplitScope.load(APK, apkDirectory);
 
             if (apks.isEmpty()) {
                 throw new IllegalStateException("Wear App dependency resolve to zero APK");

@@ -86,7 +86,7 @@ import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -1863,7 +1863,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     public File getProcessResourcePackageOutputFile(
-            @NonNull Split split, @NonNull String atomName) {
+            @NonNull ApkData apkData, @NonNull String atomName) {
         return FileUtils.join(
                 getGlobalScope().getIntermediatesDir(),
                 FD_RES,
@@ -1871,7 +1871,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         + RES_QUALIFIER_SEP
                         + atomName
                         + RES_QUALIFIER_SEP
-                        + split.getDirName()
+                        + apkData.getDirName()
                         + DOT_RES);
     }
 }

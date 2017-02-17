@@ -88,8 +88,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     @Nullable
     private Integer numShards;
 
-    @Nullable
-    private FileCollection testTargetMetadata;
+    @Nullable private FileCollection testTargetManifests;
 
     @TaskAction
     protected void runTests() throws DeviceException, IOException, InterruptedException,
@@ -103,8 +102,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         FileUtils.cleanOutputDir(coverageOutDir);
 
         // populate the TestData from the tested variant build output.
-        if (!testTargetMetadata.isEmpty()) {
-            testData.loadFromMetadataFile(testTargetMetadata.getSingleFile());
+        if (!testTargetManifests.isEmpty()) {
+            testData.loadFromMetadataFile(testTargetManifests.getSingleFile());
         }
 
         boolean success = false;
@@ -284,12 +283,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
      * @return tested variant metadata file.
      */
     @InputFiles
-    FileCollection getTestTargetMetadata() {
-        return testTargetMetadata;
-    }
-
-    void setTestTargetMetadata(FileCollection testTargetMetadata) {
-        this.testTargetMetadata = testTargetMetadata;
+    FileCollection getTestTargetManifests() {
+        return testTargetManifests;
     }
 
     public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
@@ -300,18 +295,17 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         private final DeviceProvider deviceProvider;
         @NonNull
         private final TestData testData;
-        @NonNull
-        private final FileCollection testTargetMetadata;
+        @NonNull private final FileCollection testTargetManifests;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull TestData testData,
-                @NonNull FileCollection testTargetMetadata) {
+                @NonNull FileCollection testTargetManifests) {
             this.scope = scope;
             this.deviceProvider = deviceProvider;
             this.testData = testData;
-            this.testTargetMetadata = testTargetMetadata;
+            this.testTargetManifests = testTargetManifests;
         }
 
         @NonNull
@@ -345,7 +339,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             task.setTestData(testData);
             task.setFlavorName(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);
-            task.setTestTargetMetadata(testTargetMetadata);
+            task.testTargetManifests = testTargetManifests;
             task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.setProcessExecutor(

@@ -95,9 +95,9 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
                         .stream()
                         .filter(
                                 splitOutput ->
-                                        splitOutput.getSplit().getType()
+                                        splitOutput.getApkInfo().getType()
                                                         == VariantOutput.OutputType.FULL_SPLIT
-                                                || splitOutput.getSplit().getType()
+                                                || splitOutput.getApkInfo().getType()
                                                         == VariantOutput.OutputType.MAIN)
                         .findFirst();
 

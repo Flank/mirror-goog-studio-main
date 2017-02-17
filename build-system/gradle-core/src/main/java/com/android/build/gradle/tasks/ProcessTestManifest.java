@@ -22,27 +22,28 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
@@ -51,7 +52,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
-import org.xml.sax.SAXException;
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
@@ -102,28 +102,37 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
         String testedApplicationId = this.testApplicationId;
         if (testTargetMetadata != null) {
-            BuildContext buildContext = new BuildContext();
-            try {
-                buildContext.loadFromXmlFile(testTargetMetadata.getSingleFile());
-            } catch (ParserConfigurationException  | SAXException e) {
-                getLogger().error("Error while reading build-info.xml at " +
-                    testTargetMetadata.getSingleFile().getAbsolutePath(), e);
-                throw new IOException(e);
+            Collection<SplitScope.SplitOutput> manifestOutputs =
+                    SplitScope.load(
+                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
+            java.util.Optional<SplitScope.SplitOutput> mainSplit =
+                    manifestOutputs
+                            .stream()
+                            .filter(
+                                    output ->
+                                            output.getApkInfo().getType()
+                                                    != VariantOutput.OutputType.SPLIT)
+                            .findFirst();
+
+            if (mainSplit.isPresent()) {
+                testedApplicationId = mainSplit.get().getProperties().get("packageId");
+            } else {
+                throw new RuntimeException("cannot find main APK");
             }
-            testedApplicationId = buildContext.getPackageId();
         }
-        List<Split> splits = splitScope.getSplits();
-        if (splits.isEmpty()) {
+        List<ApkData> apkDatas = splitScope.getApkDatas();
+        if (apkDatas.isEmpty()) {
             throw new RuntimeException("No output defined for test module, please file a bug");
         }
-        if (splits.size() > 1) {
+        if (apkDatas.size() > 1) {
             throw new RuntimeException(
                     "Test modules only support a single split, this one defines"
-                            + Joiner.on(",").join(splits));
+                            + Joiner.on(",").join(apkDatas));
         }
-        Split mainSplit = splits.get(0);
+        ApkData mainApkData = apkDatas.get(0);
 
-        File manifestOutputFolder = new File(getManifestOutputDirectory(), mainSplit.getDirName());
+        File manifestOutputFolder =
+                new File(getManifestOutputDirectory(), mainApkData.getDirName());
         FileUtils.mkdirs(manifestOutputFolder);
         File manifestOutputFile = new File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML);
 
@@ -143,7 +152,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                         manifestOutputFile,
                         getTmpDir());
         splitScope.addOutputForSplit(
-                VariantScope.TaskOutputType.MERGED_MANIFESTS, mainSplit, manifestOutputFile);
+                VariantScope.TaskOutputType.MERGED_MANIFESTS, mainApkData, manifestOutputFile);
         splitScope.save(VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
     }
 
@@ -244,10 +253,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     @Nullable
     public FileCollection getTestTargetMetadata() {
         return testTargetMetadata;
-    }
-
-    public void setTestTargetMetadata(FileCollection testTargetMetadata) {
-        this.testTargetMetadata = testTargetMetadata;
     }
 
     /**

@@ -601,7 +601,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         apiObjectFactory.create(variantData);
                         variantData
                                 .getSplitScope()
-                                .getSplits()
+                                .getApkDatas()
                                 .forEach(variantData::customizeSplit);
                     }
                 });

@@ -29,7 +29,7 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -71,13 +71,10 @@ public class PackageSplitRes extends BaseTask {
     @TaskAction
     protected void doFullTaskAction() throws IOException {
 
-        // TODO : this is a pattern that might be worth extracting into
-        // a SplitTask<InputType, OutputType>
-        splitScope.load(
-                VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
-                processedResources);
-        splitScope.deleteAllEntries(VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
         splitScope.parallelForEachOutput(
+                SplitScope.load(
+                        VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                        processedResources),
                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                 (split, output) -> {
@@ -115,9 +112,9 @@ public class PackageSplitRes extends BaseTask {
                 splitResApkOutputDirectory);
     }
 
-    public String getOutputFileNameForSplit(final Split split, boolean isSigned) {
+    public String getOutputFileNameForSplit(final ApkData apkData, boolean isSigned) {
         String archivesBaseName = (String) getProject().getProperties().get("archivesBaseName");
-        String apkName = archivesBaseName + "-" + split.getBaseName();
+        String apkName = archivesBaseName + "-" + apkData.getBaseName();
         return apkName + (isSigned ? "-unsigned" : "") + SdkConstants.DOT_ANDROID_PACKAGE;
     }
 

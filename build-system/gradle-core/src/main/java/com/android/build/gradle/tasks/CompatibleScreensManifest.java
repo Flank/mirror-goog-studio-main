@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -60,8 +60,8 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     }
 
     @Input
-    List<Split> getSplits() {
-        return splitScope.getSplits();
+    List<ApkData> getSplits() {
+        return splitScope.getApkDatas();
     }
 
     @OutputDirectory
@@ -85,8 +85,8 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     }
 
     @Nullable
-    public File generate(Split split) throws IOException {
-        String density = split.getFilter(com.android.build.OutputFile.FilterType.DENSITY);
+    public File generate(ApkData apkData) throws IOException {
+        String density = apkData.getFilter(com.android.build.OutputFile.FilterType.DENSITY);
         if (density == null) {
             return null;
         }
@@ -112,7 +112,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
                 "</manifest>");
 
 
-        File splitFolder = new File(outputFolder, split.getDirName());
+        File splitFolder = new File(outputFolder, apkData.getDirName());
         FileUtils.mkdirs(splitFolder);
         File manifestFile = new File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML);
 

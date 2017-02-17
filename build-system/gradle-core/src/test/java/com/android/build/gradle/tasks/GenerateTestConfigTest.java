@@ -17,11 +17,10 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
@@ -45,7 +44,7 @@ public class GenerateTestConfigTest {
 
     @Mock SplitScope splitScope;
 
-    @Mock Split split;
+    @Mock ApkData apkData;
 
     @Before
     public void setUp() {
@@ -66,22 +65,13 @@ public class GenerateTestConfigTest {
         generateTestConfig.sdkHome = fileSystem.getPath("/sdk");
         generateTestConfig.generatedJavaResourcesDirectory =
                 buildDirectory.resolve("generatedJavaResources");
-
-        when(splitScope.getMainSplit()).thenReturn(split);
-        when(splitScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, split))
-                .then(
-                        invocation ->
-                                new SplitScope.SplitOutput(
-                                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                                        split,
-                                        new File(
-                                                buildDirectory
-                                                        .resolve("mergedManifest.xml")
-                                                        .toString())));
-
         generateTestConfig.splitScope = splitScope;
 
-        generateTestConfig.generateTestConfig();
+        generateTestConfig.generateTestConfigForOutput(
+                new SplitScope.SplitOutput(
+                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                        apkData,
+                        new File(buildDirectory.resolve("mergedManifest.xml").toString())));
 
         Path expectedOutputPath =
                 fileSystem.getPath(

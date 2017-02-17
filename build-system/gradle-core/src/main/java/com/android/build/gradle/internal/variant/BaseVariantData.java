@@ -64,7 +64,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -225,7 +225,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                 globalScope.getProject().files(splitListOutputFile);
         splitScope = new SplitScope(splitHandlingPolicy);
         splitList = new SplitList(splitListInput);
-        splitFactory = new SplitFactory(globalScope, variantConfiguration, splitScope);
+        splitFactory = new SplitFactory(variantConfiguration, splitScope);
 
         taskManager.configureScopeForNdk(scope);
 
@@ -490,15 +490,15 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         splitCustomizers.forEach(customizer -> customizer.execute(split));
     }
 
-    public void customizeSplit(Split split) {
+    public void customizeSplit(ApkData apkData) {
         GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
-        split.setVersionCode(variantConfiguration.getVersionCode());
-        split.setVersionName(variantConfiguration.getVersionName());
-        customizeApk(getCustomizableSplit(this, split));
+        apkData.setVersionCode(variantConfiguration.getVersionCode());
+        apkData.setVersionName(variantConfiguration.getVersionName());
+        customizeApk(getCustomizableSplit(this, apkData));
     }
 
     private static CustomizableSplit getCustomizableSplit(
-            BaseVariantData variantData, Split split) {
+            BaseVariantData variantData, ApkData apkData) {
         return new CustomizableSplit() {
             @NonNull
             @Override
@@ -509,42 +509,42 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
             @NonNull
             @Override
             public OutputFile.OutputType getType() {
-                return split.getType();
+                return apkData.getType();
             }
 
             @Override
             public void setVersionCode(int version) {
-                split.setVersionCode(version);
+                apkData.setVersionCode(version);
             }
 
             @Override
             public void setVersionName(String versionName) {
-                split.setVersionName(versionName);
+                apkData.setVersionName(versionName);
             }
 
             @Override
             public void setOutputFileName(String outputFileName) {
-                split.setOutputFileName(outputFileName);
+                apkData.setOutputFileName(outputFileName);
             }
 
             @NonNull
             @Override
             public List<FilterData> getFilters() {
-                return ImmutableList.copyOf(split.getFilters());
+                return ImmutableList.copyOf(apkData.getFilters());
             }
 
             @Override
             @Nullable
             public String getFilter(String filterType) {
-                return split.getFilter(VariantOutput.FilterType.valueOf(filterType));
+                return apkData.getFilter(VariantOutput.FilterType.valueOf(filterType));
             }
 
             @Override
             public String toString() {
                 return MoreObjects.toStringHelper(this)
-                        .add("split", split)
-                        .add("versionCode", split.getVersionCode())
-                        .add("versionName", split.getVersionName())
+                        .add("split", apkData)
+                        .add("versionCode", apkData.getVersionCode())
+                        .add("versionName", apkData.getVersionName())
                         .add("filters", getFilters())
                         .toString();
             }

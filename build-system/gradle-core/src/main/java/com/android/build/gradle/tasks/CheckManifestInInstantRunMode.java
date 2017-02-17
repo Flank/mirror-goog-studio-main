@@ -25,10 +25,12 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -97,17 +99,20 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         // Cannot call .getLastValue() since it is not declared as an Input which
         // would call .get() before the task run.
 
-        splitScope.load(
-                VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests);
-        splitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, processedRes);
+        Collection<SplitScope.SplitOutput> manifestsOutputs =
+                SplitScope.load(
+                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                        instantRunManifests);
+        Collection<SplitScope.SplitOutput> processedResOutputs =
+                SplitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, processedRes);
 
-        Collection<SplitScope.SplitOutput> mergedManifests =
-                splitScope.getOutputs(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS);
+        for (SplitScope.SplitOutput mergedManifest : manifestsOutputs) {
 
-        for (SplitScope.SplitOutput mergedManifest : mergedManifests) {
-
-            Split split = mergedManifest.getSplit();
-            if (!split.isEnabled() || split.getType() == VariantOutput.OutputType.SPLIT) {
+            ApkInfo apkInfo = mergedManifest.getApkInfo();
+            ApkData apkData = splitScope.getSplit(apkInfo.getFilters());
+            if (apkData == null
+                    || !apkData.isEnabled()
+                    || apkData.getType() == VariantOutput.OutputType.SPLIT) {
                 continue;
             }
 
@@ -120,11 +125,14 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             // the right one. then change the code above to use the same logic to get the manifest
             // file.
             SplitScope.SplitOutput output =
-                    splitScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES, split);
+                    SplitScope.getOutput(
+                            processedResOutputs,
+                            TaskOutputHolder.TaskOutputType.PROCESSED_RES,
+                            apkData);
             if (output == null) {
                 throw new RuntimeException(
                         "Cannot find processed resources for "
-                                + split
+                                + apkData
                                 + " split in "
                                 + Joiner.on(",")
                                         .join(

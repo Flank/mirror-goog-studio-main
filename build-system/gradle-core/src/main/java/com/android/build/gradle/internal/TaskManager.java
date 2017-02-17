@@ -82,6 +82,7 @@ import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -186,7 +187,7 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.build.Split;
+import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
@@ -778,6 +779,11 @@ public abstract class TaskManager {
         if (variantScope.getMicroApkTask() != null) {
             processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
         }
+
+        variantScope.publishIntermediateArtifact(
+                SplitScope.getOutputFileLocation(variantScope.getManifestOutputDirectory()),
+                processManifestTask.getName(),
+                AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
     }
 
     /** Creates the merge manifests task. */
@@ -838,12 +844,13 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull VariantScope testedScope) {
 
-        FileCollection testedMetadata = null;
-        if (testedScope.hasOutput(VariantScope.TaskOutputType.APK_METADATA)) {
-            testedMetadata = testedScope.getOutputs(VariantScope.TaskOutputType.APK_METADATA);
-        }
-        AndroidTask<ProcessTestManifest> processTestManifestTask = androidTasks.create(tasks,
-                new ProcessTestManifest.ConfigAction(scope, testedMetadata));
+        AndroidTask<ProcessTestManifest> processTestManifestTask =
+                androidTasks.create(
+                        tasks,
+                        new ProcessTestManifest.ConfigAction(
+                                scope,
+                                testedScope.getOutputs(
+                                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)));
 
         scope.getVariantData().manifestProcessorTask = processTestManifestTask;
         scope.addTaskOutput(
@@ -1217,13 +1224,13 @@ public abstract class TaskManager {
             return null;
         }
 
-        List<Split> fullSplits =
+        List<ApkData> fullApkDatas =
                 variantData.getSplitScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
-        if (!fullSplits.isEmpty()) {
+        if (!fullApkDatas.isEmpty()) {
             throw new RuntimeException(
                     "In release 21 and later, there cannot be full splits and pure splits, "
                             + "found "
-                            + Joiner.on(",").join(fullSplits)
+                            + Joiner.on(",").join(fullApkDatas)
                             + " and abi filters "
                             + Joiner.on(",").join(filters));
         }
@@ -2944,16 +2951,6 @@ public abstract class TaskManager {
                     finalApkLocation,
                     Joiner.on(",").join(apks.getBuiltBy().stream().collect(Collectors.toList())),
                     AndroidArtifacts.ArtifactType.APK);
-
-            // FIX ME : we need a better way to do this.
-            ConfigurableFileCollection metadataFile =
-                    (ConfigurableFileCollection)
-                            variantScope.getOutputs(VariantScope.TaskOutputType.APK_METADATA);
-            variantScope.publishIntermediateArtifact(
-                    BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
-                    Joiner.on(",")
-                            .join(metadataFile.getBuiltBy().stream().collect(Collectors.toList())),
-                    AndroidArtifacts.ArtifactType.APK_METADATA);
 
             final FileSupplier mappingFileProvider = variantData.getMappingFileProvider();
             if (mappingFileProvider != null) {
