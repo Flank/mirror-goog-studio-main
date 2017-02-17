@@ -698,8 +698,12 @@ public final class GradleTestProject implements TestRule {
      *
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
+     *
+     * @deprecated Use {@link #getApk(ApkType, String...)} or {@link #getApk(String, ApkType,
+     *     String...)}
      */
     @NonNull
+    @Deprecated
     public Apk getApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
@@ -722,17 +726,27 @@ public final class GradleTestProject implements TestRule {
     public interface ApkType {
         ApkType DEBUG = of("debug", true);
         ApkType RELEASE = of("release", false);
+        ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
 
-        String getName();
+        @NonNull
+        String getBuildType();
 
+        @Nullable
+        String getTestName();
         boolean isSigned();
 
         static ApkType of(String name, boolean isSigned) {
             return new ApkType() {
 
+                @NonNull
                 @Override
-                public String getName() {
+                public String getBuildType() {
                     return name;
+                }
+
+                @Override
+                public String getTestName() {
+                    return null;
                 }
 
                 @Override
@@ -741,6 +755,29 @@ public final class GradleTestProject implements TestRule {
                 }
             };
         }
+
+        static ApkType of(String name, String testName, boolean isSigned) {
+            return new ApkType() {
+
+                @NonNull
+                @Override
+                public String getBuildType() {
+                    return name;
+                }
+
+                @Nullable
+                @Override
+                public String getTestName() {
+                    return testName;
+                }
+
+                @Override
+                public boolean isSigned() {
+                    return isSigned;
+                }
+            };
+        }
+
     }
 
     /**
@@ -765,28 +802,30 @@ public final class GradleTestProject implements TestRule {
                 getOutputFile(
                         "apk/"
                                 + mangleDimensions(dimensions)
+                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/"
-                                + apkType.getName()
+                                + apkType.getBuildType()
                                 + "/"
                                 + mangleApkName(
-                                        apkType.getName(),
-                                        filterName,
-                                        ImmutableList.copyOf(dimensions))
+                                        apkType, filterName, ImmutableList.copyOf(dimensions))
                                 + (apkType.isSigned()
                                         ? SdkConstants.DOT_ANDROID_PACKAGE
                                         : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
     }
 
     private String mangleApkName(
-            @Nullable String buildType, @Nullable String filterName, List<String> dimensions) {
+            @NonNull ApkType apkType, @Nullable String filterName, List<String> dimensions) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
         dimensionList.add(getName());
         dimensionList.addAll(dimensions);
         if (!Strings.isNullOrEmpty(filterName)) {
             dimensionList.add(filterName);
         }
-        if (!Strings.isNullOrEmpty(buildType)) {
-            dimensionList.add(buildType);
+        if (!Strings.isNullOrEmpty(apkType.getBuildType())) {
+            dimensionList.add(apkType.getBuildType());
+        }
+        if (!Strings.isNullOrEmpty(apkType.getTestName())) {
+            dimensionList.add(apkType.getTestName());
         }
         return Joiner.on("-").join(dimensionList);
     }
@@ -806,35 +845,12 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public Apk getTestApk() throws IOException {
-        return getTestApk_("debug", null, ImmutableList.of());
+        return getApk(ApkType.ANDROIDTEST_DEBUG);
     }
 
     @NonNull
     public Apk getTestApk(String... dimensions) throws IOException {
-        return getTestApk_(
-                "debug" /* buildType */, Arrays.stream(dimensions).collect(Collectors.toList()));
-    }
-
-    @NonNull
-    public Apk getTestApk_(String buildType, List<String> dimensions) throws IOException {
-        return getTestApk_(buildType, null /* filterName */, dimensions);
-    }
-
-    @NonNull
-    public Apk getTestApk_(String buildType, @Nullable String filterName, List<String> dimensions)
-            throws IOException {
-        return new Apk(
-                getOutputFile(
-                        "apk/androidTest/"
-                                + mangleDimensions(
-                                        dimensions.toArray(new String[dimensions.size()]))
-                                + "/"
-                                + buildType
-                                + "/"
-                                + "/"
-                                + mangleApkName(buildType, filterName, dimensions)
-                                + "-androidTest"
-                                + SdkConstants.DOT_ANDROID_PACKAGE));
+        return getApk(ApkType.ANDROIDTEST_DEBUG, dimensions);
     }
 
     /**
