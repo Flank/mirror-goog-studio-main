@@ -2080,8 +2080,32 @@ public class VersionChecksTest extends AbstractCheckTest {
                         + "        return Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH\n"
                         + "                ? null : new GridLayout(null);\n"
                         + "    }\n"
-                        + "    \n"
-                        + "     \n"
+                        + "}\n")
+        );
+    }
+
+    public void testVersionInVariable() throws Exception {
+        // Regression test for b/35116007:
+        // Allow the SDK version to be extracted into a variable or field
+        //noinspection all // Sample code
+        checkApiCheck(
+                "No warnings.",
+                null,
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.os.Build;\n"
+                        + "import android.view.View;\n"
+                        + "import android.widget.GridLayout;\n"
+                        + "\n"
+                        + "public class TestVersionInVariable {\n"
+                        + "    public void getLayout1() {\n"
+                        + "        final int version = Build.VERSION.SDK_INT;\n"
+                        + "        if (version >= 14) {"
+                        + "            new GridLayout(null);\n"
+                        + "        }\n"
+                        + "    }\n"
                         + "}\n")
         );
     }
