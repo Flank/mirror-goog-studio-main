@@ -262,6 +262,10 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             exception = e;
             throw e;
         } finally {
+            if (VERBOSE) {
+                stderr.writeTo(System.err);
+                stdout.writeTo(System.out);
+            }
             lastBuildResultConsumer.accept(
                     new GradleBuildResult(stdout, stderr, ImmutableList.of(), exception));
         }
