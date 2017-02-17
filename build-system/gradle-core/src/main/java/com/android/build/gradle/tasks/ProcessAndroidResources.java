@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING;
 
 import android.databinding.tool.util.StringUtils;
@@ -32,7 +33,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -50,6 +50,8 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
@@ -776,8 +778,9 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources
                     .setPseudoLocalesEnabled(config.getBuildType().isPseudoLocalesEnabled());
 
+            ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             processResources.buildTargetDensity =
-                    AndroidGradleOptions.getBuildTargetDensity(project);
+                    projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY);
 
             processResources.setMergeBlameLogFolder(
                     variantScope.getResourceBlameLogDir());
@@ -790,7 +793,10 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.libInfoFile = variantScope.getLibInfoFile();
             processResources.projectBaseName = baseName;
-            processResources.buildTargetAbi = AndroidGradleOptions.getBuildTargetAbi(project);
+            processResources.buildTargetAbi =
+                    projectOptions.get(BUILD_ONLY_TARGET_ABI)
+                            ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
+                            : null;
             processResources.supportedAbis = config.getSupportedAbis();
         }
     }
