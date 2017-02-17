@@ -283,8 +283,15 @@ public class InstantRunTransform extends Transform {
             }
         }));
 
-        // wait for all work items completion.
-        executor.waitForAllTasks();
+        try {
+            // wait for all work items completion.
+            executor.waitForTasksWithQuickFail(true);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new TransformException(e);
+        } catch (Exception e) {
+            throw new TransformException(e);
+        }
 
         // If our classes.2 transformations indicated that a cold swap was necessary,
         // clean up the classes.3 output folder as some new files may have been generated.

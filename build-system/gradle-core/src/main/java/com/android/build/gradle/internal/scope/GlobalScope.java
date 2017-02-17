@@ -76,6 +76,8 @@ public class GlobalScope implements TransformGlobalScope {
     @Nullable
     private final FileCache buildCache;
 
+    @Nullable private FileCache projectLevelCache = null;
+
     public GlobalScope(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
@@ -255,6 +257,20 @@ public class GlobalScope implements TransformGlobalScope {
     @Override
     public FileCache getBuildCache() {
         return buildCache;
+    }
+
+    @NonNull
+    public synchronized FileCache getProjectLevelCache() {
+        if (projectLevelCache == null) {
+            projectLevelCache =
+                    FileCache.getInstanceWithSingleProcessLocking(
+                            FileUtils.join(
+                                    project.getRootProject().getBuildDir(),
+                                    FD_INTERMEDIATES,
+                                    "project-cache"));
+        }
+
+        return projectLevelCache;
     }
 
     /** Validate flag options. */

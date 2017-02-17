@@ -19,21 +19,21 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
+import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.base.CaseFormat;
-import com.google.wireless.android.sdk.stats.GradleTaskExecution;
-import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 
 /**
  * Utilities to map internal representations of types to analytics.
  */
 public class AnalyticsUtil {
 
-    public static GradleTransformExecution.Type getTransformType(
+    public static GradleTransformExecutionType getTransformType(
             @NonNull Class<? extends Transform> taskClass) {
         try {
-            return GradleTransformExecution.Type.valueOf(getPotentialTransformTypeName(taskClass));
+            return GradleTransformExecutionType.valueOf(getPotentialTransformTypeName(taskClass));
         } catch (IllegalArgumentException ignored) {
-            return GradleTransformExecution.Type.UNKNOWN_TRANSFORM_TYPE;
+            return GradleTransformExecutionType.UNKNOWN_TRANSFORM_TYPE;
         }
     }
 
@@ -49,11 +49,11 @@ public class AnalyticsUtil {
 
 
     @NonNull
-    public static GradleTaskExecution.Type getTaskExecutionType(@NonNull Class<?> taskClass) {
+    public static GradleTaskExecutionType getTaskExecutionType(@NonNull Class<?> taskClass) {
         try {
-            return GradleTaskExecution.Type.valueOf(getPotentialTaskExecutionTypeName(taskClass));
+            return GradleTaskExecutionType.valueOf(getPotentialTaskExecutionTypeName(taskClass));
         } catch (IllegalArgumentException ignored) {
-            return GradleTaskExecution.Type.UNKNOWN_TASK_TYPE;
+            return GradleTaskExecutionType.UNKNOWN_TASK_TYPE;
         }
     }
 

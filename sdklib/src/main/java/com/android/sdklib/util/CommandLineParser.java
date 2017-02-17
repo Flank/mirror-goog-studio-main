@@ -520,7 +520,7 @@ public class CommandLineParser {
          */
         stdout("");
         stdout("Usage:\n" +
-                        "  android [global options] %s [action options]\n" +
+                        "  avdmanager [global options] %s [action options]\n" +
                         "\n" +
                         "Global options:",
                 verb == null ? (acceptLackOfVerb() ? "[action]" : "action") :

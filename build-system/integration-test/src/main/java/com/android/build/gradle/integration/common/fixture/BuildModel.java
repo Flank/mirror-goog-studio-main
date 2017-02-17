@@ -27,6 +27,7 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildActionExecuter;
+import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.GradleTask;
@@ -71,6 +73,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
+                project::setLastBuildResult,
                 project.getTestDir().toPath(),
                 project.getBuildFile().toPath(),
                 project.getBenchmarkRecorder(),
@@ -250,10 +253,21 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         executor.setStandardOutput(stdout);
         executor.setStandardError(stderr);
 
+        GradleConnectionException exception = null;
         // See ProfileCapturer javadoc for explanation.
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
             return executor.withArguments(arguments).run();
+        } catch (GradleConnectionException e) {
+            exception = e;
+            throw e;
+        } finally {
+            if (VERBOSE) {
+                stderr.writeTo(System.err);
+                stdout.writeTo(System.out);
+            }
+            lastBuildResultConsumer.accept(
+                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), exception));
         }
     }
 

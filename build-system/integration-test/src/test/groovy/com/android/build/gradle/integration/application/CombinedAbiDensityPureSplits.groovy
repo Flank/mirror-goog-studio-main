@@ -44,7 +44,6 @@ class CombinedAbiDensityPureSplits {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("combinedAbiDensityPureSplits")
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create()
 
     @BeforeClass

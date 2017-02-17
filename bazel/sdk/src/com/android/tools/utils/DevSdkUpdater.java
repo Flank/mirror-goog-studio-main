@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A utility class which manages updating an Android SDK for all supported platforms at the same
@@ -208,12 +209,13 @@ public final class DevSdkUpdater {
     private static boolean processPackageFile(Path packageFile, List<String> packageLines) {
         try {
             // Keep only non-empty lines (after # comments are removed)
-            packageLines.addAll(
-                    Files.lines(packageFile)
-                            .map(line -> line.replaceAll("#.*", ""))
-                            .map(String::trim)
-                            .filter(line -> !line.isEmpty())
-                            .collect(Collectors.toList()));
+            try (Stream<String> lines = Files.lines(packageFile)) {
+                packageLines.addAll(
+                        lines.map(line -> line.replaceAll("#.*", ""))
+                                .map(String::trim)
+                                .filter(line -> !line.isEmpty())
+                                .collect(Collectors.toList()));
+            }
         } catch (Exception e) {
             usage(
                     "Could not successfully read package-file: "

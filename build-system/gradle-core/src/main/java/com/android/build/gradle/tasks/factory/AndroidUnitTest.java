@@ -30,9 +30,13 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
+import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.testing.Test;
@@ -42,6 +46,9 @@ import org.gradle.api.tasks.testing.TestTaskReports;
  * Patched version of {@link Test} that we need to use for local unit tests support.
  */
 public class AndroidUnitTest extends Test {
+
+    private FileCollection resCollection;
+    private FileCollection assetsCollection;
 
     /**
      * Returns the test class files.
@@ -60,6 +67,18 @@ public class AndroidUnitTest extends Test {
         } else {
             return super.getCandidateClassFiles();
         }
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getResCollection() {
+        return resCollection;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getAssetsCollection() {
+        return assetsCollection;
     }
 
     /**
@@ -148,6 +167,22 @@ public class AndroidUnitTest extends Test {
 
                         return scope.getGlobalScope().getProject().files(classpaths);
                     });
+
+
+            // if android resources are meant to be accessible, then we need to make sure
+            // changes to them trigger a new run of the tasks
+            if (scope.getGlobalScope()
+                    .getExtension()
+                    .getTestOptions()
+                    .getUnitTests()
+                    .isIncludeAndroidResources()) {
+                Project project = scope.getGlobalScope().getProject();
+                VariantScope testedScope = testedVariantData.getScope();
+                runTestsTask.assetsCollection =
+                        project.files(testedScope.getMergeAssetsOutputDir());
+                runTestsTask.resCollection =
+                        project.files(testedScope.getMergeResourcesOutputDir());
+            }
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not

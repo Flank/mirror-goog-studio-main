@@ -17,67 +17,19 @@
 #include "dex_ir.h"
 #include "chronometer.h"
 #include "dex_utf8.h"
+#include "dex_format.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
-#include <sstream>
 
 namespace ir {
 
-// Returns the human-readable name for a primitive type
-static const char* PrimitiveTypeName(char typeChar) {
-  switch (typeChar) {
-    case 'B': return "byte";
-    case 'C': return "char";
-    case 'D': return "double";
-    case 'F': return "float";
-    case 'I': return "int";
-    case 'J': return "long";
-    case 'S': return "short";
-    case 'V': return "void";
-    case 'Z': return "boolean";
-  }
-  CHECK(!"unexpected type");
-  return nullptr;
-}
-
-// Converts a type descriptor to human-readable "dotted" form.  For
-// example, "Ljava/lang/String;" becomes "java.lang.String", and
-// "[I" becomes "int[]".
-static std::string DescriptorToDecl(const char* desc) {
-  std::stringstream ss;
-
-  int array_dimensions = 0;
-  while (*desc == '[') {
-    ++array_dimensions;
-    ++desc;
-  }
-
-  if (*desc == 'L') {
-    for (++desc; *desc != ';'; ++desc) {
-      CHECK(*desc != '\0');
-      ss << (*desc == '/' ? '.' : *desc);
-    }
-  } else {
-    ss << PrimitiveTypeName(*desc);
-  }
-
-  CHECK(desc[1] == '\0');
-
-  // add the array brackets
-  for (int i = 0; i < array_dimensions; ++i) {
-    ss << "[]";
-  }
-
-  return ss.str();
-}
-
 // Human-readable type declaration
 std::string Type::Decl() const {
-  return DescriptorToDecl(descriptor->c_str());
+  return dex::DescriptorToDecl(descriptor->c_str());
 }
 
 // Helper for IR normalization
@@ -91,6 +43,12 @@ static void IndexItems(std::vector<T>& items, C comp) {
 }
 
 // Helper for IR normalization (DFS for topological sort)
+//
+// NOTE: this recursive version is clean and simple and we know
+//  that the max depth is bounded (exactly 1 for JVMTI and a small
+//  max for general case - the largest .dex file in AOSP has 5000 classes
+//  total)
+//
 void DexFile::TopSortClassIndex(Class* irClass, dex::u4* nextIndex) {
   if (irClass->index == dex::u4(-1)) {
     if (irClass->super_class && irClass->super_class->class_def) {
@@ -150,7 +108,7 @@ static void NormalizeClass(Class* irClass) {
   SortEncodedMethods(&irClass->virtual_methods);
 }
 
-// prepare the IR for generating a .dex image
+// Prepare the IR for generating a .dex image
 // (the .dex format requires a specific sort order for some of the arrays, etc...)
 //
 // TODO: not a great solution - move this logic to the writer!

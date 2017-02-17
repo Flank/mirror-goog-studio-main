@@ -94,7 +94,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
     @NonNull private final File to;
     @NonNull private final Set<String> hashes;
     @NonNull private final ProcessOutput processOutput;
-    @Nullable private final FileCache buildCache;
+    @Nullable private final FileCache userLevelCache;
+    @Nullable private final FileCache projectLevelCache;
     @NonNull private final DexOptions dexOptions;
 
     public DexArchiveBuilderTransformCallable(
@@ -104,7 +105,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
             @NonNull File to,
             @NonNull Set<String> hashes,
             @NonNull ProcessOutput processOutput,
-            @Nullable FileCache buildCache,
+            @Nullable FileCache userLevelCache,
+            @Nullable FileCache projectLevelCache,
             @NonNull DexOptions dexOptions) {
         this.rootPath = rootPath;
         this.toProcess = toProcess;
@@ -112,7 +114,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         this.to = to;
         this.hashes = hashes;
         this.processOutput = processOutput;
-        this.buildCache = buildCache;
+        this.userLevelCache = userLevelCache;
+        this.projectLevelCache = projectLevelCache;
         this.dexOptions = dexOptions;
     }
 
@@ -131,44 +134,17 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
             hashes.add(hash);
         }
 
-        // TODO(gavra@): add project level cache
         ExceptionRunnable cacheMissAction = cacheMissAction();
 
-        // If the build cache is used, run pre-dexing using the cache
-        if (buildCache != null) {
+        FileCache cache = cacheToUse();
+        if (cache != null) {
             FileCache.Inputs buildCacheInputs = getBuildCacheInputs(rootPath.toFile(), dexOptions);
-            FileCache.QueryResult result;
-            try {
-                result = buildCache.createFile(to, buildCacheInputs, cacheMissAction);
-            } catch (ExecutionException exception) {
-                throw new RuntimeException(
-                        String.format(
-                                "Unable to pre-dex '%1$s' to '%2$s'",
-                                rootPath.toString(), to.getAbsolutePath()),
-                        exception);
-            } catch (Exception exception) {
-                throw new RuntimeException(
-                        String.format(
-                                "Unable to pre-dex '%1$s' to '%2$s' using the build cache at"
-                                        + " '%3$s'.\n"
-                                        + "%4$s",
-                                rootPath.toString(),
-                                to.getAbsolutePath(),
-                                buildCache.getCacheDirectory().getAbsolutePath(),
-                                BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE),
-                        exception);
-            }
-            if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
-                Verify.verifyNotNull(result.getCauseOfCorruption());
-                logger.verbose(
-                        "The build cache at '%1$s' contained an invalid cache entry.\n"
-                                + "Cause: %2$s\n"
-                                + "We have recreated the cache entry.\n"
-                                + "%3$s",
-                        buildCache.getCacheDirectory().getAbsolutePath(),
-                        Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
-                        BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
-            }
+            String actionableMessage =
+                    userLevelCache == cache
+                            ? BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE
+                            : "";
+            getFromCacheAndCreateIfMissing(
+                    cache, buildCacheInputs, cacheMissAction, actionableMessage);
         } else {
             cacheMissAction.run();
         }
@@ -184,6 +160,59 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         }
 
         return null;
+    }
+
+    /** Returns cache to be used, or {@code null} if none should be used. */
+    @Nullable
+    private FileCache cacheToUse() {
+        if (userLevelCache != null) {
+            return userLevelCache;
+        } else if (projectLevelCache != null) {
+            return projectLevelCache;
+        } else {
+            return null;
+        }
+    }
+
+    private void getFromCacheAndCreateIfMissing(
+            @NonNull FileCache cache,
+            @NonNull FileCache.Inputs key,
+            @NonNull ExceptionRunnable cacheMissAction,
+            @NonNull String actionableMessage) {
+        FileCache.QueryResult result;
+        try {
+            result = cache.createFile(to, key, cacheMissAction);
+        } catch (ExecutionException exception) {
+            logger.error(
+                    null,
+                    String.format(
+                            "Unable to pre-dex '%1$s' to '%2$s'",
+                            rootPath.toString(), to.getAbsolutePath()));
+            throw new RuntimeException(exception);
+        } catch (Exception exception) {
+            logger.error(
+                    null,
+                    String.format(
+                            "Unable to pre-dex '%1$s' to '%2$s' using the build cache at"
+                                    + " '%3$s'.\n"
+                                    + "%4$s",
+                            rootPath.toString(),
+                            to.getAbsolutePath(),
+                            cache.getCacheDirectory().getAbsolutePath(),
+                            actionableMessage));
+            throw new RuntimeException(exception);
+        }
+        if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+            Verify.verifyNotNull(result.getCauseOfCorruption());
+            logger.verbose(
+                    "The build cache at '%1$s' contained an invalid cache entry.\n"
+                            + "Cause: %2$s\n"
+                            + "We have recreated the cache entry.\n"
+                            + "%3$s",
+                    cache.getCacheDirectory().getAbsolutePath(),
+                    Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
+                    actionableMessage);
+        }
     }
 
     @NonNull

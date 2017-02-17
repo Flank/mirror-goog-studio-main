@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.truth.DexClassSubject;
 import com.google.common.io.Files;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,25 +51,20 @@ public class DataBindingIncrementalTest {
     private static final String ACTIVITY_MAIN_JAVA
             = "src/main/java/android/databinding/testapp/MainActivity.java";
 
-    @Parameterized.Parameters(name = "experimental_{0} useJack_{1}")
+    @Parameterized.Parameters(name = "experimental_{0}")
     public static List<Object[]> parameters() {
-        List<Object[]> options = new ArrayList<>();
-        for (int i = 0 ; i < 4; i ++) {
-            options.add(new Object[]{
-                    (i & 1) != 0, (i & 2) != 0
-            });
-        }
-        return options;
+        return Arrays.asList(
+                new Object[][] {
+                    {false}, {true},
+                });
     }
 
-    public DataBindingIncrementalTest(boolean experimental, boolean useJack) {
-        project = GradleTestProject.builder()
-                .fromTestProject("databindingIncremental")
-                .useExperimentalGradleVersion(experimental)
-                .withJack(useJack)
-                .withBuildToolsVersion(
-                        useJack ? GradleTestProject.UPCOMING_BUILD_TOOL_VERSION : null)
-                .create();
+    public DataBindingIncrementalTest(boolean experimental) {
+        project =
+                GradleTestProject.builder()
+                        .fromTestProject("databindingIncremental")
+                        .useExperimentalGradleVersion(experimental)
+                        .create();
     }
 
     @Test

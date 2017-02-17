@@ -25,11 +25,15 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
+    defaultConfig.minSdkVersion 9
+
     testOptions {
         unitTests.includeAndroidResources true
     }
 }
 
 dependencies {
+    compile "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta5'
     testCompile 'junit:junit:4.12'
 }

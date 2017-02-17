@@ -118,7 +118,7 @@ public class TransformTask extends StreamBasedTask implements Context {
 
         GradleTransformExecution preExecutionInfo =
                 GradleTransformExecution.newBuilder()
-                        .setType(AnalyticsUtil.getTransformType(transform.getClass()))
+                        .setType(AnalyticsUtil.getTransformType(transform.getClass()).getNumber())
                         .setIsIncremental(isIncremental.getValue())
                         .build();
 

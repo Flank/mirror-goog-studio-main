@@ -4,7 +4,6 @@ cc_binary(
         "agent_component.h",
         "perfa.cc",
         "perfa.h",
-        "support/energy_passthrough.cc",
         "support/event_passthrough.cc",
         "support/http_tracker.cc",
         "support/jni_wrappers.h",

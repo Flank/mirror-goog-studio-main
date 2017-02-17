@@ -29,6 +29,7 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.android.builder.profile.ProfileRecordWriter;
 import com.android.builder.profile.ThreadRecorder;
+import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.jimfs.Jimfs;
@@ -283,7 +284,7 @@ public class RecordingBuildListenerTest {
                         AnalyticsUtil.getTaskExecutionType(
                                 org.gradle.api.tasks.compile.JavaCompile.class))
                 .named("JavaCompile")
-                .isEqualTo(GradleTaskExecution.Type.JAVA_COMPILE);
+                .isEqualTo(GradleTaskExecutionType.JAVA_COMPILE);
     }
 
     private GradleBuildProfile loadProfile() throws IOException {

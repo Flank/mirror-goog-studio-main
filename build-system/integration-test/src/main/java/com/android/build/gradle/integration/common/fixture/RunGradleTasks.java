@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.tasks.BooleanLatch;
@@ -54,12 +55,15 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     private boolean isExpectingFailure = false;
     private boolean isSdkAutoDownload = false;
     private Boolean useDexArchive = true;
+    private Boolean useNewResourceProcessing = true;
+    private Boolean enableAapt2 = false;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
             @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
+                gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
@@ -172,6 +176,22 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             Boolean.toString(useDexArchive)));
         }
 
+        if (useNewResourceProcessing != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING.getPropertyName(),
+                            Boolean.toString(useNewResourceProcessing)));
+        }
+
+        if (enableAapt2 != null) {
+            args.add(
+                    String.format(
+                            "-P%s=%s",
+                            BooleanOption.ENABLE_AAPT2.getPropertyName(),
+                            Boolean.toString(enableAapt2)));
+        }
+
         args.addAll(arguments);
 
         String message =
@@ -185,7 +205,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
-
         launcher.setStandardOutput(stdout);
         launcher.setStandardError(stderr);
 
@@ -202,12 +221,19 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             WaitingResultHandler handler = new WaitingResultHandler();
             launcher.run(handler);
             failure = handler.waitForResult();
+            GradleBuildResult result =
+                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+            lastBuildResultConsumer.accept(result);
+            if (VERBOSE) {
+                stderr.writeTo(System.err);
+                stdout.writeTo(System.out);
+            }
             if (isExpectingFailure && failure == null) {
                 throw new AssertionError("Expecting build to fail");
             } else if (!isExpectingFailure && failure != null) {
                 throw failure;
             }
-            return new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+            return result;
         }
     }
 
@@ -230,6 +256,24 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
         this.useDexArchive = useDexArchive;
+        return this;
+    }
+
+    public RunGradleTasks withNewResourceProcessing(boolean useNewResourceProcessing) {
+        this.useNewResourceProcessing = useNewResourceProcessing;
+        return this;
+    }
+
+    /**
+     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
+     *
+     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
+     * {@code true}. To run AAPT2 without new resource processing, after this method also call
+     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
+     */
+    public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
+        this.enableAapt2 = enableAapt2;
+        this.useNewResourceProcessing = enableAapt2 ? true : useNewResourceProcessing;
         return this;
     }
 

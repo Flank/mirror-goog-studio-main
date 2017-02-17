@@ -18,6 +18,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.AndroidGradleOptions.DEPRECATED_NDK_COMPILE_LEASE;
+import static com.android.build.gradle.AndroidGradleOptions.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
+import static com.android.build.gradle.AndroidGradleOptions.USE_DEPRECATED_NDK;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -65,11 +68,25 @@ import org.gradle.api.tasks.util.PatternSet;
 @ParallelizableTask
 public class NdkCompile extends NdkTask {
 
-    final private static String ALTERNATIVES =
-            "Consider using CMake or ndk-build integration with the stable Android Gradle plugin:\n"
-            + " https://developer.android.com/studio/projects/add-native-code.html\n"
-            + "or use the experimental plugin:\n"
-            + " https://developer.android.com/studio/build/experimental-plugin.html.\n";
+    private static String getAlternatives(File generatedMakefile, String urlSuffix) {
+        String generatedAndridMk = "";
+        if (generatedMakefile != null) {
+            generatedAndridMk =
+                    String.format(
+                            " To get started, you can use the sample ndk-build script the Android\n"
+                                    + " plugin generated for you at:\n"
+                                    + " %s\n",
+                            generatedMakefile);
+        }
+
+        return String.format(
+                "Consider using CMake or ndk-build integration. For more information, go to:\n"
+                        + " http://d.android.com/r/studio-ui/add-native-code.html%s\n"
+                        + "%s"
+                        + "Alternatively, you can use the experimental plugin:\n"
+                        + " https://developer.android.com/studio/build/experimental-plugin.html.\n",
+                urlSuffix, generatedAndridMk);
+    }
 
     private List<File> sourceFolders;
     private File generatedMakefile;
@@ -180,44 +197,44 @@ public class NdkCompile extends NdkTask {
         return src == null ? getProject().files().getAsFileTree() : src;
     }
 
+    private static String getAlternativesAndLeaseNotice(File generatedMakefile, String urlSuffix) {
+        return String.format(
+                getAlternatives(generatedMakefile, urlSuffix)
+                        + "To continue using the deprecated NDK compile for another %s days, "
+                        + "set \n"
+                        + "%s=%s in gradle.properties",
+                DEPRECATED_NDK_COMPILE_LEASE_DAYS,
+                DEPRECATED_NDK_COMPILE_LEASE,
+                AndroidGradleOptions.getFreshDeprecatedNdkCompileLease());
+    }
+
     @TaskAction
     void taskAction(IncrementalTaskInputs inputs) throws IOException, ProcessException {
-         if (!AndroidGradleOptions.useDeprecatedNdk(getProject())) {
-             // Normally, we would catch the user when they try to configure the NDK, but NDK do
-             // not need to be configured by default.  Throw this exception during task execution in
-             // case we miss it.
-             throw new RuntimeException(
-                     "Error: Your project contains C++ files but it is not using a supported "
-                     + "native build system.\n"
-                     + ALTERNATIVES);
-         }
-
-
-        if (isNdkOptionUnset()) {
-            getLogger().warn("Warning: Native C/C++ source code is found, but it seems that NDK " +
-                    "option is not configured.  Note that if you have an Android.mk, it is not " +
-                    "used for compilation.  The recommended workaround is to remove the default " +
-                    "jni source code directory by adding: \n " +
-                    "android {\n" +
-                    "    sourceSets {\n" +
-                    "        main {\n" +
-                    "            jni.srcDirs = []\n" +
-                    "        }\n" +
-                    "    }\n" +
-                    "}\n" +
-                    "to build.gradle, manually compile the code with ndk-build, " +
-                    "and then place the resulting shared object in src/main/jniLibs.");
-        }
-
-        getLogger().warn("Warning: Deprecated NDK integration enabled by "
-                + "useDeprecatedNdk flag in gradle.properties will be removed from Android Gradle "
-                + "plugin soon.\n"
-                + ALTERNATIVES);
-
         FileTree sourceFileTree = getSource();
         Set<File> sourceFiles =
                 sourceFileTree.matching(new PatternSet().exclude("**/*.h")).getFiles();
         File makefile = getGeneratedMakefile();
+
+        if (AndroidGradleOptions.useDeprecatedNdk(getProject())) {
+            writeMakefile(sourceFiles, makefile);
+            throw new RuntimeException(
+                    String.format(
+                            "Error: Flag %s is no longer supported and will be removed in the next "
+                                    + "version of Android Studio.  Please switch to a supported "
+                                    + "build system.\n%s",
+                            USE_DEPRECATED_NDK,
+                            getAlternativesAndLeaseNotice(makefile, "#ndkCompile")));
+        }
+        if (AndroidGradleOptions.isDeprecatedNdkCompileLeaseExpired(getProject())) {
+            writeMakefile(sourceFiles, makefile);
+            // Normally, we would catch the user when they try to configure the NDK, but NDK do
+            // not need to be configured by default.  Throw this exception during task execution in
+            // case we miss it.
+            throw new RuntimeException(
+                    "Error: Your project contains C++ files but it is not using a supported "
+                            + "native build system.\n"
+                            + getAlternatives(null, ""));
+        }
 
         if (sourceFiles.isEmpty()) {
             makefile.delete();
@@ -265,6 +282,14 @@ public class NdkCompile extends NdkTask {
         if (generateMakeFile.getValue()) {
             writeMakefile(sourceFiles, makefile);
         }
+
+        getLogger()
+                .warn(
+                        "Warning: Deprecated NDK integration enabled by "
+                                + DEPRECATED_NDK_COMPILE_LEASE
+                                + " flag in gradle.properties will be removed from Android Gradle "
+                                + "plugin in the next version.\n"
+                                + getAlternatives(makefile, "#ndkCompile"));
 
         // now build
         runNdkBuild(ndkDirectory, makefile);

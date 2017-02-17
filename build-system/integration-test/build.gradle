@@ -15,9 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
     compile project(':analytics-library:protos')
+    compile project(':apksig')
     compile project(':base:apkzlib')
     compile project(':base:builder')
     compile project(':base:builder-model')
@@ -28,16 +27,18 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')
-    compile project(':apksig')
 
-    compile libs.junit
+    compile gradleApi()
     compile libs.apache_commons_io
     compile libs.apache_commons_lang
+    compile libs.google_api_client
+    compile libs.google_storage_client
+    compile libs.groovy
+    compile libs.junit
     compile libs.protobuf
     compile libs.protobuf_util
     compile libs.truth
-    compile libs.google_api_client
-    compile libs.google_storage_client
+
     testCompile libs.mockito_core
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by

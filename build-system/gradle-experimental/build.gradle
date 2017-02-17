@@ -23,7 +23,7 @@ String gradleVersion = "3.3"
 File gradleApi = rootProject.file('external/gradle/gradle-api-' + gradleVersion + '.jar')
 assert gradleApi.exists()
 dependencies {
-    compile files(gradleApi)
+    compileOnly files(gradleApi)
     compile libs.groovy
     compile project(':base:gradle-core')
 

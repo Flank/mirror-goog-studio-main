@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:private"],  # These sources are compiled into builder.
     deps = [
         "//tools/analytics-library/protos:analytics-protos",
+        "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",

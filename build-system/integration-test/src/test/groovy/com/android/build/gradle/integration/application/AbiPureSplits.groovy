@@ -49,7 +49,6 @@ class AbiPureSplits {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("abiPureSplits")
-            .addGradleProperties("android.useDeprecatedNdk=true")
             .create()
 
     @BeforeClass

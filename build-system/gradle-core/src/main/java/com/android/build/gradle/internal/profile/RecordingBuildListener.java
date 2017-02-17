@@ -67,7 +67,7 @@ public class RecordingBuildListener implements TaskExecutionListener {
         //noinspection ThrowableResultOfMethodCallIgnored Just logging the failure.
         record.setTask(
                 GradleTaskExecution.newBuilder()
-                        .setType(AnalyticsUtil.getTaskExecutionType(task.getClass()))
+                        .setType(AnalyticsUtil.getTaskExecutionType(task.getClass()).getNumber())
                         .setDidWork(taskState.getDidWork())
                         .setSkipped(taskState.getSkipped())
                         .setUpToDate(taskState.getUpToDate())

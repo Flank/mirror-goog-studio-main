@@ -25,7 +25,11 @@ android {
     }
 
     buildTypes.debug.jniDebuggable true
-
+    externalNativeBuild {
+        ndkBuild {
+            path "Android.mk"
+        }
+    }
     splits {
         abi {
             enable true

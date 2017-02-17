@@ -53,6 +53,8 @@ public class InstantRunBuildInfo {
 
     private static final String ATTR_VERIFIER_STATUS = "verifier";
 
+    private static final String ATTR_BUILD_ELIGIBILITY = "ir-eligibility";
+
     // Note: The verifier status can be any number of values (See InstantRunVerifierStatus enum in
     // gradle). Currently, the only contract between gradle and the IDE is that the value is set to
     // COMPATIBLE if the build can be hotswapped
@@ -96,6 +98,11 @@ public class InstantRunBuildInfo {
     @NonNull
     public String getVerifierStatus() {
         return mRoot.getAttribute(ATTR_VERIFIER_STATUS);
+    }
+
+    @Nullable
+    public String getBuildInstantRunEligibility() {
+        return mRoot.getAttribute(ATTR_BUILD_ELIGIBILITY);
     }
 
     @NonNull

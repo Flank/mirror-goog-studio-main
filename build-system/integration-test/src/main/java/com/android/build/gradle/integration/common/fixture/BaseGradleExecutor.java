@@ -33,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
@@ -44,9 +45,12 @@ import org.gradle.tooling.ProjectConnection;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
+    static final boolean VERBOSE =
+            !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
+
     @NonNull
     final ProjectConnection projectConnection;
-
+    @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
     @Nullable final BenchmarkRecorder benchmarkRecorder;
     @NonNull final List<String> arguments = Lists.newArrayList();
     @NonNull final Path profilesDirectory;
@@ -61,11 +65,13 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
+            @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path profilesDirectory,
             @Nullable String heapSize) {
+        this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.benchmarkRecorder = benchmarkRecorder;
         this.enableInfoLogging = benchmarkRecorder == null;

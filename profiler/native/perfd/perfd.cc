@@ -16,7 +16,6 @@
 
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
-#include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/memory/memory_profiler_component.h"
@@ -46,9 +45,6 @@ int main(int argc, char** argv) {
 
   profiler::EventProfilerComponent event_component{};
   daemon.RegisterComponent(&event_component);
-
-  profiler::EnergyProfilerComponent energy_component{&daemon.utilities()};
-  daemon.RegisterComponent(&energy_component);
 
   profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);
