@@ -115,8 +115,9 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @NonNull
     @Override
     public File getBundle() {
-        throw new UnsupportedOperationException(
-                "getBundle() is no longer supported by AndroidLibraryImpl.");
+        // even though we don't have a bundle, we have to return something, otherwise the IDE
+        // will freak out.
+        return new File("this is not the bundle path");
     }
 
     @NonNull
