@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import com.android.SdkConstants;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.truth.FailureStrategy;
@@ -46,6 +47,11 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
      * Call 'file' in shell to determine if libraries is stripped of debug symbols.
      */
     public void isStripped() throws IOException, InterruptedException {
+        // file command is not available on Windows.  Skipping this check.
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
+
         Process p = getFileData();
         if (p.exitValue() != 0) {
             String err = new String(ByteStreams.toByteArray(p.getErrorStream()), Charsets.UTF_8);
@@ -61,6 +67,11 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
     }
 
     public void isNotStripped() throws IOException, InterruptedException {
+        // file command is not available on Windows.  Skipping this check.
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
+
         Process p = getFileData();
         if (p.exitValue() != 0) {
             String err = new String(ByteStreams.toByteArray(p.getErrorStream()), Charsets.UTF_8);
