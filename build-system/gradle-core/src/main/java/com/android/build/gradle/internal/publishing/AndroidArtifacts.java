@@ -124,9 +124,7 @@ public class AndroidArtifacts {
         // this is used only for the models.
         EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
 
-        // TODO: ANDROID_JAR is created as Gradle's JavaCompile has trouble with using class
-        // directory with annotation processors instead of jar files.  It should not be necessary
-        // and should be removed when it is fixed.
+        // Jar file for annotation processor as both classes and resources are needed.
         ANNOTATION_JAR(TYPE_ANNOTATION_JAR, RUNTIME_ELEMENTS_ONLY),
 
         // API only elements.
