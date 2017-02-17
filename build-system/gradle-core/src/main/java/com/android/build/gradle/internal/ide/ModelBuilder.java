@@ -163,10 +163,10 @@ public class ModelBuilder implements ToolingModelBuilder {
             return buildAndroidProject(project);
         }
 
-        return buildGlobalLibraryMap(project);
+        return buildGlobalLibraryMap();
     }
 
-    private static Object buildGlobalLibraryMap(Project project) {
+    private static Object buildGlobalLibraryMap() {
         return new GlobalLibraryMapImpl(ArtifactDependencyGraph.getGlobalLibMap());
     }
 
