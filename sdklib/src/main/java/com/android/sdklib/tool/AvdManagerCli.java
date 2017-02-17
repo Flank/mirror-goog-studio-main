@@ -890,6 +890,11 @@ class AvdManagerCli extends CommandLineParser {
                         paramFolderPath);
             }
 
+            if (newName != null) {
+                Map<String, String> properties = new HashMap<>(info.getProperties());
+                properties.put(AvdManager.AVD_INI_DISPLAY_NAME, newName);
+                avdManager.updateAvd(info, properties);
+            }
             avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
         } catch (AndroidLocation.AndroidLocationException | IOException e) {
             errorAndExit(e.getMessage());

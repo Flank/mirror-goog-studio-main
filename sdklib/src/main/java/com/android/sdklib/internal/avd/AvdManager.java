@@ -1251,9 +1251,9 @@ public class AvdManager {
         try {
             if (paramFolderPath != null) {
                 File f = new File(avdInfo.getDataFolderPath());
-                log.info("Moving '%1$s' to '%2$s'.", avdInfo.getDataFolderPath(), paramFolderPath);
+                log.info("Moving '%1$s' to '%2$s'.\n", avdInfo.getDataFolderPath(), paramFolderPath);
                 if (!mFop.renameTo(f, new File(paramFolderPath))) {
-                    log.warning(null, "Failed to move '%1$s' to '%2$s'.",
+                    log.error(null, "Failed to move '%1$s' to '%2$s'.\n",
                             avdInfo.getDataFolderPath(), paramFolderPath);
                     return false;
                 }
