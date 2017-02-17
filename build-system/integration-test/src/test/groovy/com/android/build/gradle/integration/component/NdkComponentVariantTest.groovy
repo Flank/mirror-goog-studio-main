@@ -147,7 +147,7 @@ model {
     public void "check release build"() {
         project.execute("assembleArmRelease")
 
-        Apk apk = project.getApk("arm",  GradleTestProject.ApkType.RELEASE)
+        Apk apk = project.getApk(null,  GradleTestProject.ApkType.RELEASE, "arm")
         assertThat(apk).contains("lib/armeabi/libhello-jni.so")
         assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
     }
