@@ -168,7 +168,12 @@ model {
         }
     }
 
-    // http://b.android.com/233421
+    /**
+     * http://b.android.com/233421
+     *
+     * AndroidProject.PROPERTY_BUILD_ABI should have no effect when
+     * BooleanOption.BUILD_ONLY_TARGET_ABI is not enabled.
+     */
     @Test
     void testBuildWithSpecificAbi() {
         project.executor()
@@ -177,5 +182,9 @@ model {
 
         Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "x86")
         assertThat(apk).contains("lib/x86/libhello-jni.so")
+        apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "arm")
+        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
+        apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "mips")
+        assertThat(apk).contains("lib/mips/libhello-jni.so")
     }
 }
