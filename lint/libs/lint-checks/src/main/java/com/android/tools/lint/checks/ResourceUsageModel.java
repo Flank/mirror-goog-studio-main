@@ -31,6 +31,7 @@ import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
+import static com.android.SdkConstants.REFERENCE_STYLE;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
@@ -977,7 +978,13 @@ public class ResourceUsageModel {
                         } else if (!parent.isEmpty()) {
                             String parentStyle = parent;
                             if (!parentStyle.startsWith(STYLE_RESOURCE_PREFIX)) {
-                                parentStyle = STYLE_RESOURCE_PREFIX + parentStyle;
+                                // Allow parent references to start with 'style/'
+                                // as well as the more strict '@style/'.
+                                if (parentStyle.startsWith(REFERENCE_STYLE)) {
+                                    parentStyle = PREFIX_RESOURCE_REF + parentStyle;
+                                } else {
+                                    parentStyle = STYLE_RESOURCE_PREFIX + parentStyle;
+                                }
                             }
                             Resource ps = getResourceFromUrl(
                                     LintUtils.getFieldName(parentStyle));
