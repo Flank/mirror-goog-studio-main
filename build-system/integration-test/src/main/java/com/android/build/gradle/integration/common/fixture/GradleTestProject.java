@@ -800,9 +800,10 @@ public final class GradleTestProject implements TestRule {
             throws IOException {
         return new Apk(
                 getOutputFile(
-                        "apk/"
-                                + mangleDimensions(dimensions)
+                        "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
+                                + "/"
+                                + mangleDimensions(dimensions)
                                 + "/"
                                 + apkType.getBuildType()
                                 + "/"
