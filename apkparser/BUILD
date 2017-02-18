@@ -10,7 +10,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:jsr305",
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.testutils[module, test]",
