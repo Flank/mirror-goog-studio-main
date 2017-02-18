@@ -89,6 +89,7 @@ public class LocalJarInAarInModelTest {
         // check the model validity: making sure the folders are exacted and the local
         // jars are present.
         List<Library> libraries = androidItems.asLibraries();
+        assertThat(libraries).hasSize(6);
         for (Library androidLibrary : libraries) {
             File rootFolder = androidLibrary.getFolder();
             assertThat(rootFolder).isDirectory();
