@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -119,15 +120,23 @@ public interface BaseVariant {
     @NonNull
     List<SourceProvider> getSourceSets();
 
-    /**
-     * Returns the applicationId of the variant.
-     */
+    /** Returns the configuration object for the compilation */
+    @NonNull
+    Configuration getCompileClasspath();
+
+    /** Returns the configuration object for the annotation processor. */
+    @NonNull
+    Configuration getAnnotationProcessorClasspath();
+
+    /** Returns the configuration object for the runtime */
+    @NonNull
+    Configuration getRuntimeClasspath();
+
+    /** Returns the applicationId of the variant. */
     @NonNull
     String getApplicationId();
 
-    /**
-     * Returns the pre-build anchor task
-     */
+    /** Returns the pre-build anchor task */
     @NonNull
     Task getPreBuild();
 
