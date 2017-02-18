@@ -58,7 +58,7 @@ public class AarTransform extends ExtractTransform {
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.EXPLODED_AAR.getType());
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JAVA_RES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANNOTATION_JAR.getType());
+        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JAR.getType());
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.MANIFEST.getType());
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANDROID_RES.getType());
         targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ASSETS.getType());
@@ -98,7 +98,7 @@ public class AarTransform extends ExtractTransform {
             case CLASSES:
             case JAVA_RES:
             case ATOM_CLASSES:
-            case ANNOTATION_JAR:
+            case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessairy enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.

@@ -677,7 +677,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         Collection<PublishedConfigType> publishedConfigs = artifactType.getPublishingConfigurations();
         PublishedConfigType publishedTo = consumedConfigType.getPublishedTo();
         // if empty, means it was published to all configs.
-        if (!publishedConfigs.contains(publishedTo)) {
+        if (!publishedConfigs.isEmpty() && !publishedConfigs.contains(publishedTo)) {
             throw new RuntimeException(
                     "Querying Artifact '"
                             + artifactType.name()

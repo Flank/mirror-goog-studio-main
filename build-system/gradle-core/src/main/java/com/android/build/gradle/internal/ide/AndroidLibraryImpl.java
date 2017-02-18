@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.ide;
 
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
+import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
@@ -35,6 +37,7 @@ import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -55,8 +58,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @NonNull
     private final File folder;
     @NonNull
-    private final File jarFile;
-    @NonNull
     private final List<AndroidLibrary> androidLibraries;
     @NonNull
     private final Collection<JavaLibrary> javaLibraries;
@@ -69,7 +70,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
             @NonNull MavenCoordinates coordinates,
             @Nullable String projectPath,
             @NonNull File extractedFolder,
-            @NonNull File jarFile,
             @Nullable String variant,
             boolean isProvided,
             boolean isSkipped,
@@ -82,7 +82,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
         this.variant = variant;
         this.folder = extractedFolder;
-        this.jarFile = jarFile;
         hashcode = computeHashCode();
     }
 
@@ -97,7 +96,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 clonedLibrary.getCoordinates(),
                 clonedLibrary.getProjectPath(),
                 clonedLibrary.getExtractedFolder(),
-                clonedLibrary.getJarFile(),
                 clonedLibrary.getVariant(),
                 isProvided,
                 isSkipped,
@@ -153,7 +151,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @NonNull
     @Override
     public File getJarFile() {
-        return jarFile;
+        return FileUtils.join(folder, FD_JARS, FN_CLASSES_JAR);
     }
 
     @NonNull
@@ -245,7 +243,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
         return Objects.equal(variant, that.variant) &&
                 Objects.equal(folder, that.folder) &&
-                Objects.equal(jarFile, that.jarFile) &&
                 Objects.equal(androidLibraries, that.androidLibraries) &&
                 Objects.equal(javaLibraries, that.javaLibraries) &&
                 Objects.equal(localJars, that.localJars);
@@ -261,7 +258,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 super.hashCode(),
                 variant,
                 folder,
-                jarFile,
                 androidLibraries,
                 javaLibraries,
                 localJars);
@@ -274,7 +270,6 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 .add("project", getProject())
                 .add("variant", variant)
                 .add("folder", folder)
-                .add("jarFile", jarFile)
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)
                 .add("localJars", localJars)

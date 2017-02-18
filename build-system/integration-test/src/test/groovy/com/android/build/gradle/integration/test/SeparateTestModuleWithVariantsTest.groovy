@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.test
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.TestedTargetVariant
+import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -96,8 +97,9 @@ android {
                         .get(":test").variants.first().getTestedTargetVariants()
 
         assertThat(toInstall).hasSize(1)
-        assertThat(toInstall.first().getTargetProjectPath()).isEqualTo(":app")
-        assertThat(toInstall.first().getTargetVariant()).isEqualTo("debug")
+        TestedTargetVariant testedVariant = Iterables.getOnlyElement(toInstall);
+        assertThat(testedVariant.getTargetProjectPath()).isEqualTo(":app")
+        assertThat(testedVariant.getTargetVariant()).isEqualTo("debug")
     }
 
     private void addInstrumentationToManifest(){

@@ -21,10 +21,10 @@ import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANNOTATION_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
@@ -2534,7 +2534,7 @@ public abstract class TaskManager {
                 : project.files();
         processorPaths =
                 processorPaths.plus(
-                        scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, ANNOTATION_JAR));
+                        scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR));
         JackCompileTransform jackCompileTransform =
                 new JackCompileTransform(
                         JackOptionsUtils.forSourceCompilation(scope),

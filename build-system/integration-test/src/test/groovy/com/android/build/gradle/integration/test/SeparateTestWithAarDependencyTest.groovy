@@ -122,21 +122,25 @@ dependencies {
 
         DependencyGraphs compileGraph = artifact.getDependencyGraphs();
 
-        // check the app project shows up as a project dependency
-        Items items = helper.on(compileGraph).withType(MODULE)
-        assertThat(items.mapTo(GRADLE_PATH)).containsExactly(":app")
-
-        // get the children dependencies from the single app module.
-        Items children = items.getTransitiveFromSingleItem()
-
-        // check that the app dependencies show up too as the children of the app.. In this case as direct dependencies, since
-        // we can't do better for now.
-        assertThat(children.withType(ANDROID).mapTo(COORDINATES))
-                .containsExactly( "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar")
+        // check the app and its children dependencies show up flat in the main
+        // dependency list.
+        assertThat(helper.on(compileGraph).mapTo(COORDINATES))
+                .containsAllOf(
+                ":app::debug",
+                "com.android.support:support-core-ui:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-core-utils:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-fragment:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-compat:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-v4:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-annotations:" + GradleTestProject.SUPPORT_LIB_VERSION + "@jar",
+                "com.android.support:animated-vector-drawable:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-media-compat:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
+                "com.android.support:support-vector-drawable:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar");
     }
 
     @Test
-    void "check test model's package deps includes the tested app"() {
+    void "check test model's package deps doesnt include the tested app"() {
         Collection<Variant> variants = models.getModelMap().get(":test").getVariants()
 
         // get the main artifact of the debug artifact and its dependencies
@@ -150,17 +154,10 @@ dependencies {
 
         // check the app project shows up as a project dependency
         Items moduleItems = packageItems.withType(MODULE)
-        // FIXME the way the projects are linked doesn't show up through the dependency manager.
-//        assertThat(moduleItems.mapTo(GRADLE_PATH)).containsExactly(":app")
-        // but that it is skipped
-//        assertThat(moduleItems.filter(SKIPPED).mapTo(GRADLE_PATH)).containsExactly(":app")
 
-        // check that the app dependencies don't show up since they are marked as skipped.
-        assertThat(packageItems.withType(ANDROID).asList()).isEmpty()
-
-        // check the list of skipped items also contains all the transitive dependencies
-        assertThat(dependencyGraph.getSkippedLibraries()).containsExactly(
-                ":app",
+        // make sure the package does not contain the app or its dependencies
+        assertThat(packageItems.mapTo(COORDINATES)).containsNoneOf(
+                ":app::debug",
                 "com.android.support:support-core-ui:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
                 "com.android.support:support-core-utils:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
                 "com.android.support:appcompat-v7:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
@@ -170,7 +167,7 @@ dependencies {
                 "com.android.support:support-annotations:" + GradleTestProject.SUPPORT_LIB_VERSION + "@jar",
                 "com.android.support:animated-vector-drawable:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
                 "com.android.support:support-media-compat:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar",
-                "com.android.support:support-vector-drawable:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar")
+                "com.android.support:support-vector-drawable:" + GradleTestProject.SUPPORT_LIB_VERSION + "@aar");
 
     }
 

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANNOTATION_JAR;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 import static org.gradle.api.plugins.JavaPlugin.CLASS_DIRECTORY;
 import static org.gradle.api.plugins.JavaPlugin.RESOURCES_DIRECTORY;
@@ -41,7 +40,6 @@ public class JarTransform extends ArtifactTransform {
 
         targets.newTarget().attribute(ARTIFACT_FORMAT, CLASS_DIRECTORY);
         targets.newTarget().attribute(ARTIFACT_FORMAT, RESOURCES_DIRECTORY);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ANNOTATION_JAR.getType());
     }
 
     @Override

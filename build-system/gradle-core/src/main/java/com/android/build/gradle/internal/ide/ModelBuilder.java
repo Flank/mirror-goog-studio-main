@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -73,6 +74,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -86,6 +88,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 
@@ -343,7 +347,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
 
         // used for test only modules
-        Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants();
+        Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants(variantData);
 
         return new VariantImpl(
                 variantName,
@@ -361,12 +365,26 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private Collection<TestedTargetVariant> getTestTargetVariants() {
+    private Collection<TestedTargetVariant> getTestTargetVariants(
+            BaseVariantData<? extends BaseVariantOutputData> variantData) {
         if (config instanceof TestAndroidConfig) {
             TestAndroidConfig testConfig = (TestAndroidConfig) config;
+
+            // to get the target variant we need to get the result of the dependency resolution
+            ArtifactCollection apkArtifacts =
+                    variantData
+                            .getScope()
+                            .getArtifactCollection(
+                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                    AndroidArtifacts.ArtifactScope.ALL,
+                                    AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
+
+            // there should really be only one.
+            ResolvedArtifactResult result = Iterables.getOnlyElement(apkArtifacts.getArtifacts());
+            String variant = ArtifactDependencyGraph.getVariant(result);
+
             return ImmutableList.of(
-                    new TestedTargetVariantImpl(
-                            testConfig.getTargetProjectPath(), testConfig.getTargetVariant()));
+                    new TestedTargetVariantImpl(testConfig.getTargetProjectPath(), variant));
         } else {
             return ImmutableList.of();
         }
