@@ -61,6 +61,7 @@ public class MultiAtomTest {
         sProject = null;
     }
 
+    @Ignore
     @Test
     public void build() throws Exception {
         sProject.execute("clean", ":instantApp:assembleRelease");

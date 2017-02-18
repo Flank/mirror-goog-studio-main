@@ -23,9 +23,11 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Test atom project with a dependency on an external library. */
+@Ignore
 public class AtomDepOnExternalLibTest {
     @ClassRule
     public static GradleTestProject sProject =

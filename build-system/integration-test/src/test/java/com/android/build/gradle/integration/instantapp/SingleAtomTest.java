@@ -25,13 +25,13 @@ import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.truth.ZipFileSubject;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Basic instantApp test with a single atom.
- */
+/** Basic instantApp test with a single atom. */
 @Category(SmokeTests.class)
+@Ignore
 public class SingleAtomTest {
     @ClassRule
     public static GradleTestProject sProject = GradleTestProject.builder()
