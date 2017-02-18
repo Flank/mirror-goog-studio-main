@@ -795,6 +795,12 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.projectBaseName = baseName;
             processResources.buildTargetAbi =
                     projectOptions.get(BUILD_ONLY_TARGET_ABI)
+                                    || variantScope
+                                            .getGlobalScope()
+                                            .getExtension()
+                                            .getSplits()
+                                            .getAbi()
+                                            .isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
             processResources.supportedAbis = config.getSupportedAbis();
