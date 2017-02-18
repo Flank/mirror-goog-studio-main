@@ -88,6 +88,33 @@ class NativeModelTest {
             }
             """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
                 NativeBuildSystem.NDK_BUILD, 14),
+        NDK_BUILD_JOBS_FLAG("""
+            apply plugin: 'com.android.application'
+
+            android {
+                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
+                externalNativeBuild {
+                    ndkBuild {
+                        path "src/main/cpp/Android.mk"
+                    }
+                }
+                defaultConfig {
+                    externalNativeBuild {
+                        ndkBuild {
+                            arguments "NDK_TOOLCHAIN_VERSION:=clang",
+                                "-j8",
+                                "--jobs=8",
+                                "-j", "8",
+                                "--jobs", "8"
+                            cFlags "-DTEST_C_FLAG"
+                            cppFlags "-DTEST_CPP_FLAG"
+                        }
+                    }
+                }
+            }
+            """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
+                NativeBuildSystem.NDK_BUILD, 14),
         ANDROID_MK_FILE_CPP_CLANG("""
             apply plugin: 'com.android.application'
 
@@ -329,6 +356,7 @@ class NativeModelTest {
     @Parameterized.Parameters(name = "model = {0}")
     public static Collection<Object[]> data() {
         return [
+                [Config.NDK_BUILD_JOBS_FLAG].toArray(),
                 [Config.ANDROID_MK_FILE_C_CLANG].toArray(),
                 [Config.ANDROID_MK_FILE_CPP_CLANG].toArray(),
                 [Config.ANDROID_MK_GOOGLE_TEST].toArray(),
@@ -468,6 +496,40 @@ class NativeModelTest {
         }
     }
 
+    static NativeBuildConfigValue getNativeBuildConfigValue(File json) {
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(File.class, new TypeAdapter() {
+
+            @Override
+            void write(JsonWriter jsonWriter, Object o) throws IOException {
+
+            }
+
+            @Override
+            Object read(JsonReader jsonReader) throws IOException {
+                return new File(jsonReader.nextString());
+            }
+        }).create();
+        return gson.fromJson(new FileReader(json),
+                NativeBuildConfigValue.class);
+    }
+
+    /** Related to b.android.com/214558
+     * Clean commands should never have -j (or --jobs) parameter because gnu make doesn't handle
+     * this well.
+     */
+    @Test
+    public void checkNdkBuildCleanHasNoJobsFlags() {
+        if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
+            project.model().getSingle(NativeAndroidProject.class);
+            NativeBuildConfigValue buildConfig = getNativeBuildConfigValue(
+                    getJsonFile("debug", "armeabi"))
+            for (String cleanCommand : buildConfig.cleanCommands) {
+                assertThat(cleanCommand).doesNotContain("-j");
+            }
+        }
+    }
+
     @Test
     public void checkDebugVsRelease() {
         // Sync
@@ -476,25 +538,8 @@ class NativeModelTest {
         File debugJson = getJsonFile("debug", "armeabi");
         File releaseJson = getJsonFile("release", "armeabi");
 
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(File.class, new TypeAdapter() {
-
-                        @Override
-                        void write(JsonWriter jsonWriter, Object o) throws IOException {
-
-                        }
-
-                        @Override
-                        Object read(JsonReader jsonReader) throws IOException {
-                            return new File(jsonReader.nextString());
-                        }
-                    })
-                .create();
-
-        NativeBuildConfigValue debug = gson.fromJson(new FileReader(debugJson),
-                NativeBuildConfigValue.class);
-        NativeBuildConfigValue release = gson.fromJson(new FileReader(releaseJson),
-                NativeBuildConfigValue.class);
+        NativeBuildConfigValue debug = getNativeBuildConfigValue(debugJson);
+        NativeBuildConfigValue release = getNativeBuildConfigValue(releaseJson);
 
         Set<String> releaseFlags = uniqueFlags(release);
         Set<String> debugFlags = uniqueFlags(debug);
@@ -503,16 +548,16 @@ class NativeModelTest {
         Set<String> releaseOnlyFlags = Sets.newHashSet(releaseFlags);
         releaseOnlyFlags.removeAll(debugFlags);
         assertThat(releaseOnlyFlags)
+        // TODO Put '.named' back when this test source file is translated from groovy to java
                 //.named("release only build flags")
-        // TODO fix when moved to Java
                 .containsAllOf("-DNDEBUG", "-Os");
 
         // Look at flags that are only in debug build. Should at least contain -O0
         Set<String> debugOnlyFlags = Sets.newHashSet(debugFlags);
         debugOnlyFlags.removeAll(releaseFlags);
         assertThat(debugOnlyFlags)
+        // TODO Put '.named' back when this test source file is translated from groovy to java
                 //.named("debug only build flags")
-        // TODO fix when moved to Java
                 .contains("-O0");
     }
 

@@ -5,7 +5,7 @@
     }
   ],
   "cleanCommands": [
-    "echo build command clean"
+    "echo clean command"
   ],
   "libraries": {
     "cpufeatures-debug-armeabi": {

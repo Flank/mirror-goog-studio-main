@@ -5,7 +5,7 @@
     }
   ],
   "cleanCommands": [
-    "echo build command clean"
+    "echo clean command"
   ],
   "libraries": {
     "test-libstl-debug-x86_64": {

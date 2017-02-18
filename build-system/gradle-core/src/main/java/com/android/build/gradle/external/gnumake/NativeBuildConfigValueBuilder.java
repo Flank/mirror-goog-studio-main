@@ -112,19 +112,23 @@ public class NativeBuildConfigValueBuilder {
         this.outputs = new ArrayList<>();
     }
 
-    /**
-     * Add commands for a particular variant.
-     */
+    /** Add commands for a particular variant. */
     @NonNull
     public NativeBuildConfigValueBuilder addCommands(
             String buildCommand,
+            String cleanCommand,
             String variantName,
             String commands,
             boolean isWin32) {
         ListMultimap<String, List<BuildStepInfo>> outputs = FlowAnalyzer.analyze(commands, isWin32);
         for (Map.Entry<String, List<BuildStepInfo>> entry : outputs.entries()) {
-            this.outputs.add(new Output(entry.getKey(), entry.getValue(),
-                    buildCommand, variantName));
+            this.outputs.add(
+                    new Output(
+                            entry.getKey(),
+                            entry.getValue(),
+                            buildCommand,
+                            cleanCommand,
+                            variantName));
         }
         return this;
     }
@@ -243,7 +247,7 @@ public class NativeBuildConfigValueBuilder {
     private List<String> generateCleanCommands() {
         Set<String> cleanCommands = Sets.newHashSet();
         for (Output output : outputs) {
-            cleanCommands.add(output.buildCommand + " clean");
+            cleanCommands.add(output.cleanCommand);
         }
 
         return Lists.newArrayList(cleanCommands);
@@ -331,16 +335,22 @@ public class NativeBuildConfigValueBuilder {
         private final String outputFileName;
         private final List<BuildStepInfo> commandInputs;
         private final String buildCommand;
+        private final String cleanCommand;
         private final String variantName;
         private String artifactName;
         private String libraryName;
         private String toolchain;
 
-        private Output(String outputFileName, List<BuildStepInfo> commandInputs,
-                String buildCommand, String variantName) {
+        private Output(
+                String outputFileName,
+                List<BuildStepInfo> commandInputs,
+                String buildCommand,
+                String cleanCommand,
+                String variantName) {
             this.outputFileName = outputFileName;
             this.commandInputs = commandInputs;
             this.buildCommand = buildCommand;
+            this.cleanCommand = cleanCommand;
             this.variantName = variantName;
         }
     }
