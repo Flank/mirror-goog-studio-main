@@ -1697,16 +1697,6 @@ public abstract class TaskManager {
         // Add a task to merge the assets folders
         createMergeAssetsTask(tasks, variantScope, null);
 
-        if (variantData.getTestedVariantData().getVariantConfiguration().getType().equals(
-                VariantType.LIBRARY)) {
-            // in this case the tested library must be fully built before test can be built!
-            if (testedVariantData.getScope().getAssembleTask() != null) {
-                String bundle = testedVariantData.getScope().getTaskName("bundle");
-                variantScope.getManifestProcessorTask().dependsOn(tasks, bundle);
-                variantScope.getMergeResourcesTask().dependsOn(tasks, bundle);
-            }
-        }
-
         // Add a task to create the BuildConfig class
         createBuildConfigTask(tasks, variantScope);
 

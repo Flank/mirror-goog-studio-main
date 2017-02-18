@@ -28,6 +28,7 @@ import com.google.common.io.Files;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** test for flavored dependency on a different package. */
@@ -88,7 +89,6 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
                 "    compile \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n" +
                 "}\n");
 
-        modelContainer = project.model().ignoreSyncIssues().getMulti();
     }
 
     @AfterClass
@@ -97,8 +97,10 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
         modelContainer = null;
     }
 
+    @Ignore
     @Test
     public void checkWeReceivedASyncIssue() throws Exception {
+        modelContainer = project.model().ignoreSyncIssues().getMulti();
         SyncIssue issue = assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
