@@ -51,7 +51,7 @@ public class KotlinCompiler extends JarOutputCompiler {
         List<String> args = new ArrayList<>(files.size() + 10);
 
         try {
-            File xml = File.createTempFile("dummy", "module.xml");
+            File xml = new File(outDir.getParentFile(), outDir.getName() + ".xml");
             try (PrintWriter writer = new PrintWriter(xml)) {
                 writer.println("<modules>");
                 writer.print("<module name=\"dummy\" type=\"java-production\" outputDir=\"");

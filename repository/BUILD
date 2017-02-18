@@ -11,7 +11,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:jimfs",

@@ -578,14 +578,14 @@ maven_java_library(
 
 maven_java_library(
     name = "org.bouncycastle_bcpkix-jdk15on",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.48:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.56:jar",
     visibility = ["//visibility:public"],
     exports = [":org.bouncycastle_bcprov-jdk15on"],
 )
 
 maven_java_library(
     name = "org.bouncycastle_bcprov-jdk15on",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.48:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.56:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

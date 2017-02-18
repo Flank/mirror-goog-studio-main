@@ -13,14 +13,11 @@ iml_module(
     test_srcs = ["builder-test-api/src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/base/ddmlib:studio.ddmlib",
-        "//tools/idea/.idea/libraries:guava-tools",
-    ],
+    exports = ["//tools/base/ddmlib:studio.ddmlib"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/ddmlib:studio.ddmlib[module]",
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
     ],
 )

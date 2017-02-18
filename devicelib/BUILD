@@ -12,7 +12,7 @@ iml_module(
     deps = [
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/base/common:studio.common[module]",
-        "//tools/idea/.idea/libraries:guava-tools",
+        "//tools/idea/.idea/libraries:Guava",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",

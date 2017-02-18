@@ -36,6 +36,9 @@ kotlin_jar = rule(
             non_empty = True,
             allow_files = True,
         ),
+        "inputs": attr.label_list(
+            allow_files = True,
+        ),
         "package_prefixes": attr.string_list(),
         "deps": attr.label_list(
             mandatory = False,

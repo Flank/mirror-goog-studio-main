@@ -10,7 +10,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="module" module-name="common" />
-    <orderEntry type="library" name="guava-tools" level="project" />
+    <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />

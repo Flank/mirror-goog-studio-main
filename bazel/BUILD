@@ -55,7 +55,7 @@ java_binary(
 
 genrule(
     name = "kotlin-compiler",
-    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.1-release-IJ143-46.zip"],
+    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.5-release-139.zip"],
     outs = ["kotlin-compiler.jar"],
     cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-compiler.jar:$@",
     tools = [":unzipper"],
@@ -63,7 +63,7 @@ genrule(
 
 genrule(
     name = "kotlin-runtime",
-    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.1-release-IJ143-46.zip"],
+    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.0.5-release-139.zip"],
     outs = [
         "kotlin-runtime.jar",
         "kotlin-reflect.jar",
