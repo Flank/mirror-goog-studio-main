@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
@@ -61,13 +61,11 @@ public class InstallVariantTaskTest {
             new DefaultProcessExecutor(new StdLogger(StdLogger.Level.INFO));
 
     @NonNull
-    private static SplitScope.SplitOutput createSingleMainApkOutput(
-            @NonNull File mainOutputFileApk) {
+    private static BuildOutput createSingleMainApkOutput(@NonNull File mainOutputFileApk) {
 
         ApkInfo apkInfo = mock(ApkInfo.class);
         when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
-        return new SplitScope.SplitOutput(
-                VariantScope.TaskOutputType.APK, apkInfo, mainOutputFileApk);
+        return new BuildOutput(VariantScope.TaskOutputType.APK, apkInfo, mainOutputFileApk);
     }
 
     @Before

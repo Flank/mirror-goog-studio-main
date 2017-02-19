@@ -22,6 +22,8 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -99,14 +101,14 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         // Cannot call .getLastValue() since it is not declared as an Input which
         // would call .get() before the task run.
 
-        Collection<SplitScope.SplitOutput> manifestsOutputs =
-                SplitScope.load(
+        Collection<BuildOutput> manifestsOutputs =
+                BuildOutputs.load(
                         VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                         instantRunManifests);
-        Collection<SplitScope.SplitOutput> processedResOutputs =
-                SplitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, processedRes);
+        Collection<BuildOutput> processedResOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, processedRes);
 
-        for (SplitScope.SplitOutput mergedManifest : manifestsOutputs) {
+        for (BuildOutput mergedManifest : manifestsOutputs) {
 
             ApkInfo apkInfo = mergedManifest.getApkInfo();
             ApkData apkData = splitScope.getSplit(apkInfo.getFilters());
@@ -124,7 +126,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             // get MAIN, or UNIVERSAL or in case of FULL SPLIT, use the commented code to select
             // the right one. then change the code above to use the same logic to get the manifest
             // file.
-            SplitScope.SplitOutput output =
+            BuildOutput output =
                     SplitScope.getOutput(
                             processedResOutputs,
                             TaskOutputHolder.TaskOutputType.PROCESSED_RES,

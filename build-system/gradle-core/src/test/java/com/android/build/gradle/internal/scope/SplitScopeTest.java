@@ -72,18 +72,18 @@ public class SplitScopeTest {
 
         // load the persisted state.
         StringReader reader = new StringReader(persistedState);
-        Collection<SplitScope.SplitOutput> splitOutputs =
-                SplitScope.load(
+        Collection<BuildOutput> buildOutputs =
+                BuildOutputs.load(
                         ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
                         reader);
 
         // check that persisted was loaded correctly.
-        assertThat(splitOutputs).hasSize(1);
-        SplitScope.SplitOutput splitOutput = Iterators.getOnlyElement(splitOutputs.iterator());
-        assertThat(splitOutput.getOutputFile()).isEqualTo(outputForSplit);
-        assertThat(splitOutput.getApkInfo().getFilters()).hasSize(1);
+        assertThat(buildOutputs).hasSize(1);
+        BuildOutput buildOutput = Iterators.getOnlyElement(buildOutputs.iterator());
+        assertThat(buildOutput.getOutputFile()).isEqualTo(outputForSplit);
+        assertThat(buildOutput.getApkInfo().getFilters()).hasSize(1);
         FilterData filter =
-                Iterators.getOnlyElement(splitOutput.getApkInfo().getFilters().iterator());
+                Iterators.getOnlyElement(buildOutput.getApkInfo().getFilters().iterator());
         assertThat(filter.getIdentifier()).isEqualTo("xxhdpi");
         assertThat(filter.getFilterType()).isEqualTo(OutputFile.FilterType.DENSITY.name());
     }

@@ -26,6 +26,9 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputProperty;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -102,10 +105,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
         String testedApplicationId = this.testApplicationId;
         if (testTargetMetadata != null) {
-            Collection<SplitScope.SplitOutput> manifestOutputs =
-                    SplitScope.load(
+            Collection<BuildOutput> manifestOutputs =
+                    BuildOutputs.load(
                             TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
-            java.util.Optional<SplitScope.SplitOutput> mainSplit =
+            java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
                             .stream()
                             .filter(
@@ -115,7 +118,8 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                             .findFirst();
 
             if (mainSplit.isPresent()) {
-                testedApplicationId = mainSplit.get().getProperties().get("packageId");
+                testedApplicationId =
+                        mainSplit.get().getProperties().get(BuildOutputProperty.PACKAGE_ID);
             } else {
                 throw new RuntimeException("cannot find main APK");
             }

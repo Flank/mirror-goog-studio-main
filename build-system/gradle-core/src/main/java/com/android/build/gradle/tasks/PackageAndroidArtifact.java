@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -287,9 +289,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
 
-        Collection<SplitScope.SplitOutput> mergedResources =
-                SplitScope.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
-        splitScope.load(manifestType, manifests);
+        Collection<BuildOutput> mergedResources =
+                BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
+        BuildOutputs.load(manifestType, manifests);
         splitScope.parallelForEachOutput(
                 mergedResources,
                 VariantScope.TaskOutputType.PROCESSED_RES,
@@ -365,8 +367,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
 
-        Collection<SplitScope.SplitOutput> manifestOutputs =
-                SplitScope.load(manifestType, manifests);
+        Collection<BuildOutput> manifestOutputs = BuildOutputs.load(manifestType, manifests);
         doTask(
                 apkData,
                 incrementalDirForSplit,
@@ -453,7 +454,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             @NonNull File incrementalDirForSplit,
             @NonNull File outputFile,
             @NonNull FileCacheByPath cacheByPath,
-            @NonNull Collection<SplitScope.SplitOutput> manifestOutputs,
+            @NonNull Collection<BuildOutput> manifestOutputs,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedDex,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
@@ -479,8 +480,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         String abiFilter = apkData.getFilter(com.android.build.OutputFile.FilterType.ABI);
 
         // find the manifest file for this split.
-        SplitScope.SplitOutput manifestForSplit =
-                SplitScope.getOutput(manifestOutputs, manifestType, apkData);
+        BuildOutput manifestForSplit = SplitScope.getOutput(manifestOutputs, manifestType, apkData);
 
         if (manifestForSplit == null || manifestForSplit.getOutputFile() == null) {
             throw new RuntimeException(
@@ -560,7 +560,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
         checkNotNull(changedInputs, "changedInputs == null");
         splitScope.parallelForEachOutput(
-                SplitScope.load(TaskOutputHolder.TaskOutputType.PROCESSED_RES, resourceFiles),
+                BuildOutputs.load(TaskOutputHolder.TaskOutputType.PROCESSED_RES, resourceFiles),
                 VariantScope.TaskOutputType.PROCESSED_RES,
                 getTaskOutputType(),
                 (split, output) -> splitIncrementalAction(split, output, changedInputs));
@@ -641,8 +641,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         ? outputFileProvider.getOutputFile(apkData)
                         : new File(outputDirectory, splitOutputFileName);
 
-        Collection<SplitScope.SplitOutput> manifestOutputs =
-                SplitScope.load(manifestType, manifests);
+        Collection<BuildOutput> manifestOutputs = BuildOutputs.load(manifestType, manifests);
 
         doTask(
                 apkData,

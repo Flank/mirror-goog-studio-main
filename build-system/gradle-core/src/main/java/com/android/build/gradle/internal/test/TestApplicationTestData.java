@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -73,10 +75,10 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @Override
     public void loadFromMetadataFile(File metadataFile)
             throws ParserConfigurationException, SAXException, IOException {
-        Collection<SplitScope.SplitOutput> testedManifests =
-                SplitScope.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, metadataFile);
+        Collection<BuildOutput> testedManifests =
+                BuildOutputs.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, metadataFile);
         // all published manifests have the same package so first one will do.
-        Optional<SplitScope.SplitOutput> splitOutput = testedManifests.stream().findFirst();
+        Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
 
         if (splitOutput.isPresent()) {
             testedProperties.putAll(splitOutput.get().getProperties());
@@ -119,7 +121,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
 
             SplitScope testedSplitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-            testedSplitScope.load(VariantScope.TaskOutputType.APK, testedApks);
+            BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApks);
 
             List<String> testedSplitApksPath = getSplitApks(testedSplitScope);
             selectedApks.addAll(
@@ -143,8 +145,8 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        Collection<SplitScope.SplitOutput> testApkOutputs =
-                SplitScope.load(VariantScope.TaskOutputType.APK, testApk);
+        Collection<BuildOutput> testApkOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.APK, testApk);
         if (testApkOutputs.size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "
@@ -198,7 +200,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
                                 splitOutput ->
                                         splitOutput.getApkInfo().getType()
                                                 != VariantOutput.OutputType.SPLIT)
-                        .map(SplitScope.SplitOutput::getOutputFile)
+                        .map(BuildOutput::getOutputFile)
                         .findFirst();
 
         if (mainApk.isPresent()) {

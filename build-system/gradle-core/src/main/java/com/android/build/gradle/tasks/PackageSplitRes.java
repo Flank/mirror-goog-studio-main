@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -72,7 +73,7 @@ public class PackageSplitRes extends BaseTask {
     protected void doFullTaskAction() throws IOException {
 
         splitScope.parallelForEachOutput(
-                SplitScope.load(
+                BuildOutputs.load(
                         VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                         processedResources),
                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,

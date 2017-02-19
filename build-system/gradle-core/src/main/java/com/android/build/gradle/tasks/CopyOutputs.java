@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -82,7 +83,7 @@ public class CopyOutputs extends BaseTask {
 
     private void parallelCopy(TaskOutputType inputType, FileCollection inputs) {
         splitScope.parallelForEachOutput(
-                SplitScope.load(inputType, inputs),
+                BuildOutputs.load(inputType, inputs),
                 inputType,
                 TaskOutputType.APK,
                 (split, output) -> {

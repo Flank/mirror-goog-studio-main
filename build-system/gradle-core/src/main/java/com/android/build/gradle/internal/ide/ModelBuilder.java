@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -466,12 +466,12 @@ public class ModelBuilder implements ToolingModelBuilder {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
         // get the outputs
-        BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsProxy = null;
-        BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestsProxy = null;
+        BuildOutputSupplier<Collection<BuildOutput>> splitOutputsProxy = null;
+        BuildOutputSupplier<Collection<BuildOutput>> manifestsProxy = null;
         switch (variantData.getType()) {
             case DEFAULT:
                 splitOutputsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(
                                         VariantScope.TaskOutputType.APK,
                                         VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
@@ -488,7 +488,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                         .getDirName())));
 
                 manifestsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));
@@ -499,14 +499,14 @@ public class ModelBuilder implements ToolingModelBuilder {
                 splitOutputsProxy =
                         BuildOutputSupplier.of(
                                 ImmutableList.of(
-                                        new SplitScope.SplitOutput(
+                                        new BuildOutput(
                                                 VariantScope.TaskOutputType.AAR,
                                                 mainApkInfo,
                                                 scope.getOutputBundleFile())));
                 manifestsProxy =
                         BuildOutputSupplier.of(
                                 ImmutableList.of(
-                                        new SplitScope.SplitOutput(
+                                        new BuildOutput(
                                                 VariantScope.TaskOutputType.MERGED_MANIFESTS,
                                                 mainApkInfo,
                                                 new File(
@@ -516,7 +516,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             case ATOM:
             case INSTANTAPP:
                 splitOutputsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(VariantScope.TaskOutputType.APKB),
                                 ImmutableList.of(
                                         new File(
@@ -528,14 +528,14 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                         .getVariantConfiguration()
                                                         .getDirName())));
                 manifestsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));
                 break;
             case ANDROID_TEST:
                 splitOutputsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(VariantScope.TaskOutputType.APK),
                                 ImmutableList.of(
                                         new File(
@@ -547,7 +547,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                         .getVariantConfiguration()
                                                         .getDirName())));
                 manifestsProxy =
-                        new SplitOutputsSupplier(
+                        new BuildOutputsSupplier(
                                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                                 ImmutableList.of(
                                         variantData.getScope().getManifestOutputDirectory()));

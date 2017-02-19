@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.builder.model.AndroidArtifact;
@@ -73,13 +74,11 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     private final Map<String, ClassField> resValues;
     @NonNull
     private final InstantRun instantRun;
-    @NonNull
-    private final BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier;
+    @NonNull private final BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier;
     @NonNull
     private final String baseName;
 
-    @NonNull
-    private final BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier;
+    @NonNull private final BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -103,8 +102,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
             @NonNull InstantRun instantRun,
-            @NonNull BuildOutputSupplier<Collection<SplitScope.SplitOutput>> splitOutputsSupplier,
-            @NonNull BuildOutputSupplier<Collection<SplitScope.SplitOutput>> manifestSupplier) {
+            @NonNull BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier,
+            @NonNull BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier) {
         super(name, assembleTaskName, compileTaskName,
                 classesFolder, javaResourcesFolder,
                 compileDependencies, dependencyGraphs,
@@ -129,15 +128,15 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     @Override
     public Collection<AndroidArtifactOutput> getOutputs() {
-        Collection<SplitScope.SplitOutput> manifests = manifestSupplier.get();
-        Collection<SplitScope.SplitOutput> outputs = splitOutputsSupplier.get();
+        Collection<BuildOutput> manifests = manifestSupplier.get();
+        Collection<BuildOutput> outputs = splitOutputsSupplier.get();
         if (outputs.isEmpty()) {
             return manifests.isEmpty()
                     ? guessOutputsBasedOnNothing()
                     : guessOutputsBaseOnManifests();
         }
 
-        List<SplitScope.SplitOutput> splitApksOutput =
+        List<BuildOutput> splitApksOutput =
                 outputs.stream()
                         .filter(
                                 splitOutput ->
@@ -158,7 +157,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                                                     splitOutput.getApkInfo())))
                     .collect(Collectors.toList());
         } else {
-            List<SplitScope.SplitOutput> mainApks =
+            List<BuildOutput> mainApks =
                     outputs.stream()
                             .filter(
                                     splitOutput ->
@@ -183,31 +182,49 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     private Collection<AndroidArtifactOutput> guessOutputsBasedOnNothing() {
         ApkInfo mainApkInfo = ApkInfo.of(OutputFile.OutputType.MAIN, ImmutableList.of(), -1);
 
-        return ImmutableList.of(new AndroidArtifactOutputImpl(
-
-                new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK, mainApkInfo,
-                        splitOutputsSupplier.guessOutputFile(
-                                baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
-                new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK, mainApkInfo,
-                        manifestSupplier.guessOutputFile(SdkConstants.ANDROID_MANIFEST_XML))
-                ));
+        return ImmutableList.of(
+                new AndroidArtifactOutputImpl(
+                        new BuildOutput(
+                                TaskOutputHolder.TaskOutputType.APK,
+                                mainApkInfo,
+                                splitOutputsSupplier.guessOutputFile(
+                                        baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
+                        new BuildOutput(
+                                TaskOutputHolder.TaskOutputType.APK,
+                                mainApkInfo,
+                                manifestSupplier.guessOutputFile(
+                                        SdkConstants.ANDROID_MANIFEST_XML))));
     }
 
     private Collection<AndroidArtifactOutput> guessOutputsBaseOnManifests() {
 
-        return manifestSupplier.get().stream().map(manifestOutput ->
-            new AndroidArtifactOutputImpl(
-                    new SplitScope.SplitOutput(TaskOutputHolder.TaskOutputType.APK,
-                            manifestOutput.getApkInfo(),
-                            splitOutputsSupplier.guessOutputFile(
-                                    baseName
-                                            + Joiner.on("-").join(
-                                                    manifestOutput.getApkInfo().getFilters()
-                                                            .stream().map(FilterData::getIdentifier)
-                                                            .collect(Collectors.toList()))
-                                            + SdkConstants.DOT_ANDROID_PACKAGE)),
-                    manifestOutput)
-        ).collect(Collectors.toList());
+        return manifestSupplier
+                .get()
+                .stream()
+                .map(
+                        manifestOutput ->
+                                new AndroidArtifactOutputImpl(
+                                        new BuildOutput(
+                                                TaskOutputHolder.TaskOutputType.APK,
+                                                manifestOutput.getApkInfo(),
+                                                splitOutputsSupplier.guessOutputFile(
+                                                        baseName
+                                                                + Joiner.on("-")
+                                                                        .join(
+                                                                                manifestOutput
+                                                                                        .getApkInfo()
+                                                                                        .getFilters()
+                                                                                        .stream()
+                                                                                        .map(
+                                                                                                FilterData
+                                                                                                        ::getIdentifier)
+                                                                                        .collect(
+                                                                                                Collectors
+                                                                                                        .toList()))
+                                                                + SdkConstants
+                                                                        .DOT_ANDROID_PACKAGE)),
+                                        manifestOutput))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -298,7 +315,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(resValues, that.resValues)
                 && Objects.equals(manifestSupplier, that.manifestSupplier)
                 && Objects.equals(splitOutputsSupplier, that.splitOutputsSupplier)
-                && Objects.equals(instantRun, that.instantRun);
+                && Objects.equals(instantRun, that.instantRun)
+                && Objects.equals(baseName, that.baseName);
     }
 
     @Override
@@ -316,7 +334,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 nativeLibraries,
                 buildConfigFields,
                 resValues,
-                instantRun);
+                instantRun,
+                baseName);
     }
 
     @Override

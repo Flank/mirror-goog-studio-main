@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.ide.common.build.ApkData;
@@ -68,7 +69,7 @@ public class GenerateTestConfigTest {
         generateTestConfig.splitScope = splitScope;
 
         generateTestConfig.generateTestConfigForOutput(
-                new SplitScope.SplitOutput(
+                new BuildOutput(
                         TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                         apkData,
                         new File(buildDirectory.resolve("mergedManifest.xml").toString())));

@@ -39,6 +39,9 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputProperty;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.SplitScope;
@@ -274,8 +277,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 apkData.disable();
             }
         }
-        Collection<SplitScope.SplitOutput> manifestsOutputs =
-                SplitScope.load(taskInputType, manifestFiles);
+        Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
 
         for (ApkData apkData : splitsToGenerate) {
             if (apkData.requiresAapt()) {
@@ -362,9 +364,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Nullable
     File invokeAaptForSplit(
-            Collection<SplitScope.SplitOutput> manifestsOutputs,
-            ApkData apkData,
-            boolean generateCode)
+            Collection<BuildOutput> manifestsOutputs, ApkData apkData, boolean generateCode)
             throws IOException {
 
         AndroidBuilder builder = getBuilder();
@@ -397,8 +397,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         // FIX MEy : there should be a better way to always get the manifest file to merge.
         // for instance, should the library task also output the .gson ?
-        SplitScope.SplitOutput manifestOutput =
-                SplitScope.getOutput(manifestsOutputs, taskInputType, apkData);
+        BuildOutput manifestOutput = SplitScope.getOutput(manifestsOutputs, taskInputType, apkData);
         if (manifestOutput == null) {
             throw new RuntimeException("Cannot find merged manifest file");
         }
@@ -408,7 +407,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         File srcOut = null;
         if (generateCode) {
 
-            String splitName = manifestOutput.getProperties().get("split");
+            String splitName = manifestOutput.getProperties().get(BuildOutputProperty.SPLIT);
             packageForR =
                     Strings.isNullOrEmpty(splitName)
                             ? originalApplicationId

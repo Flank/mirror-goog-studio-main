@@ -24,6 +24,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -89,11 +91,11 @@ public class MergeManifests extends ManifestProcessorTask {
     @Override
     protected void doFullTaskAction() throws IOException {
         // read the output of the compatible screen manifest.
-        Collection<SplitScope.SplitOutput> compatibleScreenManifests =
-                SplitScope.load(
+        Collection<BuildOutput> compatibleScreenManifests =
+                BuildOutputs.load(
                         VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
                         compatibleScreensManifest);
-        @Nullable SplitScope.SplitOutput compatibleScreenManifestForSplit;
+        @Nullable BuildOutput compatibleScreenManifestForSplit;
         // FIX ME : multi threading.
         for (ApkData apkData : splitScope.getApkDatas()) {
             compatibleScreenManifestForSplit =
@@ -214,7 +216,7 @@ public class MergeManifests extends ManifestProcessorTask {
      * @return the list of providers.
      */
     private List<ManifestProvider> computeFullProviderList(
-            @Nullable SplitScope.SplitOutput compatibleScreenManifestForSplit) {
+            @Nullable BuildOutput compatibleScreenManifestForSplit) {
         final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size() + 2);
 

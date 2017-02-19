@@ -79,10 +79,10 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -781,7 +781,7 @@ public abstract class TaskManager {
         }
 
         variantScope.publishIntermediateArtifact(
-                SplitScope.getOutputFileLocation(variantScope.getManifestOutputDirectory()),
+                BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
                 processManifestTask.getName(),
                 AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
     }

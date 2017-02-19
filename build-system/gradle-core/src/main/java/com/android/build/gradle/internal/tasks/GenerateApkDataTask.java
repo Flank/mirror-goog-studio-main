@@ -24,11 +24,11 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
@@ -101,7 +101,7 @@ public class GenerateApkDataTask extends BaseTask {
         FileUtils.cleanOutputDir(outDir);
 
         if (apkDirectory != null) {
-            Collection<SplitScope.SplitOutput> apks = SplitScope.load(APK, apkDirectory);
+            Collection<BuildOutput> apks = BuildOutputs.load(APK, apkDirectory);
 
             if (apks.isEmpty()) {
                 throw new IllegalStateException("Wear App dependency resolve to zero APK");
@@ -111,7 +111,7 @@ public class GenerateApkDataTask extends BaseTask {
                 throw new IllegalStateException(
                         "Wear App dependency resolve to more than one APK: "
                                 + apks.stream()
-                                        .map(SplitScope.SplitOutput::getOutputFile)
+                                        .map(BuildOutput::getOutputFile)
                                         .collect(Collectors.toList()));
             }
 

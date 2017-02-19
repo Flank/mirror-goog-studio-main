@@ -30,6 +30,8 @@ import static org.objectweb.asm.Opcodes.V1_6;
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -88,8 +90,8 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     @TaskAction
     public void generateInfoTask() throws IOException {
-        splitScope.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, mergedManifests);
-        Optional<SplitScope.SplitOutput> mainSplitOutput =
+        BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, mergedManifests);
+        Optional<BuildOutput> mainSplitOutput =
                 splitScope
                         .getOutputs(VariantScope.TaskOutputType.MERGED_MANIFESTS)
                         .stream()

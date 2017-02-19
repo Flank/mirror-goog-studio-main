@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.builder.testing.api.TestServer;
 import com.google.common.base.Preconditions;
@@ -50,9 +51,9 @@ public class TestServerTask extends DefaultAndroidTask {
 
         List<File> testedApkFiles =
                 testedApks != null
-                        ? SplitScope.load(TaskOutputHolder.TaskOutputType.APK, testedApks)
+                        ? BuildOutputs.load(TaskOutputHolder.TaskOutputType.APK, testedApks)
                                 .stream()
-                                .map(SplitScope.SplitOutput::getOutputFile)
+                                .map(BuildOutput::getOutputFile)
                                 .collect(Collectors.toList())
                         : ImmutableList.of();
 
@@ -61,9 +62,9 @@ public class TestServerTask extends DefaultAndroidTask {
         }
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
-                SplitScope.load(TaskOutputHolder.TaskOutputType.APK, testApks)
+                BuildOutputs.load(TaskOutputHolder.TaskOutputType.APK, testApks)
                         .stream()
-                        .map(SplitScope.SplitOutput::getOutputFile)
+                        .map(BuildOutput::getOutputFile)
                         .collect(Collectors.toList());
         if (testApkFiles.size() > 1) {
             throw new RuntimeException("Cannot handle split APKs in test APKs");

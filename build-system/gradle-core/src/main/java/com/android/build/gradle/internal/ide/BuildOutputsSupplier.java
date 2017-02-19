@@ -19,7 +19,8 @@ package com.android.build.gradle.internal.ide;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.ide.common.build.ApkInfo;
@@ -27,37 +28,30 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-/**
- * FIX ME : implement equals() and hashCode()
- *
- * <p>Supplier of {@link com.android.build.gradle.internal.scope.SplitScope.SplitOutput} for built
- * artifacts.
- */
-public class SplitOutputsSupplier
-        implements BuildOutputSupplier<Collection<SplitScope.SplitOutput>> {
+/** Supplier of {@link BuildOutput} for built artifacts. */
+public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<BuildOutput>> {
 
     @NonNull private final List<File> outputFolders;
     @NonNull private final List<VariantScope.OutputType> outputTypes;
 
-    public SplitOutputsSupplier(
-            @NonNull List<VariantScope.OutputType> outputTypes,
-            @NonNull List<File> outputFolders) {
+    public BuildOutputsSupplier(
+            @NonNull List<VariantScope.OutputType> outputTypes, @NonNull List<File> outputFolders) {
         this.outputFolders = outputFolders;
         this.outputTypes = outputTypes;
     }
 
     @Override
     @NonNull
-    public Collection<SplitScope.SplitOutput> get() {
-        ImmutableList.Builder<SplitScope.SplitOutput> outputs = ImmutableList.builder();
+    public Collection<BuildOutput> get() {
+        ImmutableList.Builder<BuildOutput> outputs = ImmutableList.builder();
         outputFolders.forEach(
                 outputFolder -> {
                     if (!outputFolder.exists()) {
                         return;
                     }
-                    Collection<SplitScope.SplitOutput> previous =
-                            SplitScope.load(outputTypes, outputFolder);
+                    Collection<BuildOutput> previous = BuildOutputs.load(outputTypes, outputFolder);
                     if (previous.isEmpty()) {
                         outputTypes.forEach(
                                 taskOutputType -> {
@@ -86,11 +80,11 @@ public class SplitOutputsSupplier
     private static void processFile(
             VariantScope.OutputType taskOutputType,
             File file,
-            ImmutableList.Builder<SplitScope.SplitOutput> outputs) {
+            ImmutableList.Builder<BuildOutput> outputs) {
         if (taskOutputType == TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS) {
             if (file.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                 outputs.add(
-                        new SplitScope.SplitOutput(
+                        new BuildOutput(
                                 taskOutputType,
                                 ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0),
                                 file));
@@ -103,10 +97,28 @@ public class SplitOutputsSupplier
                             ? VariantOutput.OutputType.MAIN
                             : VariantOutput.OutputType.SPLIT;
             outputs.add(
-                    new SplitScope.SplitOutput(
+                    new BuildOutput(
                             taskOutputType,
                             ApkInfo.of(fileOutputType, ImmutableList.of(), 0),
                             file));
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(outputFolders, outputTypes);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BuildOutputsSupplier that = (BuildOutputsSupplier) o;
+        return Objects.equals(outputFolders, that.outputFolders)
+                && Objects.equals(outputTypes, that.outputTypes);
     }
 }

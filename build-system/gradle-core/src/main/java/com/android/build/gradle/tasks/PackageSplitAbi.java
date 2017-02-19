@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -129,7 +130,7 @@ public class PackageSplitAbi extends BaseTask {
         FileUtils.cleanOutputDir(incrementalDir);
 
         splitScope.parallelForEachOutput(
-                SplitScope.load(
+                BuildOutputs.load(
                         VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources),
                 VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
                 VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
