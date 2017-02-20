@@ -19,12 +19,12 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Dex archive that is stored in a .jar file. All dex entries, {@link DexArchiveEntry}, are stored
@@ -60,8 +60,8 @@ final class JarDexArchive implements DexArchive {
 
     @Override
     @NonNull
-    public Set<DexArchiveEntry> getFiles() throws IOException {
-        ImmutableSet.Builder<DexArchiveEntry> builder = ImmutableSet.builder();
+    public List<DexArchiveEntry> getFiles() throws IOException {
+        ImmutableList.Builder<DexArchiveEntry> builder = ImmutableList.builder();
 
         for (StoredEntry entry : zFile.entries()) {
             byte[] content = entry.read();
