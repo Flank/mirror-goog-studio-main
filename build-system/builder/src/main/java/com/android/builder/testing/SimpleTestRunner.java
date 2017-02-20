@@ -73,17 +73,22 @@ public class SimpleTestRunner implements TestRunner {
             @NonNull File testApk,
             @NonNull TestData testData,
             @NonNull List<? extends DeviceConnector> deviceList,
-                     int maxThreads,
-                     int timeoutInMs,
+            int maxThreadsInParallel,
+            int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
-            @NonNull ILogger logger) throws TestException, NoAuthorizedDeviceFoundException, InterruptedException {
+            @NonNull ILogger logger)
+            throws TestException, NoAuthorizedDeviceFoundException, InterruptedException {
         WaitableExecutor<Boolean> executor;
         if (mEnableSharding) {
             executor = WaitableExecutor.useNewFixedSizeThreadPool(deviceList.size());
         } else {
-            executor = WaitableExecutor.useGlobalSharedThreadPool();
+            executor =
+                    maxThreadsInParallel > 0
+                            ? WaitableExecutor.useGlobalSharedThreadPoolWithLimit(
+                                    maxThreadsInParallel)
+                            : WaitableExecutor.useGlobalSharedThreadPool();
         }
 
         int totalDevices = deviceList.size();
