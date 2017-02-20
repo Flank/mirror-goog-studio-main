@@ -82,6 +82,8 @@ def testEnvironment =
                     key == "PROCESSOR_ARCHITECTURE" ||
                     key == "ProgramW6432" ||
                     key == "ProgramFiles(x86)" ||
+                    key == "TMP" ||
+                    key == "TEMP" ||
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
