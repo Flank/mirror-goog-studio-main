@@ -20,7 +20,9 @@ import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
 import com.android.testutils.apk.Dex;
+import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +31,9 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.BeforeClass;
@@ -228,6 +232,50 @@ public class DexArchiveMergerTest {
     }
 
     @Test
+    public void test_multidex_orderOfInputsDoesNotChangeOutput() throws Exception {
+        List<Path> archives = createArchives(temporaryFolder.getRoot().toPath().resolve("_"), 30);
+
+        Path bigArchive = temporaryFolder.getRoot().toPath().resolve("big_archive");
+        FileUtils.copyDirectory(bigDexArchive.toFile(), bigArchive.toFile());
+        archives.add(bigArchive);
+
+        Path output = temporaryFolder.getRoot().toPath().resolve("output");
+        DexArchiveTestUtil.mergeNativeDex(archives, output);
+        byte[] classesDex = Files.readAllBytes(output.resolve("classes.dex"));
+        byte[] classes2Dex = Files.readAllBytes(output.resolve("classes2.dex"));
+
+        for (int i = 0; i < 5; i++) {
+            Path newOutput = temporaryFolder.getRoot().toPath().resolve("output" + i);
+            DexArchiveTestUtil.mergeNativeDex(archives, newOutput);
+
+            Truth.assertThat(classesDex)
+                    .isEqualTo(Files.readAllBytes(output.resolve("classes.dex")));
+            Truth.assertThat(classes2Dex)
+                    .isEqualTo(Files.readAllBytes(output.resolve("classes2.dex")));
+
+            Collections.shuffle(archives);
+        }
+    }
+
+    @Test
+    public void test_monoDex_orderOfInputsDoesNotChangeOutput() throws Exception {
+        List<Path> archives = createArchives(temporaryFolder.getRoot().toPath(), 10);
+
+        Path output = temporaryFolder.getRoot().toPath().resolve("output");
+        DexArchiveTestUtil.mergeMonoDex(archives, output);
+        byte[] classesDex = Files.readAllBytes(output.resolve("classes.dex"));
+
+        for (int i = 0; i < 5; i++) {
+            Path newOutput = temporaryFolder.getRoot().toPath().resolve("output" + i);
+            DexArchiveTestUtil.mergeMonoDex(archives, newOutput);
+            Truth.assertThat(classesDex)
+                    .isEqualTo(Files.readAllBytes(output.resolve("classes.dex")));
+
+            Collections.shuffle(archives);
+        }
+    }
+
+    @Test
     public void testWindowsSmokeTest() throws Exception {
         FileSystem fs = Jimfs.newFileSystem(Configuration.windows());
 
@@ -244,5 +292,16 @@ public class DexArchiveMergerTest {
 
         assertThat(outputDex)
                 .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B", "C"));
+    }
+
+    @NonNull
+    private List<Path> createArchives(@NonNull Path archivePath, int numClasses) throws Exception {
+        List<Path> archives = Lists.newArrayList();
+        for (int i = 0; i < numClasses; i++) {
+            archives.add(
+                    DexArchiveTestUtil.createClassesAndConvertToDexArchive(
+                            archivePath.resolve("A" + i), "A" + i));
+        }
+        return archives;
     }
 }

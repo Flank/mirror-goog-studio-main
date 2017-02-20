@@ -21,7 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Interface describing the DEX archive. It contains one DEX file per .class file that was processed
@@ -72,5 +72,5 @@ public interface DexArchive extends Closeable {
      * @return all entries of the archive
      */
     @NonNull
-    Set<DexArchiveEntry> getFiles() throws IOException;
+    List<DexArchiveEntry> getFiles() throws IOException;
 }
