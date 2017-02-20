@@ -143,18 +143,16 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-        splitScope.load(VariantScope.TaskOutputType.APK, testApk);
-        Collection<SplitScope.SplitOutput> mainOutputs =
-                splitScope.getOutputs(VariantScope.TaskOutputType.APK);
-        if (mainOutputs.size() != 1) {
+        Collection<SplitScope.SplitOutput> testApkOutputs =
+                SplitScope.load(VariantScope.TaskOutputType.APK, testApk);
+        if (testApkOutputs.size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "
-                            + mainOutputs.size()
+                            + testApkOutputs.size()
                             + ":"
-                            + Joiner.on(",").join(mainOutputs));
+                            + Joiner.on(",").join(testApkOutputs));
         }
-        return mainOutputs.iterator().next().getOutputFile();
+        return testApkOutputs.iterator().next().getOutputFile();
     }
 
     @NonNull

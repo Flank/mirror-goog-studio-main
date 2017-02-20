@@ -67,7 +67,7 @@ public class SplitOutputMatcher {
             @NonNull ProcessExecutor processExecutor,
             @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull List<OutputFile> outputs,
+            @NonNull Collection<OutputFile> outputs,
             @Nullable Collection<String> variantAbiFilters)
             throws ProcessException {
 
@@ -178,7 +178,7 @@ public class SplitOutputMatcher {
      */
     @NonNull
     public static <T extends VariantOutput> List<T> computeBestOutput(
-            @NonNull List<? extends T> outputs,
+            @NonNull Collection<? extends T> outputs,
             @Nullable Collection<String> variantAbiFilters,
             int deviceDensity,
             @NonNull List<String> deviceAbis) {

@@ -1956,7 +1956,9 @@ public abstract class TaskManager {
         // create the check tasks for this test
         // first the connected one.
         ImmutableList<AndroidTask<DefaultTask>> artifactsTasks =
-                ImmutableList.of(variantScope.getAssembleTask());
+                ImmutableList.of(
+                        variantScope.getAssembleTask(),
+                        testVariantData.getTestedVariantData().getScope().getAssembleTask());
 
         final AndroidTask<DeviceProviderInstrumentTestTask> connectedTask = androidTasks.create(
                 tasks,

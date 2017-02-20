@@ -16,9 +16,13 @@
 
 package com.android.build.gradle.internal.test;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -35,8 +39,9 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -97,18 +102,20 @@ public class TestDataImpl extends AbstractTestDataImpl {
                 (BaseVariantData) testVariantData.getTestedVariantData();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();
+        // FIX ME : there has to be a better way...
+        Collection<OutputFile> splitOutputs =
+                ImmutableList.copyOf(
+                        SplitScope.load(
+                                VariantScope.TaskOutputType.APK,
+                                testedVariantData
+                                        .getScope()
+                                        .getOutputs(VariantScope.TaskOutputType.APK)));
         apks.addAll(
                 SplitOutputMatcher.computeBestOutput(
                         processExecutor,
                         splitSelectExe,
                         deviceConfigProvider,
-                        // FIX ME : there has to be a better way...
-                        testedVariantData
-                                .getSplitScope()
-                                .getOutputs(VariantScope.TaskOutputType.APK)
-                                .stream()
-                                .map(splitOutput -> splitOutput)
-                                .collect(Collectors.toList()),
+                        splitOutputs,
                         testedVariantData.getVariantConfiguration().getSupportedAbis()));
         return apks.build();
     }
@@ -116,7 +123,19 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public File getTestApk() {
-        return testVariantData.getMainOutput().getOutputFile();
+        Optional<File> testApkFile =
+                testVariantData
+                        .getScope()
+                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                        .getAsFileTree()
+                        .getFiles()
+                        .stream()
+                        .filter(file -> file.getName().endsWith(SdkConstants.DOT_ANDROID_PACKAGE))
+                        .findFirst();
+        if (!testApkFile.isPresent()) {
+            throw new RuntimeException("Cannot find test APK file in scope");
+        }
+        return testApkFile.get();
     }
 
     @NonNull
