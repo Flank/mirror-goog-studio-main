@@ -73,6 +73,11 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @Before
     public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeWordpress(project);
+        if (projectScenario != ProjectScenario.DEX_OUT_OF_PROCESS) {
+            TestFileUtils.searchAndReplace(
+                    project.file("WordPress/build.gradle"), "javaMaxHeapSize = \"6g\"", "");
+        }
+
         switch (projectScenario) {
             case NATIVE_MULTIDEX:
             case DEX_ARCHIVE_NATIVE_MULTIDEX:
