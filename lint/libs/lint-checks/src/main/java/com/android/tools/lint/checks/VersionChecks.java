@@ -31,6 +31,7 @@ import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiStatement;
+import com.intellij.psi.PsiVariable;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -418,7 +419,16 @@ public class VersionChecks {
     private static boolean isSdkInt(@NonNull PsiElement element) {
         if (element instanceof PsiReferenceExpression) {
             PsiReferenceExpression ref = (PsiReferenceExpression) element;
-            return SDK_INT.equals(ref.getReferenceName());
+            if (SDK_INT.equals(ref.getReferenceName())) {
+                return true;
+            }
+            PsiElement resolved = ref.resolve();
+            if (resolved instanceof PsiVariable) {
+                PsiExpression initializer = ((PsiVariable) resolved).getInitializer();
+                if (initializer != null) {
+                    return isSdkInt(initializer);
+                }
+            }
         } else if (element instanceof PsiMethodCallExpression) {
             PsiMethodCallExpression callExpression = (PsiMethodCallExpression) element;
             if ("getBuildSdkInt".equals(callExpression.getMethodExpression().getReferenceName())) {
