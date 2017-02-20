@@ -26,13 +26,16 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ComponentSelectionRules;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolutionStrategy;
@@ -240,6 +243,7 @@ public class VariantDependencies {
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
             compileClasspath.setCanBeConsumed(false);
+            filterOutBadArtifacts(compileClasspath);
             applyVariantAttributes(compileClasspath, buildType, flavorMap);
             compileClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
             compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
@@ -270,6 +274,7 @@ public class VariantDependencies {
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
             runtimeClasspath.setCanBeConsumed(false);
+            filterOutBadArtifacts(compileClasspath);
             applyVariantAttributes(runtimeClasspath, buildType, flavorMap);
             runtimeClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
@@ -391,6 +396,42 @@ public class VariantDependencies {
             for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
                 configuration.getAttributes().attribute(entry.getKey(), entry.getValue());
             }
+        }
+
+        // these modules are APIs that are present in the platform and shouldn't be included in one's app.
+        private static final List<String> EXCLUDED_MODULES =
+                ImmutableList.of(
+                        "org.apache.httpcomponents:httpclient",
+                        "xpp3:xpp3",
+                        "commons-logging:commons-logging",
+                        "xerces:xmlParserAPIs",
+                        "org.json:json",
+                        "org.khronos:opengl-api");
+
+        private void filterOutBadArtifacts(@NonNull Configuration configuration) {
+            Action<ComponentSelectionRules> ruleAction =
+                    rules -> {
+                        // always reject the broken android jar from mavencentral.
+                        rules.withModule(
+                                "com.google.android:android",
+                                componentSelection ->
+                                        componentSelection.reject(
+                                                "This module is a copy of the android API provided by the SDK. Please exclude it from your dependencies."));
+
+                        // remove APIs already on the platform if not running unit tests.
+                        if (variantConfiguration.getType() != VariantType.UNIT_TEST) {
+                            for (String module : EXCLUDED_MODULES) {
+                                rules.withModule(
+                                        module,
+                                        componentSelection ->
+                                                componentSelection.reject(
+                                                        "Conflicts with the internal version provided by Android. Please exclude it from your dependencies."));
+                            }
+                        }
+                    };
+
+            configuration.resolutionStrategy(
+                    resolutionStrategy -> resolutionStrategy.componentSelection(ruleAction));
         }
     }
 
