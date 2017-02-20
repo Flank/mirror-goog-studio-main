@@ -56,3 +56,40 @@ TEST(BackgroundQueue, DestructorBlocksUntilJobsFinish) {
   }  // Blocked here until all enqueued tasks run
   EXPECT_EQ(kNumJobs, num_jobs_run);
 }
+
+TEST(BackgroundQueue, QueueMaxLengthIsRespected) {
+  CountDownLatch job_1_started(1);
+  CountDownLatch job_1_waiting(1);
+  CountDownLatch job_2_finished(1);
+  CountDownLatch job_3_finished(1);
+  CountDownLatch job_4_finished(1);
+  CountDownLatch job_5_finished(1);
+  CountDownLatch job_6_finished(1);
+
+  {
+    // Queue has max length of 3. We'll add one task, run it, and block it,
+    // leaving an empty queue again. At that point, we'll add 5 more tasks.
+    // Since we can only have three enqueued tasks max, the first two should get
+    // dropped.
+    BackgroundQueue bq("BQTestThread", 3);
+    bq.EnqueueTask([&] {
+      job_1_started.CountDown();
+      job_1_waiting.Await();
+    });
+
+    job_1_started.Await();
+    bq.EnqueueTask([&] { job_2_finished.CountDown(); });  // Will be removed
+    bq.EnqueueTask([&] { job_3_finished.CountDown(); });  // Will be removed
+    bq.EnqueueTask([&] { job_4_finished.CountDown(); });
+    bq.EnqueueTask([&] { job_5_finished.CountDown(); });
+    bq.EnqueueTask([&] { job_6_finished.CountDown(); });
+
+    job_1_waiting.CountDown();
+  }
+
+  EXPECT_FALSE(job_2_finished.count() == 0);
+  EXPECT_FALSE(job_3_finished.count() == 0);
+  EXPECT_TRUE(job_4_finished.count() == 0);
+  EXPECT_TRUE(job_5_finished.count() == 0);
+  EXPECT_TRUE(job_6_finished.count() == 0);
+}

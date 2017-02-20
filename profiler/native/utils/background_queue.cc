@@ -30,8 +30,10 @@ using std::queue;
 
 namespace profiler {
 
-BackgroundQueue::BackgroundQueue(string thread_name)
-    : is_task_running_(false), task_thread_name_(thread_name) {
+BackgroundQueue::BackgroundQueue(string thread_name, int max_length)
+    : max_length_(max_length),
+      is_task_running_(false),
+      task_thread_name_(thread_name) {
   task_thread_ = thread(&BackgroundQueue::TaskThread, this);
 }
 
@@ -41,6 +43,13 @@ BackgroundQueue::~BackgroundQueue() {
 }
 
 void BackgroundQueue::EnqueueTask(function<void()> task) {
+  if (task_channel_.length() == max_length_) {
+    // If we're falling behind (most likely because the background tasks are
+    // blocked), then just drop the oldest to make way for the newest.
+    function<void()> oldest_task;
+    task_channel_.Pop(&oldest_task);
+  }
+
   task_channel_.Push(task);
 }
 
