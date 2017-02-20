@@ -118,12 +118,12 @@ public class MediumGradleProjectPerformanceMatrixTest {
                     executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
-                    clean();
+                    executor().run("assembleVanillaDebug");
                     changeJavaImplementation();
                     executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
-                    clean();
+                    executor().run("assembleVanillaDebug");
                     changeJavaApi("newMethod");
                     executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
                     break;
