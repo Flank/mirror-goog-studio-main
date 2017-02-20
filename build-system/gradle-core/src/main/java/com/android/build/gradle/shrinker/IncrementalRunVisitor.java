@@ -29,7 +29,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-/** Visitor for handling modified classes in an incremental run. */
+/** Visitor for checking modified classes in an incremental run. */
 class IncrementalRunVisitor<T> extends DependencyFinderVisitor<T> {
 
     private final ShrinkerGraph<T> mGraph;

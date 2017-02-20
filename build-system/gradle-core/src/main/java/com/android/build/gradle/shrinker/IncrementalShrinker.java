@@ -139,11 +139,13 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
                     Set<String> newMembers =
                             mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
                     Set<T> newInterfaces = getReachableImplementedInterfaces(klass);
+                    Set<T> newTypesFromSignatures = getReachableTypesFromSignatures(klass);
 
                     // Update the class file if the user modified it or we "modified it" by adding or
-                    // removing class members or implemented interfaces.
+                    // removing class members or implemented interfaces or types in generic signatures.
                     if (modifiedClasses.contains(klass)
                             || !newMembers.equals(oldState.members)
+                            || !newTypesFromSignatures.equals(oldState.typesFromGenericSignatures)
                             || !newInterfaces.equals(oldState.interfaces)) {
                         classesToWrite.add(klass);
                     }
@@ -178,9 +180,22 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * <p>In other words, the shrunk bytecode for {@code klass} should use these in the class
      * definition.
      */
-    private Set<T> getReachableImplementedInterfaces(T klass) throws ClassLookupException {
+    private Set<T> getReachableImplementedInterfaces(@NonNull T klass) throws ClassLookupException {
         return Stream.of(mGraph.getInterfaces(klass))
                 .filter(iface -> mGraph.isReachable(iface, CounterSet.SHRINK))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns the set of types referenced from the given class' generic signatures, filtered to
+     * only include types that are otherwise used in the program.
+     */
+    private Set<T> getReachableTypesFromSignatures(@NonNull T klass) throws ClassLookupException {
+        return mGraph.getTypesFromGenericSignatures(klass)
+                .stream()
+                .filter(
+                        typeFromSignature ->
+                                mGraph.isReachable(typeFromSignature, CounterSet.SHRINK))
                 .collect(Collectors.toSet());
     }
 
@@ -198,9 +213,12 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             try {
                 Set<String> reachableMembers =
                         mGraph.getReachableMembersLocalNames(klass, CounterSet.SHRINK);
+                Set<T> typesFromGenericSignatures = getReachableTypesFromSignatures(klass);
                 Set<T> interfaces = getReachableImplementedInterfaces(klass);
 
-                oldState.put(klass, new State<>(reachableMembers, interfaces));
+                oldState.put(
+                        klass,
+                        new State<>(reachableMembers, interfaces, typesFromGenericSignatures));
             } catch (ClassLookupException e) {
                 throw new AssertionError("Reachable class not found in graph.", e);
             }
@@ -331,9 +349,16 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         /** Interfaces that were used in the shrunk class definition. */
         @NonNull final ImmutableSet<T> interfaces;
 
-        public State(@NonNull Iterable<String> members, @NonNull Iterable<T> interfaces) {
+        /** Types that were used in the shrunk class generic signatures. */
+        @NonNull final ImmutableSet<T> typesFromGenericSignatures;
+
+        public State(
+                @NonNull Iterable<String> members,
+                @NonNull Iterable<T> interfaces,
+                @NonNull Iterable<T> typesFromGenericSignatures) {
             this.members = ImmutableSet.copyOf(members);
             this.interfaces = ImmutableSet.copyOf(interfaces);
+            this.typesFromGenericSignatures = ImmutableSet.copyOf(typesFromGenericSignatures);
         }
 
         @Override
@@ -346,12 +371,13 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
             }
             State<?> state = (State<?>) o;
             return Objects.equal(members, state.members)
-                    && Objects.equal(interfaces, state.interfaces);
+                    && Objects.equal(interfaces, state.interfaces)
+                    && Objects.equal(typesFromGenericSignatures, state.typesFromGenericSignatures);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(members, interfaces);
+            return Objects.hashCode(members, interfaces, typesFromGenericSignatures);
         }
     }
 

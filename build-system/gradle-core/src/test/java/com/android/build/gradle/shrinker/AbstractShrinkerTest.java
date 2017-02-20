@@ -234,7 +234,7 @@ public abstract class AbstractShrinkerTest {
     }
 
     @NonNull
-    private static ClassNode getClassNode(File classFile) throws IOException {
+    protected static ClassNode getClassNode(File classFile) throws IOException {
         ClassReader classReader = new ClassReader(Files.toByteArray(classFile));
         ClassNode classNode = new ClassNode(Opcodes.ASM5);
         classReader.accept(

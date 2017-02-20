@@ -280,7 +280,7 @@ public abstract class AbstractShrinker<T> {
         // dex file.
         ClassWriter classWriter = new ClassWriter(0);
         ClassVisitor filter =
-                new FilterMembersVisitor(
+                new RewriteOutputVisitor(
                         membersToKeep, keepInterface, mBytecodeVersion, classWriter);
         classReader.accept(filter, 0);
         return classWriter.toByteArray();
