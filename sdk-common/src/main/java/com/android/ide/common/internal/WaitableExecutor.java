@@ -18,11 +18,14 @@ package com.android.ide.common.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.annotations.concurrency.GuardedBy;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -51,7 +54,7 @@ public class WaitableExecutor<T> {
     @NonNull private final CompletionService<T> mCompletionService;
     @NonNull private final Set<Future<T>> mFutureSet = Sets.newConcurrentHashSet();
 
-    private WaitableExecutor(
+    WaitableExecutor(
             @Nullable ExecutorService mExecutorService,
             @NonNull CompletionService<T> mCompletionService) {
         this.mExecutorService = mExecutorService;
@@ -73,6 +76,23 @@ public class WaitableExecutor<T> {
     public static <T> WaitableExecutor<T> useGlobalSharedThreadPool() {
         return new WaitableExecutor<>(
                 null, new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor()));
+    }
+
+    /**
+     * Creates a new {@link WaitableExecutor} which uses a globally shared thread pool, but limits
+     * the number of tasks (scheduled through this {@link WaitableExecutor}) that can execute in
+     * parallel. The thread submitting tasks will not block, but tasks may be queued before being
+     * passed to the {@link CompletionService}.
+     *
+     * @param parallelTaskLimit capacity of the underlying task queue
+     * @see #useGlobalSharedThreadPool()
+     */
+    public static <T> WaitableExecutor<T> useGlobalSharedThreadPoolWithLimit(
+            int parallelTaskLimit) {
+        return new BoundedWaitableExecutor<>(
+                null,
+                new ExecutorCompletionService<>(ExecutorSingleton.getExecutor()),
+                parallelTaskLimit);
     }
 
     /**
@@ -114,6 +134,13 @@ public class WaitableExecutor<T> {
     }
 
     /**
+     * Returns the number of tasks that have been submitted for execution but have not yet finished.
+     */
+    int getUnprocessedTasksCount() {
+        return mFutureSet.size();
+    }
+
+    /**
      * Waits for all tasks to be executed. If a tasks throws an exception, it will be thrown from
      * this method inside a RuntimeException, preventing access to the result of the other threads.
      *
@@ -126,9 +153,9 @@ public class WaitableExecutor<T> {
      *     interrupted.
      */
     public List<T> waitForTasksWithQuickFail(boolean cancelRemaining) throws InterruptedException {
-        List<T> results = Lists.newArrayListWithCapacity(mFutureSet.size());
+        List<T> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
         try {
-            while (!mFutureSet.isEmpty()) {
+            while (getUnprocessedTasksCount() > 0) {
                 Future<T> future = mCompletionService.take();
 
                 assert mFutureSet.contains(future);
@@ -182,9 +209,9 @@ public class WaitableExecutor<T> {
      */
     @NonNull
     public List<TaskResult<T>> waitForAllTasks() throws InterruptedException {
-        List<TaskResult<T>> results = Lists.newArrayListWithCapacity(mFutureSet.size());
+        List<TaskResult<T>> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
         try {
-            while (!mFutureSet.isEmpty()) {
+            while (getUnprocessedTasksCount() > 0) {
                 Future<T> future = mCompletionService.take();
 
                 assert mFutureSet.contains(future);
@@ -221,6 +248,71 @@ public class WaitableExecutor<T> {
     public void cancelAllTasks() {
         for (Future<T> future : mFutureSet) {
             future.cancel(true /*mayInterruptIfRunning*/);
+        }
+    }
+
+    /** A {@link WaitableExecutor} that blocks when too many tasks are being scheduled at once. */
+    private static class BoundedWaitableExecutor<T> extends WaitableExecutor<T> {
+        private final int bound;
+
+        @GuardedBy("overflow")
+        private final Queue<Callable<T>> overflow;
+
+        @GuardedBy("overflow")
+        private int inCompletionService;
+
+        BoundedWaitableExecutor(
+                @Nullable ExecutorService mExecutorService,
+                @NonNull CompletionService<T> mCompletionService,
+                int bound) {
+            super(mExecutorService, mCompletionService);
+            this.bound = bound;
+            this.inCompletionService = 0;
+            this.overflow = new LinkedList<>();
+        }
+
+        @Override
+        public void execute(Callable<T> callable) {
+            // Amend the callable to schedule more work once it's done.
+            Callable<T> wrapper =
+                    () -> {
+                        try {
+                            return callable.call();
+                        } finally {
+                            synchronized (overflow) {
+                                Callable<T> next = overflow.poll();
+                                if (next != null) {
+                                    super.execute(next);
+                                } else {
+                                    inCompletionService--;
+                                }
+                            }
+                        }
+                    };
+
+            synchronized (overflow) {
+                if (inCompletionService < bound) {
+                    inCompletionService++;
+                    super.execute(wrapper);
+                } else {
+                    overflow.add(wrapper);
+                }
+            }
+        }
+
+        @Override
+        public void cancelAllTasks() {
+            synchronized (overflow) {
+                overflow.clear();
+            }
+            super.cancelAllTasks();
+        }
+
+        @Override
+        int getUnprocessedTasksCount() {
+            synchronized (overflow) {
+                return super.getUnprocessedTasksCount() + overflow.size();
+            }
         }
     }
 }
