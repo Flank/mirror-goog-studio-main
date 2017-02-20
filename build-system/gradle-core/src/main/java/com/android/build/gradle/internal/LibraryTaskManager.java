@@ -462,7 +462,7 @@ public class LibraryTaskManager extends TaskManager {
                                     variantScope.publishIntermediateArtifact(
                                             mainClassJar,
                                             t.getName(),
-                                            AndroidArtifacts.ArtifactType.ANNOTATION_JAR);
+                                            AndroidArtifacts.ArtifactType.JAR);
                                     // publish the res jar
                                     variantScope.publishIntermediateArtifact(
                                             mainResJar,

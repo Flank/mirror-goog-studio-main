@@ -93,33 +93,4 @@ public class ExternalTestProjectTest {
 
         project.execute("clean", "app2:assembleDebug");
     }
-
-    @Test
-    public void testApkDependencyInModel() throws Exception {
-        TestFileUtils.appendToFile(app2BuildFile,
-                "apply plugin: 'com.android.application'\n"
-                + "\n"
-                + "android {\n"
-                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(path: ':app1')\n"
-                + "}\n");
-
-        ModelContainer<AndroidProject> modelMap = project.model().ignoreSyncIssues().getMulti();
-
-        AndroidProject model = modelMap.getModelMap().get(":app2");
-        assertNotNull(model);
-
-        SyncIssue issue = assertThat(model).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_DEPENDENCY_IS_APK,
-                "project:app1:unspecified");
-
-        String expectedMsg =
-                "Dependency project:app1:unspecified on project app2 resolves to an APK archive which is not supported as a compilation dependency. File:";
-        assertThat(issue.getMessage()).startsWith(expectedMsg);
-    }
 }

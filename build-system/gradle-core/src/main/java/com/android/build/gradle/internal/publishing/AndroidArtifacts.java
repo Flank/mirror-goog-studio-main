@@ -117,17 +117,10 @@ public class AndroidArtifacts {
 
     public enum ArtifactType {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
-        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST, API_AND_RUNTIME_ELEMENTS),
         MANIFEST_METADATA(TYPE_MANIFEST_METADATA, API_ELEMENTS_ONLY),
-
-        // this is used only for the models.
-        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
-
-        // Jar file for annotation processor as both classes and resources are needed.
-        ANNOTATION_JAR(TYPE_ANNOTATION_JAR, RUNTIME_ELEMENTS_ONLY),
 
         // API only elements.
         AIDL(TYPE_AIDL, API_ELEMENTS_ONLY),
@@ -149,8 +142,10 @@ public class AndroidArtifacts {
 
         // create a duplication of CLASSES because we don't want to publish
         // the classes of an FULL_APK to the runtime configuration as it's meant to be
-        // used only for compilation, not runtime.
-        APK_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY),
+        // used only for compilation, not runtime. Actually use TYPE_JAR to give access
+        // to this via the model for now, the JArTransform will convert it back to CLASSES
+        // FIXME: stop using TYPE_JAR for APK_CLASSES
+        APK_CLASSES(TYPE_JAR, API_ELEMENTS_ONLY),
         APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),
         APK_METADATA(TYPE_METADATA, API_ELEMENTS_ONLY),
         APK(TYPE_APK, RUNTIME_ELEMENTS_ONLY),
@@ -163,7 +158,13 @@ public class AndroidArtifacts {
         ATOM_JNI(TYPE_ATOM_JNI, API_ELEMENTS_ONLY),
         ATOM_ASSETS(TYPE_ATOM_ASSETS, API_ELEMENTS_ONLY),
         ATOM_LIB_INFO(TYPE_ATOM_LIB_INFO, API_ELEMENTS_ONLY),
-        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY);
+        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY),
+
+        // types for querying only. Not publishable.
+        // FIXME once we only support level 2 sync, then this can be not publishable
+        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
+        // Jar file for annotation processor as both classes and resources are needed, and for building model
+        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS);
 
         @NonNull
         private final String type;
