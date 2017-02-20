@@ -520,14 +520,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public FileCollection getJavaClasspath() {
         // TODO cache?
-        FileCollection classpath = getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
-
-        if (variantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = globalScope.getAndroidBuilder().getRenderScriptSupportJar();
-            classpath = classpath.plus(globalScope.getProject().files(renderScriptSupportJar));
-        }
-
-        return classpath;
+        return getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
     }
 
     @Override

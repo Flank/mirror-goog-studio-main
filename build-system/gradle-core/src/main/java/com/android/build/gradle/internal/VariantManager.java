@@ -81,6 +81,7 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -677,6 +678,17 @@ public class VariantManager implements VariantModel {
             project.getDependencies().add(
                     variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
         }
+
+        if (variantConfig.getRenderscriptSupportModeEnabled()) {
+            File renderScriptSupportJar = androidBuilder.getRenderScriptSupportJar();
+
+            final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
+            project.getDependencies()
+                    .add(variantDep.getCompileClasspath().getName(), fileCollection);
+            project.getDependencies()
+                    .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+        }
+
 
         final String testedProjectPath = extension instanceof TestAndroidConfig ?
                 ((TestAndroidConfig) extension).getTargetProjectPath() :

@@ -369,28 +369,6 @@ public class AndroidBuilder {
     }
 
     /**
-     * Returns the list of packaged jars for this config. If the config tests a library, this
-     * will include the jars of the tested config
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getAdditionalPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            if (renderScriptSupportJar != null) {
-                return ImmutableSet.of(renderScriptSupportJar);
-            }
-        }
-
-        return ImmutableSet.of();
-    }
-
-    /**
      * Returns the native lib folder for the renderscript mode.
      *
      * This may return null if the SDK has not been loaded yet.
