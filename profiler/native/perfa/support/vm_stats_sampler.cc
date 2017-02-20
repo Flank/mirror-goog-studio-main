@@ -30,29 +30,34 @@ using profiler::proto::MemoryData;
 
 namespace {
 
-const int32_t kPid = getpid();
-
 const SteadyClock& GetClock() {
   static SteadyClock clock;
   return clock;
 }
 
-void SendVmStats(int32_t alloc_count, int32_t free_count, int32_t gc_count) {
-  auto mem_stub = Perfa::Instance().memory_stub();
+void EnqueueVmStats(int32_t alloc_count, int32_t free_count, int32_t gc_count) {
+  int64_t timestamp = GetClock().GetCurrentTime();
 
-  ClientContext context;
-  EmptyMemoryReply reply;
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [alloc_count, free_count, gc_count, pid, timestamp]() {
+        auto mem_stub = Perfa::Instance().memory_stub();
 
-  VmStatsRequest vm_stats_request;
-  vm_stats_request.set_process_id(kPid);
+        ClientContext context;
+        EmptyMemoryReply reply;
 
-  MemoryData::VmStatsSample* stats = vm_stats_request.mutable_vm_stats_sample();
-  stats->set_timestamp(GetClock().GetCurrentTime());
-  stats->set_java_allocation_count(alloc_count);
-  stats->set_java_free_count(free_count);
-  stats->set_gc_count(gc_count);
+        VmStatsRequest vm_stats_request;
+        vm_stats_request.set_process_id(pid);
 
-  mem_stub.RecordVmStats(&context, vm_stats_request, &reply);
+        MemoryData::VmStatsSample* stats =
+            vm_stats_request.mutable_vm_stats_sample();
+        stats->set_timestamp(timestamp);
+        stats->set_java_allocation_count(alloc_count);
+        stats->set_java_free_count(free_count);
+        stats->set_gc_count(gc_count);
+
+        mem_stub.RecordVmStats(&context, vm_stats_request, &reply);
+      });
 }
 
 }  // namespace
@@ -63,6 +68,6 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_memory_VmStatsSampler_sendVmStats(
     JNIEnv* env, jclass clazz, jint jallocCount, jint jfreeCount,
     jint jgcCount) {
-  SendVmStats(jallocCount, jfreeCount, jgcCount);
+  EnqueueVmStats(jallocCount, jfreeCount, jgcCount);
 }
 };

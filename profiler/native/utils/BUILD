@@ -4,6 +4,7 @@ cc_library(
     name = "profiler_utils",
     srcs = [
         "activity_manager.cc",
+        "background_queue.cc",
         "bash_command.cc",
         "current_process.cc",
         "file_cache.cc",
@@ -38,9 +39,11 @@ cc_library(
     hdrs = [
         "activity_manager.h",
         "android_studio_version.h",
+        "background_queue.h",
         "bash_command.h",
         "clock.h",
         "config.h",
+        "count_down_latch.h",
         "current_process.h",
         "fake_clock.h",
         "file_cache.h",
@@ -75,7 +78,9 @@ cc_test(
     name = "profiler_utils_test",
     srcs = [
         "activity_manager_test.cc",
+        "background_queue_test.cc",
         "clock_test.cc",
+        "count_down_latch_test.cc",
         "current_process_test.cc",
         "file_cache_test.cc",
         "file_reader_test.cc",
