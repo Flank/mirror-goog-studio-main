@@ -747,6 +747,26 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testStylePrefix() throws Exception {
+        // AAPT accepts parent style references that simply start with "style/" (not @style);
+        // similarly, it also allows android:style/ rather than @android:style/
+        lint().files(
+                xml("res/values/styles.xml", ""
+                        + "<resources \n"
+                        + "        xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "        tools:keep=\"@style/MyInheritingStyle\" >\n"
+                        +  "    <style name=\"MyStyle\">\n"
+                        + "        <item name=\"android:textColor\">#ffff00ff</item>\n"
+                        + "    </style>\n"
+                        + "\n"
+                        + "    <style name=\"MyInheritingStyle\" parent=\"style/MyStyle\">\n"
+                        + "        <item name=\"android:textSize\">24pt</item>\n"
+                        + "    </style>\n"
+                        + "</resources>"))
+                .run()
+                .expectClean();
+    }
+
     public void testThemeFromLayout() throws Exception {
         mEnableIds = false;
         assertEquals("No warnings.",
