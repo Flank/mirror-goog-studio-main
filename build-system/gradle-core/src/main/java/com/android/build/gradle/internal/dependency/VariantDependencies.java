@@ -115,7 +115,7 @@ public class VariantDependencies {
         private VariantType testedVariantType = null;
         private VariantDependencies testedVariantDependencies = null;
         private AndroidDependency testedVariantOutput = null;
-        private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching;
+        private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
         // default size should be enough. It's going to be rare for a variant to include
         // more than a few configurations (main, build-type, flavors...)
@@ -188,9 +188,9 @@ public class VariantDependencies {
             return this;
         }
 
-        public Builder setFlavorMatching(
-                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching) {
-            this.flavorMatching = flavorMatching;
+        public Builder setFlavorSelection(
+                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
+            this.flavorSelection = flavorSelection;
             return this;
         }
 
@@ -230,7 +230,7 @@ public class VariantDependencies {
             VariantType variantType = variantConfiguration.getType();
             String buildType = variantConfiguration.getBuildType().getName();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap =
-                    getFlavorAttributes(flavorMatching);
+                    getFlavorAttributes(flavorSelection);
 
             final ConfigurationContainer configurations = project.getConfigurations();
 
@@ -358,11 +358,12 @@ public class VariantDependencies {
 
         /**
          * Returns a map of Configuration attributes containing all the flavor values.
-         * @param flavorMatching a list of override for flavor matching or for new attributes.
+         *
+         * @param flavorSelection a list of override for flavor matching or for new attributes.
          */
         @NonNull
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
-                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatching) {
+                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
             List<CoreProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
@@ -375,8 +376,8 @@ public class VariantDependencies {
             }
 
             // then go through the override or new attributes.
-            if (flavorMatching != null) {
-                map.putAll(flavorMatching);
+            if (flavorSelection != null) {
+                map.putAll(flavorSelection);
             }
 
             return map;

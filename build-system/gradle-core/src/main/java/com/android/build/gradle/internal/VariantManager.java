@@ -431,17 +431,16 @@ public class VariantManager implements VariantModel {
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
-            VariantDependencies.Builder builder = VariantDependencies
-                    .builder(
-                            project,
-                            androidBuilder.getErrorReporter(),
-                            testVariantConfig)
-                    .setPublishVariant(false)
-                    .setTestedVariantType(testedVariantType)
-                    .addSourceSets(testVariantSourceSets)
-                    .setFlavorMatching(extension.getFlavorMatchingStrategy())
-                    .addTestedVariant(testedVariantData.getVariantConfiguration(),
-                            testedVariantData.getVariantDependency());
+            VariantDependencies.Builder builder =
+                    VariantDependencies.builder(
+                                    project, androidBuilder.getErrorReporter(), testVariantConfig)
+                            .setPublishVariant(false)
+                            .setTestedVariantType(testedVariantType)
+                            .addSourceSets(testVariantSourceSets)
+                            .setFlavorSelection(extension.getFlavorSelection())
+                            .addTestedVariant(
+                                    testedVariantData.getVariantConfiguration(),
+                                    testedVariantData.getVariantDependency());
 
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
@@ -521,7 +520,7 @@ public class VariantManager implements VariantModel {
         }
 
         // this already contains the attribute name rather than just the dimension name.
-        dimensionAttributes.addAll(extension.getFlavorMatchingStrategy().keySet());
+        dimensionAttributes.addAll(extension.getFlavorSelection().keySet());
 
         // then set a default resolution strategy. It's fine if an attribute in the consumer is
         // missing from the producer
@@ -662,14 +661,12 @@ public class VariantManager implements VariantModel {
         BaseVariantData<?> variantData =
                 variantFactory.createVariantData(variantConfig, taskManager, recorder);
 
-        VariantDependencies.Builder builder = VariantDependencies
-                .builder(
-                        project,
-                        androidBuilder.getErrorReporter(),
-                        variantConfig)
-                .setPublishVariant(true)
-                .setFlavorMatching(extension.getFlavorMatchingStrategy())
-                .addSourceSets(variantSourceSets);
+        VariantDependencies.Builder builder =
+                VariantDependencies.builder(
+                                project, androidBuilder.getErrorReporter(), variantConfig)
+                        .setPublishVariant(true)
+                        .setFlavorSelection(extension.getFlavorSelection())
+                        .addSourceSets(variantSourceSets);
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);

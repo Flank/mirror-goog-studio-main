@@ -163,6 +163,7 @@ public interface AndroidConfig {
     DataBindingOptions getDataBinding();
 
     @Unmanaged
-    Map<String, String> getFlavorMatchingStrategy();
-    void setFlavorMatchingStrategy(Map<String, String> strategy);
+    Map<String, String> getFlavorSelection();
+
+    void setFlavorSelection(Map<String, String> strategy);
 }

@@ -150,7 +150,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
-    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMatchingStrategy;
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
     private Action<VariantFilter> variantFilter;
 
@@ -688,27 +688,24 @@ public abstract class BaseExtension implements AndroidConfig {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
-    public void flavorMatchingStrategy(String name, String value) {
-        if (flavorMatchingStrategy == null) {
-            flavorMatchingStrategy = Maps.newHashMap();
+    public void flavorSelection(String name, String value) {
+        if (flavorSelection == null) {
+            flavorSelection = Maps.newHashMap();
         }
 
-        flavorMatchingStrategy.put(
-                Attribute.of(name, ProductFlavorAttr.class),
-                ProductFlavorAttr.of(value));
+        flavorSelection.put(
+                Attribute.of(name, ProductFlavorAttr.class), ProductFlavorAttr.of(value));
     }
 
-    /**
-     * Map of (flavor dimension, flavor value) for flavor matching strategy.
-     */
+    /** Map of (flavor dimension, flavor value) for flavor matching strategy. */
     @Override
     @NonNull
-    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy() {
-        if (flavorMatchingStrategy == null) {
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection() {
+        if (flavorSelection == null) {
             return ImmutableMap.of();
         }
 
-        return flavorMatchingStrategy;
+        return flavorSelection;
     }
 
     public void variantFilter(Action<VariantFilter> filter) {

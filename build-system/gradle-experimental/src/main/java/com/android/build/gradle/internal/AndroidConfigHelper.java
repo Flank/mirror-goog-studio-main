@@ -63,7 +63,7 @@ public class AndroidConfigHelper {
         model.setAdbOptions(instantiator.newInstance(AdbOptions.class));
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
         model.setLibraryRequests(Lists.newArrayList());
-        model.setFlavorMatchingStrategy(Maps.newHashMap());
+        model.setFlavorSelection(Maps.newHashMap());
     }
 
 

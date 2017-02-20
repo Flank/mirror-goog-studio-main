@@ -159,7 +159,7 @@ public interface AndroidConfig {
     DataBindingOptions getDataBinding();
 
     @NonNull
-    Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy();
+    Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection();
 
     final class DeprecatedConfigurationAction implements Action<Dependency> {
 

@@ -248,12 +248,14 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
 
     @NonNull
     @Override
-    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorMatchingStrategy() {
-        return model.getFlavorMatchingStrategy().entrySet().stream()
-                .collect(Collectors.toMap(
-                        entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
-                        entry -> ProductFlavorAttr.of(entry.getValue())
-                ));
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection() {
+        return model.getFlavorSelection()
+                .entrySet()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
+                                entry -> ProductFlavorAttr.of(entry.getValue())));
     }
 
     @Override

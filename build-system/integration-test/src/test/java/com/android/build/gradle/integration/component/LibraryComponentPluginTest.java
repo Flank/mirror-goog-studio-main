@@ -78,7 +78,8 @@ public class LibraryComponentPluginTest {
 
     @Test
     public void checkMultiFlavorDependencies() throws Exception {
-        appendToFile(project.getSubproject("app").getBuildFile(),
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
                         + "\n"
                         + "dependencies {\n"
@@ -87,9 +88,13 @@ public class LibraryComponentPluginTest {
                         + "\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                        + "        flavorMatchingStrategy[\"pricing\"] = \"free\"\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        flavorSelection[\"pricing\"] = \"free\"\n"
                         + "    }\n"
                         + "}\n");
 
