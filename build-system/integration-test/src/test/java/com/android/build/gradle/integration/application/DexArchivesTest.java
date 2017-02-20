@@ -149,7 +149,6 @@ public class DexArchivesTest {
                 "BuildConfig.dex",
                 "HelloWorld.dex",
                 "R.dex",
-                "R$attr.dex",
                 "R$id.dex",
                 "R$layout.dex",
                 "R$string.dex");
@@ -162,13 +161,12 @@ public class DexArchivesTest {
                 "Lcom/example/helloworld/HelloWorld;",
                 "Lcom/example/helloworld/R;",
                 "Lcom/example/helloworld/R$id;",
-                "Lcom/example/helloworld/R$attr;",
                 "Lcom/example/helloworld/R$layout;",
                 "Lcom/example/helloworld/R$string;");
     }
 
     private void assembleDebug() throws IOException, InterruptedException {
-        project.executor().withUseDexArchive(true).run("assembleDebug");
+        project.executor().withUseDexArchive(true).withEnabledAapt2(true).run("assembleDebug");
     }
 
     @NonNull
