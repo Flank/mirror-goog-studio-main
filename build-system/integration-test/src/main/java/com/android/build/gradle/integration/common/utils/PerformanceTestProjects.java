@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 public class PerformanceTestProjects {
 
-    private static String generateLocalRepositoriesSnippet() {
+    public static String generateLocalRepositoriesSnippet() {
         StringBuilder localRepositoriesSnippet = new StringBuilder();
         for (Path repo : GradleTestProject.getLocalRepositories()) {
             localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
