@@ -451,6 +451,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
+    public static TestFile manifest(@NonNull String path, @NonNull @Language("XML") String source) {
+        return TestFiles.source(path, source);
+    }
+
+    @NonNull
     public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile projectProperties() {
         return TestFiles.projectProperties();
     }

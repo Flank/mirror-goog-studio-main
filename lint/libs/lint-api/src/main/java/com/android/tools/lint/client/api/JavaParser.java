@@ -177,7 +177,7 @@ public abstract class JavaParser {
             contents = getFileContents(containingFile);
         }
         return Location.create(file, contents, range.getStartOffset(),
-                               range.getEndOffset());
+                               range.getEndOffset()).setSource(element);
     }
 
     @Nullable
@@ -199,7 +199,7 @@ public abstract class JavaParser {
         }
         contents = getFileContents(containingFile);
         return Location.create(file, contents, range.getStartOffset(),
-                range.getEndOffset());
+                range.getEndOffset()).setSource(element);
     }
 
     /**
@@ -250,9 +250,10 @@ public abstract class JavaParser {
                 to.getTextRange().getEndOffset() + toDelta);
         if (end <= start) {
             // Some AST nodes don't have proper bounds, such as empty parameter lists
-            return Location.create(context.file, contents, start, fromRange.getEndOffset());
+            return Location.create(context.file, contents, start, fromRange.getEndOffset())
+                    .setSource(from);
         }
-        return Location.create(context.file, contents, start, end);
+        return Location.create(context.file, contents, start, end).setSource(from);
     }
 
     /**
@@ -311,7 +312,7 @@ public abstract class JavaParser {
                     int length = node.getClass().getSimpleName().length();
                     return Location.create(location.getFile(), start,
                             new DefaultPosition(start.getLine(), start.getColumn() + length,
-                                    start.getOffset() + length));
+                                    start.getOffset() + length)).setSource(node);
                 }
             }
         }

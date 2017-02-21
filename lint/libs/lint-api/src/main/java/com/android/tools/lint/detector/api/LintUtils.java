@@ -58,8 +58,14 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
+import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SourceProviderContainer;
+import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
@@ -1604,6 +1610,87 @@ public class LintUtils {
         } // else: the class name is already a fully qualified class name
 
         return className;
+    }
+
+    @NonNull
+    public static List<SourceProvider> getSourceProviders(
+            @NonNull AndroidProject project,
+            @NonNull Variant variant) {
+        List<SourceProvider> providers = Lists.newArrayList();
+        AndroidArtifact mainArtifact = variant.getMainArtifact();
+
+        providers.add(project.getDefaultConfig().getSourceProvider());
+
+        for (String flavorName : variant.getProductFlavors()) {
+            for (ProductFlavorContainer flavor : project.getProductFlavors()) {
+                if (flavorName.equals(flavor.getProductFlavor().getName())) {
+                    providers.add(flavor.getSourceProvider());
+                    break;
+                }
+            }
+        }
+
+        SourceProvider multiProvider = mainArtifact.getMultiFlavorSourceProvider();
+        if (multiProvider != null) {
+            providers.add(multiProvider);
+        }
+
+        String buildTypeName = variant.getBuildType();
+        for (BuildTypeContainer buildType : project.getBuildTypes()) {
+            if (buildTypeName.equals(buildType.getBuildType().getName())) {
+                providers.add(buildType.getSourceProvider());
+                break;
+            }
+        }
+
+        SourceProvider variantProvider = mainArtifact.getVariantSourceProvider();
+        if (variantProvider != null) {
+            providers.add(variantProvider);
+        }
+
+        return providers;
+    }
+
+    @NonNull
+    public static List<SourceProvider> getTestSourceProviders(
+            @NonNull AndroidProject project,
+            @NonNull Variant variant) {
+        List<SourceProvider> providers = Lists.newArrayList();
+
+        ProductFlavorContainer defaultConfig = project.getDefaultConfig();
+        for (SourceProviderContainer extra : defaultConfig.getExtraSourceProviders()) {
+            String artifactName = extra.getArtifactName();
+            if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+                providers.add(extra.getSourceProvider());
+            }
+        }
+
+        for (String flavorName : variant.getProductFlavors()) {
+            for (ProductFlavorContainer flavor : project.getProductFlavors()) {
+                if (flavorName.equals(flavor.getProductFlavor().getName())) {
+                    for (SourceProviderContainer extra : flavor.getExtraSourceProviders()) {
+                        String artifactName = extra.getArtifactName();
+                        if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+                            providers.add(extra.getSourceProvider());
+                        }
+                    }
+                }
+            }
+        }
+
+        String buildTypeName = variant.getBuildType();
+        for (BuildTypeContainer buildType : project.getBuildTypes()) {
+            if (buildTypeName.equals(buildType.getBuildType().getName())) {
+                for (SourceProviderContainer extra : buildType.getExtraSourceProviders()) {
+                    String artifactName = extra.getArtifactName();
+                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+                        providers.add(extra.getSourceProvider());
+                    }
+                }
+            }
+        }
+
+        return providers;
     }
 
     /** Returns true if the given string is a reserved Java keyword */

@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
 import java.io.File;
 import java.io.IOException;
@@ -109,33 +110,47 @@ public class LintCliXmlParser extends XmlParser {
     @NonNull
     @Override
     public Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
-        node = findSourceNode(node);
-        return Location.create(context.file, PositionXmlParser.getPosition(node));
+        return getLocation(context.file, node);
+    }
+
+    @NonNull
+    @Override
+    public Location getLocation(@NonNull File file, @NonNull Node node) {
+        Pair<File,Node> mergedSource = findManifestSource(node);
+        if (mergedSource != null) {
+            file = mergedSource.getFirst();
+            node = mergedSource.getSecond();
+        }
+
+        return Location.create(file, PositionXmlParser.getPosition(node)).setSource(node);
     }
 
     @NonNull
     @Override
     public Location getLocation(@NonNull XmlContext context, @NonNull Node node,
             int start, int end) {
-        node = findSourceNode(node);
-        return Location.create(context.file, PositionXmlParser.getPosition(node, start, end));
+        File file = context.file;
+        Pair<File,Node> mergedSource = findManifestSource(node);
+        if (mergedSource != null) {
+            file = mergedSource.getFirst();
+            node = mergedSource.getSecond();
+        }
+
+        return Location.create(file, PositionXmlParser.getPosition(node, start, end))
+                .setSource(node);
     }
 
-    @NonNull
-    private Node findSourceNode(@NonNull Node node) {
+    @Nullable
+    private Pair<File,Node> findManifestSource(@NonNull Node node) {
         if (client.isMergeManifestNode(node)) {
-            Node source = client.findManifestSourceNode(node);
-            if (source != null) {
-                node = source;
-            }
+            return client.findManifestSourceNode(node);
         }
-        return node;
+        return null;
     }
 
     @Override
     @NonNull
     public Location getNameLocation(@NonNull XmlContext context, @NonNull Node node) {
-        node = findSourceNode(node);
         Location location = getLocation(context, node);
         Position start = location.getStart();
         Position end = location.getEnd();
@@ -148,16 +163,13 @@ public class LintCliXmlParser extends XmlParser {
         int startColumn = start.getColumn() + delta;
         return Location.create(location.getFile(),
                 new DefaultPosition(start.getLine(), startColumn, startOffset),
-                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length));
+                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
+                .setSource(node);
     }
 
     @Override
     @NonNull
     public Location getValueLocation(@NonNull XmlContext context, @NonNull Attr node) {
-        Node sourceNode = findSourceNode(node);
-        if (sourceNode != node && sourceNode instanceof Attr) {
-            node = (Attr) sourceNode;
-        }
         Location location = getLocation(context, node);
         Position start = location.getStart();
         Position end = location.getEnd();
@@ -171,7 +183,8 @@ public class LintCliXmlParser extends XmlParser {
         int startColumn = start.getColumn() + delta;
         return Location.create(location.getFile(),
                 new DefaultPosition(start.getLine(), startColumn, startOffset),
-                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length));
+                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
+                .setSource(node);
     }
 
     @NonNull
@@ -182,14 +195,20 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
-        node = findSourceNode(node);
-        return  PositionXmlParser.getPosition(node).getStartOffset();
+        Pair<File,Node> mergedSource = findManifestSource(node);
+        if (mergedSource != null) {
+            node = mergedSource.getSecond();
+        }
+        return PositionXmlParser.getPosition(node).getStartOffset();
     }
 
     @Override
     public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
-        node = findSourceNode(node);
-        return  PositionXmlParser.getPosition(node).getEndOffset();
+        Pair<File,Node> mergedSource = findManifestSource(node);
+        if (mergedSource != null) {
+            node = mergedSource.getSecond();
+        }
+        return PositionXmlParser.getPosition(node).getEndOffset();
     }
 
     @Nullable
@@ -214,8 +233,14 @@ public class LintCliXmlParser extends XmlParser {
         @NonNull
         @Override
         public Location resolve() {
-            Node node = parser.findSourceNode(this.node);
-            return Location.create(file, PositionXmlParser.getPosition(node));
+            Node node = this.node;
+            File file = this.file;
+            Pair<File,Node> source = parser.findManifestSource(node);
+            if (source != null) {
+                file = source.getFirst();
+                node = source.getSecond();
+            }
+            return Location.create(file, PositionXmlParser.getPosition(node)).setSource(node);
         }
 
         @Override

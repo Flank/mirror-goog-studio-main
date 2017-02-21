@@ -323,7 +323,7 @@ public class ClassContext extends Context {
             }
         }
 
-        super.report(issue, location, message);
+        super.doReport(issue, location, message, null);
     }
 
     // Unfortunately, ASMs nodes do not extend a common DOM node type with parent

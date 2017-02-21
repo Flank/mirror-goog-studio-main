@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.PositionXmlParser;
 import com.google.common.annotations.Beta;
 import java.io.File;
 import java.io.IOException;
@@ -71,6 +70,20 @@ public abstract class XmlParser {
      */
     @NonNull
     public abstract Location getLocation(@NonNull XmlContext context, @NonNull Node node);
+
+    /**
+     * Attempt to create a location for a given XML node. Note that since DOM does not normally
+     * provide offset information for nodes, this doesn't work if you pass in a random DOM node
+     * from your own parsing operations; you should only call this method with nodes provided
+     * by lint in the first place (internally it uses a special parser which tracks offset
+     * information.)
+     *
+     * @param file the file that contains the node that was parsed
+     * @param node the node itself
+     * @return a location for the node, if possible
+     */
+    @NonNull
+    public abstract Location getLocation(@NonNull File file, @NonNull Node node);
 
     /**
      * Returns a {@link Location} for the given DOM node. Like

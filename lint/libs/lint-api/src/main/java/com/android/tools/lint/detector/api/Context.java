@@ -29,10 +29,13 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
 import com.google.common.annotations.Beta;
+import com.intellij.psi.PsiElement;
 import java.io.File;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import org.w3c.dom.Node;
 
 /**
  * Context passed to the detectors during an analysis run. It provides
@@ -267,6 +270,52 @@ public class Context {
      * @param quickfixData parameterized data for IDE quickfixes
      */
     public void report(
+            @NonNull Issue issue,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable Object quickfixData) {
+        // See if we actually have an associated source for this location, and if so
+        // check to see if the warning might be suppressed.
+        Object source = location.getSource();
+        if (source instanceof Node) {
+            Node node = (Node) source;
+            // Also see if we have the context for this location (e.g. code could
+            // have directly called XmlContext/JavaContext report methods instead); this
+            // is better because the context also checks for issues suppressed via comment
+            if (this instanceof XmlContext) {
+                XmlContext xmlContext = (XmlContext) this;
+                if (node.getOwnerDocument() == xmlContext.document) {
+                    xmlContext.report(issue, node, location, message, quickfixData);
+                    return;
+                }
+            }
+            if (driver.isSuppressed(null, issue, node)) {
+                return;
+            }
+        } else if (source instanceof PsiElement) {
+            // Check for suppressed issue via location node
+            PsiElement element = (PsiElement) source;
+            if (this instanceof JavaContext) {
+                JavaContext javaContext = (JavaContext) this;
+                if (Objects.equals(element.getContainingFile(), javaContext.getJavaFile())) {
+                    javaContext.report(issue, element, location, message, quickfixData);
+                    return;
+                }
+            }
+            if (driver.isSuppressed(null, issue, element)) {
+                return;
+            }
+        }
+        // TODO: Uast nods
+
+        doReport(issue, location, message, quickfixData);
+    }
+
+    // Method not callable outside of the lint infrastructure: perform the actual reporting.
+    // This is a separate method instead of just having Context#report() do this work,
+    // since Context#report() will possibly redirect to the XmlContext or JavaContext reporting
+    // mechanisms if it discovers that it's been called on the wrong node.
+    void doReport(
             @NonNull Issue issue,
             @NonNull Location location,
             @NonNull String message,

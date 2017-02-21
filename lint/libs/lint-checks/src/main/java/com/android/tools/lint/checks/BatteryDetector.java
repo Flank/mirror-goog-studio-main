@@ -44,7 +44,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 /**
- * Checks looking for issues that negatively affect battery life
+ * Checks for issues that negatively affect battery life
  */
 public class BatteryDetector extends ResourceXmlDetector implements
         JavaPsiScanner {

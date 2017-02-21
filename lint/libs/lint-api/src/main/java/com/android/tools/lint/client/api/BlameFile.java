@@ -17,9 +17,12 @@ package com.android.tools.lint.client.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.SourceFilePosition;
+import com.android.manifmerger.Actions;
 import com.android.manifmerger.XmlNode;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -36,22 +39,65 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 class BlameFile {
-    public static final BlameFile NONE = new BlameFile(Collections.emptyMap());
+    public static final BlameFile NONE = new BlameFile(Collections.emptyMap(), null);
 
     private final Map<String, BlameNode> nodes;
+    private final Actions actions;
 
-    BlameFile(Map<String, BlameNode> nodes) {
+    BlameFile(@NonNull Map<String, BlameNode> nodes, @Nullable Actions actions) {
         this.nodes = nodes;
+        this.actions = actions;
     }
 
     @Nullable
     private BlameNode findBlameNode(@NonNull Element element) {
         String key = getNodeKey(element);
-        return nodes.get(key);
+        BlameNode blameNode = nodes.get(key);
+
+        if (blameNode == null && actions != null) {
+            XmlNode.NodeKey nodeKey = XmlNode.NodeKey.fromXml(element);
+            ImmutableList<Actions.NodeRecord> records = actions.getNodeRecords(nodeKey);
+            for (Actions.NodeRecord record : records) {
+                Actions.ActionType actionType = record.getActionType();
+                if (actionType == Actions.ActionType.ADDED ||
+                        actionType == Actions.ActionType.MERGED) {
+                    if (blameNode == null) {
+                        blameNode = new BlameNode(key);
+                        nodes.put(key, blameNode);
+                    }
+                    SourceFilePosition actionLocation = record.getActionLocation();
+                    File sourceFile = actionLocation.getFile().getSourceFile();
+                    if (sourceFile != null) {
+                        blameNode.setElementLocation(" from " + sourceFile.getPath());
+                    }
+                }
+            }
+            for (XmlNode.NodeName nodeName : actions.getRecordedAttributeNames(nodeKey)) {
+                for (Actions.AttributeRecord record : actions
+                        .getAttributeRecords(nodeKey, nodeName)) {
+                    Actions.ActionType actionType = record.getActionType();
+                    if (actionType == Actions.ActionType.ADDED ||
+                            actionType == Actions.ActionType.MERGED) {
+                        if (blameNode == null) {
+                            blameNode = new BlameNode(key);
+                            nodes.put(key, blameNode);
+                        }
+                        SourceFilePosition actionLocation = record.getActionLocation();
+                        File sourceFile = actionLocation.getFile().getSourceFile();
+                        if (sourceFile != null) {
+                            blameNode.setAttributeLocations(nodeName.getLocalName(),
+                                    " from " + sourceFile.getPath());
+                        }
+                    }
+                }
+            }
+        }
+
+        return blameNode;
     }
 
     @Nullable
-    public Node findSourceNode(@NonNull LintClient client, @NonNull Node node) {
+    public Pair<File,Node> findSourceNode(@NonNull LintClient client, @NonNull Node node) {
         if (node instanceof Attr) {
             return findSourceAttribute(client, (Attr)node);
         } else if (node instanceof Element) {
@@ -62,29 +108,39 @@ class BlameFile {
     }
 
     @Nullable
-    public Element findSourceElement(@NonNull LintClient client, @NonNull Element element) {
-        Node node = findElementOrAttribute(client, element, null);
-        if (node instanceof Element) {
-            return (Element)node;
+    public Pair<File,Node> findSourceElement(
+            @NonNull LintClient client,
+            @NonNull Element element) {
+        Pair<File,Node> source = findElementOrAttribute(client, element, null);
+        if (source != null && source.getSecond() instanceof Element) {
+            return source;
         }
 
         return null;
     }
 
     @Nullable
-    public Attr findSourceAttribute(@NonNull LintClient client, @NonNull Attr attr) {
+    public Pair<File,Node> findSourceAttribute(@NonNull LintClient client, @NonNull Attr attr) {
         Element element = attr.getOwnerElement();
-        Node node = findElementOrAttribute(client, element, attr);
-        if (node instanceof Attr) {
-            return (Attr)node;
-        } else if (node instanceof Element) {
-            Element sourceElement = (Element)node;
+        Pair<File,Node> source = findElementOrAttribute(client, element, attr);
+        if (source != null && source.getSecond() instanceof Attr) {
+            return source;
+        } else if (source != null && source.getSecond() instanceof Element) {
+            Element sourceElement = (Element)source.getSecond();
             if (attr.getPrefix() != null) {
                 String namespace = attr.getNamespaceURI();
                 String localName = attr.getLocalName();
-                return sourceElement.getAttributeNodeNS(namespace, localName);
+                Attr sourceAttribute = sourceElement.getAttributeNodeNS(namespace, localName);
+                if (sourceAttribute != null) {
+                    return Pair.of(source.getFirst(), sourceAttribute);
+                }
+                return null;
             } else {
-                return sourceElement.getAttributeNode(attr.getName());
+                Attr sourceAttribute = sourceElement.getAttributeNode(attr.getName());
+                if (sourceAttribute != null) {
+                    return Pair.of(source.getFirst(), sourceAttribute);
+                }
+                return null;
             }
         }
 
@@ -92,7 +148,7 @@ class BlameFile {
     }
 
     @Nullable
-    private Node findElementOrAttribute(@NonNull LintClient client,
+    private Pair<File,Node> findElementOrAttribute(@NonNull LintClient client,
                                         @NonNull Element element,
                                         @Nullable Attr attribute) {
         BlameNode blameNode = findBlameNode(element);
@@ -103,6 +159,9 @@ class BlameFile {
         String location = null;
         if (attribute != null) {
             location = blameNode.getAttributeLocation(attribute.getName());
+            if (location == null) {
+                location = blameNode.getAttributeLocation(attribute.getLocalName());
+            }
             // If null use element location instead
         }
 
@@ -144,9 +203,6 @@ class BlameFile {
         // for locations; it's the main use case for resolving
         // merged nodes back to their sources
         XmlParser parser = client.getXmlParser();
-        if (parser == null) {
-            return null;
-        }
         Document document;
         try {
              document = parser.parseXml(manifest);
@@ -183,7 +239,7 @@ class BlameFile {
                 return false;
             }
         });
-        return reference.get();
+        return Pair.of(manifest, reference.get());
     }
 
     @NonNull
@@ -204,6 +260,12 @@ class BlameFile {
     public static BlameFile parse(File file) throws IOException {
         List<String> lines = Files.readLines(file, Charsets.UTF_8);
         return parse(lines);
+    }
+
+    @NonNull
+    public static BlameFile parse(Actions mergerActions) {
+        Map<String, BlameNode> nodes = Maps.newHashMapWithExpectedSize(80);
+        return new BlameFile(nodes, mergerActions);
     }
 
     @NonNull
@@ -250,7 +312,8 @@ class BlameFile {
             attributeName = null;
             last = node;
         }
-        return new BlameFile(nodes);
+
+        return new BlameFile(nodes, null);
     }
 
     private static int getIndent(@NonNull String line) {

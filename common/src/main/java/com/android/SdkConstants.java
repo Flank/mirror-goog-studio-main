@@ -949,6 +949,7 @@ public final class SdkConstants {
     public static final String TAG_USES_LIBRARY = "uses-library"; //$NON-NLS-1$
     public static final String TAG_APPLICATION = "application"; //$NON-NLS-1$
     public static final String TAG_INTENT_FILTER = "intent-filter"; //$NON-NLS-1$
+    public static final String TAG_CATEGORY = "category"; //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk"; //$NON-NLS-1$
     public static final String TAG_ACTIVITY = "activity"; //$NON-NLS-1$
     public static final String TAG_ACTIVITY_ALIAS = "activity-alias"; //$NON-NLS-1$

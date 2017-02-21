@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api;
 import static com.android.SdkConstants.CLASS_FOLDER;
 import static com.android.SdkConstants.DOT_AAR;
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.GEN_FOLDER;
@@ -36,6 +37,7 @@ import com.android.builder.model.Variant;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
+import com.android.manifmerger.Actions;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
@@ -52,8 +54,10 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -181,7 +185,7 @@ public abstract class LintClient {
      * @return a new {@link XmlParser}, or null if this client does not support
      *         XML analysis
      */
-    @Nullable
+    @NonNull
     public abstract XmlParser getXmlParser();
 
     /**
@@ -1254,17 +1258,17 @@ public abstract class LintClient {
      * source location
      *
      * @param mergedManifest the document for the merged manifest
-     * @param reportFile the manifest merger report file
+     * @param reportFile the manifest merger report file, or the report itself
      */
     @SuppressWarnings("MethodMayBeStatic") // clients can override
     public void resolveMergeManifestSources(@NonNull Document mergedManifest,
-            @NonNull File reportFile) {
+            @NonNull Object reportFile) {
         mergedManifest.setUserData(MERGED_MANIFEST, reportFile, null);
     }
 
     /**
      * Returns true if the given node is part of a merged manifest document
-     * (already configured via {@link #resolveMergeManifestSources(Document, File)})
+     * (already configured via {@link #resolveMergeManifestSources(Document, Object)})
      *
      * @param node the node to look up
      * @return true if this node is part of a merged manifest document
@@ -1276,10 +1280,12 @@ public abstract class LintClient {
     }
 
     /** Cache used by {@link #findManifestSourceNode(Node)} */
-    @Nullable private Map<File,BlameFile> reportFileCache;
+    @Nullable private Map<Object,BlameFile> reportFileCache;
 
     /** Cache used by {@link #findManifestSourceNode(Node)} */
-    @Nullable protected IdentityHashMap<Node,Node> sourceNodeCache;
+    @Nullable protected IdentityHashMap<Node,Pair<File,Node>> sourceNodeCache;
+
+    protected static final Pair<File,Node> NOT_FOUND = Pair.of(null, null);
 
     /**
      * For the given node from a merged manifest, find the corresponding
@@ -1290,13 +1296,11 @@ public abstract class LintClient {
      */
     @SuppressWarnings("MethodMayBeStatic") // clients can override
     @Nullable
-    public Node findManifestSourceNode(@NonNull Node mergedNode) {
+    public Pair<File,Node> findManifestSourceNode(@NonNull Node mergedNode) {
         if (sourceNodeCache != null) {
-            Node source = sourceNodeCache.get(mergedNode);
+            Pair<File,Node> source = sourceNodeCache.get(mergedNode);
             if (source != null) {
-                // document node is a place holder meaning "searched, not found". See
-                // code at the end of this method which populates cache.
-                if (source.getNodeType() == Node.DOCUMENT_NODE) {
+                if (source == NOT_FOUND) {
                     return null;
                 }
                 return source;
@@ -1307,40 +1311,70 @@ public abstract class LintClient {
         if (doc == null) {
             return null;
         }
-        File reportFile = (File) doc.getUserData(MERGED_MANIFEST);
-        if (reportFile == null) {
+        Object report = doc.getUserData(MERGED_MANIFEST);
+        if (report == null) {
             return null;
         }
 
         BlameFile blameFile = null;
         if (reportFileCache != null) {
-            blameFile = reportFileCache.get(reportFile);
+            blameFile = reportFileCache.get(report);
         } else {
             reportFileCache = Maps.newHashMap();
         }
         if (blameFile == null) {
             try {
-                blameFile = BlameFile.parse(reportFile);
+                if (report instanceof File) {
+                    File file = (File) report;
+                    if (file.getPath().endsWith(DOT_XML)) {
+                        // Single manifest file: no manifest merging, passed source document
+                        // straight through
+                        return Pair.of(file, mergedNode);
+                    }
+                    blameFile = BlameFile.parse(file);
+                } else if (report instanceof String) {
+                    List<String> lines = Splitter.on('\n').splitToList((String) report);
+                    blameFile = BlameFile.parse(lines);
+                } else if (report instanceof Actions) {
+                    blameFile = BlameFile.parse((Actions) report);
+                } else {
+                    assert false : report;
+                    blameFile = BlameFile.NONE;
+                }
             } catch (IOException ignore) {
                 blameFile = BlameFile.NONE;
             }
-            reportFileCache.put(reportFile, blameFile);
+            reportFileCache.put(report, blameFile);
         }
 
-        Node source = null;
+        Pair<File,Node> source = null;
         if (blameFile != BlameFile.NONE) {
             source = blameFile.findSourceNode(this, mergedNode);
         }
 
         // Cache for next time
-        // If not found, put doc node as place holder meaning "already searched, not found"
-        Node cacheValue = source != null ? source : doc;
+        Pair<File,Node> cacheValue = source != null ? source : NOT_FOUND;
         if (sourceNodeCache == null) {
             sourceNodeCache = Maps.newIdentityHashMap();
         }
         sourceNodeCache.put(mergedNode, cacheValue);
 
         return source;
+    }
+
+    /**
+     * Returns the location for a given node from a merged manifest file. Convenience
+     * wrapper around {@link #findManifestSourceNode(Node)} and
+     * {@link XmlParser#getLocation(File, Node)}
+     */
+    @Nullable
+    public Location findManifestSourceLocation(@NonNull Node mergedNode) {
+        Pair<File, Node> source = findManifestSourceNode(mergedNode);
+        if (source != null) {
+            return getXmlParser().getLocation(source.getFirst(), source.getSecond());
+        }
+
+        return null;
     }
 
     /**

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.lint.detector.api.Location.SearchDirection;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import java.io.File;
@@ -136,5 +138,17 @@ public class LocationTest extends TestCase {
                 SearchHints.create(SearchDirection.FORWARD).matchWholeWord());
         Location.create(new File("foo"), "this is a test", 0, "", "",
                 SearchHints.create(SearchDirection.BACKWARD).matchWholeWord());
+    }
+
+    public void testSource() {
+        Location location = Location.create(new File("foo"));
+
+        //noinspection UnnecessaryBoxing
+        Integer source = Integer.valueOf(42);
+        location.setSource(source);
+        assertThat(location.getSource()).isEqualTo(source);
+        assertThat(location.getSource(Integer.class)).isEqualTo(source);
+        assertThat(location.getSource(Number.class)).isEqualTo(source);
+        assertThat(location.getSource(String.class)).isNull();
     }
 }

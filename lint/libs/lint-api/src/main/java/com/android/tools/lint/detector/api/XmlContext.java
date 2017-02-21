@@ -151,7 +151,7 @@ public class XmlContext extends ResourceContext {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
-        super.report(issue, location, message, data);
+        super.doReport(issue, location, message, data);
     }
 
     @Override
