@@ -5,5 +5,4 @@
     <global id="manifestOut" value="${manifestDir}" />
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
     <global id="resOut" value="${resDir}" />
-    <global id="mavenUrl" value="mavenCentral" />
 </globals>

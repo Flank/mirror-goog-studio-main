@@ -1,18 +1,3 @@
-<#if !(perModuleRepositories??) || perModuleRepositories>
-buildscript {
-    repositories {
-        jcenter()
-<#if mavenUrl != "mavenCentral">
-        maven {
-            url '${mavenUrl}'
-        }
-</#if>
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:${gradlePluginVersion}'
-    }
-}
-</#if>
 <#if isInstantApp!false>
     <#if isLibraryProject!false>
 apply plugin: 'com.android.atom'
@@ -25,17 +10,6 @@ apply plugin: 'com.android.library'
     <#else>
 apply plugin: 'com.android.application'
     </#if>
-</#if>
-<#if !(perModuleRepositories??) || perModuleRepositories>
-
-repositories {
-        jcenter()
-<#if mavenUrl != "mavenCentral">
-        maven {
-            url '${mavenUrl}'
-        }
-</#if>
-}
 </#if>
 
 android {
