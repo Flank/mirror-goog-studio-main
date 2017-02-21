@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild;
+package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -42,14 +41,14 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Test to ensure ndk-build project works with instant run.
+ * Test to ensure CMake project works with instant run.
  */
-public class NdkBuildInstantRunTest {
+public class CmakeInstantRunTest {
 
     @ClassRule
     public static GradleTestProject sProject = GradleTestProject.builder()
             .fromTestApp(HelloWorldJniApp.builder().build())
-            .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+            .addFile(HelloWorldJniApp.cmakeLists("."))
             .create();
 
     @Rule
@@ -66,8 +65,8 @@ public class NdkBuildInstantRunTest {
                                 + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
                                 + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
                                 + "        externalNativeBuild {\n"
-                                + "            ndkBuild {\n"
-                                + "               path 'src/main/jni/Android.mk'\n"
+                                + "            cmake {\n"
+                                + "               path 'CMakeLists.txt'\n"
                                 + "            }\n"
                                 + "        }\n"
                                 + "    }\n"
@@ -119,8 +118,7 @@ public class NdkBuildInstantRunTest {
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
 
-        byte[] so1 = getSo(instantRunModel);
-
+        byte[] lib = getSo(instantRunModel);
         File src = sProject.file("src/main/jni/hello-jni.c");
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
@@ -133,7 +131,7 @@ public class NdkBuildInstantRunTest {
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED.toString());
         assertThat(context.getArtifacts()).hasSize(1);
 
-        assertThat(getSo(instantRunModel)).isNotEqualTo(so1);
+        assertThat(getSo(instantRunModel)).isNotEqualTo(lib);
     }
 
     private static byte[] getSo(InstantRun instantRunModel) throws Exception {
@@ -141,4 +139,5 @@ public class NdkBuildInstantRunTest {
         Path so = Iterables.getOnlyElement(apks.getEntries("lib/x86/libhello-jni.so"));
         return java.nio.file.Files.readAllBytes(so);
     }
+
 }

@@ -64,7 +64,7 @@ public final class InstantRunTestUtils {
     public static final Map<String, Integer> PORTS =
             ImmutableMap.<String, Integer>builder()
                     .put("ConnectedColdSwapTest", 8115)
-                    .put("NativeLibraryInstantRunTest", 8116)
+                    .put("NdkBuildInstantRunTest", 8116)
                     .put("HotSwapTest", 8117)
                     .put("ButterKnifeTest", 8118)
                     .put("DaggerTest", 8119)
