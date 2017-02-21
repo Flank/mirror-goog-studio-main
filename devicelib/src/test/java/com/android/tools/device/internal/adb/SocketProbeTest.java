@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 
-public class AdbServerUtilsTest {
+public class SocketProbeTest {
     @Test
     public void adbServerRunning_freePort() throws IOException, InterruptedException {
         int port;
@@ -43,12 +43,7 @@ public class AdbServerUtilsTest {
         // time we check..
 
         InetSocketAddress address = new InetSocketAddress(InetAddress.getByName(null), port);
-        try {
-            assertThat(AdbServerUtils.isAdbServerRunning(address, 500, TimeUnit.MILLISECONDS))
-                    .isFalse();
-        } catch (TimeoutException e) {
-            // expected on Windows
-        }
+        assertThat(new SocketProbe().probe(address, 500, TimeUnit.MILLISECONDS)).isNull();
     }
 
     @Test
@@ -68,8 +63,7 @@ public class AdbServerUtilsTest {
                     new InetSocketAddress(InetAddress.getByName(null), ds.getPort());
 
             // adb server shouldn't have been running since we are connecting to our own server
-            assertThat(AdbServerUtils.isAdbServerRunning(addr, 50, TimeUnit.MILLISECONDS))
-                    .isFalse();
+            assertThat(new SocketProbe().probe(addr, 50, TimeUnit.MILLISECONDS)).isNull();
 
             // verify that isAdbServerRunning() actually established connection to the server
             // launched above

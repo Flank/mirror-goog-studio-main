@@ -16,21 +16,7 @@
 
 package com.android.tools.device.internal.adb;
 
-import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
+import java.io.Closeable;
 
-/**
- * Commands that can be sent to the adb server.
- *
- * <p>The list of commands and the protocol are described in adb's sources at
- * system/core/adb/OVERVIEW.TXT.
- */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
-
-    @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
-    }
-}
+/** A {@link Connection} represents an open connection from an adb client to a server. */
+interface Connection extends Closeable {}

@@ -17,20 +17,13 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-/**
- * Commands that can be sent to the adb server.
- *
- * <p>The list of commands and the protocol are described in adb's sources at
- * system/core/adb/OVERVIEW.TXT.
- */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
-
+/** A {@link Launcher} provides a way to launch an ADB Server. */
+interface Launcher {
     @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
-    }
+    Endpoint launch(int port, long timeout, @NonNull TimeUnit unit)
+            throws IOException, InterruptedException, TimeoutException;
 }
