@@ -39,13 +39,11 @@ import org.gradle.api.artifacts.transform.ArtifactTransform;
  */
 public abstract class ExtractTransform extends ArtifactTransform {
 
-    private Project project;
-    private FileCache fileCache;
+    private final Project project;
+    private final FileCache fileCache;
 
-    public void setProject(Project project) {
+    public ExtractTransform(Project project, FileCache fileCache) {
         this.project = project;
-    }
-    public void setFileCache(FileCache fileCache) {
         this.fileCache = fileCache;
     }
 

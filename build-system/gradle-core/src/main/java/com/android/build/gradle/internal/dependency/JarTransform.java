@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
-import static org.gradle.api.plugins.JavaPlugin.CLASS_DIRECTORY;
-import static org.gradle.api.plugins.JavaPlugin.RESOURCES_DIRECTORY;
-
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
-import org.gradle.api.artifacts.transform.ArtifactTransformTargets;
-import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.plugins.JavaPlugin;
 
 /**
  * Transform to go from external jars to CLASS and RESOURCE artifact.
@@ -34,16 +29,12 @@ import org.gradle.api.attributes.AttributeContainer;
  */
 public class JarTransform extends ArtifactTransform {
 
-    @Override
-    public void configure(AttributeContainer from, ArtifactTransformTargets targets) {
-        from.attribute(ARTIFACT_FORMAT, "jar");
-
-        targets.newTarget().attribute(ARTIFACT_FORMAT, CLASS_DIRECTORY);
-        targets.newTarget().attribute(ARTIFACT_FORMAT, RESOURCES_DIRECTORY);
+    public static String[] getTransformTargets() {
+        return new String[] {JavaPlugin.CLASS_DIRECTORY, JavaPlugin.RESOURCES_DIRECTORY};
     }
 
     @Override
-    public List<File> transform(File file, AttributeContainer attributeContainer) {
+    public List<File> transform(File file) {
         return ImmutableList.of(file);
     }
 }

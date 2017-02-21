@@ -1,20 +1,17 @@
 package com.android.build.gradle.tasks.factory;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
-import static com.android.builder.core.VariantType.LIBRARY;
-import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -53,8 +50,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
     @Override
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
-        final BaseVariantData testedVariantData = scope.getTestedVariantData();
         scope.getVariantData().javacTask = javacTask;
+        final GlobalScope globalScope = scope.getGlobalScope();
         javacTask.compileSdkVersion = scope.getGlobalScope().getExtension().getCompileSdkVersion();
         javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
@@ -75,58 +72,28 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         if (!keepDefaultBootstrap) {
             // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
             // normal classpath.
-            javacTask.getOptions().setBootClasspath(
-                    Joiner.on(File.pathSeparator).join(
-                            scope.getGlobalScope().getAndroidBuilder()
-                                    .getBootClasspathAsStrings(false)));
+            javacTask
+                    .getOptions()
+                    .setBootClasspath(
+                            Joiner.on(File.pathSeparator)
+                                    .join(
+                                            scope.getGlobalScope()
+                                                    .getAndroidBuilder()
+                                                    .getBootClasspathAsStrings(false)));
         }
 
-        ConventionMappingHelper.map(
-                javacTask,
-                "classpath",
-                () -> {
-                    FileCollection classpath = scope.getJavaClasspath();
-                    Project project = scope.getGlobalScope().getProject();
-                    if (keepDefaultBootstrap) {
-                        classpath =
-                                classpath.plus(
-                                        project.files(
-                                                scope.getGlobalScope()
-                                                        .getAndroidBuilder()
-                                                        .getBootClasspath(false)));
-                    }
-
-                    if (testedVariantData != null) {
-                        // For libraries, the classpath from androidBuilder includes the library
-                        // output (bundle/classes.jar) as a normal dependency. In unit tests we
-                        // don't want to package the jar at every run, so we use the *.class
-                        // files instead.
-                        if (!testedVariantData.getType().equals(LIBRARY)
-                                || scope.getVariantData().getType().equals(UNIT_TEST)) {
-                            classpath =
-                                    classpath.plus(testedVariantData.getScope().getJavaClasspath());
-                            classpath =
-                                    classpath.plus(
-                                            project.files(
-                                                    testedVariantData
-                                                            .getScope()
-                                                            .getJavaOutputDir()));
-                        }
-
-                        if (scope.getVariantData().getType().equals(UNIT_TEST)
-                                && testedVariantData.getType().equals(LIBRARY)) {
-                            // The bundled classes.jar may exist, but it's probably old. Don't
-                            // use it, we already have the *.class files in the classpath.
-                            AndroidDependency testedLibrary =
-                                    testedVariantData.getVariantConfiguration().getOutput();
-                            if (testedLibrary != null) {
-                                File jarFile = testedLibrary.getJarFile();
-                                classpath = classpath.minus(project.files(jarFile));
-                            }
-                        }
-                    }
-                    return classpath;
-                });
+        FileCollection classpath = scope.getJavaClasspath(CLASSES);
+        if (keepDefaultBootstrap) {
+            classpath =
+                    classpath.plus(
+                            scope.getGlobalScope()
+                                    .getProject()
+                                    .files(
+                                            scope.getGlobalScope()
+                                                    .getAndroidBuilder()
+                                                    .getBootClasspath(false)));
+        }
+        javacTask.setClasspath(classpath);
 
         javacTask.setDestinationDir(scope.getJavaOutputDir());
 
@@ -152,11 +119,15 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                         .getAnnotationProcessorOptions()
                         .getIncludeCompileClasspath();
         Preconditions.checkNotNull(includeCompileClasspath);
-        FileCollection processorPath = includeCompileClasspath
-                ? javacTask.getClasspath()
-                : project.files();
-        processorPath =
-                processorPath.plus(scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR));
+
+        FileCollection processorPath =
+                scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
+        if (includeCompileClasspath) {
+            // in this case we need the jar version of the classpath since the annotation processor
+            // cannot handle the class folder for sub-projects.
+            processorPath = processorPath.plus(scope.getJavaClasspath(JAR));
+        }
+
         javacTask.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental = AbstractCompilesUtil.isIncremental(
@@ -188,11 +159,14 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 || !annotationProcessorOptions.getClassNames().isEmpty())
                 && project.getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
             // warn user if using android-apt plugin, as it overwrites the annotation processor opts
-            scope.getGlobalScope().getAndroidBuilder().getErrorReporter().handleSyncWarning(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    "Using incompatible plugins for the annotation processing: "
-                            + "android-apt. This may result in an unexpected behavior.");
+            globalScope
+                    .getAndroidBuilder()
+                    .getErrorReporter()
+                    .handleSyncWarning(
+                            null,
+                            SyncIssue.TYPE_GENERIC,
+                            "Using incompatible plugins for the annotation processing: "
+                                    + "android-apt. This may result in an unexpected behavior.");
         }
         if (!annotationProcessorOptions.getArguments().isEmpty()) {
             for (Map.Entry<String, String> arg :

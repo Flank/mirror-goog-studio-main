@@ -440,7 +440,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setEncoding(extension.getCompileOptions().getEncoding());
             task.setSourceCompatibility(
                     extension.getCompileOptions().getSourceCompatibility().toString());
-            task.setClasspath(variantScope.getJavaClasspath());
+            task.setClasspath(variantScope.getJavaClasspath(CLASSES));
 
             task.libraries = variantScope.getArtifactCollection(
                     COMPILE_CLASSPATH, EXTERNAL, CLASSES);

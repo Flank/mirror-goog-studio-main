@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding;
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -146,7 +147,8 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
 
-            task.compilerClasspath = variantScope::getJavaClasspath;
+            task.compilerClasspath =
+                    () -> variantScope.getJavaClasspath(AndroidArtifacts.ArtifactType.CLASSES);
             task.compilerSources =
                     () -> variantData.getJavaSources().stream()
                                     .filter(

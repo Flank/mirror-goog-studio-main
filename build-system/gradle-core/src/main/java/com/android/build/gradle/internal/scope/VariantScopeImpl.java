@@ -492,9 +492,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getJavaClasspath() {
-        // TODO cache?
-        return getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
+    public FileCollection getJavaClasspath(@NonNull ArtifactType classesType) {
+        Project project = globalScope.getProject();
+
+        ConfigurableFileCollection classpath = project.files();
+
+        classpath.from(getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType));
+
+        final BaseVariantData testedVariantData = getTestedVariantData();
+        if (testedVariantData != null) {
+            // include the output of the tested scope javac task.
+            classpath.from(
+                    testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.JAVAC));
+        }
+
+        return classpath;
     }
 
     @Override
