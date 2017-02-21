@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <recipe>
     <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
+    <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
 
 <#if minApiLevel lt 21>
     <dependency mavenUrl="com.android.support:support-vector-drawable:${buildApi}.+" />
