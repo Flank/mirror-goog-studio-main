@@ -3,11 +3,6 @@
 buildscript {
     repositories {
         jcenter()
-<#if mavenUrl != "mavenCentral">
-        maven {
-            url '${mavenUrl}'
-        }
-</#if>
 <#if isInstantApp!false>
         maven {
             url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
@@ -25,11 +20,6 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-<#if mavenUrl != "mavenCentral">
-        maven {
-            url '${mavenUrl}'
-        }
-</#if>
 <#if isInstantApp!false>
         maven {
             url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
