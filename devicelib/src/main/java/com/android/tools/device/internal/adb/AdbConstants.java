@@ -16,21 +16,10 @@
 
 package com.android.tools.device.internal.adb;
 
-import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
+public class AdbConstants {
+    /** Default host where the adb server is started. */
+    public static final String DEFAULT_HOST = null; // localhost
 
-/**
- * Commands that can be sent to the adb server.
- *
- * <p>The list of commands and the protocol are described in adb's sources at
- * system/core/adb/OVERVIEW.TXT.
- */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
-
-    @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
-    }
+    /** Default port where the adb server is started. */
+    public static final int DEFAULT_PORT = 5037;
 }

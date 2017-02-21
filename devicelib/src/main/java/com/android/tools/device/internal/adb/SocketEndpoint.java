@@ -17,20 +17,20 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
-/**
- * Commands that can be sent to the adb server.
- *
- * <p>The list of commands and the protocol are described in adb's sources at
- * system/core/adb/OVERVIEW.TXT.
- */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
+class SocketEndpoint implements Endpoint {
+    private final InetSocketAddress addr;
+
+    public SocketEndpoint(@NonNull InetSocketAddress address) {
+        addr = address;
+    }
 
     @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
+    @Override
+    public Connection newConnection() throws IOException {
+        return new SocketConnection(new Socket(addr.getAddress(), addr.getPort()));
     }
 }

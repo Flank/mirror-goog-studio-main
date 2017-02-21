@@ -17,45 +17,32 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-class AdbServerUtils {
-    /**
-     * Returns whether adb server is running at the given address, or times out if it can't be
-     * determined within the given deadline. It does this by attempting to connect to the server at
-     * that port and trying to obtain the version.
-     *
-     * <p>Note that Windows and Linux behave differently when there is nothing running at the given
-     * address: On Linux, it immediately returns, whereas Windows is likely to timeout while trying
-     * to establish a connection..
-     */
-    static boolean isAdbServerRunning(
-            @NonNull SocketAddress address, long timeout, @NonNull TimeUnit unit)
-            throws InterruptedException, TimeoutException {
-        int timeoutMs = Ints.checkedCast(TimeUnit.MILLISECONDS.convert(timeout, unit));
-        CompletableFuture<Boolean> future =
-                CompletableFuture.supplyAsync(() -> isAdbServerRunning(address, timeoutMs));
-        try {
-            return future.get(timeout, unit);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
-        }
+class SocketProbe implements Probe {
+    @Nullable
+    @Override
+    public Endpoint probe(@NonNull InetSocketAddress addr, long timeout, @NonNull TimeUnit unit) {
+        long timeoutMs = TimeUnit.MILLISECONDS.convert(timeout, unit);
+        return isAdbServerRunning(addr, timeoutMs) ? new SocketEndpoint(addr) : null;
     }
 
-    private static boolean isAdbServerRunning(@NonNull SocketAddress addr, int connectTimeoutMs) {
+    private static boolean isAdbServerRunning(@NonNull SocketAddress addr, long connectTimeoutMs) {
         try (Socket s = new Socket()) {
-            s.connect(addr, connectTimeoutMs);
+            // Note that Windows and Linux behave differently when there is nothing running at
+            // the given address: Linux seems to fail immediately, whereas Windows is likely to
+            // timeout trying to establish a connection.
+            s.connect(addr, Ints.checkedCast(connectTimeoutMs));
 
             try (OutputStream out = new BufferedOutputStream(s.getOutputStream());
                     BufferedReader r =
