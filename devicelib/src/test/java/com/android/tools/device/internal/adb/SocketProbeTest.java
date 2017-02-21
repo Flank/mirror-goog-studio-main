@@ -34,15 +34,7 @@ import org.junit.Test;
 public class SocketProbeTest {
     @Test
     public void adbServerRunning_freePort() throws IOException, InterruptedException {
-        int port;
-        try (ServerSocket ss = new ServerSocket(0)) {
-            port = ss.getLocalPort();
-        }
-
-        // there is a potential race condition here if some other process uses up port by the
-        // time we check..
-
-        InetSocketAddress address = new InetSocketAddress(InetAddress.getByName(null), port);
+        InetSocketAddress address = new InetSocketAddress(InetAddress.getByName(null), 0);
         assertThat(new SocketProbe().probe(address, 500, TimeUnit.MILLISECONDS)).isNull();
     }
 

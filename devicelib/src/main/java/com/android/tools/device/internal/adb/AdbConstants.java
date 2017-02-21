@@ -22,4 +22,7 @@ public class AdbConstants {
 
     /** Default port where the adb server is started. */
     public static final int DEFAULT_PORT = 5037;
+
+    /** Magic port number signifying that adb should pick its own free port. */
+    public static final int ANY_PORT = 0;
 }

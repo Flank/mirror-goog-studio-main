@@ -14,23 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.tools.device.internal.adb;
+package com.android.tools.device.internal.adb.commands;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 
 /**
- * Commands that can be sent to the adb server.
+ * Services offered by the adb server running on a host.
  *
  * <p>The list of commands and the protocol are described in adb's sources at
  * system/core/adb/OVERVIEW.TXT.
  */
-class AdbCommands {
-    public static final String GET_SERVER_VERSION = "host:version";
+public enum HostService {
+    VERSION("host:version"),
+    KILL("host:kill"),
+    DEVICES("host:devices-l"),
+    TRACK_DEVICES("host:track-devices");
+
+    private final String cmd;
+
+    HostService(@NonNull String cmd) {
+        this.cmd = cmd;
+    }
 
     @NonNull
-    public static byte[] formatCommand(@NonNull String cmd) {
-        String request = String.format("%04X%s", cmd.length(), cmd);
-        return request.getBytes(Charsets.UTF_8);
+    public byte[] getCommand() {
+        return cmd.getBytes(Charsets.UTF_8);
     }
 }

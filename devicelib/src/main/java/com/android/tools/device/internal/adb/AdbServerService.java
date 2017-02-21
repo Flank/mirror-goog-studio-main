@@ -18,11 +18,17 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import com.android.tools.device.internal.ScopedThreadNameRunnable;
+import com.android.tools.device.internal.adb.commands.AdbCommand;
+import com.android.tools.device.internal.adb.commands.KillServer;
 import com.google.common.util.concurrent.AbstractService;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class AdbServerService extends AbstractService {
@@ -58,6 +64,46 @@ class AdbServerService extends AbstractService {
         executorService.submit(this::stopServerIfNeeded);
     }
 
+    @NonNull
+    public <T> CompletableFuture<T> execute(@NonNull AdbCommand<T> command) {
+        CompletableFuture<T> cf = new CompletableFuture<T>();
+
+        State state = state();
+        if (state != State.RUNNING) {
+            String msg =
+                    String.format(
+                            Locale.US,
+                            "%1$s cannot accept commands while in %2$s state.",
+                            getClass().getSimpleName(),
+                            state);
+            cf.completeExceptionally(new IllegalStateException(msg));
+            return cf;
+        }
+
+        executorService.submit(
+                ScopedThreadNameRunnable.wrap(
+                        () -> {
+                            LOG.fine("Executing " + command);
+                            try {
+                                cf.complete(doExecute(command));
+                            } catch (Exception e) {
+                                LOG.fine("Exception while executing " + command);
+                                cf.completeExceptionally(e);
+                            } finally {
+                                LOG.fine("Completed executing " + command);
+                            }
+                        },
+                        command.getName()));
+
+        return cf;
+    }
+
+    private <T> T doExecute(@NonNull AdbCommand<T> command) throws IOException {
+        try (Connection connection = endpoint.newConnection()) {
+            return command.execute(connection);
+        }
+    }
+
     private void startServerIfNeeded() {
         try {
             TimeUnit unit = TimeUnit.MILLISECONDS;
@@ -89,9 +135,16 @@ class AdbServerService extends AbstractService {
 
     private void stopServerIfNeeded() {
         if (terminateServerOnStop) {
-            // TODO doKillServer();
+            try {
+                doExecute(new KillServer());
+            } catch (Exception e) {
+                notifyFailed(e);
+                LOG.log(Level.INFO, "Terminating " + getClass().getSimpleName() + " failed.", e);
+                return;
+            }
         }
 
         notifyStopped();
+        LOG.info(getClass().getSimpleName() + " stopped.");
     }
 }

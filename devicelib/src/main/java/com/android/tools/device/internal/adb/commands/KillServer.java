@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.tools.device.internal.adb;
+package com.android.tools.device.internal.adb.commands;
 
-import static com.google.common.truth.Truth.assertThat;
+import com.android.annotations.NonNull;
+import com.android.tools.device.internal.adb.Connection;
+import java.io.IOException;
 
-import com.google.common.base.Charsets;
-import org.junit.Test;
+public class KillServer implements AdbCommand<Void> {
+    @NonNull
+    @Override
+    public Void execute(@NonNull Connection conn) throws IOException {
+        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.KILL);
+        conn.writeCommand(buffer);
+        return null;
+    }
 
-public class AdbCommandsTest {
-    @Test
-    public void formatCommand_simple() {
-        byte[] expected = "0003foo".getBytes(Charsets.UTF_8);
-        assertThat(AdbCommands.formatCommand("foo")).isEqualTo(expected);
+    @Override
+    public String getName() {
+        return HostService.KILL.toString();
     }
 }
