@@ -79,7 +79,23 @@ filegroup(
 
 filegroup(
     name = "support_25.1.0",
-    srcs = glob(["*/extras/android/m2repository/com/android/support/*/25.1.0/**"]),
+    srcs = glob([
+        "*/extras/android/m2repository/com/android/support/*/25.1.0/**",
+        "*/extras/android/m2repository/com/android/support/mediarouter-v7/25.0.1/**",
+    ]),
+)
+
+filegroup(
+    name = "uiautomator_latest",
+    srcs = [":uiautomator_2.1.1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "uiautomator_2.1.1",
+    srcs = glob([
+        "*/extras/android/m2repository/com/android/support/test/uiautomator/uiautomator-v18/2.1.1/**",
+    ]),
 )
 
 filegroup(

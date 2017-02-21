@@ -29,11 +29,13 @@ import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
@@ -45,7 +47,7 @@ import org.gradle.tooling.ProjectConnection;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
-    static final boolean VERBOSE =
+    private static final boolean VERBOSE =
             !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
 
     @NonNull
@@ -219,5 +221,23 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         launcher.setJvmArguments(Iterables.toArray(jvmArguments, String.class));
+    }
+
+    protected static void setStandardOut(
+            @NonNull LongRunningOperation launcher, @NonNull OutputStream stdout) {
+        if (VERBOSE) {
+            launcher.setStandardOutput(new TeeOutputStream(stdout, System.out));
+        } else {
+            launcher.setStandardOutput(stdout);
+        }
+    }
+
+    protected static void setStandardError(
+            @NonNull LongRunningOperation launcher, @NonNull OutputStream stderr) {
+        if (VERBOSE) {
+            launcher.setStandardError(new TeeOutputStream(stderr, System.err));
+        } else {
+            launcher.setStandardError(stderr);
+        }
     }
 }
