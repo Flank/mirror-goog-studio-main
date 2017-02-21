@@ -31,10 +31,8 @@ import org.mockito.MockitoAnnotations;
 
 public class InstantRunAnalyticsHelperTest {
 
-    @Mock
-    public BuildContext mBuildContext;
-    @Mock
-    public BuildContext.Build mBuild;
+    @Mock public InstantRunBuildContext mInstantRunBuildContext;
+    @Mock public InstantRunBuildContext.Build mBuild;
 
     @Before
     public void initMocks() {
@@ -43,21 +41,22 @@ public class InstantRunAnalyticsHelperTest {
 
     @Test
     public void testAnalyticsHelper() {
-        when(mBuildContext.getLastBuild()).thenReturn(mBuild);
-        when(mBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
-        when(mBuildContext.getPatchingPolicy())
+        when(mInstantRunBuildContext.getLastBuild()).thenReturn(mBuild);
+        when(mInstantRunBuildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
+        when(mInstantRunBuildContext.getPatchingPolicy())
                 .thenReturn(InstantRunPatchingPolicy.MULTI_APK);
-        when(mBuildContext.getVerifierResult())
+        when(mInstantRunBuildContext.getVerifierResult())
                 .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
-        when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
-                new BuildContext.Artifact(FileType.RESOURCES,
-                        new File("resources.ap_")),
-                new BuildContext.Artifact(FileType.RELOAD_DEX,
-                        new File("reload.dex"))
-        ));
+        when(mBuild.getArtifacts())
+                .thenReturn(
+                        ImmutableList.of(
+                                new InstantRunBuildContext.Artifact(
+                                        FileType.RESOURCES, new File("resources.ap_")),
+                                new InstantRunBuildContext.Artifact(
+                                        FileType.RELOAD_DEX, new File("reload.dex"))));
 
         InstantRunStatus proto =
-                InstantRunAnalyticsHelper.generateAnalyticsProto(mBuildContext);
+                InstantRunAnalyticsHelper.generateAnalyticsProto(mInstantRunBuildContext);
 
         assertEquals(InstantRunStatus.BuildMode.HOT_WARM, proto.getBuildMode());
         assertEquals(InstantRunStatus.PatchingPolicy.MULTI_APK, proto.getPatchingPolicy());

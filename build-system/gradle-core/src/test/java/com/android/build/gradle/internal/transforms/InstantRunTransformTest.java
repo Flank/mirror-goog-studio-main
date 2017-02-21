@@ -39,7 +39,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
@@ -83,8 +83,7 @@ public class InstantRunTransformTest {
     @Mock
     GlobalScope globalScope;
 
-    @Mock
-    BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Mock
     Project project;
@@ -103,7 +102,7 @@ public class InstantRunTransformTest {
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
         when(globalScope.getProject()).thenReturn(project);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(variantScope.getBuildContext()).thenReturn(buildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(variantScope.getInstantRunBootClasspath()).thenReturn(ImmutableList.of());
         when(buildContext.getBuildMode()).thenReturn(InstantRunBuildMode.HOT_WARM);
 

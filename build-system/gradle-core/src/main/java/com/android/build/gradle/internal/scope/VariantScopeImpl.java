@@ -52,7 +52,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -343,7 +343,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
                 && buildType.isMinifyEnabled()
-                && !getBuildContext().isInInstantRunMode();
+                && !getInstantRunBuildContext().isInInstantRunMode();
     }
 
     @Override
@@ -1579,13 +1579,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.coverageReportTask = coverageReportTask;
     }
 
-    @NonNull
-    private BuildContext buildContext = new BuildContext();
+    @NonNull private InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
 
-    @Override
     @NonNull
-    public BuildContext getBuildContext() {
-        return buildContext;
+    public InstantRunBuildContext getInstantRunBuildContext() {
+        return instantRunBuildContext;
     }
 
     @NonNull

@@ -325,7 +325,7 @@ public class ApplicationTaskManager extends TaskManager {
                         .configureBuildInfoWriterTask(buildInfoGeneratorTask);
 
         InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getBuildContext().getPatchingPolicy();
+                variantScope.getInstantRunBuildContext().getPatchingPolicy();
 
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
 
@@ -336,7 +336,7 @@ public class ApplicationTaskManager extends TaskManager {
                     new InstantRunDependenciesApkBuilder(
                             getLogger(),
                             project,
-                            variantScope.getBuildContext(),
+                            variantScope.getInstantRunBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
@@ -358,7 +358,7 @@ public class ApplicationTaskManager extends TaskManager {
                     new InstantRunSliceSplitApkBuilder(
                             getLogger(),
                             project,
-                            variantScope.getBuildContext(),
+                            variantScope.getInstantRunBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),

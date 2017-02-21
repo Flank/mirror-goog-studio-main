@@ -28,7 +28,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TaskTestUtils;
@@ -77,8 +77,7 @@ public class InstantRunVerifierTransformTest {
     @Mock
     TransformOutputProvider transformOutputProvider;
 
-    @Mock
-    BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -87,7 +86,7 @@ public class InstantRunVerifierTransformTest {
     public void setUpMock() throws IOException {
         backupDir = temporaryFolder.newFolder();
         when(variantScope.getIncrementalVerifierDir()).thenReturn(backupDir);
-        when(variantScope.getBuildContext()).thenReturn(buildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(buildContext.getVerifierResult()).thenReturn(
                 InstantRunVerifierStatus.NO_CHANGES);

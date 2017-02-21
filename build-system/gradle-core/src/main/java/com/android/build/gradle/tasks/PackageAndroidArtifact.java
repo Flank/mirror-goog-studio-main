@@ -27,9 +27,9 @@ import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -172,7 +172,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private ApiVersion minSdkVersion;
 
-    protected BuildContext instantRunContext;
+    protected InstantRunBuildContext instantRunContext;
 
     protected File instantRunSupportDir;
 

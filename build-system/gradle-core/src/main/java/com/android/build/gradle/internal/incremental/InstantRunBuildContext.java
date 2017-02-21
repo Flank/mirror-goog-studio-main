@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.builder.Version;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.utils.XmlUtils;
@@ -29,8 +27,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -58,28 +54,26 @@ import org.xml.sax.SAXException;
 /**
  * Context object for all build related information that will be persisted at the completion
  *
- * Information persisted will have the following purposes :
+ * <p>Information persisted will have the following purposes :
+ *
  * <ul>
- * For all types of builds, the list of produced artifacts will contain the filters used when
- * producing pure or full splits. This can be used to determine which artifact should be installed.
+ *   For all types of builds, the list of produced artifacts will contain the filters used when
+ *   producing pure or full splits. This can be used to determine which artifact should be
+ *   installed.
  * </ul>
+ *
  * <ul>
- * In Instant Run mode, on top of the list of artifacts produced, the verifier status etc.
- * It is also read in subsequent builds to keep artifacts history.
- * </ul>
- * <ul>
- * The package id of the application is also stored as it can be used in the presence of separate
- * test modules.
+ *   In Instant Run mode, on top of the list of artifacts produced, the verifier status etc. It is
+ *   also read in subsequent builds to keep artifacts history.
  * </ul>
  */
-public class BuildContext {
+public class InstantRunBuildContext {
 
-    private static final Logger LOG = Logging.getLogger(BuildContext.class);
+    private static final Logger LOG = Logging.getLogger(InstantRunBuildContext.class);
 
     static final String TAG_INSTANT_RUN = "instant-run";
     static final String TAG_BUILD = "build";
     static final String TAG_ARTIFACT = "artifact";
-    static final String TAG_FILTER = "filter";
     static final String TAG_TASK = "task";
     static final String ATTR_PLUGIN_VERSION = "plugin-version";
     static final String ATTR_NAME = "name";
@@ -94,8 +88,6 @@ public class BuildContext {
     static final String ATTR_ABI = "abi";
     static final String ATTR_TOKEN = "token";
     static final String ATTR_BUILD_MODE = "build-mode";
-    static final String ATTR_FILTER_TYPE = "type";
-    static final String ATTR_FILTER_VALUE = "value";
     static final String ATTR_IR_ELIGIBILITY = "ir-eligibility";
 
     // Keep roughly in sync with InstantRunBuildInfo#isCompatibleFormat:
@@ -229,20 +221,10 @@ public class BuildContext {
     public static class Artifact {
         @NonNull private final FileType fileType;
         @NonNull private File location;
-        @NonNull private ImmutableCollection<FilterData> filters;
 
         public Artifact(@NonNull FileType fileType, @NonNull File location) {
             this.fileType = fileType;
             this.location = location;
-            this.filters = ImmutableList.of();
-        }
-
-        public Artifact(@NonNull FileType fileType,
-                @NonNull File location,
-                @NonNull ImmutableCollection<FilterData> filters) {
-            this.fileType = fileType;
-            this.location = location;
-            this.filters = filters;
         }
 
         @NonNull
@@ -251,43 +233,20 @@ public class BuildContext {
             artifact.setAttribute(ATTR_TYPE, fileType.name());
             artifact.setAttribute(
                     ATTR_LOCATION, XmlUtils.toXmlAttributeValue(location.getAbsolutePath()));
-            filters.forEach(filter -> {
-                Element element = document.createElement(TAG_FILTER);
-                element.setAttribute(ATTR_FILTER_TYPE, filter.getFilterType());
-                element.setAttribute(ATTR_FILTER_VALUE, filter.getIdentifier());
-                artifact.appendChild(element);
-            });
             return artifact;
         }
 
         @NonNull
         public static Artifact fromXml(@NonNull Node artifactNode) {
-            ImmutableList.Builder<FilterData> filterDatas = ImmutableList.builder();
-            NodeList filters = artifactNode.getChildNodes();
-            for (int i=0; i<filters.getLength(); i++) {
-                Node item = filters.item(i);
-                if (item.getNodeName().equals(TAG_FILTER)) {
-                    NamedNodeMap filterAttributes = item.getAttributes();
-                    filterDatas.add(new FilterDataImpl(
-                            filterAttributes.getNamedItem(ATTR_FILTER_TYPE).getNodeValue(),
-                            filterAttributes.getNamedItem(ATTR_FILTER_VALUE).getNodeValue()));
-                }
-            }
             NamedNodeMap attributes = artifactNode.getAttributes();
             return new Artifact(
                     FileType.valueOf(attributes.getNamedItem(ATTR_TYPE).getNodeValue()),
-                    new File(attributes.getNamedItem(ATTR_LOCATION).getNodeValue()),
-                    filterDatas.build());
+                    new File(attributes.getNamedItem(ATTR_LOCATION).getNodeValue()));
         }
 
         @NonNull
         public File getLocation() {
             return location;
-        }
-
-        @NonNull
-        public Collection<FilterData> getFilters() {
-            return filters;
         }
 
         /**
@@ -330,12 +289,12 @@ public class BuildContext {
     private final AtomicLong token = new AtomicLong(0);
     private boolean buildHasFailed = false;
 
-    public BuildContext() {
+    public InstantRunBuildContext() {
         this(defaultBuildIdAllocator);
     }
 
     @VisibleForTesting
-    BuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
+    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
         currentBuild =
                 new Build(
                         buildIdAllocator.allocatedBuildId(),
@@ -481,13 +440,6 @@ public class BuildContext {
     }
 
     public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file) {
-        addChangedFile(fileType, file, ImmutableList.of());
-    }
-
-    public synchronized void addChangedFile(
-            @NonNull FileType fileType,
-            @NonNull File file,
-            @NonNull ImmutableList<FilterData> filters) {
 
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES) {
             currentBuild.verifierStatus = InstantRunVerifierStatus.COMPATIBLE;
@@ -536,7 +488,7 @@ public class BuildContext {
                 resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
             }
         }
-        currentBuild.artifacts.add(new Artifact(fileType, file, filters));
+        currentBuild.artifacts.add(new Artifact(fileType, file));
     }
 
     @Nullable
@@ -557,11 +509,6 @@ public class BuildContext {
         return previousBuilds.values();
     }
 
-
-    public Stream<Artifact> getAllArtifactsOfAllBuild(FileType type) {
-        return previousBuilds.values().stream()
-                .flatMap(build -> build.getArtifactsForType(type));
-    }
 
     /**
      * Remove all unwanted changes :
@@ -807,7 +754,7 @@ public class BuildContext {
         if (!(Version.ANDROID_GRADLE_PLUGIN_VERSION.equals(
                 instantRun.getAttribute(ATTR_PLUGIN_VERSION)))) {
             // Don't load if the plugin version has changed.
-            Logging.getLogger(BuildContext.class)
+            Logging.getLogger(InstantRunBuildContext.class)
                     .quiet("Instant Run: Android plugin version has changed.");
             setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;

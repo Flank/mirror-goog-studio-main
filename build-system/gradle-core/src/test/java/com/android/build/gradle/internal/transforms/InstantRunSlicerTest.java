@@ -34,7 +34,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
@@ -80,8 +80,7 @@ public class InstantRunSlicerTest {
     @Mock
     InstantRunVariantScope variantScope;
 
-    @Mock
-    BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Rule
     public TemporaryFolder instantRunSupportDir = new TemporaryFolder();
@@ -101,7 +100,7 @@ public class InstantRunSlicerTest {
         when(variantScope.getRestartDexOutputFolder()).thenReturn(instantRunSupportDir.getRoot());
         when(buildContext.getPatchingPolicy()).thenReturn(
                 InstantRunPatchingPolicy.MULTI_APK);
-        when(variantScope.getBuildContext()).thenReturn(buildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
 
         jarOutput = new File(jarOutputDir.getRoot(), "output.jar");
     }

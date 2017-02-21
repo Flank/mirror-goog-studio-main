@@ -192,8 +192,9 @@ public class InstantRunSlicer extends Transform {
                         }
                         Files.write(
                                 String.valueOf(
-                                        variantScope.getBuildContext().getBuildId()),
-                                new File(sliceOutputLocation, "buildId.txt"), Charsets.UTF_8);
+                                        variantScope.getInstantRunBuildContext().getBuildId()),
+                                new File(sliceOutputLocation, "buildId.txt"),
+                                Charsets.UTF_8);
                         logger.verbose("Writing buildId in %s because of %s",
                                 sliceOutputLocation.getAbsolutePath(),
                                 changedFile.toString());
