@@ -166,6 +166,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(JavaPerformanceDetector.USE_SPARSE_ARRAY);
         issues.add(JavaPerformanceDetector.USE_VALUE_OF);
         issues.add(JavaScriptInterfaceDetector.ISSUE);
+        issues.add(JobSchedulerDetector.ISSUE);
         issues.add(LabelForDetector.ISSUE);
         issues.add(LayoutConsistencyDetector.INCONSISTENT_IDS);
         issues.add(LayoutInflationDetector.ISSUE);

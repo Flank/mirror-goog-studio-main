@@ -1234,7 +1234,7 @@ public class ConstantEvaluator {
     }
 
     /**
-     * Computes the last assignment to a given variabble counting backwards from
+     * Computes the last assignment to a given variable counting backwards from
      * the given context element
      *
      * @param usage    the usage site to search backwards from
