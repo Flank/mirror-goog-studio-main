@@ -143,7 +143,7 @@ public class AndroidArtifacts {
         // create a duplication of CLASSES because we don't want to publish
         // the classes of an FULL_APK to the runtime configuration as it's meant to be
         // used only for compilation, not runtime. Actually use TYPE_JAR to give access
-        // to this via the model for now, the JArTransform will convert it back to CLASSES
+        // to this via the model for now, the JarTransform will convert it back to CLASSES
         // FIXME: stop using TYPE_JAR for APK_CLASSES
         APK_CLASSES(TYPE_JAR, API_ELEMENTS_ONLY),
         APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),

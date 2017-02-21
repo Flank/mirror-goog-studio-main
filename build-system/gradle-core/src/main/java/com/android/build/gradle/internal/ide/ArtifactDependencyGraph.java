@@ -214,7 +214,10 @@ public class ArtifactDependencyGraph {
         return new MavenCoordinatesImpl(LOCAL_AAR_GROUPID, artifactFile.getPath(), "unspecified");
     }
 
-    /** Return a pair of all the artifacts and a set of IDs representing Java-only dependencies */
+    /**
+     * Returns a set of HashableResolvedArtifactResult where the {@link
+     * HashableResolvedArtifactResult#isJava} field as been setup properly.
+     */
     private static Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
             AndroidArtifacts.ConsumedConfigType consumedConfigType) {
