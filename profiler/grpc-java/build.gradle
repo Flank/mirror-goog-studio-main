@@ -14,7 +14,7 @@ version = '1.0'// TODO: Pass in as an argument
 
 ext {
     protobufVersion = '3.0.0'
-    grpcVersion = '1.0.1'
+    grpcVersion = '1.0.3'
 }
 
 configurations {
