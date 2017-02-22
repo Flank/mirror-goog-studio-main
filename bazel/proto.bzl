@@ -117,7 +117,7 @@ def java_proto_library(
       outs = outs,
       protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
       grpc_plugin =
-          "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.1:exe"
+          "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.3:exe"
               if grpc_support else None,
       target_language = proto_languages.JAVA,
       visibility = visibility,
