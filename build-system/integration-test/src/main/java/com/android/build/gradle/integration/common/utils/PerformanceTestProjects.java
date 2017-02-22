@@ -17,22 +17,27 @@
 package com.android.build.gradle.integration.common.utils;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PerformanceTestProjects {
 
-    public static String generateLocalRepositoriesSnippet() {
+    private static String generateLocalRepositoriesSnippet() {
         StringBuilder localRepositoriesSnippet = new StringBuilder();
         for (Path repo : GradleTestProject.getLocalRepositories()) {
             localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
@@ -115,7 +120,7 @@ public class PerformanceTestProjects {
     }
 
 
-    public static void initializeWordpress(GradleTestProject project) throws IOException {
+    public static void initializeWordpress(@NonNull GradleTestProject project) throws IOException {
 
         Files.copy(
                 project.file("WordPress/gradle.properties-example").toPath(),
@@ -344,5 +349,210 @@ public class PerformanceTestProjects {
 
 
 
+    }
+
+
+    public static void initializeUberSkeleton(@NonNull GradleTestProject project)
+            throws IOException {
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "jcenter\\(\\)",
+                PerformanceTestProjects.generateLocalRepositoriesSnippet());
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'",
+                "classpath 'com.android.tools.build:gradle:"
+                        + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
+                        + "'");
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "(classpath 'com.uber:okbuck:[^']+')", "// $0");
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "(classpath 'com.jakewharton:butterknife-gradle-plugin:8.4.0')",
+                "// $1");
+
+        String content = new String(Files.readAllBytes(project.getBuildFile().toPath()));
+        int pos = content.indexOf("apply plugin: 'com.uber");
+        Files.write(project.getBuildFile().toPath(), content.substring(0, pos - 1).getBytes());
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "buildToolsVersion: '\\d+.\\d+.\\d+',",
+                "buildToolsVersion: '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "',");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "supportVersion *: '\\d+.\\d+.\\d+',",
+                "supportVersion: '" + GradleTestProject.SUPPORT_LIB_VERSION + "',");
+
+        TestFileUtils.searchAndReplace(
+                project.file("build.gradle"),
+                "(force 'com.android.support:[^:]*):[^']*'",
+                "$1:" + GradleTestProject.SUPPORT_LIB_VERSION + "'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"), "('io.reactivex:rxjava):[^']*'", "$1:1.2.3'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "('com.jakewharton:butterknife[^:]*):[^']*'",
+                "$1:8.4.0'");
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "('com.squareup.okio:okio):[^']*'",
+                "$1:1.9.0'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "('com.jakewharton.rxbinding:rxbinding[^:]*):[^']+'",
+                "$1:1.0.0'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "('com.google.auto.value:auto-value):[^']*'",
+                "$1:1.3'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "('com.google.code.gson:gson):[^']+'",
+                "$1:2.8.0'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "def support = \\[",
+                "def support = [\n"
+                        + "leanback : \"com.android.support:leanback-v17:\\${versions.supportVersion}\",\n"
+                        + "mediarouter : [\"com.android.support:mediarouter-v7:25.0.1\","
+                        // There is no mediarouter > 25.0.1, but upgrade its dependencies.
+                        + "\"com.android.support:appcompat-v7:\\${versions.supportVersion}\","
+                        + "\"com.android.support:palette-v7:\\${versions.supportVersion}\"],\n");
+
+        TestFileUtils.appendToFile(
+                project.file("dependencies.gradle"),
+                "\n\n// Fixes for support lib versions.\n"
+                        + "ext.deps.other.appcompat = [\n"
+                        + "        ext.deps.support.appCompat,\n"
+                        + "        ext.deps.other.appcompat,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.cast = [\n"
+                        + "        ext.deps.other.cast,\n"
+                        + "        ext.deps.support.mediarouter,\n"
+                        + "        ext.deps.support.appCompat\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.design = [\n"
+                        + "        ext.deps.support.design,\n"
+                        + "        ext.deps.other.design,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.facebook = [\n"
+                        + "        ext.deps.other.facebook,\n"
+                        + "        ext.deps.support.cardView,\n"
+                        + "        \"com.android.support:customtabs:${versions.supportVersion}\",\n"
+                        + "        \"com.android.support:support-v4:${versions.supportVersion}\",\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.fresco = [\n"
+                        + "        ext.deps.other.fresco,\n"
+                        + "        \"com.android.support:support-v4:${versions.supportVersion}\",\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.googleMap = [\n"
+                        + "        ext.deps.other.googleMap,\n"
+                        + "        \"com.android.support:support-v4:${versions.supportVersion}\",\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.leanback = [\n"
+                        + "        ext.deps.other.leanback,\n"
+                        + "        ext.deps.support.leanback,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.playServices.maps = [\n"
+                        + "        ext.deps.playServices.maps,\n"
+                        + "        ext.deps.support.appCompat,\n"
+                        + "        \"com.android.support:support-v4:${versions.supportVersion}\",\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.rave = [\n"
+                        + "        ext.deps.other.gson,\n"
+                        + "        ext.deps.other.rave,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.recyclerview = [\n"
+                        + "        ext.deps.support.recyclerView,\n"
+                        + "        ext.deps.other.recyclerview,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.other.utils = [\n"
+                        + "        ext.deps.other.utils,\n"
+                        + "        \"com.android.support:support-v4:${versions.supportVersion}\",\n"
+                        + "]\n"
+                        + "\n"
+                        + "\n // End support lib version fixes. \n");
+
+        // Fix project compilation.
+        TestFileUtils.searchAndReplace(
+                project.file("outissue/cyclus/build.gradle"),
+                "dependencies \\{\n",
+                "dependencies {\n"
+                        + "compile deps.support.leanback\n"
+                        + "compile deps.support.appCompat\n"
+                        + "compile deps.external.rxjava\n");
+
+        TestFileUtils.searchAndReplace(
+                project.file("outissue/embrace/build.gradle"),
+                "dependencies \\{\n",
+                "dependencies { compile deps.external.rxjava\n");
+
+        TestFileUtils.searchAndReplace(
+                project.file("outissue/nutate/build.gradle"),
+                "dependencies \\{\n",
+                "dependencies { compile deps.support.mediarouter\n");
+
+        // Remove butterknife plugin.
+        for (String path :
+                ImmutableList.of(
+                        "outissue/carnally",
+                        "outissue/airified",
+                        "Padraig/follicle",
+                        "outissue/Glumaceae",
+                        "fratry/sodden",
+                        "subvola/zelator",
+                        "subvola/doored",
+                        "subvola/transpire",
+                        "subvola/atbash",
+                        "subvola/gorgoneum/Chordata",
+                        "subvola/gorgoneum/metanilic/agaric",
+                        "subvola/gorgoneum/teerer/polytonal",
+                        "subvola/gorgoneum/teerer/Cuphea",
+                        "harvestry/Timbira")) {
+            TestFileUtils.searchAndReplace(
+                    project.file(path + "/build.gradle"),
+                    "apply plugin: 'com.jakewharton.butterknife'",
+                    "/* $0 */");
+        }
+
+        // because we are testing the source generation which will trigger the test manifest
+        // merging, minSdkVersion has to be at least 17
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"), "(minSdkVersion *): \\d+,", "$1: 17,");
+    }
+
+    public static void assertNoSyncErrors(@NonNull Map<String, AndroidProject> models) {
+        models.forEach(
+                (path, project) -> {
+                    List<SyncIssue> severeIssues =
+                            project.getSyncIssues()
+                                    .stream()
+                                    .filter(
+                                            issue ->
+                                                    issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                                    .collect(Collectors.toList());
+                    Truth.assertThat(severeIssues).named("Issues for " + path).isEmpty();
+                });
     }
 }

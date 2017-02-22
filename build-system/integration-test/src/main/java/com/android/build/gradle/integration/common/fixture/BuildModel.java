@@ -249,9 +249,9 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         setJvmArguments(executor);
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        setStandardOut(executor, stdout);
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        executor.setStandardOutput(stdout);
-        executor.setStandardError(stderr);
+        setStandardError(executor, stderr);
 
         GradleConnectionException exception = null;
         // See ProfileCapturer javadoc for explanation.
@@ -262,10 +262,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             exception = e;
             throw e;
         } finally {
-            if (VERBOSE) {
-                stderr.writeTo(System.err);
-                stdout.writeTo(System.out);
-            }
             lastBuildResultConsumer.accept(
                     new GradleBuildResult(stdout, stderr, ImmutableList.of(), exception));
         }
