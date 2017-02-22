@@ -25,7 +25,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_PROFILE_JSON("android.enableProfileJson", true),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
-    ENABLE_DEX_ARCHIVE("android.useDexArchive"),
+    ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
     ENABLE_NEW_RESOURCE_PROCESSING("android.enableNewResourceProcessing"),
     ENABLE_PREDEX_CACHE("android.enabledPreDexBuildCache", true),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
