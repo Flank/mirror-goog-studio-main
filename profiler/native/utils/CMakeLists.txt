@@ -1,5 +1,6 @@
 set(UTILS_SOURCES
     activity_manager.cc
+    background_queue.cc
     bash_command.cc
     current_process.cc
     file_cache.cc
@@ -44,7 +45,9 @@ endif()
 
 add_unit_test(profiler_utils_test
               activity_manager_test.cc
+              background_queue_test.cc
               clock_test.cc
+              count_down_latch_test.cc
               current_process_test.cc
               file_cache_test.cc
               file_reader_test.cc
