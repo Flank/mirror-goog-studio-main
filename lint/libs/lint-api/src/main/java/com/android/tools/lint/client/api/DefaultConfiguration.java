@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -164,8 +163,11 @@ public class DefaultConfiguration extends Configuration {
 
         String id = issue.getId();
         List<String> paths = suppressed.get(id);
+        List<String> all = suppressed.get(VALUE_ALL);
         if (paths == null) {
-            paths = suppressed.get(VALUE_ALL);
+            paths = all;
+        } else if (all != null) {
+            paths.addAll(all);
         }
         if (paths != null && location != null) {
             File file = location.getFile();
@@ -185,10 +187,13 @@ public class DefaultConfiguration extends Configuration {
             // resource directory points to src/main/res)
             // Here we check if any of the suppressed paths are relative to the resource folders
             // of a project.
-            Set<Path> suppressedPathSet = paths.stream()
-              .filter(p -> p.startsWith(RES_PATH_START))
-              .map(p -> Paths.get(p.substring(RES_PATH_START_LEN)))
-              .collect(Collectors.toSet());
+            Set<Path> suppressedPathSet = new HashSet<>();
+            for (String p : paths) {
+                if (p.startsWith(RES_PATH_START)) {
+                    Path path = Paths.get(p.substring(RES_PATH_START_LEN));
+                    suppressedPathSet.add(path);
+                }
+            }
 
             if (!suppressedPathSet.isEmpty()) {
                 Path toCheck = file.toPath();
@@ -209,8 +214,11 @@ public class DefaultConfiguration extends Configuration {
 
         if (regexps != null) {
             List<Pattern> regexps = this.regexps.get(id);
+            List<Pattern> allRegexps = this.regexps.get(VALUE_ALL);
             if (regexps == null) {
-                regexps = this.regexps.get(VALUE_ALL);
+                regexps = allRegexps;
+            } else if (allRegexps != null) {
+                regexps.addAll(allRegexps);
             }
             if (regexps != null && location != null) {
                 // Check message
