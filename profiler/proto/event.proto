@@ -100,7 +100,7 @@ message SystemData {
 message ActivityData {
   // Name of the activity
   string name = 1;
-  // Unique hash identifying this activity from similarly named ones, current hashCode of object.
+  // Unique hash identifying this activity from similarly named ones.
   int64 hash = 2;
   // Application Id this activity is associated with.
   int32 process_id = 3;
