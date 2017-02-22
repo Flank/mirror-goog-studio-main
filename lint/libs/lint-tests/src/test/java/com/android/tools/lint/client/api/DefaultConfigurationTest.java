@@ -100,12 +100,15 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         File windowsFile = new File(projectDir,
                 "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
         assertTrue(windowsFile.exists());
+        File stringsFile = new File(projectDir,
+                "res" + File.separator + "values" + File.separator + "strings.xml");
         Context plainContext = new Context(driver, project, project, plainFile);
         Context largeContext = new Context(driver, project, project, largeFile);
         Context windowsContext = new Context(driver, project, project, windowsFile);
         Location plainLocation = Location.create(plainFile);
         Location largeLocation = Location.create(largeFile);
         Location windowsLocation = Location.create(windowsFile);
+        Location stringsLocation = Location.create(stringsFile);
 
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, ApiDetector.UNSUPPORTED.getDefaultSeverity());
@@ -113,6 +116,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         DefaultConfiguration configuration = getConfiguration(""
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<lint>\n"
+                + "    <issue id=\"all\">\n"
+                + "        <ignore path=\"res/values/strings.xml\" />\n"
+                + "    </issue>\n"
                 + "    <issue id=\"ObsoleteLayoutParam\">\n"
                 + "        <ignore path=\"res/layout-xlarge/onclick.xml\" />\n"
                 + "        <ignore path=\"res\\layout-xlarge\\activation.xml\" />\n"
@@ -137,6 +143,11 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertTrue(configuration
                 .isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation,
                         ""));
+        assertTrue(configuration
+                .isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE, stringsLocation,
+                        ""));
+        assertTrue(configuration
+                .isIgnored(plainContext, ApiDetector.UNSUPPORTED, stringsLocation, ""));
     }
 
     public void testPatternIgnore() throws Exception {
@@ -157,12 +168,15 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         File windowsFile = new File(projectDir,
                 "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
         assertTrue(windowsFile.exists());
+        File stringsFile = new File(projectDir,
+                "res" + File.separator + "values" + File.separator + "strings.xml");
         Context plainContext = new Context(driver, project, project, plainFile);
         Context largeContext = new Context(driver, project, project, largeFile);
         Context windowsContext = new Context(driver, project, project, windowsFile);
         Location plainLocation = Location.create(plainFile);
         Location largeLocation = Location.create(largeFile);
         Location windowsLocation = Location.create(windowsFile);
+        Location stringsLocation = Location.create(stringsFile);
 
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, ApiDetector.UNSUPPORTED.getDefaultSeverity());
@@ -170,6 +184,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         DefaultConfiguration configuration = getConfiguration(""
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<lint>\n"
+                + "    <issue id=\"all\">\n"
+                + "        <ignore regexp=\"st.*gs\" />\n"
+                + "    </issue>\n"
                 + "    <issue id=\"ObsoleteLayoutParam\">\n"
                 + "        <ignore regexp=\"x.*onclick\" />\n"
                 + "        <ignore regexp=\"res/.*layout.*/activation.xml\" />\n"
@@ -184,6 +201,10 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                 windowsLocation, ""));
         assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
                 largeLocation, ""));
+        assertTrue(configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED,
+                stringsLocation, ""));
+        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
+                stringsLocation, ""));
     }
 
     public void testGlobbing() throws Exception {
