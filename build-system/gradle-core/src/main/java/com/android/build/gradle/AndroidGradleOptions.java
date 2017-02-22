@@ -40,8 +40,6 @@ import org.gradle.api.Project;
 @Deprecated
 public class AndroidGradleOptions {
 
-    private static final boolean DEFAULT_ENABLE_AAPT2 = false;
-
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
@@ -62,8 +60,6 @@ public class AndroidGradleOptions {
             DEPRECATED_NDK_COMPILE_LEASE_DAYS * 24 * 60 * 60 * 1000;
 
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
-
-    public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
     public static final String ANDROID_CUSTOM_CLASS_TRANSFORMS = "android.custom.class.transforms";
 
@@ -156,10 +152,6 @@ public class AndroidGradleOptions {
 
     public static boolean keepTimestampsInApk(@NonNull Project project) {
         return getBoolean(project, PROPERTY_KEEP_TIMESTAMPS_IN_APK);
-    }
-
-    public static boolean isAapt2Enabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_AAPT2, DEFAULT_ENABLE_AAPT2);
     }
 
     public static boolean getTestOnly(@NonNull Project project) {

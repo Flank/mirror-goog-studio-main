@@ -35,6 +35,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -149,6 +150,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     private boolean enforceUniquePackageName;
 
     private VariantType type;
+
+    @NonNull private AaptGeneration aaptGeneration;
 
     private boolean debuggable;
 
@@ -452,10 +455,10 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 Aapt aapt =
                         AaptGradleFactory.make(
+                                aaptGeneration,
                                 builder,
                                 processOutputHandler,
                                 true,
-                                getProject(),
                                 FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                                 aaptOptions.getCruncherProcesses());
 
@@ -633,7 +636,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
-
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
         @NonNull private final File resPackageOutputFolder;
@@ -680,6 +682,9 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
+            processResources.aaptGeneration =
+                    AaptGeneration.fromProjectOptions(
+                            variantScope.getGlobalScope().getProjectOptions());
 
             processResources.setEnableNewResourceProcessing(
                     variantScope
@@ -931,13 +936,22 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.enforceUniquePackageName = enforceUniquePackageName;
     }
 
-    /** Does not change between incremental builds, so does not need to be @Input. */
+    @Input
+    public String getTypeAsString() {
+        return type.name();
+    }
+
     public VariantType getType() {
         return type;
     }
 
     public void setType(VariantType type) {
         this.type = type;
+    }
+
+    @Input
+    public String getAaptGeneration() {
+        return aaptGeneration.name();
     }
 
     @Input

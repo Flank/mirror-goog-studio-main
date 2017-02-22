@@ -23,6 +23,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -339,6 +340,7 @@ public class ApplicationTaskManager extends TaskManager {
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
+                            AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
                             packagingScope.getInstantRunSupportDir());
@@ -360,6 +362,7 @@ public class ApplicationTaskManager extends TaskManager {
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
+                            AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
                             packagingScope.getInstantRunSupportDir());

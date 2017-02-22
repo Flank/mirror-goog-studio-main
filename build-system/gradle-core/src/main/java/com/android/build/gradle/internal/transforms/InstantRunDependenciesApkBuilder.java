@@ -25,6 +25,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -57,11 +58,21 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory) {
-        super(logger, project, buildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory);
+        super(
+                logger,
+                project,
+                buildContext,
+                androidBuilder,
+                packagingScope,
+                signingConf,
+                aaptGeneration,
+                aaptOptions,
+                outputDirectory,
+                supportDirectory);
     }
 
     @NonNull

@@ -25,6 +25,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -50,17 +51,28 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
 
     private final WaitableExecutor<File> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-    public InstantRunSliceSplitApkBuilder(@NonNull Logger logger,
+    public InstantRunSliceSplitApkBuilder(
+            @NonNull Logger logger,
             @NonNull Project project,
             @NonNull BuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull com.android.builder.model.AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory) {
-        super(logger, project, buildContext, androidBuilder, packagingScope, signingConf, aaptOptions,
-                outputDirectory, supportDirectory);
+        super(
+                logger,
+                project,
+                buildContext,
+                androidBuilder,
+                packagingScope,
+                signingConf,
+                aaptGeneration,
+                aaptOptions,
+                outputDirectory,
+                supportDirectory);
     }
 
     @NonNull

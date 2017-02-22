@@ -33,6 +33,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.BuildContext;
@@ -104,25 +105,27 @@ public class InstantRunDependenciesApkBuilderTest {
 
     @Before
     public void setup() {
-        instantRunSliceSplitApkBuilder = new InstantRunDependenciesApkBuilder(
-                logger,
-                project,
-                buildContext,
-                androidBuilder,
-                packagingScope,
-                coreSigningConfig,
-                aaptOptions,
-                outputDirectory.getRoot(),
-                supportDirectory.getRoot()) {
-            @NonNull
-            @Override
-            protected File generateSplitApk(@NonNull DexFiles dexFiles)
-                    throws IOException, KeytoolException, PackagerException, InterruptedException,
-                    ProcessException, TransformException {
-                dexFilesList.add(dexFiles);
-                return new File("/dev/null");
-            }
-        };
+        instantRunSliceSplitApkBuilder =
+                new InstantRunDependenciesApkBuilder(
+                        logger,
+                        project,
+                        buildContext,
+                        androidBuilder,
+                        packagingScope,
+                        coreSigningConfig,
+                        AaptGeneration.AAPT_V2,
+                        aaptOptions,
+                        outputDirectory.getRoot(),
+                        supportDirectory.getRoot()) {
+                    @NonNull
+                    @Override
+                    protected File generateSplitApk(@NonNull DexFiles dexFiles)
+                            throws IOException, KeytoolException, PackagerException,
+                                    InterruptedException, ProcessException, TransformException {
+                        dexFilesList.add(dexFiles);
+                        return new File("/dev/null");
+                    }
+                };
     }
 
     @Test

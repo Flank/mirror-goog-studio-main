@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -61,6 +62,7 @@ public class GenerateSplitAbiRes extends BaseTask {
     // should be considered out of date.
     private String versionName;
     private int versionCode;
+    private AaptGeneration aaptGeneration;
 
     private Set<String> splits;
     private File outputDirectory;
@@ -85,6 +87,11 @@ public class GenerateSplitAbiRes extends BaseTask {
     @Optional
     public String getVersionName() {
         return versionName;
+    }
+
+    @Input
+    public String getAaptGeneration() {
+        return aaptGeneration.name();
     }
 
     @Input
@@ -169,6 +176,7 @@ public class GenerateSplitAbiRes extends BaseTask {
 
             Aapt aapt =
                     AaptGradleFactory.make(
+                            aaptGeneration,
                             getBuilder(),
                             variantScope,
                             FileUtils.mkdirs(
@@ -235,6 +243,8 @@ public class GenerateSplitAbiRes extends BaseTask {
             // not used directly, but considered as input for the task.
             generateSplitAbiRes.versionCode = config.getVersionCode();
             generateSplitAbiRes.versionName = config.getVersionName();
+            generateSplitAbiRes.aaptGeneration =
+                    AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = config.getType();
