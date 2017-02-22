@@ -17,7 +17,7 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.android.tools.device.internal.ScopedThreadName;
+import com.android.tools.device.internal.ScopedThreadNameRunnable;
 import com.google.common.util.concurrent.AbstractService;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -50,9 +50,7 @@ class AdbServerService extends AbstractService {
     @Override
     protected void doStart() {
         executorService.submit(
-                () ->
-                        ScopedThreadName.create("starting-adb-service")
-                                .run(this::startServerIfNeeded));
+                ScopedThreadNameRunnable.wrap(this::startServerIfNeeded, "starting-adb-service"));
     }
 
     @Override
