@@ -61,7 +61,7 @@ public class ApkLocationTest {
                                 .filter(
                                         file ->
                                                 file.isFile()
-                                                        && file.getName().equals("output.gson"))
+                                                        && file.getName().equals("output.json"))
                                 .count())
                 .isEqualTo(1);
     }
