@@ -22,6 +22,12 @@ new_local_repository(
     path = 'external/gradle-perf-android-medium'
 )
 
+new_local_repository(
+    name = 'android_studio_gradle_test',
+    build_file = 'tools/base/build-system/integration-test/android_studio_gradle_test.BUILD',
+    path = 'external/android-studio-gradle-test'
+)
+
 local_repository(
     name = "protobuf_repo",
     path = "external/protobuf",

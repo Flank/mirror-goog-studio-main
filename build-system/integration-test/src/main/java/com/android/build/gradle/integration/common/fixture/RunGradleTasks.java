@@ -135,9 +135,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             throws IOException, InterruptedException {
         assertThat(tasksList).named("tasks list").isNotEmpty();
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
         TestUtils.waitForFileSystemTick();
 
         List<String> args = Lists.newArrayList();
@@ -194,6 +191,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         args.addAll(arguments);
 
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         String message =
                 "[GradleTestProject] Executing tasks: gradle "
                         + Joiner.on(' ').join(args)
@@ -205,8 +204,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
-        launcher.setStandardOutput(stdout);
-        launcher.setStandardError(stderr);
+        setStandardOut(launcher, stdout);
+        setStandardError(launcher, stderr);
 
         CollectingProgressListener progressListener = new CollectingProgressListener();
 
@@ -224,10 +223,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             GradleBuildResult result =
                     new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
             lastBuildResultConsumer.accept(result);
-            if (VERBOSE) {
-                stderr.writeTo(System.err);
-                stdout.writeTo(System.out);
-            }
             if (isExpectingFailure && failure == null) {
                 throw new AssertionError("Expecting build to fail");
             } else if (!isExpectingFailure && failure != null) {
