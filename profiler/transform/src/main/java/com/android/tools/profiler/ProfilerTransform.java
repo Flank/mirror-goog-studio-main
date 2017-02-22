@@ -25,13 +25,18 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.function.BiConsumer;
 
+/**
+ * The profiler transform added by Studio. This transform can read input configuration arguments
+ * from a property file stored at:
+ *
+ * <p>System.getProperty("android.profiler.properties").
+ */
 @SuppressWarnings("unused")
 public final class ProfilerTransform implements BiConsumer<InputStream, OutputStream> {
 
     @Override
     public void accept(InputStream in, OutputStream out) {
         ClassWriter writer = new ClassWriter(0);
-
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
         visitor = new NetworkingAdapter(visitor);
