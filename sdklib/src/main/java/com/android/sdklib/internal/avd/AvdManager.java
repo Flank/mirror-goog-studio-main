@@ -156,6 +156,11 @@ public class AvdManager {
     public static final String AVD_INI_DEVICE_NAME = "hw.device.name"; //$NON-NLS-1$
 
     /**
+     * AVD/config.ini key name representing the display name of the AVD
+     */
+    public static final String AVD_INI_DISPLAY_NAME = "avd.ini.displayname";
+
+    /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
      * or a 320x480 like constant for a numeric skin size.
      *
