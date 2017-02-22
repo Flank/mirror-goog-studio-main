@@ -46,7 +46,10 @@ namespace profiler {
 grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
                                                 const MemoryStartRequest* request,
                                                 MemoryStartResponse* response) {
-  GetCollector(request->process_id())->Start();
+  MemoryCollector* collector = GetCollector(request->process_id());
+  if (!collector->IsRunning()) {
+    collector->Start();
+  }
   response->set_status(MemoryStartResponse::SUCCESS);
   return ::grpc::Status::OK;
 }
@@ -55,7 +58,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
                                                const MemoryStopRequest* request,
                                                MemoryStopResponse* response) {
   auto got = collectors_.find(request->process_id());
-  if (got != collectors_.end()) {
+  if (got != collectors_.end() && got->second.IsRunning()) {
     got->second.Stop();
   }
   response->set_status(MemoryStopResponse::SUCCESS);
@@ -99,10 +102,14 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, TriggerHeapDumpResponse::FAILURE_UNKNOWN)
 
-  if ((result->second).TriggerHeapDump(response)) {
-    response->set_status(TriggerHeapDumpResponse::SUCCESS);
+  if ((result->second).IsRunning()) {
+    if ((result->second).TriggerHeapDump(response)) {
+      response->set_status(TriggerHeapDumpResponse::SUCCESS);
+    } else {
+      response->set_status(TriggerHeapDumpResponse::IN_PROGRESS);
+    }
   } else {
-    response->set_status(TriggerHeapDumpResponse::IN_PROGRESS);
+    response->set_status(TriggerHeapDumpResponse::NOT_PROFILING);
   }
 
   return ::grpc::Status::OK;
@@ -158,17 +165,22 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
       result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
-  (result->second)
-      .TrackAllocations(request->enabled(), request->legacy(), response);
-  switch (response->status()) {
-    case TrackAllocationsResponse::SUCCESS:
-    case TrackAllocationsResponse::IN_PROGRESS:
-    case TrackAllocationsResponse::NOT_ENABLED:
-      return ::grpc::Status::OK;
-    default:
-      return ::grpc::Status(
-          ::grpc::StatusCode::UNKNOWN,
-          "Unknown issues when attempting to set allocation tracking.");
+  if ((result->second).IsRunning()) {
+    (result->second)
+        .TrackAllocations(request->enabled(), request->legacy(), response);
+    switch (response->status()) {
+      case TrackAllocationsResponse::SUCCESS:
+      case TrackAllocationsResponse::IN_PROGRESS:
+      case TrackAllocationsResponse::NOT_ENABLED:
+        return ::grpc::Status::OK;
+      default:
+        return ::grpc::Status(
+            ::grpc::StatusCode::UNKNOWN,
+            "Unknown issues when attempting to set allocation tracking.");
+    }
+  } else {
+    response->set_status(TrackAllocationsResponse::NOT_PROFILING);
+    return ::grpc::Status::OK;
   }
 }
 

@@ -49,6 +49,10 @@ void MemoryCollector::Stop() {
   }
 }
 
+bool MemoryCollector::IsRunning() {
+  return is_running_;
+}
+
 void MemoryCollector::CollectorMain() {
   SetThreadName("MemCollector");
 
