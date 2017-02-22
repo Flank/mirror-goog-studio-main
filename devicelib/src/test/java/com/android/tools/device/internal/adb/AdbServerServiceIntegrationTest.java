@@ -16,17 +16,18 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.tools.device.internal.OsProcessRunner;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.junit.Test;
 
 public class AdbServerServiceIntegrationTest {
     @Test
-    public void launchServer() {
+    public void launchServer() throws IOException {
         ExecutorService executor = Executors.newCachedThreadPool();
 
-        AdbServerOptions options =
-                new AdbServerOptions(AdbConstants.DEFAULT_PORT, AdbConstants.DEFAULT_HOST);
+        AdbServerOptions options = new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST);
         Launcher launcher =
                 new AdbServerLauncher(AdbTestUtils.getPathToAdb(), new OsProcessRunner(executor));
         AdbServerService service =
@@ -36,5 +37,17 @@ public class AdbServerServiceIntegrationTest {
         service.stopAsync().awaitTerminated();
 
         executor.shutdownNow();
+    }
+
+    private static int getFreePort() throws IOException {
+        // TODO https://code.google.com/p/android/issues/detail?id=221925#c5
+        // TODO Two instances of this test may be run in parallel, and we need them to not interact
+        // with each other's server instances. Picking a port this way is kludgy because there is
+        // no guarantee that the port is still free when it is actually used. Eventually, we should
+        // move to the correct fix which is to have the adb server automatically pick up a free
+        // port when it starts up.
+        try (ServerSocket ss = new ServerSocket(0)) {
+            return ss.getLocalPort();
+        }
     }
 }
