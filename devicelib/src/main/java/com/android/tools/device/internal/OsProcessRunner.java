@@ -61,23 +61,14 @@ public class OsProcessRunner implements ProcessRunner {
 
         stdoutReader =
                 executor.submit(
-                        () ->
-                                ScopedThreadName.create(cmd + ":stdout")
-                                        .run(
-                                                () ->
-                                                        redirectStream(
-                                                                process.getInputStream(),
-                                                                stdoutBuffer)));
+                        ScopedThreadNameRunnable.wrap(
+                                () -> redirectStream(process.getInputStream(), stdoutBuffer),
+                                cmd + ":stdout"));
         stderrReader =
                 executor.submit(
-                        () ->
-                                ScopedThreadName.create(cmd + ":stderr")
-                                        .run(
-                                                () ->
-                                                        redirectStream(
-                                                                process.getErrorStream(),
-                                                                stderrBuffer)));
-
+                        ScopedThreadNameRunnable.wrap(
+                                () -> redirectStream(process.getErrorStream(), stderrBuffer),
+                                cmd + ":stderr"));
         return process;
     }
 
