@@ -130,10 +130,8 @@ public class InstantRunDependenciesApkBuilderTest {
 
     @Test
     public void testTransformInterface() {
-        assertThat(instantRunSliceSplitApkBuilder.getScopes()).containsExactly(
-                QualifiedContent.Scope.EXTERNAL_LIBRARIES,
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
-                QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS);
+        assertThat(instantRunSliceSplitApkBuilder.getScopes())
+                .containsExactly(QualifiedContent.Scope.EXTERNAL_LIBRARIES);
         assertThat(instantRunSliceSplitApkBuilder.getInputTypes()).containsExactly(
                 ExtendedContentType.DEX);
         assertThat(instantRunSliceSplitApkBuilder.isIncremental()).isTrue();

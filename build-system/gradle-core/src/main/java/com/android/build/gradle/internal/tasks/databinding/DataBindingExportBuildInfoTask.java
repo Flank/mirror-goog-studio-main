@@ -149,6 +149,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
             task.compilerClasspath =
                     () -> variantScope.getJavaClasspath(AndroidArtifacts.ArtifactType.CLASSES);
+
             task.compilerSources =
                     () -> variantData.getJavaSources().stream()
                                     .filter(

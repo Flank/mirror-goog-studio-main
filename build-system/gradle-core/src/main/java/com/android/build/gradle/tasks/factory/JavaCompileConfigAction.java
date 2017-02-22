@@ -52,7 +52,9 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
         scope.getVariantData().javacTask = javacTask;
         final GlobalScope globalScope = scope.getGlobalScope();
-        javacTask.compileSdkVersion = scope.getGlobalScope().getExtension().getCompileSdkVersion();
+        final Project project = globalScope.getProject();
+
+        javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
         javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
         // We can't just pass the collection directly, as the instanceof check in the incremental
@@ -77,7 +79,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     .setBootClasspath(
                             Joiner.on(File.pathSeparator)
                                     .join(
-                                            scope.getGlobalScope()
+                                            globalScope
                                                     .getAndroidBuilder()
                                                     .getBootClasspathAsStrings(false)));
         }
@@ -86,28 +88,21 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         if (keepDefaultBootstrap) {
             classpath =
                     classpath.plus(
-                            scope.getGlobalScope()
-                                    .getProject()
-                                    .files(
-                                            scope.getGlobalScope()
-                                                    .getAndroidBuilder()
-                                                    .getBootClasspath(false)));
+                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
         }
         javacTask.setClasspath(classpath);
 
         javacTask.setDestinationDir(scope.getJavaOutputDir());
 
-        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
+        CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
 
         AbstractCompilesUtil.configureLanguageLevel(
                 javacTask,
                 compileOptions,
-                scope.getGlobalScope().getExtension().getCompileSdkVersion(),
+                globalScope.getExtension().getCompileSdkVersion(),
                 scope.getVariantConfiguration().isJackEnabled());
 
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
-
-        Project project = scope.getGlobalScope().getProject();
 
         Configuration annotationProcessorConfiguration =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();

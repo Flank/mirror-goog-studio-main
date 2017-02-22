@@ -145,9 +145,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull ArtifactType artifactType);
 
     @NonNull
-    Supplier<Collection<File>> getLocalPackagedJars();
-
-    @NonNull
     FileCollection getProvidedOnlyClasspath();
 
     @NonNull

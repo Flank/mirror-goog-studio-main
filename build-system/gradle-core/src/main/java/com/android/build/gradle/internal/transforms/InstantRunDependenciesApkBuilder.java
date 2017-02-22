@@ -90,9 +90,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
     @NonNull
     @Override
     public Set<QualifiedContent.Scope> getScopes() {
-        return Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES,
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
-                QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS);
+        return Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES);
     }
 
     @Override

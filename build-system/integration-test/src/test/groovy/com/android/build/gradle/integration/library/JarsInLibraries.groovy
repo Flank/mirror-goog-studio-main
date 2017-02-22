@@ -34,10 +34,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.DEBUG
 
 /**
- * Assemble tests for assets.
+ * Assemble tests for jars inside libraries as assets, res, java res and actual dependencies.
  */
 @CompileStatic
-class AssetsTest {
+class JarsInLibraries {
     byte[] simpleJarDataA
     byte[] simpleJarDataB
     byte[] simpleJarDataC
@@ -58,13 +58,13 @@ class AssetsTest {
 
     @Before
     public void setUp() {
-        simpleJarDataA = Resources.toByteArray(Resources.getResource(AssetsTest.class,
+        simpleJarDataA = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
                 "/jars/simple-jar-with-A_DoIExist-class.jar"))
-        simpleJarDataB = Resources.toByteArray(Resources.getResource(AssetsTest.class,
+        simpleJarDataB = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
                 "/jars/simple-jar-with-B_DoIExist-class.jar"))
-        simpleJarDataC = Resources.toByteArray(Resources.getResource(AssetsTest.class,
+        simpleJarDataC = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
                 "/jars/simple-jar-with-C_DoIExist-class.jar"))
-        simpleJarDataD = Resources.toByteArray(Resources.getResource(AssetsTest.class,
+        simpleJarDataD = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
                 "/jars/simple-jar-with-D_DoIExist-class.jar"))
 
         // Make directories where we will place jars.

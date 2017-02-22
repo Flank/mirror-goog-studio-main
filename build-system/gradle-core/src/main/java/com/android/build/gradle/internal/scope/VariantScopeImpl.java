@@ -55,7 +55,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -95,12 +94,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -110,11 +106,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ProjectDependency;
-import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -493,20 +485,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public FileCollection getJavaClasspath(@NonNull ArtifactType classesType) {
-        Project project = globalScope.getProject();
-
-        ConfigurableFileCollection classpath = project.files();
-
-        classpath.from(getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType));
+        FileCollection mainCollection =
+                getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType);
 
         final BaseVariantData testedVariantData = getTestedVariantData();
         if (testedVariantData != null) {
+            ConfigurableFileCollection classpath =
+                    globalScope.getProject().files().from(mainCollection);
+
             // include the output of the tested scope javac task.
             classpath.from(
                     testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.JAVAC));
+
+            return classpath;
         }
 
-        return classpath;
+        return mainCollection;
     }
 
     @Override
@@ -589,30 +583,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
 
         Spec<ComponentIdentifier> filter = null;
-        FileCollection minus = null;
         switch (scope) {
             case ALL:
                 break;
             case EXTERNAL:
-                filter = id -> id instanceof ModuleComponentIdentifier;
-                // FIXME once Spec based filtering supports file based dependency
-                if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == CLASSES) {
-
-                    // only remove the local jars to this project, not all file-based jars.
-                    Callable<Collection<File>> callable = getLocalJarLambda(configuration)::get;
-                    minus = globalScope.getProject().files(callable);
-                }
+                // since we want both Module dependencies and file based dependencies in this case
+                // the best thing to do is search for non ProjectComponentIdentifier.
+                filter = id -> !(id instanceof ProjectComponentIdentifier);
                 break;
             case MODULE:
                 filter = id -> id instanceof ProjectComponentIdentifier;
-                // FIXME once Spec based filtering supports file based dependency
-                if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == CLASSES) {
-                    // remove all file-based local jar in this case.
-                    minus = getAllFileBasedJars(attributes, configuration);
-                }
-
                 break;
             default:
                 throw new RuntimeException("unknown ArtifactScope value");
@@ -631,10 +611,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 configType,
                 scope,
                 artifactType);
-
-        if (minus != null) {
-            fileCollection = fileCollection.minus(minus);
-        }
 
         return fileCollection;
     }
@@ -683,7 +659,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             case ALL:
                 break;
             case EXTERNAL:
-                filter = id -> id instanceof ModuleComponentIdentifier;
+                // since we want both Module dependencies and file based dependencies in this case
+                // the best thing to do is search for non ProjectComponentIdentifier.
+                filter = id -> !(id instanceof ProjectComponentIdentifier);
                 break;
             case MODULE:
                 filter = id -> id instanceof ProjectComponentIdentifier;
@@ -700,21 +678,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } else {
             return artifactView.componentFilter(filter).getArtifacts();
         }
-    }
-
-    /**
-     * Returns the packaged local Jars
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    @Override
-    public Supplier<Collection<File>> getLocalPackagedJars() {
-
-        return TaskInputHelper.bypassFileSupplier(
-                getLocalJarLambda(
-                        getVariantData().getVariantDependency()
-                        .getRuntimeClasspath()));
     }
 
     @NonNull
@@ -1760,21 +1723,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return configuration.getIncoming().artifactView()
                 .attributes(attributes)
                 .componentFilter(id -> false).getFiles();
-    }
-
-    @NonNull
-    private static Supplier<Collection<File>> getLocalJarLambda(
-            @NonNull Configuration configuration) {
-        return () -> {
-            List<File> files = new ArrayList<>();
-            for (Dependency dependency : configuration.getAllDependencies()) {
-                if (dependency instanceof SelfResolvingDependency &&
-                        !(dependency instanceof ProjectDependency)) {
-                    files.addAll(((SelfResolvingDependency) dependency).resolve());
-                }
-            }
-            return files;
-        };
     }
 
     @NonNull

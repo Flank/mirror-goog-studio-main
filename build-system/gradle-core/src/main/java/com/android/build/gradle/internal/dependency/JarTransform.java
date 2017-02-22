@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
-import org.gradle.api.plugins.JavaPlugin;
 
 /**
  * Transform to go from external jars to CLASS and RESOURCE artifact.
@@ -30,7 +30,7 @@ import org.gradle.api.plugins.JavaPlugin;
 public class JarTransform extends ArtifactTransform {
 
     public static String[] getTransformTargets() {
-        return new String[] {JavaPlugin.CLASS_DIRECTORY, JavaPlugin.RESOURCES_DIRECTORY};
+        return new String[] {ArtifactType.CLASSES.getType(), ArtifactType.JAVA_RES.getType()};
     }
 
     @Override

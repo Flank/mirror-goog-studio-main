@@ -85,19 +85,14 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<Scope> SCOPE_FULL_PROJECT =
             Sets.immutableEnumSet(
                     Scope.PROJECT,
-                    Scope.PROJECT_LOCAL_DEPS,
                     Scope.SUB_PROJECTS,
-                    Scope.SUB_PROJECTS_LOCAL_DEPS,
                     Scope.EXTERNAL_LIBRARIES);
     public static final Set<QualifiedContent.ScopeType> SCOPE_FULL_INSTANT_RUN_PROJECT =
             new ImmutableSet.Builder<QualifiedContent.ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
                     .build();
-    public static final Set<Scope> SCOPE_FULL_LIBRARY =
-            Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
-    public static final Set<Scope> SCOPE_LIBRARY_LOCAL_JARS =
-            Sets.immutableEnumSet(Scope.PROJECT_LOCAL_DEPS);
+    public static final Set<Scope> SCOPE_FULL_LIBRARY = Sets.immutableEnumSet(Scope.PROJECT);
 
     @NonNull
     private final Project project;
@@ -456,8 +451,38 @@ public class TransformManager extends FilterableStreamCollection {
 
         }
 
+        checkScopeDeprecation(transform.getScopes(), transform.getName());
+        checkScopeDeprecation(transform.getReferencedScopes(), transform.getName());
 
         return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void checkScopeDeprecation(
+            @NonNull Set<? super Scope> scopes, @NonNull String transformName) {
+        if (scopes.contains(Scope.PROJECT_LOCAL_DEPS)) {
+            final String message =
+                    String.format(
+                            "Transform '%1$s' uses scope PROJECT_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
+                            transformName);
+            if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
+                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+            } else {
+                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
+            }
+        }
+
+        if (scopes.contains(Scope.SUB_PROJECTS_LOCAL_DEPS)) {
+            final String message =
+                    String.format(
+                            "Transform '%1$s' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
+                            transformName);
+            if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
+                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+            } else {
+                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
+            }
+        }
     }
 
     private boolean checkContentTypes(

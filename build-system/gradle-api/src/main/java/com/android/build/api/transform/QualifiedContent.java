@@ -95,18 +95,29 @@ public interface QualifiedContent {
     enum Scope implements ScopeType {
         /** Only the project content */
         PROJECT(0x01),
-        /** Only the project's local dependencies (local jars) */
-        PROJECT_LOCAL_DEPS(0x02),
         /** Only the sub-projects. */
         SUB_PROJECTS(0x04),
-        /** Only the sub-projects's local dependencies (local jars). */
-        SUB_PROJECTS_LOCAL_DEPS(0x08),
         /** Only the external libraries */
         EXTERNAL_LIBRARIES(0x10),
         /** Code that is being tested by the current variant, including dependencies */
         TESTED_CODE(0x20),
         /** Local or remote dependencies that are provided-only */
-        PROVIDED_ONLY(0x40);
+        PROVIDED_ONLY(0x40),
+
+        /**
+         * Only the project's local dependencies (local jars)
+         *
+         * @deprecated local dependencies are now processed as {@link #EXTERNAL_LIBRARIES}
+         */
+        @Deprecated
+        PROJECT_LOCAL_DEPS(0x02),
+        /**
+         * Only the sub-projects's local dependencies (local jars).
+         *
+         * @deprecated local dependencies are now processed as {@link #EXTERNAL_LIBRARIES}
+         */
+        @Deprecated
+        SUB_PROJECTS_LOCAL_DEPS(0x08);
 
         private final int value;
 

@@ -556,12 +556,6 @@ public abstract class TaskManager {
         TransformManager transformManager = variantScope.getTransformManager();
 
         transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_FULL_JAR)
-                .addScope(Scope.PROJECT_LOCAL_DEPS)
-                .setJars(variantScope.getLocalPackagedJars())
-                .build());
-
-        transformManager.addStream(OriginalStream.builder(project)
                 .addContentTypes(TransformManager.CONTENT_CLASS)
                 .addScope(Scope.EXTERNAL_LIBRARIES)
                 .setFileCollection(variantScope.getArtifactFileCollection(
