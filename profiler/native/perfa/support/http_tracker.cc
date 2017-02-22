@@ -17,13 +17,12 @@
 #include <jni.h>
 #include <string.h>
 #include <unistd.h>
+#include <atomic>
+#include <memory>
 
 #include "perfa/perfa.h"
 #include "perfa/support/jni_wrappers.h"
 #include "utils/clock.h"
-#include "utils/log.h"
-
-#include <atomic>
 
 using grpc::ClientContext;
 using profiler::JByteArrayWrapper;
@@ -40,20 +39,32 @@ using profiler::proto::EmptyNetworkReply;
 namespace {
 std::atomic_int id_generator_(1);
 
-void SendHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
+const SteadyClock &GetClock() {
+  static SteadyClock clock;
+  return clock;
+}
+
+void SendHttpEvent(uint64_t uid, int64_t timestamp,
+                   HttpEventRequest::Event event) {
   auto net_stub = Perfa::Instance().network_stub();
 
-  SteadyClock clock;
   ClientContext ctx;
   HttpEventRequest httpEvent;
   EmptyNetworkReply reply;
 
   httpEvent.set_conn_id(uid);
-  httpEvent.set_timestamp(clock.GetCurrentTime());
+  httpEvent.set_timestamp(timestamp);
   httpEvent.set_event(event);
 
   net_stub.SendHttpEvent(&ctx, httpEvent, &reply);
 }
+
+void EnqueueHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
+  int64_t timestamp = GetClock().GetCurrentTime();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [uid, event, timestamp] { SendHttpEvent(uid, timestamp, event); });
+}
+
 }  // namespace
 
 extern "C" {
@@ -74,31 +85,33 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_next
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onClose(
     JNIEnv *env, jobject thiz, jlong juid) {
-  SendHttpEvent(juid, HttpEventRequest::DOWNLOAD_COMPLETED);
+  EnqueueHttpEvent(juid, HttpEventRequest::DOWNLOAD_COMPLETED);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onReadBegin(
     JNIEnv *env, jobject thiz, jlong juid) {
-  SendHttpEvent(juid, HttpEventRequest::DOWNLOAD_STARTED);
+  EnqueueHttpEvent(juid, HttpEventRequest::DOWNLOAD_STARTED);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
-  auto net_stub = Perfa::Instance().network_stub();
-
-  ClientContext ctx;
-  ChunkRequest chunk;
-  EmptyNetworkReply reply;
-
   JByteArrayWrapper bytes(env, jbytes);
 
-  chunk.set_conn_id(juid);
-  chunk.set_content(bytes.get());
-  chunk.set_type(ChunkRequest::RESPONSE);
+  Perfa::Instance().background_queue()->EnqueueTask([bytes, juid] {
+    auto net_stub = Perfa::Instance().network_stub();
 
-  net_stub.SendChunk(&ctx, chunk, &reply);
+    ClientContext ctx;
+    EmptyNetworkReply reply;
+    ChunkRequest chunk;
+
+    chunk.set_conn_id(juid);
+    chunk.set_content(bytes.get());
+    chunk.set_type(ChunkRequest::RESPONSE);
+
+    net_stub.SendChunk(&ctx, chunk, &reply);
+  });
 }
 
 JNIEXPORT void JNICALL
@@ -117,17 +130,22 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
   JStringWrapper url(env, jurl);
   JStringWrapper stack(env, jstack);  // TODO: Send this to perfd
 
-  auto net_stub = Perfa::Instance().network_stub();
-  ClientContext ctx;
-  HttpDataRequest httpData;
-  EmptyNetworkReply reply;
-  httpData.set_conn_id(juid);
-  httpData.set_process_id(getpid());
-  httpData.set_url(url.get());
-  httpData.set_trace(stack.get());
-  net_stub.RegisterHttpData(&ctx, httpData, &reply);
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [juid, pid, stack, timestamp, url] {
+        auto net_stub = Perfa::Instance().network_stub();
+        ClientContext ctx;
+        HttpDataRequest httpData;
+        EmptyNetworkReply reply;
+        httpData.set_conn_id(juid);
+        httpData.set_process_id(pid);
+        httpData.set_url(url.get());
+        httpData.set_trace(stack.get());
+        net_stub.RegisterHttpData(&ctx, httpData, &reply);
 
-  SendHttpEvent(juid, HttpEventRequest::CREATED);
+        SendHttpEvent(juid, timestamp, HttpEventRequest::CREATED);
+      });
 }
 
 JNIEXPORT void JNICALL
@@ -139,31 +157,38 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
     JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields) {
-  auto net_stub = Perfa::Instance().network_stub();
-  ClientContext ctx;
-  HttpRequestRequest httpRequest;
-  EmptyNetworkReply reply;
-
-  httpRequest.set_conn_id(juid);
   JStringWrapper fields(env, jfields);
-  httpRequest.set_fields(fields.get());
   JStringWrapper method(env, jmethod);
-  httpRequest.set_method(method.get());
-  net_stub.SendHttpRequest(&ctx, httpRequest, &reply);
+
+  Perfa::Instance().background_queue()->EnqueueTask([fields, juid, method] {
+    auto net_stub = Perfa::Instance().network_stub();
+    ClientContext ctx;
+    HttpRequestRequest httpRequest;
+    EmptyNetworkReply reply;
+
+    httpRequest.set_conn_id(juid);
+    httpRequest.set_fields(fields.get());
+    httpRequest.set_method(method.get());
+    net_stub.SendHttpRequest(&ctx, httpRequest, &reply);
+  });
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponse(
     JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
-  auto net_stub = Perfa::Instance().network_stub();
-  ClientContext ctx;
-  HttpResponseRequest httpResponse;
-  EmptyNetworkReply reply;
-
-  httpResponse.set_conn_id(juid);
   JStringWrapper fields(env, jfields);
-  httpResponse.set_fields(fields.get());
-  net_stub.SendHttpResponse(&ctx, httpResponse, &reply);
+
+  Perfa::Instance().background_queue()->EnqueueTask([fields, juid] {
+    auto net_stub = Perfa::Instance().network_stub();
+
+    ClientContext ctx;
+    HttpResponseRequest httpResponse;
+    EmptyNetworkReply reply;
+
+    httpResponse.set_conn_id(juid);
+    httpResponse.set_fields(fields.get());
+    net_stub.SendHttpResponse(&ctx, httpResponse, &reply);
+  });
 }
 
 JNIEXPORT void JNICALL
@@ -177,6 +202,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onDi
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onError(
     JNIEnv *env, jobject thiz, jlong juid, jstring jstatus) {
-  SendHttpEvent(juid, HttpEventRequest::ABORTED);
+  EnqueueHttpEvent(juid, HttpEventRequest::ABORTED);
 }
 };

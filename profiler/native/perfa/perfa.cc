@@ -20,8 +20,8 @@
 #include <mutex>
 
 #include "utils/config.h"
-#include "utils/thread_name.h"
 #include "utils/stopwatch.h"
+#include "utils/thread_name.h"
 
 namespace {
 using profiler::Perfa;
@@ -53,7 +53,7 @@ Perfa& Perfa::Instance() {
   return *perfa_;
 }
 
-Perfa::Perfa(const char* address) {
+Perfa::Perfa(const char* address) : background_queue_("Studio:Perfa") {
   auto channel =
       grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
   service_stub_ = PerfaService::NewStub(channel);

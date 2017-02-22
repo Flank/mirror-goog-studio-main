@@ -39,10 +39,11 @@ const SteadyClock& GetClock() {
   return clock;
 }
 
-void SendSystemEvent(SystemData* event, long jdownTime) {
-  event->set_start_timestamp(GetClock().GetCurrentTime());
+void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
+                     long jdownTime) {
+  event->set_start_timestamp(timestamp);
   event->set_end_timestamp(0);
-  event->set_process_id(getpid());
+  event->set_process_id(pid);
   event->set_event_id(jdownTime);
 
   auto event_stub = Perfa::Instance().event_stub();
@@ -53,28 +54,33 @@ void SendSystemEvent(SystemData* event, long jdownTime) {
 
 // TODO: Combine activity and fragment protos, fragments are a subset of
 // activity.
-void SendActivityEvent(JNIEnv* env, const jstring& name,
-                       const ActivityStateData::ActivityState& state,
-                       int hash) {
+void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
+                          const ActivityStateData::ActivityState& state,
+                          int hash) {
   JStringWrapper activity_name(env, name);
-  ActivityData activity;
-  activity.set_name(activity_name.get());
-  activity.set_process_id(getpid());
-  activity.set_hash(hash);
-  ActivityStateData* state_data = activity.add_state_changes();
-  state_data->set_state(state);
-  state_data->set_timestamp(GetClock().GetCurrentTime());
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [activity_name, hash, pid, state, timestamp]() {
+        ActivityData activity;
+        activity.set_name(activity_name.get());
+        activity.set_process_id(pid);
+        activity.set_hash(hash);
+        ActivityStateData* state_data = activity.add_state_changes();
+        state_data->set_state(state);
+        state_data->set_timestamp(timestamp);
 
-  auto event_stub = Perfa::Instance().event_stub();
-  ClientContext context;
-  EmptyEventResponse response;
-  event_stub.SendActivity(&context, activity, &response);
+        auto event_stub = Perfa::Instance().event_stub();
+        ClientContext context;
+        EmptyEventResponse response;
+        event_stub.SendActivity(&context, activity, &response);
+      });
 }
 
-void SendFragmentEvent(JNIEnv* env, const jstring& name,
-                       const FragmentEventData::FragmentState& state,
-                       int hash) {
-  // TODO
+void EnqueueFragmentEvent(JNIEnv* env, const jstring& name,
+                          const FragmentEventData::FragmentState& state,
+                          int hash) {
+  // TODO using Perfa::Instance().background_queue()
 }
 }  // namespace
 
@@ -83,164 +89,183 @@ extern "C" {
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_InputConnectionWrapper_sendKeyboardEvent(
     JNIEnv* env, jobject thiz, jstring jtext) {
-  SystemData event;
-  event.set_type(SystemData::KEY);
   JStringWrapper text(env, jtext);
-  event.set_event_data(text.get());
-  SendSystemEvent(&event, GetClock().GetCurrentTime());
+
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask([pid, text, timestamp]() {
+    SystemData event;
+    event.set_type(SystemData::KEY);
+    event.set_event_data(text.get());
+    SendSystemEvent(&event, pid, timestamp, timestamp);
+  });
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(
     JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
-  SystemData event;
-  event.set_type(SystemData::TOUCH);
-  event.set_action_id(jstate);
-  SendSystemEvent(&event, jdownTime);
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [jdownTime, jstate, pid, timestamp]() {
+        SystemData event;
+        event.set_type(SystemData::TOUCH);
+        event.set_action_id(jstate);
+        SendSystemEvent(&event, pid, timestamp, jdownTime);
+      });
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendKeyEvent(
     JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
-  SystemData event;
-  event.set_type(SystemData::KEY);
-  event.set_action_id(jstate);
-  SendSystemEvent(&event, jdownTime);
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [jdownTime, jstate, pid, timestamp]() {
+        SystemData event;
+        event.set_type(SystemData::KEY);
+        event.set_action_id(jstate);
+        SendSystemEvent(&event, pid, timestamp, jdownTime);
+      });
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityCreated(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::CREATED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::CREATED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityStarted(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::STARTED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::STARTED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityResumed(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::RESUMED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::RESUMED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityPaused(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::PAUSED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::PAUSED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityStopped(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::STOPPED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::STOPPED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivityDestroyed(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::DESTROYED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::DESTROYED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivitySaved(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::SAVED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::SAVED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_activity_ActivityWrapper_sendActivityOnRestart(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendActivityEvent(env, jname, ActivityStateData::RESTARTED, jhash);
+  EnqueueActivityEvent(env, jname, ActivityStateData::RESTARTED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::ADDED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::ADDED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemoved(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::REMOVED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::REMOVED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnAttach(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::ATTACHED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::ATTACHED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnCreate(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::CREATED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::CREATED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnCreateView(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::CREATEDVIEW, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::CREATEDVIEW, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnActivityCreated(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::ACTIVITYCREATED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::ACTIVITYCREATED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnStart(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::STARTED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::STARTED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnResume(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::RESUMED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::RESUMED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnPause(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::PAUSED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::PAUSED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnStop(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::STOPPED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::STOPPED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDestroyView(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::DESTROYEDVIEW, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::DESTROYEDVIEW, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDestroy(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::DESTROYED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::DESTROYED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_fragment_FragmentWrapper_sendFragmentOnDetach(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  SendFragmentEvent(env, jname, FragmentEventData::DETACHED, jhash);
+  EnqueueFragmentEvent(env, jname, FragmentEventData::DETACHED, jhash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEvent(
     JNIEnv* env, jobject thiz, jint jstate) {
-  SystemData event;
-  event.set_type(SystemData::ROTATION);
-  event.set_action_id(jstate);
-  // Give rotation events a unique id.
-  SendSystemEvent(&event, GetClock().GetCurrentTime());
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask([jstate, pid, timestamp]() {
+    SystemData event;
+    event.set_type(SystemData::ROTATION);
+    event.set_action_id(jstate);
+    // Give rotation events a unique id.
+    SendSystemEvent(&event, pid, timestamp, timestamp);
+  });
 }
 };

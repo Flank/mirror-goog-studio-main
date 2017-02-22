@@ -26,6 +26,7 @@
 #include "proto/internal_network.grpc.pb.h"
 #include "proto/perfa_service.grpc.pb.h"
 
+#include "utils/background_queue.h"
 #include "utils/clock.h"
 
 namespace profiler {
@@ -48,6 +49,8 @@ class Perfa {
   const proto::InternalNetworkService::Stub& network_stub() {
     return *network_stub_;
   }
+
+  BackgroundQueue* background_queue() { return &background_queue_; }
 
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
@@ -72,6 +75,8 @@ class Perfa {
   grpc::ClientContext data_context_;
   proto::DataStreamResponse data_response_;
   std::unique_ptr<grpc::ClientWriter<proto::CommonData>> data_stream_;
+
+  BackgroundQueue background_queue_;
 
   void RunControlThread();
   void RunHeartbeatThread();
