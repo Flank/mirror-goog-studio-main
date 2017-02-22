@@ -93,11 +93,11 @@ public class NinePatchAaptProcessorTestUtils {
         System.out.println(
                 "waiting for requests completion : " + (System.currentTimeMillis() - startTime));
         System.out.println("total time : " + (System.currentTimeMillis() - classStartTime.get()));
-        System.out.println("Comparing crunched files");
-        long comparisonStartTime = System.currentTimeMillis();
         TestUtils.waitForFileSystemTick();
+        long comparisonStartTime = System.currentTimeMillis();
+        System.out.print("Comparing crunched files");
         for (Map.Entry<File, File> sourceAndCrunched : sourceAndCrunchedFiles.entrySet()) {
-            System.out.println(sourceAndCrunched.getKey().getName());
+            System.out.print('.');
             File crunched = new File(sourceAndCrunched.getKey().getParent(),
                     sourceAndCrunched.getKey().getName() + getControlFileSuffix());
 
@@ -110,8 +110,10 @@ public class NinePatchAaptProcessorTestUtils {
                 throw new RuntimeException("Failed with " + testedChunks.get("IHDR"), e);
             }
         }
-        System.out.println("Done comparing crunched files " + (System.currentTimeMillis()
-                - comparisonStartTime));
+        System.out.println();
+        System.out.format(
+                "Done comparing %1$d crunched files in %2$dms%n",
+                sourceAndCrunchedFiles.size(), (System.currentTimeMillis() - comparisonStartTime));
     }
 
     /**
@@ -140,7 +142,7 @@ public class NinePatchAaptProcessorTestUtils {
             e.printStackTrace();
             throw e;
         }
-        System.out.println("crunch " + file.getPath());
+        //System.out.println("crunch " + file.getPath());
         return outFile;
     }
 
