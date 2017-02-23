@@ -34,6 +34,6 @@ android {
 
 dependencies {
     compile "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta5'
+    compile "com.android.support.constraint:constraint-layout:${rootProject.constraintLayoutVersion}"
     testCompile 'junit:junit:4.12'
 }

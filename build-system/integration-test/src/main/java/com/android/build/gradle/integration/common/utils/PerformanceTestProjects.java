@@ -383,10 +383,7 @@ public class PerformanceTestProjects {
                 "def support = \\[",
                 "def support = [\n"
                         + "leanback : \"com.android.support:leanback-v17:\\${versions.supportVersion}\",\n"
-                        + "mediarouter : [\"com.android.support:mediarouter-v7:25.0.1\","
-                        // There is no mediarouter > 25.0.1, but upgrade its dependencies.
-                        + "\"com.android.support:appcompat-v7:\\${versions.supportVersion}\","
-                        + "\"com.android.support:palette-v7:\\${versions.supportVersion}\"],\n");
+                        + "mediarouter : \"com.android.support:mediarouter-v7:\\${versions.supportVersion}\",\n");
 
         TestFileUtils.appendToFile(
                 project.file("dependencies.gradle"),

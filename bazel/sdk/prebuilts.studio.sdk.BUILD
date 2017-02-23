@@ -57,31 +57,30 @@ filegroup(
 
 filegroup(
     name = "constraint-layout_latest",
-    srcs = [":constraint-layout_1.0.0-beta5"],
+    srcs = [":constraint-layout_1.0.0"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "constraint-layout_1.0.0-beta5",
+    name = "constraint-layout_1.0.0",
     srcs = glob(
         include = [
-            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0-beta5/**",
-            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-beta5/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.0/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0/**",
         ],
     ),
 )
 
 filegroup(
     name = "support_latest",
-    srcs = [":support_25.1.0"],
+    srcs = [":support_25.2.0"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "support_25.1.0",
+    name = "support_25.2.0",
     srcs = glob([
-        "*/extras/android/m2repository/com/android/support/*/25.1.0/**",
-        "*/extras/android/m2repository/com/android/support/mediarouter-v7/25.0.1/**",
+        "*/extras/android/m2repository/com/android/support/*/25.2.0/**",
     ]),
 )
 
