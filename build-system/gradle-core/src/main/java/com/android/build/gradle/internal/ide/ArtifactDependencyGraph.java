@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
@@ -238,6 +239,18 @@ public class ArtifactDependencyGraph {
                         // FIXME once we only support level two, we can pass ArtifactScope.EXTERNAL here
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.EXPLODED_AAR);
+
+        // because the ArtifactCollection could be a collection over a test variant which ends
+        // up being a ArtifactCollectionWithTestedArtifact, we need to get the actual list
+        // without the tested artifact.
+        if (mainArtifactList instanceof ArtifactCollectionWithTestedArtifact) {
+            mainArtifactList =
+                    ((ArtifactCollectionWithTestedArtifact) mainArtifactList).getTestArtifacts();
+        }
+        if (externalAArList instanceof ArtifactCollectionWithTestedArtifact) {
+            externalAArList =
+                    ((ArtifactCollectionWithTestedArtifact) externalAArList).getTestArtifacts();
+        }
 
         // build a list of external AARs. Put the hashable result directly in it as we'll want these
         // instead of the other ones in order to have direct access to the exploded aar.

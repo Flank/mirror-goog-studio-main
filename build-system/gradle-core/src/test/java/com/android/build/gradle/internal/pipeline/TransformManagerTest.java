@@ -229,7 +229,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .withContentTypes(DefaultContentType.RESOURCES)
                 .withScopes(Scope.PROJECT)
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
-                .withFileCollection(projectClassAndResources.getFiles())
+                .withFileCollection(projectClassAndResources.getFileCollection())
                 .test();
 
         // check the task contains the stream
@@ -239,7 +239,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .withContentTypes(DefaultContentType.CLASSES)
                 .withScopes(Scope.PROJECT)
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
-                .withFileCollection(projectClassAndResources.getFiles())
+                .withFileCollection(projectClassAndResources.getFileCollection())
                 .test();
     }
 
@@ -295,14 +295,14 @@ public class TransformManagerTest extends TaskTestUtils {
         streamTester()
                 .withContentTypes(DefaultContentType.RESOURCES)
                 .withScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
-                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withFileCollection(projectAndLibsClasses.getFileCollection())
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
                 .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
         streamTester()
                 .withContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                 .withScopes(Scope.EXTERNAL_LIBRARIES)
-                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withFileCollection(projectAndLibsClasses.getFileCollection())
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
                 .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
@@ -316,7 +316,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .withContentTypes(DefaultContentType.CLASSES)
                 .withScopes(Scope.PROJECT)
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
-                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withFileCollection(projectAndLibsClasses.getFileCollection())
                 .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
     }
@@ -404,7 +404,7 @@ public class TransformManagerTest extends TaskTestUtils {
         streamTester()
                 .withContentTypes(DefaultContentType.CLASSES)
                 .withScopes(Scope.EXTERNAL_LIBRARIES)
-                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withFileCollection(projectAndLibsClasses.getFileCollection())
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
                 .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
@@ -418,7 +418,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .withContentTypes(DefaultContentType.CLASSES)
                 .withScopes(Scope.PROJECT)
                 .withDependencies(ImmutableList.of(MY_FAKE_DEPENDENCY_TASK_NAME))
-                .withFileCollection(projectAndLibsClasses.getFiles())
+                .withFileCollection(projectAndLibsClasses.getFileCollection())
                 .withRootLocation(projectAndLibsClasses.getRootLocation())
                 .test();
     }

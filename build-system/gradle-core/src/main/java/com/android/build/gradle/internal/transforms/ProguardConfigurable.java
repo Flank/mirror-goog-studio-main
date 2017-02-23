@@ -53,9 +53,9 @@ public abstract class ProguardConfigurable extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         if (variantType == VariantType.LIBRARY) {
-            return TransformManager.SCOPE_FULL_LIBRARY;
+            return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
         }
 
         return TransformManager.SCOPE_FULL_PROJECT;

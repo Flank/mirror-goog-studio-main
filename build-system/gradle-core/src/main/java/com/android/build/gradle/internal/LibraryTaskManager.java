@@ -32,6 +32,7 @@ import static com.android.SdkConstants.LIBS_FOLDER;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
@@ -39,6 +40,8 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.pipeline.ExtendedContentType;
+import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -403,8 +406,7 @@ public class LibraryTaskManager extends TaskManager {
                                                 "",
                                                 SyncIssue.TYPE_GENERIC,
                                                 String.format(
-                                                        "Transforms with scopes '%s' cannot be applied"
-                                                                + "to library projects.",
+                                                        "Transforms with scopes '%s' cannot be applied to library projects.",
                                                         scopes));
                             }
 
@@ -540,7 +542,7 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryJniLibsTransform(
                                         "syncJniLibs",
                                         jniLibsFolder,
-                                        TransformManager.SCOPE_FULL_LIBRARY);
+                                        TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
                         Optional<AndroidTask<TransformTask>> jniPackagingTask =
                                 transformManager.addTransform(tasks, variantScope, jniTransform);
                         jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
@@ -608,6 +610,34 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath,
                 variantName,
                 () -> createLintTasks(tasks, variantScope));
+    }
+
+    @Override
+    protected void createDependencyStreams(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        super.createDependencyStreams(tasks, variantScope);
+
+        // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
+        // so that filtering of duplicates in proguard can work.
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project)
+                                .addContentTypes(TransformManager.CONTENT_CLASS)
+                                .addScope(InternalScope.LOCAL_DEPS)
+                                .setJars(variantScope.getLocalPackagedJars())
+                                .build());
+
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project)
+                                .addContentTypes(
+                                        DefaultContentType.RESOURCES,
+                                        ExtendedContentType.NATIVE_LIBS)
+                                .addScope(InternalScope.LOCAL_DEPS)
+                                .setJars(variantScope.getLocalPackagedJars())
+                                .build());
     }
 
     @NonNull
@@ -681,11 +711,11 @@ public class LibraryTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         if (variantScope.getTestedVariantData() != null) {
             return TransformManager.SCOPE_FULL_PROJECT;
         }
-        return TransformManager.SCOPE_FULL_LIBRARY;
+        return TransformManager.PROJECT_ONLY;
     }
 
     private Task getAssembleDefault() {

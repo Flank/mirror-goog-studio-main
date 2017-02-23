@@ -100,6 +100,7 @@ public abstract class AbstractShrinkerTest {
 
         mDirectoryInput = mock(DirectoryInput.class);
         when(mDirectoryInput.getFile()).thenReturn(classDir);
+        when(mDirectoryInput.getName()).thenReturn("randomName");
         TransformInput transformInput = mock(TransformInput.class);
         when(transformInput.getDirectoryInputs()).thenReturn(ImmutableList.of(mDirectoryInput));
         mOutput = mock(TransformOutputProvider.class);

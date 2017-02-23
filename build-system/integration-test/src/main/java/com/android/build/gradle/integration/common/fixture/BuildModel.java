@@ -65,7 +65,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         }
     }
 
-    private boolean mAssertNoSyncIssues = true;
+    private int mMaxSyncIssueSeverityLevel = 0;
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
 
@@ -87,13 +87,22 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     public BuildModel ignoreSyncIssues() {
         Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
-        mAssertNoSyncIssues = false;
+        mMaxSyncIssueSeverityLevel = SyncIssue.SEVERITY_ERROR;
+        return this;
+    }
+
+    public BuildModel ignoreSyncIssueWarnings() {
+        Preconditions.checkState(
+                modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
+                "Studio 1 was not aware of sync issues.");
+        mMaxSyncIssueSeverityLevel = SyncIssue.SEVERITY_WARNING;
         return this;
     }
 
     /** Fetch the model as studio 1.0 would. */
     public BuildModel asStudio1() {
-        Preconditions.checkState(mAssertNoSyncIssues, "Studio 1 was not aware of sync issues.");
+        Preconditions.checkState(
+                mMaxSyncIssueSeverityLevel == 0, "Studio 1 was not aware of sync issues.");
         return level(AndroidProject.MODEL_LEVEL_0_ORIGINAL);
     }
 
@@ -119,7 +128,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      */
     public ModelContainer<AndroidProject> getSingle() throws IOException {
         ModelContainer<AndroidProject> container = getSingleModel(AndroidProject.class);
-        if (mAssertNoSyncIssues) {
+        if (mMaxSyncIssueSeverityLevel > 0) {
             AndroidProject project = Iterables.getOnlyElement(container.getModelMap().values());
             assertNoSyncIssues(project.getName(), project);
         }
@@ -163,8 +172,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /** Returns a project model for each sub-project. */
     public ModelContainer<AndroidProject> getMulti() throws IOException {
         ModelContainer<AndroidProject> container = getMultiContainer(AndroidProject.class);
-        if (mAssertNoSyncIssues) {
-            container.getModelMap().forEach(BuildModel::assertNoSyncIssues);
+        if (mMaxSyncIssueSeverityLevel > 0) {
+            container.getModelMap().forEach(this::assertNoSyncIssues);
         }
         return container;
     }
@@ -251,11 +260,17 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         }
     }
 
-    private static void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
-        if (!project.getSyncIssues().isEmpty()) {
+    private void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
+        List<SyncIssue> filteredIssues =
+                project.getSyncIssues()
+                        .stream()
+                        .filter(syncIssue -> syncIssue.getSeverity() > mMaxSyncIssueSeverityLevel)
+                        .collect(Collectors.toList());
+
+        if (!filteredIssues.isEmpty()) {
             StringBuilder msg = new StringBuilder();
             msg.append("Project ").append(name).append(" had sync issues :\n");
-            for (SyncIssue syncIssue : project.getSyncIssues()) {
+            for (SyncIssue syncIssue : filteredIssues) {
                 msg.append(
                         MoreObjects.toStringHelper(SyncIssue.class)
                                 .add(

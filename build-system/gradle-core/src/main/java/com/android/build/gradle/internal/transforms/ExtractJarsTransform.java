@@ -128,11 +128,12 @@ public class ExtractJarsTransform extends Transform {
                     final File jarFile = jarInput.getFile();
 
                     // create an output folder for this jar, keeping its type and scopes.
-                    final File outJarFolder = outputProvider.getContentLocation(
-                            jarFile.getName() + "-" + jarFile.getPath().hashCode(),
-                            jarInput.getContentTypes(),
-                            jarInput.getScopes(),
-                            Format.DIRECTORY);
+                    final File outJarFolder =
+                            outputProvider.getContentLocation(
+                                    jarInput.getName(),
+                                    jarInput.getContentTypes(),
+                                    jarInput.getScopes(),
+                                    Format.DIRECTORY);
                     FileUtils.mkdirs(outJarFolder);
 
                     if (!isIncremental) {

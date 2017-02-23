@@ -185,14 +185,17 @@ public class ProGuardTransform extends BaseProguardAction {
     private void doMinification(
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
-            @Nullable TransformOutputProvider output) throws IOException {
-        checkNotNull(output, "Missing output object for transform " + getName());
-        Set<ContentType> outputTypes = getOutputTypes();
-        Set<Scope> scopes = getScopes();
-        File outFile = output.getContentLocation("main", outputTypes, scopes, Format.JAR);
-        mkdirs(outFile.getParentFile());
-
+            @Nullable TransformOutputProvider output)
+            throws IOException {
         try {
+            checkNotNull(output, "Missing output object for transform " + getName());
+            Set<ContentType> outputTypes = getOutputTypes();
+            Set<? super Scope> scopes = getScopes();
+            File outFile =
+                    output.getContentLocation(
+                            "combined_res_and_classes", outputTypes, scopes, Format.JAR);
+            mkdirs(outFile.getParentFile());
+
             GlobalScope globalScope = variantScope.getGlobalScope();
 
             // set the mapping file if there is one.
@@ -262,7 +265,7 @@ public class ProGuardTransform extends BaseProguardAction {
         }
     }
 
-    private static void handleQualifiedContent(
+    private void handleQualifiedContent(
             @NonNull ClassPath classPath,
             @NonNull QualifiedContent content,
             @Nullable List<String> baseFilter) {

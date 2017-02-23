@@ -51,6 +51,7 @@ import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
@@ -143,6 +144,15 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,
             @NonNull ArtifactType artifactType);
+
+    @NonNull
+    ArtifactView getArtifactView(
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
+            @NonNull AndroidArtifacts.ArtifactScope scope,
+            @NonNull ArtifactType artifactType);
+
+    @NonNull
+    Supplier<Collection<File>> getLocalPackagedJars();
 
     @NonNull
     FileCollection getProvidedOnlyClasspath();

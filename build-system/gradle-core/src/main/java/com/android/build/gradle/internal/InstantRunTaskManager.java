@@ -105,7 +105,7 @@ public class InstantRunTaskManager {
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
             @Nullable AndroidTask<?> preTask,
             AndroidTask<?> anchorTask,
-            Set<QualifiedContent.Scope> resMergingScopes,
+            Set<? super QualifiedContent.Scope> resMergingScopes,
             FileCollection instantRunMergedManifests,
             FileCollection processedResources,
             boolean addDependencyChangeChecker) {

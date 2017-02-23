@@ -28,7 +28,6 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.android.ide.common.internal.WaitableExecutor;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -82,12 +80,6 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public Collection<File> getSecondaryFileOutputs() {
         return ImmutableList.of(mainClassLocation, resJarLocation);
-    }
-
-    @NonNull
-    @Override
-    public Set<QualifiedContent.Scope> getReferencedScopes() {
-        return TransformManager.PROJECT_ONLY;
     }
 
     @Override
@@ -188,12 +180,13 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     }
 
     private static void handleJarOutput(
-            @NonNull List<QualifiedContent> mainClassInputs,
+            @NonNull List<QualifiedContent> inputs,
             @NonNull File toFile,
             @Nullable ZipEntryFilter filter,
-            @Nullable TypedefRemover typedefRemover) throws IOException {
-        if (mainClassInputs.size() == 1) {
-            QualifiedContent content = mainClassInputs.get(0);
+            @Nullable TypedefRemover typedefRemover)
+            throws IOException {
+        if (inputs.size() == 1) {
+            QualifiedContent content = inputs.get(0);
 
             if (content instanceof JarInput) {
                 copyJarWithContentFilter(content.getFile(), toFile, filter);
@@ -201,7 +194,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 jarFolderToLocation(content.getFile(), toFile, filter, typedefRemover);
             }
         } else {
-            mergeInputsToLocation(mainClassInputs, toFile, filter, typedefRemover);
+            mergeInputsToLocation(inputs, toFile, filter, typedefRemover);
         }
     }
 }

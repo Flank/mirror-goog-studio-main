@@ -33,6 +33,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.IntermediateFolderUtils;
+import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -121,23 +122,30 @@ public class ExtractJarsTransformTest {
             jarOutputStream.closeEntry();
         }
 
-        ExtractJarsTransform transform =
-                new ExtractJarsTransform(
-                        ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
-                        ImmutableSet.of(QualifiedContent.Scope.SUB_PROJECTS));
+        final ImmutableSet<QualifiedContent.ContentType> types =
+                ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
+        final ImmutableSet<QualifiedContent.Scope> scopes =
+                ImmutableSet.of(QualifiedContent.Scope.SUB_PROJECTS);
+        ExtractJarsTransform transform = new ExtractJarsTransform(types, scopes);
         Path outputDirectory = temporaryFolder.newFolder().toPath();
 
         // Initial Run
+        final TransformOutputProviderImpl transformOutputProvider =
+                new TransformOutputProviderImpl(outputDirectory, types, scopes);
         transform.transform(
                 new TransformInvocationBuilder(context)
                         .addInputs(
                                 ImmutableList.of(
                                         asJarInput(jar1, Status.NOTCHANGED),
                                         asJarInput(jar2, Status.NOTCHANGED)))
-                        .addOutputProvider(new TransformOutputProviderImpl(outputDirectory))
+                        .addOutputProvider(transformOutputProvider)
                         .build());
 
-        assertThat(getFileNames(outputDirectory)).containsExactly("A.class", "B.class");
+        // we need to save the output state so that the next run picks it up
+        transformOutputProvider.save();
+
+        assertThat(getFileNames(outputDirectory))
+                .containsExactly("A.class", "B.class", SubStream.FN_FOLDER_CONTENT);
 
         // Delete jar
         Files.delete(jar2);
@@ -145,11 +153,13 @@ public class ExtractJarsTransformTest {
         transform.transform(
                 new TransformInvocationBuilder(context)
                         .addInputs(ImmutableList.of(asJarInput(jar2, Status.REMOVED)))
-                        .addOutputProvider(new TransformOutputProviderImpl(outputDirectory))
+                        .addOutputProvider(
+                                new TransformOutputProviderImpl(outputDirectory, types, scopes))
                         .setIncrementalMode(true)
                         .build());
 
-        assertThat(getFileNames(outputDirectory)).containsExactly("A.class");
+        assertThat(getFileNames(outputDirectory))
+                .containsExactly("A.class", SubStream.FN_FOLDER_CONTENT);
     }
 
     private static List<String> getFileNames(Path outputDirectory) throws IOException {
@@ -163,10 +173,11 @@ public class ExtractJarsTransformTest {
     private void checkWarningForCaseIssues(@NonNull File jar, boolean expectingWarning)
             throws IOException, TransformException, InterruptedException {
 
-        ExtractJarsTransform transform =
-                new ExtractJarsTransform(
-                        ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
-                        ImmutableSet.of(QualifiedContent.Scope.SUB_PROJECTS));
+        final ImmutableSet<QualifiedContent.ContentType> types =
+                ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
+        final ImmutableSet<QualifiedContent.Scope> scopes =
+                ImmutableSet.of(QualifiedContent.Scope.SUB_PROJECTS);
+        ExtractJarsTransform transform = new ExtractJarsTransform(types, scopes);
 
         List<TransformInput> inputList = ImmutableList.of(asJarInput(jar, Status.NOTCHANGED));
 
@@ -175,7 +186,7 @@ public class ExtractJarsTransformTest {
                         .addInputs(inputList)
                         .addOutputProvider(
                                 new TransformOutputProviderImpl(
-                                        temporaryFolder.newFolder().toPath()))
+                                        temporaryFolder.newFolder().toPath(), types, scopes))
                         .build());
         if (expectingWarning) {
             verify(logger).error(anyString(), eq((Object)jar.getAbsolutePath()));
@@ -236,14 +247,26 @@ public class ExtractJarsTransformTest {
     static class TransformOutputProviderImpl implements TransformOutputProvider {
 
         @NonNull private final File rootLocation;
+        private final ImmutableSet<QualifiedContent.ContentType> types;
+        private final ImmutableSet<QualifiedContent.Scope> scopes;
+        private IntermediateFolderUtils folderUtils;
 
-        TransformOutputProviderImpl(@NonNull Path rootLocation) {
+        TransformOutputProviderImpl(
+                @NonNull Path rootLocation,
+                ImmutableSet<QualifiedContent.ContentType> types,
+                ImmutableSet<QualifiedContent.Scope> scopes) {
             this.rootLocation = rootLocation.toFile();
+            this.types = types;
+            this.scopes = scopes;
         }
 
         @Override
         public void deleteAll() throws IOException {
             FileUtils.cleanOutputDir(rootLocation);
+        }
+
+        public void save() throws IOException {
+            folderUtils.save();
         }
 
         @NonNull
@@ -253,8 +276,10 @@ public class ExtractJarsTransformTest {
                 @NonNull Set<QualifiedContent.ContentType> types,
                 @NonNull Set<? super QualifiedContent.Scope> scopes,
                 @NonNull Format format) {
-            return IntermediateFolderUtils.getContentLocation(
-                    rootLocation, name, types, scopes, format);
+            if (folderUtils == null) {
+                folderUtils = new IntermediateFolderUtils(rootLocation, this.types, this.scopes);
+            }
+            return folderUtils.getContentLocation(name, types, scopes, format);
         }
     }
 

@@ -52,7 +52,6 @@ import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -87,8 +86,7 @@ public class MergeJavaResourcesTransform extends Transform {
     @NonNull
     private final String name;
 
-    @NonNull
-    private final Set<Scope> mergeScopes;
+    @NonNull private final Set<? super Scope> mergeScopes;
     @NonNull
     private final Set<ContentType> mergedType;
 
@@ -102,13 +100,13 @@ public class MergeJavaResourcesTransform extends Transform {
 
     public MergeJavaResourcesTransform(
             @NonNull PackagingOptions packagingOptions,
-            @NonNull Set<Scope> mergeScopes,
+            @NonNull Set<? super Scope> mergeScopes,
             @NonNull ContentType mergedType,
             @NonNull String name,
             @NonNull VariantScope variantScope) {
         this.packagingOptions = new ParsedPackagingOptions(packagingOptions);
         this.name = name;
-        this.mergeScopes = Sets.immutableEnumSet(mergeScopes);
+        this.mergeScopes = ImmutableSet.copyOf(mergeScopes);
         this.mergedType = ImmutableSet.of(mergedType);
         this.intermediateDir = variantScope.getIncrementalDir(
                 variantScope.getFullVariantName() + "-" + name);
@@ -158,7 +156,7 @@ public class MergeJavaResourcesTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         return mergeScopes;
     }
 
@@ -304,10 +302,7 @@ public class MergeJavaResourcesTransform extends Transform {
 
         File outputDir =
                 outputProvider.getContentLocation(
-                        "main",
-                        getOutputTypes(),
-                        getScopes(),
-                        Format.DIRECTORY);
+                        "resources", getOutputTypes(), getScopes(), Format.DIRECTORY);
 
 
         /*

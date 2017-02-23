@@ -28,6 +28,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.TaskFactory;
@@ -80,19 +81,24 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
     public static final Set<ContentType> DATA_BINDING_ARTIFACT =
-            ImmutableSet.of(ExtendedContentType.DATA_BINDING, CLASSES);
-    public static final Set<Scope> PROJECT_ONLY = Sets.immutableEnumSet(Scope.PROJECT);
+            ImmutableSet.of(ExtendedContentType.DATA_BINDING);
+    public static final Set<ScopeType> PROJECT_ONLY = ImmutableSet.of(Scope.PROJECT);
     public static final Set<Scope> SCOPE_FULL_PROJECT =
             Sets.immutableEnumSet(
                     Scope.PROJECT,
                     Scope.SUB_PROJECTS,
                     Scope.EXTERNAL_LIBRARIES);
-    public static final Set<QualifiedContent.ScopeType> SCOPE_FULL_INSTANT_RUN_PROJECT =
-            new ImmutableSet.Builder<QualifiedContent.ScopeType>()
+    // this scope is only for dexing where we need to make sure we get every scope, including
+    // the deprecated ones.
+    public static final Set<ScopeType> SCOPE_FULL_WITH_IR_FOR_DEXING =
+            new ImmutableSet.Builder<ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
+                    .add(Scope.PROJECT_LOCAL_DEPS)
+                    .add(Scope.SUB_PROJECTS_LOCAL_DEPS)
                     .build();
-    public static final Set<Scope> SCOPE_FULL_LIBRARY = Sets.immutableEnumSet(Scope.PROJECT);
+    public static final Set<ScopeType> SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS =
+            ImmutableSet.of(Scope.PROJECT, InternalScope.LOCAL_DEPS);
 
     @NonNull
     private final Project project;
@@ -451,8 +457,13 @@ public class TransformManager extends FilterableStreamCollection {
 
         }
 
-        checkScopeDeprecation(transform.getScopes(), transform.getName());
-        checkScopeDeprecation(transform.getReferencedScopes(), transform.getName());
+        if (!transform
+                .getClass()
+                .getCanonicalName()
+                .startsWith("com.android.build.gradle.internal.transforms")) {
+            checkScopeDeprecation(transform.getScopes(), transform.getName());
+            checkScopeDeprecation(transform.getReferencedScopes(), transform.getName());
+        }
 
         return true;
     }

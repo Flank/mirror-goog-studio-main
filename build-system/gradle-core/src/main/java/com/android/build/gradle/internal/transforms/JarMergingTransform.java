@@ -86,8 +86,9 @@ public class JarMergingTransform extends Transform {
 
         // all the output will be the same since the transform type is COMBINED.
         // and format is SINGLE_JAR so output is a jar
-        File jarFile = outputProvider.getContentLocation("combined", getOutputTypes(), getScopes(),
-                Format.JAR);
+        File jarFile =
+                outputProvider.getContentLocation(
+                        "combined_classes", getOutputTypes(), getScopes(), Format.JAR);
         FileUtils.mkdirs(jarFile.getParentFile());
         deleteIfExists(jarFile);
 
