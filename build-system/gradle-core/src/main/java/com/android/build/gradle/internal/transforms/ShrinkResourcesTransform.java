@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.transform.DirectoryInput;
+import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -37,10 +39,11 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
@@ -188,10 +191,16 @@ public class ShrinkResourcesTransform extends Transform {
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
 
-        // there should be only one input since this transform is always applied after
-        // proguard.
-        TransformInput input = Iterables.getOnlyElement(invocation.getReferencedInputs());
-        File minifiedOutJar = Iterables.getOnlyElement(input.getJarInputs()).getFile();
+        Collection<TransformInput> referencedInputs = invocation.getReferencedInputs();
+        List<File> classes = new ArrayList<>();
+        for (TransformInput transformInput : referencedInputs) {
+            for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
+                classes.add(directoryInput.getFile());
+            }
+            for (JarInput jarInput : transformInput.getJarInputs()) {
+                classes.add(jarInput.getFile());
+            }
+        }
 
         BaseVariantData<?> variantData = variantOutputData.variantData;
         // FIX ME !
@@ -207,13 +216,9 @@ public class ShrinkResourcesTransform extends Transform {
         }
 
         // Analyze resources and usages and strip out unused
-        ResourceUsageAnalyzer analyzer = new ResourceUsageAnalyzer(
-                sourceDir,
-                minifiedOutJar,
-                mergedManifest,
-                mappingFile,
-                resourceDir,
-                reportFile);
+        ResourceUsageAnalyzer analyzer =
+                new ResourceUsageAnalyzer(
+                        sourceDir, classes, mergedManifest, mappingFile, resourceDir, reportFile);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));
             analyzer.setDebug(logger.isEnabled(LogLevel.DEBUG));
@@ -290,15 +295,18 @@ public class ShrinkResourcesTransform extends Transform {
                 if (!ourWarned) {
                     ourWarned = true;
                     String name = variantData.getVariantConfiguration().getBuildType().getName();
-                    sb.append(
-                            "\nNote: If necessary, you can disable resource shrinking by adding\n" +
-                                    "android {\n" +
-                                    "    buildTypes {\n" +
-                                    "        " + name + " {\n" +
-                                    "            shrinkResources false\n" +
-                                    "        }\n" +
-                                    "    }\n" +
-                                    "}");
+                    sb.append("\n")
+                            .append(
+                                    "Note: If necessary, you can disable resource shrinking by adding\n")
+                            .append("android {\n")
+                            .append("    buildTypes {\n")
+                            .append("        ")
+                            .append(name)
+                            .append(" {\n")
+                            .append("            shrinkResources false\n")
+                            .append("        }\n")
+                            .append("    }\n")
+                            .append("}");
                 }
 
                 System.out.println(sb.toString());

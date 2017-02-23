@@ -26,10 +26,11 @@ import com.google.common.collect.Lists
 import com.google.common.io.ByteStreams
 import com.google.common.io.Closer
 import groovy.transform.CompileStatic
-import org.junit.Assume
-import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -47,25 +48,31 @@ import static java.io.File.separator
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+
 /**
  * Assemble tests for shrink.
  */
-
 @CompileStatic
+@RunWith(Parameterized)
+@Ignore("http://b.android.com/234871")
 class ShrinkResourcesTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("shrink")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("shrink")
+                    .create()
 
-    @Before
-    public void skipOnJack() throws Exception {
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
+    @Parameterized.Parameters(name = "useProguard {0}")
+    static List<Boolean> data() {
+        return [true, false]
     }
 
+    @Parameterized.Parameter
+    public boolean useProguard
+
     @Test
-    public void "minifyEnabled is required"() throws Exception {
+    void "minifyEnabled is required"() throws Exception {
         TestFileUtils.appendToFile(
                 project.buildFile,
                 "android.buildTypes.debug.shrinkResources = true")
@@ -78,21 +85,23 @@ class ShrinkResourcesTest {
 
     @Test
     void "check shrink resources"() {
-        project.execute("clean", "assembleRelease", "assembleDebug", "assembleProguardNoShrink")
+        project.buildFile.append("android.buildTypes.release.useProguard = " + useProguard)
+
+        project.execute("clean", "assembleRelease", "assembleDebug", "assembleMinifyDontShrink")
 
         File intermediates = project.file("build/" + AndroidProject.FD_INTERMEDIATES)
 
         // The release target has shrinking enabled.
-        // The proguardNoShrink target has proguard but no shrinking enabled.
+        // The minifyDontShrink target has proguard but no shrinking enabled.
         // The debug target has neither proguard nor shrinking enabled.
 
-        Apk apkRelease = project.getApk(ApkType.RELEASE);
-        Apk apkDebug = project.getApk("debug");
-        Apk apkProguardOnly = project.getApk(ApkType.of("proguardNoShrink", false));
+        Apk apkRelease = project.getApk(ApkType.RELEASE)
+        Apk apkDebug = project.getApk("debug")
+        Apk apkProguardOnly = project.getApk(ApkType.of("minifyDontShrink", false))
 
-        assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
-        assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
-        assertTrue(apkProguardOnly.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
+        assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
+        assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
+        assertTrue(apkProguardOnly.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
 
         File compressed = new File(intermediates,
                 "res" + separator + "resources-release-stripped.ap_")
@@ -107,9 +116,9 @@ class ShrinkResourcesTest {
         assertFalse(new File(intermediates,
                 "res" + separator + "resources-debug-stripped.ap_").exists())
         assertTrue(new File(intermediates,
-                "res" + separator + "resources-proguardNoShrink.ap_").exists())
+                "res" + separator + "resources-minifyDontShrink.ap_").exists())
         assertFalse(new File(intermediates,
-                "res" + separator + "resources-proguardNoShrink-stripped.ap_").exists())
+                "res" + separator + "resources-minifyDontShrink-stripped.ap_").exists())
 
         String expectedUnstrippedApk = """\
 AndroidManifest.xml
@@ -257,7 +266,7 @@ res/layout/used21.xml"""
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
             assertThatZip(compressed).containsFileWithContent("res/drawable/force_remove.xml",
-                    ResourceUsageAnalyzer.TINY_XML);
+                    ResourceUsageAnalyzer.TINY_XML)
         }
 
         // Check the compressed .ap_:
@@ -413,7 +422,7 @@ res/layout/used21.xml"""
             }
             assertEquals(name1, name2)
             if (!entry1.isDirectory()) {
-                assertEquals(name1, entry1.getMethod(), entry2.getMethod());
+                assertEquals(name1, entry1.getMethod(), entry2.getMethod())
 
                 byte[] bytes1 = ByteStreams.toByteArray(zis1)
                 byte[] bytes2 = ByteStreams.toByteArray(zis2)
@@ -473,13 +482,13 @@ res/layout/used21.xml"""
             throws IOException {
         List<String> lines = Lists.newArrayList()
 
-        Closer closer = Closer.create();
+        Closer closer = Closer.create()
 
         try {
-            ZipFile zf = new ZipFile(zipFile);
-            Enumeration<? extends ZipEntry> entries = zf.entries();
+            ZipFile zf = new ZipFile(zipFile)
+            Enumeration<? extends ZipEntry> entries = zf.entries()
             while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
+                ZipEntry entry = entries.nextElement()
                 String path = entry.getName()
                 if (includeMethod) {
                     String method
@@ -493,9 +502,9 @@ res/layout/used21.xml"""
                 lines.add(path)
             }
         } catch (Throwable t) {
-            throw closer.rethrow(t);
+            throw closer.rethrow(t)
         } finally {
-            closer.close();
+            closer.close()
         }
 
         return lines
@@ -526,7 +535,7 @@ res/layout/used21.xml"""
         Collections.sort(lines, new Comparator<String>() {
 
             @Override
-            public int compare(String line1, String line2) {
+            int compare(String line1, String line2) {
                 String name1 = line1.substring(line1.lastIndexOf('/') + 1)
                 String name2 = line2.substring(line2.lastIndexOf('/') + 1)
                 int delta = name1.compareTo(name2)

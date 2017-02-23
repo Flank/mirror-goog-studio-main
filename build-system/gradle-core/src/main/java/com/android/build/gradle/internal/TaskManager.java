@@ -3200,16 +3200,6 @@ public abstract class TaskManager {
                 return;
             }
 
-            if (buildType.isMinifyEnabled() && !buildType.isUseProguard()) {
-                androidBuilder
-                        .getErrorReporter()
-                        .handleSyncError(
-                                null,
-                                SyncIssue.TYPE_GENERIC,
-                                "Built-in class shrinker and resource shrinking are not supported yet.");
-                return;
-            }
-
             return;
         }
         // FIX ME : change this transform into a variant based one base on FileCollection.

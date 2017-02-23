@@ -92,8 +92,14 @@ public class ResourceUsageAnalyzerTest {
         File mergedManifest = createMergedManifest(dir);
         File resources = createResourceFolder(dir);
 
-        ResourceUsageAnalyzer analyzer = new ResourceUsageAnalyzer(rDir, classes,
-            mergedManifest, mapping, resources, null);
+        ResourceUsageAnalyzer analyzer =
+                new ResourceUsageAnalyzer(
+                        rDir,
+                        Collections.singleton(classes),
+                        mergedManifest,
+                        mapping,
+                        resources,
+                        null);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(""
@@ -1132,8 +1138,9 @@ public class ResourceUsageAnalyzerTest {
     public void testIsResourceClass() throws Exception {
         File dummy = new File("dummy");
         File mappingFile = createMappingFile(Files.createTempDir());
-        ResourceUsageAnalyzer analyzer = new ResourceUsageAnalyzer(dummy, dummy, dummy,
-                mappingFile, dummy, null);
+        ResourceUsageAnalyzer analyzer =
+                new ResourceUsageAnalyzer(
+                        dummy, Collections.singleton(dummy), dummy, mappingFile, dummy, null);
         analyzer.getModel().addDeclaredResource(ResourceType.LAYOUT, "structure_status_view", null, true);
         analyzer.recordMapping(mappingFile);
         assertTrue(analyzer.isResourceClass("android/support/v7/appcompat/R$attr.class"));
