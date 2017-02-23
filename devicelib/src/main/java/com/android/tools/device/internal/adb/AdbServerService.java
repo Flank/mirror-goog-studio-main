@@ -83,14 +83,14 @@ class AdbServerService extends AbstractService {
         executorService.submit(
                 ScopedThreadNameRunnable.wrap(
                         () -> {
-                            LOG.fine("Executing " + command);
+                            LOG.fine("Executing " + command.getName());
                             try {
                                 cf.complete(doExecute(command));
                             } catch (Exception e) {
                                 LOG.fine("Exception while executing " + command);
                                 cf.completeExceptionally(e);
                             } finally {
-                                LOG.fine("Completed executing " + command);
+                                LOG.fine("Completed executing " + command.getName());
                             }
                         },
                         command.getName()));

@@ -70,7 +70,8 @@ public class StreamConnection implements Connection {
     }
 
     @NonNull
-    private String readString(int len) throws IOException {
+    @Override
+    public String readString(int len) throws IOException {
         byte[] data = new byte[len];
         readFully(data);
         return new String(data, Charsets.UTF_8);

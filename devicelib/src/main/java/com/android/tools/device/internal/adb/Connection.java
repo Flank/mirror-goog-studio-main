@@ -40,4 +40,7 @@ public interface Connection extends Closeable {
      */
     @NonNull
     UnsignedInteger readUnsignedHexInt() throws IOException;
+
+    @NonNull
+    String readString(int len) throws IOException;
 }

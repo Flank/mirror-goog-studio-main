@@ -41,4 +41,9 @@ public enum HostService {
     public byte[] getCommand() {
         return cmd.getBytes(Charsets.UTF_8);
     }
+
+    @Override
+    public String toString() {
+        return cmd;
+    }
 }

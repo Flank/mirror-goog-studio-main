@@ -29,6 +29,7 @@ public class KillServer implements AdbCommand<Void> {
         return null;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return HostService.KILL.toString();
