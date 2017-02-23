@@ -27,7 +27,7 @@ namespace profiler {
 class MemoryProfilerComponent final : public ProfilerComponent {
  public:
   explicit MemoryProfilerComponent(Daemon::Utilities* utilities)
-      : public_service_(utilities->clock(), &collectors_),
+      : public_service_(utilities, &collectors_),
         private_service_(&collectors_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).

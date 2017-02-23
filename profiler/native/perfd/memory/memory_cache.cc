@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <cassert>
 
-#include "utils/file_reader.h"
 #include "utils/log.h"
 
 using ::profiler::proto::TrackAllocationsResponse;
@@ -30,8 +29,10 @@ using ::profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
 
-MemoryCache::MemoryCache(const Clock& clock, int32_t samples_capacity)
+MemoryCache::MemoryCache(const Clock& clock, FileCache& file_cache,
+                         int32_t samples_capacity)
     : clock_(clock),
+      file_cache_(file_cache),
       memory_samples_(new MemoryData::MemorySample[samples_capacity]),
       vm_stats_samples_(new MemoryData::VmStatsSample[samples_capacity]),
       heap_dump_infos_(new HeapDumpInfo[samples_capacity]),
@@ -259,7 +260,8 @@ void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
     }
   }
 
-  FileReader::Read(heap_dump_file_path, response->mutable_data());
+  auto file = file_cache_.GetFile(heap_dump_file_path);
+  response->mutable_data()->append(file->Contents());
   response->set_status(DumpDataResponse::SUCCESS);
 }
 
