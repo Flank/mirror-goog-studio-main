@@ -267,12 +267,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         @Override
         public void run() {
             try {
-                // Because we poll for if the InputConnection is wrapped, we
-                // set a flag after we wrap it so we do not need to run the reflection
-                // routine again. When the InputMethodManager no longer accepts input
-                // We reset this variable as we can no longer guarantee the InputConnection is
-                // set to the one we wrap.
-                boolean interceptSetForSoftkeyboard = false;
                 // First grab access to the InputMethodManager
                 Class clazz = InputMethodManager.class;
                 Method instance = clazz.getMethod("getInstance");
@@ -282,7 +276,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                     Thread.sleep(SLEEP_TIME);
                     // If we are accepting text that means we have an input connection
                     boolean acceptingText = imm.isAcceptingText();
-                    if (acceptingText && !interceptSetForSoftkeyboard) {
+                    if (acceptingText) {
                         // Grab the inputconnection wrapper internally
                         Field wrapper = clazz.getDeclaredField("mServedInputConnectionWrapper");
                         wrapper.setAccessible(true);
@@ -298,7 +292,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             ic.setAccessible(true);
                             //Replace the object with a wrapper
                             Object input = ic.get(connection);
-                            if (!input.getClass().isInstance(InputConnectionWrapper.class)) {
+                            if (!InputConnectionWrapper.class.isInstance(input)) {
                                 ic.set(
                                         connection,
                                         new InputConnectionWrapper((InputConnection) input));
@@ -307,9 +301,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             ic.setAccessible(false);
                         }
                         lock.setAccessible(false);
-                        interceptSetForSoftkeyboard = true;
-                    } else if (!acceptingText) {
-                        interceptSetForSoftkeyboard = false;
                     }
                 }
             } catch (InterruptedException ex) {
