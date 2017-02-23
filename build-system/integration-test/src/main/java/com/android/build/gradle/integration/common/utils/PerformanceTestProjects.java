@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -23,7 +25,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -393,6 +396,16 @@ public class PerformanceTestProjects {
                         + "        ext.deps.other.appcompat,\n"
                         + "]\n"
                         + "\n"
+                        + "ext.deps.external.butterKnife = [\n"
+                        + "        ext.deps.support.annotations,\n"
+                        + "        ext.deps.external.butterKnife,\n"
+                        + "]\n"
+                        + "\n"
+                        + "ext.deps.apt.butterKnifeCompiler = [\n"
+                        + "        ext.deps.support.annotations,\n"
+                        + "        ext.deps.apt.butterKnifeCompiler,\n"
+                        + "]\n"
+                        + "\n"
                         + "ext.deps.other.cast = [\n"
                         + "        ext.deps.other.cast,\n"
                         + "        ext.deps.support.mediarouter,\n"
@@ -491,6 +504,141 @@ public class PerformanceTestProjects {
                     "/* $0 */");
         }
 
+        // Remove the android-apt plugin
+
+        Set<String> aptConfigurationProjects =
+                ImmutableSet.of(
+                        "Padraig/endocoele",
+                        "Padraig/follicle",
+                        "Padraig/ratafee",
+                        "Tripoline",
+                        "fratry/Cosmati",
+                        "fratry/Krapina",
+                        "fratry/cepaceous",
+                        "fratry/crankum",
+                        "fratry/crapple",
+                        "fratry/crippling",
+                        "fratry/endothys",
+                        "fratry/fortunate",
+                        "fratry/halsen",
+                        "fratry/linotype",
+                        "fratry/matchy",
+                        "fratry/passbook",
+                        "fratry/psoriasis",
+                        "fratry/savory",
+                        "fratry/sodden",
+                        "fratry/subradius",
+                        "fratry/wiredraw",
+                        "harvestry/Bokhara",
+                        "harvestry/Timbira",
+                        "harvestry/digallate",
+                        "harvestry/isocryme",
+                        "harvestry/suchness",
+                        "harvestry/thribble",
+                        "outissue/Glumaceae",
+                        "outissue/airified",
+                        "outissue/carnally",
+                        "outissue/caudate",
+                        "outissue/eyesore",
+                        "outissue/nonparty",
+                        "outissue/nursing",
+                        "outissue/situla",
+                        "outissue/worldway",
+                        "preprice",
+                        "subvola/Dipnoi",
+                        "subvola/Leporis",
+                        "subvola/absconsa",
+                        "subvola/aluminize",
+                        "subvola/atbash",
+                        "subvola/cleithral",
+                        "subvola/copsewood",
+                        "subvola/doored",
+                        "subvola/emergency",
+                        "subvola/gorgoneum/Chordata",
+                        "subvola/gorgoneum/metanilic/agaric",
+                        "subvola/gorgoneum/teerer/Cuphea",
+                        "subvola/gorgoneum/teerer/Onondaga",
+                        "subvola/gorgoneum/teerer/lucrific",
+                        "subvola/gorgoneum/teerer/perscribe",
+                        "subvola/gorgoneum/teerer/polytonal",
+                        "subvola/gorgoneum/teerer/revalenta",
+                        "subvola/gorgoneum/unwincing",
+                        "subvola/graphite",
+                        "subvola/haploidic",
+                        "subvola/inhumanly",
+                        "subvola/liming",
+                        "subvola/ocracy",
+                        "subvola/remigrate",
+                        "subvola/suborder",
+                        "subvola/tourer",
+                        "subvola/transpire",
+                        "subvola/unmilked",
+                        "subvola/wordsmith",
+                        "subvola/zealotic",
+                        "subvola/zelator");
+        for (String path : aptConfigurationProjects) {
+            File buildDotGradle = project.file(path + "/build.gradle");
+            TestFileUtils.searchAndReplace(
+                    buildDotGradle, "apply plugin: 'com\\.neenbedankt\\.android-apt'", "/* $0 */");
+            TestFileUtils.searchAndReplace(buildDotGradle, " apt ", " annotationProcessor ");
+        }
+
+        for (String path : ImmutableList.of("subvola/absconsa", "phthalic", "fratry/endothys")) {
+            TestFileUtils.searchAndReplace(
+                    project.file(path + "/build.gradle"), "estApt", "estAnnotationProcessor");
+        }
+
+        Set<String> aptPluginProjects =
+                ImmutableSet.of(
+                        "Padraig/arbitrate",
+                        "Padraig/cuminoin",
+                        "Padraig/decollete",
+                        "Padraig/emerse",
+                        "Padraig/limitary",
+                        "Padraig/paegle",
+                        "Padraig/quaestor/triduum",
+                        "Padraig/signist",
+                        "fratry/Ormond",
+                        "fratry/assumpsit",
+                        "fratry/asteep",
+                        "fratry/audience",
+                        "fratry/tentlet",
+                        "harvestry/Savannah/penumbra",
+                        "harvestry/eelgrass",
+                        "harvestry/unwormy",
+                        "outissue/aricine",
+                        "outissue/bracciale",
+                        "outissue/browntail",
+                        "outissue/caricetum/midship",
+                        "outissue/caricetum/scientist",
+                        "outissue/caricetum/skiapod",
+                        "outissue/coherence",
+                        "outissue/cyclus",
+                        "outissue/defusion",
+                        "outissue/embrace",
+                        "outissue/extended",
+                        "outissue/gliadin",
+                        "outissue/nonjurant",
+                        "outissue/nonunion",
+                        "outissue/nutate",
+                        "outissue/oleometer",
+                        "outissue/phasmatid",
+                        "outissue/shortsome",
+                        "outissue/synarchy",
+                        "outissue/tetragram",
+                        "phthalic",
+                        "subvola/Brittany",
+                        "subvola/Brittany",
+                        "subvola/papistry");
+        assertThat(aptPluginProjects).containsNoneIn(aptConfigurationProjects);
+        for (String path : aptPluginProjects) {
+            TestFileUtils.searchAndReplace(
+                    project.file(path + "/build.gradle"),
+                    "apply plugin: 'com\\.neenbedankt\\.android-apt'",
+                    "/* $0 */");
+        }
+
+
         // because we are testing the source generation which will trigger the test manifest
         // merging, minSdkVersion has to be at least 17
         TestFileUtils.searchAndReplace(
@@ -507,7 +655,7 @@ public class PerformanceTestProjects {
                                             issue ->
                                                     issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
                                     .collect(Collectors.toList());
-                    Truth.assertThat(severeIssues).named("Issues for " + path).isEmpty();
+                    assertThat(severeIssues).named("Issues for " + path).isEmpty();
                 });
     }
 }
