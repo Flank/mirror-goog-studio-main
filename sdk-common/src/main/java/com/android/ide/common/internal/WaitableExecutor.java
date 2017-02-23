@@ -15,11 +15,12 @@
  */
 package com.android.ide.common.internal;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -84,11 +85,12 @@ public class WaitableExecutor<T> {
      * parallel. The thread submitting tasks will not block, but tasks may be queued before being
      * passed to the {@link CompletionService}.
      *
-     * @param parallelTaskLimit capacity of the underlying task queue
+     * @param parallelTaskLimit number of tasks that can execute in parallel
      * @see #useGlobalSharedThreadPool()
      */
     public static <T> WaitableExecutor<T> useGlobalSharedThreadPoolWithLimit(
             int parallelTaskLimit) {
+        checkArgument(parallelTaskLimit > 0, "parallelTaskLimit needs to be a positive number.");
         return new BoundedWaitableExecutor<>(
                 null,
                 new ExecutorCompletionService<>(ExecutorSingleton.getExecutor()),
@@ -104,8 +106,7 @@ public class WaitableExecutor<T> {
      * @see #useGlobalSharedThreadPool()
      */
     public static <T> WaitableExecutor<T> useNewFixedSizeThreadPool(int nThreads) {
-        Preconditions.checkArgument(
-                nThreads > 0, "Number of threads needs to be a positive number.");
+        checkArgument(nThreads > 0, "Number of threads needs to be a positive number.");
         ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
         return new WaitableExecutor<>(
                 executorService, new ExecutorCompletionService<T>(executorService));
@@ -134,7 +135,8 @@ public class WaitableExecutor<T> {
     }
 
     /**
-     * Returns the number of tasks that have been submitted for execution but have not yet finished.
+     * Returns the number of tasks that have been submitted for execution but the results have not
+     * been fetched yet.
      */
     int getUnprocessedTasksCount() {
         return mFutureSet.size();
@@ -251,7 +253,10 @@ public class WaitableExecutor<T> {
         }
     }
 
-    /** A {@link WaitableExecutor} that blocks when too many tasks are being scheduled at once. */
+    /**
+     * A {@link WaitableExecutor} that limits the number of tasks (scheduled through this executor)
+     * that can execute in parallel.
+     */
     private static class BoundedWaitableExecutor<T> extends WaitableExecutor<T> {
         private final int bound;
 
