@@ -165,7 +165,8 @@ message TriggerHeapDumpResponse {
     UNSPECIFIED = 0;
     SUCCESS = 1;
     IN_PROGRESS = 2;
-    FAILURE_UNKNOWN = 3;
+    NOT_PROFILING = 3;
+    FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
   // Returns the HeapDumpInfo immediately so the caller can
@@ -197,7 +198,8 @@ message TrackAllocationsResponse {
     SUCCESS = 1;
     IN_PROGRESS = 2;
     NOT_ENABLED = 3;
-    FAILURE_UNKNOWN = 4;
+    NOT_PROFILING = 4;
+    FAILURE_UNKNOWN = 5;
   }
   Status status = 1;
   AllocationsInfo info = 2;
