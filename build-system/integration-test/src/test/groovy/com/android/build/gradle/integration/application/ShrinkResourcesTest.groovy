@@ -28,7 +28,6 @@ import com.google.common.io.Closer
 import groovy.transform.CompileStatic
 import org.junit.Assume
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -78,7 +77,6 @@ class ShrinkResourcesTest {
     }
 
     @Test
-    @Ignore("Flaky: http://b.android.com/224406")
     void "check shrink resources"() {
         project.execute("clean", "assembleRelease", "assembleDebug", "assembleProguardNoShrink")
 

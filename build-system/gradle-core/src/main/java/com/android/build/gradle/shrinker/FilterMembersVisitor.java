@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.shrinker;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.shrinker.parser.BytecodeVersion;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -33,15 +36,20 @@ import org.objectweb.asm.Opcodes;
 public class FilterMembersVisitor extends ClassVisitor {
     private final Set<String> mMembers;
     private final Predicate<String> mClassKeptPredicate;
+    @Nullable private final BytecodeVersion mBytecodeVersion;
 
     public FilterMembersVisitor(
-            Set<String> members, Predicate<String> classKeptPredicate, ClassVisitor cv) {
+            @NonNull Set<String> members,
+            @NonNull Predicate<String> classKeptPredicate,
+            @Nullable BytecodeVersion bytecodeVersion,
+            @NonNull ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
 
         // Make sure all the information here (i.e. all changes we make to bytecode) are reflected
         // in IncrementalShrinker.State.
         mMembers = members;
         mClassKeptPredicate = classKeptPredicate;
+        mBytecodeVersion = bytecodeVersion;
     }
 
     @Override
@@ -57,6 +65,11 @@ public class FilterMembersVisitor extends ClassVisitor {
             if (mClassKeptPredicate.test(iface)) {
                 interfacesToKeep.add(iface);
             }
+        }
+
+        // Check if we want to override the output bytecode version.
+        if (mBytecodeVersion != null) {
+            version = mBytecodeVersion.getBytes();
         }
 
         super.visit(

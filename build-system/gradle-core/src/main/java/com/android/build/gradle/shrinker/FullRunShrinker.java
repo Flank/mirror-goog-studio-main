@@ -19,8 +19,10 @@ package com.android.build.gradle.shrinker;
 import static com.android.utils.FileUtils.getAllFiles;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.shrinker.parser.BytecodeVersion;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.FluentIterable;
@@ -56,11 +58,12 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
     private final Set<File> mPlatformJars;
 
     public FullRunShrinker(
-            WaitableExecutor<Void> executor,
-            ShrinkerGraph<T> graph,
-            Set<File> platformJars,
-            ShrinkerLogger shrinkerLogger) {
-        super(graph, executor, shrinkerLogger);
+            @NonNull WaitableExecutor<Void> executor,
+            @NonNull ShrinkerGraph<T> graph,
+            @NonNull Set<File> platformJars,
+            @NonNull ShrinkerLogger shrinkerLogger,
+            @Nullable BytecodeVersion bytecodeVersion) {
+        super(graph, executor, shrinkerLogger, bytecodeVersion);
         mPlatformJars = platformJars;
     }
 

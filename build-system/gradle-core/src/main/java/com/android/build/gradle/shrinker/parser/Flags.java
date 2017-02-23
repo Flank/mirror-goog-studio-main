@@ -17,8 +17,10 @@
 package com.android.build.gradle.shrinker.parser;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import java.util.List;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Class representing a ProGuard config file.
@@ -35,6 +37,8 @@ public class Flags {
     @NonNull private final List<ClassSpecification> keepClassMembersSpecs = Lists.newArrayList();
 
     @NonNull private final List<FilterSpecification> dontWarnSpecs = Lists.newArrayList();
+
+    private BytecodeVersion bytecodeVersion = null;
 
     private boolean ignoreWarnings;
 
@@ -69,6 +73,44 @@ public class Flags {
         dontWarnSpecs.addAll(classSpec);
     }
 
+    public void target(@NonNull String target) {
+        int version;
+        switch (target) {
+            case "8":
+            case "1.8":
+                version = Opcodes.V1_8;
+                break;
+            case "7":
+            case "1.7":
+                version = Opcodes.V1_7;
+                break;
+            case "6":
+            case "1.6":
+                version = Opcodes.V1_6;
+                break;
+            case "5":
+            case "1.5":
+                version = Opcodes.V1_5;
+                break;
+            case "1.4":
+                version = Opcodes.V1_4;
+                break;
+            case "1.3":
+                version = Opcodes.V1_3;
+                break;
+            case "1.2":
+                version = Opcodes.V1_2;
+                break;
+            case "1.1":
+                version = Opcodes.V1_1;
+                break;
+            default:
+                throw new AssertionError("Unknown target " + target);
+        }
+
+        this.bytecodeVersion = new BytecodeVersion(version);
+    }
+
     @NonNull
     public List<FilterSpecification> getDontWarnSpecs() {
         return dontWarnSpecs;
@@ -80,5 +122,10 @@ public class Flags {
 
     public boolean isIgnoreWarnings() {
         return ignoreWarnings;
+    }
+
+    @Nullable
+    public BytecodeVersion getBytecodeVersion() {
+        return bytecodeVersion;
     }
 }

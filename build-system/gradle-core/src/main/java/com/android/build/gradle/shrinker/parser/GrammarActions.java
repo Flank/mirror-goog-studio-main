@@ -313,6 +313,10 @@ public class GrammarActions {
         }
     }
 
+    static void target(Flags flags, String target) {
+        flags.target(target);
+    }
+
     @NonNull
     private static String convertNameToPattern(
             @NonNull String name, @NonNull FilterSeparator separator) {

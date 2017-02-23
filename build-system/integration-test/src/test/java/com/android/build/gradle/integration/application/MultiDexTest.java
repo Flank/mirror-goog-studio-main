@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
+import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -161,22 +162,31 @@ public class MultiDexTest {
     }
 
     @Test
-    public void checkMinifiedBuild() throws Exception {
-        project.execute("assembleMinified");
+    public void checkProguard() throws Exception {
+        checkMinifiedBuild("proguard");
+    }
+
+    @Test
+    public void checkShrinker() throws Exception {
+        checkMinifiedBuild("shrinker");
+    }
+
+    public void checkMinifiedBuild(String buildType) throws Exception {
+        project.execute("assemble" + StringHelper.capitalize(buildType));
 
         assertMainDexListContains(
-                "minified",
+                buildType,
                 ImmutableList.of("android/support/multidex/MultiDexApplication"),
                 ImmutableList.of(
                         "com/android/tests/basic/Used",
                         "com/android/tests/basic/Main",
                         "com/android/tests/basic/OtherActivity"));
 
-        commonApkChecks("minified");
+        commonApkChecks(buildType);
 
-        assertThat(project.getApk(ApkType.of("minified", true), "ics"))
+        assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/NotUsed;");
-        assertThat(project.getApk(ApkType.of("minified", true), "ics"))
+        assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/DeadCode;");
     }
 

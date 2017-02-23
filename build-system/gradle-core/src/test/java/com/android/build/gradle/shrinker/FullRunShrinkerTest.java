@@ -22,12 +22,17 @@ import com.android.build.api.transform.Status;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import org.junit.Test;
+import org.objectweb.asm.Opcodes;
 
 /** Tests for {@link FullRunShrinker}. */
 @SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
@@ -1531,6 +1536,29 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "ONE:Ltest/MyEnum;",
                 "TWO:Ltest/MyEnum;",
                 "$VALUES:[Ltest/MyEnum;");
+    }
+
+    @Test
+    public void target() throws Exception {
+        Files.write(TestClasses.SimpleScenario.aaa(), new File(mTestPackageDir, "Aaa.class"));
+        fullRun("Aaa", "aaa:()V");
+        File outputClassFile = getOutputClassFile("Aaa");
+        checkBytecodeVersion(outputClassFile, Opcodes.V1_6);
+        FileUtils.delete(outputClassFile);
+
+        ProguardConfig config = new ProguardConfig();
+        config.parse("-target 1.8");
+        mFullRunShrinker = createFullRunShrinker(config.getFlags().getBytecodeVersion());
+        fullRun("Aaa", "aaa:()V");
+        checkBytecodeVersion(outputClassFile, Opcodes.V1_8);
+    }
+
+    protected static void checkBytecodeVersion(File classFile, int version) throws IOException {
+        try (DataInputStream input = new DataInputStream(new FileInputStream(classFile))) {
+            assertThat(input.readInt()).named("magic bytes").isEqualTo(0xcafebabe);
+            input.readUnsignedShort(); // Ignore minor version.
+            assertThat(input.readUnsignedShort()).named("major version").isEqualTo(version);
+        }
     }
 
     private void forceEmptyIncrementalRun() throws Exception {

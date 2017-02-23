@@ -5,39 +5,43 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion rootProject.latestCompileSdk
-  buildToolsVersion = rootProject.buildToolsVersion
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
 
-  defaultConfig {
-    buildConfigField "String", "FOO", "\"foo\""
-    multiDexEnabled = true
+    defaultConfig {
+        buildConfigField "String", "FOO", "\"foo\""
+        multiDexEnabled = true
+    }
+
+    flavorDimensions 'foo'
+    productFlavors {
+        ics {
+            minSdkVersion 14
+        }
+        lollipop {
+            minSdkVersion 21
+        }
   }
 
-  flavorDimensions 'foo'
-  productFlavors {
-    ics {
-      minSdkVersion 14
+    buildTypes {
+        debug {
+            buildConfigField "String", "FOO", "\"bar\""
+            resValue "string", "foo", "foo2"
+        }
+        proguard {
+            initWith debug
+            minifyEnabled true
+            proguardFile file('proguard-android.txt')
+        }
+        shrinker {
+            initWith proguard
+            useProguard false
+        }
     }
-    lollipop {
-      minSdkVersion 21
-    }
-  }
 
-  buildTypes {
-    debug {
-      buildConfigField "String", "FOO", "\"bar\""
-      resValue "string", "foo", "foo2"
+    lintOptions {
+        abortOnError !rootProject.useJack
     }
-    minified {
-      initWith debug
-      minifyEnabled true
-      proguardFile file('proguard-android.txt')
-    }
-  }
-
-  lintOptions {
-    abortOnError !rootProject.useJack
-  }
 }
 
 dependencies {
