@@ -47,3 +47,29 @@ TEST(CountDownLatch, CountDownWorks) {
   latch.CountDown();
   EXPECT_EQ(0, latch.count());
 }
+
+TEST(CountDownLatch, ResetWorks) {
+  CountDownLatch latch(3);
+  EXPECT_EQ(3, latch.count());
+
+  bool waiter_finished = false;
+  auto waiter = thread([&]() {
+    latch.Await();
+    waiter_finished = true;
+  });
+
+  latch.CountDown();
+  latch.CountDown();
+  EXPECT_EQ(1, latch.count());
+
+  latch.Reset();
+  EXPECT_EQ(3, latch.count());
+
+  latch.CountDown();
+  latch.CountDown();
+  latch.CountDown();
+
+  waiter.join();
+  EXPECT_TRUE(waiter_finished);
+  EXPECT_EQ(0, latch.count());
+}

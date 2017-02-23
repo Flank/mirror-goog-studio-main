@@ -40,7 +40,8 @@ namespace profiler {
 //   latch.Await(); // Blocks until all 10 threads are finished with their work
 class CountDownLatch {
  public:
-  explicit CountDownLatch(int32_t count) : count_(count) {}
+  explicit CountDownLatch(int32_t count)
+      : original_count_(count), count_(count) {}
 
   // Decrement the latch value by 1. When it hits 0, any threads that called
   // |Await| will be allowed to move forward. If the count is already 0, this
@@ -68,12 +69,19 @@ class CountDownLatch {
     count_down_complete_.wait(lock);
   }
 
+  // Resets the latch back to the count it was initialized with.
+  void Reset() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    count_ = original_count_;
+  }
+
   int32_t count() const {
     std::unique_lock<std::mutex> lock(mutex_);
     return count_;
   }
 
  private:
+  int32_t original_count_;
   int32_t count_;
 
   std::condition_variable count_down_complete_;
