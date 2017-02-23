@@ -22,12 +22,15 @@
 
 #include <grpc++/grpc++.h>
 
+#include "perfd/daemon.h"
 #include "proto/internal_event.grpc.pb.h"
 
 namespace profiler {
 
 class EventCache {
  public:
+  explicit EventCache(const Daemon::Utilities& utilities)
+      : clock_(utilities.clock()) {}
   // Adds data to the event cache, the data is copied.
   void AddActivityData(const profiler::proto::ActivityData& data);
   void AddSystemData(const profiler::proto::SystemData& data);
@@ -42,6 +45,8 @@ class EventCache {
   void GetSystemData(int app_id, int64_t start_time, int64_t end_time,
                      profiler::proto::SystemDataResponse* response);
 
+  void MarkActivitiesAsTerminated(int process_id);
+
  private:
   // TODO: The current cache grows unlimited, the data needs a timeout, or
   // changed to a ring buffer.
@@ -52,6 +57,7 @@ class EventCache {
   // Guards |cache_|
   std::mutex activity_cache_mutex_;
   std::mutex system_cache_mutex_;
+  const Clock& clock_;
 };
 
 }  // end of namespace profiler

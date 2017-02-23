@@ -2,7 +2,8 @@ add_executable(perfd
                daemon.cc
                perfa_service.cc
                perfd.cc
-               profiler_service.cc)
+               profiler_service.cc
+               generic_component.cc)
 
 target_link_libraries(perfd
                       profiler_cpu

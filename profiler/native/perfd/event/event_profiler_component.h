@@ -16,21 +16,32 @@
 #ifndef PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 #define PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 
+#include "perfd/daemon.h"
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
+#include "proto/profiler_service.grpc.pb.h"
 
 namespace profiler {
 
 class EventProfilerComponent final : public ProfilerComponent {
  public:
-  explicit EventProfilerComponent() {}
+  explicit EventProfilerComponent(const Daemon::Utilities& utilities)
+      : cache_(utilities) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
 
   // Returns the service that talks to device clients (e.g., perfa).
   grpc::Service* GetInternalService() override { return &internal_service_; }
+
+  void AgentStatusChangedCallback(
+      int process_id,
+      const profiler::proto::AgentStatusResponse::Status& status) {
+    if (status == proto::AgentStatusResponse::DETACHED) {
+      cache_.MarkActivitiesAsTerminated(process_id);
+    }
+  }
 
  private:
   EventCache cache_;
