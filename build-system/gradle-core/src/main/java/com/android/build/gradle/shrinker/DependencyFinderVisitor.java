@@ -110,7 +110,10 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             handleDeclarationType(method, argType);
         }
 
-        if (name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
+        // Keep class initializers, but also keep all default constructors. This is the ProGuard
+        // behavior,
+        if (name.equals(ByteCodeUtils.CLASS_INITIALIZER)
+                || (name.equals(ByteCodeUtils.CONSTRUCTOR) && desc.equals("()V"))) {
             handleDependency(mKlass, method, DependencyType.REQUIRED_CLASS_STRUCTURE);
         }
 
