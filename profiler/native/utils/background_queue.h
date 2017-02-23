@@ -24,6 +24,8 @@
 #include <thread>
 #include <vector>
 
+#include "utils/count_down_latch.h"
+
 namespace profiler {
 
 // A thread-safe queue of tasks which will be run sequentially on a background
@@ -72,6 +74,7 @@ class BackgroundQueue {
 
   std::thread task_thread_;
   std::string task_thread_name_;
+  CountDownLatch task_enqueued_latch_;
   std::atomic_bool is_ready_;
 };
 
