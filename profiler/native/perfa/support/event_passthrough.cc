@@ -65,7 +65,7 @@ void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
         ActivityData activity;
         activity.set_name(activity_name.get());
         activity.set_process_id(pid);
-        activity.set_hash(hash);
+        activity.set_hash(hash ^ pid);
         ActivityStateData* state_data = activity.add_state_changes();
         state_data->set_state(state);
         state_data->set_timestamp(timestamp);
