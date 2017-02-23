@@ -19,6 +19,7 @@ package com.android.testutils.truth;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.apk.Zip;
+import com.google.common.base.MoreObjects;
 import com.google.common.primitives.Bytes;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;
@@ -96,8 +97,12 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
         // validate file presence
         exists();
 
+        String subjectName =
+                MoreObjects.firstNonNull(
+                        internalCustomName(), getSubject().getFile().getFileName().toString());
+
         check().that(extractContentAsBytes(path))
-                .named(internalCustomName() + ": " + path)
+                .named(path + " in " + subjectName)
                 .isEqualTo(content);
     }
 

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent.ContentType;
@@ -32,6 +33,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.shrinker.parser.BytecodeVersion;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.TestUtils;
@@ -110,13 +112,18 @@ public abstract class AbstractShrinkerTest {
                 .thenReturn(mOutDir);
 
         mInputs = ImmutableList.of(transformInput);
+        mFullRunShrinker = createFullRunShrinker(null);
+    }
 
-        mFullRunShrinker =
-                new FullRunShrinker<>(
-                        WaitableExecutor.useGlobalSharedThreadPool(),
-                        JavaSerializationShrinkerGraph.empty(mIncrementalDir),
-                        getPlatformJars(),
-                        mShrinkerLogger);
+    @NonNull
+    protected final FullRunShrinker<String> createFullRunShrinker(
+            @Nullable BytecodeVersion bytecodeVersion) {
+        return new FullRunShrinker<>(
+                WaitableExecutor.useGlobalSharedThreadPool(),
+                JavaSerializationShrinkerGraph.empty(mIncrementalDir),
+                getPlatformJars(),
+                mShrinkerLogger,
+                bytecodeVersion);
     }
 
     @Before
@@ -266,7 +273,8 @@ public abstract class AbstractShrinkerTest {
                         WaitableExecutor.useGlobalSharedThreadPool(),
                         JavaSerializationShrinkerGraph.readFromDir(
                                 mIncrementalDir, this.getClass().getClassLoader()),
-                        mShrinkerLogger);
+                        mShrinkerLogger,
+                        null);
 
         Map<File, Status> files = Maps.newHashMap();
         for (Map.Entry<String, Status> entry : changes.entrySet()) {

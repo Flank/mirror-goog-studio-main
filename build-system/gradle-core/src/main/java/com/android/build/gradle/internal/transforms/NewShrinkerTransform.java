@@ -134,7 +134,8 @@ public class NewShrinkerTransform extends ProguardConfigurable {
                         WaitableExecutor.<Void>useGlobalSharedThreadPool(),
                         JavaSerializationShrinkerGraph.empty(incrementalDir),
                         platformJars,
-                        shrinkerLogger);
+                        shrinkerLogger,
+                        config.getFlags().getBytecodeVersion());
 
         // Only save state if incremental mode is enabled.
         boolean saveState = this.isIncremental();
@@ -213,7 +214,8 @@ public class NewShrinkerTransform extends ProguardConfigurable {
                     new IncrementalShrinker<>(
                             WaitableExecutor.<Void>useGlobalSharedThreadPool(),
                             graph,
-                            shrinkerLogger);
+                            shrinkerLogger,
+                            config.getFlags().getBytecodeVersion());
 
             shrinker.incrementalRun(inputs, output);
             checkForWarnings(config, shrinkerLogger);

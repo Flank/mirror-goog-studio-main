@@ -47,6 +47,7 @@ prog [Flags flags, String baseDirectory]
     | (unFlag=unsupportedFlag {GrammarActions.unsupportedFlag($unFlag.text);})
     | ('-dontwarn' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS] {GrammarActions.dontWarn($flags, class_filter);})
     | ('-ignorewarnings' {GrammarActions.ignoreWarnings($flags);})
+    | ('-target' target=NAME {GrammarActions.target(flags, $target.text);})
   )*
   EOF
   ;
@@ -104,7 +105,6 @@ private unsupportedFlag
   ( '-injars' inJars=classpath
     | '-outjars' outJars=classpath
     | '-libraryjars' libraryJars=classpath
-    | ('-target' NAME) //version
     | '-forceprocessing'
     | ('-printusage' NAME) //[filename]
     | ('-whyareyoukeeping' classSpecification)

@@ -20,12 +20,14 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.shrinker.parser.BytecodeVersion;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Stopwatch;
@@ -65,13 +67,17 @@ public abstract class AbstractShrinker<T> {
 
     protected final ShrinkerLogger mShrinkerLogger;
 
+    @Nullable private final BytecodeVersion mBytecodeVersion;
+
     protected AbstractShrinker(
-            ShrinkerGraph<T> graph,
-            WaitableExecutor<Void> executor,
-            ShrinkerLogger shrinkerLogger) {
+            @NonNull ShrinkerGraph<T> graph,
+            @NonNull WaitableExecutor<Void> executor,
+            @NonNull ShrinkerLogger shrinkerLogger,
+            @Nullable BytecodeVersion bytecodeVersion) {
         mGraph = graph;
         mExecutor = executor;
         mShrinkerLogger = shrinkerLogger;
+        mBytecodeVersion = bytecodeVersion;
     }
 
     /**
@@ -243,7 +249,7 @@ public abstract class AbstractShrinker<T> {
      * interfaces. Returns the new class bytecode as {@code byte[]}.
      */
     @NonNull
-    protected static byte[] rewrite(
+    protected byte[] rewrite(
             @NonNull String className,
             @NonNull File classFile,
             @NonNull Set<String> membersToKeep,
@@ -264,7 +270,9 @@ public abstract class AbstractShrinker<T> {
         // the constant pool, which we want, since it can contain unused entries that end up in the
         // dex file.
         ClassWriter classWriter = new ClassWriter(0);
-        ClassVisitor filter = new FilterMembersVisitor(membersToKeep, keepInterface, classWriter);
+        ClassVisitor filter =
+                new FilterMembersVisitor(
+                        membersToKeep, keepInterface, mBytecodeVersion, classWriter);
         classReader.accept(filter, 0);
         return classWriter.toByteArray();
     }

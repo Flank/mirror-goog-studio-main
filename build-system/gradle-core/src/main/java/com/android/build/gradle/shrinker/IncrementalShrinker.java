@@ -19,11 +19,13 @@ package com.android.build.gradle.shrinker;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.shrinker.parser.BytecodeVersion;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
@@ -59,10 +61,11 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
     }
 
     public IncrementalShrinker(
-            WaitableExecutor<Void> executor,
-            ShrinkerGraph<T> graph,
-            ShrinkerLogger shrinkerLogger) {
-        super(graph, executor, shrinkerLogger);
+            @NonNull WaitableExecutor<Void> executor,
+            @NonNull ShrinkerGraph<T> graph,
+            @NonNull ShrinkerLogger shrinkerLogger,
+            @Nullable BytecodeVersion bytecodeVersion) {
+        super(graph, executor, shrinkerLogger, bytecodeVersion);
     }
 
     /**

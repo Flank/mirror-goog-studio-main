@@ -236,7 +236,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
                 && buildType.isMinifyEnabled()
-                && !buildType.isUseProguard()
+                && buildType.isUseProguard()
                 && !getInstantRunBuildContext().isInInstantRunMode();
     }
 
