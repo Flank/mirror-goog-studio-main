@@ -66,7 +66,8 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kElapsedTime = 1175801430;
 
   Daemon::Utilities utilities;
-  CpuCache cache;
+  CpuCache cache{100};
+  cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid);
   bool sample_result = sampler.Sample();
@@ -92,7 +93,9 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_2 = 140;
 
   Daemon::Utilities utilities;
-  CpuCache cache;
+  CpuCache cache{100};
+  cache.AllocateAppCache(kMockAppPid_1);
+  cache.AllocateAppCache(kMockAppPid_2);
   CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid_1);
   sampler.AddProcess(kMockAppPid_2);
@@ -113,10 +116,11 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   EXPECT_EQ(kMockAppPid_2, sample.basic_info().process_id());
   EXPECT_EQ(kAppCpuTime_2, sample.cpu_usage().app_cpu_time_in_millisec());
 
+  // TODO: Enable the following test after cache supports proto::AppId::ANY.
   // Test the ANY_APP feature of the cache.
-  samples =
-      cache.Retrieve(proto::CpuDataRequest::ANY_APP, INT64_MIN, INT64_MAX);
-  ASSERT_EQ(2, samples.size());
+  // samples =
+  //     cache.Retrieve(proto::CpuDataRequest::ANY_APP, INT64_MIN, INT64_MAX);
+  // ASSERT_EQ(2, samples.size());
 }
 
-}  // nampespace profiler
+}  // namespace profiler

@@ -28,42 +28,68 @@ using std::vector;
 
 namespace profiler {
 
-void CpuCache::Add(const CpuProfilerData& datum) {
-  std::lock_guard<std::mutex> lock(cache_mutex_);
-  cache_.push_back(datum);
+bool CpuCache::AllocateAppCache(int32_t app_id) {
+  if (FindAppCache(app_id) != nullptr) return false;
+  app_caches_.emplace_back(new AppCpuCache(app_id, capacity_));
+  return true;
+}
+
+bool CpuCache::DeallocateAppCache(int32_t app_id) {
+  for (auto it = app_caches_.begin(); it != app_caches_.end(); it++) {
+    if (app_id == (*it)->app_id) {
+      app_caches_.erase(it);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CpuCache::Add(const CpuProfilerData& datum) {
+  int32_t app_id = datum.basic_info().process_id();
+  auto* found = FindAppCache(app_id);
+  if (found == nullptr) return false;
+  found->usage_cache.Add(datum, datum.basic_info().end_timestamp());
+  return true;
 }
 
 vector<CpuProfilerData> CpuCache::Retrieve(int32_t app_id, int64_t from,
                                            int64_t to) {
-  std::lock_guard<std::mutex> lock(cache_mutex_);
-  vector<CpuProfilerData> filtered;
-
-  for (const auto& datum : cache_) {
-    auto id = datum.basic_info().process_id();
-    auto timestamp = datum.basic_info().end_timestamp();
-    if (id == app_id || app_id == proto::AppId::ANY) {
-      if (timestamp > from && timestamp <= to) {
-        filtered.push_back(datum);
-      }
-    }
+  auto* found = FindAppCache(app_id);
+  if (found == nullptr) {
+    vector<CpuProfilerData> empty;
+    return empty;
   }
-
-  return filtered;
+  // This function returns (from, to], but the underlying buffer library
+  // (TimeValueBuffer) returns [from, to), and thus some adjust is needed.
+  if (from != INT64_MAX) from++;
+  if (to != INT64_MAX) to++;
+  return found->usage_cache.GetValues(from, to);
 }
 
-void CpuCache::AddThreads(const ThreadsSample& threads_sample) {
-  std::lock_guard<std::mutex> lock(threads_cache_mutex_);
-  threads_cache_.push_back(threads_sample);
+bool CpuCache::AddThreads(const ThreadsSample& sample) {
+  int32_t app_id = sample.basic_info.process_id();
+  auto* found = FindAppCache(app_id);
+  if (found == nullptr) return false;
+  found->threads_cache.Add(sample, sample.basic_info.end_timestamp());
+  return true;
 }
 
 CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t app_id,
                                                     int64_t from, int64_t to) {
-  std::lock_guard<std::mutex> lock(threads_cache_mutex_);
   CpuCache::ThreadSampleResponse response;
   const ThreadsSample* latest_before_from = nullptr;
+  auto* found = FindAppCache(app_id);
+  if (found == nullptr) {
+    return response;
+  }
+  // This function returns (from, to], but the underlying buffer library
+  // (TimeValueBuffer) returns [from, to), and thus some adjust is needed.
+  if (to != INT64_MAX) to++;
+  auto threads_cache_content = found->threads_cache.GetValues(INT64_MIN, to);
+
   // TODO: optimize it to binary search the initial point. That will also make
   // it easier to get the data from the greatest timestamp smaller than |from|.
-  for (const auto& sample : threads_cache_) {
+  for (const auto& sample : threads_cache_content) {
     auto id = sample.basic_info.process_id();
     auto timestamp = sample.basic_info.end_timestamp();
     if (id == app_id || app_id == proto::AppId::ANY) {
@@ -86,6 +112,15 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t app_id,
   }
 
   return response;
+}
+
+CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t app_id) {
+  for (auto& cache : app_caches_) {
+    if (app_id == cache->app_id) {
+      return cache.get();
+    }
+  }
+  return nullptr;
 }
 
 }  // namespace profiler
