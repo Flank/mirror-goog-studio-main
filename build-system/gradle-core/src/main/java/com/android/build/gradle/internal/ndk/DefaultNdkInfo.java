@@ -54,15 +54,28 @@ public class DefaultNdkInfo implements NdkInfo {
         return root;
     }
 
+    /**
+     * Returns the sysroot path for compilation.
+     *
+     * <p>If unified headers is enabled, this will be different from getLinkerSysrootPath. They will
+     * be the same otherwise.
+     */
     @Override
     @NonNull
-    public String getSysrootPath(@NonNull Abi abi, @NonNull String platformVersion) {
-        return root + "/platforms/" + platformVersion + "/arch-" + abi.getArchitecture();
+    public String getCompilerSysrootPath(
+            @NonNull Abi abi, @NonNull String platformVersion, boolean useUnifiedHeaders) {
+        if (useUnifiedHeaders) {
+            return FileUtils.join(root.getPath(), "sysroot");
+        } else {
+            return getLinkerSysrootPath(abi, platformVersion);
+        }
     }
 
+    @Override
     @NonNull
-    private File getSysrootDirectory(@NonNull Abi abi, @NonNull String platformVersion) {
-        return new File(getSysrootPath(abi, platformVersion));
+    public String getLinkerSysrootPath(@NonNull Abi abi, @NonNull String platformVersion) {
+        return FileUtils.join(
+                root.getPath(), "platforms", platformVersion, "arch-" + abi.getArchitecture());
     }
 
     /**
@@ -114,7 +127,7 @@ public class DefaultNdkInfo implements NdkInfo {
         // that ABI
         File platformDir = FileUtils.join(root, "platforms");
         checkState(platformDir.isDirectory());
-        if (getSysrootDirectory(abi, "android-" + minSdkVersion).isDirectory()) {
+        if (new File(getLinkerSysrootPath(abi, "android-" + minSdkVersion)).isDirectory()) {
             return minSdkVersion;
         }
 

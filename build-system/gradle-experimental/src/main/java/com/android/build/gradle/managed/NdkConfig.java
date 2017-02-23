@@ -31,4 +31,12 @@ public interface NdkConfig extends NdkBuildType {
      */
     String getToolchainVersion();
     void setToolchainVersion(@NonNull String toolchainVersion);
+
+    /**
+     * Determine whether to use unified headers. See
+     * https://android.googlesource.com/platform/ndk/+/master/docs/UnifiedHeaders.md for details.
+     */
+    Boolean getUseUnifiedHeaders();
+
+    void setUseUnifiedHeaders(@NonNull Boolean useUnifiedHeaders);
 }
