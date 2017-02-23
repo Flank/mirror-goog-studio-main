@@ -79,6 +79,7 @@ class TimeValueBuffer {
     return result;
   }
 
+  // Returns data within the given range [time_from, time_to).
   std::vector<T> GetValues(const int64_t time_from, const int64_t time_to) {
     std::lock_guard<std::mutex> lock(values_mutex_);
     std::vector<T> result;

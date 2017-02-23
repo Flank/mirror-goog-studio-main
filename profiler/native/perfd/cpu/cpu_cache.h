@@ -24,6 +24,7 @@
 #include "perfd/cpu/threads_sample.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
+#include "utils/time_value_buffer.h"
 
 namespace profiler {
 
@@ -36,33 +37,51 @@ class CpuCache {
     std::vector<ThreadsSample> activity_samples;
   };
 
-  // Adds |datum| to the cache.
-  void Add(const profiler::proto::CpuProfilerData& datum);
+  // Construct the main CPU cache holder. |capacity| is of every app's every
+  // kind of cache (same size for all).
+  explicit CpuCache(int32_t capacity) : capacity_(capacity) {}
 
+  // Returns true if successfully allocating a cache for a given app.
+  bool AllocateAppCache(int32_t app_id);
+  // Returns true if successfully deallocating the cache for a given app.
+  bool DeallocateAppCache(int32_t app_id);
+
+  // Returns true if successfully adding |datum| to the cache.
+  bool Add(const profiler::proto::CpuProfilerData& datum);
   // Retrieves data of |app_id| with timestamps in interval (|from|, |to|].
-  // |app_id| being |kAnyApp| means all apps in the cache.
+  // TODO: Support proto::AppId::ANY.
   std::vector<profiler::proto::CpuProfilerData> Retrieve(int32_t app_id,
                                                          int64_t from,
                                                          int64_t to);
 
-  // Adds |threads_sample| to the cache.
-  void AddThreads(const ThreadsSample& threads_sample);
-
+  // Returns true if successfully adding |threads_sample| to the cache.
+  bool AddThreads(const ThreadsSample& threads_sample);
   // Gets thread samples data of |app_id| with timestamps in interval
-  // (|from|, |to|]. |app_id| being |kAnyApp| means all apps in the
-  // cache.
+  // (|from|, |to|].
+  // TODO: Support proto::AppId::ANY.
   ThreadSampleResponse GetThreads(int32_t app_id, int64_t from, int64_t to);
 
  private:
-  // TODO: Utilize something like a circular buffer. The size is unbounded for
-  // now.
-  std::vector<profiler::proto::CpuProfilerData> cache_;
-  // Protects |cache_|.
-  std::mutex cache_mutex_;
+  // Each app's cache held by CPU component in the on-device daemon.
+  struct AppCpuCache {
+    int32_t app_id;
+    TimeValueBuffer<profiler::proto::CpuProfilerData> usage_cache;
+    TimeValueBuffer<ThreadsSample> threads_cache;
 
-  std::vector<ThreadsSample> threads_cache_;
-  // Protects |threads_cache_|.
-  std::mutex threads_cache_mutex_;
+    AppCpuCache(int32_t app_id, int32_t capacity)
+        : app_id(app_id),
+          usage_cache(capacity, app_id),
+          threads_cache(capacity, app_id) {}
+  };
+
+  // Returns the raw pointer to the cache for a given app. Returns null if
+  // it doesn't exist. No ownership transfer.
+  AppCpuCache* FindAppCache(int32_t app_id);
+
+  // Each app has a set of dedicated caches.
+  std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
+  // The capacity of every kind of cache.
+  int32_t capacity_;
 };
 
 }  // namespace profiler

@@ -119,6 +119,10 @@ grpc::Status CpuServiceImpl::GetThreads(ServerContext* context,
 grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
                                                 const CpuStartRequest* request,
                                                 CpuStartResponse* response) {
+  if (!cache_.AllocateAppCache(request->process_id())) {
+    return Status(StatusCode::RESOURCE_EXHAUSTED,
+                  "Cannot allocate a cache for CPU data");
+  }
   auto status = usage_sampler_.AddProcess(request->process_id());
   if (status == CpuStartResponse::SUCCESS) {
     status = thread_monitor_.AddProcess(request->process_id());
@@ -130,6 +134,7 @@ grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
 grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
                                                const CpuStopRequest* request,
                                                CpuStopResponse* response) {
+  cache_.DeallocateAppCache(request->process_id());
   auto status = usage_sampler_.RemoveProcess(request->process_id());
   if (status == CpuStopResponse::SUCCESS) {
     status = thread_monitor_.RemoveProcess(request->process_id());
