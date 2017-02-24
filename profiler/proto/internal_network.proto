@@ -34,6 +34,7 @@ message HttpDataRequest {
   int32 process_id = 2;
   string url = 3;
   string trace = 4;
+  int64 start_timestamp = 5;
 }
 
 // A small chunk of a body of data large enough that we want to stream it in

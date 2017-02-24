@@ -28,8 +28,7 @@ namespace profiler {
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
   explicit NetworkProfilerComponent(Daemon::Utilities* utilities)
-      : network_cache_(utilities->clock()),
-        public_service_(&network_cache_),
+      : public_service_(&network_cache_),
         internal_service_(utilities, &network_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).

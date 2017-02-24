@@ -30,7 +30,8 @@ Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
     proto::EmptyNetworkReply *reply) {
   auto details =
-      network_cache_.AddConnection(httpData->conn_id(), httpData->process_id());
+      network_cache_.AddConnection(httpData->conn_id(), httpData->process_id(),
+                                   httpData->start_timestamp());
   details->request.url = httpData->url();
   details->request.trace = httpData->trace();
   return Status::OK;
