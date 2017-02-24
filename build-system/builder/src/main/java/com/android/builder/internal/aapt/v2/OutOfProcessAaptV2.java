@@ -73,8 +73,10 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
         super(processExecutor, processOutputHandler);
 
         Preconditions.checkArgument(
-                intermediateDir.isDirectory(),
-                "!intermediateDir.isDirectory()");
+                BuildToolInfo.PathId.AAPT2.isPresentIn(buildToolInfo.getRevision()),
+                "Aapt2 requires newer build tools");
+        Preconditions.checkArgument(
+                intermediateDir.isDirectory(), "!intermediateDir.isDirectory()");
 
         mBuildToolInfo = buildToolInfo;
         mIntermediateDir = intermediateDir;

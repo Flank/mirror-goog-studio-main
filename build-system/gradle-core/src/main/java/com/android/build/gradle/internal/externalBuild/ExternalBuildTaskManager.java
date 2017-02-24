@@ -24,6 +24,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.AaptOptionsImpl;
@@ -237,6 +238,7 @@ class ExternalBuildTaskManager {
                         externalBuildContext.getAndroidBuilder(),
                         packagingScope,
                         packagingScope.getSigningConfig(),
+                        AaptGeneration.fromProjectOptions(globalScope.getProjectOptions()),
                         packagingScope.getAaptOptions(),
                         packagingScope.getInstantRunSplitApkOutputFolder(),
                         packagingScope.getInstantRunSupportDir());

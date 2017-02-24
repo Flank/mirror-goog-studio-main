@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -183,7 +184,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         if (!enableAaptV2) {
-            arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false"));
+            arguments.add(propertyArg(BooleanOption.ENABLE_AAPT2.getPropertyName(), "false"));
         }
 
         if (!enablePreDexBuildCache) {

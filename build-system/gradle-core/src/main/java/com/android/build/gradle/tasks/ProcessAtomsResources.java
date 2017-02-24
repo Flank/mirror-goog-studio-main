@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -118,10 +119,10 @@ public class ProcessAtomsResources extends IncrementalTask {
             try {
                 Aapt aapt =
                         AaptGradleFactory.make(
+                                aaptGeneration,
                                 builder,
                                 processOutputHandler,
                                 true,
-                                getProject(),
                                 FileUtils.mkdirs(
                                         FileUtils.join(
                                                 getIncrementalFolder(), "atom", "aapt-temp")),
@@ -280,6 +281,12 @@ public class ProcessAtomsResources extends IncrementalTask {
         this.aaptOptions = aaptOptions;
     }
 
+    @Input
+    public String getAaptGeneration() {
+        return aaptGeneration.name();
+    }
+
+    private AaptGeneration aaptGeneration;
     private Collection<String> resourceConfigs;
     private String preferredDensity;
     private boolean debuggable;
@@ -319,8 +326,9 @@ public class ProcessAtomsResources extends IncrementalTask {
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             final GlobalScope globalScope = scope.getGlobalScope();
 
+            processAtomsResources.aaptGeneration =
+                    AaptGeneration.fromProjectOptions(globalScope.getProjectOptions());
             processAtomsResources.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
-
             processAtomsResources.setAndroidBuilder(globalScope.getAndroidBuilder());
             processAtomsResources.setVariantName(config.getFullName());
             processAtomsResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));

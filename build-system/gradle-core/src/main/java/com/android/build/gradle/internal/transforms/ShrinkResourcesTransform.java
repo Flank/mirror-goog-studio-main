@@ -26,6 +26,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.SplitList;
@@ -38,12 +39,14 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
@@ -98,17 +101,20 @@ public class ShrinkResourcesTransform extends Transform {
     @Nullable
     private final File mappingFile;
     @NonNull private final SplitList splitList;
+    @NonNull private final AaptGeneration aaptGeneration;
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantOutputData variantOutputData,
             @NonNull File uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull Logger logger) {
         this.variantOutputData = variantOutputData;
         this.uncompressedResources = uncompressedResources;
         this.compressedResources = compressedResources;
         this.androidBuilder = androidBuilder;
+        this.aaptGeneration = aaptGeneration;
         this.logger = logger;
         this.splitList =
                 variantOutputData.getScope().getVariantScope().getVariantData().getSplitList();
@@ -175,6 +181,12 @@ public class ShrinkResourcesTransform extends Transform {
     @Override
     public Collection<File> getSecondaryFileOutputs() {
         return ImmutableList.of(compressedResources);
+    }
+
+    @NonNull
+    @Override
+    public Map<String, Object> getParameterInputs() {
+        return ImmutableMap.of("AaptGeneration", aaptGeneration.name());
     }
 
     @InputFiles
@@ -244,6 +256,7 @@ public class ShrinkResourcesTransform extends Transform {
                 // Repackage the resources:
                 Aapt aapt =
                         AaptGradleFactory.make(
+                                aaptGeneration,
                                 androidBuilder,
                                 variantOutputData.getScope().getVariantScope(),
                                 FileUtils.mkdirs(

@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -121,6 +122,8 @@ public class MergeResources extends IncrementalTask {
 
     private VariantScope variantScope;
 
+    private AaptGeneration aaptGeneration;
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
@@ -153,11 +156,13 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             QueueableResourceCompiler resourceCompiler;
             if (getProcessResources()) {
-                resourceCompiler = AaptGradleFactory.make(
-                        getBuilder(),
-                        getCrunchPng(),
-                        variantScope,
-                        getAaptTempDir());
+                resourceCompiler =
+                        AaptGradleFactory.make(
+                                aaptGeneration,
+                                getBuilder(),
+                                getCrunchPng(),
+                                variantScope,
+                                getAaptTempDir());
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
@@ -233,11 +238,13 @@ public class MergeResources extends IncrementalTask {
 
             QueueableResourceCompiler resourceCompiler;
             if (getProcessResources()) {
-                resourceCompiler = AaptGradleFactory.make(
-                        getBuilder(),
-                        getCrunchPng(),
-                        variantScope,
-                        getAaptTempDir());
+                resourceCompiler =
+                        AaptGradleFactory.make(
+                                aaptGeneration,
+                                getBuilder(),
+                                getCrunchPng(),
+                                variantScope,
+                                getAaptTempDir());
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
@@ -481,6 +488,11 @@ public class MergeResources extends IncrementalTask {
         this.disableVectorDrawables = disableVectorDrawables;
     }
 
+    @Input
+    public String getAaptGeneration() {
+        return aaptGeneration.name();
+    }
+
     /**
      * Compute the list of resource set to be used during execution based all the inputs.
      */
@@ -613,6 +625,8 @@ public class MergeResources extends IncrementalTask {
                             .getResourcesMinSdkVersion()
                             .getApiLevel());
 
+            mergeResourcesTask.aaptGeneration =
+                    AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
             mergeResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
             mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
