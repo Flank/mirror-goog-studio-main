@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.CleanupDetector.SHARED_PREF;
+
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
@@ -1393,6 +1395,7 @@ public class CleanupDetectorTest extends AbstractCheckTest {
 
     public void testFields() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=224435
+        //noinspection all // Sample code
         assertEquals("No warnings.",
                 lintProject(
                         java(""
@@ -1418,6 +1421,29 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                                 + "    }\n"
                                 + "}\n")
                 ));
+    }
+
+    public void testUnrelatedSharedPrefEdit() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=234868
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.SharedPreferences;\n"
+                        + "\n"
+                        + "public abstract class PrefTest {\n"
+                        + "    public static void something(SomePref pref) {\n"
+                        + "        pref.edit(1, 2, 3);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public interface SomePref extends SharedPreferences {\n"
+                        + "        void edit(Object...args);\n"
+                        + "    }\n"
+                        + "}"))
+                .issues(SHARED_PREF)
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

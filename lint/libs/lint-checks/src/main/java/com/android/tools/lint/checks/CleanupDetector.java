@@ -609,8 +609,11 @@ public class CleanupDetector extends Detector implements JavaPsiScanner {
         if (EDIT.equals(methodName)) {
             PsiClass containingClass = method.getContainingClass();
             JavaEvaluator evaluator = context.getEvaluator();
-            return evaluator.extendsClass(containingClass, ANDROID_CONTENT_SHARED_PREFERENCES,
-                    false);
+            return containingClass != null &&
+                    evaluator.implementsInterface(containingClass,
+                            ANDROID_CONTENT_SHARED_PREFERENCES,false) &&
+                    evaluator.typeMatches(method.getReturnType(),
+                            ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR);
         }
 
         return false;
