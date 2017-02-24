@@ -16,10 +16,10 @@
 
 package com.android.ide.common.xml;
 
+import com.android.annotations.Nullable;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
-
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
@@ -45,8 +45,12 @@ public final class ManifestData {
     String mPackage;
     /** Application version Code, null if the attribute is not present. */
     Integer mVersionCode = null;
+    /** Default Dex process */
+    String mDefaultProcess;
     /** List of all activities */
     final ArrayList<Activity> mActivities = new ArrayList<Activity>();
+    /** List of all activities, services, receivers and providers to keep for Proguard and Dex * */
+    final ArrayList<KeepClass> mKeepClasses = new ArrayList<KeepClass>();
     /** Launcher activity */
     Activity mLauncherActivity = null;
     /** list of process names declared by the manifest */
@@ -149,6 +153,30 @@ public final class ManifestData {
 
         void setHasLauncherCategory(boolean hasLauncherCategory) {
             mHasLauncherCategory = hasLauncherCategory;
+        }
+    }
+
+    public static final class KeepClass {
+        private final String name;
+        private final String process;
+        private final String type;
+
+        public KeepClass(String name, String process, String type) {
+            this.name = name;
+            this.process = process;
+            this.type = type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getProcess() {
+            return process;
+        }
+
+        public String getType() {
+            return type;
         }
     }
 
@@ -574,8 +602,18 @@ public final class ManifestData {
     }
 
     /**
-     * Returns the name of one activity found in the manifest, that is configured to show
-     * up in the HOME screen.
+     * Returns the list of activities, services, receivers and providers found in the manifest.
+     *
+     * @return An array of fully qualified class names, or empty if no classes to keep were found.
+     */
+    public KeepClass[] getKeepClasses() {
+        return mKeepClasses.toArray(new KeepClass[mKeepClasses.size()]);
+    }
+
+    /**
+     * Returns the name of one activity found in the manifest, that is configured to show up in the
+     * HOME screen.
+     *
      * @return the fully qualified name of a HOME activity or null if none were found.
      */
     public Activity getLauncherActivity() {
@@ -591,6 +629,11 @@ public final class ManifestData {
         }
 
         return new String[0];
+    }
+
+    @Nullable
+    public String getDefaultProcess() {
+        return mDefaultProcess;
     }
 
     /**
