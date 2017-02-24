@@ -20,6 +20,7 @@
 #include "memory_levels_sampler.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"
+#include "utils/file_cache.h"
 
 #include <atomic>
 #include <string>
@@ -35,8 +36,11 @@ class MemoryCollector {
       1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
 
  public:
-  MemoryCollector(int32_t pid, const Clock& clock)
-      : memory_cache_(clock, kSamplesCount), clock_(clock), pid_(pid) {}
+  MemoryCollector(int32_t pid, const Clock& clock, FileCache& file_cache)
+      : memory_cache_(clock, file_cache, kSamplesCount),
+        clock_(clock),
+        file_cache_(file_cache),
+        pid_(pid) {}
   ~MemoryCollector();
 
   void Start();
@@ -52,6 +56,7 @@ class MemoryCollector {
   MemoryCache memory_cache_;
   MemoryLevelsSampler memory_levels_sampler_;
   const Clock& clock_;
+  FileCache& file_cache_;
   std::thread server_thread_;
   std::thread heap_dump_thread_;
   std::atomic_bool is_running_{false};
@@ -59,7 +64,7 @@ class MemoryCollector {
   int32_t pid_;
 
   void CollectorMain();
-  void HeapDumpMain(const std::string& file_path);
+  void HeapDumpMain(std::shared_ptr<File> file);
 };  // MemoryCollector
 
 }  // namespace profiler

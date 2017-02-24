@@ -85,10 +85,10 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
   if (!is_heap_dump_running_.exchange(true)) {
     int64_t request_time = clock_.GetCurrentTime();
     std::stringstream ss;
-    ss << "/data/local/tmp/" << pid_ << "_" << request_time << ".hprof";
-    std::string dump_file_path = ss.str();
+    ss << pid_ << "_" << request_time << ".hprof";
+    auto file = file_cache_.GetFile(ss.str());
 
-    if (!memory_cache_.StartHeapDump(dump_file_path, request_time, response)) {
+    if (!memory_cache_.StartHeapDump(file->name(), request_time, response)) {
       Log::V("StartHeapDumpSample failed.");
       return false;
     }
@@ -96,24 +96,24 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
     if (heap_dump_thread_.joinable()) {
       heap_dump_thread_.join();
     }
+
     heap_dump_thread_ = std::thread(
-        [this, dump_file_path] { this->HeapDumpMain(dump_file_path); });
+        [this, file] { this->HeapDumpMain(file); });
   }
 
   return true;
 }
 
-void MemoryCollector::HeapDumpMain(const std::string& file_path) {
+void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
   SetThreadName("HeapDump");
 
   std::string unusedOutput;
   ActivityManager* am = ActivityManager::Instance();
 
-  bool result = am->TriggerHeapDump(pid_, file_path, &unusedOutput);
+  bool result = am->TriggerHeapDump(pid_, file->path(), &unusedOutput);
 
-  // Monitoring the file_path to catch file close event when
-  // the heap dump is complete
-  FileSystemNotifier notifier(file_path, FileSystemNotifier::CLOSE);
+  // Monitoring the file to catch close event when the heap dump is complete
+  FileSystemNotifier notifier(file->path(), FileSystemNotifier::CLOSE);
   if (!notifier.IsReadyToNotify() || !notifier.WaitUntilEventOccurs()) {
     Log::V("Unable to monitor heap dump file for completion");
     result = false;
