@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -217,6 +218,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     private SplitFactory splitFactory;
 
     private boolean enableNewResourceProcessing;
+
+    private boolean enableAapt2;
 
     // FIX-ME : make me incremental !
     @Override
@@ -484,7 +487,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 builder.processResources(aapt, config,
                         generateCode && getEnforceUniquePackageName());
-
                 if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
                 }
@@ -525,7 +527,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             return resOutBaseNameFile;
 
-        } catch (IOException | InterruptedException | ProcessException e) {
+        } catch (InterruptedException | ProcessException e) {
             getLogger().error(e.getMessage(), e);
             throw new BuildException(e.getMessage(), e);
         }
@@ -686,6 +688,11 @@ public class ProcessAndroidResources extends IncrementalTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(ENABLE_NEW_RESOURCE_PROCESSING));
+            processResources.setEnableAapt2(
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_AAPT2));
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -1031,5 +1038,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
         this.enableNewResourceProcessing = enableNewResourceProcessing;
+    }
+
+    @Input
+    public boolean isAapt2Enabled() {
+        return enableAapt2;
+    }
+
+    public void setEnableAapt2(boolean enableAapt2) {
+        this.enableAapt2 = enableAapt2;
     }
 }

@@ -37,6 +37,7 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.LeafFolderGatherer;
 import com.android.builder.internal.compiler.PreDexCache;
@@ -820,6 +821,15 @@ public class AndroidBuilder {
             } else if (aaptConfig.getVariantType() == VariantType.ATOM
                     && aaptConfig.getBaseFeature() != null) {
                 finalIds = false;
+            }
+
+            // Generate manifest_keep.txt for main dex when using AAPT2 (until the flag is added).
+            if (!(aapt instanceof AaptV1)
+                    && aaptConfig.getMainDexListProguardOutputFile() != null) {
+                java.nio.file.Files.write(
+                        aaptConfig.getMainDexListProguardOutputFile().toPath(),
+                        SymbolUtils.generateMainDexKeepRules(
+                                SymbolUtils.parseManifest(aaptConfig.getManifestFile())));
             }
 
             RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
