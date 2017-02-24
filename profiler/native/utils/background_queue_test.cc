@@ -15,8 +15,6 @@
  */
 #include "background_queue.h"
 
-#include <thread>
-
 #include <gtest/gtest.h>
 #include "utils/count_down_latch.h"
 
@@ -31,38 +29,30 @@ TEST(BackgroundQueue, EnqueuingTasksWorks) {
   bq.EnqueueTask([&] { job_1_waiting.Await(); });
   bq.EnqueueTask([&] { job_2_waiting.Await(); });
 
-  EXPECT_TRUE(bq.IsRunning());
+  EXPECT_FALSE(bq.IsIdle());
   job_1_waiting.CountDown();
 
-  EXPECT_TRUE(bq.IsRunning());
+  EXPECT_FALSE(bq.IsIdle());
   job_2_waiting.CountDown();
 
-  bq.Join();
-  EXPECT_FALSE(bq.IsRunning());
+  while (!bq.IsIdle()) {
+    std::this_thread::yield();
+  }
 }
 
-TEST(BackgroundQueue, ResettingQueueKillsRemainingJobs) {
-  CountDownLatch job_1_starting(1);
-  CountDownLatch job_1_waiting(1);
-  CountDownLatch job_2_waiting(1);
+TEST(BackgroundQueue, DestructorBlocksUntilJobsFinish) {
+  const int kNumJobs = 12345;
+  CountDownLatch first_job_started(1);
+  int num_jobs_run = 0;
 
-  BackgroundQueue bq("BQTestThread");
-  bq.EnqueueTask([&] {
-    job_1_starting.CountDown();
-    job_1_waiting.Await();
-  });
-  bq.EnqueueTask([&] { job_2_waiting.Await(); });  // Will be reset before run
-
-  job_1_starting.Await();
-  EXPECT_TRUE(bq.IsRunning());
-  bq.Reset();
-  EXPECT_TRUE(bq.IsRunning());  // Job 1 is still running
-  job_1_waiting.CountDown();
-
-  // Job 2 is skipped, no need to decrement job_2_waiting latch
-  bq.Join();
-  EXPECT_FALSE(bq.IsRunning());
-
-  bq.Reset();  // No harm resetting a finished Queue
-  EXPECT_FALSE(bq.IsRunning());
+  {
+    BackgroundQueue bq("BQTestThread");
+    bq.EnqueueTask([&] { first_job_started.Await(); });
+    for (int i = 0; i < kNumJobs; ++i) {
+      bq.EnqueueTask([&] { ++num_jobs_run; });
+    }
+    first_job_started.CountDown();
+    EXPECT_NE(kNumJobs, num_jobs_run);
+  }  // Blocked here until all enqueued tasks run
+  EXPECT_EQ(kNumJobs, num_jobs_run);
 }
