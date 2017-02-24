@@ -23,6 +23,7 @@
 
 #include "proto/memory.pb.h"
 #include "utils/clock.h"
+#include "utils/file_cache.h"
 
 namespace profiler {
 
@@ -32,7 +33,8 @@ class MemoryCache {
   // Indicates that a heap dump is in progress.
   static const int64_t kUnfinishedTimestamp = -1;
 
-  explicit MemoryCache(const Clock& clock, int32_t samples_capacity);
+  explicit MemoryCache(const Clock& clock, FileCache& file_cache,
+                       int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
@@ -61,6 +63,7 @@ class MemoryCache {
   int32_t GetNextSampleIndex(int32_t id);
 
   const Clock& clock_;
+  FileCache& file_cache_;
 
   // TODO replace these with circular buffer class when it becomes available.
   std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;

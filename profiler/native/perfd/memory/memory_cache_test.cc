@@ -16,6 +16,7 @@
 #include "memory_cache.h"
 #include "proto/memory.pb.h"
 #include "utils/fake_clock.h"
+#include "utils/file_cache.h"
 
 #include <gtest/gtest.h>
 
@@ -27,8 +28,9 @@ using profiler::proto::TriggerHeapDumpResponse;
 const int64_t profiler::MemoryCache::kUnfinishedTimestamp;
 
 TEST(MemoryCache, TrackAllocations) {
+  profiler::FileCache file_cache;
   profiler::FakeClock fake_clock(5);
-  profiler::MemoryCache cache(fake_clock, 2);
+  profiler::MemoryCache cache(fake_clock, file_cache, 2);
   TrackAllocationsResponse response;
 
   // Ensure stopping does nothing if no current tracking is enabled.
@@ -106,8 +108,9 @@ TEST(MemoryCache, TrackAllocations) {
 }
 
 TEST(MemoryCache, HeapDump) {
+  profiler::FileCache file_cache;
   profiler::FakeClock fake_clock(0);
-  profiler::MemoryCache cache(fake_clock, 2);
+  profiler::MemoryCache cache(fake_clock, file_cache, 2);
   TriggerHeapDumpResponse response;
 
   // Ensure EndHeapDump does nothing if no in-progress heap dump
