@@ -590,20 +590,6 @@ public class LintDriver {
         fireEvent(canceled ? EventType.CANCELED : EventType.COMPLETED, null);
     }
 
-    @Nullable
-    private Set<Issue> myCustomIssues;
-
-    /**
-     * Returns true if the given issue is an issue that was loaded as a custom rule
-     * (e.g. a 3rd-party library provided the detector, it's not built in)
-     *
-     * @param issue the issue to be looked up
-     * @return true if this is a custom (non-builtin) check
-     */
-    public boolean isCustomIssue(@NonNull Issue issue) {
-        return myCustomIssues != null && myCustomIssues.contains(issue);
-    }
-
     private void registerCustomDetectors(Collection<Project> projects) {
         // Look at the various projects, and if any of them provide a custom
         // lint jar, "add" them (this will replace the issue registry with
@@ -628,10 +614,6 @@ public class LintDriver {
                     if (registry.hasLegacyDetectors()) {
                         runCompatChecks = true;
                     }
-                    if (myCustomIssues == null) {
-                        myCustomIssues = Sets.newHashSet();
-                    }
-                    myCustomIssues.addAll(registry.getIssues());
                     registries.add(registry);
                 } catch (Throwable e) {
                     client.log(e, "Could not load custom rule jar file %1$s", jarFile);

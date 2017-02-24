@@ -311,7 +311,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     @SuppressWarnings("ConstantConditions")
     @NonNull
     private static final GradleCoordinate PLAY_SERVICES_V650 = GradleCoordinate
-            .parseCoordinateString(GradleDetector.GMS_GROUP_ID + ":play-services:6.5.0");
+            .parseCoordinateString(GMS_GROUP_ID + ":play-services:6.5.0");
     /**
      * Threshold to consider a versionCode very high and issue a warning.
      * https://developer.android.com/studio/publish/versioning.html indicates

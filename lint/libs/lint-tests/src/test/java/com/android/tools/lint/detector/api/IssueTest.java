@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import static org.junit.Assert.assertNotEquals;
+
 import com.android.tools.lint.checks.AccessibilityDetector;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,5 +40,22 @@ public class IssueTest extends TestCase {
         assertEquals(Collections.singletonList(url1), issue.getMoreInfo());
         issue.addMoreInfo(url2);
         assertEquals(Arrays.asList(url1, url2), issue.getMoreInfo());
+    }
+
+    public void testEquals() {
+        Implementation implementation = new Implementation(AccessibilityDetector.class,
+                Scope.RESOURCE_FILE_SCOPE);
+        Issue issue1 = Issue.create("MyId", "ShortDesc", "Explanation",
+                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+
+        Issue issue2 = Issue.create("MyId", "ShortDesc2", "Explanation",
+                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+
+        Issue issue3 = Issue.create("SomethingElse", "ShortDesc", "Explanation",
+                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+
+        assertEquals(issue1, issue1);
+        assertEquals(issue1, issue2); // only id counts, not the other attributes
+        assertNotEquals(issue1, issue3);
     }
 }
