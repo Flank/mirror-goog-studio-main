@@ -33,18 +33,18 @@ class MemoryCache {
   // Indicates that a heap dump is in progress.
   static const int64_t kUnfinishedTimestamp = -1;
 
-  explicit MemoryCache(const Clock& clock, FileCache& file_cache,
+  explicit MemoryCache(const Clock& clock, FileCache* file_cache,
                        int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
-  // Saves a new HeapDumpInfo sample based on the dump_file_path and
+  // Saves a new HeapDumpInfo sample based on the dump_file_name and
   // request_time parameters. This method returns false if a heap dump
   // is still in progress (e.g. a matching EndHeapDump has not been
   // called from a previous StartHeapDump). Otherwise this method returns
   // true indicating a HeapDumpInfo has been added. On return, the response
   // parameter is populated with the most recent HeapDumpInfo.
-  bool StartHeapDump(const std::string& dump_file_path,
+  bool StartHeapDump(const std::string& dump_file_name,
                      int64_t request_time,
                      proto::TriggerHeapDumpResponse* response);
   bool EndHeapDump(int64_t end_time, bool success);
@@ -63,7 +63,7 @@ class MemoryCache {
   int32_t GetNextSampleIndex(int32_t id);
 
   const Clock& clock_;
-  FileCache& file_cache_;
+  FileCache* file_cache_;
 
   // TODO replace these with circular buffer class when it becomes available.
   std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;

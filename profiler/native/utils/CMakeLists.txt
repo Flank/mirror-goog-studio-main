@@ -16,6 +16,7 @@ set(UTILS_SOURCES
     fs/disk_file_system.cc
     fs/file.cc
     fs/file_system.cc
+    fs/memory_file_system.cc
     fs/path.cc)
 
 if (CMAKE_HOST_APPLE AND NOT ANDROID)
@@ -57,7 +58,6 @@ add_unit_test(profiler_utils_test
               timespec_math_test.cc
               tokenizer_test.cc
               uid_fetcher_test.cc
-              fs/memory_file_system.cc
               fs/file_system_test.cc)
 
 target_link_libraries(profiler_utils_test

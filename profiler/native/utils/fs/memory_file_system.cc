@@ -15,8 +15,8 @@
  */
 #include "utils/fs/memory_file_system.h"
 
-#include <gtest/gtest.h>
 #include <algorithm>
+#include <vector>
 
 namespace profiler {
 
