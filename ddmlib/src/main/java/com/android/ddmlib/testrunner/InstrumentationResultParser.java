@@ -19,7 +19,6 @@ package com.android.ddmlib.testrunner;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -190,8 +189,14 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     private boolean mInInstrumentationResultKey = false;
 
     /**
-     * Stores key-value pairs under INSTRUMENTATION_RESULT header, these are printed at the
-     * end of a test run, if applicable
+     * True if the parser is enforcing a final time stamp to be present, for example: the Android
+     * JUnit Runner (AJUR) does always output the time stamp.
+     */
+    private boolean mEnforceTimeStamp = false;
+
+    /**
+     * Stores key-value pairs under INSTRUMENTATION_RESULT header, these are printed at the end of a
+     * test run, if applicable
      */
     private Map<String, String> mInstrumentationResultBundle = new HashMap<String, String>();
 
@@ -632,11 +637,18 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 }
                 if (mTestTime == null) {
                     // Report a test run failure since the output was invalid
-                    listener.testRunFailed(INVALID_OUTPUT_ERR_MSG);
+                    if (mEnforceTimeStamp) {
+                        listener.testRunFailed(INVALID_OUTPUT_ERR_MSG);
+                    }
                     mTestTime = 0l;
                 }
                 listener.testRunEnded(mTestTime, mInstrumentationResultBundle);
             }
         }
+    }
+
+    /** Set to True to enforce searching for a final time stamp, and fail the run if missing. */
+    public void setEnforceTimeStamp(boolean isEnforced) {
+        mEnforceTimeStamp = isEnforced;
     }
 }

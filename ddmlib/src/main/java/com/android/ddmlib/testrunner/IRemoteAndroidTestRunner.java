@@ -20,7 +20,6 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -172,6 +171,12 @@ public interface IRemoteAndroidTestRunner {
      * Sets this code coverage mode of this test run.
      */
     void setCoverage(boolean coverage);
+
+    /**
+     * Sets this test to enforce expecting a final time stamp from the instrumentation otherwise the
+     * run will be considered failed.
+     */
+    void setEnforceTimeStamp(boolean enforceTimestamp);
 
     /**
      * Sets this test run to test collection mode. If true, will skip test execution and will set

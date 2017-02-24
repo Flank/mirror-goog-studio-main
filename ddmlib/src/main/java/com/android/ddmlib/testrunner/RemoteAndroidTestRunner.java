@@ -23,7 +23,6 @@ import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,6 +43,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private long mMaxTimeToOutputResponse = 0;
     private TimeUnit mMaxTimeUnits = TimeUnit.MILLISECONDS;
     private String mRunName = null;
+    private boolean mEnforceTimeStamp = false;
 
     /** map of name-value instrumentation argument pairs */
     private Map<String, String> mArgMap;
@@ -182,6 +182,11 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
+    public void setEnforceTimeStamp(boolean timestamp) {
+        mEnforceTimeStamp = timestamp;
+    }
+
+    @Override
     public void setTestSize(TestSize size) {
         addInstrumentationArg(SIZE_ARG_NAME, size.getRunnerValue());
     }
@@ -254,6 +259,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
                 mRemoteDevice.getName()));
         String runName = mRunName == null ? mPackageName : mRunName;
         mParser = new InstrumentationResultParser(runName, listeners);
+        mParser.setEnforceTimeStamp(mEnforceTimeStamp);
 
         try {
             mRemoteDevice.executeShellCommand(runCaseCommandStr, mParser, mMaxTimeToOutputResponse,
