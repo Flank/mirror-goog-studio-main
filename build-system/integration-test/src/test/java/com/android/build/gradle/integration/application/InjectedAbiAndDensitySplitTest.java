@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -68,7 +68,7 @@ public class InjectedAbiAndDensitySplitTest {
     @Test
     public void checkAbi() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
                 .run("clean", "assembleDebug");
 
         assertThat(sProject.getApk("armeabi-v7a", ApkType.DEBUG)).exists();
@@ -84,8 +84,8 @@ public class InjectedAbiAndDensitySplitTest {
     @Test
     public void checkAbiAndDensity() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
-                .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
+                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "ldpi")
                 .run("clean", "assembleDebug");
 
         Apk apk;
@@ -109,7 +109,7 @@ public class InjectedAbiAndDensitySplitTest {
     @Test
     public void checkOnlyDensity() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, "ldpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "ldpi")
                 .run("clean", "assembleDebug");
 
         assertThat(sProject.getApk("armeabi-v7a", ApkType.DEBUG).exists());
@@ -123,7 +123,7 @@ public class InjectedAbiAndDensitySplitTest {
     @Test
     public void checkError() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "mips")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
                 .expectFailure()
                 .run("assembleDebug");
     }

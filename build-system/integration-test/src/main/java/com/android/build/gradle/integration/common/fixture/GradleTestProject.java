@@ -116,7 +116,6 @@ public final class GradleTestProject implements TestRule {
     @NonNull public static final File ANDROID_HOME;
     @NonNull public static final File ANDROID_NDK_HOME;
 
-    public static final boolean USE_JACK;
     public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
@@ -176,9 +175,6 @@ public final class GradleTestProject implements TestRule {
             String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
             ANDROID_GRADLE_PLUGIN_VERSION =
                     MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
-
-            String envJack = System.getenv().get("CUSTOM_JACK");
-            USE_JACK = !Strings.isNullOrEmpty(envJack);
 
             IMPROVED_DEPENDENCY_RESOLUTION =
                     Strings.isNullOrEmpty(
@@ -241,7 +237,6 @@ public final class GradleTestProject implements TestRule {
 
     private final String targetGradleVersion;
 
-    private final boolean useJack;
     private final boolean improvedDependencyEnabled;
     @Nullable private final String buildToolsVersion;
 
@@ -258,7 +253,6 @@ public final class GradleTestProject implements TestRule {
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
-            boolean useJack,
             boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
             boolean withoutNdk,
@@ -272,7 +266,6 @@ public final class GradleTestProject implements TestRule {
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.improvedDependencyEnabled = improvedDependencyEnabled;
-        this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
         this.withoutNdk = withoutNdk;
@@ -305,7 +298,6 @@ public final class GradleTestProject implements TestRule {
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
-        useJack = false;
         improvedDependencyEnabled = rootProject.isImprovedDependencyEnabled();
         openConnections = null;
         buildToolsVersion = null;
@@ -522,7 +514,7 @@ public final class GradleTestProject implements TestRule {
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
-                        useJack,
+                        false,
                         DEFAULT_KOTLIN_PLUGIN_VERSION);
         if (withDependencyChecker) {
             result = result
@@ -1130,10 +1122,6 @@ public final class GradleTestProject implements TestRule {
     @Nullable
     String getHeapSize() {
         return heapSize;
-    }
-
-    boolean isUseJack() {
-        return useJack;
     }
 
     public boolean isImprovedDependencyEnabled() {

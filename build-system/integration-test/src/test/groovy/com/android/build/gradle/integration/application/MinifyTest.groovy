@@ -18,13 +18,11 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.builder.Version
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.ZipFileSubject
 import groovy.transform.CompileStatic
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -41,11 +39,6 @@ class MinifyTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minify").create()
-
-    @Before
-    void skipUnderJack() throws Exception {
-        AssumeUtil.assumeNotUsingJack()
-    }
 
     @Test
     @Category(DeviceTests.class)

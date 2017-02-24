@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -51,8 +50,6 @@ public class InstantRunFullBuildTest {
 
     @Before
     public void getModel() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
         mProject.execute("clean");
         AndroidProject model = mProject.model().getSingle().getOnlyModel();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);

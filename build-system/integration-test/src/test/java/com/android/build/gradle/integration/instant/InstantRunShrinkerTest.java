@@ -27,7 +27,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.testutils.apk.SplitApks;
 import com.google.common.truth.Expect;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,7 +80,6 @@ public class InstantRunShrinkerTest {
 
     @Before
     public void addProvidedLibrary() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.buildTypes.debug {\n"
                 + "    minifyEnabled true\n"

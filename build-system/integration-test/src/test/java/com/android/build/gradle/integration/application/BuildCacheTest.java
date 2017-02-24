@@ -22,8 +22,9 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
@@ -45,7 +46,6 @@ public class BuildCacheTest {
 
     @Before
     public void setUp() throws Exception {
-        AssumeUtil.assumeNotUsingJack();
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -60,8 +60,8 @@ public class BuildCacheTest {
         RunGradleTasks executor =
                 project.executor()
                         .withUseDexArchive(false)
-                        .withProperty("android.enableBuildCache", "true")
-                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+                        .with(BooleanOption.ENABLE_BUILD_CACHE, true)
+                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
         File preDexDir = FileUtils.join(project.getIntermediatesDir(), "transforms", "preDex");
@@ -118,8 +118,8 @@ public class BuildCacheTest {
 
         RunGradleTasks executor =
                 project.executor()
-                        .withProperty("android.enableBuildCache", "false")
-                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+                        .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
 
         GradleBuildResult result = executor.expectFailure().run("clean", "assembleDebug");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())

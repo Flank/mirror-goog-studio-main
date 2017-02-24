@@ -29,8 +29,6 @@ import org.junit.runners.Parameterized
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static org.junit.Assert.assertNotNull
-import static org.junit.Assume.assumeFalse
-
 /**
  * Tests that ensure that java resources files accessed with a relative or absolute path are
  * packaged correctly.
@@ -79,8 +77,6 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Test
     void testReleasePackaging() {
-        assumeFalse("Ignore until Jack fixed proguard confusion", GradleTestProject.USE_JACK)
-
         project.execute(":app:assembleRelease")
         Apk releaseApk = project.getSubproject("app").getApk("release")
         assertNotNull(releaseApk)

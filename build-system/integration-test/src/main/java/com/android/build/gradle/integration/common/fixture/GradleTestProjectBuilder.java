@@ -37,7 +37,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
-    private boolean useJack = GradleTestProject.USE_JACK;
     private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
     private boolean withoutNdk = false;
@@ -56,7 +55,6 @@ public final class GradleTestProjectBuilder {
         return new GradleTestProject(
                 name,
                 testProject,
-                useJack,
                 improvedDependencyEnabled,
                 targetGradleVersion,
                 withoutNdk,
@@ -167,17 +165,6 @@ public final class GradleTestProjectBuilder {
      */
     public GradleTestProjectBuilder withHeap(String heapSize) {
         this.heapSize = heapSize;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withJack(boolean useJack) {
-        this.useJack = useJack;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withImprovedDependencyResolution(
-            boolean improvedDependencyEnabled) {
-        this.improvedDependencyEnabled = improvedDependencyEnabled;
         return this;
     }
 

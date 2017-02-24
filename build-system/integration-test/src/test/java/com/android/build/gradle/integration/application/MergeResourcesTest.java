@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -383,7 +383,7 @@ public class MergeResourcesTest {
                 "public int useFoo() { return R.id.foo; }");
 
         project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_API, 23)
+                .with(IntegerOption.IDE_TARGET_FEATURE_LEVEL, 23)
                 .run(":app:assembleDebug");
     }
 }

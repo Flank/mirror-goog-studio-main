@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,7 +88,7 @@ public class ManifestMergingTest {
                 .doesNotContain("android:testOnly=\"true\"");
 
         flavors.executor()
-                .withProperty(AndroidProject.PROPERTY_TEST_ONLY, "true")
+                .with(BooleanOption.IDE_TEST_ONLY, true)
                 .run("clean", "assembleF1FaDebug");
 
         assertThat(flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml"))

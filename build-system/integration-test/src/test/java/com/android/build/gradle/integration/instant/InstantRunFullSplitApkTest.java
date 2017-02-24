@@ -20,8 +20,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -46,8 +46,6 @@ public class InstantRunFullSplitApkTest {
 
     @Before
     public void getModel() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
                 "android {\n"
@@ -80,10 +78,8 @@ public class InstantRunFullSplitApkTest {
     @Test
     public void testSplit() throws Exception {
         mProject.executor()
-                .withInstantRun(
-                        24,
-                        OptionalCompilationStep.FULL_APK)
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
+                .withInstantRun(24, OptionalCompilationStep.FULL_APK)
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
                 .run("assembleDebug");
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
         List<InstantRunArtifact> artifacts = initialContext.getArtifacts();

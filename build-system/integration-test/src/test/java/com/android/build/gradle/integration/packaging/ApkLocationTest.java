@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.StringOption;
 import java.io.File;
 import java.util.Arrays;
 import org.junit.Rule;
@@ -41,9 +41,7 @@ public class ApkLocationTest {
     @Test
     public void outputToInjectedLocation() throws Exception {
         project.executor()
-                .withProperty(
-                        AndroidProject.PROPERTY_APK_LOCATION,
-                        mTemporaryFolder.getRoot().getAbsolutePath())
+                .with(StringOption.IDE_APK_LOCATION, mTemporaryFolder.getRoot().getAbsolutePath())
                 .run("assembleDebug");
 
         File debugApkLocation = new File(mTemporaryFolder.getRoot(), "debug");

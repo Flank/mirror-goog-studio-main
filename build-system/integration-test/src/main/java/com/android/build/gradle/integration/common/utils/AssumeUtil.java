@@ -53,10 +53,6 @@ public class AssumeUtil {
                         .compareTo(revision) > 0);
     }
 
-    public static void assumeNotUsingJack() {
-        Assume.assumeFalse(GradleTestProject.USE_JACK);
-    }
-
     public static void assumeNotWindows() {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
     }
