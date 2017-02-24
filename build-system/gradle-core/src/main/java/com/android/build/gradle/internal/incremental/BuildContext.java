@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -568,6 +569,7 @@ public class BuildContext {
      * - Empty changes (unless it's the last one).
      */
     private void purge() {
+        LOG.debug("Purge");
         boolean foundColdRestart = false;
         Set<String> splitFilesAlreadyFound = new HashSet<>();
         // the oldest build is by definition the full build.
@@ -576,26 +578,52 @@ public class BuildContext {
         // natural order of builds.
         for (Long aBuildId : new ArrayList<>(previousBuilds.descendingKeySet())) {
             Build previousBuild = previousBuilds.get(aBuildId);
+            LOG.debug(
+                    ""
+                            + "===================================================\n"
+                            + "Purge: build {}\n"
+                            + "Verifier status: {}\n"
+                            + "===================================================\n",
+                    aBuildId,
+                    previousBuild.verifierStatus);
             // initial builds are never purged in any way.
             if (previousBuild.buildId == initialFullBuild) {
+                LOG.debug(" --- Skipping initial build.");
                 continue;
             }
             if (previousBuild.verifierStatus == InstantRunVerifierStatus.COMPATIBLE) {
                 if (foundColdRestart) {
                     // Remove previous hot swap artifacts, they have been superseded by the cold
                     // swap artifact.
+
+                    LOG.debug("Removed this hot swap build as there are newer cold swaps.");
                     previousBuilds.remove(aBuildId);
                     continue;
                 }
             } else if (previousBuild.verifierStatus != InstantRunVerifierStatus.NO_CHANGES) {
+                LOG.debug("This is a cold swap build. Older hot swaps will be removed.");
                 foundColdRestart = true;
             }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Artifacts for build: Size: {}\n  * {}",
+                        previousBuild.artifacts.size(),
+                        previousBuild
+                                .artifacts
+                                .stream()
+                                .map(Artifact::toString)
+                                .collect(Collectors.joining("\n  * ")));
+            }
+
             // when a coldswap build was found, remove all RESOURCES entries for previous builds
             // as the resource is redelivered as part of the main split.
             if (foundColdRestart && patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
                 Artifact resourceApArtifact = previousBuild.getArtifactForType(FileType.RESOURCES);
                 if (resourceApArtifact != null) {
                     previousBuild.artifacts.remove(resourceApArtifact);
+                    LOG.debug(
+                            "Removing resources from this build as superseded by later cold swap.");
                 }
             }
 
@@ -605,13 +633,34 @@ public class BuildContext {
                 if (artifact.isAccumulative()) {
                     // we don't remove artifacts from the first build.
                     if (splitFilesAlreadyFound.contains(artifact.getLocation().getAbsolutePath())) {
+                        LOG.debug(
+                                "Found split is superseded by the same split in a newer build",
+                                artifact.getLocation().getAbsolutePath());
                         previousBuild.artifacts.remove(artifact);
                     } else {
+                        LOG.debug(
+                                "Found split {}, will be removed from older builds.",
+                                artifact.getLocation().getAbsolutePath());
                         splitFilesAlreadyFound.add(artifact.getLocation().getAbsolutePath());
                     }
                 }
             }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Artifacts after purge: Size: {}\n  * {}",
+                        previousBuild.artifacts.size(),
+                        previousBuild
+                                .artifacts
+                                .stream()
+                                .map(Artifact::toString)
+                                .collect(Collectors.joining("\n  * ")));
+            }
         }
+
+        LOG.debug(
+                "Purge: SplitFilesAlreadyFound: {} ",
+                splitFilesAlreadyFound.stream().collect(Collectors.joining("\n")));
 
         // bunch of builds can be empty, either because we did nothing or all its artifact got
         // rebuilt in a more recent iteration, in such a case, remove it.
@@ -619,6 +668,7 @@ public class BuildContext {
             Build aBuild = previousBuilds.get(aBuildId);
             // if the build artifacts are empty and it's not the current build.
             if (aBuild.artifacts.isEmpty() && aBuild.buildId != currentBuild.buildId) {
+                LOG.debug("Removing empty build: {}", aBuildId);
                 previousBuilds.remove(aBuildId);
             }
         }
@@ -628,12 +678,14 @@ public class BuildContext {
         boolean inMultiAPKOnBefore24 = patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
                 && featureLevel != null && featureLevel < 24;
         if (inMultiAPKOnBefore24) {
+            LOG.debug("Adding split main if a split is present as deploying to a device < 24");
             // Re-add the SPLIT_MAIN if any SPLIT is present.
             if (currentBuild.getArtifactForType(FileType.SPLIT_MAIN) == null) {
                 boolean anySplitInCurrentBuild = currentBuild.artifacts.stream()
                         .anyMatch(artifact -> artifact.fileType == FileType.SPLIT);
 
                 if (anySplitInCurrentBuild) {
+                    LOG.debug("No split main and a split, re-adding split main.");
                     // find the SPLIT_MAIN, any is fine since the location does not vary.
                     for (Build previousBuild : previousBuilds.values()) {
                         Artifact main = previousBuild.getArtifactForType(FileType.SPLIT_MAIN);
@@ -651,6 +703,11 @@ public class BuildContext {
     }
 
     private void collapseMainArtifactsIntoCurrentBuild() {
+        LOG.debug(
+                ""
+                        + "=======================================\n"
+                        + "collapseMainArtifactsIntoCurrentBuild\n"
+                        + "=======================================");
         if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
             // Add all of the older splits to the current build,
             // as the older builds will be thrown away.
@@ -667,6 +724,13 @@ public class BuildContext {
                 }
             }
 
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Split locations  Count:{}.\n" + "{}",
+                        splitLocations.size(),
+                        splitLocations.stream().collect(Collectors.joining("\n")));
+            }
+
             // Don't re-add existing splits.
             for (Artifact artifact : currentBuild.artifacts) {
                 if (artifact.fileType == FileType.SPLIT) {
@@ -674,6 +738,13 @@ public class BuildContext {
                 } else if (artifact.fileType == FileType.SPLIT_MAIN) {
                     main = null;
                 }
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Split locations, current build removed  Count: {}.\n" + "{}",
+                        splitLocations.size(),
+                        splitLocations.stream().collect(Collectors.joining("\n")));
             }
 
             for (String splitLocation : splitLocations) {
