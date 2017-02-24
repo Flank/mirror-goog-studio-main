@@ -28,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.SoftReference;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.EnumSet;
@@ -187,49 +186,42 @@ public class JarFileIssueRegistry extends IssueRegistry {
             @NonNull LintClient client,
             @NonNull File file,
             @NonNull URLClassLoader loader) {
+        // But first, proactively load all classes:
         try {
-            // Proactively close out the .jar file. This is only available on Java 7.
-            Method closeMethod = loader.getClass().getDeclaredMethod("close");
-
-            // But first, proactively load all classes:
-            try {
-                try (InputStream inputStream = new FileInputStream(file)) {
-                    try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
-                        ZipEntry entry = jarInputStream.getNextEntry();
-                        while (entry != null) {
-                            String name = entry.getName();
-                            // Load non-inner-classes
-                            if (name.endsWith(DOT_CLASS)) {
-                                // Strip .class suffix and change .jar file path (/)
-                                // to class name (.'s).
-                                name = name.substring(0,
-                                        name.length() - DOT_CLASS.length());
-                                name = name.replace('/', '.');
-                                try {
-                                    Class<?> aClass = Class.forName(name, true, loader);
-                                    // Actually, initialize them too to make sure basic classes
-                                    // needed by the detector are available
-                                    aClass.newInstance();
-                                } catch (Throwable e) {
-                                    client.log(Severity.ERROR, e,
-                                            "Failed to prefetch " + name + " from " + file);
-                                }
+            try (InputStream inputStream = new FileInputStream(file)) {
+                try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
+                    ZipEntry entry = jarInputStream.getNextEntry();
+                    while (entry != null) {
+                        String name = entry.getName();
+                        // Load non-inner-classes
+                        if (name.endsWith(DOT_CLASS)) {
+                            // Strip .class suffix and change .jar file path (/)
+                            // to class name (.'s).
+                            name = name.substring(0,
+                                    name.length() - DOT_CLASS.length());
+                            name = name.replace('/', '.');
+                            try {
+                                Class<?> aClass = Class.forName(name, true, loader);
+                                // Actually, initialize them too to make sure basic classes
+                                // needed by the detector are available
+                                aClass.newInstance();
+                            } catch (Throwable e) {
+                                client.log(Severity.ERROR, e,
+                                        "Failed to prefetch " + name + " from " + file);
                             }
-                            entry = jarInputStream.getNextEntry();
                         }
+                        entry = jarInputStream.getNextEntry();
                     }
                 }
-            } catch (Throwable ignore) {
-            } finally {
-                // Finally close the URL class loader
-                try {
-                    closeMethod.invoke(loader);
-                } catch (Throwable ignore) {
-                    // Couldn't close. This is unlikely.
-                }
             }
-        } catch (NoSuchMethodException ignore) {
-            // No close method - we're on 1.6
+        } catch (Throwable ignore) {
+        } finally {
+            // Finally close the URL class loader
+            try {
+                loader.close();
+            } catch (Throwable ignore) {
+                // Couldn't close. This is unlikely.
+            }
         }
     }
 
