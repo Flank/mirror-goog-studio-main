@@ -29,7 +29,7 @@ using ::profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
 
-MemoryCache::MemoryCache(const Clock& clock, FileCache& file_cache,
+MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
                          int32_t samples_capacity)
     : clock_(clock),
       file_cache_(file_cache),
@@ -69,7 +69,7 @@ void MemoryCache::SaveVmStatsSample(const MemoryData::VmStatsSample& sample) {
   }
 }
 
-bool MemoryCache::StartHeapDump(const std::string& dump_file_path,
+bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
                                 int64_t request_time,
                                 TriggerHeapDumpResponse* response) {
   std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
@@ -86,7 +86,7 @@ bool MemoryCache::StartHeapDump(const std::string& dump_file_path,
       heap_dump_infos_[GetSampleIndex(next_heap_dump_sample_id_)];
   info.set_start_time(request_time);
   info.set_end_time(kUnfinishedTimestamp);
-  info.set_file_path(dump_file_path);
+  info.set_file_name(dump_file_name);
   response->mutable_info()->CopyFrom(info);
 
   next_heap_dump_sample_id_++;
@@ -230,7 +230,7 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
 
 void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
                                            DumpDataResponse* response) {
-  std::string heap_dump_file_path;
+  std::string heap_dump_file_name;
   {
     std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
 
@@ -252,7 +252,7 @@ void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
         response->set_status(DumpDataResponse::NOT_READY);
         return;
       } else {
-        heap_dump_file_path.assign(heap_dump_infos_[wrapped_index].file_path());
+        heap_dump_file_name.assign(heap_dump_infos_[wrapped_index].file_name());
       }
     } else {
       response->set_status(DumpDataResponse::NOT_FOUND);
@@ -260,7 +260,7 @@ void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
     }
   }
 
-  auto file = file_cache_.GetFile(heap_dump_file_path);
+  auto file = file_cache_->GetFile(heap_dump_file_name);
   response->mutable_data()->append(file->Contents());
   response->set_status(DumpDataResponse::SUCCESS);
 }

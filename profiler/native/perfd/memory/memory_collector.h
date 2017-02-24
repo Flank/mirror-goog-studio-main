@@ -36,7 +36,7 @@ class MemoryCollector {
       1 + Clock::s_to_ms(kSecondsToBuffer) / Clock::ns_to_ms(kSleepNs);
 
  public:
-  MemoryCollector(int32_t pid, const Clock& clock, FileCache& file_cache)
+  MemoryCollector(int32_t pid, const Clock& clock, FileCache* file_cache)
       : memory_cache_(clock, file_cache, kSamplesCount),
         clock_(clock),
         file_cache_(file_cache),
@@ -56,7 +56,7 @@ class MemoryCollector {
   MemoryCache memory_cache_;
   MemoryLevelsSampler memory_levels_sampler_;
   const Clock& clock_;
-  FileCache& file_cache_;
+  FileCache* file_cache_;
   std::thread server_thread_;
   std::thread heap_dump_thread_;
   std::atomic_bool is_running_{false};

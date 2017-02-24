@@ -15,6 +15,5 @@ add_unit_test(perfd_memory_tests
 
 target_link_libraries(perfd_memory_tests
                       profiler_memory
-                      profiler_utils
                       testutils
                       ${GTEST_LINK_LIBRARIES})
