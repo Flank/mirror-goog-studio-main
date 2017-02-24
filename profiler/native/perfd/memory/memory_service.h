@@ -32,7 +32,7 @@ class MemoryServiceImpl final
   MemoryServiceImpl(Daemon::Utilities* utilities,
                     std::unordered_map<int32_t, MemoryCollector>* collectors)
       : clock_(utilities->clock()),
-        file_cache_(*(utilities->file_cache())),
+        file_cache_(utilities->file_cache()),
         collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
 
@@ -94,7 +94,7 @@ class MemoryServiceImpl final
   MemoryCollector* GetCollector(int32_t app_id);
 
   const Clock& clock_;
-  FileCache& file_cache_;
+  FileCache* file_cache_;
   std::unordered_map<int32_t, MemoryCollector>&
       collectors_;  // maps pid to MemoryCollector
 };

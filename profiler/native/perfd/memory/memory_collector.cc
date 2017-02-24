@@ -86,7 +86,7 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
     int64_t request_time = clock_.GetCurrentTime();
     std::stringstream ss;
     ss << pid_ << "_" << request_time << ".hprof";
-    auto file = file_cache_.GetFile(ss.str());
+    auto file = file_cache_->GetFile(ss.str());
 
     if (!memory_cache_.StartHeapDump(file->name(), request_time, response)) {
       Log::V("StartHeapDumpSample failed.");
@@ -105,7 +105,7 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
 }
 
 void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
-  SetThreadName("HeapDump");
+  SetThreadName("Studio:HeapDump");
 
   std::string unusedOutput;
   ActivityManager* am = ActivityManager::Instance();
