@@ -999,6 +999,10 @@ class AvdManagerCli extends CommandLineParser {
                         mSdkLog.info("\n%s\n", e.getMessage());
                     }
                     break;
+                case STRING:
+                    map.put(property.getName(), result);
+                    i++; // valid reply, move to next property
+                    break;
                 case DISKSIZE:
                     // TODO check validity
                     map.put(property.getName(), result);
