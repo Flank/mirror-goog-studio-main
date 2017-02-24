@@ -41,6 +41,7 @@ cc_library(
         "android_studio_version.h",
         "background_queue.h",
         "bash_command.h",
+        "channel.h",
         "clock.h",
         "config.h",
         "count_down_latch.h",
@@ -79,6 +80,7 @@ cc_test(
     srcs = [
         "activity_manager_test.cc",
         "background_queue_test.cc",
+        "channel_test.cc",
         "clock_test.cc",
         "count_down_latch_test.cc",
         "current_process_test.cc",

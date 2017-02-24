@@ -17,14 +17,10 @@
 #define PERFA_BACKGROUND_QUEUE_H
 
 #include <atomic>
-#include <functional>
-#include <mutex>
-#include <queue>
 #include <string>
 #include <thread>
-#include <vector>
 
-#include "utils/count_down_latch.h"
+#include "utils/channel.h"
 
 namespace profiler {
 
@@ -33,10 +29,11 @@ namespace profiler {
 // enqueued tasks that haven't run yet.
 //
 // Example:
-//   BackgroundQueue bq("LongTasks");
-//   bq.EnqueueTask([]() { ... long operation #1 ... })
-//   bq.EnqueueTask([]() { ... long operation #2 ... })
-//   bq.Join(); // Blocks until all operations are finished
+//   {
+//     BackgroundQueue bq("LongTasks");
+//     bq.EnqueueTask([]() { ... long operation #1 ... })
+//     bq.EnqueueTask([]() { ... long operation #2 ... })
+//   } // bq will not be destroyed until tasks finish running
 class BackgroundQueue {
  public:
   // TODO: Handle a case where infinite items can be added to the queue, e.g.
@@ -50,32 +47,19 @@ class BackgroundQueue {
   // prior tasks finish; in other words, tasks are not run simultaneously.
   void EnqueueTask(std::function<void()> task);
 
-  // Remove any tasks still on this queue
-  void Reset();
-
-  // Blocks the current thread until all background tasks are complete
-  void Join() const;
-
-  // Whether any background tasks are running right now.
-  bool IsRunning() const;
+  // If |true|, no tasks are running or enqueued to run at the moment.
+  bool IsIdle() const;
 
  private:
-  // The logic for whether this queue is currently running, but callers are
-  // responsible for locking against |task_queue_mutex_| before calling.
-  bool IsRunningUnsafe() const;
-
   // The background method responsible for pulling the next task out of the
   // queue and running it.
   void TaskThread();
 
-  std::queue<std::function<void()>> task_queue_;
-  bool is_task_running_;
-  mutable std::mutex task_queue_mutex_;
+  Channel<std::function<void()>> task_channel_;
+  std::atomic_bool is_task_running_;
 
   std::thread task_thread_;
   std::string task_thread_name_;
-  CountDownLatch task_enqueued_latch_;
-  std::atomic_bool is_ready_;
 };
 
 }  // namespace profiler

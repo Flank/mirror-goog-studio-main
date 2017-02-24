@@ -31,73 +31,31 @@ using std::queue;
 namespace profiler {
 
 BackgroundQueue::BackgroundQueue(string thread_name)
-    : is_task_running_(false),
-      task_thread_name_(thread_name),
-      task_enqueued_latch_(1) {
-  is_ready_ = true;
+    : is_task_running_(false), task_thread_name_(thread_name) {
   task_thread_ = thread(&BackgroundQueue::TaskThread, this);
 }
 
 BackgroundQueue::~BackgroundQueue() {
-  is_ready_ = false;
-  EnqueueTask([]() {});  // Releases latch so background thread can run and die
+  task_channel_.Finish();
   task_thread_.join();
 }
 
 void BackgroundQueue::EnqueueTask(function<void()> task) {
-  lock_guard<mutex> lock(task_queue_mutex_);
-  task_queue_.push(task);
-  task_enqueued_latch_.CountDown();
+  task_channel_.Push(task);
 }
 
-void BackgroundQueue::Reset() {
-  lock_guard<mutex> lock(task_queue_mutex_);
-  if (!IsRunningUnsafe()) {
-    return;
-  }
-
-  task_queue_ = queue<function<void()>>();
-}
-
-void BackgroundQueue::Join() const {
-  while (IsRunning()) {
-    std::this_thread::yield();
-  }
-}
-
-bool BackgroundQueue::IsRunning() const {
-  lock_guard<mutex> lock(task_queue_mutex_);
-  return IsRunningUnsafe();
-}
-
-bool BackgroundQueue::IsRunningUnsafe() const {
-  return !task_queue_.empty() || is_task_running_;
+bool BackgroundQueue::IsIdle() const {
+  return task_channel_.length() == 0 && !is_task_running_;
 }
 
 void BackgroundQueue::TaskThread() {
   SetThreadName(task_thread_name_);
 
-  while (is_ready_) {
-    task_enqueued_latch_.Await();
-
-    function<void()> task;
-
-    {
-      lock_guard<mutex> lock(task_queue_mutex_);
-      task = task_queue_.front();
-      task_queue_.pop();
-      is_task_running_ = true;
-    }
-
+  function<void()> task;
+  while (task_channel_.Pop(&task)) {
+    is_task_running_ = true;
     task();
-
-    {
-      lock_guard<mutex> lock(task_queue_mutex_);
-      is_task_running_ = false;
-      if (task_queue_.empty()) {
-        task_enqueued_latch_.Reset();
-      }
-    }
+    is_task_running_ = false;
   }
 }
 

@@ -60,7 +60,7 @@ class CountDownLatch {
 
   // Wait for the current latch count to hit 0. If the count is already 0, this
   // operation is a no-op.
-  void Await() {
+  void Await() const {
     std::unique_lock<std::mutex> lock(mutex_);
     if (count_ == 0) {
       return;
@@ -84,7 +84,7 @@ class CountDownLatch {
   int32_t original_count_;
   int32_t count_;
 
-  std::condition_variable count_down_complete_;
+  mutable std::condition_variable count_down_complete_;
   mutable std::mutex mutex_;
 };
 
