@@ -272,9 +272,15 @@ class AvdManagerCli extends CommandLineParser {
             // got back a level for the SDK folder
             File tools;
             if (toolsDirProp.length() > 0) {
-                tools = new File(toolsDirProp);
-                mOsSdkFolder = tools.getParent();
-            } else {
+                try {
+                    tools = new File(toolsDirProp).getCanonicalFile();
+                    mOsSdkFolder = tools.getParent();
+                }
+                catch (IOException e) {
+                    // try using "." below
+                }
+            }
+            if (mOsSdkFolder == null) {
                 try {
                     tools = new File(".").getCanonicalFile();
                     mOsSdkFolder = tools.getParent();
