@@ -16,13 +16,11 @@
 
 package com.android.ddmlib.testrunner;
 
-import junit.framework.TestCase;
-
-import org.easymock.Capture;
-import org.easymock.EasyMock;
-
 import java.util.Collections;
 import java.util.Map;
+import junit.framework.TestCase;
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 
 /**
  * Unit tests for {@link InstrumentationResultParser}.
@@ -89,6 +87,8 @@ public class InstrumentationResultParserTest extends TestCase {
      * Tests parsing output for a missing time stamp, meaning an invalid output from the runner.
      */
     public void testParse_missingTimeStamp() {
+        // we enforce the time stamp
+        mParser.setEnforceTimeStamp(true);
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: stream=");
         addLine(output, "INSTRUMENTATION_CODE: -1");
@@ -100,9 +100,21 @@ public class InstrumentationResultParserTest extends TestCase {
         injectAndVerifyTestString(output.toString());
     }
 
-    /**
-     * Tests parsing output for a single successful test execution.
-     */
+    /** Tests parsing output for a missing time stamp but without enforcing the format. */
+    public void testParse_missingTimeStamp_notEnforced() {
+        mParser.setEnforceTimeStamp(false);
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        // no failure should be expected
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /** Tests parsing output for a single successful test execution. */
     public void testParse_singleTest() {
         StringBuilder output = createSuccessTest();
 
