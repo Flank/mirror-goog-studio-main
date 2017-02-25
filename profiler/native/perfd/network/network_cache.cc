@@ -23,11 +23,12 @@ using std::string;
 using std::vector;
 
 ConnectionDetails* NetworkCache::AddConnection(int64_t conn_id,
-                                               int32_t app_id) {
+                                               int32_t app_id,
+                                               int64_t start_timestamp) {
   ConnectionDetails new_conn;
   new_conn.id = conn_id;
   new_conn.app_id = app_id;
-  new_conn.start_timestamp = clock_.GetCurrentTime();
+  new_conn.start_timestamp = start_timestamp;
 
   lock_guard<mutex> lock(connections_mutex_);
   connections_.push_back(new_conn);

@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "perfd/network/connection_details.h"
-#include "utils/clock.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
@@ -32,15 +31,13 @@ namespace profiler {
 // Note: This class is thread safe
 // TODO: This class needs tests
 class NetworkCache final {
- public:
-  // Create a cache, passing in a clock which will be used to initialize a new
-  // connection's start timestamp.
-  explicit NetworkCache(const Clock& clock) : clock_(clock) {}
 
+ public:
   // Register a new connection, returning a |ConnectionDetails| instance in case
-  // there is additional information you can initialize. This will initialize
-  // a connection at the time the method is called.
-  ConnectionDetails* AddConnection(int64_t conn_id, int32_t app_id);
+  // there is additional information you can initialize.
+  ConnectionDetails* AddConnection(int64_t conn_id,
+                                   int32_t app_id,
+                                   int64_t start_timestamp);
 
   // Return details for the request with a matching |conn_id|, or nullptr if no
   // match.
@@ -60,8 +57,6 @@ class NetworkCache final {
   // Internal handler for |GetDetails| methods, so both const and non-const
   // versions can delegate to it.
   ConnectionDetails* DoGetDetails(int64_t conn_id) const;
-
-  const Clock& clock_;
 
   mutable std::mutex
       connections_mutex_;  // Guards connections_ and conn_id_map_
