@@ -29,6 +29,12 @@ using std::mutex;
 
 Perfa* perfa_ = nullptr;
 mutex perfa_mutex_;
+
+// If perfa is disconnected from perfd, grpc requests will begin backing up.
+// Given that downloading a 1MB image would send 1000 1K chunk messages (plus
+// general network event messages), it seems reasonable to limit our queue to
+// something one or two magnitudes above that, to be safe.
+const int32_t kMaxBackgroundTasks = 100000;  // Worst case: ~100MB in memory
 }
 
 namespace profiler {
@@ -53,7 +59,8 @@ Perfa& Perfa::Instance() {
   return *perfa_;
 }
 
-Perfa::Perfa(const char* address) : background_queue_("Studio:Perfa") {
+Perfa::Perfa(const char* address)
+    : background_queue_("Studio:Perfa", kMaxBackgroundTasks) {
   auto channel =
       grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
   service_stub_ = PerfaService::NewStub(channel);
