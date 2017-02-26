@@ -36,15 +36,18 @@ namespace profiler {
 //   } // bq will not be destroyed until tasks finish running
 class BackgroundQueue {
  public:
-  // TODO: Handle a case where infinite items can be added to the queue, e.g.
-  // when perfa can't reach perfd. Add max queue length? And if the max is hit,
-  // should we enqueue new tasks dropping oldest, or ignore the enqueue request
-  // instead?
-  explicit BackgroundQueue(std::string thread_name);
+  // Create a background queue with an optional max length. If |max_length| is
+  // not specified, the queue can grow unbounded, constrained only by memory.
+  // Otherwise, the number of simultaneously enqueued background tasks will be
+  // limited, with older tasks removed to make way for newly enqueued ones. The
+  // task that is currently running does not count against this length.
+  explicit BackgroundQueue(std::string thread_name, int32_t max_length = -1);
   ~BackgroundQueue();
 
   // Add a task to the end of the queue. It will automatically be run after all
   // prior tasks finish; in other words, tasks are not run simultaneously.
+  // If a max number of tasks has already been enqueued, the oldest task will be
+  // removed without ever being run.
   void EnqueueTask(std::function<void()> task);
 
   // If |true|, no tasks are running or enqueued to run at the moment.
@@ -55,6 +58,7 @@ class BackgroundQueue {
   // queue and running it.
   void TaskThread();
 
+  int32_t max_length_;
   Channel<std::function<void()>> task_channel_;
   std::atomic_bool is_task_running_;
 
