@@ -19,10 +19,10 @@
 #include <atomic>
 #include <thread>
 
-#include "utils/trace.h"
 #include "utils/clock.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
+#include "utils/trace.h"
 
 namespace profiler {
 
@@ -45,7 +45,7 @@ void CpuCollector::Stop() {
 }
 
 void CpuCollector::Collect() {
-  SetThreadName("CpuCollector");
+  SetThreadName("Studio:PollCpu");
 
   Stopwatch stopwatch;
   while (is_running_.load()) {

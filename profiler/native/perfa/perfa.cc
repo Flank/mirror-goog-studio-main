@@ -43,10 +43,8 @@ using proto::HeartBeatResponse;
 using proto::InternalEventService;
 using proto::InternalMemoryService;
 using proto::InternalNetworkService;
-using proto::PerfaControlRequest;
 using proto::PerfaService;
 using proto::CommonData;
-using proto::RegisterApplication;
 using std::lock_guard;
 
 void Perfa::Initialize() {
@@ -68,21 +66,12 @@ Perfa::Perfa(const char* address)
   memory_stub_ = InternalMemoryService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
 
-  // Open the control stream
-  RegisterApplication app_data;
-  app_data.set_pid(getpid());
-  control_stream_ = service_stub_->RegisterAgent(&control_context_, app_data);
-  control_thread_ = std::thread(&Perfa::RunControlThread, this);
-
-  // Open the component independent data stream
-  data_stream_ = service_stub_->DataStream(&data_context_, &data_response_);
-
   // Enable the heartbeat.
   heartbeat_thread_ = std::thread(&Perfa::RunHeartbeatThread, this);
 }
 
 void Perfa::RunHeartbeatThread() {
-  SetThreadName("HeartbeatThread");
+  SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
   while (true) {
     int64_t start_ns = stopwatch.GetElapsed();
@@ -99,18 +88,6 @@ void Perfa::RunHeartbeatThread() {
       usleep(static_cast<uint64_t>(sleep_us));
     }
   }
-}
-
-void Perfa::RunControlThread() {
-  SetThreadName("ControlThread");
-  PerfaControlRequest request;
-  while (control_stream_->Read(&request)) {
-    // TODO: Process control request
-  }
-}
-
-bool Perfa::WriteData(const CommonData& data) {
-  return data_stream_->Write(data);
 }
 
 }  // namespace profiler

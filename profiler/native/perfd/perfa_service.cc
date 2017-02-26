@@ -15,35 +15,15 @@
  */
 #include "perfa_service.h"
 
-using profiler::proto::DataStreamResponse;
-using profiler::proto::PerfaControlRequest;
+using grpc::ServerContext;
 using profiler::proto::CommonData;
-using profiler::proto::RegisterApplication;
+using profiler::proto::HeartBeatResponse;
 
 namespace profiler {
 
-grpc::Status PerfaServiceImpl::RegisterAgent(
-    grpc::ServerContext* context, const RegisterApplication* request,
-    grpc::ServerWriter<PerfaControlRequest>* writer) {
-  while (true) {
-    // TODO: Implement sending control request
-  }
-  return grpc::Status::OK;
-}
-
-grpc::Status PerfaServiceImpl::DataStream(
-    grpc::ServerContext* context, grpc::ServerReader<CommonData>* reader,
-    DataStreamResponse* response) {
-  CommonData data;
-  while (reader->Read(&data)) {
-    // TODO: Store data
-  }
-  return grpc::Status::OK;
-}
-
-grpc::Status PerfaServiceImpl::HeartBeat(grpc::ServerContext* context,
-                                         const proto::CommonData* data,
-                                         proto::HeartBeatResponse* response) {
+grpc::Status PerfaServiceImpl::HeartBeat(ServerContext* context,
+                                         const CommonData* data,
+                                         HeartBeatResponse* response) {
   heartbeat_timestamp_map_[data->process_id()] = clock_.GetCurrentTime();
   return grpc::Status::OK;
 }

@@ -52,7 +52,7 @@ void NetworkCollector::Stop() {
 }
 
 void NetworkCollector::Collect() {
-  SetThreadName("NetCollector");
+  SetThreadName("Studio:PollNet");
 
   profiler::SteadyClock clock;
   while (is_running_.load()) {

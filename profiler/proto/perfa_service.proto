@@ -22,30 +22,8 @@ option java_outer_classname = "Perfa";
 import "profiler.proto";
 
 service PerfaService {
-  // Register a new agent in perfd and open a stream where perfd can send
-  // control requests to the agent.
-  rpc RegisterAgent(RegisterApplication) returns (stream PerfaControlRequest) {
-  }
-
-  // Open a stream where the agent can stream data to perfd in a component
-  // independent way.
-  rpc DataStream(stream CommonData) returns (DataStreamResponse) {
-  }
-
   // A simple ping mechanism to notify perfd of perfa's existence, vice versa.
   rpc HeartBeat(CommonData) returns (HeartBeatResponse) {}
-}
-
-// TODO: Add more data to this object what can be sent during initialization
-message RegisterApplication {
-  int64 pid = 1;
-}
-
-// TODO: Fill it in with the data required to control perfa
-message PerfaControlRequest {
-}
-
-message DataStreamResponse {
 }
 
 message HeartBeatResponse {
