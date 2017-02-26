@@ -18,6 +18,7 @@
 #include <fts.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 #include <utime.h>
 #include <memory>
@@ -115,12 +116,22 @@ void DiskFileSystem::WalkDir(const string &dpath,
       }
       if (valid) {
         string full_path(fts_path);
-        callback(
-            PathStat(type, dpath, full_path, GetModificationAge(full_path)));
+        callback(PathStat(type, dpath, full_path, GetFileSize(full_path),
+                          GetModificationAge(full_path)));
       }
     }
 
     fts_close(fts);
+  }
+}
+
+int32_t DiskFileSystem::GetFileSize(const string &fpath) const {
+  struct stat s;
+  int result = stat(fpath.c_str(), &s);
+  if (result == 0) {
+    return s.st_size;
+  } else {
+    return 0;
   }
 }
 
@@ -189,4 +200,19 @@ bool DiskFileSystem::DeleteFile(const string &fpath) {
   Close(fpath);
   return remove(fpath.c_str()) == 0;
 }
+
+int64_t DiskFileSystem::GetFreeSpace(const string &path) const {
+  struct statvfs s;
+  int result = statvfs(path.c_str(), &s);
+  if (result == 0) {
+    // Explicitly assign to int64_t to prevent wrapping from occuring during
+    // multiplication of large numbers.
+    int64_t free_space = s.f_bsize;
+    free_space *= s.f_bavail;
+    return free_space;
+  } else {
+    return 0;
+  }
+}
+
 }  // namespace profiler

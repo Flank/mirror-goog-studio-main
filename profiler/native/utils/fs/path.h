@@ -78,6 +78,10 @@ class Path {
   const std::shared_ptr<Dir> Up() const;
   std::shared_ptr<Dir> Up();
 
+  // Return the free space available on the disk which contains this path (or,
+  // if the path does not yet exist, its first valid ancestor).
+  int64_t GetFreeSpace() const;
+
  protected:
   Path(FileSystem *fs, const std::string &abs_path);
 

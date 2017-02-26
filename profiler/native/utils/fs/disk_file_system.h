@@ -42,6 +42,7 @@ class DiskFileSystem final : public FileSystem {
   void WalkDir(const std::string &dpath,
                std::function<void(const PathStat &)> callback,
                int32_t max_depth) const override;
+  int32_t GetFileSize(const std::string &path) const override;
   std::string GetFileContents(const std::string &path) const override;
   bool MoveFile(const std::string &path_from,
                 const std::string &path_to) override;
@@ -51,6 +52,7 @@ class DiskFileSystem final : public FileSystem {
   void Close(const std::string &path) override;
   bool DeleteDir(const std::string &path) override;
   bool DeleteFile(const std::string &path) override;
+  int64_t GetFreeSpace(const std::string &path) const override;
 
  private:
   std::unordered_map<std::string, FILE *> open_files_;

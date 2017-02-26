@@ -16,6 +16,7 @@
 #include "utils/fs/memory_file_system.h"
 
 #include <algorithm>
+#include <climits>
 #include <vector>
 
 namespace profiler {
@@ -82,17 +83,22 @@ void MemoryFileSystem::WalkDir(const string &dpath,
   }
 
   for (const auto &full_path : paths) {
+    int32_t size_b = GetFileSize(full_path);
     int32_t modification_age_s = GetModificationAge(full_path);
     PathStat::Type type =
         HasDir(full_path) ? PathStat::Type::DIR : PathStat::Type::FILE;
 
-    PathStat pstat(type, dpath, full_path, modification_age_s);
+    PathStat pstat(type, dpath, full_path, size_b, modification_age_s);
     int32_t depth =
         count(pstat.rel_path().begin(), pstat.rel_path().end(), '/');
     if (depth < max_depth) {
-      callback(PathStat(type, dpath, full_path, modification_age_s));
+      callback(pstat);
     }
   }
+}
+
+int32_t MemoryFileSystem::GetFileSize(const string &fpath) const {
+  return GetFileContents(fpath).length();
 }
 
 string MemoryFileSystem::GetFileContents(const string &fpath) const {
@@ -162,4 +168,9 @@ bool MemoryFileSystem::DeleteFile(const string &fpath) {
   timestamps_.erase(fpath);
   return files_.erase(fpath) == 1;
 }
+
+int64_t MemoryFileSystem::GetFreeSpace(const std::string &path) const {
+  return LONG_MAX;
+}
+
 }  // namespace profiler
