@@ -54,8 +54,8 @@ class FileCache final {
   FileCache(std::unique_ptr<FileSystem> fs);
   ~FileCache();
 
-  FileCache(const FileCache&) = delete;
-  FileCache& operator=(const FileCache&) = delete;
+  FileCache(const FileCache &) = delete;
+  FileCache &operator=(const FileCache &) = delete;
 
   // Repeatedly call this to add chunks of data to be appended to a file
   // named after the passed in |cache_id|. If no file exists yet, a new one will
@@ -85,6 +85,11 @@ class FileCache final {
  private:
   // While running, periodically walks the cache and removes old files
   void JanitorThread();
+
+  // Max size we allow this cache to grow to, in bytes. Note: The cache may
+  // temporarily go over this limit, but it will be trimmed down the next time
+  // the |JanitorThread| runs a cleanup pass.
+  int64_t size_limit_b;
 
   // File system for storing cached files
   std::unique_ptr<FileSystem> fs_;

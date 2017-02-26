@@ -107,5 +107,13 @@ const shared_ptr<Dir> Path::Up() const { return DoUp(); }
 
 shared_ptr<Dir> Path::Up() { return DoUp(); }
 
+int64_t Path::GetFreeSpace() const {
+  if (!Exists()) {
+    return Up()->GetFreeSpace();
+  }
+
+  return fs_->GetFreeSpace(path_);
+}
+
 shared_ptr<Dir> Path::DoUp() const { return fs_->GetDir(StripLast(path_)); }
 }  // namespace profiler

@@ -36,9 +36,10 @@ class PathStat {
   };
 
   PathStat(Type type, const std::string &root, const std::string &full_path,
-           int32_t modification_age_s)
+           int32_t size_b, int32_t modification_age_s)
       : type_(type),
         full_path_(full_path),
+        size_b_(size_b),
         modification_age_s_(modification_age_s) {
     rel_path_ = full_path.substr(root.length() + 1);
   }
@@ -55,6 +56,9 @@ class PathStat {
   // rel_path will be "subdir/file.txt"
   const std::string &rel_path() const { return rel_path_; }
 
+  // Returns the size, in bytes, of this file system entry
+  int32_t size() const { return size_b_; }
+
   // Returns the time, in seconds, since this file was last modified
   int32_t modification_age() const { return modification_age_s_; }
 
@@ -62,6 +66,7 @@ class PathStat {
   Type type_;
   std::string full_path_;
   std::string rel_path_;
+  int32_t size_b_;
   int32_t modification_age_s_;
 };
 
@@ -159,6 +164,9 @@ class FileSystem {
                        std::function<void(const PathStat &)> callback,
                        int32_t max_depth) const = 0;
 
+  // Return a file's size, in bytes.
+  virtual int32_t GetFileSize(const std::string &fpath) const = 0;
+
   // Read a file's contents all in one pass. This will return the empty string
   // if the file at the target path is in write mode.
   virtual std::string GetFileContents(const std::string &fpath) const = 0;
@@ -191,6 +199,10 @@ class FileSystem {
 
   // Remove a file.
   virtual bool DeleteFile(const std::string &fpath) = 0;
+
+  // Return the free space available on the disk which contains the target path.
+  // The path must exist, or this will return 0.
+  virtual int64_t GetFreeSpace(const std::string &path) const = 0;
 };
 
 }  // namespace profiler
