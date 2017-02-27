@@ -1,9 +1,9 @@
 #include "bash_command.h"
 
-#include "profiler_file.h"
 #include "sys/wait.h"
-#include "utils/trace.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
+#include "utils/trace.h"
 
 using std::string;
 
@@ -63,13 +63,14 @@ bool BashCommandRunner::RunAndReadOutput(const string &cmd,
 }
 
 bool BashCommandRunner::IsRunAsCapable() {
-  ProfilerFile run_as = ProfilerFile(kRunAsExecutable);
+  DiskFileSystem fs;
+  auto run_as = fs.GetFile(kRunAsExecutable);
   // Checking for run-as existance is not enough: We also need to
   // check capabilities.
   // TODO: Use listxattr (as in
   // https://groups.google.com/forum/#!topic/android-kernel/iYakEvY24n4)
   // to makes sure run-as has CAP_SETUID and CAP_SETGID capability.
   // See bug report: https://code.google.com/p/android/issues/detail?id=187955
-  return run_as.Exists();
+  return run_as->Exists();
 }
 }  // namespace profiler
