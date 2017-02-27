@@ -32,17 +32,9 @@ class PerfaServiceImpl : public proto::PerfaService::Service {
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
       : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
-  grpc::Status RegisterAgent(
-      grpc::ServerContext* context, const proto::RegisterApplication* request,
-      grpc::ServerWriter<proto::PerfaControlRequest>* writer) override;
-
-  grpc::Status DataStream(grpc::ServerContext* context,
-                          grpc::ServerReader<proto::CommonData>* reader,
-                          proto::DataStreamResponse* response) override;
-
   grpc::Status HeartBeat(grpc::ServerContext* context,
-                          const proto::CommonData* data,
-                          proto::HeartBeatResponse* response) override;
+                         const proto::CommonData* data,
+                         proto::HeartBeatResponse* response) override;
 
  private:
   const Clock& clock_;

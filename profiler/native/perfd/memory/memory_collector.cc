@@ -49,12 +49,10 @@ void MemoryCollector::Stop() {
   }
 }
 
-bool MemoryCollector::IsRunning() {
-  return is_running_;
-}
+bool MemoryCollector::IsRunning() { return is_running_; }
 
 void MemoryCollector::CollectorMain() {
-  SetThreadName("MemCollector");
+  SetThreadName("Studio:PollMem");
 
   Stopwatch stopwatch;
   while (is_running_) {
@@ -97,8 +95,7 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
       heap_dump_thread_.join();
     }
 
-    heap_dump_thread_ = std::thread(
-        [this, file] { this->HeapDumpMain(file); });
+    heap_dump_thread_ = std::thread([this, file] { this->HeapDumpMain(file); });
   }
 
   return true;

@@ -38,8 +38,6 @@ class Perfa {
   // necessary, but consider calling |Initialize| on your own first.
   static Perfa& Instance();
 
-  bool WriteData(const proto::CommonData& data);
-
   const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
 
   const proto::InternalMemoryService::Stub& memory_stub() {
@@ -66,19 +64,8 @@ class Perfa {
 
   std::thread heartbeat_thread_;
 
-  // TODO: Move this over to the StreamingRpcManager when it is ready
-  std::thread control_thread_;
-  grpc::ClientContext control_context_;
-  std::unique_ptr<grpc::ClientReader<proto::PerfaControlRequest>>
-      control_stream_;
-
-  grpc::ClientContext data_context_;
-  proto::DataStreamResponse data_response_;
-  std::unique_ptr<grpc::ClientWriter<proto::CommonData>> data_stream_;
-
   BackgroundQueue background_queue_;
 
-  void RunControlThread();
   void RunHeartbeatThread();
 };
 
