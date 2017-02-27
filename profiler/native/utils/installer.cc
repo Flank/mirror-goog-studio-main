@@ -7,17 +7,15 @@
 #include "android_studio_version.h"
 #include "bash_command.h"
 #include "package_manager.h"
-#include "profiler_file.h"
 #include "utils/current_process.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/trace.h"
 
 using std::string;
-using profiler::Log;
 
 namespace {
-bool Exists(const string &who_runs_the_check, const string& path) {
+bool Exists(const string &who_runs_the_check, const string &path) {
   profiler::BashCommandRunner existsCmd("test");
   std::stringstream parameters;
   parameters << "-e ";
@@ -25,7 +23,6 @@ bool Exists(const string &who_runs_the_check, const string& path) {
   string output;
   return existsCmd.RunAs(parameters.str(), who_runs_the_check, &output);
 }
-
 }
 namespace profiler {
 Installer::Installer(const char *app_package_name)
@@ -59,8 +56,9 @@ bool Installer::Install(const string &binary_name, string *error_string) const {
          app_package_name_.c_str(), dst_path.c_str());
   // We need to copy sampler to the app folder.
 
-  ProfilerFile src(src_path);
-  if (!src.Exists()) {
+  DiskFileSystem fs;
+  auto src = fs.GetFile(src_path);
+  if (!src->Exists()) {
     error_string->append("\n");
     error_string->append("Source does not exists (" + src_path + ").");
     return false;
@@ -101,18 +99,20 @@ bool Installer::Install(const string &binary_name, string *error_string) const {
 
 bool Installer::Uninstall(const string &binary_path,
                           string *error_string) const {
-  ProfilerFile target(binary_path);
-  if (!target.Exists()) {
+  DiskFileSystem fs;
+  auto target = fs.GetFile(binary_path);
+
+  if (!target->Exists()) {
     error_string->append("\n");
     error_string->append("Cannot delete file '" + binary_path +
-                         "': ProfilerFile does not exists.");
+                         "': does not exist.");
     return false;
   }
   BashCommandRunner rm("rm");
   string parameters;
-  parameters.append(target.GetPath());
+  parameters.append(target->path());
   bool success = rm.Run(parameters, error_string);
-  if (!success || target.Exists()) {
+  if (!success || target->Exists()) {
     return false;
   }
   return true;
@@ -133,8 +133,9 @@ bool Installer::GetInstallationPath(const string &executable_path,
   }
   Log::I("App %s base is %s", app_package_name_.c_str(), app_base.c_str());
 
-  ProfilerFile b(executable_path);
-  string binary_filename = b.GetFileName();
+  DiskFileSystem fs;
+  auto binary = fs.GetFile(executable_path);
+  string binary_filename = binary->name();
 
   install_path->clear();
   install_path->append(app_base);
