@@ -8,7 +8,6 @@ set(UTILS_SOURCES
     installer.cc
     package_manager.cc
     process_manager.cc
-    profiler_file.cc
     stopwatch.cc
     tokenizer.cc
     trace.cc
