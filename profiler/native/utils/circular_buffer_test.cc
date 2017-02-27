@@ -31,14 +31,17 @@ TEST(CircularBuffer, AddDataMoreThanCapacity) {
   EXPECT_FALSE(buffer.full());
   EXPECT_EQ(1u, buffer.size());
   EXPECT_EQ(10, buffer.Get(0));
+  EXPECT_EQ(10, buffer.back());
 
   buffer.Add(20);
   EXPECT_TRUE(buffer.full());
   EXPECT_EQ(20, buffer.Get(1));
+  EXPECT_EQ(20, buffer.back());
 
   buffer.Add(30);
   EXPECT_TRUE(buffer.full());
   EXPECT_EQ(2u, buffer.size());
   EXPECT_EQ(20, buffer.Get(0));
   EXPECT_EQ(30, buffer.Get(1));
+  EXPECT_EQ(30, buffer.back());
 }
