@@ -55,7 +55,6 @@ add_unit_test(profiler_utils_test
               file_reader_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
-              timespec_math_test.cc
               tokenizer_test.cc
               uid_fetcher_test.cc
               fs/file_system_test.cc)
