@@ -16,7 +16,9 @@
 
 #include "dexter.h"
 #include "slicer/common.h"
+#include "slicer/scopeguard.h"
 #include "slicer/reader.h"
+#include "slicer/writer.h"
 #include "slicer/chronometer.h"
 
 #include <stdio.h>
@@ -219,6 +221,63 @@ static void ListClasses(const dex::Reader& reader) {
   printf("\n");
 }
 
+// Create a new in-memory .dex image and optionally write it to disk
+//
+// NOTE: we always create the new in-memory image, even if we don't write it
+// to an output file, for aggresive code coverage and perf timings
+//
+bool Dexter::CreateNewImage(std::shared_ptr<ir::DexFile> dex_ir) {
+  // our custom (and trivial) allocator for dex::Writer
+  struct Allocator : public dex::Writer::Allocator {
+    virtual void* Allocate(size_t size) { return ::malloc(size); }
+    virtual void Free(void* ptr) { ::free(ptr); }
+  };
+
+  size_t new_image_size = 0;
+  dex::u1* new_image = nullptr;
+  Allocator allocator;
+
+  {
+    slicer::Chronometer chrono(writer_time_);
+
+    dex::Writer writer(dex_ir);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+  }
+
+  if (new_image == nullptr) {
+    printf("ERROR: Can't create a new .dex image\n");
+    return false;
+  }
+
+  SCOPE_EXIT {
+    allocator.Free(new_image);
+  };
+
+  // write the new .dex image to disk?
+  if (out_dex_filename_ != nullptr) {
+    if (verbose_) {
+      printf("\nWriting: %s\n", out_dex_filename_);
+    }
+
+    // create output file
+    FILE* out_file = fopen(out_dex_filename_, "wb");
+    if (out_file == nullptr) {
+      printf("ERROR: Can't create output .dex file (%s)\n", out_dex_filename_);
+      return false;
+    }
+
+    SCOPE_EXIT {
+      fclose(out_file);
+    };
+
+    // write the new image
+    CHECK(fwrite(new_image, 1, new_image_size, out_file) == new_image_size);
+  }
+
+  return true;
+}
+
+// Main entry point for processing an input .dex file
 int Dexter::ProcessDex() {
   if (verbose_) {
     printf("\nReading: %s\n", dex_filename_);
@@ -230,6 +289,10 @@ int Dexter::ProcessDex() {
     printf("ERROR: Can't open input .dex file (%s)\n", dex_filename_);
     return 1;
   }
+
+  SCOPE_EXIT {
+    fclose(in_file);
+  };
 
   // calculate file size
   fseek(in_file, 0, SEEK_END);
@@ -255,11 +318,9 @@ int Dexter::ProcessDex() {
     ListClasses(reader);
   }
 
-  double reader_time = 0;
-
   // parse the .dex image
   {
-    slicer::Chronometer chrono(reader_time);
+    slicer::Chronometer chrono(reader_time_);
 
     if (extract_class_ != nullptr) {
       // extract the specified class only
@@ -279,6 +340,10 @@ int Dexter::ProcessDex() {
 
   auto dex_ir = reader.GetIr();
 
+  if(!CreateNewImage(dex_ir)) {
+    return 1;
+  }
+
   // stats?
   if (stats_) {
     PrintDexFileStats(reader);
@@ -286,10 +351,9 @@ int Dexter::ProcessDex() {
   }
 
   if (verbose_) {
-    printf("\nDone (reader: %.3f ms)\n", reader_time);
+    printf("\nDone (reader: %.3fms, writer: %.3fms)\n", reader_time_, writer_time_);
   }
 
   // done
-  fclose(in_file);
   return 0;
 }
