@@ -34,6 +34,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.BytecodeVersion;
+import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.TestUtils;
@@ -248,25 +249,34 @@ public abstract class AbstractShrinkerTest {
     }
 
     @NonNull
-    protected KeepRules parseKeepRules(String rules) {
+    protected static Flags parseKeepRules(String rules) {
         ProguardConfig config = new ProguardConfig();
         config.parse(rules);
-        return new ProguardFlagsKeepRules(config.getFlags(), mShrinkerLogger);
+        return config.getFlags();
     }
 
-    protected ShrinkerGraph<String> fullRun(KeepRules keepRules) throws IOException {
-        mFullRunShrinker.run(
+    protected FullRunShrinker<String>.Result fullRun(Flags flags) throws IOException {
+        return fullRun(
+                ProguardParserKeepRules.keepRules(flags, mShrinkerLogger),
+                ProguardParserKeepRules.whyAreYouKeepingRules(flags, mShrinkerLogger));
+    }
+
+    @NonNull
+    private FullRunShrinker<String>.Result fullRun(
+            @NonNull KeepRules keepRules, @Nullable KeepRules whyAreYouKeepingRules)
+            throws IOException {
+        return mFullRunShrinker.run(
                 mInputs,
                 Collections.emptyList(),
                 mOutput,
                 ImmutableMap.of(AbstractShrinker.CounterSet.SHRINK, keepRules),
+                whyAreYouKeepingRules,
                 true);
-        return mFullRunShrinker.mGraph;
     }
 
-    protected ShrinkerGraph<String> fullRun(String className, String... methods)
+    protected FullRunShrinker<String>.Result fullRun(String className, String... methods)
             throws IOException {
-        return fullRun(new TestKeepRules(className, methods));
+        return fullRun(new TestKeepRules(className, methods), null);
     }
 
     protected void incrementalRun(Map<String, Status> changes) throws Exception {

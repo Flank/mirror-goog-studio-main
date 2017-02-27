@@ -20,13 +20,19 @@ import static com.android.utils.FileUtils.getAllFiles;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.BytecodeVersion;
+import com.android.build.gradle.shrinker.tracing.NoOpTracer;
+import com.android.build.gradle.shrinker.tracing.RealTracer;
+import com.android.build.gradle.shrinker.tracing.Trace;
+import com.android.build.gradle.shrinker.tracing.Tracer;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -36,6 +42,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
@@ -51,6 +58,18 @@ import org.objectweb.asm.tree.ClassNode;
  * incremental runs.
  */
 public class FullRunShrinker<T> extends AbstractShrinker<T> {
+
+    /** Result of the shrinker run. */
+    @Immutable
+    public class Result {
+        @NonNull public final ShrinkerGraph<T> graph;
+        @NonNull public final Map<T, Trace<T>> traces;
+
+        public Result(@NonNull ShrinkerGraph<T> graph, @NonNull Map<T, Trace<T>> traces) {
+            this.graph = graph;
+            this.traces = traces;
+        }
+    }
 
     /** Suffix for "fake methods", inserted to forward dependencies between unrelated classes. */
     static final String SHRINKER_FAKE_MARKER = "$shrinker_fake";
@@ -75,20 +94,23 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
      * rewrite all reachable class files to only contain kept class members and put them in the
      * matching output directories.
      */
-    public void run(
+    public Result run(
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedClasses,
             @NonNull TransformOutputProvider output,
             @NonNull ImmutableMap<CounterSet, KeepRules> keepRules,
+            @Nullable KeepRules whyAreYouKeepingRules,
             boolean saveState)
             throws IOException {
         output.deleteAll();
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
         buildGraph(inputs, referencedClasses);
+        logTime("Build graph", stopwatch);
 
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        setCounters(keepRules);
+        Tracer<T> tracer = setCounters(keepRules, whyAreYouKeepingRules);
         logTime("Set counters", stopwatch);
+
         writeOutput(inputs, output);
         logTime("Write output", stopwatch);
 
@@ -96,6 +118,8 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
             mGraph.saveState();
             logTime("Saving state", stopwatch);
         }
+
+        return new Result(mGraph, tracer.getRecordedTraces());
     }
 
     /**
@@ -164,48 +188,46 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
         for (final T klass : interfaceInheritance) {
             mExecutor.execute(
                     () -> {
-                        TreeTraverser<T> interfaceTraverser =
-                                TypeHierarchyTraverser.interfaces(mGraph, mShrinkerLogger);
-
-                        if ((mGraph.getModifiers(klass) & Opcodes.ACC_INTERFACE) != 0) {
-
-                            // The "children" name is unfortunate: in the type hierarchy tree traverser,
-                            // these are the interfaces that klass (which is an interface itself)
-                            // extends (directly).
-                            Iterable<T> superinterfaces = interfaceTraverser.children(klass);
-
-                            for (T superinterface : superinterfaces) {
-                                if (mGraph.isProgramClass(superinterface)) {
-                                    // Add the arrow going "down", from the superinterface to this one.
-                                    mGraph.addDependency(
-                                            superinterface,
-                                            klass,
-                                            DependencyType.SUPERINTERFACE_KEPT);
-                                } else {
-                                    // The superinterface is part of the SDK, so it's always kept. As
-                                    // long as there's any class that implements this interface, it
-                                    // needs to be kept.
-                                    mGraph.addRoots(
-                                            ImmutableMap.of(
-                                                    klass, DependencyType.SUPERINTERFACE_KEPT),
-                                            CounterSet.SHRINK);
-                                }
-                            }
-                        }
-
-                        Iterable<T> implementedInterfaces =
-                                // Skip the class itself.
-                                interfaceTraverser.preOrderTraversal(klass).skip(1);
-
-                        for (T iface : implementedInterfaces) {
-                            if (mGraph.isProgramClass(iface)) {
-                                mGraph.addDependency(
-                                        klass, iface, DependencyType.INTERFACE_IMPLEMENTED);
-                            }
-                        }
-
+                        handleInterfaceInheritance(klass);
                         return null;
                     });
+        }
+    }
+
+    private void handleInterfaceInheritance(T klass) {
+        TreeTraverser<T> interfaceTraverser =
+                TypeHierarchyTraverser.interfaces(mGraph, mShrinkerLogger);
+
+        if ((mGraph.getModifiers(klass) & Opcodes.ACC_INTERFACE) != 0) {
+
+            // The "children" name is unfortunate: in the type hierarchy tree traverser,
+            // these are the interfaces that klass (which is an interface itself)
+            // extends (directly).
+            Iterable<T> superinterfaces = interfaceTraverser.children(klass);
+
+            for (T superinterface : superinterfaces) {
+                if (mGraph.isProgramClass(superinterface)) {
+                    // Add the arrow going "down", from the superinterface to this one.
+                    mGraph.addDependency(superinterface, klass, DependencyType.SUPERINTERFACE_KEPT);
+                } else {
+                    // The superinterface is part of the SDK, so it's always kept. As
+                    // long as there's any class that implements this interface, it
+                    // needs to be kept.
+                    mGraph.addRoots(
+                            ImmutableMap.of(klass, DependencyType.SUPERINTERFACE_KEPT),
+                            CounterSet.SHRINK);
+                }
+            }
+        }
+
+        Iterable<T> implementedInterfaces =
+                // Skip the class itself.
+                interfaceTraverser.preOrderTraversal(klass).skip(1);
+
+        for (T iface : implementedInterfaces) {
+            if (mGraph.isProgramClass(iface)) {
+                mGraph.addDependency(klass, iface, DependencyType.INTERFACE_IMPLEMENTED);
+            }
         }
     }
 
@@ -455,20 +477,37 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
     }
 
     /** Sets the roots (i.e. entry points) of the graph and marks all nodes reachable from them. */
-    private void setCounters(@NonNull ImmutableMap<CounterSet, KeepRules> allKeepRules) {
-        final CounterSet counterSet = CounterSet.SHRINK;
-        final KeepRules keepRules = allKeepRules.get(counterSet);
+    private Tracer<T> setCounters(
+            @NonNull ImmutableMap<CounterSet, KeepRules> allKeepRules,
+            @Nullable KeepRules whyAreYouKeepingRules) {
+        CounterSet counterSet = CounterSet.SHRINK;
+        KeepRules keepRules = allKeepRules.get(counterSet);
+        Set<T> whyAreYouKeeping = Sets.newConcurrentHashSet();
 
         for (final T klass : mGraph.getAllProgramClasses()) {
             mExecutor.execute(
                     () -> {
                         mGraph.addRoots(keepRules.getSymbolsToKeep(klass, mGraph), counterSet);
+                        if (whyAreYouKeepingRules != null) {
+                            whyAreYouKeeping.addAll(
+                                    whyAreYouKeepingRules.getSymbolsToKeep(klass, mGraph).keySet());
+                        }
                         return null;
                     });
         }
         waitForAllTasks();
 
-        setCounters(counterSet);
+        Tracer<T> tracer;
+        //noinspection VariableNotUsedInsideIf: if this is null, it means we're not tracing.
+        if (whyAreYouKeepingRules == null) {
+            tracer = new NoOpTracer<>();
+        } else {
+            tracer = new RealTracer<>(whyAreYouKeeping);
+        }
+
+        setCounters(counterSet, tracer);
+
+        return tracer;
     }
 
     private void writeOutput(

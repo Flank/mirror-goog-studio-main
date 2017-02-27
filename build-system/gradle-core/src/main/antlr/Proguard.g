@@ -48,6 +48,7 @@ prog [Flags flags, String baseDirectory]
     | ('-dontwarn' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS] {GrammarActions.dontWarn($flags, class_filter);})
     | ('-ignorewarnings' {GrammarActions.ignoreWarnings($flags);})
     | ('-target' target=NAME {GrammarActions.target(flags, $target.text);})
+    | ('-whyareyoukeeping' classSpec=classSpecification { GrammarActions.whyAreYouKeeping(flags, $classSpec.classSpec); })
   )*
   EOF
   ;
@@ -107,7 +108,6 @@ private unsupportedFlag
     | '-libraryjars' libraryJars=classpath
     | '-forceprocessing'
     | ('-printusage' NAME) //[filename]
-    | ('-whyareyoukeeping' classSpecification)
     | '-microedition'
     | ('-printconfiguration' NAME?) //[filename]
     | ('-dump' NAME?) //[filename]

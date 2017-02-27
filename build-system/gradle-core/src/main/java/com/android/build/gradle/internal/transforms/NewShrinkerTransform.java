@@ -32,14 +32,18 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.shrinker.AbstractShrinker.CounterSet;
+import com.android.build.gradle.shrinker.DependencyType;
 import com.android.build.gradle.shrinker.FullRunShrinker;
 import com.android.build.gradle.shrinker.IncrementalShrinker;
 import com.android.build.gradle.shrinker.JavaSerializationShrinkerGraph;
-import com.android.build.gradle.shrinker.KeepRules;
 import com.android.build.gradle.shrinker.ProguardConfig;
-import com.android.build.gradle.shrinker.ProguardFlagsKeepRules;
+import com.android.build.gradle.shrinker.ProguardParserKeepRules;
 import com.android.build.gradle.shrinker.ShrinkerLogger;
+import com.android.build.gradle.shrinker.parser.Flags;
+import com.android.build.gradle.shrinker.tracing.Trace;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.utils.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,8 +51,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.tooling.BuildException;
 import org.slf4j.Logger;
@@ -125,38 +131,68 @@ public class NewShrinkerTransform extends ProguardConfigurable {
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
             @NonNull TransformOutputProvider output) throws IOException {
-        ProguardConfig config = getConfig();
+        Flags flags = getConfig().getFlags();
 
-        ShrinkerLogger shrinkerLogger =
-                new ShrinkerLogger(config.getFlags().getDontWarnSpecs(), logger);
+        ShrinkerLogger shrinkerLogger = new ShrinkerLogger(flags.getDontWarnSpecs(), logger);
 
         FullRunShrinker<String> shrinker =
                 new FullRunShrinker<>(
-                        WaitableExecutor.<Void>useGlobalSharedThreadPool(),
+                        WaitableExecutor.useGlobalSharedThreadPool(),
                         JavaSerializationShrinkerGraph.empty(incrementalDir),
                         platformJars,
                         shrinkerLogger,
-                        config.getFlags().getBytecodeVersion());
+                        flags.getBytecodeVersion());
 
         // Only save state if incremental mode is enabled.
         boolean saveState = this.isIncremental();
 
-        shrinker.run(
-                inputs,
-                referencedInputs,
-                output,
-                ImmutableMap.<CounterSet, KeepRules>of(
-                        CounterSet.SHRINK,
-                        new ProguardFlagsKeepRules(config.getFlags(), shrinkerLogger)),
-                saveState);
+        ProguardParserKeepRules whyAreYouKeepingRules = null;
+        if (!flags.getWhyAreYouKeepingSpecs().isEmpty()) {
+            whyAreYouKeepingRules =
+                    ProguardParserKeepRules.whyAreYouKeepingRules(flags, shrinkerLogger);
+        }
 
-        checkForWarnings(config, shrinkerLogger);
+        FullRunShrinker<String>.Result result =
+                shrinker.run(
+                        inputs,
+                        referencedInputs,
+                        output,
+                        ImmutableMap.of(
+                                CounterSet.SHRINK,
+                                ProguardParserKeepRules.keepRules(flags, shrinkerLogger)),
+                        whyAreYouKeepingRules,
+                        saveState);
+
+        if (!result.traces.isEmpty()) {
+            // Print header identical to ProGuard.
+            System.out.println("Explaining why classes and class members are being kept...");
+            System.out.println();
+
+            printWhyAreYouKeepingExplanation(result.traces, System.out);
+        }
+
+        checkForWarnings(flags, shrinkerLogger);
+    }
+
+    @VisibleForTesting
+    static void printWhyAreYouKeepingExplanation(
+            Map<String, Trace<String>> traces, PrintStream out) {
+        traces.forEach(
+                (node, trace) -> {
+                    for (Pair<String, DependencyType> pair : trace.toList()) {
+                        out.println(pair.getFirst());
+                        out.print("  ");
+                        out.print(pair.getSecond());
+                        out.print(" from ");
+                    }
+                });
+
+        out.println("keep rules");
     }
 
     private static void checkForWarnings(
-            @NonNull ProguardConfig config,
-            @NonNull ShrinkerLogger shrinkerLogger) {
-        if (shrinkerLogger.getWarningsCount() > 0 && !config.getFlags().isIgnoreWarnings()) {
+            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+        if (shrinkerLogger.getWarningsCount() > 0 && !flags.isIgnoreWarnings()) {
             throw new BuildException(
                     "Warnings found during shrinking, please use -dontwarn or -ignorewarnings to suppress them.",
                     null);
@@ -212,18 +248,24 @@ public class NewShrinkerTransform extends ProguardConfigurable {
 
             ProguardConfig config = getConfig();
 
+            if (!config.getFlags().getWhyAreYouKeepingSpecs().isEmpty()) {
+                //noinspection SpellCheckingInspection: flag name from ProGuard
+                logger.warn(
+                        "-whyareyoukeeping is ignored during incremental runs. Clean the project to use it.");
+            }
+
             ShrinkerLogger shrinkerLogger =
                     new ShrinkerLogger(config.getFlags().getDontWarnSpecs(), logger);
 
             IncrementalShrinker<String> shrinker =
                     new IncrementalShrinker<>(
-                            WaitableExecutor.<Void>useGlobalSharedThreadPool(),
+                            WaitableExecutor.useGlobalSharedThreadPool(),
                             graph,
                             shrinkerLogger,
                             config.getFlags().getBytecodeVersion());
 
             shrinker.incrementalRun(inputs, output);
-            checkForWarnings(config, shrinkerLogger);
+            checkForWarnings(config.getFlags(), shrinkerLogger);
         } catch (IncrementalShrinker.IncrementalRunImpossibleException e) {
             logger.warn("Incremental shrinker run impossible: " + e.getMessage());
             // Log the full stack trace at INFO level for debugging.

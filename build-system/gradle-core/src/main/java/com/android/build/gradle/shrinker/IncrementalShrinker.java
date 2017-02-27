@@ -26,6 +26,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.BytecodeVersion;
+import com.android.build.gradle.shrinker.tracing.NoOpTracer;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
@@ -103,7 +104,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
         finishGraph(unresolvedReferences);
         logTime("finish graph", stopwatch);
 
-        setCounters(CounterSet.SHRINK);
+        setCounters(CounterSet.SHRINK, new NoOpTracer<>());
         logTime("set counters", stopwatch);
 
         Changes<T> changes = calculateChanges(inputs, output, oldState, modifiedClasses);

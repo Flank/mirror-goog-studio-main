@@ -45,6 +45,9 @@ public enum DependencyType {
     /** Target type is referenced in class declaration. */
     REQUIRED_CLASS_STRUCTURE,
 
+    /** Target is kept by keep rules. */
+    REQUIRED_KEEP_RULES,
+
     /**
      * Target member should be kept, assuming its owner class is kept.
      *
