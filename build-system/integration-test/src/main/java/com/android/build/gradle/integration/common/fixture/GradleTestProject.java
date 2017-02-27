@@ -216,9 +216,10 @@ public final class GradleTestProject implements TestRule {
     }
 
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
-    public static final String SUPPORT_LIB_VERSION = "25.1.0";
+    public static final String SUPPORT_LIB_VERSION = "25.2.0";
     public static final String TEST_SUPPORT_LIB_VERSION = "0.5";
     public static final int SUPPORT_LIB_MIN_SDK = 9;
+    public static final String CONSTRAINT_LAYOUT_VERSION = "1.0.0";
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
@@ -607,7 +608,8 @@ public final class GradleTestProject implements TestRule {
                         + "supportLibVersion = '%s'%n"
                         + "testSupportLibVersion = '%s'%n"
                         + "playServicesVersion = '%s'%n"
-                        + "supportLibMinSdk = %d%n",
+                        + "supportLibMinSdk = %d%n"
+                        + "constraintLayoutVersion = '%s'%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
@@ -615,7 +617,8 @@ public final class GradleTestProject implements TestRule {
                 SUPPORT_LIB_VERSION,
                 TEST_SUPPORT_LIB_VERSION,
                 PLAY_SERVICES_VERSION,
-                SUPPORT_LIB_MIN_SDK);
+                SUPPORT_LIB_MIN_SDK,
+                CONSTRAINT_LAYOUT_VERSION);
     }
 
     /** Create a GradleTestProject representing a subproject. */
