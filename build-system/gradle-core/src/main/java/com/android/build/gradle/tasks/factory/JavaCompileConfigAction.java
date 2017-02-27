@@ -56,7 +56,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         final BaseVariantData testedVariantData = scope.getTestedVariantData();
         scope.getVariantData().javacTask = javacTask;
         javacTask.compileSdkVersion = scope.getGlobalScope().getExtension().getCompileSdkVersion();
-        javacTask.mBuildContext = scope.getBuildContext();
+        javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
         // We can't just pass the collection directly, as the instanceof check in the incremental
         // compile doesn't work recursively currently, so every ConfigurableFileTree needs to be

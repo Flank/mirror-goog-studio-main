@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -82,10 +82,9 @@ public final class InstantRunTestUtils {
     }
 
     @NonNull
-    public static BuildContext loadBuildContext(
-            int apiLevel,
-            @NonNull InstantRun instantRunModel) throws Exception {
-        BuildContext context = new BuildContext();
+    public static InstantRunBuildContext loadBuildContext(
+            int apiLevel, @NonNull InstantRun instantRunModel) throws Exception {
+        InstantRunBuildContext context = new InstantRunBuildContext();
         context.setApiLevel(apiLevel, null);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;

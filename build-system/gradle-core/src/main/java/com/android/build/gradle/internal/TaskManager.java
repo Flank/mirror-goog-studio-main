@@ -2035,8 +2035,11 @@ public abstract class TaskManager {
 
         checkNotNull(variantScope.getJavacTask());
 
-        variantScope.getBuildContext().setInstantRunMode(
-                getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE);
+        variantScope
+                .getInstantRunBuildContext()
+                .setInstantRunMode(
+                        getIncrementalMode(variantScope.getVariantConfiguration())
+                                != IncrementalMode.NONE);
 
         final BaseVariantData<? extends BaseVariantOutputData> variantData =
                 variantScope.getVariantData();
@@ -2104,7 +2107,7 @@ public abstract class TaskManager {
         // ----- 10x support
 
         AndroidTask<PreColdSwapTask> preColdSwapTask = null;
-        if (variantScope.getBuildContext().isInInstantRunMode()) {
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
             AndroidTask<DefaultTask> allActionsAnchorTask =
                     createInstantRunAllActionsTasks(tasks, variantScope);
@@ -2115,8 +2118,8 @@ public abstract class TaskManager {
 
             // when dealing with platforms that can handle multi dexes natively, automatically
             // turn on multi dexing so shards are packaged as individual dex files.
-            if (InstantRunPatchingPolicy.PRE_LOLLIPOP !=
-                    variantScope.getBuildContext().getPatchingPolicy()) {
+            if (InstantRunPatchingPolicy.PRE_LOLLIPOP
+                    != variantScope.getInstantRunBuildContext().getPatchingPolicy()) {
                 isMultiDexEnabled = true;
                 // force pre-dexing to be true as we rely on individual slices to be packaged
                 // separately.
@@ -2229,7 +2232,7 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
                         projectLevelCache,
-                        variantScope.getBuildContext().isInInstantRunMode());
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2294,7 +2297,7 @@ public abstract class TaskManager {
                         && dexOptions.getPreDexLibraries()
                         && !isMinifyEnabled(variantScope);
         boolean preDexEnabled =
-                variantScope.getBuildContext().isInInstantRunMode() || cachePreDex;
+                variantScope.getInstantRunBuildContext().isInInstantRunMode() || cachePreDex;
         if (preDexEnabled) {
             FileCache buildCache;
             if (cachePreDex
@@ -2310,7 +2313,7 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingMode,
-                            variantScope.getBuildContext().isInInstantRunMode());
+                            variantScope.getInstantRunBuildContext().isInInstantRunMode());
             transformManager.addTransform(tasks, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
         }
@@ -2339,10 +2342,11 @@ public abstract class TaskManager {
     }
 
     private boolean isLegacyMultidexMode(@NonNull VariantScope variantScope) {
-        return variantScope.getVariantData().getVariantConfiguration().isLegacyMultiDexMode() &&
-                (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE
-                        || variantScope.getBuildContext().getPatchingPolicy() ==
-                        InstantRunPatchingPolicy.PRE_LOLLIPOP);
+        return variantScope.getVariantData().getVariantConfiguration().isLegacyMultiDexMode()
+                && (getIncrementalMode(variantScope.getVariantConfiguration())
+                                == IncrementalMode.NONE
+                        || variantScope.getInstantRunBuildContext().getPatchingPolicy()
+                                == InstantRunPatchingPolicy.PRE_LOLLIPOP);
 
     }
 
@@ -2801,12 +2805,12 @@ public abstract class TaskManager {
         IncrementalMode incrementalMode = getIncrementalMode(variantConfiguration);
 
         InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getBuildContext().getPatchingPolicy();
+                variantScope.getInstantRunBuildContext().getPatchingPolicy();
 
         DefaultGradlePackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
 
         VariantScope.TaskOutputType manifestType =
-                variantScope.getBuildContext().isInInstantRunMode()
+                variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
                         : VariantScope.TaskOutputType.MERGED_MANIFESTS;
 
@@ -2849,7 +2853,7 @@ public abstract class TaskManager {
 
         AndroidTask<PackageApplication> packageInstantRunResources = null;
 
-        if (variantScope.getBuildContext().isInInstantRunMode()) {
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             packageInstantRunResources =
                     androidTasks.create(
                             tasks,

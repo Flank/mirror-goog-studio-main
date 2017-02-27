@@ -36,10 +36,10 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalSupportVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalVisitor;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -137,9 +137,14 @@ public class InstantRunTransform extends Transform {
     public Map<String, Object> getParameterInputs() {
         // Force the instant run transform to re-run when the dex patching policy changes,
         // as the slicer will re-run.
-        return transformScope.getBuildContext().getPatchingPolicy() != null
-                ? ImmutableMap.of("dex patching policy", transformScope.getBuildContext()
-                        .getPatchingPolicy().getDexPatchingPolicy().toString())
+        return transformScope.getInstantRunBuildContext().getPatchingPolicy() != null
+                ? ImmutableMap.of(
+                        "dex patching policy",
+                        transformScope
+                                .getInstantRunBuildContext()
+                                .getPatchingPolicy()
+                                .getDexPatchingPolicy()
+                                .toString())
                 : ImmutableMap.of();
 
     }
@@ -159,21 +164,19 @@ public class InstantRunTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        BuildContext buildContext = transformScope.getBuildContext();
-        buildContext.startRecording(
-                BuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
+        buildContext.startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         try {
             doTransform(invocation);
         } finally {
-            buildContext.stopRecording(
-                    BuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+            buildContext.stopRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         }
 
     }
 
     public void doTransform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        BuildContext buildContext = transformScope.getBuildContext();
+        InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
 
         // if we do not run in incremental mode, we should automatically switch to COLD swap.
         if (!invocation.isIncremental()) {
@@ -307,15 +310,17 @@ public class InstantRunTransform extends Transform {
 
         // the transform can set the verifier status to failure in some corner cases, in that
         // case, make sure we delete our classes.3
-        if (!transformScope.getBuildContext().hasPassedVerification()) {
+        if (!transformScope.getInstantRunBuildContext().hasPassedVerification()) {
             FileUtils.cleanOutputDir(classes3Folder);
             return;
         }
         // otherwise, generate the patch file and add it to the list of files to process next.
         ImmutableList<String> generatedClassNames = generatedClasses3Names.build();
         if (!generatedClassNames.isEmpty()) {
-            writePatchFileContents(generatedClassNames, classes3Folder,
-                    transformScope.getBuildContext().getBuildId());
+            writePatchFileContents(
+                    generatedClassNames,
+                    classes3Folder,
+                    transformScope.getInstantRunBuildContext().getBuildId());
         }
     }
 
@@ -426,8 +431,9 @@ public class InstantRunTransform extends Transform {
         // that it was disabled for InstantRun, we don't add it to our collection of generated
         // classes and it will not be part of the Patch class that apply changes.
         if (outputFile == null) {
-            transformScope.getBuildContext().setVerifierStatus(
-                    InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
+            transformScope
+                    .getInstantRunBuildContext()
+                    .setVerifierStatus(InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
             LOGGER.info("Class %s cannot be hot swapped.", inputFile);
             return null;
         }

@@ -20,7 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -54,7 +54,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     private static final Logger LOG = Logging.getLogger(CheckManifestInInstantRunMode.class);
 
-    private BuildContext buildContext;
+    private InstantRunBuildContext buildContext;
     private File instantRunSupportDir;
     private SplitScope splitScope;
     private FileCollection instantRunManifests;
@@ -154,9 +154,11 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
     }
 
     @VisibleForTesting
-    static void runManifestChangeVerifier(BuildContext buildContext,
+    static void runManifestChangeVerifier(
+            InstantRunBuildContext buildContext,
             File instantRunSupportDir,
-            @NonNull File manifestFileToPackage) throws IOException {
+            @NonNull File manifestFileToPackage)
+            throws IOException {
         File previousManifestFile = new File(instantRunSupportDir, "manifest.xml");
 
         if (previousManifestFile.exists()) {
@@ -180,7 +182,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     @VisibleForTesting
     static void runManifestBinaryChangeVerifier(
-            BuildContext buildContext,
+            InstantRunBuildContext buildContext,
             File instantRunSupportDir,
             @NonNull File resOutBaseNameFile)
             throws IOException {
@@ -252,7 +254,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             task.instantRunManifests = instantRunMergedManifests;
             task.processedRes = processedResources;
             task.splitScope = transformVariantScope.getSplitScope();
-            task.buildContext = instantRunVariantScope.getBuildContext();
+            task.buildContext = instantRunVariantScope.getInstantRunBuildContext();
             task.instantRunSupportDir =
                     new File(instantRunVariantScope.getInstantRunSupportDir(), "manifestChecker");
             task.setVariantName(transformVariantScope.getFullVariantName());

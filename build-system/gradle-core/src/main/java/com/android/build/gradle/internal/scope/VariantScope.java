@@ -22,7 +22,7 @@ import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -91,9 +91,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isJackEnabled();
 
-    @Override
     @NonNull
-    BuildContext getBuildContext();
+    InstantRunBuildContext getInstantRunBuildContext();
 
     @NonNull
     ApiVersion getMinSdkVersion();

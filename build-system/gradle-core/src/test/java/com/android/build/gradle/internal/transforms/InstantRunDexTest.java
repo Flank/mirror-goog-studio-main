@@ -32,8 +32,8 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.dsl.DexOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -81,8 +81,7 @@ public class InstantRunDexTest {
     @Mock
     TransformOutputProvider transformOutputProvider;
 
-    @Mock
-    BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Mock
     DexOptions dexOptions;
@@ -117,7 +116,7 @@ public class InstantRunDexTest {
         File oldRestartFile = new File(restartOutputFolder, "restart.dex");
         assertTrue(oldRestartFile.createNewFile());
 
-        when(variantScope.getBuildContext()).thenReturn(buildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(variantScope.getRestartDexOutputFolder()).thenReturn(restartOutputFolder);
         when(variantScope.getReloadDexOutputFolder()).thenReturn(reloadOutputFolder);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);

@@ -68,7 +68,7 @@ public class BuildInfoTasksTest {
 
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
-        BuildContext context = new BuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext();
         context.setApiLevel(23, null);
         runLoaderTask(project, context);
 
@@ -80,7 +80,7 @@ public class BuildInfoTasksTest {
 
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
-        BuildContext context = new BuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext();
         context.setApiLevel(23, null);
 
         runLoaderTask(project, context);
@@ -95,9 +95,7 @@ public class BuildInfoTasksTest {
         assertThat(context.getLastBuild().getArtifactForType(FileType.RESOURCES)).isNotNull();
     }
 
-    private void runLoaderTask(
-            @NonNull Project project,
-            @NonNull BuildContext context) {
+    private void runLoaderTask(@NonNull Project project, @NonNull InstantRunBuildContext context) {
         BuildInfoLoaderTask loader = project.getTasks().create("loader", BuildInfoLoaderTask.class);
         loader.buildInfoFile = buildInfoFile;
         loader.tmpBuildInfoFile = tmpBuildInfoFile;
@@ -107,9 +105,7 @@ public class BuildInfoTasksTest {
         loader.execute();
     }
 
-    private void runWriterTask(
-            @NonNull Project project,
-            @NonNull BuildContext context) {
+    private void runWriterTask(@NonNull Project project, @NonNull InstantRunBuildContext context) {
         BuildInfoWriterTask writer = project.getTasks().create("writer", BuildInfoWriterTask.class);
         writer.buildInfoFile = buildInfoFile;
         writer.tmpBuildInfoFile = tmpBuildInfoFile;

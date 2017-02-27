@@ -26,8 +26,8 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -62,7 +62,7 @@ public class InstantRunSplitApkBuilderTest {
 
     @Mock Logger logger;
     @Mock Project project;
-    @Mock BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
     @Mock PackagingScope packagingScope;

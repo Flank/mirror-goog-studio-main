@@ -23,8 +23,8 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
@@ -60,7 +60,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     private final AndroidBuilder androidBuilder;
     @NonNull private final AaptGeneration aaptGeneration;
-    @NonNull private final BuildContext buildContext;
+    @NonNull private final InstantRunBuildContext buildContext;
     @NonNull
     protected final File outputDirectory;
     @Nullable
@@ -75,7 +75,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
-            @NonNull BuildContext buildContext,
+            @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,

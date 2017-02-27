@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -54,8 +54,8 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -162,7 +162,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File mergeBlameLogFolder;
 
-    private BuildContext buildContext;
+    private InstantRunBuildContext buildContext;
 
     private FileCollection atomResourcePackages;
 
@@ -771,7 +771,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                            : variantScope.getBuildContext().isInInstantRunMode()
+                            : variantScope.getInstantRunBuildContext().isInInstantRunMode()
                                     ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
                                     : VariantScope.TaskOutputType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
@@ -796,8 +796,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setMergeBlameLogFolder(
                     variantScope.getResourceBlameLogDir());
 
-            processResources.buildContext =
-                    variantScope.getBuildContext();
+            processResources.buildContext = variantScope.getInstantRunBuildContext();
 
             processResources.setAtomResourcePackages(
                     variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG));

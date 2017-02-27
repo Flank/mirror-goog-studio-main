@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.externalBuild;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SplitScope;
@@ -47,7 +47,7 @@ import org.gradle.api.Project;
     private final TransformGlobalScope globalScope;
     private final File outputRootFolder;
     private final ExternalBuildContext externalBuildContext;
-    private final BuildContext mBuildContext = new BuildContext();
+    private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext();
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
     private final SplitScope splitScope;
@@ -157,10 +157,9 @@ import org.gradle.api.Project;
         return new File(outputRootFolder, "/incremental-verifier/debug");
     }
 
-    @Override
     @NonNull
-    public BuildContext getBuildContext() {
-        return mBuildContext;
+    public InstantRunBuildContext getInstantRunBuildContext() {
+        return mInstantRunBuildContext;
     }
 
     @Override

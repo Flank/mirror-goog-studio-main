@@ -23,7 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
@@ -72,8 +72,8 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public BuildContext getInstantRunBuildContext() {
-        return mVariantScope.getBuildContext();
+    public InstantRunBuildContext getInstantRunBuildContext() {
+        return mVariantScope.getInstantRunBuildContext();
     }
 
     @NonNull

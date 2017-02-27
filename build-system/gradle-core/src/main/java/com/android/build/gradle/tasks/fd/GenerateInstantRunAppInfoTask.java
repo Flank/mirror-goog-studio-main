@@ -29,7 +29,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
@@ -70,7 +70,7 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     private File outputFile;
     private FileCollection mergedManifests;
-    private BuildContext buildcontext;
+    private InstantRunBuildContext buildcontext;
     private SplitScope splitScope;
 
     @OutputFile
@@ -214,7 +214,7 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         public void execute(@NonNull GenerateInstantRunAppInfoTask task) {
             task.setVariantName(variantScope.getFullVariantName());
             task.splitScope = transformVariantScope.getSplitScope();
-            task.buildcontext = variantScope.getBuildContext();
+            task.buildcontext = variantScope.getInstantRunBuildContext();
             task.outputFile =
                     new File(variantScope.getIncrementalApplicationSupportDir(),
                             PackageAndroidArtifact.INSTANT_RUN_PACKAGES_PREFIX + "-bootstrap.jar");

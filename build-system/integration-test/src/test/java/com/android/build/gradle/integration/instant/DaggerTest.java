@@ -29,7 +29,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -127,9 +127,9 @@ public class DaggerTest {
 
                             @Override
                             public void checkArtifacts(
-                                    @NonNull List<BuildContext.Artifact> artifacts)
+                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
                                     throws Exception {
-                                BuildContext.Artifact artifact =
+                                InstantRunBuildContext.Artifact artifact =
                                         Iterables.getOnlyElement(artifacts);
                                 assertThatApk(new Apk(artifact.getLocation()))
                                         .hasClass(APP_MODULE_DESC)

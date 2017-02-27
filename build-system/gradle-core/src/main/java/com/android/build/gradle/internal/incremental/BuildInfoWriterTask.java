@@ -33,9 +33,10 @@ import org.gradle.api.tasks.TaskAction;
 /**
  * Task to finalize and write the {@code build-info.xml}.
  *
- * If the build has failed, it writes a tmp build info instead, which is loaded in the next build.
+ * <p>If the build has failed, it writes a tmp build info instead, which is loaded in the next
+ * build.
  *
- * See {@link BuildContext}.
+ * <p>See {@link InstantRunBuildContext}.
  */
 public class BuildInfoWriterTask extends BaseTask {
 
@@ -49,7 +50,7 @@ public class BuildInfoWriterTask extends BaseTask {
 
     Logger logger;
 
-    BuildContext buildContext;
+    InstantRunBuildContext buildContext;
 
     @TaskAction
     public void executeAction() {
@@ -124,7 +125,7 @@ public class BuildInfoWriterTask extends BaseTask {
             task.setVariantName(variantScope.getFullVariantName());
             task.buildInfoFile = getBuildInfoFile(variantScope);
             task.tmpBuildInfoFile = getTmpBuildInfoFile(variantScope);
-            task.buildContext = variantScope.getBuildContext();
+            task.buildContext = variantScope.getInstantRunBuildContext();
             task.logger = logger;
         }
     }

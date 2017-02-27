@@ -194,7 +194,7 @@ class ExternalBuildTaskManager {
         AndroidTask<PreColdSwapTask> preColdswapTask = instantRunTaskManager
                 .createPreColdswapTask(project);
 
-        if (variantScope.getBuildContext().getPatchingPolicy()
+        if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
                 != InstantRunPatchingPolicy.PRE_LOLLIPOP) {
             instantRunTaskManager.createSlicerTask();
         }
@@ -234,7 +234,7 @@ class ExternalBuildTaskManager {
                 new InstantRunSliceSplitApkBuilder(
                         logger,
                         project,
-                        variantScope.getBuildContext(),
+                        variantScope.getInstantRunBuildContext(),
                         externalBuildContext.getAndroidBuilder(),
                         packagingScope,
                         packagingScope.getSigningConfig(),
@@ -252,7 +252,7 @@ class ExternalBuildTaskManager {
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
                                 project.getBuildDir(),
-                                variantScope.getBuildContext().getPatchingPolicy(),
+                                variantScope.getInstantRunBuildContext().getPatchingPolicy(),
                                 project.files(processedAndroidResourcesFile),
                                 project.files(androidManifestFile),
                                 VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
@@ -285,7 +285,7 @@ class ExternalBuildTaskManager {
             @NonNull ExternalBuildVariantScope variantScope) {
         AndroidBuilder androidBuilder = externalBuildContext.getAndroidBuilder();
         InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getBuildContext().getPatchingPolicy();
+                variantScope.getInstantRunBuildContext().getPatchingPolicy();
         final DexingMode dexingMode = DexingMode.NATIVE_MULTIDEX;
         //if (patchingPolicy != null && patchingPolicy.useMultiDex()) {
         //    dexingMode = DexingMode.NATIVE_MULTIDEX;
@@ -299,7 +299,7 @@ class ExternalBuildTaskManager {
                         androidBuilder,
                         variantScope.getGlobalScope().getBuildCache(),
                         dexingMode,
-                        variantScope.getBuildContext().isInInstantRunMode());
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
         transformManager.addTransform(tasks, variantScope, preDexTransform);
 
         //if (dexingMode != DexingMode.NATIVE_MULTIDEX) {

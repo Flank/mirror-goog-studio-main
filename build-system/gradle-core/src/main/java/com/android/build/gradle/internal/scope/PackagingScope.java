@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
@@ -53,7 +53,7 @@ public interface PackagingScope extends TaskOutputHolder {
     ApiVersion getMinSdkVersion();
 
     @NonNull
-    BuildContext getInstantRunBuildContext();
+    InstantRunBuildContext getInstantRunBuildContext();
 
     /**
      * Directory with instant run support files.

@@ -27,7 +27,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.google.common.collect.ImmutableList;
@@ -47,8 +47,7 @@ public class NoChangesVerifierTransformTest {
 
     @Mock
     TransformInvocation input;
-    @Mock
-    BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Test
     public void testNonIncTransformInvocation()

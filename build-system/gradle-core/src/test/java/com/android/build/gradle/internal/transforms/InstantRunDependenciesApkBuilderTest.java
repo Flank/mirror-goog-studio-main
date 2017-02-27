@@ -36,7 +36,7 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
@@ -74,7 +74,7 @@ public class InstantRunDependenciesApkBuilderTest {
 
     @Mock Logger logger;
     @Mock Project project;
-    @Mock BuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
     @Mock AaptOptions aaptOptions;

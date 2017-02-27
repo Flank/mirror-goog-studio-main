@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.factory;
 
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import org.gradle.api.JavaVersion;
@@ -30,7 +30,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String compileSdkVersion;
 
-    BuildContext mBuildContext;
+    InstantRunBuildContext mInstantRunBuildContext;
 
     @Override
     protected void compile(IncrementalTaskInputs inputs) {
@@ -45,9 +45,9 @@ public class AndroidJavaCompile extends JavaCompile {
             }
         }
 
-        mBuildContext.startRecording(BuildContext.TaskType.JAVAC);
+        mInstantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
         super.compile(inputs);
-        mBuildContext.stopRecording(BuildContext.TaskType.JAVAC);
+        mInstantRunBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);
     }
 
     private boolean isPostN() {

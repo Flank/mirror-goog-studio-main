@@ -29,7 +29,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.incremental.BuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier;
 import com.android.build.gradle.internal.incremental.InstantRunVerifier.ClassBytesJarEntryProvider;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -114,12 +114,14 @@ public class InstantRunVerifierTransform extends Transform {
             throw new RuntimeException("Empty list of referenced inputs");
         }
         try {
-            variantScope.getBuildContext().startRecording(
-                    BuildContext.TaskType.VERIFIER);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .startRecording(InstantRunBuildContext.TaskType.VERIFIER);
             doTransform(invocation.getReferencedInputs(), invocation.isIncremental());
         } finally {
-            variantScope.getBuildContext().stopRecording(
-                    BuildContext.TaskType.VERIFIER);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .stopRecording(InstantRunBuildContext.TaskType.VERIFIER);
         }
     }
 
@@ -142,9 +144,9 @@ public class InstantRunVerifierTransform extends Transform {
         // verifier result, however the transform needed to run to backup the .class files.
         // But we do record the result as a build-eligibility status, for the IDE.
         if (variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY)) {
-            variantScope.getBuildContext().setInstantRunEligibilityStatus(resultSoFar);
+            variantScope.getInstantRunBuildContext().setInstantRunEligibilityStatus(resultSoFar);
         } else {
-            variantScope.getBuildContext().setVerifierStatus(resultSoFar);
+            variantScope.getInstantRunBuildContext().setVerifierStatus(resultSoFar);
         }
     }
 

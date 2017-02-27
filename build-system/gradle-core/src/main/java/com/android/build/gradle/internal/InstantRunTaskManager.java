@@ -20,9 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.incremental.BuildContext;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -128,7 +128,7 @@ public class InstantRunTaskManager {
         NoChangesVerifierTransform javaResourcesVerifierTransform =
                 new NoChangesVerifierTransform(
                         "javaResourcesVerifier",
-                        variantScope.getBuildContext(),
+                        variantScope.getInstantRunBuildContext(),
                         ImmutableSet.of(
                                 QualifiedContent.DefaultContentType.RESOURCES,
                                 ExtendedContentType.NATIVE_LIBS),
@@ -171,7 +171,7 @@ public class InstantRunTaskManager {
             NoChangesVerifierTransform dependenciesVerifierTransform =
                     new NoChangesVerifierTransform(
                             "dependencyChecker",
-                            variantScope.getBuildContext(),
+                            variantScope.getInstantRunBuildContext(),
                             ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
                             Sets.immutableEnumSet(
                                     QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
@@ -247,7 +247,7 @@ public class InstantRunTaskManager {
             @NonNull Project project) {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
-        BuildContext context = variantScope.getBuildContext();
+        InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
 
         context.setApiLevel(
                 AndroidGradleOptions.getTargetFeatureLevel(project),
@@ -319,16 +319,21 @@ public class InstantRunTaskManager {
 
         // Register a task execution listener to allow the writer task to write the temp build info
         // on build failure, which will get merged into the next build.
-        variantScope.getGlobalScope().getProject().getGradle().getTaskGraph()
-                .addTaskExecutionListener(new TaskExecutionAdapter() {
-                    @Override
-                    public void afterExecute(Task task, TaskState state) {
-                        //noinspection ThrowableResultOfMethodCallIgnored
-                        if (state.getFailure() != null) {
-                            variantScope.getBuildContext().setBuildHasFailed();
-                        }
-                    }
-                });
+        variantScope
+                .getGlobalScope()
+                .getProject()
+                .getGradle()
+                .getTaskGraph()
+                .addTaskExecutionListener(
+                        new TaskExecutionAdapter() {
+                            @Override
+                            public void afterExecute(Task task, TaskState state) {
+                                //noinspection ThrowableResultOfMethodCallIgnored
+                                if (state.getFailure() != null) {
+                                    variantScope.getInstantRunBuildContext().setBuildHasFailed();
+                                }
+                            }
+                        });
     }
 
 }
