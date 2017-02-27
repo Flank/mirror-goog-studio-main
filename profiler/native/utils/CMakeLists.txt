@@ -47,6 +47,7 @@ add_unit_test(profiler_utils_test
               activity_manager_test.cc
               background_queue_test.cc
               channel_test.cc
+              circular_buffer_test.cc
               clock_test.cc
               count_down_latch_test.cc
               current_process_test.cc

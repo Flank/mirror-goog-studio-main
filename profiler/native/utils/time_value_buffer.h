@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TIME_VALUE_BUFFER_H_
-#define TIME_VALUE_BUFFER_H_
+#ifndef UTILS_TIME_VALUE_BUFFER_H_
+#define UTILS_TIME_VALUE_BUFFER_H_
 
-#include <time.h>
-#include <cstdint>
-#include <memory>
+#include <algorithm>
 #include <mutex>
 #include <vector>
+
+#include "utils/circular_buffer.h"
 
 namespace profiler {
 
@@ -35,91 +35,70 @@ struct TimeValue {
 // Data holder class of time sequential collected information. For example,
 // traffic bytes sent and received information are repeated collected. It stores
 // data and provides query functionality.
-// TODO: Refactor name to ProfilerBuffer for profiler sampling data.
 template <typename T>
 class TimeValueBuffer {
  public:
   explicit TimeValueBuffer(size_t capacity, int pid = -1)
-      : capacity_(capacity),
-        pid_(pid),
-        values_(new TimeValue<T>[ capacity_ ]) {}
+      : pid_(pid), values_(capacity) {}
 
   // Add sample value collected at a given time point.
-  // TODO: We are moving to int64_t from timespec, this method is not needed.
-  void Add(T value, const timespec &sample_time) {
-    Add(value, 1e9 * sample_time.tv_sec + sample_time.tv_nsec);
-  }
-
   void Add(T value, const int64_t sample_time) {
     std::lock_guard<std::mutex> lock(values_mutex_);
-    size_t index = size_ < capacity_ ? size_ : start_;
-    values_[index].time = sample_time;
-    values_[index].value = value;
-    if (size_ < capacity_) {
-      size_++;
-    } else {
-      start_ = (start_ + 1) % capacity_;
-    }
+    TimeValue<T> time_value{sample_time, value};
+    values_.Add(time_value);
   }
 
-  // Returns data within the given range [time_from, time_to).
-  // TODO: We are moving to int64_t from timespec, this method is not needed.
-  std::vector<TimeValue<T>> Get(const timespec &time_from,
-                                const timespec &time_to) {
-    int64_t from = 1e9 * time_from.tv_sec + time_from.tv_nsec;
-    int64_t to = 1e9 * time_to.tv_sec + time_to.tv_nsec;
-    std::lock_guard<std::mutex> lock(values_mutex_);
-    std::vector<TimeValue<T>> result;
-    for (size_t i = 0; i < size_; i++) {
-      size_t index = (start_ + i) % capacity_;
-      if (values_[index].time >= from && values_[index].time < to) {
-        result.push_back(values_[index]);
-      }
-    }
+  // Returns data only (without timestamps) for the given range
+  // [time_from, time_to).
+  std::vector<T> GetValues(const int64_t time_from,
+                           const int64_t time_to) const {
+    std::vector<TimeValue<T>> items = GetItems(time_from, time_to);
+    std::vector<T> result(items.size());
+    std::transform(items.begin(), items.end(), result.begin(),
+                   [](const TimeValue<T>& t) { return t.value; });
+
     return result;
   }
 
-  // Returns data within the given range [time_from, time_to).
-  std::vector<T> GetValues(const int64_t time_from, const int64_t time_to) {
+  // Returns time values within the given range [time_from, time_to).
+  std::vector<TimeValue<T>> GetItems(const int64_t time_from,
+                                     const int64_t time_to) const {
     std::lock_guard<std::mutex> lock(values_mutex_);
-    std::vector<T> result;
-    for (size_t i = 0; i < size_; i++) {
-      size_t index = (start_ + i) % capacity_;
-      if (values_[index].time >= time_from && values_[index].time < time_to) {
-        result.push_back(values_[index].value);
+    std::vector<TimeValue<T>> result;
+    for (size_t i = 0; i < values_.size(); i++) {
+      const auto& value = values_.Get(i);
+      if (value.time >= time_from && value.time < time_to) {
+        result.push_back(value);
       }
     }
     return result;
   }
 
   // Returns the number of samples stored.
-  size_t GetSize() {
+  size_t GetSize() const {
     std::lock_guard<std::mutex> lock(values_mutex_);
-    return size_;
+    return values_.size();
   }
 
   // Returns collected sample data at given index.
-  TimeValue<T> Get(size_t index) {
+  TimeValue<T> GetItem(size_t index) const {
     std::lock_guard<std::mutex> lock(values_mutex_);
-    TimeValue<T> result = values_[(start_ + index) % capacity_];
-    return result;
+    return values_.Get(index);
   }
 
   // Returns app id that the profiler data buffer is for.
-  int pid() { return pid_; }
+  int pid() const { return pid_; }
+
+  // Returns the maximum number of samples it can hold.
+  size_t capacity() const { return values_.capacity(); }
 
  private:
-  // Indicates the maximum number of samples it can hold.
-  const size_t capacity_;
   const int pid_;
 
-  // TODO: Temporarily uses dynamic array. It should change to circular buffer.
-  std::unique_ptr<TimeValue<T>[]> values_;
-  std::mutex values_mutex_;
-  size_t size_ = 0;
-  size_t start_ = 0;
+  mutable std::mutex values_mutex_;
+  CircularBuffer<TimeValue<T>> values_;
 };
 
 }  // namespace profiler
 
-#endif  // TIME_VALUE_BUFFER_H_
+#endif  // UTILS_TIME_VALUE_BUFFER_H_
