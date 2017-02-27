@@ -17,6 +17,8 @@
 #pragma once
 
 #include "common.h"
+#include "arrayview.h"
+#include "memview.h"
 #include "dex_leb128.h"
 
 #include <assert.h>
@@ -47,7 +49,7 @@ class Buffer {
     std::swap(capacity_, b.capacity_);
   }
 
-  Buffer& operator=(Buffer& b) {
+  Buffer& operator=(Buffer&& b) {
     Free();
     std::swap(buff_, b.buff_);
     std::swap(size_, b.size_);

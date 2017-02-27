@@ -5,4 +5,5 @@ add_library(slicer
             dex_format.cc
             dex_ir.cc
             dex_utf8.cc
-            reader.cc)
+            reader.cc
+            writer.cc)
