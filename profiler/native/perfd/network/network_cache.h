@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "perfd/network/connection_details.h"
+#include "utils/circular_buffer.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
@@ -31,12 +32,12 @@ namespace profiler {
 // Note: This class is thread safe
 // TODO: This class needs tests
 class NetworkCache final {
-
  public:
+  NetworkCache();
+
   // Register a new connection, returning a |ConnectionDetails| instance in case
   // there is additional information you can initialize.
-  ConnectionDetails* AddConnection(int64_t conn_id,
-                                   int32_t app_id,
+  ConnectionDetails* AddConnection(int64_t conn_id, int32_t app_id,
                                    int64_t start_timestamp);
 
   // Return details for the request with a matching |conn_id|, or nullptr if no
@@ -58,9 +59,9 @@ class NetworkCache final {
   // versions can delegate to it.
   ConnectionDetails* DoGetDetails(int64_t conn_id) const;
 
-  mutable std::mutex
-      connections_mutex_;  // Guards connections_ and conn_id_map_
-  std::list<ConnectionDetails> connections_;
+  // Mutex guards connections_ and conn_id_map_
+  mutable std::mutex connections_mutex_;
+  CircularBuffer<ConnectionDetails> connections_;
   // A mapping of connection IDs to connection details
   std::unordered_map<int64_t, ConnectionDetails*> conn_id_map_;
 };

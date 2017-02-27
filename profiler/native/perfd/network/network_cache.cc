@@ -15,26 +15,31 @@
  */
 #include "network_cache.h"
 
-namespace profiler {
-
 using std::lock_guard;
 using std::mutex;
-using std::string;
 using std::vector;
 
-ConnectionDetails* NetworkCache::AddConnection(int64_t conn_id,
-                                               int32_t app_id,
+namespace profiler {
+
+NetworkCache::NetworkCache() : connections_(1000) {}
+
+ConnectionDetails* NetworkCache::AddConnection(int64_t conn_id, int32_t app_id,
                                                int64_t start_timestamp) {
+  if (connections_.full()) {
+    // An old connection is about to get overwritten, so remove it from our map
+    const auto& conn = connections_.Get(0);
+    conn_id_map_.erase(conn.id);
+  }
+
   ConnectionDetails new_conn;
   new_conn.id = conn_id;
   new_conn.app_id = app_id;
   new_conn.start_timestamp = start_timestamp;
 
   lock_guard<mutex> lock(connections_mutex_);
-  connections_.push_back(new_conn);
-  // The above line copies new_conn; instead of returning "new_conn" below, make
-  // sure we pass the address of the *copy* instead.
-  ConnectionDetails* conn_ptr = &connections_.back();
+  // |Add| copies new_conn; instead of tracking the (temporary) original, make
+  // sure we use the address of the *copy* instead.
+  ConnectionDetails* conn_ptr = connections_.Add(new_conn);
   conn_id_map_[conn_id] = conn_ptr;
   return conn_ptr;
 }
@@ -51,7 +56,8 @@ vector<ConnectionDetails> NetworkCache::GetRange(int32_t app_id, int64_t start,
                                                  int64_t end) const {
   lock_guard<mutex> lock(connections_mutex_);
   vector<ConnectionDetails> data_range;
-  for (const auto& conn : connections_) {
+  for (size_t i = 0; i < connections_.size(); ++i) {
+    const auto& conn = connections_.Get(i);
     if (conn.app_id != app_id) continue;
 
     // Given a range t0 and t1 and requests a-f...
