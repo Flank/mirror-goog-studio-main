@@ -45,9 +45,10 @@ ext.versionCodes = ['armeabi-v7a':1, mips:2, x86:3]
 
 android.applicationVariants.all { variant ->
     // assign different version code for each output
-    variant.registerSplitCustomizer { split ->
+    variant.outputs.all { output ->
         // set the versionCode on the output.
-        split.versionCode = project.ext.versionCodes.get(
-                split.getFilter(com.android.build.OutputFile.ABI)) * 1000000 + android.defaultConfig.versionCode
+        println("Customizing " + output)
+        output.versionCodeOverride = project.ext.versionCodes.get(
+                output.getFilter(com.android.build.OutputFile.ABI)) * 1000000 + android.defaultConfig.versionCode
     }
 }

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
@@ -67,7 +68,7 @@ public abstract class BaseVariantOutputData implements VariantOutput {
                 new ApkOutputFile(
                         outputType,
                         filters,
-                        this::getOutputFile,
+                        this::getFile,
                         mainApkData != null ? mainApkData.getVersionCode() : -1);
 
         scope = new VariantOutputScope(variantData.getScope(), this);
@@ -79,6 +80,11 @@ public abstract class BaseVariantOutputData implements VariantOutput {
         return mainApkOutputFile.getFilters();
     }
 
+    @Nullable
+    public String getFilter(String filterType) {
+        return ApkData.getFilter(mainApkOutputFile.getFilters(), FilterType.valueOf(filterType));
+    }
+
     @NonNull
     @Override
     public Collection<String> getFilterTypes() {
@@ -87,6 +93,10 @@ public abstract class BaseVariantOutputData implements VariantOutput {
                 .stream()
                 .map(FilterData::getFilterType)
                 .collect(Collectors.toList());
+    }
+
+    private File getFile() {
+        return mainApkOutputFile.getOutputFile();
     }
 
     @NonNull
@@ -100,10 +110,6 @@ public abstract class BaseVariantOutputData implements VariantOutput {
     public ApkOutputFile getMainOutputFile() {
         return mainApkOutputFile;
     }
-
-
-    @NonNull
-    public abstract File getOutputFile();
 
     @NonNull
     @Override

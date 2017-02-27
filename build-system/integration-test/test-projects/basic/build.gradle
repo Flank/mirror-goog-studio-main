@@ -1,4 +1,3 @@
-import com.android.build.gradle.api.CustomizableSplit
 
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
@@ -118,15 +117,11 @@ android {
     applicationVariants.all { variant ->
         print variant
         if (variant.buildType.name == "release") {
-            variant.registerSplitCustomizer(new Action<CustomizableSplit>() {
-
-                @Override
-                void execute(CustomizableSplit split) {
-                    print("Customizing " + split)
-                    split.setVersionCode(13)
-                    print("Done with " + split)
-                }
-            })
+            variant.outputs.all {
+                print("Customizing " + this)
+                setVersionCodeOverride(13)
+                print("Done with " + this)
+            }
         }
     }
 }

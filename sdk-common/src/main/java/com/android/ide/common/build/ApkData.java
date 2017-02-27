@@ -46,6 +46,9 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 
+
+    public ApkData() {}
+
     @NonNull
     @Override
     public Collection<FilterData> getFilters() {
@@ -63,6 +66,11 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     @Nullable
     public String getFilter(FilterType filterType) {
         return ApkData.getFilter(getFilters(), filterType);
+    }
+
+    @Nullable
+    public String getFilter(String filterType) {
+        return ApkData.getFilter(getFilters(), FilterType.valueOf(filterType));
     }
 
     public boolean requiresAapt() {

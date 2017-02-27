@@ -2,6 +2,7 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggingUtil;
@@ -38,6 +39,7 @@ public class LibraryExtension extends TestedExtension {
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
@@ -47,6 +49,7 @@ public class LibraryExtension extends TestedExtension {
                 buildTypes,
                 productFlavors,
                 signingConfigs,
+                buildOutputs,
                 extraModelInfo,
                 true);
     }

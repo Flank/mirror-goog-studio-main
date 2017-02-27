@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
@@ -90,6 +91,11 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
     @Override
     public Collection<String> getFilterTypes() {
         return buildOutput.getFilterTypes();
+    }
+
+    @Nullable
+    public String getFilter(String filterType) {
+        return buildOutput.getFilter(filterType);
     }
 
     @NonNull

@@ -49,17 +49,15 @@ public class AppPluginDslTest
         assertNotNull(variant.getAssemble());
         assertNotNull(variant.getUninstall());
 
-        Assert.assertTrue(variant.getOutputs().isEmpty());
+        for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
+            Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
+            ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
-        // FIX ME !
-        //for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
-        //    Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
-        //    ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-        //
-        //    assertNotNull(apkVariantOutput.getProcessManifest());
-        //    assertNotNull(apkVariantOutput.getProcessResources());
-        //    assertNotNull(apkVariantOutput.getPackageApplication());
-        //}
+            // FIX ME !
+            //assertNotNull(apkVariantOutput.getProcessManifest());
+            //assertNotNull(apkVariantOutput.getProcessResources());
+            //assertNotNull(apkVariantOutput.getPackageApplication());
+        }
 
         if (variant.isSigningReady()) {
             assertNotNull(variant.getInstall());

@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.DependencyManager;
@@ -40,6 +41,8 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -47,6 +50,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
+import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -178,6 +182,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo);
 
     @NonNull
@@ -404,6 +409,11 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(SigningConfig.class, new SigningConfigFactory(instantiator));
 
+        final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
+                project.container(BaseVariantOutput.class);
+
+        project.getExtensions().add("buildOutputs", buildOutputs);
+
         extension =
                 createExtension(
                         project,
@@ -413,6 +423,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
+                        buildOutputs,
                         extraModelInfo);
 
         ndkHandler = new NdkHandler(
@@ -598,11 +609,29 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                             new ApiObjectFactory(
                                     androidBuilder, extension, variantFactory, instantiator);
                     for (BaseVariantData variantData : variantManager.getVariantDataList()) {
-                        apiObjectFactory.create(variantData);
+                        BaseVariantImpl variantPublicApi = apiObjectFactory.create(variantData);
+                        variantData.variantOutputFactory =
+                                new VariantOutputFactory(
+                                        ApkVariantOutputImpl.class,
+                                        instantiator,
+                                        extension,
+                                        variantPublicApi,
+                                        variantData);
                         variantData
                                 .getSplitScope()
                                 .getApkDatas()
-                                .forEach(variantData::customizeSplit);
+                                .forEach(
+                                        apkData -> {
+                                            apkData.setVersionCode(
+                                                    variantData
+                                                            .getVariantConfiguration()
+                                                            .getVersionCode());
+                                            apkData.setVersionName(
+                                                    variantData
+                                                            .getVariantConfiguration()
+                                                            .getVersionName());
+                                            variantData.variantOutputFactory.create(apkData);
+                                        });
                     }
                 });
 

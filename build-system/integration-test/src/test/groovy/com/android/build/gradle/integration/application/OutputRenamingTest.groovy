@@ -52,8 +52,8 @@ applicationVariants.all { variant ->
     // Custom APK names (do not do this for 'dev' build type)
     println variant.buildType.name
     def baseFileName = "project-\${variant.flavorName}-\${variant.versionCode}-\${variant.buildType.name}"
-    variant.registerSplitCustomizer { split ->
-      split.outputFileName = "\${baseFileName}-signed.apk"
+    variant.outputs.all { output ->
+      output.outputFileName = "\${baseFileName}-signed.apk"
     }
   }
         }"""

@@ -53,7 +53,7 @@ public interface VariantOutput {
     }
 
     /**
-     * String representations of the FilterType enum which can be used for remote-able interfaces.
+     * String representations of the FilterType enum which can be used for remote-able interfaces.Ap
      */
     String DENSITY = FilterType.DENSITY.name();
 
@@ -94,8 +94,8 @@ public interface VariantOutput {
     /**
      * Returns the version code for this output.
      *
-     * This is convenient method that returns the final version code whether it's coming
-     * from the override set in the output or from the variant's merged flavor.
+     * <p>This is convenient method that returns the final version code whether it's coming from the
+     * override set in the output or from the variant's merged flavor.
      *
      * @return the version code.
      */

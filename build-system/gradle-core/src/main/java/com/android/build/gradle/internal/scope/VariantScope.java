@@ -92,6 +92,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isJackEnabled();
 
+    @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
 

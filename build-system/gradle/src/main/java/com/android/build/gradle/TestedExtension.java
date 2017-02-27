@@ -4,6 +4,7 @@ import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -39,6 +40,7 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isDependency) {
         super(
@@ -49,6 +51,7 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
                 buildTypes,
                 productFlavors,
                 signingConfigs,
+                buildOutputs,
                 extraModelInfo,
                 isDependency);
 

@@ -31,7 +31,6 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
@@ -85,10 +84,11 @@ public interface BaseVariant {
 
     /**
      * Returns the variant outputs. There should always be at least one output.
+     *
      * @return a non-null list of variants.
      */
     @NonNull
-    List<BaseVariantOutput> getOutputs();
+    Collection<BaseVariantOutput> getOutputs();
 
     /**
      * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
@@ -344,5 +344,4 @@ public interface BaseVariant {
      */
     boolean getOutputsAreSigned();
 
-    void registerSplitCustomizer(Action<CustomizableSplit> customizer);
 }

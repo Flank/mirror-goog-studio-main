@@ -22,14 +22,12 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.ApkVariantImpl;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -144,21 +142,8 @@ public class ApplicationVariantFactory implements VariantFactory {
     }
 
     @Override
-    @NonNull
-    public ApplicationVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        // create the base variant object.
-        ApplicationVariantImpl variant = instantiator.newInstance(
-                ApplicationVariantImpl.class,
-                variantData,
-                androidBuilder,
-                readOnlyObjectProvider);
-
-        // now create the output objects
-        createApkOutputApiObjects(instantiator, variantData, variant);
-
-        return variant;
+    public Class<ApplicationVariantImpl> getVariantImplementationClass() {
+        return ApplicationVariantImpl.class;
     }
 
     public static void createApkOutputApiObjects(

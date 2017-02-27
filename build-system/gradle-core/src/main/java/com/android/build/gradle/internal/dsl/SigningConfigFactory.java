@@ -37,7 +37,6 @@ public class SigningConfigFactory implements NamedDomainObjectFactory<SigningCon
         this.instantiator = instantiator;
     }
 
-    @Override
     @NonNull
     public SigningConfig create(@NonNull String name) {
         SigningConfig signingConfig = instantiator.newInstance(SigningConfig.class, name);

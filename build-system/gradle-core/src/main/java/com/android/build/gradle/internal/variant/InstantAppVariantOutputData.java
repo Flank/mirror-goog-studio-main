@@ -36,15 +36,6 @@ public class InstantAppVariantOutputData extends BaseVariantOutputData {
 
     @NonNull
     @Override
-    public File getOutputFile() {
-        InstantAppVariantData instantAppVariantData = (InstantAppVariantData) variantData;
-        return instantAppVariantData.bundleInstantAppTask == null
-                ? getScope().getVariantScope().getInstantAppPackage()
-                : instantAppVariantData.bundleInstantAppTask.getBundleFile();
-    }
-
-    @NonNull
-    @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
         ImmutableList.Builder<ApkOutputFile> outputs = ImmutableList.builder();
         // InstantApp only outputs one bundle.

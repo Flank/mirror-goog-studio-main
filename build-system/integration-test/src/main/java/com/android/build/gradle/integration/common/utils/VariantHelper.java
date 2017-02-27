@@ -53,7 +53,7 @@ public class VariantHelper {
         assertEquals(1, outputs.size());
         AndroidArtifactOutput output = outputs.iterator().next();
 
-        assertEquals(variantName + " output", apk, output.getMainOutputFile().getOutputFile());
+        assertEquals(variantName + " output", apk, output.getOutputFile());
         File manifest = output.getGeneratedManifest();
         assertNotNull(manifest);
     }

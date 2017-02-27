@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.CustomizableSplit;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -33,11 +32,10 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
@@ -47,10 +45,10 @@ import org.gradle.api.tasks.compile.JavaCompile;
 /**
  * Base class for variants.
  *
- * This is a wrapper around the internal data model, in order to control what is accessible
+ * <p>This is a wrapper around the internal data model, in order to control what is accessible
  * through the external API.
  */
-abstract class BaseVariantImpl implements BaseVariant {
+public abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     protected AndroidBuilder androidBuilder;
@@ -58,13 +56,15 @@ abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     protected ReadOnlyObjectProvider readOnlyObjectProvider;
 
-    protected List<BaseVariantOutput> outputs = Lists.newArrayListWithExpectedSize(1);
+    @NonNull protected NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.androidBuilder = androidBuilder;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
+        this.outputs = outputs;
     }
 
     @NonNull
@@ -106,7 +106,7 @@ abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     @Override
-    public List<BaseVariantOutput> getOutputs() {
+    public Collection<BaseVariantOutput> getOutputs() {
         return outputs;
     }
 
@@ -303,10 +303,5 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public boolean getOutputsAreSigned() {
         return getVariantData().outputsAreSigned;
-    }
-
-    @Override
-    public void registerSplitCustomizer(Action<CustomizableSplit> customizer) {
-        getVariantData().registerSplitCustomizer(customizer);
     }
 }

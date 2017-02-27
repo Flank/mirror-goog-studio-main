@@ -22,6 +22,7 @@ import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
@@ -46,7 +47,9 @@ import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -244,6 +247,13 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     @Override
     public DataBindingOptions getDataBinding() {
         return new DataBindingOptionsAdapter(model.getDataBinding());
+    }
+
+    @Override
+    public Collection<BaseVariantOutput> getBuildOutputs() {
+        ArrayList<BaseVariantOutput> buildOutputs = new ArrayList<>();
+        Iterators.addAll(buildOutputs, model.getBuildOutputs().iterator());
+        return buildOutputs;
     }
 
     @NonNull

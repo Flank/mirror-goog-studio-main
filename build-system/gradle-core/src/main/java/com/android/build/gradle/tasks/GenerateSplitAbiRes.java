@@ -127,9 +127,13 @@ public class GenerateSplitAbiRes extends BaseTask {
         for (String split : getSplits()) {
             ApkData abiApkData =
                     splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
+            abiApkData.setVersionCode(variantScope.getVariantConfiguration().getVersionCode());
+            abiApkData.setVersionName(variantScope.getVariantConfiguration().getVersionName());
 
             // call user's script for the newly discovered ABI pure split.
-            variantScope.getVariantData().customizeSplit(abiApkData);
+            if (variantScope.getVariantData().variantOutputFactory != null) {
+                variantScope.getVariantData().variantOutputFactory.create(abiApkData);
+            }
 
             File resPackageFile = getOutputFileForSplit(split);
 

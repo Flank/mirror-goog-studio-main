@@ -35,8 +35,6 @@ public class AtomPluginDslTest
         assertNotNull(variant.getProcessJavaResources());
         assertNotNull(variant.getAssemble());
 
-        assertTrue(variant.getOutputs().isEmpty());
-
         // FIX ME !
         //for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
         //    assertTrue(baseVariantOutput instanceof AtomVariantOutputImpl);

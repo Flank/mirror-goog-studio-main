@@ -19,12 +19,9 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.InstallableVariantData;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.builder.core.AndroidBuilder;
-import java.io.File;
-import java.util.Collection;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * Implementation of the apk-generating variant.
@@ -34,18 +31,11 @@ import org.gradle.api.file.FileCollection;
  */
 public abstract class ApkVariantImpl extends InstallableVariantImpl implements ApkVariant {
 
-    protected ApkVariantImpl(@NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
-        super(androidBuilder, immutableObjectProvider);
-    }
-
-    @NonNull
-    protected abstract ApkVariantData getApkVariantData();
-
-    @NonNull
-    @Override
-    protected InstallableVariantData getInstallableVariantData() {
-        return getApkVariantData();
+    protected ApkVariantImpl(
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull ReadOnlyObjectProvider immutableObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, immutableObjectProvider, outputs);
     }
 
     @Nullable

@@ -95,11 +95,11 @@ android {
 
         // assign a composite version code for each output, based on the flavor above
         // and the density component.
-        variant.registerSplitCustomizer { split ->
+        variant.outputs.all { output ->
             // get the key for the abi component
-            def key = split.getFilter(OutputFile.ABI) == null ? "all" : split.getFilter(OutputFile.ABI)
+            def key = output.getFilter(OutputFile.ABI) == null ? "all" : output.getFilter(OutputFile.ABI)
             // set the versionCode on the output.
-            split.versionCode = apiVersion * 1000000 + project.ext.versionCodes.get(key) * 100000 + defaultConfig.versionCode
+            output.versionCodeOverride = apiVersion * 1000000 + project.ext.versionCodes.get(key) * 100000 + defaultConfig.versionCode
         }
     }
 }
