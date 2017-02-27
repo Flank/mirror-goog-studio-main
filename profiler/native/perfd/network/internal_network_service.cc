@@ -61,7 +61,9 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 
     case proto::HttpEventRequest::DOWNLOAD_STARTED: {
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
-      details->downloading_timestamp = httpEvent->timestamp();
+      if (details != nullptr) {
+        details->downloading_timestamp = httpEvent->timestamp();
+      }
     }
 
     break;
@@ -75,8 +77,10 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       auto payload_file = file_cache_.Complete(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
-      details->response.payload_id = payload_file->name();
-      details->end_timestamp = httpEvent->timestamp();
+      if (details != nullptr) {
+        details->response.payload_id = payload_file->name();
+        details->end_timestamp = httpEvent->timestamp();
+      }
     }
 
     break;
@@ -88,7 +92,9 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       file_cache_.Abort(filename.str());
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
-      details->end_timestamp = httpEvent->timestamp();
+      if (details != nullptr) {
+        details->end_timestamp = httpEvent->timestamp();
+      }
       // TODO: Somehow mark the connection as aborted?
     } break;
 

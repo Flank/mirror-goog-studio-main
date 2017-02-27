@@ -28,7 +28,8 @@ class CircularBuffer {
   explicit CircularBuffer(size_t capacity)
       : capacity_(capacity), values_(new T[capacity_]) {}
 
-  void Add(T value) {
+  // Add a copy of |value| and return a pointer to our copy.
+  T* Add(T value) {
     size_t index = size_ < capacity_ ? size_ : start_;
     values_[index] = value;
     if (size_ < capacity_) {
@@ -36,6 +37,7 @@ class CircularBuffer {
     } else {
       start_ = (start_ + 1) % capacity_;
     }
+    return &values_[index];
   }
 
   // Get the item at the specified |index|. This method will return an undefined
