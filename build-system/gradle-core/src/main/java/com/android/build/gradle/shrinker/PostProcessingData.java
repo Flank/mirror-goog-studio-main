@@ -62,11 +62,11 @@ class PostProcessingData<T> {
         @NonNull final DependencyType dependencyType;
 
         public UnresolvedReference(
-                @NonNull T method,
+                @NonNull T referencingMethod,
                 @NonNull T target,
                 boolean invokespecial,
                 @NonNull DependencyType dependencyType) {
-            this.method = method;
+            this.method = referencingMethod;
             this.target = target;
             this.dependencyType = dependencyType;
             this.invokespecial = invokespecial;

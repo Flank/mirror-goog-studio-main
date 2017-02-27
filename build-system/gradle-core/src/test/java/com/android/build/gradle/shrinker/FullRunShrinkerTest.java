@@ -1609,6 +1609,33 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 .inOrder();
     }
 
+    @Test
+    public void lambdas_staticMethod() throws Exception {
+        Files.write(TestClasses.Lambdas.samType(), new File(mTestPackageDir, "SamType.class"));
+        Files.write(TestClasses.Lambdas.lambdas(), new File(mTestPackageDir, "Lambdas.class"));
+
+        fullRun("Lambdas", "makeSamObjectStatic:()V");
+
+        assertMembersLeft(
+                "Lambdas",
+                "<init>:()V",
+                "makeSamObjectStatic:()V",
+                "lambda$makeSamObjectStatic$1:(I)V");
+        assertMembersLeft("SamType");
+    }
+
+    @Test
+    public void lambdas_instanceMethod() throws Exception {
+        Files.write(TestClasses.Lambdas.samType(), new File(mTestPackageDir, "SamType.class"));
+        Files.write(TestClasses.Lambdas.lambdas(), new File(mTestPackageDir, "Lambdas.class"));
+
+        fullRun("Lambdas", "makeSamObject:()V");
+
+        assertMembersLeft(
+                "Lambdas", "<init>:()V", "makeSamObject:()V", "lambda$makeSamObject$0:(I)V");
+        assertMembersLeft("SamType");
+    }
+
     protected static void checkBytecodeVersion(File classFile, int version) throws IOException {
         try (DataInputStream input = new DataInputStream(new FileInputStream(classFile))) {
             assertThat(input.readInt()).named("magic bytes").isEqualTo(0xcafebabe);

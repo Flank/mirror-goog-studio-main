@@ -104,12 +104,6 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             handleVirtualMethod(method);
         }
 
-        Type methodType = Type.getMethodType(desc);
-        handleDeclarationType(method, methodType.getReturnType());
-        for (Type argType : methodType.getArgumentTypes()) {
-            handleDeclarationType(method, argType);
-        }
-
         // Keep class initializers, but also keep all default constructors. This is the ProGuard
         // behavior,
         if (name.equals(ByteCodeUtils.CLASS_INITIALIZER)
@@ -127,7 +121,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         }
 
         return new DependencyFinderMethodVisitor(
-                method, super.visitMethod(access, name, desc, signature, exceptions));
+                method, desc, super.visitMethod(access, name, desc, signature, exceptions));
     }
 
     @Override
@@ -171,8 +165,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
     }
 
     private void handleDeclarationType(T member, Type type) {
-        String className = getClassName(type);
-        if (className != null && !isSdkPackage(className)) {
+        String className = getTargetClassName(type);
+        if (className != null) {
             T classReference = mGraph.getClassReference(className);
             handleDependency(member, classReference, DependencyType.REQUIRED_CLASS_STRUCTURE);
         }
@@ -184,16 +178,18 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         reader.accept(visitor);
     }
 
+    /**
+     * Extracts a dependency target from a {@link Type} object. Ignores SDK classes.
+     *
+     * @param type A {@link Type} object, encountered by the visitor. Cannot be of sort METHOD.
+     * @return If the {@link Type} is for a class or an object array, the internal name of that
+     *     class. Null if the that class is an SDK class.
+     * @see AbstractShrinker#isSdkPackage(String)
+     */
     @Nullable
-    private static String getClassName(String desc) {
-        return getClassName(Type.getType(desc));
-    }
-
-    @Nullable
-    private static String getClassName(Type type) {
+    private static String getTargetClassName(Type type) {
         switch (type.getSort()) {
             case Type.VOID:
-            case Type.METHOD:
             case Type.SHORT:
             case Type.INT:
             case Type.LONG:
@@ -204,11 +200,14 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             case Type.CHAR:
                 return null;
             case Type.ARRAY:
-                return getClassName(type.getElementType());
+                return getTargetClassName(type.getElementType());
             case Type.OBJECT:
-                return type.getInternalName();
+                String name = type.getInternalName();
+                return isSdkPackage(name) ? null : name;
+            case Type.METHOD:
+                throw new IllegalArgumentException("Can't extract one class from a METHOD Type.");
             default:
-                throw new IllegalStateException();
+                throw new AssertionError("Unknown Type sort " + type.getSort());
         }
     }
 
@@ -234,10 +233,11 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
          */
         private final Deque<Object> mLastLdcs;
 
-        DependencyFinderMethodVisitor(T method, MethodVisitor mv) {
+        DependencyFinderMethodVisitor(T method, String desc, MethodVisitor mv) {
             super(Opcodes.ASM5, mv);
             this.mMethod = method;
             mLastLdcs = new ArrayDeque<>();
+            visitType(Type.getMethodType(desc));
         }
 
         @Override
@@ -260,8 +260,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
         @Override
         public void visitTypeInsn(int opcode, String type) {
-            String className = getClassName(Type.getObjectType(type));
-            if (className != null && !isSdkPackage(className)) {
+            String className = getTargetClassName(Type.getObjectType(type));
+            if (className != null) {
                 T classReference = mGraph.getClassReference(className);
                 handleDependency(mMethod, classReference, DependencyType.REQUIRED_CODE_REFERENCE);
             }
@@ -280,10 +280,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
                 T target = mGraph.getMemberReference(owner, name, desc);
                 handleUnresolvedReference(
                         new UnresolvedReference<>(
-                                mMethod,
-                                target,
-                                opcode == Opcodes.INVOKESPECIAL,
-                                DependencyType.REQUIRED_CODE_REFERENCE));
+                                mMethod, target, false, DependencyType.REQUIRED_CODE_REFERENCE));
             }
 
             mLastLdcs.clear();
@@ -294,8 +291,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         public void visitLdcInsn(Object cst) {
             if (cst instanceof Type) {
                 Type type = Type.getObjectType(((Type) cst).getInternalName());
-                String className = getClassName(type);
-                if (className != null && !isSdkPackage(className)) {
+                String className = getTargetClassName(type);
+                if (className != null) {
                     T classReference = mGraph.getClassReference(className);
                     handleDependency(
                             mMethod, classReference, DependencyType.REQUIRED_CODE_REFERENCE);
@@ -367,8 +364,8 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
         @Override
         public void visitMultiANewArrayInsn(String desc, int dims) {
-            String className = getClassName(desc);
-            if (className != null && !isSdkPackage(className)) {
+            String className = getTargetClassName(Type.getType(desc));
+            if (className != null) {
                 handleDependency(
                         mMethod,
                         mGraph.getClassReference(className),
@@ -413,8 +410,58 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         @Override
         public void visitInvokeDynamicInsn(
                 String name, String desc, Handle bsm, Object... bsmArgs) {
+            visitType(Type.getMethodType(desc));
+            visitConstantHandle(bsm);
+
+            for (Object bsmArg : bsmArgs) {
+                if (bsmArg instanceof Type) {
+                    visitType((Type) bsmArg);
+                } else if (bsmArg instanceof Handle) {
+                    visitConstantHandle((Handle) bsmArg);
+                }
+            }
+
             mLastLdcs.clear();
             super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+        }
+
+        private void visitType(Type type) {
+            if (type.getSort() == Type.METHOD) {
+                visitType(type.getReturnType());
+                for (Type argType : type.getArgumentTypes()) {
+                    visitType(argType);
+                }
+            } else {
+                String className = getTargetClassName(type);
+                if (className != null) {
+                    handleDependency(
+                            mMethod,
+                            mGraph.getClassReference(className),
+                            DependencyType.REQUIRED_CODE_REFERENCE);
+                }
+            }
+        }
+
+        private void visitConstantHandle(Handle bsm) {
+            // Make sure all types mentioned in the bytecode are kept.
+            visitType(Type.getMethodType(bsm.getDesc()));
+
+            if (!isSdkPackage(bsm.getOwner())) {
+                T targetMethod =
+                        mGraph.getMemberReference(bsm.getOwner(), bsm.getName(), bsm.getDesc());
+
+                if (bsm.getTag() == Opcodes.H_INVOKESPECIAL) {
+                    // This MethodHandle won't look for overrides.
+                    handleDependency(mMethod, targetMethod, DependencyType.REQUIRED_CODE_REFERENCE);
+                } else {
+                    handleUnresolvedReference(
+                            new UnresolvedReference<>(
+                                    mMethod,
+                                    targetMethod,
+                                    bsm.getTag() == Opcodes.H_INVOKESPECIAL,
+                                    DependencyType.REQUIRED_CODE_REFERENCE));
+                }
+            }
         }
 
         @Override
@@ -450,7 +497,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
         @Override
         public void visitEnum(String name, String desc, String value) {
-            String internalName = getClassName(desc);
+            String internalName = getTargetClassName(Type.getType(desc));
             if (internalName != null) {
                 handleDependency(
                         mSource,
@@ -467,7 +514,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String name, String desc) {
-            String internalName = getClassName(desc);
+            String internalName = getTargetClassName(Type.getType(desc));
             if (internalName != null) {
                 handleDependency(
                         mSource,
