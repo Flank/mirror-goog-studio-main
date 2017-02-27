@@ -16,12 +16,11 @@
 #ifndef MEMORY_CACHE_H_
 #define MEMORY_CACHE_H_
 
-#include <cstdint>
-#include <memory>
 #include <mutex>
 #include <string>
 
 #include "proto/memory.pb.h"
+#include "utils/circular_buffer.h"
 #include "utils/clock.h"
 #include "utils/file_cache.h"
 
@@ -33,6 +32,7 @@ class MemoryCache {
   // Indicates that a heap dump is in progress.
   static const int64_t kUnfinishedTimestamp = -1;
 
+  // TODO consider configuring cache sizes independently.
   explicit MemoryCache(const Clock& clock, FileCache* file_cache,
                        int32_t samples_capacity);
 
@@ -44,8 +44,7 @@ class MemoryCache {
   // called from a previous StartHeapDump). Otherwise this method returns
   // true indicating a HeapDumpInfo has been added. On return, the response
   // parameter is populated with the most recent HeapDumpInfo.
-  bool StartHeapDump(const std::string& dump_file_name,
-                     int64_t request_time,
+  bool StartHeapDump(const std::string& dump_file_name, int64_t request_time,
                      proto::TriggerHeapDumpResponse* response);
   bool EndHeapDump(int64_t end_time, bool success);
   void TrackAllocations(bool enabled, bool legacy,
@@ -65,25 +64,15 @@ class MemoryCache {
   const Clock& clock_;
   FileCache* file_cache_;
 
-  // TODO replace these with circular buffer class when it becomes available.
-  std::unique_ptr<proto::MemoryData::MemorySample[]> memory_samples_;
-  std::unique_ptr<proto::MemoryData::VmStatsSample[]> vm_stats_samples_;
-  std::unique_ptr<proto::HeapDumpInfo[]> heap_dump_infos_;
-  std::unique_ptr<proto::AllocationsInfo[]> allocations_info_;
+  CircularBuffer<proto::MemoryData::MemorySample> memory_samples_;
+  CircularBuffer<proto::MemoryData::VmStatsSample> vm_stats_samples_;
+  CircularBuffer<proto::HeapDumpInfo> heap_dump_infos_;
+  CircularBuffer<proto::AllocationsInfo> allocations_info_;
   std::mutex memory_samples_mutex_;
   std::mutex vm_stats_samples_mutex_;
   std::mutex heap_dump_infos_mutex_;
   std::mutex allocations_info_mutex_;
 
-  int32_t put_memory_sample_index_;
-  int32_t put_vm_stats_sample_index_;
-  int32_t next_heap_dump_sample_id_;
-  int32_t next_allocations_info_id_;
-  // TODO consider configuring cache sizes independently.
-  int32_t samples_capacity_;
-
-  bool memory_samples_buffer_full_;
-  bool vm_stats_samples_buffer_full_;
   bool has_unfinished_heap_dump_;
   bool is_allocation_tracking_enabled_;
 };
