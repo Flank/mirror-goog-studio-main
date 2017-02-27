@@ -96,7 +96,7 @@ shared_ptr<File> FileCache::GetFile(const std::string &cache_id) {
 }
 
 void FileCache::JanitorThread() {
-  SetThreadName("FileCache");
+  SetThreadName("Studio:FileCache");
 
   Stopwatch stopwatch;
   while (is_janitor_running_) {
