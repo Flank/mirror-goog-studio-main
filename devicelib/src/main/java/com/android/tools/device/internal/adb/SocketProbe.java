@@ -18,6 +18,7 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.device.internal.adb.commands.HostService;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import java.io.BufferedOutputStream;
@@ -27,6 +28,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 class SocketProbe implements Probe {
@@ -48,7 +50,9 @@ class SocketProbe implements Probe {
                     BufferedReader r =
                             new BufferedReader(
                                     new InputStreamReader(s.getInputStream(), Charsets.UTF_8))) {
-                out.write(AdbCommands.formatCommand(AdbCommands.GET_SERVER_VERSION));
+                byte[] cmd = HostService.VERSION.getCommand();
+                out.write(String.format(Locale.US, "%04X", cmd.length).getBytes(Charsets.UTF_8));
+                out.write(cmd);
                 out.flush();
                 String line = r.readLine();
                 return line != null && line.startsWith("OKAY");

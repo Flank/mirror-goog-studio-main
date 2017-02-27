@@ -17,13 +17,19 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
+import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.google.common.base.Charsets;
+import com.google.common.primitives.UnsignedInteger;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-class StreamConnection implements Connection {
+public class StreamConnection implements Connection {
+    /** Response header from adb server that indicates that the command succeeded. */
+    public static final String STATUS_OKAY = "OKAY";
+
     private final BufferedInputStream is;
     private final BufferedOutputStream os;
 
@@ -36,5 +42,54 @@ class StreamConnection implements Connection {
     public void close() throws IOException {
         is.close();
         os.close();
+    }
+
+    @Override
+    public void writeCommand(@NonNull CommandBuffer buffer) throws IOException {
+        byte[] command = buffer.toByteArray();
+        os.write(String.format("%04X", command.length).getBytes(Charsets.UTF_8));
+        os.write(command);
+        os.flush();
+    }
+
+    @Override
+    public boolean isOk() throws IOException {
+        return STATUS_OKAY.equals(readString(4));
+    }
+
+    @NonNull
+    @Override
+    public String getError() throws IOException {
+        return readString(readUnsignedHexInt().intValue());
+    }
+
+    @NonNull
+    @Override
+    public UnsignedInteger readUnsignedHexInt() throws IOException {
+        return UnsignedInteger.valueOf(readString(4), 16);
+    }
+
+    @NonNull
+    @Override
+    public String readString(int len) throws IOException {
+        byte[] data = new byte[len];
+        readFully(data);
+        return new String(data, Charsets.UTF_8);
+    }
+
+    private int readFully(@NonNull byte[] data) throws IOException {
+        int len = 0;
+
+        while (len < data.length) {
+            int r = is.read(data, len, data.length - len);
+            if (r <= 0) {
+                throw new IOException(
+                        "End of Stream before fully reading " + data.length + " bytes");
+            }
+
+            len += r;
+        }
+
+        return len;
     }
 }
