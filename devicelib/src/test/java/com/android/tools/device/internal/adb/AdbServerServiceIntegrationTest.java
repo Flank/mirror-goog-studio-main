@@ -15,18 +15,103 @@
  */
 package com.android.tools.device.internal.adb;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.device.internal.OsProcessRunner;
+import com.android.tools.device.internal.adb.commands.ServerVersion;
+import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.ServerSocket;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * This is an integration test for the {@link AdbServerService} class. It ensures that the service
+ * works properly with a real adb instance.
+ *
+ * <p>It does however test an internal API and will likely be removed or migrated to use the public
+ * API when it becomes available.
+ */
 public class AdbServerServiceIntegrationTest {
-    @Test
-    public void launchServer() throws IOException {
-        ExecutorService executor = Executors.newCachedThreadPool();
+    private static ConsoleHandler handler;
+    private ExecutorService executor;
 
+    /**
+     * Sets up the logging system to print out logs at all levels, but in a simplified format. For
+     * an integration test, doing this step is entirely optional and the chosen format is entirely
+     * subjective.
+     */
+    @BeforeClass
+    public static void setupLogger() {
+        Logger logger = Logger.getLogger(AdbServerService.class.getName());
+        logger.setUseParentHandlers(false);
+
+        handler = new ConsoleHandler();
+        handler.setFormatter(
+                new Formatter() {
+                    @Override
+                    public String format(LogRecord record) {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.append(String.format(Locale.US, "%10d", record.getMillis() % 100000))
+                                .append(' ')
+                                .append(record.getLevel().getName().charAt(0))
+                                .append(' ')
+                                .append(formatMessage(record))
+                                .append('\n');
+
+                        if (record.getThrown() != null) {
+                            try (StringWriter sw = new StringWriter();
+                                    PrintWriter pw = new PrintWriter(sw)) {
+                                record.getThrown().printStackTrace(pw);
+                                sb.append(sw.toString());
+                            } catch (IOException ignored) {
+                            }
+                        }
+
+                        return sb.toString();
+                    }
+                });
+        handler.setLevel(Level.ALL);
+        logger.setLevel(Level.ALL);
+        logger.addHandler(handler);
+    }
+
+    @AfterClass
+    public static void removeLogger() {
+        Logger logger = Logger.getLogger(AdbServerService.class.getName());
+        logger.removeHandler(handler);
+    }
+
+    @Before
+    public void setUp() {
+        executor = Executors.newCachedThreadPool();
+    }
+
+    @After
+    public void tearDown() {
+        executor.shutdownNow();
+    }
+
+    @Test
+    public void launchServer()
+            throws InterruptedException, ExecutionException, TimeoutException, IOException {
         AdbServerOptions options = new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST);
         Launcher launcher =
                 new AdbServerLauncher(AdbTestUtils.getPathToAdb(), new OsProcessRunner(executor));
@@ -34,9 +119,11 @@ public class AdbServerServiceIntegrationTest {
                 new AdbServerService(options, launcher, new SocketProbe(), executor);
 
         service.startAsync().awaitRunning();
-        service.stopAsync().awaitTerminated();
 
-        executor.shutdownNow();
+        CompletableFuture<UnsignedInteger> future = service.execute(new ServerVersion());
+        assertThat(future.get()).isGreaterThan(UnsignedInteger.fromIntBits(3));
+
+        service.stopAsync().awaitTerminated();
     }
 
     private static int getFreePort() throws IOException {

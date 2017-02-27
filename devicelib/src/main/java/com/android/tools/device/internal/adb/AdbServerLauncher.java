@@ -41,6 +41,11 @@ class AdbServerLauncher implements Launcher {
     @Override
     public Endpoint launch(int port, long timeout, @NonNull TimeUnit unit)
             throws IOException, InterruptedException, TimeoutException {
+        if (port == AdbConstants.ANY_PORT) {
+            // TODO(b/35644544): Have adb pick a free port
+            port = AdbConstants.DEFAULT_PORT;
+        }
+
         List<String> cmd =
                 Arrays.asList(adb.toString(), "-P", Integer.toString(port), "start-server");
         Process process = runner.start(new ProcessBuilder(cmd));

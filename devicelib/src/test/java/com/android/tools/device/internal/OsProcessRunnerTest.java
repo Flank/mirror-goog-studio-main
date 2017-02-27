@@ -38,7 +38,7 @@ public class OsProcessRunnerTest {
 
     @Test
     public void getBaseName_windows() {
-        assume().that(isWindows()).isTrue();
+        assume().withFailureMessage("Is Windows?").that(isWindows()).isTrue();
         assertThat(OsProcessRunner.getBaseName(ImmutableList.of("C:\\path\\to\\adb.exe")))
                 .isEqualTo("adb.exe");
     }
@@ -49,7 +49,7 @@ public class OsProcessRunnerTest {
 
     @Test
     public void getBaseName_unix() {
-        assume().that(isWindows()).isFalse();
+        assume().withFailureMessage("Is Unix?").that(isWindows()).isFalse();
         assertThat(OsProcessRunner.getBaseName(ImmutableList.of("/path/to/adb"))).isEqualTo("adb");
     }
 
