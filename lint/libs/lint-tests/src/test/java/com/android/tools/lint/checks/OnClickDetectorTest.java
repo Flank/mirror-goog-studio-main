@@ -302,4 +302,27 @@ public class OnClickDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testDataBinding() {
+        // Regression test for
+        // 235032: Data binding fails with lint errors on lambdas
+        lint().files(
+                xml("res/layout/accessibility.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:id=\"@+id/newlinear\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    android:orientation=\"vertical\">\n"
+                        + "\n"
+                        + "    <Button\n"
+                        + "        android:id=\"@+id/button1\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:onClick=\"@{() -> handlers.goToPercentInListMinHeight()}\"\n"
+                        + "        android:text=\"Button\" />\n"
+                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
 }
