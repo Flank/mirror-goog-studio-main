@@ -954,6 +954,13 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 // at or above 6.5.0, recommend un-bundling
                 String message = "Avoid using bundled version of Google Play services SDK.";
                 report(context, cookie, BUNDLED_GMS, message);
+
+            } else if (GMS_GROUP_ID.equals(dependency.getGroupId())
+                  && "play-services-appindexing".equals(dependency.getArtifactId())) {
+                String message = "Deprecated: Replace '" + GMS_GROUP_ID
+                        + ":play-services-appindexing:" + dependency.getRevision()
+                        + "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above.";
+                report(context, cookie, DEPRECATED, message);
             }
 
             checkPlayServices(context, dependency, cookie);

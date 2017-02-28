@@ -35,7 +35,6 @@ import static com.android.tools.lint.checks.GradleDetector.getNamedDependency;
 import static com.android.tools.lint.checks.GradleDetector.getNewValue;
 import static com.android.tools.lint.checks.GradleDetector.getOldValue;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
@@ -79,7 +78,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.junit.Assert;
 
 /**
  * NOTE: Many of these tests are duplicated in the Android Studio plugin to
@@ -1190,6 +1188,31 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected);
 
+    }
+
+    public void testDeprecatedAppIndexingDependency() throws Exception {
+        String expected = ""
+                + "build.gradle:9: Warning: Deprecated: Replace 'com.google.android.gms:play-services-appindexing:9.8.0' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. [GradleDeprecated]\n"
+                + "compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
+                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 25\n"
+                        + "    buildToolsVersion \"25.0.2\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
+                        + "}\n"))
+                .issues(DEPRECATED)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testBadBuildTools() throws Exception {
