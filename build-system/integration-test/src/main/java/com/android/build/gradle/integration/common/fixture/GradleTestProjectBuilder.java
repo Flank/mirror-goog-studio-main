@@ -197,6 +197,12 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
+    public GradleTestProjectBuilder withImprovedDependencyResolution(
+            boolean improvedDependencyEnabled) {
+        this.improvedDependencyEnabled = improvedDependencyEnabled;
+        return this;
+    }
+
     private static class EmptyTestApp extends AbstractAndroidTestApp {
         @Override
         public boolean containsFullBuildScript() {

@@ -191,7 +191,6 @@ public abstract class LibraryBaseTransform extends Transform {
         }
     }
 
-
     protected static void copyJarWithContentFilter(
             @NonNull File from,
             @NonNull File to,

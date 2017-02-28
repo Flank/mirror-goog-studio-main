@@ -126,18 +126,18 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
                         content.getFile(),
                         mainClassLocation,
                         archivePath -> checkEntry(patterns, archivePath),
-                        typedefRecipe.isFile() ?
-                                new TypedefRemover().setTypedefFile(typedefRecipe) :
-                                null);
+                        typedefRecipe != null
+                                ? new TypedefRemover().setTypedefFile(typedefRecipe)
+                                : null);
             }
         } else {
             mergeInputsToLocation(
                     mainScope,
                     mainClassLocation,
                     archivePath -> checkEntry(patterns, archivePath),
-                    typedefRecipe.isFile() ?
-                            new TypedefRemover().setTypedefFile(typedefRecipe) :
-                            null);
+                    typedefRecipe != null
+                            ? new TypedefRemover().setTypedefFile(typedefRecipe)
+                            : null);
         }
 
         // process local scope

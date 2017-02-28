@@ -77,6 +77,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 project.getBuildFile().toPath(),
                 project.getBenchmarkRecorder(),
                 project.getProfileDirectory(),
+                project.isImprovedDependencyEnabled(),
                 project.getHeapSize());
         with(
                 BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION,
