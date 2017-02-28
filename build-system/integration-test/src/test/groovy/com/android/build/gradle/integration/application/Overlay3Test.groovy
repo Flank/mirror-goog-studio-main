@@ -20,28 +20,35 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ImageHelper
 import com.android.builder.model.AndroidProject
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+
+import static com.android.testutils.truth.MoreTruth.assertThat
 
 /**
  * Assemble tests for overlay3.
  */
 @CompileStatic
+@RunWith(Parameterized.class)
 class Overlay3Test {
+    @Parameterized.Parameters(name = "enableAapt2 = {0}")
+    public static Collection<Object> data() {
+        return [(Object) false, (Object) true];
+    }
+
+    @Parameterized.Parameter
+    public boolean useAapt2;
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("overlay3")
             .create()
-
-    @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
-    }
 
     @AfterClass
     static void cleanUp() {
@@ -50,41 +57,133 @@ class Overlay3Test {
 
     @Test
     void "check image color"() {
+        project.executor().withEnabledAapt2(useAapt2).run("clean", "assembleDebug")
+
+        // "no_overlay.png" consists of only green pixels, all others only of red pixels.
         int GREEN = ImageHelper.GREEN
         int RED = ImageHelper.RED
 
-        File drawableOutput = project.file(
-                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/freeBeta/debug/drawable")
+        if (!useAapt2) {
+            File drawableOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/freeBeta/debug/drawable")
 
-        ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", RED)
+            // First image should remain unchanged, all images in free beta variants should be
+            // overlaid with the first image (first pixel turns from red to green). Others should
+            // not be changed (remain red).
+            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", RED)
 
-        drawableOutput = project.file(
-                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/freeNormal/debug/drawable")
+            drawableOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/freeNormal/debug/drawable")
 
-        ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", GREEN)
+            // First image should remain unchanged, all images in free normal variants should be
+            // overlaid with the first image (first pixel turns from red to green). Others should
+            // not be changed (remain red).
+            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", GREEN)
 
-        drawableOutput = project.file(
-                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/paidBeta/debug/drawable")
+            drawableOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/paidBeta/debug/drawable")
 
-        ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED)
-        ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", RED)
+            // First image should remain unchanged, all images in paid beta variants should be
+            // overlaid with the first image (first pixel turns from red to green). Others should
+            // not be changed (remain red).
+            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "debug_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "beta_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "free_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED)
+            ImageHelper.checkImageColor(drawableOutput, "free_normal_overlay.png", RED)
+        } else {
+            // Only check that the intermediate files exist. We verify their correctness later, by
+            // checking the contents of the APK.
+
+            File resOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/freeBeta/debug")
+            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists()
+
+            resOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/freeNormal/debug")
+            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists()
+
+            resOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES +
+                            "/res/merged/paidBeta/debug")
+            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_beta_debug_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists()
+        }
+
+        Apk apk = project.getApk("free", "beta", "debug")
+        assertThat(apk).isNotNull()
+        // First image should remain unchanged, all images in free beta variants should be overlaid
+        // with the first image (first pixel turns from red to green). Others should not be changed
+        // (remain red).
+        ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/debug_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/beta_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_debug_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_normal_overlay.png"), RED)
+
+        apk = project.getApk("free", "normal", "debug")
+        assertThat(apk).isNotNull()
+        // First image should remain unchanged, all images in free normal variants should be
+        // overlaid with the first image (first pixel turns from red to green). Others should not be
+        // changed (remain red).
+        ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/debug_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/beta_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_debug_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_normal_overlay.png"), GREEN)
+
+        apk = project.getApk("paid", "beta", "debug")
+        assertThat(apk).isNotNull()
+        // First image should remain unchanged, all images in paid beta variants should be overlaid
+        // with the first image (first pixel turns from red to green). Others should not be changed
+        // (remain red).
+        ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/debug_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/beta_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_debug_overlay.png"), RED)
+        ImageHelper.checkImageColor(apk.getResource("drawable/free_normal_overlay.png"), RED)
     }
 
     @Test

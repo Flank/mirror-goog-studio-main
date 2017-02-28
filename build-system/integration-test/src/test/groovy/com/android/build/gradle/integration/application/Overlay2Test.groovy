@@ -20,28 +20,35 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ImageHelper
 import com.android.builder.model.AndroidProject
+import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.experimental.categories.Category
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+
+import static com.android.testutils.truth.MoreTruth.assertThat
 
 /**
  * Assemble tests for overlay2.
  */
 @CompileStatic
+@RunWith(Parameterized.class)
 class Overlay2Test {
+    @Parameterized.Parameters(name = "enableAapt2 = {0}")
+    public static Collection<Object> data() {
+        return [(Object) false, (Object) true];
+    }
+
+    @Parameterized.Parameter
+    public boolean useAapt2;
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("overlay2")
             .create()
-
-    @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
-    }
 
     @AfterClass
     static void cleanUp() {
@@ -50,15 +57,41 @@ class Overlay2Test {
 
     @Test
     void "check image color"() {
-        int GREEN = ImageHelper.GREEN
-        File drawableOutput = project.file(
-                "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug/drawable")
+        project.executor().withEnabledAapt2(useAapt2).run("clean", "assembleDebug")
 
-        ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "type_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "flavor_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "type_flavor_overlay.png", GREEN)
-        ImageHelper.checkImageColor(drawableOutput, "variant_type_flavor_overlay.png", GREEN)
+        int GREEN = ImageHelper.GREEN
+
+        if (!useAapt2) {
+            File drawableOutput = project.file(
+                    "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug/drawable")
+
+            //First picture should remain unchanged (first pixel remains green), while all the
+            //others should have the first image overlay them (first pixel turns from red to green).
+            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "type_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "flavor_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "type_flavor_overlay.png", GREEN)
+            ImageHelper.checkImageColor(drawableOutput, "variant_type_flavor_overlay.png", GREEN)
+        } else {
+            File resOutput = project.
+                    file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug")
+            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_type_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_flavor_overlay.png.flat")).exists()
+            assertThat(new File(resOutput, "drawable_type_flavor_overlay.png.flat")).exists()
+            assertThat(
+                    new File(resOutput, "drawable_variant_type_flavor_overlay.png.flat")).exists()
+        }
+
+        Apk apk = project.getApk("one", "debug")
+        //First picture should remain unchanged (first pixel remains green), while all the
+        //others should have the first image overlay them (first pixel turns from red to green).
+        ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/type_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/flavor_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(apk.getResource("drawable/type_flavor_overlay.png"), GREEN)
+        ImageHelper.checkImageColor(
+                apk.getResource("drawable/variant_type_flavor_overlay.png"), GREEN)
     }
 
     @Test

@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.truth.Truth;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 /**
@@ -45,10 +48,16 @@ public class ImageHelper {
 
         BufferedImage image = ImageIO.read(imageFile);
         int rgb = image.getRGB(0, 0);
-        assertEquals(
-                String.format("Expected: 0x%08X, actual: 0x%08X for file %s",
-                        expectedColor, rgb, imageFile),
-                expectedColor, rgb);
+        Truth.assertThat(rgb).named("color for file " + imageFile).isEqualTo(expectedColor);
+    }
+
+    /** Check the color of the first pixel in file at imagePath is as expected. */
+    public static void checkImageColor(Path imagePath, int expectedColor) throws IOException {
+        try (BufferedInputStream bis = new BufferedInputStream(Files.newInputStream(imagePath))) {
+            BufferedImage image = ImageIO.read(bis);
+            int rgb = image.getRGB(0, 0);
+            Truth.assertThat(rgb).named("color for path " + imagePath).isEqualTo(expectedColor);
+        }
     }
 
     public static void checkImageColor(File folder, String fileName, int expectedColor)
