@@ -18,8 +18,8 @@ package com.android.fakeadbserver.statechangehubs;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.statechangehubs.StateChangeHandlerFactory.HandlerResult;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Supplier;
 
 /**
  * This queue is the primary message pump for listening threads to know when events have
@@ -27,13 +27,13 @@ import java.util.function.Supplier;
  */
 public final class StateChangeQueue {
 
-    protected LinkedBlockingQueue<Supplier<HandlerResult>> mQueue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<Callable<HandlerResult>> mQueue = new LinkedBlockingQueue<>();
 
-    public Supplier<HandlerResult> take() throws InterruptedException {
+    public Callable<HandlerResult> take() throws InterruptedException {
         return mQueue.take();
     }
 
-    public void add(@NonNull Supplier<HandlerResult> handler) {
+    public void add(@NonNull Callable<HandlerResult> handler) {
         mQueue.add(handler);
     }
 }

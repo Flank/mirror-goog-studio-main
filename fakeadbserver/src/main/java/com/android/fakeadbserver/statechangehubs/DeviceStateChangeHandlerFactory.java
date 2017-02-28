@@ -20,21 +20,21 @@ import com.android.annotations.NonNull;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.DeviceState.DeviceStatus;
 import java.util.Collection;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 /**
- * A factory interface to create device event receivers. The {@link Supplier}'s return value
+ * A factory interface to create device event receivers. The {@link Callable}'s return value
  * indicates if a possible error may have occurred (or a shut down signal was sent), and the calling
  * thread should terminate the processing task and release all open resources.
  */
 public interface DeviceStateChangeHandlerFactory extends StateChangeHandlerFactory {
 
     @NonNull
-    Supplier<HandlerResult> createDeviceListChangedHandler(
+    Callable<HandlerResult> createDeviceListChangedHandler(
             @NonNull Collection<DeviceState> deviceList);
 
     @NonNull
-    Supplier<HandlerResult> createDeviceStateChangedHandler(
+    Callable<HandlerResult> createDeviceStateChangedHandler(
             @NonNull DeviceState device, @NonNull DeviceStatus status);
 
 }

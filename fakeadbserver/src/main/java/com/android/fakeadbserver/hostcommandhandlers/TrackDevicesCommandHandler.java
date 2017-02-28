@@ -30,8 +30,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 
 /**
  * host:track-devices is a persistent connection that tracks device connection/disconnections, as
@@ -44,7 +44,7 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
     public static final String COMMAND = "track-devices";
 
     @NonNull
-    private static Supplier<HandlerResult> sendDeviceList(@NonNull Socket responseSocket,
+    private static Callable<HandlerResult> sendDeviceList(@NonNull Socket responseSocket,
             @NonNull FakeAdbServer server) {
         return () -> {
             try {
@@ -71,14 +71,14 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
                                 new DeviceStateChangeHandlerFactory() {
                                     @NonNull
                                     @Override
-                                    public Supplier<HandlerResult> createDeviceListChangedHandler(
+                                    public Callable<HandlerResult> createDeviceListChangedHandler(
                                             @NonNull Collection<DeviceState> deviceList) {
                                         return sendDeviceList(responseSocket, fakeAdbServer);
                                     }
 
                                     @NonNull
                                     @Override
-                                    public Supplier<HandlerResult> createDeviceStateChangedHandler(
+                                    public Callable<HandlerResult> createDeviceStateChangedHandler(
                                             @NonNull DeviceState device,
                                             @NonNull DeviceStatus status) {
                                         return sendDeviceList(responseSocket, fakeAdbServer);
@@ -93,7 +93,7 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
             writeOkay(responseSocket.getOutputStream()); // Send ok first.
 
             // Then send over the full list of devices before going into monitoring mode.
-            sendDeviceList(responseSocket, fakeAdbServer).get();
+            sendDeviceList(responseSocket, fakeAdbServer).call();
 
             while (true) {
                 try {
@@ -101,7 +101,7 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
                     // defined above in the DeviceStateChangeHandlerFactory) as-is in the current
                     // thread so that we can send the message in the opened connection (which only
                     // exists in the current thread).
-                    if (!queue.take().get().mShouldContinue) {
+                    if (!queue.take().call().mShouldContinue) {
                         break;
                     }
                 } catch (InterruptedException ignored) {
@@ -109,7 +109,7 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
                     break;
                 }
             }
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
         } finally {
             fakeAdbServer.getDeviceChangeHub().unsubscribe(queue);
         }
