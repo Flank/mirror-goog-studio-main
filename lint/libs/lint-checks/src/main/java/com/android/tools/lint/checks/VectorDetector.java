@@ -126,7 +126,7 @@ public class VectorDetector extends ResourceXmlDetector {
         checkSupported(context, root);
     }
 
-    private static boolean usingSupportLibVectors(@NonNull Project project) {
+    static boolean usingSupportLibVectors(@NonNull Project project) {
         GradleVersion version = project.getGradleModelVersion();
         if (version == null || version.getMajor() < 2) {
             return false;
