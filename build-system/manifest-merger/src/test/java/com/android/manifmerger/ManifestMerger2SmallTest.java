@@ -751,6 +751,73 @@ public class ManifestMerger2SmallTest {
                         .getNodeValue());
     }
 
+    @Test
+    public void testInternetPermissionAdded() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"${applicationId}\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <uses-permission t:name=\"android.permission.RECEIVE_SMS\"/>\n"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testInternetPermissionAdded", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        NodeList nodes = xmlDocument.getElementsByTagName("uses-permission");
+        assertEquals(2, nodes.getLength());
+        assertEquals(
+                "android.permission.RECEIVE_SMS",
+                nodes.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
+        assertEquals(
+                "android.permission.INTERNET",
+                nodes.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
+    }
+
+    @Test
+    public void testInternetPermissionNotDupped() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"${applicationId}\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <uses-permission t:name=\"android.permission.INTERNET\"/>\n"
+                        + "    <uses-permission t:name=\"android.permission.RECEIVE_SMS\"/>\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testInternetPermissionNotDupped", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        NodeList nodes = xmlDocument.getElementsByTagName("uses-permission");
+        assertEquals(2, nodes.getLength());
+        assertEquals(
+                "android.permission.INTERNET",
+                nodes.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
+        assertEquals(
+                "android.permission.RECEIVE_SMS",
+                nodes.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
+    }
+
     public static Optional<Node> getChildByName(@NonNull Node parent, @NonNull String localName) {
         NodeList childNodes = parent.getChildNodes();
         for (int i=0; i<childNodes.getLength(); i++) {

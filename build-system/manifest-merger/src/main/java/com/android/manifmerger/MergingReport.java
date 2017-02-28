@@ -56,10 +56,8 @@ public class MergingReport {
          */
         AAPT_SAFE,
 
-        /**
-         * Blame file for merged manifest file.
-         */
-        BLAME
+        /** Blame file for merged manifest file. */
+        BLAME,
     }
 
     @NonNull

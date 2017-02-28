@@ -65,7 +65,8 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
-    public static final String ANDROID_CUSTOM_CLASS_TRANSFORMS = "android.custom.class.transforms";
+    public static final String ANDROID_ADVANCED_PROFILING_TRANSFORMS =
+            "android.advanced.profiling.transforms";
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
@@ -437,8 +438,8 @@ public class AndroidGradleOptions {
     }
 
     @NonNull
-    public static String[] getCustomClassTransforms(@NonNull Project project) {
-        String string = getString(project, ANDROID_CUSTOM_CLASS_TRANSFORMS);
+    public static String[] getAdvancedProfilingTransforms(@NonNull Project project) {
+        String string = getString(project, ANDROID_ADVANCED_PROFILING_TRANSFORMS);
         return string == null ?  new String[]{} : string.split(",");
     }
 
