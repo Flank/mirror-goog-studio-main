@@ -19,19 +19,19 @@ package com.android.fakeadbserver.statechangehubs;
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
 import java.util.Collection;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 /**
- * A factory interface to create client event receivers. The {@link Supplier}'s return value
+ * A factory interface to create client event receivers. The {@link Callable}'s return value
  * indicates if a possible error may have occurred (or a shut down signal was sent), and the calling
  * thread should terminate the processing task and release all open resources.
  */
 public interface ClientStateChangeHandlerFactory extends StateChangeHandlerFactory {
 
     @NonNull
-    Supplier<HandlerResult> createClientListChangedHandler(
+    Callable<HandlerResult> createClientListChangedHandler(
             @NonNull Collection<ClientState> clientList);
 
     @NonNull
-    Supplier<HandlerResult> createLogcatMessageAdditionHandler(@NonNull String message);
+    Callable<HandlerResult> createLogcatMessageAdditionHandler(@NonNull String message);
 }

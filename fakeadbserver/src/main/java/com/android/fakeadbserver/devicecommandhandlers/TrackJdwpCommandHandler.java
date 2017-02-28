@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Collection;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +56,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
                 .subscribe(new ClientStateChangeHandlerFactory() {
                     @NonNull
                     @Override
-                    public Supplier<HandlerResult> createClientListChangedHandler(
+                    public Callable<HandlerResult> createClientListChangedHandler(
                             @NonNull Collection<ClientState> clientList) {
                         return () -> {
                             try {
@@ -74,7 +74,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
 
                     @NonNull
                     @Override
-                    public Supplier<HandlerResult> createLogcatMessageAdditionHandler(
+                    public Callable<HandlerResult> createLogcatMessageAdditionHandler(
                             @NonNull String message) {
                         return () -> new HandlerResult(true);
                     }
@@ -88,11 +88,11 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
             writeOkay(stream); // Send ok first.
 
             while (true) {
-                if (!queue.take().get().mShouldContinue) {
+                if (!queue.take().call().mShouldContinue) {
                     break;
                 }
             }
-        } catch (IOException | InterruptedException ignored) {
+        } catch (Exception ignored) {
         } finally {
             device.getClientChangeHub().unsubscribe(queue);
         }

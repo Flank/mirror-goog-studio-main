@@ -30,7 +30,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 /**
  * shell:logcat command is a persistent command issued to grab the output of logcat. In this
@@ -70,14 +70,14 @@ public class LogcatCommandHandler extends ShellCommandHandler {
                 = device.subscribeLogcatChangeHandler(new ClientStateChangeHandlerFactory() {
             @NonNull
             @Override
-            public Supplier<HandlerResult> createClientListChangedHandler(
+            public Callable<HandlerResult> createClientListChangedHandler(
                     @NonNull Collection<ClientState> clientList) {
                 return () -> new HandlerResult(true);
             }
 
             @NonNull
             @Override
-            public Supplier<HandlerResult> createLogcatMessageAdditionHandler(
+            public Callable<HandlerResult> createLogcatMessageAdditionHandler(
                     @NonNull String message) {
                 return () -> {
                     try {
@@ -100,7 +100,7 @@ public class LogcatCommandHandler extends ShellCommandHandler {
             }
             while (true) {
                 try {
-                    if (!subscriptionResult.mQueue.take().get().mShouldContinue) {
+                    if (!subscriptionResult.mQueue.take().call().mShouldContinue) {
                         break;
                     }
                 } catch (InterruptedException ignored) {
@@ -108,7 +108,7 @@ public class LogcatCommandHandler extends ShellCommandHandler {
                     break;
                 }
             }
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
         } finally {
             device.getClientChangeHub().unsubscribe(subscriptionResult.mQueue);
         }
