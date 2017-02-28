@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.LoggingUtil;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultProductFlavor;
@@ -80,7 +79,7 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
         ndkConfig = instantiator.newInstance(NdkOptions.class);
         externalNativeBuildOptions = instantiator.newInstance(ExternalNativeBuildOptions.class,
                 instantiator);
-        jackOptions = instantiator.newInstance(JackOptions.class);
+        jackOptions = instantiator.newInstance(JackOptions.class, errorReporter);
         javaCompileOptions = instantiator.newInstance(JavaCompileOptions.class, instantiator);
         shaderOptions = instantiator.newInstance(ShaderOptions.class);
     }
@@ -531,9 +530,9 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     @Deprecated
     @Nullable
     public Boolean getUseJack() {
-        LoggingUtil.displayDeprecationWarning(
-                logger, project, "useJack is deprecated.  Use jackOptions.enabled instead.");
-        return jackOptions.isEnabled();
+        errorReporter.handleSyncWarning(
+                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+        return null;
     }
 
     /**
@@ -545,9 +544,8 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
      */
     @Deprecated
     public void setUseJack(Boolean useJack) {
-        LoggingUtil.displayDeprecationWarning(
-                logger, project, "useJack is deprecated.  Use jackOptions.enabled instead.");
-        jackOptions.setEnabled(useJack);
+        errorReporter.handleSyncWarning(
+                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
     }
 
     /**
@@ -559,9 +557,8 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
      */
     @Deprecated
     public void useJack(Boolean useJack) {
-        LoggingUtil.displayDeprecationWarning(
-                logger, project, "useJack is deprecated.  Use jackOptions.enabled instead.");
-        jackOptions.setEnabled(useJack);
+        errorReporter.handleSyncWarning(
+                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
     }
 
     /**

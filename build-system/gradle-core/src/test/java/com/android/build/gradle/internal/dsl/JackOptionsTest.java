@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.build.gradle.internal.transforms.NoOpErrorReporter;
 import com.android.testutils.internal.CopyOfTester;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public class JackOptionsTest {
     public void testInitWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
                 JackOptions.class,
-                new JackOptions(),
-                original -> new JackOptions()._initWith(original));
+                new JackOptions(new NoOpErrorReporter()),
+                original -> new JackOptions(new NoOpErrorReporter())._initWith(original));
     }
 }

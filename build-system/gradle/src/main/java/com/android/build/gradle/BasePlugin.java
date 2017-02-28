@@ -394,7 +394,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
                 project.container(
                         BuildType.class,
-                        new BuildTypeFactory(instantiator, project, project.getLogger()));
+                        new BuildTypeFactory(instantiator, project, extraModelInfo));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
