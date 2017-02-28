@@ -65,7 +65,9 @@ public class PerformanceTestProjects {
 
 
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "jcenter\\(\\)", generateLocalRepositoriesSnippet());
+                project.getBuildFile(),
+                "jcenter\\(\\)",
+                generateLocalRepositoriesSnippet().replace("\\", "\\\\"));
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
@@ -163,9 +165,7 @@ public class PerformanceTestProjects {
                     file, "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'", "");
 
             TestFileUtils.searchAndReplace(
-                    file,
-                    "jcenter\\(\\)",
-                    localRepositoriesSnippet);
+                    file, "jcenter\\(\\)", localRepositoriesSnippet.replace("\\", "\\\\"));
 
             TestFileUtils.searchAndReplace(
                     file,
