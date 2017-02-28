@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -72,6 +73,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path buildDotGradleFile,
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path profilesDirectory,
+            boolean dependencyResolutionAtExecution,
             @Nullable String heapSize) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
@@ -81,6 +83,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
+        arguments.add(
+                "-P"
+                        + BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName()
+                        + "="
+                        + dependencyResolutionAtExecution);
         this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
     }

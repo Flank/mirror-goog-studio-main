@@ -67,7 +67,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     private boolean mAssertNoSyncIssues = true;
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
-    private final boolean isImproveDependencyEnabled;
     private final List<String> modelFeatures = Lists.newArrayList();
 
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
@@ -78,8 +77,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 project.getBuildFile().toPath(),
                 project.getBenchmarkRecorder(),
                 project.getProfileDirectory(),
+                project.isImprovedDependencyEnabled(),
                 project.getHeapSize());
-        isImproveDependencyEnabled = project.isImprovedDependencyEnabled();
     }
 
     /** Do not fail if there are sync issues */
@@ -233,12 +232,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 break;
             default:
                 throw new RuntimeException("Unsupported ModelLevel");
-        }
-
-        if (isImproveDependencyEnabled) {
-            arguments.add("-P"
-                    + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
-                    + "=true");
         }
 
         // model feature

@@ -68,6 +68,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
                 gradleTestProject.getProfileDirectory(),
+                gradleTestProject.isImprovedDependencyEnabled(),
                 gradleTestProject.getHeapSize());
         isUseJack = gradleTestProject.isUseJack();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();

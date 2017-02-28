@@ -275,7 +275,7 @@ public class LibraryJarTransform extends Transform {
             throws IOException {
         JarMerger jarMerger = new JarMerger(mainClassLocation);
         jarMerger.setFilter(archivePath -> checkEntry(excludes, archivePath));
-        if (typedefRecipe.isFile()) {
+        if (typedefRecipe != null) {
             jarMerger.setTypedefRemover(new TypedefRemover().setTypedefFile(typedefRecipe));
         }
         jarMerger.addFolder(file);
