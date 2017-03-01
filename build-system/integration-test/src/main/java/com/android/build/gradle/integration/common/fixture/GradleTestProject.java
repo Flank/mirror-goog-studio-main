@@ -218,7 +218,6 @@ public final class GradleTestProject implements TestRule {
     public static final String SUPPORT_LIB_VERSION = "25.2.0";
     public static final String TEST_SUPPORT_LIB_VERSION = "0.5";
     public static final int SUPPORT_LIB_MIN_SDK = 9;
-    public static final String CONSTRAINT_LAYOUT_VERSION = "1.0.0";
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
@@ -618,7 +617,7 @@ public final class GradleTestProject implements TestRule {
                 TEST_SUPPORT_LIB_VERSION,
                 PLAY_SERVICES_VERSION,
                 SUPPORT_LIB_MIN_SDK,
-                CONSTRAINT_LAYOUT_VERSION);
+                SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
     }
 
     /** Create a GradleTestProject representing a subproject. */
