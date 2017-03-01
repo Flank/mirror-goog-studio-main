@@ -83,7 +83,7 @@ class Overlay2Test {
                     new File(resOutput, "drawable_variant_type_flavor_overlay.png.flat")).exists()
         }
 
-        Apk apk = project.getApk("one", "debug")
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "one")
         //First picture should remain unchanged (first pixel remains green), while all the
         //others should have the first image overlay them (first pixel turns from red to green).
         ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)
