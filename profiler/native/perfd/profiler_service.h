@@ -38,8 +38,8 @@ class ProfilerServiceImpl final
         heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
-                        const profiler::proto::TimeRequest* request,
-                        profiler::proto::TimeResponse* response) override;
+                              const profiler::proto::TimeRequest* request,
+                              profiler::proto::TimeResponse* response) override;
 
   grpc::Status GetVersion(grpc::ServerContext* context,
                           const profiler::proto::VersionRequest* request,
@@ -53,6 +53,11 @@ class ProfilerServiceImpl final
       grpc::ServerContext* context,
       const profiler::proto::AgentStatusRequest* request,
       profiler::proto::AgentStatusResponse* response) override;
+
+  grpc::Status GetDevices(
+      grpc::ServerContext* context,
+      const profiler::proto::GetDevicesRequest* request,
+      profiler::proto::GetDevicesResponse* response) override;
 
  private:
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
