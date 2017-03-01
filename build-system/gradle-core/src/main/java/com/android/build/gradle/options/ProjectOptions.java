@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.Project;
 
 /** Determines if various options, triggered from the command line or environment, are set. */
+@Immutable
 public final class ProjectOptions {
 
     public static final String PROPERTY_TEST_RUNNER_ARGS =

@@ -528,6 +528,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 VariantFactory variantFactory,
                 TaskManager taskManager,
                 Project project,
+                ProjectOptions projectOptions,
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
                 ExtraModelInfo extraModelInfo,
@@ -545,6 +546,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     new VariantManager(
                             globalScope,
                             project,
+                            projectOptions,
                             androidBuilder,
                             adaptedModel,
                             variantFactory,

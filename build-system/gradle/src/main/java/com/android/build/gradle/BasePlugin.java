@@ -481,6 +481,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 new VariantManager(
                         globalScope,
                         project,
+                        projectOptions,
                         androidBuilder,
                         extension,
                         variantFactory,

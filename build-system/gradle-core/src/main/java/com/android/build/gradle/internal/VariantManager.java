@@ -54,6 +54,8 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SigningOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
@@ -105,6 +107,7 @@ public class VariantManager implements VariantModel {
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
     @NonNull private final Project project;
+    @NonNull private final ProjectOptions projectOptions;
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private final AndroidConfig extension;
     @NonNull private final VariantFactory variantFactory;
@@ -123,6 +126,7 @@ public class VariantManager implements VariantModel {
     public VariantManager(
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull VariantFactory variantFactory,
@@ -132,6 +136,7 @@ public class VariantManager implements VariantModel {
         this.extension = extension;
         this.androidBuilder = androidBuilder;
         this.project = project;
+        this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
         this.taskManager = taskManager;
         this.recorder = recorder;
@@ -1099,27 +1104,26 @@ public class VariantManager implements VariantModel {
     }
 
     private CoreSigningConfig createSigningOverride() {
-        AndroidGradleOptions.SigningOptions signingOptions =
-                AndroidGradleOptions.getSigningOptions(project);
+        SigningOptions signingOptions = SigningOptions.readSigningOptions(projectOptions);
         if (signingOptions != null) {
             com.android.build.gradle.internal.dsl.SigningConfig signingConfigDsl =
                     new com.android.build.gradle.internal.dsl.SigningConfig("externalOverride");
 
-            signingConfigDsl.setStoreFile(new File(signingOptions.storeFile));
-            signingConfigDsl.setStorePassword(signingOptions.storePassword);
-            signingConfigDsl.setKeyAlias(signingOptions.keyAlias);
-            signingConfigDsl.setKeyPassword(signingOptions.keyPassword);
+            signingConfigDsl.setStoreFile(new File(signingOptions.getStoreFile()));
+            signingConfigDsl.setStorePassword(signingOptions.getStorePassword());
+            signingConfigDsl.setKeyAlias(signingOptions.getKeyAlias());
+            signingConfigDsl.setKeyPassword(signingOptions.getKeyPassword());
 
-            if (signingOptions.storeType != null) {
-                signingConfigDsl.setStoreType(signingOptions.storeType);
+            if (signingOptions.getStoreType() != null) {
+                signingConfigDsl.setStoreType(signingOptions.getStoreType());
             }
 
-            if (signingOptions.v1Enabled != null) {
-                signingConfigDsl.setV1SigningEnabled(signingOptions.v1Enabled);
+            if (signingOptions.getV1Enabled() != null) {
+                signingConfigDsl.setV1SigningEnabled(signingOptions.getV1Enabled());
             }
 
-            if (signingOptions.v2Enabled != null) {
-                signingConfigDsl.setV2SigningEnabled(signingOptions.v2Enabled);
+            if (signingOptions.getV2Enabled() != null) {
+                signingConfigDsl.setV2SigningEnabled(signingOptions.getV2Enabled());
             }
 
             return signingConfigDsl;
