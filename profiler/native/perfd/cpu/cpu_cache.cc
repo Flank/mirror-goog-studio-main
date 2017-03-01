@@ -29,7 +29,7 @@ using std::vector;
 namespace profiler {
 
 bool CpuCache::AllocateAppCache(int32_t app_id) {
-  if (FindAppCache(app_id) != nullptr) return false;
+  if (FindAppCache(app_id) != nullptr) return true;
   app_caches_.emplace_back(new AppCpuCache(app_id, capacity_));
   return true;
 }
