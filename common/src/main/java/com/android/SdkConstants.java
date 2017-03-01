@@ -777,7 +777,7 @@ public final class SdkConstants {
     public static final String CONSTRAINT_LAYOUT_LIB_ARTIFACT =
             CONSTRAINT_LAYOUT_LIB_GROUP_ID + ":" + CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
     /** Latest known version of the ConstraintLayout library (as a string) */
-    public static final String LATEST_CONSTRAINT_LAYOUT_VERSION = "1.0.0-beta3";
+    public static final String LATEST_CONSTRAINT_LAYOUT_VERSION = "1.0.0";
 
     /* FlexboxLayout constants */
     public static final String CLASS_FLEXBOX_LAYOUT = "com.google.android.flexbox.FlexboxLayout";
