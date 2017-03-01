@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
@@ -109,8 +110,8 @@ public class LargeGradleProjectPerformanceMatrixTest {
         return project.executor()
                 .withEnableInfoLogging(false)
                 .withUseDexArchive(projectScenario.useDexArchive())
-                .disablePreDexBuildCache()
-                .disableAaptV2()
+                .with(BooleanOption.ENABLE_PREDEX_CACHE, false)
+                .with(BooleanOption.ENABLE_AAPT2, false)
                 .withoutOfflineFlag();
     }
 }

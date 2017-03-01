@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,11 +58,7 @@ public class MultiDexTest {
 
     @Parameterized.Parameters(name = "dexInProcess = {0}")
     public static List<Boolean> data() {
-        if (GradleTestProject.USE_JACK) {
-            return Lists.newArrayList(true);
-        } else {
-            return Lists.newArrayList(true, false);
-        }
+        return Lists.newArrayList(true, false);
     }
 
     @Parameterized.Parameter public boolean dexInProcess;
@@ -192,8 +187,6 @@ public class MultiDexTest {
 
     @Test
     public void checkAdditionalParameters() throws Exception {
-        Assume.assumeFalse(
-                "additionalParameters not supported by Jack", GradleTestProject.USE_JACK);
 
         FileUtils.deletePath(
                 FileUtils.join(
@@ -255,10 +248,6 @@ public class MultiDexTest {
             @NonNull List<String> mandatoryClasses,
             @NonNull List<String> permittedToBeInMainDexClasses)
             throws Exception {
-        // Jack done not produce maindexlist.txt
-        if (GradleTestProject.USE_JACK) {
-            return;
-        }
         File listFile =
                 FileUtils.join(
                         project.getIntermediatesDir(),

@@ -18,6 +18,7 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
@@ -89,11 +90,6 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_ENABLE_PREDEX_BUILD_CACHE =
             "android.enabledPreDexBuildCache";
 
-    /**
-     * Set to true to delay dependency resolution to task execution.
-     */
-    public static final String PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION =
-            "android.enableImprovedDependenciesResolution";
 
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "android.overrideVersionCheck";
@@ -349,7 +345,10 @@ public class AndroidGradleOptions {
     }
 
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
+        return getBoolean(
+                project,
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(),
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getDefaultValue());
     }
 
     public static boolean isPreDexBuildCacheEnabled(@NonNull Project project) {

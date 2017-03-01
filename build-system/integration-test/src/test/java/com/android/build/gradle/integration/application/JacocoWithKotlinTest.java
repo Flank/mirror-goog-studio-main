@@ -22,28 +22,20 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Check that Jacoco runs for a Kotlin-based project. */
-@CompileStatic
 public class JacocoWithKotlinTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                     .create();
-
-    @Before
-    public void skipJack() {
-        Assume.assumeFalse("Not supported under Jack", GradleTestProject.USE_JACK);
-    }
 
     @Before
     public void setUpBuildFile() throws IOException {

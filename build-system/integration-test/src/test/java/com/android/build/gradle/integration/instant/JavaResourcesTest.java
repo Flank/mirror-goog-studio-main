@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,7 +67,6 @@ public class JavaResourcesTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         resource = project.file("src/main/resources/foo.txt");
         FileUtils.createFile(resource, "foo");
     }

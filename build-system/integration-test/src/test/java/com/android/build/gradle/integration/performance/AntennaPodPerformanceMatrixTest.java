@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.utils.FileUtils;
@@ -174,7 +175,7 @@ public class AntennaPodPerformanceMatrixTest {
                 case GENERATE_SOURCES:
                     executor().run("clean");
                     executor()
-                            .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                            .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                             .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
                             .run(ModelHelper.getDebugGenerateSourcesCommands(models));
                     continue;
@@ -224,8 +225,8 @@ public class AntennaPodPerformanceMatrixTest {
     public RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .disablePreDexBuildCache()
-                .disableAaptV2()
+                .with(BooleanOption.ENABLE_PREDEX_CACHE, false)
+                .with(BooleanOption.ENABLE_AAPT2, false)
                 .withUseDexArchive(projectScenario.useDexArchive());
     }
 

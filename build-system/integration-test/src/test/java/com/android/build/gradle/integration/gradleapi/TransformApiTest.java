@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeFalse;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -34,7 +33,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 import java.util.Collection;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,11 +43,6 @@ public class TransformApiTest {
     public GradleTestProject wholeProject = GradleTestProject.builder()
             .fromTestProject("transformApiTest")
             .create();
-
-    @BeforeClass
-    public static void skipOnJack() throws Exception {
-        assumeFalse("Transform api cannot be used with jack.", GradleTestProject.USE_JACK);
-    }
 
     @Before
     public void moveLocalProperties() throws Exception {

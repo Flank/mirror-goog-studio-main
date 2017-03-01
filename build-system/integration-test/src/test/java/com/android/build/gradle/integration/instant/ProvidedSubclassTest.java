@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.truth.Expect;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +59,6 @@ public class ProvidedSubclassTest {
 
     @Before
     public void addProvidedLibrary() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "dependencies { provided 'com.google.guava:guava:18.0' }\n");

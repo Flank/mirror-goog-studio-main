@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import org.junit.Assume
+import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -31,6 +31,7 @@ import static com.google.common.truth.Truth.assertThat
 /**
  * Checks if fatal lint errors stop the release build.
  */
+@CompileStatic
 class LintVitalTest {
 
     public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile()
@@ -42,7 +43,6 @@ class LintVitalTest {
 
     @Before
     public void setUp() {
-        Assume.assumeFalse("Disabled until lintVital supports Jack", GradleTestProject.USE_JACK)
 
         project.getBuildFile() << """
 apply plugin: 'com.android.application'

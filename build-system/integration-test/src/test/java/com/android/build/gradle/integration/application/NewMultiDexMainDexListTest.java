@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,10 +82,6 @@ public class NewMultiDexMainDexListTest {
 
     @Test
     public void checkNewAndOldGiveSameResults() throws Exception {
-        if (GradleTestProject.USE_JACK) {
-            throw new AssumptionViolatedException(
-                    "Jack has its own implementation of main dex list");
-        }
         checkBuild();
         TestFileUtils.appendToFile(
                 project.getSubproject(testProject.appProjectDirectory).getBuildFile(),

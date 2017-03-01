@@ -42,7 +42,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,7 +83,6 @@ public class DaggerTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         mAppModule = project.file("src/main/java/com/android/tests/AppModule.java");
     }
 

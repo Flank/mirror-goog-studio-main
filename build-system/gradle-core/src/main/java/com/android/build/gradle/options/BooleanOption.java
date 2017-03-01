@@ -28,6 +28,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
     ENABLE_NEW_RESOURCE_PROCESSING("android.enableNewResourceProcessing", true),
     ENABLE_PREDEX_CACHE("android.enabledPreDexBuildCache", true),
+    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
     VERSION_CHECK_OVERRIDE_PROPERTY_OLD("com.android.build.gradle.overrideVersionCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),

@@ -21,8 +21,8 @@ import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
-import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -33,7 +33,6 @@ import org.junit.Test
 import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
 /**
  * Integration test of the native plugin with multiple variants.
  */
@@ -177,7 +176,7 @@ model {
     @Test
     void testBuildWithSpecificAbi() {
         project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("assembleDebug")
 
         Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "x86")

@@ -40,7 +40,7 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY
 import static com.android.testutils.truth.MoreTruth.assertThatZip
 import static com.google.common.truth.Truth.assertThat
