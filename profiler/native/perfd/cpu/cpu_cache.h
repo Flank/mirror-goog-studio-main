@@ -41,7 +41,8 @@ class CpuCache {
   // kind of cache (same size for all).
   explicit CpuCache(int32_t capacity) : capacity_(capacity) {}
 
-  // Returns true if successfully allocating a cache for a given app.
+  // Returns true if successfully allocating a cache for a given app, or if
+  // the cache is already allocated.
   bool AllocateAppCache(int32_t app_id);
   // Returns true if successfully deallocating the cache for a given app.
   bool DeallocateAppCache(int32_t app_id);
