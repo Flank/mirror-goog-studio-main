@@ -20,6 +20,7 @@ import com.android.testutils.TestClassesGenerator;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -3195,6 +3196,156 @@ class TestClasses implements Opcodes {
                 fv.visitEnd();
             }
             cw.visitEnd();
+            return cw.toByteArray();
+        }
+    }
+
+    static class Lambdas {
+        public static byte[] samType() throws Exception {
+
+            ClassWriter cw = new ClassWriter(0);
+            MethodVisitor mv;
+
+            cw.visit(
+                    52,
+                    ACC_PUBLIC + ACC_ABSTRACT + ACC_INTERFACE,
+                    "test/SamType",
+                    null,
+                    "java/lang/Object",
+                    null);
+
+            cw.visitSource("SamType.java", null);
+            {
+                mv = cw.visitMethod(ACC_PUBLIC + ACC_ABSTRACT, "samMethod", "()V", null, null);
+                mv.visitEnd();
+            }
+            cw.visitEnd();
+
+            return cw.toByteArray();
+        }
+
+        public static byte[] lambdas() throws Exception {
+
+            ClassWriter cw = new ClassWriter(0);
+            MethodVisitor mv;
+
+            cw.visit(52, ACC_PUBLIC + ACC_SUPER, "test/Lambdas", null, "java/lang/Object", null);
+            cw.visitInnerClass(
+                    "java/lang/invoke/MethodHandles$Lookup",
+                    "java/lang/invoke/MethodHandles",
+                    "Lookup",
+                    ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
+
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+                mv.visitCode();
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, "makeSamObject", "()V", null, null);
+                mv.visitCode();
+                mv.visitInsn(ICONST_4);
+                mv.visitVarInsn(ISTORE, 1);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ILOAD, 1);
+                mv.visitInvokeDynamicInsn(
+                        "samMethod",
+                        "(Ltest/Lambdas;I)Ltest/SamType;",
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "java/lang/invoke/LambdaMetafactory",
+                                "metafactory",
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"),
+                        Type.getType("()V"),
+                        new Handle(
+                                Opcodes.H_INVOKESPECIAL,
+                                "test/Lambdas",
+                                "lambda$makeSamObject$0",
+                                "(I)V"),
+                        Type.getType("()V"));
+                mv.visitVarInsn(ASTORE, 2);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 3);
+                mv.visitEnd();
+            }
+            {
+                mv =
+                        cw.visitMethod(
+                                ACC_PRIVATE + ACC_SYNTHETIC,
+                                "lambda$makeSamObject$0",
+                                "(I)V",
+                                null,
+                                null);
+                mv.visitCode();
+                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitVarInsn(ILOAD, 1);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        "java/lang/Object",
+                        "toString",
+                        "()Ljava/lang/String;",
+                        false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        "java/io/PrintStream",
+                        "println",
+                        "(Ljava/lang/String;)V",
+                        false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, "makeSamObjectStatic", "()V", null, null);
+                mv.visitCode();
+                mv.visitInsn(ICONST_4);
+                mv.visitVarInsn(ISTORE, 1);
+                mv.visitVarInsn(ILOAD, 1);
+                mv.visitInvokeDynamicInsn(
+                        "samMethod",
+                        "(I)Ltest/SamType;",
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "java/lang/invoke/LambdaMetafactory",
+                                "metafactory",
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"),
+                        Type.getType("()V"),
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "test/Lambdas",
+                                "lambda$makeSamObjectStatic$1",
+                                "(I)V"),
+                        Type.getType("()V"));
+                mv.visitVarInsn(ASTORE, 2);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 3);
+                mv.visitEnd();
+            }
+            {
+                mv =
+                        cw.visitMethod(
+                                ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,
+                                "lambda$makeSamObjectStatic$1",
+                                "(I)V",
+                                null,
+                                null);
+                mv.visitCode();
+                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitVarInsn(ILOAD, 0);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 1);
+                mv.visitEnd();
+            }
+            cw.visitEnd();
+
             return cw.toByteArray();
         }
     }
