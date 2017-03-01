@@ -16,7 +16,6 @@
 
 package com.android.tools.profiler.support.event;
 
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -35,6 +34,9 @@ import android.view.accessibility.AccessibilityEvent;
 // TODO Have the Window profiler class send events back to Android studio.
 public final class WindowProfilerCallback implements Window.Callback {
 
+    private static final String BACK_UNICODE = "\u25c0";
+    private static final String VOLUME_DOWN_UNICODE = "\u21e9";
+    private static final String VOLUME_UP_UNICODE = "\u21e7";
     private final Window.Callback myRedirectCallback;
 
     public WindowProfilerCallback(Window.Callback redirectCallback) {
@@ -43,11 +45,26 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     // Native function to send touch event states via RPC to perfd.
     private native void sendTouchEvent(int state, long downTime);
-    private native void sendKeyEvent(int state, long downTime);
+    private native void sendKeyEvent(String text, long downTime);
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
-        sendKeyEvent(keyEvent.getAction(), keyEvent.getDownTime());
+        String keyString = "";
+        switch (keyEvent.getKeyCode()) {
+            case KeyEvent.KEYCODE_BACK:
+                keyString = BACK_UNICODE;
+                break;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                keyString = VOLUME_DOWN_UNICODE;
+                break;
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                keyString = VOLUME_UP_UNICODE;
+                break;
+            default:
+                keyString = KeyEvent.keyCodeToString(keyEvent.getKeyCode());
+                break;
+        }
+        sendKeyEvent(keyString, keyEvent.getDownTime());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchKeyEvent(keyEvent);
         }
