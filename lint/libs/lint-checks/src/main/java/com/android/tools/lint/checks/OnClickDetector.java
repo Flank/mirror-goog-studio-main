@@ -20,7 +20,9 @@ import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
 import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
@@ -173,6 +175,12 @@ public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiS
         if (value.isEmpty() || value.trim().isEmpty()) {
             context.report(ISSUE, attribute, context.getLocation(attribute),
                     "`onClick` attribute value cannot be empty");
+        } else if (value.startsWith(PREFIX_BINDING_EXPR)
+                || value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)) {
+            // Data binding: can't evaluate the expression to see if all expression values
+            // are valid yet
+            //noinspection UnnecessaryReturnStatement
+            return;
         } else if (value.contains(" ")) {
             context.report(ISSUE, attribute, context.getValueLocation(attribute),
                     "There should be no spaces in the `onClick` handler name");

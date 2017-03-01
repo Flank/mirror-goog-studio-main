@@ -78,6 +78,7 @@ public final class Category implements Comparable<Category> {
      *
      * @return the parent category, or null if this is a top level category
      */
+    @Nullable
     public Category getParent() {
         return parent;
     }
@@ -87,6 +88,7 @@ public final class Category implements Comparable<Category> {
      *
      * @return the name of this category
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -98,6 +100,7 @@ public final class Category implements Comparable<Category> {
      *
      * @return a full name for this category
      */
+    @NonNull
     public String getFullName() {
         if (parent != null) {
             return parent.getFullName() + ':' + name;
