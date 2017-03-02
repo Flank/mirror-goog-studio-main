@@ -52,6 +52,17 @@ void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
   event_stub.SendSystem(&context, *event, &response);
 }
 
+void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
+  int64_t timestamp = GetClock().GetCurrentTime();
+  int32_t pid = getpid();
+  Perfa::Instance().background_queue()->EnqueueTask([pid, text, timestamp, event_down_time]() {
+    SystemData event;
+    event.set_type(SystemData::KEY);
+    event.set_event_data(text.get());
+    SendSystemEvent(&event, pid, timestamp, event_down_time);
+  });
+}
+
 // TODO: Combine activity and fragment protos, fragments are a subset of
 // activity.
 void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
@@ -90,15 +101,8 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_InputConnectionWrapper_sendKeyboardEvent(
     JNIEnv* env, jobject thiz, jstring jtext) {
   JStringWrapper text(env, jtext);
-
   int64_t timestamp = GetClock().GetCurrentTime();
-  int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask([pid, text, timestamp]() {
-    SystemData event;
-    event.set_type(SystemData::KEY);
-    event.set_event_data(text.get());
-    SendSystemEvent(&event, pid, timestamp, timestamp);
-  });
+  SendKeyboardEvent(text, timestamp);
 }
 
 JNIEXPORT void JNICALL
@@ -117,16 +121,9 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendKeyEvent(
-    JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
-  int64_t timestamp = GetClock().GetCurrentTime();
-  int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
-      [jdownTime, jstate, pid, timestamp]() {
-        SystemData event;
-        event.set_type(SystemData::KEY);
-        event.set_action_id(jstate);
-        SendSystemEvent(&event, pid, timestamp, jdownTime);
-      });
+    JNIEnv* env, jobject thiz, jstring jtext, jlong jdownTime) {
+  JStringWrapper text(env, jtext);
+  SendKeyboardEvent(text, jdownTime);
 }
 
 JNIEXPORT void JNICALL
