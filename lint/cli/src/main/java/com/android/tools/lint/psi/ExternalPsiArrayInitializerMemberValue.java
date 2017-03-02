@@ -37,9 +37,9 @@ public class ExternalPsiArrayInitializerMemberValue extends ExternalPsiAnnotatio
         return mInitializers;
     }
 
-    @Nullable
-    @Override
-    public PsiType getType() {
-        return null;
-    }
+    //@Nullable
+    //@Override
+    //public PsiType getType() {
+    //    return null;
+    //}
 }

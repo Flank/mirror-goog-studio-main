@@ -21,29 +21,29 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaTokenType;
-import com.intellij.psi.PsiBinaryExpression;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiPolyadicExpression;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UBinaryExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULiteralExpression;
+import org.jetbrains.uast.UPolyadicExpression;
+import org.jetbrains.uast.UQualifiedReferenceExpression;
+import org.jetbrains.uast.UastBinaryOperator;
 
 /**
  * Checks for errors related to TextView#setText and internationalization
  */
-public class SetTextDetector extends Detector implements JavaPsiScanner {
+public class SetTextDetector extends Detector implements UastScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             SetTextDetector.class,
@@ -85,7 +85,7 @@ public class SetTextDetector extends Detector implements JavaPsiScanner {
     public SetTextDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -94,28 +94,28 @@ public class SetTextDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (!evaluator.isMemberInSubClassOf(method, TEXT_VIEW_CLS, false)) {
             return;
         }
         if (method.getParameterList().getParametersCount() > 0 &&
                 evaluator.parameterHasType(method, 0, CHAR_SEQUENCE_CLS)) {
-            checkNode(context, call.getArgumentList().getExpressions()[0]);
+            checkNode(context, call.getValueArguments().get(0));
         }
     }
 
-    private static void checkNode(@NonNull JavaContext context, @Nullable PsiElement node) {
-        if (node instanceof PsiLiteral) {
-            Object value = ((PsiLiteral)node).getValue();
+    private static void checkNode(@NonNull JavaContext context, @Nullable UElement node) {
+        if (node instanceof ULiteralExpression) {
+            Object value = ((ULiteralExpression)node).getValue();
             if (value instanceof String && value.toString().matches(WORD_PATTERN)) {
                 context.report(SET_TEXT_I18N, node, context.getLocation(node),
                         "String literal in `setText` can not be translated. Use Android "
                                 + "resources instead.");
             }
-        } else if (node instanceof PsiMethodCallExpression) {
-            PsiMethod calledMethod = ((PsiMethodCallExpression) node).resolveMethod();
+        } else if (node instanceof UCallExpression) {
+            PsiMethod calledMethod = ((UCallExpression) node).resolve();
             if (calledMethod != null && TO_STRING_NAME.equals(calledMethod.getName())) {
                 PsiClass containingClass = calledMethod.getContainingClass();
                 if (containingClass == null) {
@@ -128,16 +128,30 @@ public class SetTextDetector extends Detector implements JavaPsiScanner {
                                     "Consider using `String.format` instead.");
                 }
             }
-        } else if (node instanceof PsiPolyadicExpression) {
-            PsiPolyadicExpression expression = (PsiPolyadicExpression) node;
-            if (expression.getOperationTokenType() == JavaTokenType.PLUS) {
+        } else if (node instanceof UQualifiedReferenceExpression) {
+            UQualifiedReferenceExpression expression = (UQualifiedReferenceExpression) node;
+            checkNode(context, expression.getReceiver());
+            checkNode(context, expression.getSelector());
+        } else if (node instanceof UPolyadicExpression) {
+            UPolyadicExpression expression = (UPolyadicExpression) node;
+            if (expression.getOperator() == UastBinaryOperator.PLUS) {
                 context.report(SET_TEXT_I18N, node, context.getLocation(node),
                         "Do not concatenate text displayed with `setText`. "
                                 + "Use resource string with placeholders.");
             }
-            for (PsiExpression operand : expression.getOperands()) {
+            for (UExpression operand : expression.getOperands()) {
                 checkNode(context, operand);
             }
+        } else if (node instanceof UBinaryExpression) {
+            // UAST does not currently have UBinaryExpression extend UPolyadicExpression
+            UBinaryExpression expression = (UBinaryExpression) node;
+            if (expression.getOperator() == UastBinaryOperator.PLUS) {
+                context.report(SET_TEXT_I18N, node, context.getLocation(node),
+                        "Do not concatenate text displayed with `setText`. "
+                                + "Use resource string with placeholders.");
+            }
+            checkNode(context, expression.getLeftOperand());
+            checkNode(context, expression.getRightOperand());
         }
     }
 }

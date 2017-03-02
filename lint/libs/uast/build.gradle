@@ -2,14 +2,26 @@ apply plugin: 'java'
 
 group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'uast'
-version = '162.2228.14'
+version = '171.2455.10'
 
-jar {
-    from zipTree("../../../../../prebuilts/tools/common/uast/uast-" + version + ".jar")
+dependencies {
+    compile 'org.jetbrains.trove4j:trove4j:20160824'
 }
 
-project.ext.pomName = 'IntelliJ IDEA AST API (PSI) Subset'
-project.ext.pomDesc = 'A subset of IntelliJ IDEA\'s AST APIs and implementation, focusing on the read-only aspects, intended for use by Android Lint when running outside of the IDE (typically from Gradle.). Based on IntelliJ IDEA tag idea/' + version + '.'
+jar {
+    // IntelliJ core
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/intellij-core.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/picocontainer.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/annotations.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/asm-all.jar")
+
+    // UAST
+    from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-common-1.0.jar")
+    from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-java-1.0.jar")
+}
+
+project.ext.pomName = 'IntelliJ IDEA Core and AST APIs'
+project.ext.pomDesc = 'IntelliJ IDEA Core and AST APIs'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"

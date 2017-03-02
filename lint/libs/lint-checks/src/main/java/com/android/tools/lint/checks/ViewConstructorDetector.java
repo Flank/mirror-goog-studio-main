@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -33,18 +32,18 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.intellij.psi.PsiAnonymousClass;
-import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UClass;
 
 /**
  * Looks for custom views that do not define the view constructors needed by UI builders
  */
-public class ViewConstructorDetector extends Detector implements JavaPsiScanner {
+public class ViewConstructorDetector extends Detector implements Detector.UastScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ViewConstructor",
@@ -72,7 +71,7 @@ public class ViewConstructorDetector extends Detector implements JavaPsiScanner 
     public ViewConstructorDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     private static boolean isXmlConstructor(
             @NonNull JavaEvaluator evaluator,
@@ -110,7 +109,7 @@ public class ViewConstructorDetector extends Detector implements JavaPsiScanner 
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         // Only applies to concrete classes
         JavaEvaluator evaluator = context.getEvaluator();
         if (evaluator.isAbstract(declaration)
@@ -142,7 +141,7 @@ public class ViewConstructorDetector extends Detector implements JavaPsiScanner 
                             + "or `(Context,AttributeSet,int)`",
                     declaration.getName());
             Location location = context.getNameLocation(declaration);
-            context.report(ISSUE, declaration, location, message  /*data*/);
+            context.report(ISSUE, declaration, location, message);
         }
     }
 }

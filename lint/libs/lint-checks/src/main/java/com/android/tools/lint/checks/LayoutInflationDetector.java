@@ -20,7 +20,6 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.tools.lint.checks.ViewHolderDetector.INFLATE;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -28,11 +27,12 @@ import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceFile;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.ResourceReference;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -46,18 +46,16 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiReferenceExpression;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UastLiteralUtils;
 import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -69,7 +67,7 @@ import org.xmlpull.v1.XmlPullParserException;
 /**
  * Looks for layout inflation calls passing null as the view root
  */
-public class LayoutInflationDetector extends LayoutDetector implements JavaPsiScanner {
+public class LayoutInflationDetector extends LayoutDetector implements UastScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -139,7 +137,7 @@ public class LayoutInflationDetector extends LayoutDetector implements JavaPsiSc
         }
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -148,47 +146,41 @@ public class LayoutInflationDetector extends LayoutDetector implements JavaPsiSc
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         assert method.getName().equals(INFLATE);
-        if (call.getMethodExpression().getQualifier() == null) {
+        if (call.getReceiver() == null) {
             return;
         }
-        PsiExpression[] arguments = call.getArgumentList().getExpressions();
-        if (arguments.length < 2) {
+        List<UExpression> arguments = call.getValueArguments();
+        if (arguments.size() < 2) {
             return;
         }
 
-        PsiExpression first = arguments[0];
-        if (!(first instanceof PsiReferenceExpression)) {
+        UExpression second = arguments.get(1);
+        if (!UastLiteralUtils.isNullLiteral(second)) {
             return;
         }
-        PsiExpression second = arguments[1];
-        if (!LintUtils.isNullLiteral(second)) {
+
+        UExpression first = arguments.get(0);
+        ResourceReference reference = ResourceReference.get(first);
+        if (reference == null) {
             return;
         }
-        PsiReferenceExpression select = (PsiReferenceExpression) first;
-        PsiElement operand = select.getQualifier();
-        if (operand instanceof PsiReferenceExpression) {
-            PsiReferenceExpression rLayout = (PsiReferenceExpression) operand;
-            if (ResourceType.LAYOUT.getName().equals(rLayout.getReferenceName()) &&
-                    rLayout.getQualifier() != null &&
-                    rLayout.getQualifier().getText().endsWith(SdkConstants.R_CLASS)) {
-                String layoutName = select.getReferenceName();
-                if (context.getScope().contains(Scope.RESOURCE_FILE)) {
-                    // We're doing a full analysis run: we can gather this information
-                    // incrementally
-                    if (!context.getDriver().isSuppressed(context, ISSUE, call)) {
-                        if (mPendingErrors == null) {
-                            mPendingErrors = Lists.newArrayList();
-                        }
-                        Location location = context.getLocation(second);
-                        mPendingErrors.add(Pair.of(layoutName, location));
-                    }
-                } else if (hasLayoutParams(context, layoutName)) {
-                    context.report(ISSUE, call, context.getLocation(second), ERROR_MESSAGE);
+
+        String layoutName = reference.getName();
+        if (context.getScope().contains(Scope.RESOURCE_FILE)) {
+            // We're doing a full analysis run: we can gather this information
+            // incrementally
+            if (!context.getDriver().isSuppressed(context, ISSUE, call)) {
+                if (mPendingErrors == null) {
+                    mPendingErrors = Lists.newArrayList();
                 }
+                Location location = context.getLocation(second);
+                mPendingErrors.add(Pair.of(layoutName, location));
             }
+        } else if (hasLayoutParams(context, layoutName)) {
+            context.report(ISSUE, call, context.getLocation(second), ERROR_MESSAGE);
         }
     }
 

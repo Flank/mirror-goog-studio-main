@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -40,11 +40,12 @@ import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiReferenceList;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UClass;
 
 /**
  * Looks for subclasses of custom widgets in projects using app compat
  */
-public class AppCompatCustomViewDetector extends Detector implements JavaPsiScanner {
+public class AppCompatCustomViewDetector extends Detector implements UastScanner {
 
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE = Issue.create(
@@ -70,7 +71,7 @@ public class AppCompatCustomViewDetector extends Detector implements JavaPsiScan
     public AppCompatCustomViewDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -79,7 +80,7 @@ public class AppCompatCustomViewDetector extends Detector implements JavaPsiScan
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         Project project = context.getMainProject();
         if (project.dependsOn(APPCOMPAT_LIB_ARTIFACT) != Boolean.TRUE) {
             return;

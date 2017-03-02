@@ -153,7 +153,6 @@ public class JavaPsiVisitor {
             Maps.newHashMapWithExpectedSize(12);
     private final Map<String, List<VisitingDetector>> referenceDetectors =
             Maps.newHashMapWithExpectedSize(10);
-    private Set<String> constructorSimpleNames;
     private final List<VisitingDetector> resourceFieldDetectors =
             new ArrayList<>();
     private final List<VisitingDetector> allDetectors;
@@ -225,15 +224,11 @@ public class JavaPsiVisitor {
                 // not supported in Java visitors; adding a method invocation node is trivial
                 // for that case.
                 assert types != XmlScanner.ALL;
-                if (constructorSimpleNames == null) {
-                    constructorSimpleNames = Sets.newHashSet();
-                }
                 for (String type : types) {
                     List<VisitingDetector> list = constructorDetectors.get(type);
                     if (list == null) {
                         list = new ArrayList<>(SAME_TYPE_COUNT);
                         constructorDetectors.put(type, list);
-                        constructorSimpleNames.add(type.substring(type.lastIndexOf('.')+1));
                     }
                     list.add(v);
                 }

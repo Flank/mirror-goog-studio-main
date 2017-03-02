@@ -24,7 +24,7 @@ import static com.android.SdkConstants.TAG_RECEIVER;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -32,22 +32,20 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.uast.UReferenceExpression;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 /**
  * Checks for issues that negatively affect battery life
  */
-public class BatteryDetector extends ResourceXmlDetector implements
-        JavaPsiScanner {
+public class BatteryDetector extends ResourceXmlDetector implements UastScanner {
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPLEMENTATION = new Implementation(
@@ -129,8 +127,8 @@ public class BatteryDetector extends ResourceXmlDetector implements
     }
 
     @Override
-    public void visitReference(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiJavaCodeReferenceElement reference, @NonNull PsiElement resolved) {
+    public void visitReference(@NonNull JavaContext context,
+            @NonNull UReferenceExpression reference, @NonNull PsiElement resolved) {
         if (resolved instanceof PsiField &&
                 context.getEvaluator().isMemberInSubClassOf((PsiField)resolved,
                         "android.provider.Settings", false)

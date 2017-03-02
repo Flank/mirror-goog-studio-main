@@ -16,9 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.IncludeDetector.requestsHeight;
-import static com.android.tools.lint.checks.IncludeDetector.requestsWidth;
-
 import com.android.tools.lint.detector.api.Detector;
 
 public class IncludeDetectorTest extends AbstractCheckTest {
@@ -127,17 +124,5 @@ public class IncludeDetectorTest extends AbstractCheckTest {
                             + "            android:visibility=\"visible\" />\n"
                             + "\n"
                             + "</LinearLayout>\n")));
-    }
-
-    public void testRequestsWidth() {
-        assertTrue(requestsWidth("Layout parameter layout_margin ignored unless both layout_width and layout_height are also specified on <include> tag"));
-        assertTrue(requestsWidth("Layout parameter layout_weight ignored unless layout_width is also specified on <include> tag"));
-        assertFalse(requestsWidth("Layout parameter layout_weight ignored unless layout_height is also specified on <include> tag"));
-    }
-
-    public void testRequestsHeight() {
-        assertTrue(requestsHeight("Layout parameter layout_margin ignored unless both layout_width and layout_height are also specified on <include> tag"));
-        assertFalse(requestsHeight("Layout parameter layout_weight ignored unless layout_width is also specified on <include> tag"));
-        assertTrue(requestsHeight("Layout parameter layout_weight ignored unless layout_height is also specified on <include> tag"));
     }
 }

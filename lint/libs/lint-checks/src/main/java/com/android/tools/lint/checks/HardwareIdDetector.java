@@ -27,30 +27,29 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiCatchSection;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiDisjunctionType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiParameter;
-import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UCatchClause;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
  * Detect calls to get device Identifiers.
  */
-public class HardwareIdDetector extends Detector implements Detector.JavaPsiScanner {
+public class HardwareIdDetector extends Detector implements Detector.UastScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             HardwareIdDetector.class,
@@ -112,8 +111,8 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression node, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         String className = null;
         String methodName = method.getName();
@@ -149,12 +148,12 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
 
         if (methodName.equals(SETTINGS_SECURE_GET_STRING)) {
             if (evaluator.getParameterCount(method) != 2
-                    || node.getArgumentList().getExpressions().length != 2) {
+                    || node.getValueArgumentCount() != 2) {
                 // we are explicitly looking for Secure.getString(x, ANDROID_ID) here
                 return;
             }
             String value = ConstantEvaluator.evaluateString(
-                    context, node.getArgumentList().getExpressions()[1], false);
+                    context, node.getValueArguments().get(1), false);
             // Check if the value matches Settings.Secure.ANDROID_ID
             if (!"android_id".equals(value)) {
                 return;
@@ -197,8 +196,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
     @Override
     public void visitReference(
             @NonNull JavaContext context,
-            @Nullable JavaElementVisitor visitor,
-            @NonNull PsiJavaCodeReferenceElement reference,
+            @NonNull UReferenceExpression reference,
             @NonNull PsiElement resolved) {
 
         JavaEvaluator evaluator = context.getEvaluator();
@@ -218,40 +216,32 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
      * @param expression PsiExpression that can be within a catch block
      * @return true iff the expression is within the catch block
      */
-    private static boolean inCatchPlayServicesNotAvailableException(PsiExpression expression) {
+    private static boolean inCatchPlayServicesNotAvailableException(UExpression expression) {
+        UCatchClause surroundingCatchSection =
+                UastUtils.getParentOfType(expression, UCatchClause.class, true);
 
-        PsiCatchSection surroundingCatchSection =
-                PsiTreeUtil.getParentOfType(expression, PsiCatchSection.class, true);
-
-        if (surroundingCatchSection != null && surroundingCatchSection.getCatchType() != null) {
-            PsiType catchType = surroundingCatchSection.getCatchType();
-            // Handle multi-catch statements such as (IOException | AnotherException e)
-            if (catchType instanceof PsiDisjunctionType) {
-                PsiDisjunctionType disjunctionType = (PsiDisjunctionType) catchType;
-                if (disjunctionType.getDisjunctions()
-                        .stream()
-                        .anyMatch(t -> t.equalsToText(PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION))) {
+        if (surroundingCatchSection != null) {
+            for (PsiType t : surroundingCatchSection.getTypes()) {
+                if (t.equalsToText(PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION)) {
                     return true;
                 }
-            } else if (catchType.equalsToText(PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION)) {
-                return true;
             }
         }
         return false;
     }
 
-    private static void findReflectionUsage(@NonNull PsiMethodCallExpression expression,
+    private static void findReflectionUsage(@NonNull UCallExpression expression,
             @NonNull JavaContext context) {
-        PsiExpression[] methodArgs = expression.getArgumentList().getExpressions();
-        if (methodArgs.length < 1) {
+        List<UExpression> methodArgs = expression.getValueArguments();
+        if (methodArgs.isEmpty()) {
             return;
         }
-        String value = ConstantEvaluator.evaluateString(context, methodArgs[0], false);
+        String value = ConstantEvaluator.evaluateString(context, methodArgs.get(0), false);
         if (!"android.os.SystemProperties".equals(value)) {
             return;
         }
-        PsiMethod surroundingMethod =
-                PsiTreeUtil.getParentOfType(expression, PsiMethod.class, true);
+        UMethod surroundingMethod =
+                UastUtils.getParentOfType(expression, UMethod.class, true);
         if (surroundingMethod == null) {
             return;
         }
@@ -269,9 +259,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
         // e.g. getSystemProperty(context, "ro.serialno")
         // So we need to find calls to the current method. Note: Here we restrict
         // the search to the current class.
-        PsiClass surroundingClass = PsiTreeUtil.getParentOfType(
-                surroundingMethod, PsiClass.class, true);
-
+        UClass surroundingClass = UastUtils.getContainingUClass(surroundingMethod);
         if (surroundingClass != null) {
             int paramIndex = surroundingMethod.getParameterList()
                     .getParameterIndex(argExpression);
@@ -279,7 +267,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
                 return;
             }
             FindMethodCallVisitor methodCallVisitor =
-                    new FindMethodCallVisitor(context, surroundingMethod, paramIndex);
+                    new FindMethodCallVisitor(context, surroundingMethod.getPsi(), paramIndex);
             surroundingClass.accept(methodCallVisitor);
         }
     }
@@ -289,9 +277,9 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
      * {@link java.lang.reflect.Method#invoke(Object, Object...)} and also check the parameter(s)
      * passed into invoke.
      */
-    private static final class InvokeCallVisitor extends JavaRecursiveElementVisitor {
+    private static final class InvokeCallVisitor extends AbstractUastVisitor {
 
-        private final PsiMethodCallExpression mLoadMethod;
+        private final UCallExpression mLoadMethod;
         private final JavaContext mContext;
 
         private String mLoadVariable;
@@ -299,30 +287,29 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
         private boolean mProcessingDone;
         private PsiParameter mPsiParameter;
 
-        public InvokeCallVisitor(JavaContext context, PsiMethodCallExpression expression) {
+        public InvokeCallVisitor(JavaContext context, UCallExpression expression) {
             mContext = context;
             mLoadMethod = expression;
         }
 
         @Override
-        public void visitElement(PsiElement element) {
-            // stop processing if we have already concluded our search.
-            if (!mProcessingDone) {
-                super.visitElement(element);
-            }
+        public boolean visitElement(UElement node) {
+            return mProcessingDone || super.visitElement(node);
         }
 
+
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-            super.visitMethodCallExpression(expression);
-            if (expression == mLoadMethod) {
-                PsiVariable variable = CleanupDetector.getVariableElement(expression);
+        public boolean visitCallExpression(UCallExpression expression) {
+            if (expression.equals(mLoadMethod)) {
+                PsiVariable variable = CleanupDetector.getVariableElement(expression, true, false);
+                //PsiVariable variable = UastUtils.getParentOfType(expression, UVariable.class);
+
                 mLoadVariable = variable == null ? null : variable.getName();
             } else if (mLoadVariable != null
                     && isDesiredMethodCall(expression, mLoadVariable,
                     "java.lang.Class", "getMethod", 0)) {
                 // clazz.getMethod("get", ..)
-                PsiExpression arg = methodParameterAt(expression, 0 /* param index */);
+                UExpression arg = methodParameterAt(expression, 0 /* param index */);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);
                 if ("get".equals(value)) {
                     PsiVariable variable = CleanupDetector.getVariableElement(expression);
@@ -332,19 +319,21 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
                     && isDesiredMethodCall(expression, mMethodVariable,
                     "java.lang.reflect.Method", "invoke", 1 /* param index */)) {
                 // method.invoke(instance, "ro.serialno")
-                PsiExpression arg = methodParameterAt(expression, 1);
+                UExpression arg = methodParameterAt(expression, 1);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);
                 if (RO_SERIALNO.equals(value)) {
                     mContext.report(ISSUE, arg, mContext.getLocation(arg),
                             String.format(MESSAGE_DEVICE_IDENTIFIERS, RO_SERIALNO));
-                } else if (arg instanceof PsiReferenceExpression) {
-                    PsiElement resolved = ((PsiReferenceExpression)arg).resolve();
+                } else if (arg instanceof UReferenceExpression) {
+                    PsiElement resolved = ((UReferenceExpression)arg).resolve();
                     if (resolved instanceof PsiParameter) {
                         mPsiParameter = (PsiParameter)resolved;
                     }
                 }
                 mProcessingDone = true;
             }
+
+            return super.visitCallExpression(expression);
         }
 
         @Nullable
@@ -352,37 +341,34 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
             return mPsiParameter;
         }
 
-        private static PsiExpression methodParameterAt(PsiMethodCallExpression expression,
+        private static UExpression methodParameterAt(UCallExpression expression,
                 int index) {
-            PsiExpression[] expressions = expression.getArgumentList().getExpressions();
-            assert expressions.length > index;
-            return expressions[index];
+            List<UExpression> expressions = expression.getValueArguments();
+            assert expressions.size() > index;
+            return expressions.get(index);
         }
 
-        private static boolean isDesiredMethodCall(@NonNull PsiMethodCallExpression expression,
+        private static boolean isDesiredMethodCall(@NonNull UCallExpression expression,
                 @NonNull String variableQualifier,
                 @NonNull String containingClass,
                 @NonNull String desiredMethodName, int paramIndex) {
 
-            if (!desiredMethodName.equals(expression.getMethodExpression().getReferenceName())) {
+            if (!desiredMethodName.equals(expression.getMethodName())) {
                 return false;
             }
             // Check that the qualifier used is the same.
-            PsiExpression qualifierExpression = expression
-                    .getMethodExpression()
-                    .getQualifierExpression();
-
+            UExpression qualifierExpression = expression.getReceiver();
             if (qualifierExpression == null
-                    || !variableQualifier.equals(qualifierExpression.getText())) {
+                    || !variableQualifier.equals(qualifierExpression.asSourceString())) {
                 return false;
             }
 
-            PsiMethod method = expression.resolveMethod();
+            PsiMethod method = expression.resolve();
 
             return method != null
                     && method.getContainingClass() != null
                     && containingClass.equals(method.getContainingClass().getQualifiedName())
-                    && expression.getArgumentList().getExpressions().length > paramIndex;
+                    && expression.getValueArgumentCount() > paramIndex;
         }
     }
 
@@ -390,7 +376,7 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
      * Find calls to a given method and report an issue if a parameter at parametIndex
      * evaluates to a constant 'ro.serialno'
      */
-    private static final class FindMethodCallVisitor extends JavaRecursiveElementVisitor {
+    private static final class FindMethodCallVisitor extends AbstractUastVisitor {
 
         private final JavaContext mContext;
         private final PsiMethod mPsiMethod;
@@ -403,12 +389,11 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
         }
 
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-            super.visitMethodCallExpression(expression);
-            if (mPsiMethod == expression.resolveMethod()) {
-                PsiExpression[] expressions = expression.getArgumentList().getExpressions();
-                if (expressions.length > mParamIndex) {
-                    PsiExpression paramExpr = expressions[mParamIndex];
+        public boolean visitCallExpression(UCallExpression expression) {
+            if (mPsiMethod.equals(expression.resolve())) {
+                List<UExpression> expressions = expression.getValueArguments();
+                if (expressions.size() > mParamIndex) {
+                    UExpression paramExpr = expressions.get(mParamIndex);
                     String value = ConstantEvaluator.evaluateString(mContext, paramExpr, false);
                     if (RO_SERIALNO.equals(value)
                             && !inCatchPlayServicesNotAvailableException(expression)) {
@@ -418,6 +403,8 @@ public class HardwareIdDetector extends Detector implements Detector.JavaPsiScan
                     }
                 }
             }
+
+            return super.visitCallExpression(expression);
         }
     }
 }

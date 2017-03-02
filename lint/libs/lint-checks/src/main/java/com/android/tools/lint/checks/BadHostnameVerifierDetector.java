@@ -23,25 +23,25 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.PsiThrowStatement;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.UThrowExpression;
+import org.jetbrains.uast.UastLiteralUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-public class BadHostnameVerifierDetector extends Detector implements JavaPsiScanner {
+public class BadHostnameVerifierDetector extends Detector implements UastScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
@@ -59,7 +59,7 @@ public class BadHostnameVerifierDetector extends Detector implements JavaPsiScan
             Severity.WARNING,
             IMPLEMENTATION);
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -68,7 +68,7 @@ public class BadHostnameVerifierDetector extends Detector implements JavaPsiScan
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         JavaEvaluator evaluator = context.getEvaluator();
         for (PsiMethod method : declaration.findMethodsByName("verify", false)) {
             if (evaluator.methodMatches(method, null, false,
@@ -90,43 +90,47 @@ public class BadHostnameVerifierDetector extends Detector implements JavaPsiScan
         }
     }
 
-    private static class ComplexVisitor extends JavaRecursiveElementVisitor {
+    private static class ComplexVisitor extends AbstractUastVisitor {
         @SuppressWarnings("unused")
-        private final JavaContext mContext;
-        private boolean mComplex;
+        private final JavaContext context;
+        private boolean complex;
 
         public ComplexVisitor(JavaContext context) {
-            mContext = context;
+            this.context = context;
         }
 
         @Override
-        public void visitThrowStatement(PsiThrowStatement statement) {
-            super.visitThrowStatement(statement);
-            mComplex = true;
+        public boolean visitThrowExpression(UThrowExpression node) {
+            complex = true;
+            return true;
         }
 
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-            super.visitMethodCallExpression(expression);
+        public boolean visitCallExpression(UCallExpression node) {
             // TODO: Ignore certain known safe methods, e.g. Logging etc
-            mComplex = true;
+            complex = true;
+            return true;
         }
 
         @Override
-        public void visitReturnStatement(PsiReturnStatement node) {
-            PsiExpression argument = node.getReturnValue();
+        public boolean visitReturnExpression(UReturnExpression node) {
+            UExpression argument = node.getReturnExpression();
             if (argument != null) {
                 // TODO: Only do this if certain that there isn't some intermediate
                 // assignment, as exposed by the unit test
-                //Object value = ConstantEvaluator.evaluate(mContext, argument);
+                //Object value = ConstantEvaluator.evaluate(context, argument);
                 //if (Boolean.TRUE.equals(value)) {
-                mComplex = !LintUtils.isTrueLiteral(argument); // "return false" or unknown logic
+                if (UastLiteralUtils.isTrueLiteral(argument)) {
+                    complex = false;
+                } else {
+                    complex = true; // "return false" or some complicated logic
+                }
             }
-            super.visitReturnStatement(node);
+            return super.visitReturnExpression(node);
         }
 
         public boolean isComplex() {
-            return mComplex;
+            return complex;
         }
     }
 }

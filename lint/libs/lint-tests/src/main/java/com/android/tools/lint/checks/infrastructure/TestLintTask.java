@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -513,6 +514,10 @@ public class TestLintTask {
     public TestLintResult run() {
         alreadyRun = true;
         ensureConfigured();
+
+        if (!allowCompilationErrors) {
+            EcjParser.skipComputingEcjErrors = false;
+        }
 
         File rootDir = Files.createTempDir();
         try {

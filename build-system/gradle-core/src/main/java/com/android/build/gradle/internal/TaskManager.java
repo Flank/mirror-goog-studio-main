@@ -751,7 +751,7 @@ public abstract class TaskManager {
         AndroidArtifactVariantData<?> androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
-        
+
         AndroidTask<CompatibleScreensManifest> csmTask =
                 androidTasks.create(
                         tasks,

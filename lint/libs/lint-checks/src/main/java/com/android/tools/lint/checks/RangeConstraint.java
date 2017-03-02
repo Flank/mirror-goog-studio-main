@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.intellij.psi.JavaTokenType;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
@@ -25,26 +26,45 @@ import com.intellij.psi.PsiBinaryExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiIfStatement;
 import com.intellij.psi.PsiLiteral;
-import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPrefixExpression;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.util.PsiTreeUtil;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UExpression;
 
 public abstract class RangeConstraint {
 
     @NonNull
-    public String describe(@Nullable PsiExpression argument) {
+    public String describe(@Nullable UExpression argument) {
         assert false;
         return "";
     }
 
     @Nullable
     public static RangeConstraint create(@NonNull PsiAnnotation annotation) {
+        String qualifiedName = annotation.getQualifiedName();
+        if (qualifiedName == null) {
+            return null;
+        }
+        switch (qualifiedName) {
+            case SupportAnnotationDetector.INT_RANGE_ANNOTATION:
+                return IntRangeConstraint.create(annotation);
+            case SupportAnnotationDetector.FLOAT_RANGE_ANNOTATION:
+                return FloatRangeConstraint.create(annotation);
+            case SupportAnnotationDetector.SIZE_ANNOTATION:
+                return SizeConstraint.create(annotation);
+            default:
+                return null;
+        }
+    }
+
+    @Nullable
+    public static RangeConstraint create(
+            @NonNull JavaContext context,
+            @NonNull UAnnotation annotation) {
         String qualifiedName = annotation.getQualifiedName();
         if (qualifiedName == null) {
             return null;
@@ -78,93 +98,94 @@ public abstract class RangeConstraint {
     }
 
     @Nullable
-    public Boolean isValid(@NonNull PsiExpression argument) {
+    public Boolean isValid(@NonNull UExpression argument) {
         return null;
     }
 
     @Nullable
-    protected Number guessSize(@NonNull PsiExpression argument) {
-        if (argument instanceof PsiLiteral) {
-            PsiLiteral literal = (PsiLiteral) argument;
-            Object v = literal.getValue();
-            if (v instanceof Number) {
-                return (Number) v;
-            }
-        } else if (argument instanceof PsiBinaryExpression) {
-            // For PSI conversion, use this instead:
-            //Object v = JavaConstantExpressionEvaluator.computeConstantExpression(argument, false);
-            Object v = ConstantEvaluator.evaluate(null, argument);
-            if (v instanceof Number) {
-                return (Number) v;
-            }
-        } else if (argument instanceof PsiReferenceExpression) {
-            PsiReferenceExpression ref = (PsiReferenceExpression) argument;
-            PsiElement resolved = ref.resolve();
-            if (resolved instanceof PsiField) {
-                PsiField field = (PsiField) resolved;
-                PsiExpression initializer = field.getInitializer();
-                if (initializer != null) {
-                    Number number = guessSize(initializer);
-                    //noinspection VariableNotUsedInsideIf
-                    if (number != null) {
-                        // If we're surrounded by an if check involving the variable, then don't validate
-                        // based on the initial value since it might be clipped to a valid range
-                        PsiIfStatement ifStatement = PsiTreeUtil
-                                .getParentOfType(argument, PsiIfStatement.class, true);
-                        if (ifStatement != null) {
-                            PsiExpression condition = ifStatement.getCondition();
-                            if (comparesReference(resolved, condition)) {
-                                return null;
-                            }
-                        }
-                    }
-                    return number;
-                }
-            } else if (resolved instanceof PsiLocalVariable) {
-                PsiLocalVariable variable = (PsiLocalVariable) resolved;
-                PsiExpression initializer = variable.getInitializer();
-                if (initializer != null) {
-                    Number number = guessSize(initializer);
-                    //noinspection VariableNotUsedInsideIf
-                    if (number != null) {
-                        // If we're surrounded by an if check involving the variable, then don't validate
-                        // based on the initial value since it might be clipped to a valid range
-                        PsiIfStatement ifStatement = PsiTreeUtil
-                                .getParentOfType(argument, PsiIfStatement.class, true);
-                        if (ifStatement != null) {
-                            PsiExpression condition = ifStatement.getCondition();
-                            if (comparesReference(resolved, condition)) {
-                                return null;
-                            }
-                        }
-                    }
-                    return number;
-                }
-            }
-        } else if (argument instanceof PsiPrefixExpression) {
-            PsiPrefixExpression prefix = (PsiPrefixExpression) argument;
-            if (prefix.getOperationTokenType() == JavaTokenType.MINUS) {
-                PsiExpression operand = prefix.getOperand();
-                if (operand != null) {
-                    Number number = guessSize(operand);
-                    if (number != null) {
-                        if (number instanceof Long) {
-                            return -number.longValue();
-                        } else if (number instanceof Integer) {
-                            return -number.intValue();
-                        } else if (number instanceof Double) {
-                            return -number.doubleValue();
-                        } else if (number instanceof Float) {
-                            return -number.floatValue();
-                        } else if (number instanceof Short) {
-                            return -number.shortValue();
-                        } else if (number instanceof Byte) {
-                            return -number.byteValue();
-                        }
-                    }
-                }
-            }
-        }
+    protected Number guessSize(@NonNull UExpression argument) {
+        System.out.println("IMPLEMENT CONSTRAINT GUESS SIZE");
+        //if (argument instanceof PsiLiteral) {
+        //    PsiLiteral literal = (PsiLiteral) argument;
+        //    Object v = literal.getValue();
+        //    if (v instanceof Number) {
+        //        return (Number) v;
+        //    }
+        //} else if (argument instanceof PsiBinaryExpression) {
+        //    // For PSI conversion, use this instead:
+        //    //Object v = JavaConstantExpressionEvaluator.computeConstantExpression(argument, false);
+        //    Object v = ConstantEvaluator.evaluate(null, argument);
+        //    if (v instanceof Number) {
+        //        return (Number) v;
+        //    }
+        //} else if (argument instanceof PsiReferenceExpression) {
+        //    PsiReferenceExpression ref = (PsiReferenceExpression) argument;
+        //    PsiElement resolved = ref.resolve();
+        //    if (resolved instanceof PsiField) {
+        //        PsiField field = (PsiField) resolved;
+        //        PsiExpression initializer = field.getInitializer();
+        //        if (initializer != null) {
+        //            Number number = guessSize(initializer);
+        //            //noinspection VariableNotUsedInsideIf
+        //            if (number != null) {
+        //                // If we're surrounded by an if check involving the variable, then don't validate
+        //                // based on the initial value since it might be clipped to a valid range
+        //                PsiIfStatement ifStatement = PsiTreeUtil
+        //                        .getParentOfType(argument, PsiIfStatement.class, true);
+        //                if (ifStatement != null) {
+        //                    PsiExpression condition = ifStatement.getCondition();
+        //                    if (comparesReference(resolved, condition)) {
+        //                        return null;
+        //                    }
+        //                }
+        //            }
+        //            return number;
+        //        }
+        //    } else if (resolved instanceof PsiLocalVariable) {
+        //        PsiLocalVariable variable = (PsiLocalVariable) resolved;
+        //        PsiExpression initializer = variable.getInitializer();
+        //        if (initializer != null) {
+        //            Number number = guessSize(initializer);
+        //            //noinspection VariableNotUsedInsideIf
+        //            if (number != null) {
+        //                // If we're surrounded by an if check involving the variable, then don't validate
+        //                // based on the initial value since it might be clipped to a valid range
+        //                PsiIfStatement ifStatement = PsiTreeUtil
+        //                        .getParentOfType(argument, PsiIfStatement.class, true);
+        //                if (ifStatement != null) {
+        //                    PsiExpression condition = ifStatement.getCondition();
+        //                    if (comparesReference(resolved, condition)) {
+        //                        return null;
+        //                    }
+        //                }
+        //            }
+        //            return number;
+        //        }
+        //    }
+        //} else if (argument instanceof PsiPrefixExpression) {
+        //    PsiPrefixExpression prefix = (PsiPrefixExpression) argument;
+        //    if (prefix.getOperationTokenType() == JavaTokenType.MINUS) {
+        //        PsiExpression operand = prefix.getOperand();
+        //        if (operand != null) {
+        //            Number number = guessSize(operand);
+        //            if (number != null) {
+        //                if (number instanceof Long) {
+        //                    return -number.longValue();
+        //                } else if (number instanceof Integer) {
+        //                    return -number.intValue();
+        //                } else if (number instanceof Double) {
+        //                    return -number.doubleValue();
+        //                } else if (number instanceof Float) {
+        //                    return -number.floatValue();
+        //                } else if (number instanceof Short) {
+        //                    return -number.shortValue();
+        //                } else if (number instanceof Byte) {
+        //                    return -number.byteValue();
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
         return null;
     }
 

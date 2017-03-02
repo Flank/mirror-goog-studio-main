@@ -65,12 +65,16 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import com.intellij.psi.PsiJavaFile;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,6 +84,7 @@ import java.util.regex.Pattern;
 import junit.framework.TestCase;
 import lombok.ast.Node;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -469,18 +474,30 @@ public class LintUtilsTest extends TestCase {
 
     public static JavaContext parse(@Language("JAVA") final String javaSource,
             final File relativePath) {
-        return parse(javaSource, relativePath, true, false);
+        return parse(javaSource, relativePath, true, false, false);
     }
 
     public static JavaContext parsePsi(@Language("JAVA") final String javaSource,
             final File relativePath) {
-        return parse(javaSource, relativePath, false, true);
+        return parse(javaSource, relativePath, false, true, false);
+    }
+
+    public static JavaContext parseUast(@Language("JAVA") final String javaSource,
+            final File relativePath) {
+        return parse(javaSource, relativePath, false, true, true);
     }
 
     public static JavaContext parse(@Language("JAVA") final String javaSource,
-            final File relativePath, boolean lombok, boolean psi) {
-        File dir = new File("projectDir");
+            final File relativePath, boolean lombok, boolean psi, boolean uast) {
+        // TODO: Clean up -- but where?
+        File dir = Files.createTempDir();
         final File fullPath = new File(dir, relativePath.getPath());
+        fullPath.getParentFile().mkdirs();
+        try {
+            Files.write(javaSource, fullPath, Charsets.UTF_8);
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
         LintCliClient client = new LintCliClient() {
             @NonNull
             @Override
@@ -512,13 +529,18 @@ public class LintUtilsTest extends TestCase {
             }
         };
         Project project = client.getProject(dir, dir);
-
+        client.initializeProjects(Collections.singletonList(project));
         LintDriver driver = new LintDriver(new BuiltinIssueRegistry(),
                 new LintCliClient());
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         TestContext context = new TestContext(driver, client, project, javaSource, fullPath);
-        JavaParser parser = context.getParser();
-        parser.prepareJavaParse(Collections.<JavaContext>singletonList(context));
+        JavaParser parser = null;
+        if (lombok || psi) {
+            parser = client.getJavaParser(project);
+            context.setParser(parser);
+            assertNotNull(parser);
+            parser.prepareJavaParse(Collections.singletonList(context));
+        }
         if (lombok) {
             Node compilationUnit = parser.parseJava(context);
             assertNotNull(javaSource, compilationUnit);
@@ -529,6 +551,15 @@ public class LintUtilsTest extends TestCase {
             assertNotNull("Couldn't parse source", javaFile);
             context.setJavaFile(javaFile);
         }
+        if (uast) {
+            UastParser uastParser = client.getUastParser(project);
+            assertNotNull(uastParser);
+            context.setUastParser(uastParser);
+            uastParser.prepare(Collections.singletonList(context));
+            UFile uFile = uastParser.parse(context);
+            context.setUastFile(uFile);
+        }
+        client.disposeProjects(Collections.singletonList(project));
         return context;
     }
 
@@ -728,8 +759,7 @@ public class LintUtilsTest extends TestCase {
         public TestContext(LintDriver driver, LintCliClient client, Project project,
                 String javaSource, File file) {
             //noinspection ConstantConditions
-            super(driver, project,
-                    null, file, client.getJavaParser(project));
+            super(driver, project, null, file);
 
             mJavaSource = javaSource;
         }

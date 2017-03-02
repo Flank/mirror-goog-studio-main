@@ -27,9 +27,8 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -38,28 +37,27 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.utils.XmlUtils;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiClassObjectAccessExpression;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiNewExpression;
-import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClassLiteralExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UReferenceExpression;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
  * Checks looking for issues related to the JobScheduler API
  */
-public class JobSchedulerDetector extends Detector implements JavaPsiScanner {
+public class JobSchedulerDetector extends Detector implements UastScanner {
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPLEMENTATION = new Implementation(
@@ -99,42 +97,34 @@ public class JobSchedulerDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitConstructor(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiNewExpression node, @NonNull PsiMethod constructor) {
-        PsiExpressionList argumentList = node.getArgumentList();
-        if (argumentList == null) {
+    public void visitConstructor(@NonNull JavaContext context, @NonNull UCallExpression node,
+            @NonNull PsiMethod constructor) {
+        List<UExpression> arguments = node.getValueArguments();
+        if (arguments.size() < 2) {
             return;
         }
-        PsiExpression[] arguments = argumentList.getExpressions();
-        if (arguments.length < 2) {
-            return;
-        }
-        PsiExpression componentName = arguments[1];
-        if (componentName instanceof PsiReferenceExpression) {
-            PsiElement resolved = ((PsiReferenceExpression) componentName).resolve();
+        UExpression componentName = arguments.get(1);
+        if (componentName instanceof UReferenceExpression) {
+            PsiElement resolved = ((UReferenceExpression) componentName).resolve();
             if (resolved instanceof PsiVariable) {
-                componentName = ConstantEvaluator.findLastAssignment(arguments[1],
-                        (PsiVariable) resolved);
+                componentName = UastLintUtils.findLastAssignment((PsiVariable)resolved,
+                        componentName);
             }
         }
-        if (!(componentName instanceof PsiNewExpression)) {
+        if (!(componentName instanceof UCallExpression)) {
             return;
         }
-        PsiNewExpression call = (PsiNewExpression) componentName;
-        argumentList = call.getArgumentList();
-        if (argumentList == null) {
+        UCallExpression call = (UCallExpression) componentName;
+        arguments = call.getValueArguments();
+        if (arguments.size() < 2) {
             return;
         }
-        arguments = argumentList.getExpressions();
-        if (arguments.length < 2) {
+        UExpression typeReference = arguments.get(1);
+        if (!(typeReference instanceof UClassLiteralExpression)) {
             return;
         }
-        PsiExpression typeReference = arguments[1];
-        if (!(typeReference instanceof PsiClassObjectAccessExpression)) {
-            return;
-        }
-        PsiClassObjectAccessExpression classRef = (PsiClassObjectAccessExpression) typeReference;
-        PsiType serviceType = classRef.getOperand().getType();
+        UClassLiteralExpression classRef = (UClassLiteralExpression) typeReference;
+        PsiType serviceType = classRef.getType();
         if (!(serviceType instanceof PsiClassType)) {
             return;
         }
@@ -156,7 +146,7 @@ public class JobSchedulerDetector extends Detector implements JavaPsiScanner {
     private static void ensureBindServicePermission(
             @NonNull JavaContext context,
             @NonNull String fqcn,
-            @NonNull PsiClassObjectAccessExpression typeReference) {
+            @NonNull UClassLiteralExpression typeReference) {
         // Make sure the app has
         //    android:permission="android.permission.BIND_JOB_SERVICE"
         // as well.

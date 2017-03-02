@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
 public class FragmentDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -26,7 +25,7 @@ public class FragmentDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/FragmentTest.java:10: Error: This fragment class should be public (test.pkg.FragmentTest.Fragment1) [ValidFragment]\n"
                 + "    private static class Fragment1 extends Fragment {\n"
                 + "                         ~~~~~~~~~\n"
@@ -45,9 +44,10 @@ public class FragmentDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/FragmentTest.java:36: Error: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]\n"
                 + "        public Fragment5(int dummy) {\n"
                 + "               ~~~~~~~~~\n"
-                + "6 errors, 0 warnings\n",
-
-            lintProject(java("src/test/pkg/FragmentTest.java", ""
+                + "6 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java("src/test/pkg/FragmentTest.java", ""
                     + "package test.pkg;\n"
                     + "\n"
                     + "import android.annotation.SuppressLint;\n"
@@ -107,18 +107,19 @@ public class FragmentDetectorTest extends AbstractCheckTest {
                     + "    public static class Fragment7 extends Fragment {\n"
                     + "    }\n"
                     + "}\n"))
-
-        );
+                .run()
+                .expect(expected);
     }
 
     public void testAnonymousInnerClass() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/Parent.java:7: Error: Fragments should be static such that they can be re-instantiated by the system, and anonymous classes are not static [ValidFragment]\n"
                 + "        return new Fragment() {\n"
-                + "                   ~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProject(java("src/test/pkg/Parent.java", ""
+                + "                   ^\n"
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java("src/test/pkg/Parent.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import android.app.Fragment;\n"
@@ -128,6 +129,8 @@ public class FragmentDetectorTest extends AbstractCheckTest {
                         + "        return new Fragment() {\n"
                         + "        };\n"
                         + "    }\n"
-                        + "}\n")));
+                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 }

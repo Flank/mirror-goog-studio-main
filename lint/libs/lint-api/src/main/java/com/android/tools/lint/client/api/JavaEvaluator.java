@@ -52,6 +52,10 @@ import com.intellij.psi.PsiWildcardType;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
+import org.jetbrains.uast.UAnnotated;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UMethod;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
 public abstract class JavaEvaluator {
@@ -477,6 +481,12 @@ public abstract class JavaEvaluator {
     public abstract String findJarPath(@NonNull PsiElement element);
 
     /**
+     * Try to determine the path to the .jar file containing the element, <b>if</b> applicable
+     */
+    @Nullable
+    public abstract String findJarPath(@NonNull UElement element);
+
+    /**
      * Returns true if the given annotation is inherited (instead of being defined directly
      * on the given modifier list holder
      *
@@ -490,8 +500,41 @@ public abstract class JavaEvaluator {
         return annotationOwner == null || !annotationOwner.equals(owner.getModifierList());
     }
 
+    public boolean isInherited(@NonNull UAnnotation annotation,
+            @NonNull PsiModifierListOwner owner) {
+        PsiElement psi = annotation.getPsi();
+        if (psi instanceof PsiAnnotation) {
+            PsiAnnotationOwner annotationOwner = ((PsiAnnotation)psi).getOwner();
+            return annotationOwner == null || !annotationOwner.equals(owner.getModifierList());
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns true if the given annotation is inherited (instead of being defined directly
+     * on the given modifier list holder
+     *
+     * @param annotation the annotation to check
+     * @param owner      the owner potentially declaring the annotation
+     * @return true if the annotation is inherited rather than being declared directly on this owner
+     */
+    public boolean isInherited(@NonNull UAnnotation annotation, @NonNull UAnnotated owner) {
+        return owner.getAnnotations().contains(annotation);
+    }
+
     @Nullable
     public abstract PsiPackage getPackage(@NonNull PsiElement node);
+
+    @Nullable
+    public abstract PsiPackage getPackage(@NonNull UElement node);
+
+    // Just here to disambiguate getPackage(PsiElement) and getPackage(UElement) since
+    // a UMethod is both a PsiElement and a UElement
+    @Nullable
+    public PsiPackage getPackage(@NonNull UMethod node) {
+        return getPackage((PsiElement) node);
+    }
 
     /**
      * Return the Gradle group id for the given element, <b>if</b> applicable. For example, for
@@ -500,6 +543,21 @@ public abstract class JavaEvaluator {
     @Nullable
     public MavenCoordinates getLibrary(@NonNull PsiElement element) {
         return getLibrary(findJarPath(element));
+    }
+
+    /**
+     * Return the Gradle group id for the given element, <b>if</b> applicable. For example, for
+     * a method in the appcompat library, this would return "com.android.support".
+     */
+    @Nullable
+    public MavenCoordinates getLibrary(@NonNull UElement element) {
+        return getLibrary(findJarPath(element));
+    }
+
+    /** Disambiguate between UElement and PsiElement since a UMethod is both */
+    @Nullable
+    public MavenCoordinates getLibrary(@NonNull UMethod element) {
+        return getLibrary((PsiElement)element);
     }
 
     public abstract Dependencies getDependencies();
@@ -512,7 +570,7 @@ public abstract class JavaEvaluator {
             }
             MavenCoordinates coordinates = jarToGroup.get(jarFile);
             if (coordinates == null) {
-                Library library = findOwnerLibrary(jarFile);
+                Library library = findOwnerLibrary(jarFile.replace('/', File.separatorChar));
                 if (library != null) {
                     coordinates = library.getResolvedCoordinates();
                 }

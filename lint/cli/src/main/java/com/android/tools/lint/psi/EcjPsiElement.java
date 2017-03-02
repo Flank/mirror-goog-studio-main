@@ -18,122 +18,227 @@ package com.android.tools.lint.psi;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiInvalidElementAccessException;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
+import com.intellij.util.IncorrectOperationException;
+import javax.swing.Icon;
 
-abstract class EcjPsiElement implements PsiElement {
-    @NonNull protected final EcjPsiManager mManager;
+public class EcjPsiElement implements PsiElement {
 
-    EcjPsiElement(@NonNull EcjPsiManager manager) {
-        mManager = manager;
+    @NonNull
+    @Override
+    public Project getProject() throws PsiInvalidElementAccessException {
+        return null;
     }
 
     @NonNull
     @Override
     public Language getLanguage() {
-        return getContainingFile().getLanguage();
+        return null;
+    }
+
+    @Override
+    public PsiManager getManager() {
+        return null;
     }
 
     @NonNull
     @Override
     public PsiElement[] getChildren() {
-        throw new UnimplementedLintPsiApiException();
+        return new PsiElement[0];
     }
 
     @Override
     public PsiElement getParent() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public PsiElement getFirstChild() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public PsiElement getLastChild() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public PsiElement getNextSibling() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public PsiElement getPrevSibling() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public PsiFile getContainingFile() throws PsiInvalidElementAccessException {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public TextRange getTextRange() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @Override
     public int getStartOffsetInParent() {
-        throw new UnimplementedLintPsiApiException();
+        return 0;
     }
 
     @Override
     public int getTextLength() {
-        throw new UnimplementedLintPsiApiException();
+        return 0;
+    }
+
+    @Nullable
+    @Override
+    public PsiElement findElementAt(int i) {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public PsiReference findReferenceAt(int i) {
+        return null;
     }
 
     @Override
     public int getTextOffset() {
-        throw new UnimplementedLintPsiApiException();
+        return 0;
     }
 
     @Override
     public String getText() {
-        throw new UnimplementedLintPsiApiException();
+        return null;
     }
 
     @NonNull
     @Override
     public char[] textToCharArray() {
-        throw new UnimplementedLintPsiApiException();
+        return new char[0];
     }
 
-    @NonNull
     @Override
     public PsiElement getNavigationElement() {
-        return this;
+        return null;
     }
 
     @Override
     public PsiElement getOriginalElement() {
-        return this;
+        return null;
     }
 
     @Override
     public boolean textMatches(@NonNull CharSequence charSequence) {
-        throw new UnimplementedLintPsiApiException();
+        return false;
     }
 
     @Override
     public boolean textMatches(@NonNull PsiElement psiElement) {
-        throw new UnimplementedLintPsiApiException();
+        return false;
     }
 
     @Override
     public boolean textContains(char c) {
-        throw new UnimplementedLintPsiApiException();
+        return false;
+    }
+
+    @Override
+    public void accept(@NonNull PsiElementVisitor psiElementVisitor) {
+
+    }
+
+    @Override
+    public void acceptChildren(@NonNull PsiElementVisitor psiElementVisitor) {
+
+    }
+
+    @Override
+    public PsiElement copy() {
+        return null;
+    }
+
+    @Override
+    public PsiElement add(@NonNull PsiElement psiElement) throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public PsiElement addBefore(@NonNull PsiElement psiElement, @Nullable PsiElement psiElement1)
+            throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public PsiElement addAfter(@NonNull PsiElement psiElement, @Nullable PsiElement psiElement1)
+            throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public void checkAdd(@NonNull PsiElement psiElement) throws IncorrectOperationException {
+
+    }
+
+    @Override
+    public PsiElement addRange(PsiElement psiElement, PsiElement psiElement1)
+            throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public PsiElement addRangeBefore(@NonNull PsiElement psiElement,
+            @NonNull PsiElement psiElement1, PsiElement psiElement2)
+            throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public PsiElement addRangeAfter(PsiElement psiElement, PsiElement psiElement1,
+            PsiElement psiElement2) throws IncorrectOperationException {
+        return null;
+    }
+
+    @Override
+    public void delete() throws IncorrectOperationException {
+
+    }
+
+    @Override
+    public void checkDelete() throws IncorrectOperationException {
+
+    }
+
+    @Override
+    public void deleteChildRange(PsiElement psiElement, PsiElement psiElement1)
+            throws IncorrectOperationException {
+
+    }
+
+    @Override
+    public PsiElement replace(@NonNull PsiElement psiElement) throws IncorrectOperationException {
+        return null;
     }
 
     @Override
     public boolean isValid() {
-        return true;
+        return false;
     }
 
     @Override
@@ -144,21 +249,31 @@ abstract class EcjPsiElement implements PsiElement {
     @Nullable
     @Override
     public PsiReference getReference() {
-        if (this instanceof PsiReference) {
-            return (PsiReference)this;
-        }
         return null;
     }
 
     @NonNull
     @Override
     public PsiReference[] getReferences() {
-        PsiReference reference = getReference();
-        if (reference != null) {
-            return new PsiReference[]{reference};
-        } else {
-            return PsiReference.EMPTY_ARRAY;
-        }
+        return new PsiReference[0];
+    }
+
+    @Nullable
+    @Override
+    public <T> T getCopyableUserData(Key<T> key) {
+        return null;
+    }
+
+    @Override
+    public <T> void putCopyableUserData(Key<T> key, @Nullable T t) {
+
+    }
+
+    @Override
+    public boolean processDeclarations(@NonNull PsiScopeProcessor psiScopeProcessor,
+            @NonNull ResolveState resolveState, @Nullable PsiElement psiElement,
+            @NonNull PsiElement psiElement1) {
+        return false;
     }
 
     @Nullable
@@ -169,24 +284,44 @@ abstract class EcjPsiElement implements PsiElement {
 
     @Override
     public boolean isPhysical() {
-        return true;
-    }
-
-    // Navigatable
-    // Here such that concrete children which implement Navigatable (for example, parameters)
-    // don't have to repeat these no-op method declarations
-
-    @SuppressWarnings({"UnusedParameters", "EmptyMethod", "unused"})
-    public void navigate(boolean b) {
-    }
-
-    @SuppressWarnings({"SameReturnValue", "unused"})
-    public boolean canNavigate() {
         return false;
     }
 
-    @SuppressWarnings({"SameReturnValue", "unused"})
-    public boolean canNavigateToSource() {
+    @NonNull
+    @Override
+    public GlobalSearchScope getResolveScope() {
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public SearchScope getUseScope() {
+        return null;
+    }
+
+    @Override
+    public ASTNode getNode() {
+        return null;
+    }
+
+    @Override
+    public boolean isEquivalentTo(PsiElement psiElement) {
         return false;
+    }
+
+    @Override
+    public Icon getIcon(@IconFlags int i) {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public <T> T getUserData(@NonNull Key<T> key) {
+        return null;
+    }
+
+    @Override
+    public <T> void putUserData(@NonNull Key<T> key, @Nullable T t) {
+
     }
 }

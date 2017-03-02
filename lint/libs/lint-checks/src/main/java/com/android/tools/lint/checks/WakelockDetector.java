@@ -24,19 +24,18 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -51,7 +50,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
  * Checks for problems with wakelocks (such as failing to release them)
  * which can lead to unnecessary battery usage.
  */
-public class WakelockDetector extends Detector implements ClassScanner, JavaPsiScanner {
+public class WakelockDetector extends Detector implements ClassScanner, Detector.UastScanner {
     public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";
 
     /** Problems using wakelocks */
@@ -459,12 +458,9 @@ public class WakelockDetector extends Detector implements ClassScanner, JavaPsiS
     }
 
     @Override
-    public void visitMethod(
-            @NonNull JavaContext context,
-            @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call,
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
-        if (call.getArgumentList().getExpressions().length > 0) {
+        if (call.getValueArgumentCount() > 0) {
             return;
         }
 
@@ -473,7 +469,8 @@ public class WakelockDetector extends Detector implements ClassScanner, JavaPsiS
             return;
         }
 
-        context.report(TIMEOUT, call, context.getLocation(call), ""
+        Location location = context.getLocation(call);
+        context.report(TIMEOUT, call, location, ""
                 + "Provide a timeout when requesting a wakelock with "
                 + "`PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will "
                 + "cleanup any wakelocks that last longer than you intend, and will save your "

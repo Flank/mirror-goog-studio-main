@@ -3,7 +3,8 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -18,6 +19,7 @@ java_library(
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
     ],
@@ -41,8 +43,9 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
-        "//prebuilts/tools/common/uast:uast-162.2228.14",
+        "//prebuilts/tools/common/uast:uast-171.2455.10",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -61,6 +64,9 @@ java_test(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-runtime",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
 )

@@ -26,14 +26,10 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
         return new AppIndexingApiDetector();
     }
 
-    @Override
-    protected boolean allowCompilationErrors() {
-        return true;
-    }
-
     public void testOk() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -60,20 +56,24 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testDataMissing() throws Exception {
         assertEquals(AppIndexingApiDetector.IssueType.DATA_MISSING, AppIndexingApiDetector.IssueType.parse("Missing data element"));
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:15: Error: Missing data element [GoogleAppIndexingUrlError]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
                 + "AndroidManifest.xml:15: Warning: Missing URL [GoogleAppIndexingWarning]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
-                + "1 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -97,20 +97,25 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNoUrl() throws Exception {
-        assertEquals(AppIndexingApiDetector.IssueType.URL_MISSING, AppIndexingApiDetector.IssueType.parse("Missing URL for the intent filter"));
-        assertEquals(""
+        assertEquals(AppIndexingApiDetector.IssueType.URL_MISSING,
+                AppIndexingApiDetector.IssueType.parse("Missing URL for the intent filter"));
+        String expected = ""
                 + "AndroidManifest.xml:17: Error: Missing URL for the intent filter [GoogleAppIndexingUrlError]\n"
                 + "                <data />\n"
                 + "                ~~~~~~~~\n"
                 + "AndroidManifest.xml:15: Warning: Missing URL [GoogleAppIndexingWarning]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
-                + "1 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -135,16 +140,20 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testMimeType() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:15: Warning: Missing URL [GoogleAppIndexingWarning]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
-                + "0 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -169,16 +178,20 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNoActivity() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:5: Warning: App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW intent filter. See issue explanation for more details. [GoogleAppIndexingWarning]\n"
                 + "    <application\n"
                 + "    ^\n"
-                + "0 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -191,16 +204,17 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNoWarningInLibraries() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=194937
         // 194937: App indexing lint check shouldn't apply to library projects
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        xml("AndroidManifest.xml", ""
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -214,17 +228,21 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "    </application>\n"
                         + "\n"
                         + "</manifest>\n"),
-                        // Mark project as library
-                        source("project.properties", "android.library=true\n")));
+                // Mark project as library
+                source("project.properties", "android.library=true\n"))
+                .run()
+                .expectClean();
     }
 
     public void testNoActionView() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:5: Warning: App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW intent filter. See issue explanation for more details. [GoogleAppIndexingWarning]\n"
                 + "    <application\n"
                 + "    ^\n"
-                + "0 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -245,17 +263,21 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNotBrowsable() throws Exception {
         assertEquals(AppIndexingApiDetector.IssueType.NOT_BROWSABLE, AppIndexingApiDetector.IssueType.parse("Activity supporting ACTION_VIEW is not set as BROWSABLE"));
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:25: Warning: Activity supporting ACTION_VIEW is not set as BROWSABLE [GoogleAppIndexingWarning]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
-                + "0 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -291,17 +313,21 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testWrongPathPrefix() throws Exception {
         assertEquals(AppIndexingApiDetector.IssueType.MISSING_SLASH, AppIndexingApiDetector.IssueType.parse("android:pathPrefix attribute should start with '/', but it is : gizmos"));
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:19: Error: android:pathPrefix attribute should start with '/', but it is : gizmos [GoogleAppIndexingUrlError]\n"
                 + "                    android:pathPrefix=\"gizmos\" />\n"
                 + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -328,17 +354,21 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testWrongPort() throws Exception {
         assertEquals(AppIndexingApiDetector.IssueType.ILLEGAL_NUMBER, AppIndexingApiDetector.IssueType.parse("android:port is not a legal number"));
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:19: Error: android:port is not a legal number [GoogleAppIndexingUrlError]\n"
                 + "                    android:port=\"ABCD\"\n"
                 + "                    ~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -366,13 +396,15 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testSchemeAndHostMissing() throws Exception {
         assertEquals(AppIndexingApiDetector.IssueType.SCHEME_MISSING, AppIndexingApiDetector.IssueType.parse("android:scheme is missing"));
         assertEquals(AppIndexingApiDetector.IssueType.HOST_MISSING, AppIndexingApiDetector.IssueType.parse("android:host is missing"));
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:17: Error: Missing URL for the intent filter [GoogleAppIndexingUrlError]\n"
                 + "                <data android:pathPrefix=\"/gizmos\" />\n"
                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -385,8 +417,10 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 + "AndroidManifest.xml:15: Warning: Missing URL [GoogleAppIndexingWarning]\n"
                 + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
                 + "            ^\n"
-                + "3 errors, 1 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "3 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -411,12 +445,15 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testMultiData() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -443,12 +480,15 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testMultiIntent() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(xml("AndroidManifest.xml", ""
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -479,16 +519,20 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testMultiIntentWithError() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:20: Error: android:host is missing [GoogleAppIndexingUrlError]\n"
                 + "                <data android:scheme=\"http\"\n"
                 + "                ^\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -518,16 +562,20 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testNotExported() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:10: Error: Activity supporting ACTION_VIEW is not exported [GoogleAppIndexingUrlError]\n"
                 + "        <activity android:exported=\"false\"\n"
                 + "        ^\n"
-                + "1 errors, 0 warnings\n",
-                lintProject(xml("AndroidManifest.xml", ""
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + "    package=\"com.example.helloworld\" >\n"
@@ -554,482 +602,506 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                         + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />"
                         + "    </application>\n"
                         + "\n"
-                        + "</manifest>\n")));
+                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testOkWithResource() throws Exception {
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-                lintProjectIncrementally(
-                        "AndroidManifest.xml",
-                        mAppindexing_manifest,
-                        xml("res/values/appindexing_strings.xml", ""
-                            + "<!--\n"
-                            + "  ~ Copyright (C) 2015 The Android Open Source Project\n"
-                            + "  ~\n"
-                            + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                            + "  ~ you may not use this file except in compliance with the License.\n"
-                            + "  ~ You may obtain a copy of the License at\n"
-                            + "  ~\n"
-                            + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
-                            + "  ~\n"
-                            + "  ~ Unless required by applicable law or agreed to in writing, software\n"
-                            + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                            + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                            + "  ~ See the License for the specific language governing permissions and\n"
-                            + "  ~ limitations under the License.\n"
-                            + "  -->\n"
-                            + "\n"
-                            + "<resources>\n"
-                            + "    <string name=\"path_prefix\">/pathprefix</string>\n"
-                            + "    <string name=\"port\">8080</string>\n"
-                            + "</resources>\n")));
+        lint().files(
+                mAppindexing_manifest,
+                xml("res/values/appindexing_strings.xml", ""
+                        + "<!--\n"
+                        + "  ~ Copyright (C) 2015 The Android Open Source Project\n"
+                        + "  ~\n"
+                        + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                        + "  ~ you may not use this file except in compliance with the License.\n"
+                        + "  ~ You may obtain a copy of the License at\n"
+                        + "  ~\n"
+                        + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
+                        + "  ~\n"
+                        + "  ~ Unless required by applicable law or agreed to in writing, software\n"
+                        + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+                        + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+                        + "  ~ See the License for the specific language governing permissions and\n"
+                        + "  ~ limitations under the License.\n"
+                        + "  -->\n"
+                        + "\n"
+                        + "<resources>\n"
+                        + "    <string name=\"path_prefix\">/pathprefix</string>\n"
+                        + "    <string name=\"port\">8080</string>\n"
+                        + "</resources>\n"))
+                .incremental("AndroidManifest.xml")
+                .run()
+                .expectClean();
     }
 
     public void testWrongWithResource() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with '/', but it is : pathprefix [GoogleAppIndexingUrlError]\n"
                 + "                      android:pathPrefix=\"@string/path_prefix\"\n"
                 + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "AndroidManifest.xml:19: Error: android:port is not a legal number [GoogleAppIndexingUrlError]\n"
                 + "                      android:port=\"@string/port\"/>\n"
                 + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "2 errors, 0 warnings\n",
-                lintProjectIncrementally(
-                        "AndroidManifest.xml",
-                        mAppindexing_manifest,
-                        xml("res/values/appindexing_wrong_strings.xml", ""
-                            + "<!--\n"
-                            + "  ~ Copyright (C) 2015 The Android Open Source Project\n"
-                            + "  ~\n"
-                            + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                            + "  ~ you may not use this file except in compliance with the License.\n"
-                            + "  ~ You may obtain a copy of the License at\n"
-                            + "  ~\n"
-                            + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
-                            + "  ~\n"
-                            + "  ~ Unless required by applicable law or agreed to in writing, software\n"
-                            + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                            + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                            + "  ~ See the License for the specific language governing permissions and\n"
-                            + "  ~ limitations under the License.\n"
-                            + "  -->\n"
-                            + "\n"
-                            + "<resources>\n"
-                            + "    <string name=\"path_prefix\">pathprefix</string>\n"
-                            + "    <string name=\"port\">gizmos</string>\n"
-                            + "</resources>\n")));
+                + "2 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                mAppindexing_manifest,
+                xml("res/values/appindexing_wrong_strings.xml", ""
+                        + "<!--\n"
+                        + "  ~ Copyright (C) 2015 The Android Open Source Project\n"
+                        + "  ~\n"
+                        + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                        + "  ~ you may not use this file except in compliance with the License.\n"
+                        + "  ~ You may obtain a copy of the License at\n"
+                        + "  ~\n"
+                        + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
+                        + "  ~\n"
+                        + "  ~ Unless required by applicable law or agreed to in writing, software\n"
+                        + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+                        + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+                        + "  ~ See the License for the specific language governing permissions and\n"
+                        + "  ~ limitations under the License.\n"
+                        + "  -->\n"
+                        + "\n"
+                        + "<resources>\n"
+                        + "    <string name=\"path_prefix\">pathprefix</string>\n"
+                        + "    <string name=\"port\">gizmos</string>\n"
+                        + "</resources>\n"))
+                .incremental("AndroidManifest.xml")
+                .run()
+                .expect(expected);
     }
 
     public void testJavaOk() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        mAppIndexingApiTestOk,
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+        lint().files(
+                mAppIndexingApiTestOk,
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expectClean();
     }
 
     public void testNoManifest() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:28: Warning: Missing support for Firebase App Indexing in the manifest [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
                 + "                         ~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:36: Warning: Missing support for Firebase App Indexing in the manifest [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.end(mClient, action);\n"
                 + "                         ~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        mAppIndexingApiTestOk,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                mAppIndexingApiTestOk,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testNoStartEnd() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:11: Warning: Missing support for Firebase App Indexing API [GoogleAppIndexingApiWarning]\n"
                 + "public class AppIndexingApiTest extends Activity {\n"
                 + "             ~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    mClient.connect();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    mClient.disconnect();\n"
-                            + "  }\n"
-                            + "}\n"
-                            + "\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    mClient.connect();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    mClient.disconnect();\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testStartMatch() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:27: Warning: GoogleApiClient mClient is not connected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
                 + "                               ~~~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:27: Warning: Missing corresponding AppIndex.AppIndexApi.end method [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
                 + "                         ~~~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.start(mClient, action);\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    mClient.disconnect();\n"
-                            + "  }\n"
-                            + "}\n"
-                            + "\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    mClient.disconnect();\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testEndMatch() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:33: Warning: GoogleApiClient mClient is not disconnected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.end(mClient, action);\n"
                 + "                             ~~~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:33: Warning: Missing corresponding AppIndex.AppIndexApi.start method [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.end(mClient, action);\n"
                 + "                         ~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    mClient.connect();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.end(mClient, action);\n"
-                            + "  }\n"
-                            + "}\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    mClient.connect();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "  }\n"
+                        + "}\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testViewMatch() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:26: Warning: GoogleApiClient mClient is not connected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.view(mClient, this, APP_URI, title, WEB_URL, null);\n"
                 + "                              ~~~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:26: Warning: Missing corresponding AppIndex.AppIndexApi.end method [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.view(mClient, this, APP_URI, title, WEB_URL, null);\n"
                 + "                         ~~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    AppIndex.AppIndexApi.view(mClient, this, APP_URI, title, WEB_URL, null);\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "  }\n"
-                            + "}\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    AppIndex.AppIndexApi.view(mClient, this, APP_URI, title, WEB_URL, null);\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "  }\n"
+                        + "}\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testViewEndMatch() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:29: Warning: GoogleApiClient mClient is not disconnected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.viewEnd(mClient, this, APP_URI);\n"
                 + "                                 ~~~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:29: Warning: Missing corresponding AppIndex.AppIndexApi.start method [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.viewEnd(mClient, this, APP_URI);\n"
                 + "                         ~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    AppIndex.AppIndexApi.viewEnd(mClient, this, APP_URI);\n"
-                            + "  }\n"
-                            + "}\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    AppIndex.AppIndexApi.viewEnd(mClient, this, APP_URI);\n"
+                        + "  }\n"
+                        + "}\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
 
     public void testWrongOrder() throws Exception {
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.end(mClient, action);\n"
-                            + "    mClient.disconnect();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    mClient.connect();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.start(mClient, action);\n"
-                            + "  }\n"
-                            + "}\n"
-                            + "\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.APP_INDEX_API).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "    mClient.disconnect();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    mClient.connect();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expectClean();
     }
 
     public void testGoogleApiClientAddApi() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:28: Warning: GoogleApiClient mClient has not added support for App Indexing API [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
                 + "                               ~~~~~~~\n"
                 + "src/com/example/helloworld/AppIndexingApiTest.java:36: Warning: GoogleApiClient mClient has not added support for App Indexing API [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.end(mClient, action);\n"
                 + "                             ~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(""
-                            + "package com.example.helloworld;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.net.Uri;\n"
-                            + "import android.os.Bundle;\n"
-                            + "\n"
-                            + "import com.google.android.gms.appindexing.Action;\n"
-                            + "import com.google.android.gms.appindexing.AppIndex;\n"
-                            + "import com.google.android.gms.common.api.GoogleApiClient;\n"
-                            + "\n"
-                            + "public class AppIndexingApiTest extends Activity {\n"
-                            + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
-                            + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
-                            + "  private GoogleApiClient mClient;\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  protected void onCreate(Bundle savedInstanceState) {\n"
-                            + "    super.onCreate(savedInstanceState);\n"
-                            + "    mClient = new GoogleApiClient.Builder(this).build();\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStart(){\n"
-                            + "    super.onStart();\n"
-                            + "    mClient.connect();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.start(mClient, action);\n"
-                            + "  }\n"
-                            + "\n"
-                            + "  @Override\n"
-                            + "  public void onStop(){\n"
-                            + "    super.onStop();\n"
-                            + "    final String title = \"App Indexing API Title\";\n"
-                            + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
-                            + "    AppIndex.AppIndexApi.end(mClient, action);\n"
-                            + "    mClient.disconnect();\n"
-                            + "  }\n"
-                            + "}\n"
-                            + "\n"),
-                        mApp_indexing_api_test,
-                        mAppIndex,
-                        mAppIndexApi,
-                        mGoogleApiClient,
-                        mActivity,
-                        mApi));
+                + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.net.Uri;\n"
+                        + "import android.os.Bundle;\n"
+                        + "\n"
+                        + "import com.google.android.gms.appindexing.Action;\n"
+                        + "import com.google.android.gms.appindexing.AppIndex;\n"
+                        + "import com.google.android.gms.common.api.GoogleApiClient;\n"
+                        + "\n"
+                        + "public class AppIndexingApiTest extends Activity {\n"
+                        + "  static final Uri APP_URI = Uri.parse(\"android-app://com.example.helloworld/http/example.com/gizmos\");\n"
+                        + "  static final Uri WEB_URL = Uri.parse(\"http://example.com/gizmos\");\n"
+                        + "  private GoogleApiClient mClient;\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "    super.onCreate(savedInstanceState);\n"
+                        + "    mClient = new GoogleApiClient.Builder(this).build();\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStart(){\n"
+                        + "    super.onStart();\n"
+                        + "    mClient.connect();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.start(mClient, action);\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  @Override\n"
+                        + "  public void onStop(){\n"
+                        + "    super.onStop();\n"
+                        + "    final String title = \"App Indexing API Title\";\n"
+                        + "    Action action = Action.newAction(Action.TYPE_VIEW, title, WEB_URL, APP_URI);\n"
+                        + "    AppIndex.AppIndexApi.end(mClient, action);\n"
+                        + "    mClient.disconnect();\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"),
+                mApp_indexing_api_test,
+                mAppIndex,
+                mAppIndexApi,
+                mGoogleApiClient,
+                mActivity,
+                mApi)
+                .run()
+                .expect(expected);
     }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mActivity = java(""
             + "package android.app;\n"

@@ -26,8 +26,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/layout/main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_First) [Overdraw]\n"
                 + "    android:background=\"@drawable/ic_launcher\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -40,98 +39,98 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 + "res/layout/third.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_Third) [Overdraw]\n"
                 + "    android:background=\"@drawable/ic_launcher\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n",
-
-            lintProject(
+                + "0 errors, 4 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
                 mAndroidManifest,
                 projectProperties().compileSdk(10),
                 mCustombg,
                 mCustombg2,
                 image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
                 xml("res/layout/sixth.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/custombg\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/custombg\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 xml("res/layout/fifth.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/custombg2\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/custombg2\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 xml("res/layout/fourth.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 xml("res/layout/main.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 xml("res/layout/second.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 xml("res/layout/third.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 mStrings,
                 mStyles,
 
@@ -139,37 +138,35 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 mFourthActivity,
                 mOverdrawActivity,
                 mSecondActivity,
-                mThirdActivity
-            ));
+                mThirdActivity)
+                .run()
+                .expect(expected);
     }
 
     public void testSuppressed() throws Exception {
         //noinspection all // Sample code
-        assertEquals(
-            "No warnings.",
-
-            lintProject(
+        lint().files(
                 mAndroidManifest,
                 projectProperties().compileSdk(10),
                 mCustombg,
                 mCustombg2,
                 image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
                 xml("res/layout/main.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    tools:ignore=\"Overdraw\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    tools:ignore=\"Overdraw\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
                 mStrings,
                 mStyles,
 
@@ -177,127 +174,120 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 mFourthActivity,
                 mOverdrawActivity,
                 mSecondActivity,
-                mThirdActivity
-            ));
+                mThirdActivity)
+                .run()
+                .expectClean();
     }
 
     public void testContextAttribute() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
-                + "No warnings.",
-
-                lintProject(
-                        mAndroidManifest,
-                        projectProperties().compileSdk(10),
-                        image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
-                        xml("res/layout/fourth.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    tools:context=\"test.pkg.FourthActivity\">\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
-                        mStrings,
-                        mStyles
-                ));
+        lint().files(
+                mAndroidManifest,
+                projectProperties().compileSdk(10),
+                image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
+                xml("res/layout/fourth.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    tools:context=\"test.pkg.FourthActivity\">\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
+                mStrings,
+                mStyles)
+                .run()
+                .expectClean();
     }
 
     public void testContextAttribute2() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
-                + "No warnings.",
-
-                lintProject(
-                        mAndroidManifest,
-                        projectProperties().compileSdk(10),
-                        image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
-                        xml("res/layout/fourth.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    tools:context=\".FourthActivity\">\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
-                        mStrings,
-                        mStyles
-                ));
+        lint().files(
+                mAndroidManifest,
+                projectProperties().compileSdk(10),
+                image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
+                xml("res/layout/fourth.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    tools:context=\".FourthActivity\">\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
+                mStrings,
+                mStyles)
+                .run()
+                .expectClean();
     }
 
     public void testNull() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=71197
         // @null as a background should not trigger a warning
         //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-
-                lintProject(
-                        mAndroidManifest,
-                        projectProperties().compileSdk(10),
-                        xml("res/layout/null.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    android:background=\"@null\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
-                        mStrings,
-                        mStyles
-                ));
+        lint().files(
+                mAndroidManifest,
+                projectProperties().compileSdk(10),
+                xml("res/layout/null.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:background=\"@null\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
+                mStrings,
+                mStyles)
+                .run()
+                .expectClean();
     }
 
     public void testToolsBackground() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=80679
         // tools:background instead of android:background should not trigger a warning
         //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-
-                lintProject(
-                        mAndroidManifest,
-                        projectProperties().compileSdk(10),
-                        xml("res/layout/tools_background.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:layout_width=\"fill_parent\"\n"
-                            + "    android:layout_height=\"fill_parent\"\n"
-                            + "    tools:background=\"@drawable/ic_launcher\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:layout_width=\"fill_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:text=\"@string/hello\" />\n"
-                            + "\n"
-                            + "</LinearLayout>\n"),
-                        mStrings,
-                        mStyles
-                ));
+        lint().files(
+                mAndroidManifest,
+                projectProperties().compileSdk(10),
+                xml("res/layout/tools_background.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    tools:background=\"@drawable/ic_launcher\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"fill_parent\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:text=\"@string/hello\" />\n"
+                        + "\n"
+                        + "</LinearLayout>\n"),
+                mStrings,
+                mStyles)
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

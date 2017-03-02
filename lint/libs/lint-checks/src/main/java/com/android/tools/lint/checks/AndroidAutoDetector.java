@@ -31,7 +31,7 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -42,13 +42,13 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
@@ -58,7 +58,7 @@ import org.w3c.dom.Element;
  * as a trigger for validating Automotive specific issues.
  */
 public class AndroidAutoDetector extends ResourceXmlDetector
-        implements XmlScanner, JavaPsiScanner {
+        implements XmlScanner, UastScanner {
 
     // TODO: Use the new merged manifest model
 
@@ -342,7 +342,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         // Only check classes that are not declared abstract.
         if (!context.getEvaluator().isAbstract(declaration)) {
             MediaSessionCallbackVisitor visitor = new MediaSessionCallbackVisitor(context);
@@ -364,7 +364,7 @@ public class AndroidAutoDetector extends ResourceXmlDetector
      * A Visitor class to search for {@code MediaSession.Callback#onPlayFromSearch(..)}
      * method declaration.
      */
-    private static class MediaSessionCallbackVisitor extends JavaRecursiveElementVisitor {
+    private static class MediaSessionCallbackVisitor extends AbstractUastVisitor {
 
         private final JavaContext mContext;
 
@@ -379,13 +379,13 @@ public class AndroidAutoDetector extends ResourceXmlDetector
         }
 
         @Override
-        public void visitMethod(PsiMethod method) {
-            super.visitMethod(method);
+        public boolean visitMethod(UMethod method) {
             if (METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH.equals(method.getName())
                     && mContext.getEvaluator().parametersMatch(method, TYPE_STRING,
                     BUNDLE_ARG)) {
                 mOnPlayFromSearchFound = true;
             }
+            return super.visitMethod(method);
         }
     }
 

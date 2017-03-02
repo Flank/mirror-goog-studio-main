@@ -28,7 +28,7 @@ import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -42,8 +42,6 @@ import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiElement;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +51,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.uast.UElement;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -62,7 +61,7 @@ import org.w3c.dom.NodeList;
 /**
  * Checks for consistency in layouts across different resource folders
  */
-public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsiScanner {
+public class LayoutConsistencyDetector extends LayoutDetector implements UastScanner {
 
     /** Map from layout resource names to a list of files defining that resource,
      * and within each file the value is a map from string ids to the widget type
@@ -419,7 +418,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
         return locations.get(0);
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public boolean appliesToResourceRefs() {
@@ -427,8 +426,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements JavaPsi
     }
 
     @Override
-    public void visitResourceReference(@NonNull JavaContext context,
-            @Nullable JavaElementVisitor visitor, @NonNull PsiElement node,
+    public void visitResourceReference(@NonNull JavaContext context, @NonNull UElement node,
             @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
         if (!isFramework && type == ResourceType.ID) {
             mRelevantIds.add(name);

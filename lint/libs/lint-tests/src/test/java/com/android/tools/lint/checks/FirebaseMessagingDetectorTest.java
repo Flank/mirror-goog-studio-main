@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.Detector;
 
 public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
 
+    @SuppressWarnings("all") // Sample code
     final TestFile mFirebaseInstanceIdService = java(
             "src/com/google/firebase/iid/FirebaseInstanceIdService.java", ""
                     + "package com.google.firebase.iid;\n"
@@ -27,6 +28,7 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
                     + "    public void onTokenRefresh() {}\n"
                     + "}");
 
+    @SuppressWarnings("all") // Sample code
     final TestFile mFirebaseInstanceId = java(
             "src/com/google/firebase/iid/FirebaseInstanceId.java", ""
                     + "package com.google.firebase.iid;\n"
@@ -44,6 +46,7 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
                     + "}");
 
     public void testMissingRefreshCallback() throws Exception {
+        //noinspection all // Sample code
         TestFile myInstanceIdService = java("src/test/pkg/MyFirebaseInstanceIdService.java", ""
                 + "package test.pkg;\n"
                 + "import com.google.firebase.iid.FirebaseInstanceId;\n"
@@ -68,6 +71,7 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
     }
 
     public void testWithRefreshCallback() throws Exception {
+        //noinspection all // Sample code
         TestFile myInstanceIdService = java("src/test/pkg/MyFirebaseInstanceIdService.java", ""
                 + "package test.pkg;\n"
                 + "import com.google.firebase.iid.FirebaseInstanceId;\n"
@@ -88,6 +92,7 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
     }
 
     public void testGetTokenInDifferentFileThanCallback() throws Exception {
+        //noinspection all // Sample code
         TestFile myInstanceIdService = java("src/test/pkg/MyFirebaseInstanceIdService.java", ""
                 + "package test.pkg;\n"
                 + "import com.google.firebase.iid.FirebaseInstanceId;\n"
@@ -101,6 +106,7 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
                 + "        // update app server with token\n"
                 + "    }\n"
                 + "}\n");
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import com.google.firebase.iid.FirebaseInstanceId;\n"

@@ -121,7 +121,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Dete
 
         // Ignore the call if it was called on a non-view.
         ClassNode ownerClass = context.getDriver().findClass(context, owner, 0);
-        if(ownerClass == null
+        if (ownerClass == null
                 || !context.getDriver().isSubclassOf(ownerClass, ANDROID_VIEW_VIEW)) {
             return;
         }

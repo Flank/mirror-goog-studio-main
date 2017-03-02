@@ -27,25 +27,24 @@ public class LeakDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("ALL") // sample code
     public void test() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Activity sField7; // LEAK!\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "            ~~~~~~\n"
                 + "src/test/pkg/LeakTest.java:19: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Fragment sField8; // LEAK!\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "            ~~~~~~\n"
                 + "src/test/pkg/LeakTest.java:20: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Button sField9; // LEAK!\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "            ~~~~~~\n"
                 + "src/test/pkg/LeakTest.java:21: Warning: Do not place Android context classes in static fields (static reference to MyObject which has field mActivity pointing to Activity); this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static MyObject sField10;\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "            ~~~~~~\n"
                 + "src/test/pkg/LeakTest.java:30: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Activity sAppContext1; // LEAK\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 5 warnings\n",
-
-        lintProject(
+                + "            ~~~~~~\n"
+                + "0 errors, 5 warnings\n";
+        lint().files(
                 java("src/test/pkg/LeakTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"
@@ -79,6 +78,8 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "    private static Activity sAppContext1; // LEAK\n"
                         + "    private static Context sAppContext2; // Probably app context leak\n"
                         + "    private static Context applicationCtx; // Probably app context leak\n"
-                        + "}\n")));
+                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 }

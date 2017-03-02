@@ -27,13 +27,18 @@ import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ResourceEvaluatorTest extends TestCase {
-    private static void check(String expected, String statementsSource,
-            final String targetVariable, boolean getSpecificType, boolean allowDereference) {
+
+    @Language("JAVA")
+    private static String getString(String statementsSource) {
         @Language("JAVA")
-        String source = ""
+        String s = ""
                 + "package test.pkg;\n"
                 + "public class Test {\n"
                 + "    public void test() {\n"
@@ -54,7 +59,65 @@ public class ResourceEvaluatorTest extends TestCase {
                 + "        }\n"
                 + "    }"
                 + "}\n";
+        return s;
+    }
 
+    private static void checkUast(String expected, String statementsSource,
+            final String targetVariable, boolean getSpecificType, boolean allowDereference) {
+        @Language("JAVA")
+        String source = getString(statementsSource);
+        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        assertNotNull(context);
+        UFile uFile = context.getUastFile();
+        assertNotNull(uFile);
+
+        // Find the expression
+        final AtomicReference<UExpression> reference = new AtomicReference<>();
+        uFile.accept(new AbstractUastVisitor() {
+            @Override
+            public boolean visitVariable(UVariable variable) {
+                String name = variable.getName();
+                if (name != null && name.equals(targetVariable)) {
+                    reference.set(variable.getUastInitializer());
+                }
+
+                return super.visitVariable(variable);
+            }
+        });
+
+        UExpression expression = reference.get();
+        ResourceEvaluator evaluator = new ResourceEvaluator(context.getEvaluator())
+                .allowDereference(allowDereference);
+
+        if (getSpecificType) {
+            ResourceUrl actual = evaluator.getResource(expression);
+            if (expected == null) {
+                assertNull(actual);
+            } else {
+                assertNotNull("Couldn't compute resource for " + source + ", expected " + expected,
+                        actual);
+
+                assertEquals(expected, actual.toString());
+            }
+        } else {
+            EnumSet<ResourceType> types = evaluator.getResourceTypes(expression);
+            if (expected == null) {
+                assertNull(types);
+            } else {
+                assertNotNull("Couldn't compute resource types for " + source
+                        + ", expected " + expected, types);
+
+                assertEquals(expected, types.toString());
+            }
+        }
+    }
+
+    private static void check(String expected, String statementsSource,
+            final String targetVariable, boolean getSpecificType, boolean allowDereference) {
+        checkUast(expected, statementsSource, targetVariable, getSpecificType, allowDereference);
+
+        @Language("JAVA")
+        String source = getString(statementsSource);
         JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
         assertNotNull(context);
         PsiJavaFile javaFile = context.getJavaFile();

@@ -63,6 +63,15 @@ import lombok.ast.VariableDeclaration;
 import lombok.ast.VariableDefinition;
 import lombok.ast.VariableDefinitionEntry;
 import lombok.ast.VariableReference;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
  * Evaluates the types of nodes. This goes deeper than
@@ -298,6 +307,41 @@ public class TypeEvaluator {
         } else if (node instanceof PsiExpression) {
             PsiExpression expression = (PsiExpression) node;
             return expression.getType();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static PsiType evaluate(@Nullable UElement node) {
+        if (node == null) {
+            return null;
+        }
+
+        UElement resolved = node;
+        if (resolved instanceof UReferenceExpression) {
+            UastContext uastContext = UastUtils.getUastContext(node);
+            resolved = UastUtils.tryResolveUDeclaration(resolved, uastContext);
+        }
+
+        if (resolved instanceof UMethod) {
+            return ((UMethod) resolved).getPsi().getReturnType();
+        } else if (resolved instanceof UVariable) {
+            UVariable variable = (UVariable) resolved;
+            UElement lastAssignment = UastLintUtils.findLastAssignment(variable, node);
+            if (lastAssignment != null) {
+                return evaluate(lastAssignment);
+            }
+            return variable.getType();
+        } else if (resolved instanceof UCallExpression) {
+            if (UastExpressionUtils.isMethodCall(resolved)) {
+                PsiMethod resolvedMethod = ((UCallExpression) resolved).resolve();
+                return resolvedMethod != null ? resolvedMethod.getReturnType() : null;
+            } else {
+                return ((UCallExpression) resolved).getExpressionType();
+            }
+        } else if (resolved instanceof UExpression) {
+            return ((UExpression) resolved).getExpressionType();
         }
 
         return null;

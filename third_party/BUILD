@@ -745,6 +745,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.jetbrains.trove4j_trove4j",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/trove4j/trove4j/20160824:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "org.jsoup_jsoup",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.6.3:jar",
     visibility = ["//visibility:public"],
