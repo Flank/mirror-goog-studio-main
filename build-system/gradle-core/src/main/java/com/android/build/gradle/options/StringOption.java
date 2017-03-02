@@ -44,7 +44,7 @@ public enum StringOption implements Option<String> {
     IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME),
 
     // Profiler plugin
-    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.custom.class.transforms"),
+    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms"),
     ;
 
     @NonNull private final String propertyName;

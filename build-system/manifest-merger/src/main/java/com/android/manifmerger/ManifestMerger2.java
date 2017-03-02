@@ -308,6 +308,12 @@ public class ManifestMerger2 {
                 extractFcqns(document);
             }
 
+            if (mOptionalFeatures.contains(Invoker.Feature.ADVANCED_PROFILING)) {
+                mergingReport.setMergedDocument(
+                        MergingReport.MergedManifestKind.MERGED,
+                        addInternetPermission(document).prettyPrint());
+            }
+
             mergingReport.setMergedXmlDocument(
               MergingReport.MergedManifestKind.MERGED, document);
             if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
@@ -344,7 +350,6 @@ public class ManifestMerger2 {
                         MergingReport.MergedManifestKind.INSTANT_RUN,
                         instantRunReplacement(document).prettyPrint());
             }
-
         }
     }
 
@@ -375,6 +380,30 @@ public class ManifestMerger2 {
             addIrContentProvider(document, application);
         } else {
             throw new RuntimeException("Application not defined in AndroidManifest.xml");
+        }
+        return document.reparse();
+    }
+
+    @NonNull
+    private static XmlDocument addInternetPermission(XmlDocument document) {
+        String permission = "android.permission.INTERNET";
+        ImmutableList<XmlElement> usesPermissions =
+                document.getRootNode().getAllNodesByType(ManifestModel.NodeTypes.USES_PERMISSION);
+        boolean found = false;
+        for (XmlElement usesPermission : usesPermissions) {
+            Optional<XmlAttribute> attribute =
+                    usesPermission.getAttribute(XmlNode.fromXmlName("android:name"));
+            if (attribute.isPresent() && attribute.get().getValue().equals(permission)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            Element uses = document.getXml().createElement(SdkConstants.TAG_USES_PERMISSION);
+            // Add the node to the document before setting the attribute to make sure
+            // the namespace prefix is found correctly.
+            document.getRootNode().getXml().appendChild(uses);
+            setAndroidAttribute(uses, SdkConstants.ATTR_NAME, permission);
         }
         return document.reparse();
     }
@@ -959,6 +988,9 @@ public class ManifestMerger2 {
              * Do not perform implicit permission addition.
              */
             NO_IMPLICIT_PERMISSION_ADDITION,
+
+            /** Perform Studio advanced profiling manifest modifications */
+            ADVANCED_PROFILING,
         }
 
         /**

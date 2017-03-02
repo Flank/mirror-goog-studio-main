@@ -751,7 +751,7 @@ public abstract class TaskManager {
         AndroidArtifactVariantData<?> androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
-
+        
         AndroidTask<CompatibleScreensManifest> csmTask =
                 androidTasks.create(
                         tasks,
@@ -766,6 +766,11 @@ public abstract class TaskManager {
 
         if (AndroidGradleOptions.getTestOnly(project)) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
+        }
+
+        if (AndroidGradleOptions.getAdvancedProfilingTransforms(project).length > 0
+                && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING);
         }
 
         AndroidTask<? extends ManifestProcessorTask> processManifestTask =
@@ -2085,9 +2090,8 @@ public abstract class TaskManager {
                     });
         }
 
-        // ----- User transform support (e.g. Studio profilers) -----
-
-        for (String jar : AndroidGradleOptions.getCustomClassTransforms(project)) {
+        // ----- Android studio profiling transforms
+        for (String jar : AndroidGradleOptions.getAdvancedProfilingTransforms(project)) {
             if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
                     && variantData.getType().equals(VariantType.DEFAULT)
                     && jar != null) {
