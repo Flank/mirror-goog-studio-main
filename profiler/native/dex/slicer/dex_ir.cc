@@ -85,7 +85,7 @@ void DexFile::SortClassIndexes() {
 static void SortEncodedFields(std::vector<EncodedField*>* fields) {
   std::sort(fields->begin(), fields->end(),
             [](const EncodedField* a, const EncodedField* b) {
-              CHECK(a->field->index != b->field->index);
+              CHECK(a->field->index != b->field->index || a == b);
               return a->field->index < b->field->index;
             });
 }
@@ -94,7 +94,7 @@ static void SortEncodedFields(std::vector<EncodedField*>* fields) {
 static void SortEncodedMethods(std::vector<EncodedMethod*>* methods) {
   std::sort(methods->begin(), methods->end(),
             [](const EncodedMethod* a, const EncodedMethod* b) {
-              CHECK(a->method->index != b->method->index);
+              CHECK(a->method->index != b->method->index || a == b);
               return a->method->index < b->method->index;
             });
 }
@@ -181,7 +181,7 @@ void DexFile::Normalize() {
   IndexItems(classes, [&](const own<Class>& a, const own<Class>& b) {
     CHECK(a->index < classes.size());
     CHECK(b->index < classes.size());
-    CHECK(a->index != b->index);
+    CHECK(a->index != b->index || a == b);
     return a->index < b->index;
   });
 
