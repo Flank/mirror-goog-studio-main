@@ -32,15 +32,18 @@ the Play Store, all from command line invocations) it was decided instant run
 would be an integrated experience from the IDE. There is no command line
 interface to the features described in this document.
 
-The basic idea of Instant Run is to embed a small server within the application
-running on the Android device. This server will open a port to communicate with
-the Android Studio instance. User modifies code within the IDE, then press Play.
-AS will call the build system to perform an incremental build (based on the
-delta of source files). Build system will return the list of artifacts produced
-(details in the following paragraphs). Such artifacts will be handed over to the
-Instant Run client that use the port opened by the server to push the artifacts.
-The server will then be notified what type of restart is necessary (none,
-activity, process) and will perform it.
+A small server is embedded within the application running on the Android device.
+This server will open a port to communicate with the Android Studio instance.
+
+When the user modifies code within the IDE and selects re-run, Studio calls the
+build system to perform an incremental build. The build system returns the list
+of artifacts produced (details in the following paragraphs).
+
+In the case of hot or warm swap, the artifacts are sent by the instant run
+client in Studio to the instant run server in the application The server will
+then be notified what type of restart is necessary (none, activity, process) and
+will perform it. For a cold swap the changed apks are redeployed using `adb
+install-multiple -p` partial install.
 
 ## Verifier ##
 
@@ -69,12 +72,20 @@ See
 [`InstantRunVerifierStatus`](/build-system/instant-run-instrumentation/src/main/java/com/android/build/gradle/internal/incremental/InstantRunVerifierStatus.java)
 for the list of possible states for verification. Depending on the patching
 policy
-([`InstantRunPatchingPolicy`](instant-run-instrumentation/src/main/java/com/android/build/gradle/internal/incremental/InstantRunPatchingPolicy.java)),
-each verifier status maps to an InstantRunBuildMode. For example, a java
+([`InstantRunPatchingPolicy`](/build-system/instant-run-instrumentation/src/main/java/com/android/build/gradle/internal/incremental/InstantRunPatchingPolicy.java)),
+each verifier status maps to an
+[`InstantRunBuildMode`](/build-system/instant-run-instrumentation/src/main/java/com/android/build/gradle/internal/incremental/InstantRunBuildMode.java). For example, a java
 resource change results in a full build when using a target device before
 Lollipop and multidex but a cold swap for multi-apk. When there are multiple
 verifier failures only the first one is stored, but the build modes are
 combined. For example `HOT_WARM` and `COLD` gives `COLD`.
+
+If the `InstantRunBuildMode` is `HOT_WARM`, the downstream cold swap tasks are disabled
+in
+[`PreColdSwapTask`](/build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/PreColdSwapTask.java).
+If the build mode is `FULL`, the `InstantRunBuildContext` collapses all the
+previously built artifacts into the current build, so studio knows to deploy
+them all.
 
 ## Hot swap ##
 
@@ -85,24 +96,45 @@ See [Instant run byte code instrumentation](/build-system/instant-run-instrument
 ### Hot swap delivery ###
 
 When the build-system determines that all the code changes since the last build
-are compatible with the current hot swap implementation, it will create a
-reload.dex with all the changed classes instrumented with the incremental
-instrumentation. This reload.dex will be used by the Instant Run client library
-and transferred to the running application Instant Run server which will write
-it on the disk, create a class loader and register the updated classes.
+are compatible with the current hot swap implementation, it creates a reload.dex
+with all the changed classes instrumented with the incremental instrumentation.
+This reload.dex is sent by studio with the Instant Run client library to the
+running application's Instant Run server which writes it on the disk, create a
+class loader and register the updated classes, so next time the updated methods
+are called, they are redirected to their new implementations.
+
+## Warm swap ##
+
+When resources are changed in a compatible way, a new `resources._ap` is
+produced with the updated resources.
+
+When the instant run server receives updated resources, it constructs a new
+asset manager and uses reflection to replace the existing asset manager with one
+containing the updated resources. This is implemented in
+[`MonkeyPatcher`](/instant-run/instant-run-server/src/main/java/com/android/tools/fd/runtime/MonkeyPatcher.java)
+.
+
+A warm swap can also include hot swap changes.
 
 ## Cold swap ##
 
 When a code change is outside of the boundaries of the hot swap implementation
-(say adding or removing a method for example), we need to restart the
-application which is called cold swap. The key here is to do it in the most
-efficient manner.
+(for example, when adding or removing a method), a cold swap is performed.
 
-First, we collect all the hot swap changes that may have impacted several source
-files since the last APK/Cold swap build and re-create all the slices that are
-impacted by the touched source files. If the user touches files in a single
-package, since all files belonging to a single java package end up in the same
-slice, only one slice will be rebuilt.
+The cold swap dexing and packaging tasks, which were disabled during the
+previous hot and warm swap builds, run incrementally picking up all changes
+since the last cold swap or full build. They produce the split APKs for the
+classes that have been updated since the last cold swap or full build.
+
+The classes are sharded by java package, so if the user has only been editing
+files in one package, only one split apk will be rebuilt.
+
+The updated splits are then pushed and installed on to the device using an adb
+partial install.
+
+### Previous (before Android Studio 2.3)
+Cold swap used to produce dex files, which we would add to the application
+classpath via classloader hacks.
 
 The impacted slices are then pushed to the device via the runtime, which writes
 them to a known ‘inbox’ location in the app’s data directory. The application is
