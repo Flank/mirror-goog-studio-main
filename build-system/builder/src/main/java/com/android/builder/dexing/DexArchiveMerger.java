@@ -76,8 +76,7 @@ public class DexArchiveMerger {
      */
     public DexArchiveMerger(
             @NonNull DexMergerConfig config, @NonNull WaitableExecutor<Void> executor) {
-        // merging with a simple merging strategy by default
-        this(config, new NaiveDexMergingStrategy(), executor);
+        this(config, new ReferenceCountMergingStrategy(), executor);
     }
 
     public DexArchiveMerger(

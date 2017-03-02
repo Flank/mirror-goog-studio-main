@@ -51,7 +51,9 @@ apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
-def generated = new File("${project.buildDir}/generated/resources")
+def generated = new File("${project.buildDir}/generated")
+def generatedSources = new File("${generated}/generated")
+def generatedResources = new File("${generated}/resources")
 
 sourceSets {
     main {
@@ -59,14 +61,22 @@ sourceSets {
             srcDir 'src/dex/java'
         }
         resources {
-            srcDir generated
+            srcDir generatedResources
         }
     }
 }
 
 task copyVersionProperties(type: Copy) {
     from project.file("$rootDir/buildSrc/base/version.properties")
-    into project.file("$generated/com/android/builder")
+    into project.file("$generatedResources/com/android/builder")
+}
+
+// setup annotation processor output directory
+tasks.compileJava {
+    doFirst {
+        generatedSources.mkdirs()
+    }
+    options.compilerArgs += ['-s', generatedSources]
 }
 
 tasks.compileJava.dependsOn copyVersionProperties
