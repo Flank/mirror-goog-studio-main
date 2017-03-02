@@ -24,6 +24,7 @@ import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.tasks.BundleAtom;
 import com.android.builder.core.AndroidBuilder;
 
 /**
@@ -93,5 +94,11 @@ public class AtomVariantImpl extends AndroidArtifactVariantImpl implements AtomV
     @Override
     public void setUnitTestVariant(@Nullable UnitTestVariant unitTestVariant) {
         this.unitTestVariant = unitTestVariant;
+    }
+
+    @Nullable
+    @Override
+    public BundleAtom getBundleAtom() {
+        return variantData.bundleAtomTask;
     }
 }

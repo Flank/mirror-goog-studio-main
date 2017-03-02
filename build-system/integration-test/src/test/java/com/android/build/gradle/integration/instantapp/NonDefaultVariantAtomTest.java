@@ -23,13 +23,11 @@ import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Tests that non-default variants for atoms work as expected. */
 @Category(SmokeTests.class)
-@Ignore
 public class NonDefaultVariantAtomTest {
     @ClassRule
     public static GradleTestProject sProject =

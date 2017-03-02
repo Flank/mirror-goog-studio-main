@@ -16,17 +16,5 @@
 
 package com.android.build.gradle.api;
 
-import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.BundleAtom;
-
-/**
- * A variant output for library variants.
- */
-public interface AtomVariantOutput {
-
-    /**
-     * Returns the Atom bundling task.
-     */
-    @Nullable
-    BundleAtom getBundleAtom();
-}
+/** A variant output for library variants. */
+public interface AtomVariantOutput {}

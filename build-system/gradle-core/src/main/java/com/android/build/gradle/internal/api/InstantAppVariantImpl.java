@@ -22,6 +22,7 @@ import com.android.build.gradle.api.InstantAppVariant;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
+import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
 
 
@@ -63,5 +64,11 @@ public class InstantAppVariantImpl extends InstallableVariantImpl implements Ins
     @Override
     protected BaseVariantData<?> getVariantData() {
         return variantData;
+    }
+
+    @Nullable
+    @Override
+    public BundleInstantApp getBundleInstantApp() {
+        return variantData.bundleInstantAppTask;
     }
 }

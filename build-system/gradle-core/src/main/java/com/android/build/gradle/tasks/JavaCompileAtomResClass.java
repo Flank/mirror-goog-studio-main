@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
@@ -104,7 +104,7 @@ public class JavaCompileAtomResClass extends DefaultAndroidTask {
     private AtomConfig atomConfigTask;
 
     public static class ConfigAction implements TaskConfigAction<JavaCompileAtomResClass> {
-        public ConfigAction(@NonNull VariantOutputScope scope) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 
@@ -122,10 +122,10 @@ public class JavaCompileAtomResClass extends DefaultAndroidTask {
 
         @Override
         public void execute(@NonNull JavaCompileAtomResClass javaCompileAtomResClass) {
-            javaCompileAtomResClass.setVariantName(scope.getVariantOutputData().getFullName());
-            javaCompileAtomResClass.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
+            javaCompileAtomResClass.setVariantName(scope.getVariantConfiguration().getFullName());
+            javaCompileAtomResClass.atomConfigTask = scope.getVariantData().atomConfigTask;
         }
 
-        @NonNull private VariantOutputScope scope;
+        @NonNull private VariantScope scope;
     }
 }

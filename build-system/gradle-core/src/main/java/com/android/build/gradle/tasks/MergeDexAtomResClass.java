@@ -24,7 +24,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.core.DefaultDexOptions;
@@ -143,9 +142,9 @@ public class MergeDexAtomResClass extends BaseTask {
 
     public static class ConfigAction implements TaskConfigAction<MergeDexAtomResClass> {
 
-        private final VariantOutputScope scope;
+        private final VariantScope scope;
 
-        public ConfigAction(@NonNull VariantOutputScope scope) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 
@@ -163,15 +162,12 @@ public class MergeDexAtomResClass extends BaseTask {
 
         @Override
         public void execute(@NonNull MergeDexAtomResClass task) {
-            final VariantScope variantScope = scope.getVariantScope();
-
             task.setVariantName(scope.getFullVariantName());
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.scope = variantScope;
+            task.scope = scope;
 
-            task.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
-            task.atomDexDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
+            task.atomConfigTask = scope.getVariantData().atomConfigTask;
+            task.atomDexDirs = scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
         }
     }
 

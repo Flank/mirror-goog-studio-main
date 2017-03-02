@@ -120,12 +120,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
-    @NonNull
-    File getDexOutputFolder();
-
-    @NonNull
-    File getDexOutputFolder(@NonNull String atomName);
-
     @Nullable
     BaseVariantData getTestedVariantData();
 
@@ -137,9 +131,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getJavaOutputDir();
-
-    @NonNull
-    File getJavaOutputDir(@NonNull String atomName);
 
     @NonNull
     FileCollection getArtifactFileCollection(
@@ -206,9 +197,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
-    File getResourceBlameLogDir(@NonNull String atomName);
-
-    @NonNull
     File getMergeNativeLibsOutputDir();
 
     @NonNull
@@ -243,9 +231,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getRClassSourceOutputDir();
-
-    @NonNull
-    File getRClassSourceOutputDir(@NonNull String atomName);
 
     @NonNull
     File getAidlSourceOutputDir();
@@ -328,9 +313,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getSplitSupportDirectory();
 
     @NonNull
-    File getPackageAtom(@NonNull String atomName);
-
-    @NonNull
     File getAaptFriendlyManifestOutputDirectory();
 
     @NonNull
@@ -362,6 +344,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getManifestOutputDirectory();
+
+    @NonNull
+    File getInstantAppPackage();
 
     AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask();
 

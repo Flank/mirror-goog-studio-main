@@ -19,5 +19,4 @@ android {
 //
 dependencies {
     compile project(path: ':atom')
-    releaseCompile project(path: ':atom')
 }

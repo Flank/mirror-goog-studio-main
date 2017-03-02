@@ -383,8 +383,10 @@ public class ProcessAndroidResources extends IncrementalTask {
         // Find the base atom package, if it exists.
         @Nullable File baseAtomPackage = null;
         for (File atomPackage : atomResourcePackages) {
-            if (atomPackage.exists()) {
-                baseAtomPackage = atomPackage;
+            Collection<BuildOutput> splitOutputs =
+                    BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, atomPackage);
+            if (!splitOutputs.isEmpty()) {
+                baseAtomPackage = splitOutputs.iterator().next().getOutputFile();
                 break;
             }
         }

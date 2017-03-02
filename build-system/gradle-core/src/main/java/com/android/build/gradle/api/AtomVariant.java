@@ -16,11 +16,16 @@
 
 package com.android.build.gradle.api;
 
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.TestedVariant;
+import com.android.build.gradle.tasks.BundleAtom;
 
 /**
  * An Atom Build variant and all its public data.
  */
 public interface AtomVariant extends BaseVariant, VersionedVariant, TestedVariant {
 
+    /** Returns the Atom bundling task. */
+    @Nullable
+    BundleAtom getBundleAtom();
 }

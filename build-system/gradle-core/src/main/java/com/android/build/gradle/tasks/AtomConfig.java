@@ -16,6 +16,18 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.DOT_RES;
+import static com.android.SdkConstants.FD_ATOMS;
+import static com.android.SdkConstants.FD_BLAME;
+import static com.android.SdkConstants.FD_CLASSES_OUTPUT;
+import static com.android.SdkConstants.FD_DEX;
+import static com.android.SdkConstants.FD_RES;
+import static com.android.SdkConstants.FD_RES_CLASS;
+import static com.android.SdkConstants.FD_SOURCE_GEN;
+import static com.android.SdkConstants.FD_SYMBOLS;
+import static com.android.SdkConstants.FN_RES_BASE;
+import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_ASSETS;
@@ -28,15 +40,18 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.utils.FileUtils;
+import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +61,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -140,9 +156,6 @@ public class AtomConfig extends BaseTask {
                         artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
             }
 
-            VariantScope variantScope = variantOutputScope.getVariantScope();
-            GlobalScope globalScope = variantScope.getGlobalScope();
-
             Set<ResolvedArtifactResult> atomManifestArtifacts = atomManifests.getArtifacts();
             computedAtomInfo = new ArrayList<>(atomManifestArtifacts.size());
 
@@ -161,32 +174,20 @@ public class AtomConfig extends BaseTask {
                 String atomName = componentIdentifier.getDisplayName();
                 atomName = atomName.substring(atomName.indexOf(':') + 1);
 
-                File sourceOutputDir = variantScope.getRClassSourceOutputDir(atomName);
-                File textSymbolOutputDir =
-                        FileUtils.join(
-                                globalScope.getIntermediatesDir(),
-                                "symbols",
-                                atomName,
-                                variantScope
-                                        .getVariantData()
-                                        .getVariantConfiguration()
-                                        .getDirName());
-                // FIX ME : can we use splits here ?
-                File packageOutputFile = null;
-                //variantOutputScope.getProcessResourcePackageOutputFile(atomName);
-                File mergeBlameLogDir = variantScope.getResourceBlameLogDir(atomName);
-                File javaClassDir = variantScope.getJavaOutputDir(atomName);
-                File dexTempDir =
-                        variantScope.getIncrementalDir(
-                                atomName + "-" + variantOutputScope.getFullVariantName());
-                File finalDexDir = variantScope.getDexOutputFolder(atomName);
-                File finalOutputFile = variantScope.getPackageAtom(atomName);
+                File sourceOutputDir = getSourceOutputDir(atomName);
+                File textSymbolOutputDir = getTextSymbolOutputDir(atomName);
+                File packageOutputFile = getPackageOutputFile(atomName);
+                File mergeBlameLogDir = getMergeBlameLogDir(atomName);
+                File javaClassDir = getJavaClassDir(atomName);
+                File dexTempDir = getDexTempDir(atomName);
+                File finalDexDir = getFinalDexDir(atomName);
+                File finalOutputFile = getFinalOutputFile(atomName);
 
                 computedAtomInfo.add(
                         new AtomInfo(
                                 atomName,
-                                artifactResult.getFile(),
-                                resPackageMap.get(componentIdentifier),
+                                getManifestFile(artifactResult.getFile()),
+                                getPackageFile(resPackageMap.get(componentIdentifier)),
                                 androidResMap.get(componentIdentifier),
                                 dexMap.get(componentIdentifier),
                                 javaResMap.get(componentIdentifier),
@@ -233,7 +234,7 @@ public class AtomConfig extends BaseTask {
     private ArtifactCollection atomJniDirs;
     private ArtifactCollection atomAssetDirs;
     private ArtifactCollection atomLibInfoFiles;
-    private VariantOutputScope variantOutputScope;
+    private VariantScope variantScope;
 
     // So we don't have to compute them twice.
     private Collection<File> sourceOutputDirsCollection;
@@ -247,13 +248,108 @@ public class AtomConfig extends BaseTask {
 
     private Collection<AtomInfo> computedAtomInfo;
 
+    @NonNull
+    private static File getManifestFile(@NonNull File manifestDir) {
+        // FIXME: Remove this once we support config splits.
+        Collection<BuildOutput> splitOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, manifestDir);
+        if (splitOutputs.isEmpty()) {
+            throw new GradleException("Could not load manifest from " + manifestDir);
+        }
+        return splitOutputs.iterator().next().getOutputFile();
+    }
+
+    @Nullable
+    private static File getPackageFile(@NonNull File packageDir) {
+        // FIXME: Remove this once we support config splits.
+        Collection<BuildOutput> splitOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, packageDir);
+        if (splitOutputs.isEmpty()) {
+            return null;
+        }
+        return splitOutputs.iterator().next().getOutputFile();
+    }
+
+    @NonNull
+    private File getSourceOutputDir(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getGeneratedDir(),
+                FD_SOURCE_GEN,
+                FD_RES_CLASS,
+                atomName + RES_QUALIFIER_SEP + variantScope.getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    private File getTextSymbolOutputDir(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                FD_SYMBOLS,
+                atomName,
+                variantScope.getVariantData().getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    private File getPackageOutputFile(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                FD_RES,
+                FN_RES_BASE
+                        + RES_QUALIFIER_SEP
+                        + atomName
+                        + RES_QUALIFIER_SEP
+                        + variantScope.getVariantConfiguration().getBaseName()
+                        + DOT_RES);
+    }
+
+    @NonNull
+    private File getMergeBlameLogDir(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                StringHelper.toStrings(
+                        FD_BLAME,
+                        FD_RES,
+                        atomName,
+                        variantScope.getVariantConfiguration().getDirectorySegments()));
+    }
+
+    @NonNull
+    private File getJavaClassDir(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                FD_CLASSES_OUTPUT,
+                atomName + RES_QUALIFIER_SEP + variantScope.getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    private File getDexTempDir(String atomName) {
+        return variantScope.getIncrementalDir(
+                atomName + RES_QUALIFIER_SEP + variantScope.getFullVariantName());
+    }
+
+    @NonNull
+    private File getFinalDexDir(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                FD_DEX,
+                atomName + RES_QUALIFIER_SEP + variantScope.getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    private File getFinalOutputFile(String atomName) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getIntermediatesDir(),
+                FD_ATOMS,
+                variantScope.getVariantConfiguration().getDirName(),
+                atomName + DOT_ANDROID_PACKAGE);
+    }
+
     // Struct containing all necessary information for one atom.
     public static class AtomInfo {
 
         public AtomInfo(
                 @NonNull String name,
                 @NonNull File manifestFile,
-                @NonNull File resourcePackageFile,
+                @Nullable File resourcePackageFile,
                 @NonNull File resourceDir,
                 @NonNull File atomDexDir,
                 @NonNull File javaResourcesDir,
@@ -292,66 +388,82 @@ public class AtomConfig extends BaseTask {
             return name;
         }
 
+        @Nullable
         public File getResourcePackageFile() {
             return resourcePackageFile;
         }
 
+        @NonNull
         public File getManifestFile() {
             return manifestFile;
         }
 
+        @NonNull
         public File getResourceDir() {
             return resourceDir;
         }
 
+        @NonNull
         public File getAtomDexDir() {
             return atomDexDir;
         }
 
+        @NonNull
         public File getJavaResourcesDir() {
             return javaResourcesDir;
         }
 
+        @NonNull
         public File getJniDir() {
             return jniDir;
         }
 
+        @NonNull
         public File getAssetDir() {
             return assetDir;
         }
 
+        @NonNull
         public File getLibInfoFile() {
             return libInfoFile;
         }
 
+        @NonNull
         public File getSourceOutputDir() {
             return sourceOutputDir;
         }
 
+        @NonNull
         public File getTextSymbolOutputDir() {
             return textSymbolOutputDir;
         }
 
+        @NonNull
         public File getPackageOutputFile() {
             return packageOutputFile;
         }
 
+        @NonNull
         public File getMergeBlameLogDir() {
             return mergeBlameLogDir;
         }
 
+        @NonNull
         public File getJavaClassDir() {
             return javaClassDir;
         }
 
+        @NonNull
         public File getDexTempDir() {
             return dexTempDir;
         }
 
+        @NonNull
         public File getFinalDexDir() {
             return finalDexDir;
         }
 
+        @NonNull
         public File getFinalOutputFile() {
             return finalOutputFile;
         }
@@ -429,9 +541,9 @@ public class AtomConfig extends BaseTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<AtomConfig> {
-        private final VariantOutputScope scope;
+        private final VariantScope scope;
 
-        public ConfigAction(VariantOutputScope scope) {
+        public ConfigAction(VariantScope scope) {
             this.scope = scope;
         }
 
@@ -449,34 +561,33 @@ public class AtomConfig extends BaseTask {
 
         @Override
         public void execute(@NonNull AtomConfig atomConfig) {
-            final VariantScope variantScope = scope.getVariantScope();
-            final GlobalScope globalScope = variantScope.getGlobalScope();
+            final GlobalScope globalScope = scope.getGlobalScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantScope().getVariantData();
+                    scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-            scope.getVariantOutputData().atomConfigTask = atomConfig;
+            variantData.atomConfigTask = atomConfig;
 
             atomConfig.setAndroidBuilder(globalScope.getAndroidBuilder());
             atomConfig.setVariantName(config.getFullName());
 
             atomConfig.atomManifests =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             atomConfig.atomResourcePackages =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG);
             atomConfig.atomAndroidRes =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ANDROID_RES);
             atomConfig.atomDexDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_DEX);
             atomConfig.atomJavaRes =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
             atomConfig.atomJniDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
             atomConfig.atomAssetDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
             atomConfig.atomLibInfoFiles =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
-            atomConfig.variantOutputScope = scope;
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_LIB_INFO);
+            atomConfig.variantScope = scope;
         }
     }
 }

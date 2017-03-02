@@ -22,8 +22,6 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.scope.VariantOutputScope;
-import com.android.build.gradle.tasks.AtomConfig;
-import com.android.build.gradle.tasks.BundleAtom;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.ide.common.build.ApkData;
@@ -33,7 +31,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import org.gradle.api.Task;
-import org.gradle.api.tasks.bundling.Zip;
+
 
 /**
  * Base output data about a variant.
@@ -54,13 +52,7 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     public PackageAndroidArtifact packageAndroidArtifactTask;
 
-    public BundleAtom bundleAtomTask;
-
-    public Zip packageInstantAppTask;
-
     public Task assembleTask;
-
-    public AtomConfig atomConfigTask;
 
     @NonNull
     private final VariantOutputScope scope;

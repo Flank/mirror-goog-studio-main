@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.api.InstantAppVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.InstantAppVariantOutputData;
-import org.gradle.api.tasks.bundling.Zip;
 
 /**
  * Implementation of variant output for iapk-generating variants.
@@ -37,12 +35,6 @@ public class InstantAppVariantOutputImpl extends BaseVariantOutputImpl implement
     @Override
     public int getVersionCode() {
         return variantOutputData.getVersionCode();
-    }
-
-    @Nullable
-    @Override
-    public Zip getPackageInstantApp() {
-        return variantOutputData.packageInstantAppTask;
     }
 
     @NonNull

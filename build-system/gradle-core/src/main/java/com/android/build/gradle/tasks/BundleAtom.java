@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.build.gradle.internal.tasks.FileSupplier;
+import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -267,6 +268,9 @@ public class BundleAtom extends DefaultAndroidTask implements FileSupplier {
             bundleAtom.jniFolders = transformManager.getPipelineOutputAsFileCollection(NATIVE_LIBS);
             bundleAtom.dexFolders = transformManager.getPipelineOutputAsFileCollection(DEX);
             bundleAtom.javaResources = transformManager.getPipelineOutputAsFileCollection(RESOURCES);
+
+            AtomVariantData atomVariantData = (AtomVariantData) scope.getVariantData();
+            atomVariantData.bundleAtomTask = bundleAtom;
         }
 
         @NonNull

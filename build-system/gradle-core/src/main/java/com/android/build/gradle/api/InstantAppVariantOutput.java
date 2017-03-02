@@ -16,16 +16,5 @@
 
 package com.android.build.gradle.api;
 
-import com.android.annotations.Nullable;
-import org.gradle.api.tasks.bundling.Zip;
-
-/**
- * A variant output for instant app-generating variants.
- */
-public interface InstantAppVariantOutput {
-
-    /** Returns the InstantApp packaging task */
-    @Nullable
-    Zip getPackageInstantApp();
-
-}
+/** A variant output for instantApp-generating variants. */
+public interface InstantAppVariantOutput {}

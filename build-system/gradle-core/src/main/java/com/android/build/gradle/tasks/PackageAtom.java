@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
@@ -506,9 +505,9 @@ public class PackageAtom extends IncrementalTask {
 
     public static class ConfigAction implements TaskConfigAction<PackageAtom> {
 
-        private final VariantOutputScope scope;
+        private final VariantScope scope;
 
-        public ConfigAction(VariantOutputScope scope) {
+        public ConfigAction(VariantScope scope) {
             this.scope = scope;
         }
 
@@ -526,15 +525,14 @@ public class PackageAtom extends IncrementalTask {
 
         @Override
         public void execute(@NonNull PackageAtom packageAtom) {
-            VariantScope variantScope = scope.getVariantScope();
-            GlobalScope globalScope = variantScope.getGlobalScope();
+            GlobalScope globalScope = scope.getGlobalScope();
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    variantScope.getVariantData();
+                    scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             packageAtom.setAndroidBuilder(globalScope.getAndroidBuilder());
             packageAtom.setVariantName(scope.getFullVariantName());
-            packageAtom.setIncrementalFolder(variantScope.getIncrementalDir(packageAtom.getName()));
+            packageAtom.setIncrementalFolder(scope.getIncrementalDir(packageAtom.getName()));
 
             File cacheByPathDir = new File(packageAtom.getIncrementalFolder(), ZIP_DIFF_CACHE_DIR);
             FileUtils.mkdirs(cacheByPathDir);
@@ -549,18 +547,18 @@ public class PackageAtom extends IncrementalTask {
                     packageAtom,
                     "packagingOptions",
                     globalScope.getExtension()::getPackagingOptions);
-            packageAtom.setMinSdkVersion(variantScope.getMinSdkVersion());
+            packageAtom.setMinSdkVersion(scope.getMinSdkVersion());
             packageAtom.aaptOptions = globalScope.getExtension().getAaptOptions();
 
             packageAtom.atomManifests =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_MANIFEST);
             packageAtom.atomJavaResDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JAVA_RES);
             packageAtom.atomJniDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_JNI);
             packageAtom.atomAssetDirs =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
-            packageAtom.atomConfigTask = scope.getVariantOutputData().atomConfigTask;
+                    scope.getArtifactCollection(COMPILE_CLASSPATH, MODULE, ATOM_ASSETS);
+            packageAtom.atomConfigTask = scope.getVariantData().atomConfigTask;
         }
     }
 }
