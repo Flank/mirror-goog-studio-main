@@ -9,7 +9,9 @@ version = rootProject.ext.baseVersion
 dependencies {
     compile project(':base:lint-checks')
     compile project(':base:manifest-merger')
-    compile 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
+    compile 'org.jetbrains.kotlin:kotlin-runtime:1.0.5' // for UAST
+    compile 'org.jetbrains.kotlin:kotlin-stdlib:1.0.5' // for UAST
+    compile 'org.eclipse.jdt.core.compiler:ecj:4.6.1' // for old PSI bridge
 }
 
 sourceSets {

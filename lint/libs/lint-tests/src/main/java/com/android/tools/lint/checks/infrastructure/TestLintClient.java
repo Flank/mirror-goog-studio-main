@@ -18,7 +18,6 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -63,6 +62,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -73,8 +73,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.psi.EcjPsiBuilder;
-import com.android.tools.lint.psi.EcjPsiJavaEvaluator;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.StdLogger;
@@ -86,11 +84,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.psi.JavaRecursiveElementVisitor;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +100,7 @@ import java.util.stream.Collectors;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -194,10 +195,10 @@ public class TestLintClient extends LintCliClient {
 
             String secondResult;
             try {
-                EcjPsiBuilder.setDebugOptions(true, true);
+                //EcjPsiBuilder.setDebugOptions(true, true);
                 secondResult = analyze(files, issues);
             } finally {
-                EcjPsiBuilder.setDebugOptions(false, false);
+                //EcjPsiBuilder.setDebugOptions(false, false);
             }
 
             assertEquals("The lint check produced different results when run on the "
@@ -416,55 +417,53 @@ public class TestLintClient extends LintCliClient {
         return writer.toString();
     }
 
-    private static void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
-                    result.add(file);
-                } else if (file.isDirectory()) {
-                    gatherJavaFiles(file, result);
+    @Nullable
+    @Override
+    public UastParser getUastParser(@Nullable Project project) {
+        return new LintCliUastParser(project) {
+            @Override
+            public boolean prepare(@NonNull List<JavaContext> contexts) {
+                boolean ok = super.prepare(contexts);
+                if (task.forceSymbolResolutionErrors) {
+                    ok = false;
                 }
+                return ok;
             }
-        }
+
+            @Nullable
+            @Override
+            public UFile parse(@NonNull JavaContext context) {
+                UFile file = super.parse(context);
+
+                if (!task.allowCompilationErrors) {
+                    if (file != null) {
+                        PsiErrorElement error = PsiTreeUtil
+                                .findChildOfType(file.getPsi(), PsiErrorElement.class);
+                        if (error != null) {
+                            fail("Found error element " + error);
+                            // TODO: Use ECJ parser to produce build errors with better
+                            // error messages, source offsets, etc?
+                        }
+                    } else {
+                        fail("Failure processing source " + context.file);
+                    }
+                }
+
+                return file;
+            }
+        };
     }
 
     @Override
     public JavaParser getJavaParser(@Nullable Project project) {
         return new EcjParser(this, project) {
-            @NonNull
-            @Override
-            public EcjPsiJavaEvaluator getEvaluator() {
-                EcjPsiJavaEvaluator evaluator = super.getEvaluator();
-                //noinspection ConstantConditions
-                if (evaluator == null) {
-                    // Running from unit tests
-                    List<File> sourceFolders = project.getJavaSourceFolders();
-                    List<File> sources = new ArrayList<>(100);
-                    for (File folder : sourceFolders) {
-                        gatherJavaFiles(folder, sources);
-                    }
-
-                    List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(sourceFolders.size());
-                    for (File file : sources) {
-                        if (file.isFile() && file.getPath().endsWith(DOT_JAVA)) {
-                            contexts.add(new JavaContext(driver, project, project, file, this));
-                        }
-                    }
-                    prepareJavaParse(contexts);
-                    evaluator = super.getEvaluator();
-                }
-                return evaluator;
-            }
-
             @Override
             public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
                 boolean success = super.prepareJavaParse(contexts);
                 if (task.forceSymbolResolutionErrors) {
                     success = false;
                 }
-                boolean allowCompilationErrors = task.allowCompilationErrors;
-                if (!allowCompilationErrors && ecjResult != null) {
+                if (!task.allowCompilationErrors && ecjResult != null) {
                     StringBuilder sb = new StringBuilder();
                     for (CompilationUnitDeclaration unit : ecjResult.getCompilationUnits()) {
                         // so maybe I don't need my map!!

@@ -28,25 +28,25 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiDeclarationStatement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiNewExpression;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiReturnStatement;
 import com.intellij.psi.PsiType;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UDeclarationsExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULocalVariable;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-public class FirebaseAnalyticsDetector extends Detector implements Detector.JavaPsiScanner {
+public class FirebaseAnalyticsDetector extends Detector implements Detector.UastScanner {
 
     private static final int EVENT_NAME_MAX_LENGTH = 32;
     private static final int EVENT_PARAM_NAME_MAX_LENGTH = 24;
@@ -96,19 +96,19 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         String firebaseAnalytics = "com.google.firebase.analytics.FirebaseAnalytics";
         if (!context.getEvaluator().isMemberInClass(method, firebaseAnalytics)) {
             return;
         }
 
-        PsiExpression[] expressions = call.getArgumentList().getExpressions();
-        if (expressions.length < 2) {
+        List<UExpression> expressions = call.getValueArguments();
+        if (expressions.size() < 2) {
             return;
         }
 
-        PsiElement firstArgumentExpression = expressions[0];
+        UElement firstArgumentExpression = expressions.get(0);
         String value = ConstantEvaluator.evaluateString(context, firstArgumentExpression, false);
         if (value == null) {
             return;
@@ -120,7 +120,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
             context.report(INVALID_NAME, call, context.getLocation(call), error);
         }
 
-        PsiExpression secondParameter = expressions[1];
+        UExpression secondParameter = expressions.get(1);
         List<BundleModification> bundleModifications = getBundleModifications(context,
                 secondParameter);
 
@@ -131,7 +131,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
 
     private static void validateEventParameters(JavaContext context,
             List<BundleModification> parameters,
-            PsiElement call) {
+            UCallExpression call) {
         for (BundleModification bundleModification : parameters) {
             String error = getErrorForEventParameterName(bundleModification.mName);
             if (error != null) {
@@ -145,20 +145,20 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
 
     @Nullable
     private static List<BundleModification> getBundleModifications(JavaContext context,
-            PsiExpression secondParameter) {
-        PsiType type = secondParameter.getType();
+            UExpression secondParameter) {
+        PsiType type = secondParameter.getExpressionType();
         if (type != null && !type.getCanonicalText().equals(SdkConstants.CLASS_BUNDLE)) {
             return null;
         }
 
-        if (secondParameter instanceof PsiNewExpression) {
+        if (secondParameter instanceof UCallExpression) {
             return Collections.emptyList();
         }
 
         List<BundleModification> modifications = null;
 
-        if (secondParameter instanceof PsiReferenceExpression) {
-            PsiReferenceExpression bundleReference = (PsiReferenceExpression) secondParameter;
+        if (secondParameter instanceof UReferenceExpression) {
+            UReferenceExpression bundleReference = (UReferenceExpression) secondParameter;
             modifications = BundleModificationFinder.find(context, bundleReference);
         }
 
@@ -171,70 +171,87 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
      *
      * This will recursively search across files within the project.
      */
-    private static class BundleModificationFinder extends JavaRecursiveElementVisitor {
+    private static class BundleModificationFinder extends AbstractUastVisitor {
 
-        private final PsiReferenceExpression mBundleReference;
+        private final String mBundleReference;
         private final JavaContext mContext;
         private final List<BundleModification> mParameters = new ArrayList<>();
 
         private BundleModificationFinder(JavaContext context,
-                PsiReferenceExpression bundleReference) {
+                UReferenceExpression bundleReference) {
             mContext = context;
-            mBundleReference = bundleReference;
+            mBundleReference = bundleReference.asSourceString();
         }
 
         @Override
-        public void visitDeclarationStatement(PsiDeclarationStatement statement) {
-            for (PsiElement element : statement.getDeclaredElements()) {
-                if (!(element instanceof PsiLocalVariable)) {
+        public boolean visitDeclarationsExpression(UDeclarationsExpression statement) {
+            for (UElement element : statement.getDeclarations()) {
+                if (!(element instanceof ULocalVariable)) {
                     continue;
                 }
 
-                PsiLocalVariable local = (PsiLocalVariable) element;
+                ULocalVariable local = (ULocalVariable) element;
                 String name = local.getName();
 
-                if (name == null || !name.equals(mBundleReference.getText())) {
+                if (name == null || !name.equals(mBundleReference)) {
                     continue;
                 }
 
-                if (!(local.getInitializer() instanceof PsiMethodCallExpression)) {
+                UExpression initializer = local.getUastInitializer();
+                PsiMethod resolvedMethod;
+                if (initializer instanceof UCallExpression) {
+                    resolvedMethod = ((UCallExpression) initializer).resolve();
+                } else if (initializer instanceof UReferenceExpression) {
+                    PsiElement resolved = ((UReferenceExpression) initializer).resolve();
+                    if (resolved instanceof PsiMethod) {
+                        resolvedMethod = (PsiMethod) resolved;
+                    } else {
+                        continue;
+                    }
+                } else {
                     continue;
                 }
-
-                PsiMethodCallExpression call = (PsiMethodCallExpression) local.getInitializer();
-                PsiReferenceExpression returnReference = ReturnReferenceExpressionFinder
-                        .find(call.resolveMethod());
-
-                if (returnReference != null) {
-                    addParams(find(mContext, returnReference));
+                if (resolvedMethod != null) {
+                    UReferenceExpression returnReference = ReturnReferenceExpressionFinder
+                            .find(mContext.getUastContext().getMethod(resolvedMethod));
+                    if (returnReference != null) {
+                        addParams(find(mContext, returnReference));
+                    }
                 }
             }
+
+            return super.visitDeclarationsExpression(statement);
         }
 
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-            String method = expression.getMethodExpression().getCanonicalText();
+        public boolean visitCallExpression(UCallExpression expression) {
+            checkMethodCall(expression);
+            return super.visitCallExpression(expression);
+        }
 
-            if (!method.endsWith(".putString") && !method.endsWith(".putLong") && !method
-                    .endsWith(".putDouble")) {
+         private void checkMethodCall(UCallExpression expression) {
+            String method = expression.getMethodName();
+            if (method == null ||
+                     (!method.equals("putString") && !method.equals("putLong")
+                    && !method.equals("putDouble"))) {
                 return;
             }
 
-            PsiElement token = expression.getMethodExpression().getQualifier();
-            if (token == null || !mBundleReference.textMatches(token)) {
+            UElement token = expression.getReceiver();
+            if (token == null || !mBundleReference.equals(token.asSourceString())) {
                 return;
             }
 
-            PsiExpression[] expressions = expression.getArgumentList().getExpressions();
+            List<UExpression> expressions = expression.getValueArguments();
             String evaluatedName = ConstantEvaluator.evaluateString(mContext,
-                    expressions[0], false);
+                    expressions.get(0), false);
 
             if (evaluatedName != null) {
-                addParam(evaluatedName, expressions[1].getText(), expression);
+                addParam(evaluatedName, expressions.get(1).asSourceString(), expression);
             }
         }
 
-        private void addParam(String key, String value, PsiMethodCallExpression location) {
+        private void addParam(String key, String value, UCallExpression location) {
             mParameters.add(new BundleModification(key, value, location));
         }
 
@@ -244,11 +261,11 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
 
         @NonNull
         static List<BundleModification> find(JavaContext context,
-                PsiReferenceExpression bundleReference) {
+                UReferenceExpression bundleReference) {
             BundleModificationFinder scanner = new BundleModificationFinder(context,
                     bundleReference);
-            PsiMethod enclosingMethod = PsiTreeUtil
-                    .getParentOfType(bundleReference, PsiMethod.class);
+            UMethod enclosingMethod = UastUtils
+                    .getParentOfType(bundleReference, UMethod.class);
             if (enclosingMethod == null) {
                 return Collections.emptyList();
             }
@@ -261,20 +278,22 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
      * Given a method, find the last `return` expression that returns a reference.
      */
     @SuppressWarnings("UnsafeReturnStatementVisitor")
-    private static class ReturnReferenceExpressionFinder extends JavaRecursiveElementVisitor {
+    private static class ReturnReferenceExpressionFinder extends AbstractUastVisitor {
 
-        private PsiReferenceExpression mReturnReference = null;
+        private UReferenceExpression mReturnReference = null;
 
         @Override
-        public void visitReturnStatement(PsiReturnStatement statement) {
-            PsiExpression returnExpression = statement.getReturnValue();
-            if (returnExpression instanceof PsiReferenceExpression) {
-                mReturnReference = (PsiReferenceExpression) returnExpression;
+        public boolean visitReturnExpression(UReturnExpression statement) {
+            UExpression returnExpression = statement.getReturnExpression();
+            if (returnExpression instanceof UReferenceExpression) {
+                mReturnReference = (UReferenceExpression) returnExpression;
             }
+
+            return super.visitReturnExpression(statement);
         }
 
         @Nullable
-        static PsiReferenceExpression find(PsiMethod method) {
+        static UReferenceExpression find(UMethod method) {
             ReturnReferenceExpressionFinder finder = new ReturnReferenceExpressionFinder();
             method.accept(finder);
             return finder.mReturnReference;
@@ -286,10 +305,10 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Java
         public final String mName;
         @SuppressWarnings("unused")
         public final String mValue;
-        public final PsiMethodCallExpression mLocation;
+        public final UCallExpression mLocation;
 
         public BundleModification(String name, String value,
-                PsiMethodCallExpression location) {
+                UCallExpression location) {
             mName = name;
             mValue = value;
             mLocation = location;

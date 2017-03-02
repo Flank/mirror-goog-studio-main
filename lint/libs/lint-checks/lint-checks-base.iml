@@ -10,7 +10,6 @@
     <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="lint-api-base" />
     <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="library" name="asm-tools" level="project" />
@@ -20,5 +19,7 @@
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="repository" />
     <orderEntry type="library" name="lombok-ast" level="project" />
+    <orderEntry type="library" name="intellij-core" level="project" />
+    <orderEntry type="library" name="uast" level="project" />
   </component>
 </module>

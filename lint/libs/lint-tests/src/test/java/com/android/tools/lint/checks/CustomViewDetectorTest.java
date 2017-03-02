@@ -25,9 +25,8 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
         return new CustomViewDetector();
     }
 
-    @SuppressWarnings("ClassNameDiffersFromFileName")
     public void test() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/CustomView1.java:18: Warning: By convention, the custom view (CustomView1) and the declare-styleable (MyDeclareStyleable) should have the same name (various editor features rely on this convention) [CustomViewStyleable]\n"
                 + "        context.obtainStyledAttributes(R.styleable.MyDeclareStyleable);\n"
                 + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -46,9 +45,10 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/CustomView1.java:47: Warning: By convention, the declare-styleable (MyDeclareStyleable) for a layout parameter class (MyLayoutParams) is expected to be the surrounding class (MyLayout) plus \"_Layout\", e.g. MyLayout_Layout. (Various editor features rely on this convention.) [CustomViewStyleable]\n"
                 + "                context.obtainStyledAttributes(R.styleable.MyDeclareStyleable); // Wrong\n"
                 + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-
-            lintProject(java("src/test/pkg/CustomView1.java", ""
+                + "0 errors, 6 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java("src/test/pkg/CustomView1.java", ""
                     + "package test.pkg;\n"
                     + "\n"
                     + "import android.content.Context;\n"
@@ -149,7 +149,9 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
                     + "            public static final int MyLayout_Layout_layout_myWeight = 2;\n"
                     + "        }\n"
                     + "    }\n"
-                    + "}\n")));
+                    + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testObtainOnCall() throws Exception {

@@ -29,14 +29,15 @@ import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaTokenType;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.tree.IElementType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
  * A permission requirement is a boolean expression of permission names that a
@@ -46,7 +47,7 @@ public abstract class PermissionRequirement {
     public static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
     public static final String VALUE_DANGEROUS = "dangerous";
 
-    protected final PsiAnnotation annotation;
+    protected final UAnnotation annotation;
     private int firstApi;
     private int lastApi;
 
@@ -100,14 +101,13 @@ public abstract class PermissionRequirement {
         }
     };
 
-    private PermissionRequirement(@NonNull PsiAnnotation annotation) {
+    private PermissionRequirement(@NonNull UAnnotation annotation) {
         this.annotation = annotation;
     }
 
     @NonNull
     public static PermissionRequirement create(
-            @NonNull PsiAnnotation annotation) {
-
+            @NonNull UAnnotation annotation) {
         String value = getAnnotationStringValue(annotation, ATTR_VALUE);
         if (value != null && !value.isEmpty()) {
             return new Single(annotation, value);
@@ -135,10 +135,11 @@ public abstract class PermissionRequirement {
     }
 
     @Nullable
-    public static Boolean getAnnotationBooleanValue(@Nullable PsiAnnotation annotation,
+    public static Boolean getAnnotationBooleanValue(
+            @Nullable UAnnotation annotation,
             @NonNull String name) {
         if (annotation != null) {
-            PsiAnnotationMemberValue attributeValue = annotation.findDeclaredAttributeValue(name);
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
                 attributeValue = annotation.findDeclaredAttributeValue(null);
             }
@@ -154,11 +155,23 @@ public abstract class PermissionRequirement {
         return null;
     }
 
+    public static boolean getAnnotationBooleanValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            boolean defaultValue) {
+        Boolean value = getAnnotationBooleanValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
     @Nullable
-    public static Long getAnnotationLongValue(@Nullable PsiAnnotation annotation,
+    public static Long getAnnotationLongValue(
+            @Nullable UAnnotation annotation,
             @NonNull String name) {
         if (annotation != null) {
-            PsiAnnotationMemberValue attributeValue = annotation.findDeclaredAttributeValue(name);
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
                 attributeValue = annotation.findDeclaredAttributeValue(null);
             }
@@ -174,11 +187,23 @@ public abstract class PermissionRequirement {
         return null;
     }
 
+    public static long getAnnotationLongValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            long defaultValue) {
+        Long value = getAnnotationLongValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
     @Nullable
-    public static Double getAnnotationDoubleValue(@Nullable PsiAnnotation annotation,
+    public static Double getAnnotationDoubleValue(
+            @Nullable UAnnotation annotation,
             @NonNull String name) {
         if (annotation != null) {
-            PsiAnnotationMemberValue attributeValue = annotation.findDeclaredAttributeValue(name);
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
                 attributeValue = annotation.findDeclaredAttributeValue(null);
             }
@@ -194,11 +219,23 @@ public abstract class PermissionRequirement {
         return null;
     }
 
+    public static double getAnnotationDoubleValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            double defaultValue) {
+        Double value = getAnnotationDoubleValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
     @Nullable
-    public static String getAnnotationStringValue(@Nullable PsiAnnotation annotation,
+    public static String getAnnotationStringValue(
+            @Nullable UAnnotation annotation,
             @NonNull String name) {
         if (annotation != null) {
-            PsiAnnotationMemberValue attributeValue = annotation.findDeclaredAttributeValue(name);
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
                 attributeValue = annotation.findDeclaredAttributeValue(null);
             }
@@ -215,19 +252,23 @@ public abstract class PermissionRequirement {
     }
 
     @Nullable
-    public static String[] getAnnotationStringValues(@Nullable PsiAnnotation annotation,
+    public static String[] getAnnotationStringValues(
+            @Nullable UAnnotation annotation,
             @NonNull String name) {
         if (annotation != null) {
-            PsiAnnotationMemberValue attributeValue = annotation.findDeclaredAttributeValue(name);
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
                 attributeValue = annotation.findDeclaredAttributeValue(null);
             }
-            if (attributeValue instanceof PsiArrayInitializerMemberValue) {
-                PsiAnnotationMemberValue[] initializers =
-                        ((PsiArrayInitializerMemberValue) attributeValue).getInitializers();
-                List<String> result = Lists.newArrayListWithCapacity(initializers.length);
+            if (attributeValue == null) {
+                return null;
+            }
+            if (UastExpressionUtils.isArrayInitializer(attributeValue)) {
+                List<UExpression> initializers =
+                        ((UCallExpression) attributeValue).getValueArguments();
+                List<String> result = Lists.newArrayListWithCapacity(initializers.size());
                 ConstantEvaluator constantEvaluator = new ConstantEvaluator(null);
-                for (PsiAnnotationMemberValue element : initializers) {
+                for (UExpression element : initializers) {
                     Object o = constantEvaluator.evaluate(element);
                     if (o instanceof String) {
                         result.add((String)o);
@@ -240,22 +281,20 @@ public abstract class PermissionRequirement {
                 }
             } else {
                 // Use constant evaluator since we want to resolve field references as well
-                if (attributeValue != null) {
-                    Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                    if (o instanceof String) {
-                        return new String[]{(String) o};
-                    } else if (o instanceof String[]) {
-                        return (String[])o;
-                    } else if (o instanceof Object[]) {
-                        Object[] array = (Object[]) o;
-                        List<String> strings = Lists.newArrayListWithCapacity(array.length);
-                        for (Object element : array) {
-                            if (element instanceof String) {
-                                strings.add((String) element);
-                            }
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof String) {
+                    return new String[]{(String) o};
+                } else if (o instanceof String[]) {
+                    return (String[])o;
+                } else if (o instanceof Object[]) {
+                    Object[] array = (Object[]) o;
+                    List<String> strings = Lists.newArrayListWithCapacity(array.length);
+                    for (Object element : array) {
+                        if (element instanceof String) {
+                            strings.add((String) element);
                         }
-                        return strings.toArray(new String[0]);
                     }
+                    return strings.toArray(new String[0]);
                 }
             }
         }
@@ -434,7 +473,7 @@ public abstract class PermissionRequirement {
     private static class Single extends PermissionRequirement {
         public final String name;
 
-        public Single(@NonNull PsiAnnotation annotation, @NonNull String name) {
+        public Single(@NonNull UAnnotation annotation, @NonNull String name) {
             super(annotation);
             this.name = name;
         }
@@ -514,7 +553,7 @@ public abstract class PermissionRequirement {
         public final List<PermissionRequirement> permissions;
 
         public Many(
-                @NonNull PsiAnnotation annotation,
+                @NonNull UAnnotation annotation,
                 IElementType operator,
                 String[] names) {
             super(annotation);

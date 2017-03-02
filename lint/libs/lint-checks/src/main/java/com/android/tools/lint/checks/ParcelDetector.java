@@ -21,24 +21,24 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.PsiAnonymousClass;
-import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UClass;
 
 /**
  * Looks for Parcelable classes that are missing a CREATOR field
  */
-public class ParcelDetector extends Detector implements JavaPsiScanner {
+public class ParcelDetector extends Detector implements UastScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -62,7 +62,7 @@ public class ParcelDetector extends Detector implements JavaPsiScanner {
     public ParcelDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -71,8 +71,8 @@ public class ParcelDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
-        if (declaration instanceof PsiAnonymousClass) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
+        if (declaration instanceof UAnonymousClass) {
             // Anonymous classes aren't parcelable
             return;
         }

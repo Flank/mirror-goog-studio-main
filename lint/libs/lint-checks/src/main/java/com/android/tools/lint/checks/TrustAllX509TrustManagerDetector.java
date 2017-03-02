@@ -23,28 +23,31 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.PsiStatement;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.uast.UBlockExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.UastEmptyExpression;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
-public class TrustAllX509TrustManagerDetector extends Detector implements JavaPsiScanner,
+public class TrustAllX509TrustManagerDetector extends Detector implements UastScanner,
         ClassScanner {
 
     @SuppressWarnings("unchecked")
@@ -67,7 +70,7 @@ public class TrustAllX509TrustManagerDetector extends Detector implements JavaPs
     public TrustAllX509TrustManagerDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -76,13 +79,13 @@ public class TrustAllX509TrustManagerDetector extends Detector implements JavaPs
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass cls) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass cls) {
         checkMethod(context, cls, "checkServerTrusted");
         checkMethod(context, cls, "checkClientTrusted");
     }
 
     private static void checkMethod(@NonNull JavaContext context,
-            @NonNull PsiClass cls,
+            @NonNull UClass cls,
             @NonNull String methodName) {
         JavaEvaluator evaluator = context.getEvaluator();
         for (PsiMethod method : cls.findMethodsByName(methodName, true)) {
@@ -99,19 +102,14 @@ public class TrustAllX509TrustManagerDetector extends Detector implements JavaPs
             // reporting an issue if none of these calls are found. ControlFlowGraph
             // may be useful here.
 
-            boolean complex = false;
-            PsiCodeBlock body = method.getBody();
-            if (body == null) {
-                return;
-            }
-            for (PsiStatement statement : body.getStatements()) {
-                if (!(statement instanceof PsiReturnStatement)) {
-                    complex = true;
-                    break;
-                }
+            UExpression body = context.getUastContext().getMethodBody(method);
+
+            ComplexBodyVisitor visitor = new ComplexBodyVisitor();
+            if (body != null) {
+                body.accept(visitor);
             }
 
-            if (!complex) {
+            if (!visitor.isComplex()) {
                 Location location = context.getNameLocation(method);
                 String message = getErrorMessage(methodName);
                 context.report(ISSUE, method, location, message);
@@ -124,6 +122,26 @@ public class TrustAllX509TrustManagerDetector extends Detector implements JavaPs
         return "`" + methodName + "` is empty, which could cause " +
                 "insecure network traffic due to trusting arbitrary TLS/SSL " +
                 "certificates presented by peers";
+    }
+
+    private static class ComplexBodyVisitor extends AbstractUastVisitor {
+        private boolean isComplex = false;
+
+        @Override
+        public boolean visitElement(@NonNull UElement node) {
+            if (node instanceof UExpression &&
+                    !(node instanceof UReturnExpression
+                            || node instanceof UBlockExpression
+                            || node instanceof UastEmptyExpression)) {
+                isComplex = true;
+            }
+
+            return isComplex || super.visitElement(node);
+        }
+
+        boolean isComplex() {
+            return isComplex;
+        }
     }
 
     // ---- Implements ClassScanner ----

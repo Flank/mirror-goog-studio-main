@@ -30,9 +30,54 @@ import lombok.ast.Expression;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.VariableDefinitionEntry;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class TypeEvaluatorTest extends TestCase {
+    private static void checkUast(Object expected, @Language("JAVA") String source,
+            final String targetVariable) {
+        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        assertNotNull(context);
+        UFile uFile = context.getUastFile();
+        assertNotNull(uFile);
+
+        // Find the expression
+        final AtomicReference<UExpression> reference = new AtomicReference<>();
+        uFile.accept(new AbstractUastVisitor() {
+            @Override
+            public boolean visitVariable(UVariable variable) {
+                String name = variable.getName();
+                if (name != null && name.equals(targetVariable)) {
+                    reference.set(variable.getUastInitializer());
+                }
+
+                return super.visitVariable(variable);
+            }
+        });
+
+        UExpression expression = reference.get();
+        PsiType actual = TypeEvaluator.evaluate(expression);
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertNotNull("Couldn't compute type for " + source + ", expected " + expected,
+                    actual);
+
+            if (expected instanceof PsiType) {
+                assertEquals(expected, actual);
+            } else {
+                String expectedString = expected.toString();
+                if (expectedString.startsWith("class ")) {
+                    expectedString = expectedString.substring("class ".length());
+                }
+                assertEquals(expectedString, actual.getCanonicalText());
+            }
+        }
+    }
+
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
@@ -74,6 +119,7 @@ public class TypeEvaluatorTest extends TestCase {
 
     private static void check(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
+        checkUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
 
         JavaContext context = LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));

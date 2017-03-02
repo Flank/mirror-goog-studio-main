@@ -19,7 +19,6 @@ package com.android.tools.lint.psi;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiNameValuePair;
 
@@ -35,9 +34,6 @@ public class ExternalPsiNameValuePair extends EcjPsiElement implements PsiNameVa
             @Nullable String name,
             @NonNull String literal,
             @NonNull PsiAnnotationMemberValue value) {
-        //noinspection ConstantConditions
-        super(null);
-
         mName = name;
         mLiteral = literal;
         mMemberValue = value;
@@ -67,13 +63,10 @@ public class ExternalPsiNameValuePair extends EcjPsiElement implements PsiNameVa
         return mMemberValue;
     }
 
+    @NonNull
     @Override
-    public void accept(@NonNull PsiElementVisitor psiElementVisitor) {
-        throw new UnimplementedLintPsiApiException();
-    }
-
-    @Override
-    public void acceptChildren(@NonNull PsiElementVisitor psiElementVisitor) {
-        throw new UnimplementedLintPsiApiException();
+    public PsiAnnotationMemberValue setValue(
+            @NonNull PsiAnnotationMemberValue psiAnnotationMemberValue) {
+        return null;
     }
 }

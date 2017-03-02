@@ -17,25 +17,23 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.util.ArrayList;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULiteralExpression;
 
 /** Detector looking for text messages sent to an unlocalized phone number. */
-public class NonInternationalizedSmsDetector extends Detector implements JavaPsiScanner {
+public class NonInternationalizedSmsDetector extends Detector implements UastScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "UnlocalizedSms",
@@ -57,7 +55,7 @@ public class NonInternationalizedSmsDetector extends Detector implements JavaPsi
     public NonInternationalizedSmsDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -68,22 +66,22 @@ public class NonInternationalizedSmsDetector extends Detector implements JavaPsi
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
-        if (call.getMethodExpression().getQualifier() == null) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
+        if (call.getReceiver() == null) {
             // "sendTextMessage"/"sendMultipartTextMessage" in the code with no operand
             return;
         }
 
-        PsiExpression[] args = call.getArgumentList().getExpressions();
-        if (args.length != 5) {
+        List<UExpression> args = call.getValueArguments();
+        if (args.size() != 5) {
             return;
         }
-        PsiExpression destinationAddress = args[0];
-        if (!(destinationAddress instanceof PsiLiteral)) {
+        UExpression destinationAddress = args.get(0);
+        if (!(destinationAddress instanceof ULiteralExpression)) {
             return;
         }
-        Object literal = ((PsiLiteral)destinationAddress).getValue();
+        Object literal = ((ULiteralExpression)destinationAddress).getValue();
         if (!(literal instanceof String)) {
             return;
         }

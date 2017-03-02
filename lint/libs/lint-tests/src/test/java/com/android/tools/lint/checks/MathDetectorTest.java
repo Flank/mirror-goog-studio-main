@@ -47,12 +47,6 @@ public class MathDetectorTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-
-    @Override
-    protected boolean allowCompilationErrors() {
-        return true;
-    }
-
     @Override
     protected Detector getDetector() {
         return new MathDetector();
@@ -77,7 +71,7 @@ public class MathDetectorTest extends AbstractCheckTest {
             // Need to have a pre-M, post-Froyo target installed
             return;
         }
-        assertEquals(""
+        String expected = ""
                 + "src/test/bytecode/MathTest.java:12: Warning: Use java.lang.Math#cos instead of android.util.FloatMath#cos() since it is faster as of API 8 [FloatMath]\n"
                 + "        floatResult = FloatMath.cos(x);\n"
                 + "                      ~~~~~~~~~~~~~\n"
@@ -95,13 +89,14 @@ public class MathDetectorTest extends AbstractCheckTest {
                 + "                           ~~~~~~~~~~~~~~\n"
                 + "src/test/bytecode/MathTest.java:17: Warning: Use java.lang.Math#sin instead of android.util.FloatMath#sin() since it is faster as of API 8 [FloatMath]\n"
                 + "        floatResult = sin((float) y);\n"
-                + "                      ~~~~~~~~~~~~~~\n"
-                + "0 errors, 6 warnings\n",
-
-            lintProject(
-                    mTestFile,
-                    projectProperties().compileSdk(compileSdkVersion),
-                    manifest().minSdk(14)));
+                + "                      ~~~\n"
+                + "0 errors, 6 warnings\n";
+        lint().files(
+                mTestFile,
+                projectProperties().compileSdk(compileSdkVersion),
+                manifest().minSdk(14))
+                .run()
+                .expect(expected);
     }
 
     public void testNoWarningsPreFroyo() throws Exception {
@@ -109,12 +104,11 @@ public class MathDetectorTest extends AbstractCheckTest {
         if (compileSdkVersion < 3) {
             return;
         }
-        assertEquals(
-            "No warnings.",
-
-            lintProject(mTestFile,
-                    projectProperties().compileSdk(compileSdkVersion),
-                    manifest().minSdk(2)));
+        lint().files(
+                mTestFile,
+                projectProperties().compileSdk(compileSdkVersion),
+                manifest().minSdk(2))
+                .run()
+                .expectClean();
     }
-
 }

@@ -20,21 +20,20 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.PsiClass;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UClass;
 
 /**
  * Looks for copy/paste versions of the divider item decorator.
  */
-public class ItemDecoratorDetector extends Detector implements JavaPsiScanner {
+public class ItemDecoratorDetector extends Detector implements Detector.UastScanner {
 
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE = Issue.create(
@@ -69,7 +68,7 @@ public class ItemDecoratorDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         String name = declaration.getName();
         if (name == null || !name.equals("DividerItemDecoration")) {
             return;

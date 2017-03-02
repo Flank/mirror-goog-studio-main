@@ -19,6 +19,7 @@ import static com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.classpath;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.manifest;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzip;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -40,15 +41,18 @@ public class CustomRuleTest {
     public static TemporaryFolder temp = new TemporaryFolder();
 
     private static File lintJar;
-    private static File oldLintJar;
+    private static File lombokLintJar;
+    private static File psiLintJar;
 
     @BeforeClass
     public static void createLintJars() throws IOException {
         File root = temp.getRoot();
         lintJar = base64gzip("lint1.jar", LINT_JAR_BASE64_GZIP).createFile(root);
-        oldLintJar = base64gzip("lint2.jar", OLD_LINT_JAR_BASE64_GZIP).createFile(root);
+        lombokLintJar = base64gzip("lint2.jar", LOMBOK_LINT_JAR_BASE64_GZIP).createFile(root);
+        psiLintJar = base64gzip("lint3.jar", PSI_LINT_JAR_BASE64_GZIP).createFile(root);
         assertTrue(lintJar.getPath(), lintJar.isFile());
-        assertTrue(oldLintJar.getPath(), oldLintJar.isFile());
+        assertTrue(lombokLintJar.getPath(), lombokLintJar.isFile());
+        assertTrue(psiLintJar.getPath(), psiLintJar.isFile());
     }
 
     @Test
@@ -150,6 +154,7 @@ public class CustomRuleTest {
                 + "        ~~~~~~\n"
                 + "0 errors, 1 warnings\n";
 
+        //noinspection all // Sample code
         TestLintTask.lint().files(
                 classpath(),
                 manifest().minSdk(1),
@@ -165,7 +170,7 @@ public class CustomRuleTest {
                     @NonNull
                     @Override
                     public List<File> findGlobalRuleJars() {
-                        return Collections.singletonList(oldLintJar);
+                        return Collections.singletonList(lombokLintJar);
                     }
 
                     @NonNull
@@ -175,6 +180,45 @@ public class CustomRuleTest {
                     }
                 })
                 .issueIds("MyId")
+                .allowCompilationErrors()
+                .run()
+                .expect(expected);
+    }
+
+    @Test
+    public void testLegacyPsiJavaLintRule() throws Exception {
+        String expected = ""
+                + "src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetector]\n"
+                + "        foo(5);\n"
+                + "        ~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+
+        //noinspection all // Sample code
+        TestLintTask.lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class Test {\n"
+                        + "    public void foo(int var) {\n"
+                        + "        foo(5);\n"
+                        + "    }\n"
+                        + "}"))
+                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @NonNull
+                    @Override
+                    public List<File> findGlobalRuleJars() {
+                        return Collections.singletonList(psiLintJar);
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<File> findRuleJars(@NonNull Project project) {
+                        return Collections.emptyList();
+                    }
+                })
+                .issueIds("MainActivityDetector")
                 .allowCompilationErrors()
                 .run()
                 .expect(expected);
@@ -294,7 +338,7 @@ public class CustomRuleTest {
             + "T6jmf/ED/04NPKEGkZyC/qcbsJ4w0Pq1wX9GgZP3/vOLvHjCJew3LqeMBn83"
             + "/7nhMifM6an+vyduDDtL/qNLFAD5Y1fac993/wK1/pChWw4AAA==";
 
-    public static final String OLD_LINT_JAR_BASE64_GZIP = ""
+    private static final String LOMBOK_LINT_JAR_BASE64_GZIP = ""
             + "H4sIAAAAAAAAAI1WezgTeh+fy2xTaJp6c0m5TDQjIYWGMYYxM5dJHMZEzV0R"
             + "vee4tCG3yK0sl6hXCLnrOl1cNsQ0iYiG5DK3UHR6nafnfU7pPe97Pr/n+8fv"
             + "eT6f7/f7x/eGtxISFgUAwGDAuJklFrAJQcA3QDYNZ0Y0VsfaYDSEAPgfiI0x"
@@ -342,4 +386,50 @@ public class CustomRuleTest {
             + "vP96beS7Fb+uUqhuBv/D183dKCAIE/rrpfsNOwCzxoDv9/5W2dYD4T8ojlb9"
             + "i3Ph7we+/n1l/S+Z+A+y1p8Kcqt26yXwZ9If/+9dsNXX1lb405eRyN9qDLwV"
             + "UOQPgcjmS9h0BAX/8fs37IxfaLAJAAA=";
+
+    private static final String PSI_LINT_JAR_BASE64_GZIP = ""
+            + "H4sIAAAAAAAAAJVVd1DT6RYNVRCwANJVwCggSehkBUKRpSUUaZHqiiGGCCaU"
+            + "wEpRiAgCg4AgoS6wUkSy4BIF8RkjBCPFaDAQ3VAkGlpWUIqCBWRx1jdKnjLz"
+            + "7m++P77fnHO+O3fuvecQQkx8MwAgJQX4E+UBB6yFKODfkF47bg4+dmAXd0cD"
+            + "McChdcD2GjTqM9pz7Sh+C3Szc3dxdPD2gbg5LrgxH7giwJDHcgjw/kdM1nUv"
+            + "wwET3vh8D1P/sRzcjQWC6DXc8HJ+xOIgGp2Z4G4XDoLF8tjkdcB2RwKtsILB"
+            + "qL1qmEYNogZ98zas9Venb5MUXzso/Ml1+QljZL9g0KdCTkZGoDfEKghhMXg8"
+            + "RogiXCeV71MisDjC//BScy+rG63l7Lf2y3gDnlsIFmeHImDjsIT4n9EENIqA"
+            + "j4agIkJiYgqR4d7qvipnWm1xckX3kYGNcZ6D6QBua5VS6oCpuERnrT+88WY0"
+            + "5cC5zojF0DiPbWdSbeh3j0bVzUxl27SP8jFdSxEHO+i8fSZj5TDqZPyzBwu0"
+            + "sruf3q94AEzeGaXJzkv76Q13jADTIw3SsEzgbPMRGxdev/grHcOyexhdoNF5"
+            + "Fr84l28n/0tVMV1zV90h+kGN8Z+U5GRB3EU+hZiZtadMaeFvmmIswkUgSdK3"
+            + "QnNuvcjJpzEC6AGbz5obqGQ8lPaojxc7zZ1zE1vZ6z8pma5P55Nnjl/4qP7H"
+            + "BNulTnvnBM74l6nJVyF3B7cTiUnd3Uv+18ejyVroVFJedJr0tSndZp2BjoNF"
+            + "Fc7XzNv2twY0RZo+2nzYkkLrLS3/05g71wsZQiEDpZ82ZNhePM1Wksu92upR"
+            + "ftNdlRlbETxhBgp8Tw9XnBCwGbDtUhwR6CzC3CuAJH0VCGMs+WpRbZWGYxlN"
+            + "nM0Wq+Db1B5Yy9UOveJ+x5fEqTxS8UvSUqD1VlGtOwsgGYu3UVc6w3k4VhN7"
+            + "5k6OvSTOcb4sy+ktQW7sspPtCWxcf/wKNUwWOKFxk0y+BB6idSqnKTFbrotf"
+            + "fDqO4J+k2u8fJhnn1JqS5mLViqL25sDV9P329kp4QreGDkVET5QEmk3gS+gy"
+            + "ipjYBTu1cD9o5HtQklgRcgvzPI03VHea5xJNOrdYH9ZazFKzDp8pZkM5HuxQ"
+            + "My6ybvD5vhifslt1fcH50MrIfq1Hce0Pg5r2jSRAoFic53TQzhvvntT0FBZA"
+            + "+acuOe6I01DHWkkWvjlS4z4QXI3oVNzLbQ81eKjYVWBK6/D+jYbnv4NceD1n"
+            + "r8xfzchd8J5iJLmSM7NOesOt3G+ef2blbCBoGaNo9oFPj7cFI9ix0ude1Cx0"
+            + "pAQUeunCRhiS9yk6avGNrYj0NJN0IgcV0wesiqruOqxzV59r0jI0s/VY9tlk"
+            + "8SuJ9EmwQOEh67GjK2a+4qU9HlK+Kzmh/Od820y9Z3mfRMbrbyAbSQh1MnrI"
+            + "unTKE6+sTeEm5X4EHkk4XEjmtJzwqahOvGeyq+fZRfCKfCAEp1QJhvj2sqbZ"
+            + "gxZ31EYtfq+jPMUNBsn8vegyktYALg+5EqOWCfvDoIc+d2C8q32U2y+RRWB7"
+            + "S5MSHoSa1n7CGDtMZ+dQjeB3McZVl/pHzWDdAqiHzQy2t3/JN6G0jlMVq7kk"
+            + "fz9mMEjTXtNBP08HJfOaDRkxoie2uZOJS3Mi/mEplsEpfhN0/TcrH9S0lCrc"
+            + "K9t2vnxG2z5YTDDP2nobF6GwCGjco3B+qrK0OIFIdJ2WeIFPIOzuLJYzwlgs"
+            + "Brve+SiF0mJJ4V4gw2Bnh7ovGwxf2OP0GGg4Z/HGnz5Q+dhVu4BZsyUqChiV"
+            + "8Wa3SlKpqsW9WUQ2lV472rdqJfv+p3p1cWtVC/O0awefEtJN3hmTlpXXL6AQ"
+            + "DpBXIgIAPF/bXuCNFlC8S0xMLNoLjcHGEKLjv+wer2CEup0iDGX9pKb5RMNK"
+            + "a8A2Vx+NczQHEKNVMyLQsHSp5/hfR0qY3a8iwj4VfjgmsE+2TfYRjLjVO2yf"
+            + "th5OnHx1YInPXP6wwtdJgfqRq886mYFCbuV0nZLnYVMwohwYZWxJAt4Y51GV"
+            + "xJMMOGoNJNtgOmnuOb6jkXWq/3EuqYDr2ngUoFcLvYhxKrd+HxgdmGWGqVoq"
+            + "XzcJvbNsau3a77pbUOxVmW0p2uL3UbuLepy8s6LhYn6Jzh779LEUCAP5HvT8"
+            + "Ax4vspiF7N0i7yQm+M1EUNNvm7gzvsg51pES1sedPPG26UG+c3JN0nCtOn96"
+            + "rEW9XltqlkpUPqV6tJZ42G/HX22TcNH5nExt+9KR0fgm1aFfnyBDRx0qHMe6"
+            + "Xl+RkfbZcnukYKto4Grz7fb5lshNj1Qk866DPgTBSeoJmBiYxJNAhcwLlOZl"
+            + "tg366OSTFp5Z7/KZebyk9uHsGVAlMLGDRomXiPJcbmpuVOrZMcA13wew4klp"
+            + "sJ5rVUfPv7qkEXRswhI+CZ0KX+1L1TtNawdF4pozSpPXTEZEVFHsxzb+b2wD"
+            + "zNgBvvVqYZqwqf83aoh6P7D4bxW+Z81fH6790mwbMWTXMXqE2nMjpsI65tvv"
+            + "N/ZGVVJZJ6Ar8uPJEFYRtvSvRTu6gcqPDV5YX3hiv+o/l/g/5/cQQkLyM1Vq"
+            + "7dNZk2Ns+nz7B9ep+6YCCgAA";
 }

@@ -60,6 +60,7 @@ import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -70,7 +71,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.psi.EcjPsiBuilder;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
@@ -82,6 +82,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -101,6 +103,7 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -122,7 +125,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         super.setUp();
         BuiltinIssueRegistry.reset();
         LintDriver.clearCrashCount();
-        EcjParser.skipComputingEcjErrors = false;
+        //EcjParser.skipComputingEcjErrors = false;
     }
 
     @Override
@@ -275,10 +278,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             String secondResult;
             try {
-                EcjPsiBuilder.setDebugOptions(true, true);
+                //EcjPsiBuilder.setDebugOptions(true, true);
                 secondResult = lintClient.analyze(files);
             } finally {
-                EcjPsiBuilder.setDebugOptions(false, false);
+                //EcjPsiBuilder.setDebugOptions(false, false);
             }
 
             assertEquals("The lint check produced different results when run on the "
@@ -769,11 +772,52 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return writer.toString();
         }
 
+        @Nullable
+        @Override
+        public UastParser getUastParser(@Nullable Project project) {
+            return new LintCliUastParser(project) {
+                @Override
+                public boolean prepare(@NonNull List<JavaContext> contexts) {
+                    boolean ok = super.prepare(contexts);
+                    if (forceErrors()) {
+                        ok = false;
+                    }
+                    return ok;
+                }
+
+                @Nullable
+                @Override
+                public UFile parse(@NonNull JavaContext context) {
+                    UFile file = super.parse(context);
+
+                    if (!allowCompilationErrors()) {
+                        if (file != null) {
+                            PsiErrorElement error = PsiTreeUtil
+                                    .findChildOfType(file.getPsi(), PsiErrorElement.class);
+                            if (error != null) {
+                                fail("Found error element " + error);
+                                // TODO: Use ECJ parser to produce build errors with better
+                                // error messages, source offsets, etc?
+                            }
+                        } else {
+                            fail("Failure processing source " + context.file);
+                        }
+                    }
+
+                    return file;
+                }
+            };
+        }
+
         @Override
         public JavaParser getJavaParser(@Nullable Project project) {
             return new EcjParser(this, project) {
                 @Override
                 public boolean prepareJavaParse(@NonNull List<JavaContext> contexts) {
+                    if (!allowCompilationErrors()) {
+                        EcjParser.skipComputingEcjErrors = false;
+                    }
+
                     boolean success = super.prepareJavaParse(contexts);
                     if (forceErrors()) {
                         success = false;

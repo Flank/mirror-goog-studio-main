@@ -17,29 +17,30 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UBlockExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULambdaExpression;
+import org.jetbrains.uast.ULiteralExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /** Detector looking for Toast.makeText() without a corresponding show() call */
-public class ToastDetector extends Detector implements JavaPsiScanner {
+public class ToastDetector extends Detector implements UastScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ShowToast",
@@ -60,7 +61,7 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
     public ToastDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -68,8 +69,8 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         if (!context.getEvaluator().isMemberInClass(method, "android.widget.Toast")) {
             return;
         }
@@ -77,70 +78,72 @@ public class ToastDetector extends Detector implements JavaPsiScanner {
         // Make sure you pass the right kind of duration: it's not a delay, it's
         //  LENGTH_SHORT or LENGTH_LONG
         // (see http://code.google.com/p/android/issues/detail?id=3655)
-        PsiExpression[] args = call.getArgumentList().getExpressions();
-        if (args.length == 3) {
-            PsiExpression duration = args[2];
-            if (duration instanceof PsiLiteral) {
+        List<UExpression> args = call.getValueArguments();
+        if (args.size() == 3) {
+            UExpression duration = args.get(2);
+            if (duration instanceof ULiteralExpression) {
                 context.report(ISSUE, duration, context.getLocation(duration),
                         "Expected duration `Toast.LENGTH_SHORT` or `Toast.LENGTH_LONG`, a custom " +
                         "duration value is not supported");
             }
         }
 
-        PsiMethod surroundingMethod = PsiTreeUtil.getParentOfType(call, PsiMethod.class, true);
-        if (surroundingMethod == null) {
+        @SuppressWarnings("unchecked")
+        UElement surroundingDeclaration = UastUtils.getParentOfType(
+                call, true,
+                UMethod.class, UBlockExpression.class, ULambdaExpression.class);
+
+        if (surroundingDeclaration == null) {
             return;
         }
 
         ShowFinder finder = new ShowFinder(call);
-        surroundingMethod.accept(finder);
+        surroundingDeclaration.accept(finder);
         if (!finder.isShowCalled()) {
-            context.report(ISSUE, call, context.getLocation(call.getMethodExpression()),
+            context.report(ISSUE, call, context.getCallLocation(call, true, false),
                     "Toast created but not shown: did you forget to call `show()` ?");
         }
     }
 
-    private static class ShowFinder extends JavaRecursiveElementVisitor {
+    private static class ShowFinder extends AbstractUastVisitor {
         /** The target makeText call */
-        private final PsiMethodCallExpression mTarget;
+        private final UCallExpression target;
         /** Whether we've found the show method */
-        private boolean mFound;
+        private boolean found;
         /** Whether we've seen the target makeText node yet */
-        private boolean mSeenTarget;
+        private boolean seenTarget;
 
-        private ShowFinder(PsiMethodCallExpression target) {
-            mTarget = target;
+        private ShowFinder(UCallExpression target) {
+            this.target = target;
         }
 
         @Override
-        public void visitMethodCallExpression(PsiMethodCallExpression node) {
-            super.visitMethodCallExpression(node);
+        public boolean visitCallExpression(UCallExpression node) {
 
-            if (node == mTarget) {
-                mSeenTarget = true;
+            if (node == target) {
+                seenTarget = true;
             } else {
-                PsiReferenceExpression methodExpression = node.getMethodExpression();
-                if ((mSeenTarget || methodExpression.getQualifier() == mTarget)
-                        && "show".equals(methodExpression.getReferenceName())) {
+                if ((seenTarget || target.equals(node.getReceiver()))
+                        && "show".equals(node.getMethodName())) {
                     // TODO: Do more flow analysis to see whether we're really calling show
                     // on the right type of object?
-                    mFound = true;
+                    found = true;
                 }
             }
+            return super.visitCallExpression(node);
         }
 
         @Override
-        public void visitReturnStatement(PsiReturnStatement node) {
-            super.visitReturnStatement(node);
-
-            if (node.getReturnValue() == mTarget) {
+        public boolean visitReturnExpression(UReturnExpression node) {
+            if (UastUtils.isChildOf(target, node.getReturnExpression(), true)) {
                 // If you just do "return Toast.makeText(...) don't warn
-                mFound = true;
+                found = true;
             }
+            return super.visitReturnExpression(node);
         }
 
         boolean isShowCalled() {
-            return mFound;
+            return found;
         }
     }
 }

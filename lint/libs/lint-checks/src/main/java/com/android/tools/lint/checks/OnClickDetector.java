@@ -30,6 +30,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -60,6 +61,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.uast.UClass;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -67,7 +69,7 @@ import org.w3c.dom.Node;
 /**
  * Checks for missing onClick handlers
  */
-public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiScanner {
+public class OnClickDetector extends LayoutDetector implements Detector.UastScanner {
 
     /**
      * Missing onClick handlers
@@ -229,7 +231,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiS
                             ctx = pkg + (ctx.startsWith(".") ? "" : ".") + ctx;
                         }
                     }
-                    JavaParser parser = context.getClient().getJavaParser(project);
+                    UastParser parser = context.getClient().getUastParser(project);
                     if (parser != null) {
                         JavaEvaluator evaluator = parser.getEvaluator();
                         PsiClass cls = evaluator.findClass(ctx);
@@ -263,7 +265,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiS
         }
     }
 
-    // ---- Implements JavaPsiScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -272,7 +274,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiS
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         if (names == null) {
             // No onClick attributes in the XML files
             return;
@@ -339,7 +341,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.JavaPsiS
         }
     }
 
-    private void recordSimilar(String name, PsiClass containingClass, PsiMethod method) {
+    private void recordSimilar(String name, UClass containingClass, PsiMethod method) {
         if (similar == null) {
             similar = new HashMap<>();
         }

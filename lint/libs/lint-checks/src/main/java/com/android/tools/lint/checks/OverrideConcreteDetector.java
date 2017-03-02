@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -32,13 +32,14 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UClass;
 
 /**
  * Checks that subclasses of certain APIs are overriding all methods that were abstract
  * in one or more earlier API levels that are still targeted by the minSdkVersion
  * of this project.
  */
-public class OverrideConcreteDetector extends Detector implements JavaPsiScanner {
+public class OverrideConcreteDetector extends Detector implements UastScanner {
     /** Are previously-abstract methods all overridden? */
     public static final Issue ISSUE = Issue.create(
         "OverrideAbstract",
@@ -79,7 +80,7 @@ public class OverrideConcreteDetector extends Detector implements JavaPsiScanner
     public OverrideConcreteDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Nullable
     @Override
@@ -88,7 +89,7 @@ public class OverrideConcreteDetector extends Detector implements JavaPsiScanner
     }
 
     @Override
-    public void checkClass(@NonNull JavaContext context, @NonNull PsiClass declaration) {
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (evaluator.isAbstract(declaration)) {
             return;

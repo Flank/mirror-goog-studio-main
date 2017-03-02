@@ -36,6 +36,7 @@ import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestMerger2.MergeType;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
@@ -47,16 +48,19 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.helpers.DefaultUastParser;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Splitter;
@@ -64,6 +68,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
+import com.intellij.codeInsight.ExternalAnnotationsManager;
+import com.intellij.openapi.vfs.StandardFileSystems;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -287,6 +295,12 @@ public class LintCliClient extends LintClient {
     @Override
     public JavaParser getJavaParser(@Nullable Project project) {
         return new EcjParser(this, project);
+    }
+
+    @Nullable
+    @Override
+    public UastParser getUastParser(@Nullable Project project) {
+        return new LintCliUastParser(project);
     }
 
     @Override
@@ -844,6 +858,109 @@ public class LintCliClient extends LintClient {
         return new CliConfiguration(file, flags.isFatalOnly());
     }
 
+
+    @Nullable private com.intellij.openapi.project.Project ideaProject;
+    @Nullable private LintCoreProjectEnvironment ideaProjectEnvironment;
+
+    @Nullable
+    public com.intellij.openapi.project.Project getIdeaProject() {
+        return ideaProject;
+    }
+
+    @Override
+    public void initializeProjects(@NonNull Collection<Project> knownProjects) {
+        // Initialize the associated idea project to use
+
+        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create();
+
+        ideaProjectEnvironment = projectEnvironment;
+        ideaProject = projectEnvironment.getProject();
+
+        // knownProject only lists root projects, not dependencies
+        Set<Project> allProjects = Sets.newIdentityHashSet();
+        for (Project project : knownProjects) {
+            allProjects.add(project);
+            allProjects.addAll(project.getAllLibraries());
+        }
+
+        Set<File> files = Sets.newHashSetWithExpectedSize(50);
+        Set<VirtualFile> virtualFiles = Sets.newHashSetWithExpectedSize(50);
+
+        VirtualFileSystem local = StandardFileSystems.local();
+
+        for (Project project : allProjects) {
+            registerClassPath(projectEnvironment, files, virtualFiles, local,
+                    project.getJavaSourceFolders());
+
+            registerClassPath(projectEnvironment, files, virtualFiles, local,
+                    project.getJavaLibraries(true));
+
+            registerClassPath(projectEnvironment, files, virtualFiles, local,
+                    project.getJavaClassFolders());
+
+            registerClassPath(projectEnvironment, files, virtualFiles, local,
+                    project.getTestLibraries());
+        }
+
+        IAndroidTarget buildTarget = null;
+        for (Project project : knownProjects) {
+            IAndroidTarget t = project.getBuildTarget();
+            if (t != null) {
+                if (buildTarget == null) {
+                    buildTarget = t;
+                } else if (buildTarget.getVersion().compareTo(t.getVersion()) > 0) {
+                    buildTarget = t;
+                }
+            }
+        }
+
+        if (buildTarget != null) {
+            String path = buildTarget.getPath(IAndroidTarget.ANDROID_JAR);
+            if (path != null) {
+                File file = new File(path);
+                files.add(file);
+                projectEnvironment.addJarToClassPath(file);
+            }
+        }
+
+        super.initializeProjects(knownProjects);
+    }
+
+    private static void registerClassPath(LintCoreProjectEnvironment projectEnvironment,
+            Set<File> files,
+            Set<VirtualFile> virtualFiles, VirtualFileSystem local, List<File> javaClassFolders) {
+        for (File dir : javaClassFolders) {
+            if (dir.exists()) {
+                if (dir.isFile()) {
+                    if (files.contains(dir)) {
+                        continue;
+                    }
+                    files.add(dir);
+                    projectEnvironment.addJarToClassPath(dir);
+                } else if (dir.isDirectory()) {
+                    VirtualFile virtualFile = local.findFileByPath(dir.getPath());
+                    if (virtualFile != null) {
+                        if (virtualFiles.contains(virtualFile)) {
+                            continue;
+                        }
+                        virtualFiles.add(virtualFile);
+                        projectEnvironment.addSourcesToClasspath(virtualFile);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void disposeProjects(@NonNull Collection<Project> knownProjects) {
+        // TODO: Dispose the environment -- how do I do that?
+
+        ideaProject = null;
+        ideaProjectEnvironment = null;
+
+        super.disposeProjects(knownProjects);
+    }
+
     @Override
     @Nullable
     public String getClientRevision() {
@@ -1009,5 +1126,33 @@ public class LintCliClient extends LintClient {
         }
 
         return super.getMergedManifest(project);
+    }
+
+    protected class LintCliUastParser extends DefaultUastParser {
+
+        private final Project project;
+
+        public LintCliUastParser(Project project) {
+            super(project, LintCliClient.this.ideaProject);
+            this.project = project;
+        }
+
+        @Override
+        public boolean prepare(@NonNull final List<JavaContext> contexts) {
+            if (project == null || contexts.isEmpty()) {
+                return true;
+            }
+
+            // Now that we have a project context, ensure that the annotations manager
+            // is up to date
+            if (ideaProject != null) {
+                LintExternalAnnotationsManager annotationsManager =
+                    (LintExternalAnnotationsManager) ExternalAnnotationsManager.getInstance(
+                                ideaProject);
+                annotationsManager.updateAnnotationRoots(LintCliClient.this);
+            }
+
+            return true;
+        }
     }
 }

@@ -18,6 +18,9 @@ package com.android.tools.lint.client.api;
 import static com.android.SdkConstants.DOT_CLASS;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.JavaScanner;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -62,11 +65,17 @@ public class JarFileIssueRegistry extends IssueRegistry {
     private long timestamp;
     private File jarFile;
 
-    private boolean hasLegacyDetectors;
+    private boolean hasLombokLegacyDetectors;
+    private boolean hasPsiLegacyDetectors;
 
     /** True if one or more java detectors were found that use the old Lombok-based API */
-    public boolean hasLegacyDetectors() {
-        return hasLegacyDetectors;
+    public boolean hasLombokLegacyDetectors() {
+        return hasLombokLegacyDetectors;
+    }
+
+    /** True if one or more java detectors were found that use the old PSI-based API */
+    public boolean hasPsiLegacyDetectors() {
+        return hasPsiLegacyDetectors;
     }
 
     @NonNull
@@ -115,7 +124,7 @@ public class JarFileIssueRegistry extends IssueRegistry {
                 //noinspection VariableNotUsedInsideIf
                 if (object != null) {
                     // It's an old rule. We don't yet conclude that
-                    //   hasLegacyDetectors=true
+                    //   hasLombokLegacyDetectors=true
                     // because the lint checks may not be Java related.
                     isLegacy = true;
                 }
@@ -137,7 +146,13 @@ public class JarFileIssueRegistry extends IssueRegistry {
                         EnumSet<Scope> scope = issue.getImplementation().getScope();
                         if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.JAVA_LIBRARIES)
                                 || scope.contains(Scope.ALL_JAVA_FILES)) {
-                            hasLegacyDetectors = true;
+                            Class<? extends Detector> detectorClass = issue.getImplementation()
+                                    .getDetectorClass();
+                            if (JavaScanner.class.isAssignableFrom(detectorClass)) {
+                                hasLombokLegacyDetectors = true;
+                            } else if (JavaPsiScanner.class.isAssignableFrom(detectorClass)) {
+                                hasPsiLegacyDetectors = true;
+                            }
                             break;
                         }
                     }

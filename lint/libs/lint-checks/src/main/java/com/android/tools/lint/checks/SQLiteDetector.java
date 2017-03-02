@@ -19,28 +19,26 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
 
 /**
  * Detector which looks for problems related to SQLite usage
  */
-public class SQLiteDetector extends Detector implements JavaPsiScanner {
+public class SQLiteDetector extends Detector implements UastScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
           SQLiteDetector.class, Scope.JAVA_FILE_SCOPE);
 
@@ -81,8 +79,8 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression node, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (!evaluator.isMemberInClass(method, "android.database.sqlite.SQLiteDatabase")) {
             return;
@@ -96,7 +94,7 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
             return;
         }
         // Try to resolve the String and look for STRING keys
-        PsiExpression argument = node.getArgumentList().getExpressions()[0];
+        UExpression argument = call.getValueArguments().get(0);
         String sql = ConstantEvaluator.evaluateString(context, argument, true);
         if (sql != null && (sql.startsWith("CREATE TABLE") || sql.startsWith("ALTER TABLE"))
                 && sql.matches(".*\\bSTRING\\b.*")) {
@@ -104,7 +102,7 @@ public class SQLiteDetector extends Detector implements JavaPsiScanner {
                     + "(STRING is a numeric type and its value can be adjusted; for example, "
                     + "strings that look like integers can drop leading zeroes. See issue "
                     + "explanation for details.)";
-            context.report(ISSUE, node, context.getLocation(node), message);
+            context.report(ISSUE, call, context.getLocation(call), message);
         }
     }
 }

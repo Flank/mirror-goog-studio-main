@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationLongValue;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.INT_RANGE_ANNOTATION;
@@ -24,7 +25,8 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiExpression;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UExpression;
 
 class IntRangeConstraint extends RangeConstraint {
 
@@ -38,6 +40,14 @@ class IntRangeConstraint extends RangeConstraint {
         PsiAnnotationMemberValue toValue = annotation.findDeclaredAttributeValue(ATTR_TO);
         long from = getLongValue(fromValue, Long.MIN_VALUE);
         long to = getLongValue(toValue, Long.MAX_VALUE);
+        return new IntRangeConstraint(from, to);
+    }
+
+    @NonNull
+    public static IntRangeConstraint create(@NonNull UAnnotation annotation) {
+        assert INT_RANGE_ANNOTATION.equals(annotation.getQualifiedName());
+        long from = getAnnotationLongValue(annotation, ATTR_FROM, Long.MIN_VALUE);
+        long to = getAnnotationLongValue(annotation, ATTR_TO, Long.MAX_VALUE);
         return new IntRangeConstraint(from, to);
     }
 
@@ -67,7 +77,7 @@ class IntRangeConstraint extends RangeConstraint {
 
     @Nullable
     @Override
-    public Boolean isValid(@NonNull PsiExpression argument) {
+    public Boolean isValid(@NonNull UExpression argument) {
         Number literalValue = guessSize(argument);
         if (literalValue != null) {
             long value = literalValue.longValue();
@@ -84,7 +94,7 @@ class IntRangeConstraint extends RangeConstraint {
 
     @NonNull
     @Override
-    public String describe(@Nullable PsiExpression argument) {
+    public String describe(@Nullable UExpression argument) {
         return describe(argument, null);
     }
 
@@ -94,7 +104,7 @@ class IntRangeConstraint extends RangeConstraint {
     }
 
     @NonNull
-    private String describe(@Nullable PsiExpression argument, @Nullable Long actualValue) {
+    private String describe(@Nullable UExpression argument, @Nullable Long actualValue) {
         StringBuilder sb = new StringBuilder(20);
 
         // If we have an actual value, don't describe the full range, only describe

@@ -44,9 +44,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,6 +53,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.jetbrains.uast.UCallExpression;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
@@ -65,7 +64,7 @@ import org.objectweb.asm.tree.MethodNode;
  * Checks for errors related to locale handling
  */
 public class LocaleFolderDetector extends Detector implements Detector.ResourceFolderScanner,
-        Detector.JavaPsiScanner, Detector.ClassScanner {
+        Detector.UastScanner, Detector.ClassScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             LocaleFolderDetector.class,
@@ -471,7 +470,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         return sortedRegions;
     }
 
-    // Implements JavaPsiScanner
+    // Implements UastScanner
 
     @Nullable
     @Override
@@ -480,8 +479,8 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod method) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod method) {
         if (threeLetterLocales == null || context.getMainProject().getMinSdk() >= 21) {
             return;
         }

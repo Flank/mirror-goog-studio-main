@@ -36,6 +36,7 @@ sourceSets {
 dependencies {
     compile project(':base:builder')
     compile project(':base:lint')
+    compile project(':base:uast')
     // TODO: Switch to remote dependency once the empty deprecated transform-api is published
     compile project(':base:transform-api')
     compile project(':base:gradle-api')

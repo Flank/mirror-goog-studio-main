@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.RESOURCE_CLZ_ID;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -31,35 +30,39 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.Maps;
-import com.intellij.psi.JavaElementVisitor;
-import com.intellij.psi.PsiArrayAccessExpression;
-import com.intellij.psi.PsiAssignmentExpression;
-import com.intellij.psi.PsiBinaryExpression;
-import com.intellij.psi.PsiBreakStatement;
-import com.intellij.psi.PsiContinueStatement;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiIfStatement;
-import com.intellij.psi.PsiJavaToken;
-import com.intellij.psi.PsiLocalVariable;
-import com.intellij.psi.PsiLoopStatement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiMethodCallExpression;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.PsiStatement;
-import com.intellij.psi.PsiTypeCastExpression;
-import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.uast.UArrayAccessExpression;
+import org.jetbrains.uast.UBinaryExpression;
+import org.jetbrains.uast.UBlockExpression;
+import org.jetbrains.uast.UBreakExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UContinueExpression;
+import org.jetbrains.uast.UDoWhileExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UForEachExpression;
+import org.jetbrains.uast.UForExpression;
+import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.ULabeledExpression;
+import org.jetbrains.uast.ULocalVariable;
+import org.jetbrains.uast.ULoopExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UQualifiedReferenceExpression;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.USwitchExpression;
+import org.jetbrains.uast.UWhileExpression;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
  * Detector looking for cut &amp; paste issues
  */
-public class CutPasteDetector extends Detector implements Detector.JavaPsiScanner {
+public class CutPasteDetector extends Detector implements Detector.UastScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "CutPasteId",
@@ -79,16 +82,16 @@ public class CutPasteDetector extends Detector implements Detector.JavaPsiScanne
                     CutPasteDetector.class,
                     Scope.JAVA_FILE_SCOPE));
 
-    private PsiMethod mLastMethod;
-    private Map<String, PsiMethodCallExpression> mIds;
-    private Map<String, String> mLhs;
-    private Map<String, String> mCallOperands;
+    private PsiMethod lastMethod;
+    private Map<String, UCallExpression> ids;
+    private Map<String, String> lhs;
+    private Map<String, String> callOperands;
 
     /** Constructs a new {@link CutPasteDetector} check */
     public CutPasteDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements UastScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -96,47 +99,55 @@ public class CutPasteDetector extends Detector implements Detector.JavaPsiScanne
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @Nullable JavaElementVisitor visitor,
-            @NonNull PsiMethodCallExpression call, @NonNull PsiMethod calledMethod) {
-        String lhs = getLhs(call);
-        if (lhs == null) {
+    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+            @NonNull PsiMethod calledMethod) {
+        // If it's in a comparison, don't do anything
+        if (call.getUastParent() instanceof UBinaryExpression &&
+                !UastExpressionUtils.isAssignment(call.getUastParent())) {
             return;
         }
 
-        PsiMethod method = PsiTreeUtil.getParentOfType(call, PsiMethod.class, false);
+        String leftSide = getLhs(call);
+        if (leftSide == null) {
+            return;
+        }
+
+        UMethod method = UastUtils.getParentOfType(call, UMethod.class, false);
         if (method == null) {
             return; // prevent doing the same work for multiple findViewById calls in same method
-        } else if (method != mLastMethod) {
-            mIds = Maps.newHashMap();
-            mLhs = Maps.newHashMap();
-            mCallOperands = Maps.newHashMap();
-            mLastMethod = method;
+        } else if (method != lastMethod) {
+            ids = Maps.newHashMap();
+            lhs = Maps.newHashMap();
+            callOperands = Maps.newHashMap();
+            lastMethod = method;
         }
 
-        PsiReferenceExpression methodExpression = call.getMethodExpression();
-        String callOperand = methodExpression.getQualifier() != null
-                ? methodExpression.getQualifier().getText() : "";
+        String callOperand = call.getReceiver() != null
+                ? call.getReceiver().asSourceString() : "";
 
-        PsiExpression[] arguments = call.getArgumentList().getExpressions();
-        if (arguments.length == 0) {
+        List<UExpression> arguments = call.getValueArguments();
+        if (arguments.isEmpty()) {
             return;
         }
-        PsiExpression first = arguments[0];
-        if (first instanceof PsiReferenceExpression) {
-            PsiReferenceExpression psiReferenceExpression = (PsiReferenceExpression) first;
-            String id = psiReferenceExpression.getReferenceName();
-            PsiElement operand = psiReferenceExpression.getQualifier();
-            if (operand instanceof PsiReferenceExpression) {
-                PsiReferenceExpression type = (PsiReferenceExpression) operand;
-                if (RESOURCE_CLZ_ID.equals(type.getReferenceName())) {
-                    if (mIds.containsKey(id)) {
-                        if (lhs.equals(mLhs.get(id))) {
+        UExpression first = arguments.get(0);
+        if (first instanceof UReferenceExpression) {
+            UReferenceExpression psiReferenceExpression = (UReferenceExpression) first;
+            String id = psiReferenceExpression.getResolvedName();
+            UElement operand = (first instanceof UQualifiedReferenceExpression)
+                    ? ((UQualifiedReferenceExpression) first).getReceiver()
+                    : null;
+
+            if (operand instanceof UReferenceExpression) {
+                UReferenceExpression type = (UReferenceExpression) operand;
+                if (RESOURCE_CLZ_ID.equals(type.getResolvedName())) {
+                    if (ids.containsKey(id)) {
+                        if (leftSide.equals(this.lhs.get(id))) {
                             return;
                         }
-                        if (!callOperand.equals(mCallOperands.get(id))) {
+                        if (!callOperand.equals(callOperands.get(id))) {
                             return;
                         }
-                        PsiMethodCallExpression earlierCall = mIds.get(id);
+                        UCallExpression earlierCall = ids.get(id);
                         if (!isReachableFrom(method, earlierCall, call)) {
                             return;
                         }
@@ -146,11 +157,11 @@ public class CutPasteDetector extends Detector implements Detector.JavaPsiScanne
                         location.setSecondary(secondary);
                         context.report(ISSUE, call, location, String.format(
                             "The id `%1$s` has already been looked up in this method; possible "
-                                    + "cut & paste error?", first.getText()));
+                                    + "cut & paste error?", first.asSourceString()));
                     } else {
-                        mIds.put(id, call);
-                        mLhs.put(id, lhs);
-                        mCallOperands.put(id, callOperand);
+                        ids.put(id, call);
+                        lhs.put(id, leftSide);
+                        callOperands.put(id, callOperand);
                     }
                 }
 
@@ -160,136 +171,209 @@ public class CutPasteDetector extends Detector implements Detector.JavaPsiScanne
 
     @Override
     public void afterCheckFile(@NonNull Context context) {
-        mIds = null;
-        mLhs = null;
-        mCallOperands = null;
-        mLastMethod = null;
+        ids = null;
+        lhs = null;
+        callOperands = null;
+        lastMethod = null;
     }
 
     @Nullable
-    private static String getLhs(@NonNull PsiMethodCallExpression call) {
-        PsiElement parent = skipParentheses(call.getParent());
-        if (parent instanceof PsiTypeCastExpression) {
-            parent = parent.getParent();
-        }
-
-        if (parent instanceof PsiLocalVariable) {
-            return ((PsiLocalVariable)parent).getName();
-        } else if (parent instanceof PsiBinaryExpression) {
-            PsiBinaryExpression be = (PsiBinaryExpression) parent;
-            PsiExpression left = be.getLOperand();
-            if (left instanceof PsiReference) {
-                return left.getText();
-            } else if (left instanceof PsiArrayAccessExpression) {
-                PsiArrayAccessExpression aa = (PsiArrayAccessExpression) left;
-                return aa.getArrayExpression().getText();
+    private static String getLhs(@NonNull UCallExpression call) {
+        UElement parent = call.getUastParent();
+        while (parent != null && !(parent instanceof UBlockExpression)) {
+            if (parent instanceof ULocalVariable) {
+                return ((ULocalVariable) parent).getName();
+            } else if (UastExpressionUtils.isAssignment(parent)) {
+                UExpression left = ((UBinaryExpression) parent).getLeftOperand();
+                if (left instanceof UReferenceExpression) {
+                    return left.asSourceString();
+                } else if (left instanceof UArrayAccessExpression) {
+                    UArrayAccessExpression aa = (UArrayAccessExpression) left;
+                    return aa.getReceiver().asSourceString();
+                }
             }
-        } else if (parent instanceof PsiAssignmentExpression) {
-            PsiExpression left = ((PsiAssignmentExpression) parent).getLExpression();
-            if (left instanceof PsiReference) {
-                return left.getText();
-            } else if (left instanceof PsiArrayAccessExpression) {
-                PsiArrayAccessExpression aa = (PsiArrayAccessExpression) left;
-                return aa.getArrayExpression().getText();
-            }
+            parent = parent.getUastParent();
         }
-
         return null;
     }
 
     static boolean isReachableFrom(
-            @NonNull PsiMethod method,
-            @NonNull PsiElement from,
-            @NonNull PsiElement to) {
-        PsiElement prev = from;
-        PsiElement curr = next(method, from, to, null);
-        //noinspection ConstantConditions
-        while (curr != null) {
-            if (containsElement(method, curr, to)) {
-                return true;
-            }
-            curr = next(method, curr, to, prev);
-            prev = curr;
-        }
-
-        return false;
+            @NonNull UMethod method,
+            @NonNull UElement from,
+            @NonNull UElement to) {
+        ReachabilityVisitor visitor = new ReachabilityVisitor(from, to);
+        method.accept(visitor);
+        return visitor.isReachable();
     }
 
-    @Nullable
-    static PsiElement next(
-            @NonNull PsiMethod method,
-            @NonNull PsiElement curr,
-            @NonNull PsiElement target,
-            @Nullable PsiElement prev) {
+    private static class ReachabilityVisitor extends AbstractUastVisitor {
 
-        if (curr instanceof PsiMethod) {
-            return null;
+        private final UElement from;
+        private final UElement target;
+
+        private boolean isFromReached;
+        private boolean isTargetReachable;
+        private boolean isFinished;
+
+        private UExpression breakedExpression;
+        private UExpression continuedExpression;
+
+        ReachabilityVisitor(UElement from, UElement target) {
+            this.from = from;
+            this.target = target;
         }
 
-        PsiElement parent = curr.getParent();
-        if (curr instanceof PsiContinueStatement) {
-            PsiStatement continuedStatement = ((PsiContinueStatement) curr)
-                    .findContinuedStatement();
-            if (continuedStatement != null) {
-                if (containsElement(method, continuedStatement, target)) {
-                    return target;
+        @Override
+        public boolean visitElement(UElement node) {
+            if (isFinished || breakedExpression != null || continuedExpression != null) {
+                return true;
+            }
+
+            if (node.equals(from)) {
+                isFromReached = true;
+            }
+
+            if (node.equals(target)) {
+                isFinished = true;
+                if (isFromReached) {
+                    isTargetReachable = true;
                 }
-                return next(method, continuedStatement, target, curr);
-            } else {
-                return next(method, parent, target, curr);
-            }
-        } else if (curr instanceof PsiBreakStatement) {
-            PsiStatement exitedStatement = ((PsiBreakStatement) curr).findExitedStatement();
-            if (exitedStatement != null) {
-                return next(method, exitedStatement, target, curr);
-            } else {
-                return next(method, parent, target, curr);
-            }
-        } else if (curr instanceof PsiReturnStatement) {
-            return null;
-        } else if (curr instanceof PsiLoopStatement && prev != null &&
-                containsElement(method, curr, prev)) {
-            // If we stepped *up* (from a last child nested in the loop) up to the loop
-            // itself, mark all children in the loop as reachable since we're iterating
-            if (containsElement(method, curr, target)) {
-                return target;
-            }
-        }
-
-        PsiElement sibling = curr.getNextSibling();
-        while (sibling instanceof PsiWhiteSpace || sibling instanceof PsiJavaToken) {
-            // Skip whitespaces and tokens such as PsiJavaToken.SEMICOLON etc
-            sibling = sibling.getNextSibling();
-        }
-        if (sibling == null) {
-            return next(method, parent, target, curr);
-        }
-
-        if (parent instanceof PsiIfStatement &&
-                curr == ((PsiIfStatement)parent).getThenBranch()) {
-            return next(method, parent, target, curr);
-        } else if (parent instanceof PsiLoopStatement) {
-            if (containsElement(method, parent, target)) {
-                return target;
-            }
-        }
-
-        return sibling;
-    }
-
-    private static boolean containsElement(@
-            NonNull PsiMethod method,
-            @NonNull PsiElement root,
-            @NonNull PsiElement element) {
-        //noinspection ConstantConditions
-        while (element != null && element != method) {
-            if (root.equals(element)) {
                 return true;
             }
 
-            element = element.getParent();
+            if (isFromReached) {
+                if (node instanceof UReturnExpression) {
+                    isFinished = true;
+                } else if (node instanceof UBreakExpression) {
+                    breakedExpression = getBreakedExpression((UBreakExpression) node);
+                } else if (node instanceof UContinueExpression) {
+                    UExpression expression = getContinuedExpression((UContinueExpression) node);
+                    if (expression != null && UastUtils.isChildOf(target, expression, false)) {
+                        isTargetReachable = true;
+                        isFinished = true;
+                    } else {
+                        continuedExpression = expression;
+                    }
+                } else if (UastUtils.isChildOf(target, node, false)) {
+                    isTargetReachable = true;
+                    isFinished = true;
+                }
+                return true;
+            } else {
+                if (node instanceof UIfExpression) {
+                    UIfExpression ifExpression = (UIfExpression) node;
+
+                    ifExpression.getCondition().accept(this);
+
+                    boolean isFromReached = this.isFromReached;
+
+                    UExpression thenExpression = ifExpression.getThenExpression();
+                    if (thenExpression != null) {
+                        thenExpression.accept(this);
+                    }
+
+                    UExpression elseExpression = ifExpression.getElseExpression();
+                    if (elseExpression != null && isFromReached == this.isFromReached) {
+                        elseExpression.accept(this);
+                    }
+                    return true;
+                } else if (node instanceof ULoopExpression) {
+                    visitLoopExpressionHeader(node);
+                    boolean isFromReached = this.isFromReached;
+
+                    ((ULoopExpression) node).getBody().accept(this);
+
+                    if (isFromReached != this.isFromReached
+                            && UastUtils.isChildOf(target, node, false)) {
+                        isTargetReachable = true;
+                        isFinished = true;
+                    }
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        return false;
+        @Override
+        public void afterVisitElement(UElement node) {
+            if (node.equals(breakedExpression)) {
+                breakedExpression = null;
+            } else if (node.equals(continuedExpression)) {
+                continuedExpression = null;
+            }
+        }
+
+        private void visitLoopExpressionHeader(UElement node) {
+            if (node instanceof UWhileExpression) {
+                ((UWhileExpression) node).getCondition().accept(this);
+            } else if (node instanceof UDoWhileExpression) {
+                ((UDoWhileExpression) node).getCondition().accept(this);
+            } else if (node instanceof UForExpression) {
+                UForExpression forExpression = (UForExpression) node;
+
+                if (forExpression.getDeclaration() != null) {
+                    forExpression.getDeclaration().accept(this);
+                }
+
+                if (forExpression.getCondition() != null) {
+                    forExpression.getCondition().accept(this);
+                }
+
+                if (forExpression.getUpdate() != null) {
+                    forExpression.getUpdate().accept(this);
+                }
+            } else if (node instanceof UForEachExpression) {
+                UForEachExpression forEachExpression = (UForEachExpression) node;
+                forEachExpression.getForIdentifier().accept(this);
+                forEachExpression.getIteratedValue().accept(this);
+            }
+        }
+
+        private static UExpression getBreakedExpression(UBreakExpression node) {
+            UElement parent = node.getUastParent();
+            String label = node.getLabel();
+            while (parent != null) {
+                if (label != null) {
+                    if (parent instanceof ULabeledExpression) {
+                        ULabeledExpression labeledExpression = (ULabeledExpression) parent;
+                        if (labeledExpression.getLabel().equals(label)) {
+                            return labeledExpression.getExpression();
+                        }
+                    }
+                } else {
+                    if (parent instanceof ULoopExpression || parent instanceof USwitchExpression) {
+                        return (UExpression) parent;
+                    }
+                }
+                parent = parent.getUastParent();
+            }
+            return null;
+        }
+
+        private static UExpression getContinuedExpression(UContinueExpression node) {
+            UElement parent = node.getUastParent();
+            String label = node.getLabel();
+            while (parent != null) {
+                if (label != null) {
+                    if (parent instanceof ULabeledExpression) {
+                        ULabeledExpression labeledExpression = (ULabeledExpression) parent;
+                        if (labeledExpression.getLabel().equals(label)) {
+                            return labeledExpression.getExpression();
+                        }
+                    }
+                } else {
+                    if (parent instanceof ULoopExpression) {
+                        return (UExpression) parent;
+                    }
+                }
+                parent = parent.getUastParent();
+            }
+            return null;
+        }
+
+        public boolean isReachable() {
+            return isTargetReachable;
+        }
     }
 }

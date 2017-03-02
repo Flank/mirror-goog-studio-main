@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.Detector;
 
 public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
 
+    @SuppressWarnings("all") // Sample code
     final TestFile mFirebaseAnalytics = java("src/com/google/firebase/analytics/FirebaseAnalytics.java", ""
             + "package com.google.firebase.analytics;\n"
             + "import android.os.Bundle;\n"
@@ -37,6 +38,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidCharacters() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -57,6 +59,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidLength() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -77,6 +80,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidConstant() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -98,6 +102,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testValidFirebaseAnalyticsEventName() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -114,6 +119,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testLogEvent() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -131,6 +137,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidParameterName() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -154,6 +161,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidParameterNameInClassField() throws Exception {
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -178,6 +186,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidParameterNameInSeparateMethod() throws Exception {
+        //noinspection all // Sample code
         TestFile util = java("src/test/pkg/Util.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
@@ -188,6 +197,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                 + "      return bundle;\n"
                 + "    }\n"
                 + "}");
+        //noinspection all // Sample code
         TestFile mainActivity = java("src/test/pkg/MainActivity.java", ""
                 + "package test.pkg;\n"
                 + "import android.os.Bundle;\n"
