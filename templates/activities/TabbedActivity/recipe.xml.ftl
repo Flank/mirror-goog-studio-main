@@ -17,6 +17,10 @@
         <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
     </#if>
 
+    <#if !(hasDependency('com.android.support.constraint:constraint-layout'))>
+        <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+    </#if>
+
     <#include "../common/recipe_manifest.xml.ftl" />
 
     <instantiate from="root/res/menu/main.xml.ftl"
