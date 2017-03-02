@@ -82,12 +82,14 @@ public class ${activityClass} extends ${superClass}<#if !hasAppBar && features =
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-
     </#if>
     <#if hasAppBar>
       <#if features == 'tabs'>
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(mViewPager);
+
+         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+
+        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
       <#elseif features == 'spinner'>
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -256,6 +258,7 @@ public class ${activityClass} extends ${superClass}<#if !hasAppBar && features =
             // Show 3 total pages.
             return 3;
         }
+        <#if !appCompat>
 
         @Override
         public CharSequence getPageTitle(int position) {
@@ -269,6 +272,7 @@ public class ${activityClass} extends ${superClass}<#if !hasAppBar && features =
             }
             return null;
         }
+        </#if>
     }
     </#if>
 
