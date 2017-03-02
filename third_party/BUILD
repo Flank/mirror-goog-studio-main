@@ -48,6 +48,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.google.auto.value_auto-value",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.google.code.findbugs_jsr305",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.0:jar",
     visibility = ["//visibility:public"],

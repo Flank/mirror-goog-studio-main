@@ -30,11 +30,15 @@ maven_java_library(
         "//tools/base/aaptjlib:srcjar",
         "//tools/base/build-system/builder/src/dex:srcjar",
     ],
+    plugins = [
+        ":auto-value-plugin",
+    ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
+        ":com.google.auto.value_auto-value_neverlink",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
@@ -105,4 +109,19 @@ java_test(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
+)
+
+java_plugin(
+    name = "auto-value-plugin",
+    processor_class = "com.google.auto.value.processor.AutoValueProcessor",
+    deps = [
+        "//tools/base/third_party:com.google.auto.value_auto-value",
+    ],
+)
+
+# Compile-time only dependency on the auto-value.
+java_library(
+    name = "com.google.auto.value_auto-value_neverlink",
+    neverlink = 1,
+    exports = ["//tools/base/third_party:com.google.auto.value_auto-value"],
 )
