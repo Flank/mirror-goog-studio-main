@@ -32,6 +32,8 @@ public class ClassContextTest extends TestCase {
     public void testGetInternalName() {
         assertEquals("foo/bar/Foo$Bar",
                 ClassContext.getInternalName("foo.bar.Foo.Bar"));
+        assertEquals("java/util/Map",  ClassContext.getInternalName(
+                "java.util.Map<java.lang.String,java.lang.String>"));
     }
 
     public void testGetFqcn() {
