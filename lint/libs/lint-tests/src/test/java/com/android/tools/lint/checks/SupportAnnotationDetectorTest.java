@@ -3117,6 +3117,29 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testPrivateVisibilityWithDefaultConstructor() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=235661
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.VisibleForTesting;\n"
+                        + "\n"
+                        + "public class LintBugExample {\n"
+                        + "    public static Object demonstrateBug() {\n"
+                        + "        return new InnerClass();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @VisibleForTesting\n"
+                        + "    static class InnerClass {\n"
+                        + "    }\n"
+                        + "}"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
