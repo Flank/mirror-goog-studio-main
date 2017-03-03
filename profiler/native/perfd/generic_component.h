@@ -25,12 +25,15 @@
 
 namespace profiler {
 
+using AgentStatusChanged = std::function<void(
+    int processId, const profiler::proto::AgentStatusResponse::Status&)>;
+
 class GenericComponent final : public ProfilerComponent {
  public:
+  static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
+
   // TODO: Fix this so we don't have to pass in a non-const Daemon
-  explicit GenericComponent(Daemon::Utilities* utilities)
-      : generic_public_service_(utilities, &heartbeat_timestamp_map_),
-        perfa_service_(utilities->clock(), &heartbeat_timestamp_map_) {}
+  explicit GenericComponent(Daemon::Utilities* utilities);
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override {
@@ -40,12 +43,24 @@ class GenericComponent final : public ProfilerComponent {
   // Returns the service that talks to device clients (e.g., perfa).
   grpc::Service* GetInternalService() override { return &perfa_service_; }
 
+  void AddAgentStatusChangedCallback(AgentStatusChanged callback) {
+    agent_status_changed_callbacks_.push_back(callback);
+  }
+
  private:
+  void RunAgentStatusThread();
+
   ProfilerServiceImpl generic_public_service_;
   PerfaServiceImpl perfa_service_;
 
+  const Clock& clock_;
   // Mapping pid -> timestamp of last ping from perfa.
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
+  std::list<AgentStatusChanged> agent_status_changed_callbacks_;
+  // Mapping pid -> latest status of heartbeat (Attached / Detached).
+  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
+      heartbeat_status_map_;
+  std::thread status_thread_;
 };
 
 }  // namespace profiler

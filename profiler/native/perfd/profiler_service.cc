@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 #include "perfd/profiler_service.h"
+#include "perfd/generic_component.h"
 
 #include <sys/time.h>
 
 #include "utils/android_studio_version.h"
+#include "utils/log.h"
 #include "utils/trace.h"
 
 using grpc::ServerContext;
@@ -61,11 +63,15 @@ Status ProfilerServiceImpl::GetAgentStatus(
     ServerContext* context, const profiler::proto::AgentStatusRequest* request,
     profiler::proto::AgentStatusResponse* response) {
   auto got = heartbeat_timestamp_map_.find(request->process_id());
+  Log::V("Heartbeat got: %d", got == heartbeat_timestamp_map_.end() ? 1 : 0);
   if (got != heartbeat_timestamp_map_.end()) {
     int64_t current_time = clock_.GetCurrentTime();
-    if (kHeartbeatThresholdNs > (current_time - got->second)) {
+    if (GenericComponent::kHeartbeatThresholdNs >
+        (current_time - got->second)) {
+      Log::V("Heartbeat good");
       response->set_status(AgentStatusResponse::ATTACHED);
     } else {
+      Log::V("Heartbeat bad");
       response->set_status(AgentStatusResponse::DETACHED);
     }
     response->set_last_timestamp(got->second);
