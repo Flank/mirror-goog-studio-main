@@ -5172,6 +5172,28 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testMapGetOrDefault() throws Exception {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=235665
+        //noinspection all // Sample code
+        checkApiCheck(""
+                        + "src/test/pkg/MapApiTest.java:8: Error: Call requires API level 24 (current min is 1): java.util.Map#getOrDefault [NewApi]\n"
+                        + "        map.getOrDefault(\"foo\", \"bar\");\n"
+                        + "            ~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                "No warnings.",
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import java.util.Map;\n"
+                        + "\n"
+                        + "@SuppressWarnings(\"Since15\")\n"
+                        + "public class MapApiTest  {\n"
+                        + "    public void test(Map<String,String> map) {\n"
+                        + "        map.getOrDefault(\"foo\", \"bar\");\n"
+                        + "    }\n"
+                        + "}\n"));
+    }
+
     public void testVectorDrawableCompat() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=222654
         //noinspection all // Sample code
