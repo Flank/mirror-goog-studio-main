@@ -21,6 +21,7 @@
 #include "utils/android_studio_version.h"
 #include "utils/log.h"
 #include "utils/trace.h"
+#include "utils/file_reader.h"
 
 using grpc::ServerContext;
 using grpc::ServerWriter;
@@ -80,6 +81,17 @@ Status ProfilerServiceImpl::GetAgentStatus(
     response->set_last_timestamp(INT64_MIN);
   }
 
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::GetDevices(
+    ServerContext* context, const profiler::proto::GetDevicesRequest* request,
+    profiler::proto::GetDevicesResponse* response) {
+  Trace trace("PRO:GetDevices");
+  profiler::proto::Device* device = response->add_device();
+  std::string device_id;
+  FileReader::Read("/proc/sys/kernel/random/boot_id", &device_id);
+  device->set_boot_id(device_id);
   return Status::OK;
 }
 

@@ -54,6 +54,11 @@ class ProfilerServiceImpl final
       const profiler::proto::AgentStatusRequest* request,
       profiler::proto::AgentStatusResponse* response) override;
 
+  grpc::Status GetDevices(
+      grpc::ServerContext* context,
+      const profiler::proto::GetDevicesRequest* request,
+      profiler::proto::GetDevicesResponse* response) override;
+
  private:
   // Clock knows about timestamps.
   const Clock& clock_;
