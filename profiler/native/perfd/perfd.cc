@@ -43,8 +43,11 @@ int main(int argc, char** argv) {
   profiler::MemoryProfilerComponent memory_component{&daemon.utilities()};
   daemon.RegisterComponent(&memory_component);
 
-  profiler::EventProfilerComponent event_component{};
+  profiler::EventProfilerComponent event_component{daemon.utilities()};
   daemon.RegisterComponent(&event_component);
+  generic_component.AddAgentStatusChangedCallback(std::bind(
+      &profiler::EventProfilerComponent::AgentStatusChangedCallback,
+      &event_component, std::placeholders::_1, std::placeholders::_2));
 
   profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);

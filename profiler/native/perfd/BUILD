@@ -3,6 +3,7 @@ cc_library(
     hdrs = [
         "daemon.h",
         "profiler_component.h",
+        "profiler_service.h",
     ],
     copts = [
         "-Itools/base/profiler/native",
