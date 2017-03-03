@@ -677,7 +677,7 @@ public abstract class Detector {
      * Interface to be implemented by lint detectors that want to analyze
      * Java source files (or other similar source files, such as Kotlin files.)
      * <p>
-     * THere are several different common patterns for detecting issues:
+     * There are several different common patterns for detecting issues:
      * <ul>
      * <li> Checking calls to a given method. For this see
      * {@link #getApplicableMethodNames()} and
@@ -690,7 +690,7 @@ public abstract class Detector {
      * {@link #visitReference(JavaContext, UReferenceExpression, PsiElement)}</li>
      * <li> Extending a given class or implementing a given interface.
      * For this, see {@link #applicableSuperClasses()} and
-     * {@link #visitClass(JavaContext, UClass)}</li>.
+     * {@link #visitClass(JavaContext, UClass)}</li>
      * <li> More complicated scenarios: perform a general AST
      * traversal with a visitor. In this case, first tell lint which
      * AST node types you're interested in with the
@@ -708,7 +708,7 @@ public abstract class Detector {
      * and lets the client of the library access the AST in a unified way.
      * <p>
      * UAST isn't actually a full replacement for PSI; it <b>augments</b> PSI.
-     * Essentially, UAST is usd for the <b>inside</b> of methods (e.g. method bodies),
+     * Essentially, UAST is used for the <b>inside</b> of methods (e.g. method bodies),
      * and things like field initializers. PSI continues to be used at the outer
      * level: for packages, classes, and methods (declarations and signatures).
      * There are also wrappers around some of these for convenience.
@@ -868,21 +868,18 @@ public abstract class Detector {
      * <h3>Binary Expressions</h3>
      * If you had been using {@link PsiBinaryExpression} for things like checking comparator
      * operators or arithmetic combination of operands, you can replace this with
-     * {@link UBinaryExpression}. But you normally shouldn't; you should use
-     * {@link UPolyadicExpression} instead. A polyadic expression is just like a binary
+     * {@link UBinaryExpression}. <b>But you normally shouldn't; you should use
+     * {@link UPolyadicExpression} instead</b>. A polyadic expression is just like a binary
      * expression, but possibly with more than two terms. With the old parser backend,
      * an expression like "A + B + C" would be represented by nested binary expressions
      * (first A + B, then a parent element which combined that binary expression with C).
      * However, this will now be provided as a {@link UPolyadicExpression} instead. And
      * the binary case is handled trivially without the need to special case it.
      * <h3>Method name changes</h3>
-     * <p>
      * The following table maps some common method names and what their corresponding
      * names are in UAST.
      * <table>
-     *     <tr><td>createPsiVisitor</td><td>createUastVisitor</td></tr>
-     *     <tr><td>getApplicablePsiTypes</td><td>getApplicableUastTypes</td></tr>
-     *     <tr><td>getApplicablePsiTypes</td><td>getApplicableUastTypes</td></tr>
+     *     <tr><th>PSI</th><th>UAST</th></tr>
      *     <tr><td>getArgumentList</td><td>getValueArguments</td></tr>
      *     <tr><td>getCatchSections</td><td>getCatchClauses</td></tr>
      *     <tr><td>getDeclaredElements</td><td>getDeclarations</td></tr>
