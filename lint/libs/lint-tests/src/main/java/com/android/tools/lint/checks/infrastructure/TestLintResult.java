@@ -18,7 +18,6 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -28,15 +27,20 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.intellij.util.ArrayUtil;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -49,11 +53,13 @@ import org.intellij.lang.annotations.Language;
  * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@SuppressWarnings({"UnusedReturnValue", "SameParameterValue"}) // Allow chaining of these report checks
 public class TestLintResult {
     private final String output;
     private final Exception exception;
     private final TestLintTask task;
     private final List<Warning> warnings;
+    private int maxLineLength;
 
     TestLintResult(@NonNull TestLintTask task, @Nullable String output, @Nullable Exception e,
             List<Warning> warnings) {
@@ -64,9 +70,24 @@ public class TestLintResult {
     }
 
     /**
+     * Sets the maximum line length in the report. This is useful if some lines are
+     * particularly long and you don't care about the details at the end of the line
+     *
+     * @param maxLineLength the maximum number of characters to show in the report
+     * @return this
+     */
+    @SuppressWarnings("SameParameterValue") // Lint internally always using 100, but allow others
+    @NonNull
+    public TestLintResult maxLineLength(int maxLineLength) {
+        this.maxLineLength = maxLineLength;
+        return this;
+    }
+
+    /**
      * Checks that the lint result had the expected report format.
      *
      * @param expectedText the text to expect
+     * @return this
      */
     public TestLintResult expect(@NonNull String expectedText) {
         assertEquals(expectedText, describeOutput());
@@ -74,26 +95,45 @@ public class TestLintResult {
         return this;
     }
 
+    private static final String TRUNCATION_MARKER = "\u2026";
+
     private String describeOutput() {
+        String output = this.output;
+        if (output == null) {
+            output = "";
+        } else if (maxLineLength > TRUNCATION_MARKER.length()) {
+            StringBuilder sb = new StringBuilder();
+            for (String line : Splitter.on('\n').split(output)) {
+                if (line.length() > maxLineLength) {
+                    line = line.substring(0, maxLineLength - TRUNCATION_MARKER.length()) +
+                            TRUNCATION_MARKER;
+                }
+                sb.append(line).append('\n');
+            }
+            output = sb.toString();
+            if (output.endsWith("\n\n") && !this.output.endsWith("\n\n")) {
+                output = output.substring(0, output.length() - 1);
+            }
+        }
+
         if (exception != null) {
             StringWriter writer = new StringWriter();
             exception.printStackTrace(new PrintWriter(writer));
 
-            if (output != null) {
+            if (!output.isEmpty()) {
                 writer.write(output);
             }
 
             return writer.toString();
         } else {
-            if (output == null) {
-                return "";
-            }
             return output;
         }
     }
 
     /**
      * Checks that there were no errors or exceptions.
+     *
+     * @return this
      */
     public TestLintResult expectClean() {
         expect("No warnings.");
@@ -102,6 +142,8 @@ public class TestLintResult {
 
     /**
      * Checks that the results correspond to the messages inlined in the source files
+     *
+     * @return this
      */
     public TestLintResult expectInlinedMessages() {
         for (ProjectDescription project : task.projects) {
@@ -286,12 +328,70 @@ public class TestLintResult {
         return matches;
     }
 
-    public void expectMatches(@Language("RegExp") @NonNull String regexp) {
+    /**
+     * Checks that the lint report matches the given regular expression
+     *
+     * @param regexp the regular expression to match the input with (note that it's using {@link
+     *               Matcher#find()}, not {@link Matcher#match(int, int)}, so you don't have to
+     *               include wildcards at the beginning or end if looking for a match inside the
+     *               report
+     * @return this
+     */
+    public TestLintResult expectMatches(@Language("RegExp") @NonNull String regexp) {
         String output = describeOutput();
         Pattern pattern = Pattern.compile(regexp);
         boolean found = pattern.matcher(output).find();
         if (!found) {
             fail("Did not find pattern\n  " + regexp + "\n in \n" + output);
         }
+
+        return this;
+    }
+
+    /**
+     * Checks that the actual number of errors in this lint check matches exactly the given
+     * count
+     *
+     * @param expectedCount the expected error count
+     * @return this
+     */
+    public TestLintResult expectWarningCount(int expectedCount) {
+        return expectCount(expectedCount, Severity.WARNING);
+    }
+
+    /**
+     * Checks that the actual number of errors in this lint check matches exactly the given
+     * count
+     *
+     * @param expectedCount the expected error count
+     * @return this
+     */
+    public TestLintResult expectErrorCount(int expectedCount) {
+        return expectCount(expectedCount, Severity.ERROR, Severity.FATAL);
+    }
+
+    /**
+     * Checks that the actual number of problems with a given severity in this lint check
+     * matches exactly the given count.
+     *
+     * @param expectedCount the expected count
+     * @param severities    the severities to count
+     * @return this
+     */
+    public TestLintResult expectCount(int expectedCount, Severity... severities) {
+        int count = 0;
+        for (Warning warning : warnings) {
+            if (ArrayUtil.contains(warning.severity, severities)) {
+                count++;
+            }
+        }
+
+        if (count != expectedCount) {
+            assertEquals("Expected " + expectedCount + " problems with severity "
+                            + Joiner.on(" or ").join(severities) + " but was " + count,
+                    expectedCount, count);
+        }
+
+        return this;
     }
 }
