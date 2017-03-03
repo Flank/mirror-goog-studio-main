@@ -71,7 +71,7 @@ public abstract class ExtractTransform extends ArtifactTransform {
 
         // If the build cache is enabled, we create and cache the exploded aar using the cache's
         // API; otherwise, we explode the aar without using the cache.
-        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getBuildCacheInputs(aarFile);
+        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getCacheInputs(aarFile);
         File explodedLocation = fileCache.getFileInCache(buildCacheInputs);
         try {
             fileCache.createFileInCacheIfAbsent(

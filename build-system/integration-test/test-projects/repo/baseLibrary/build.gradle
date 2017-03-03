@@ -21,7 +21,7 @@ android {
 
 group = 'com.example.android.multiproject'
 archivesBaseName = 'baseLib'
-version = '1.0'
+version = '1.0-SNAPSHOT'  // using SNAPSHOT as it may be handled differently by the plugin.
 
 uploadArchives {
     repositories {

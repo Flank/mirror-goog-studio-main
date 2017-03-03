@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.utils.FileUtils;
-import com.google.common.base.Throwables;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -112,7 +111,13 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testBuildCacheDisabled() throws Exception {
+    public void testProjectLevelCache() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid.defaultConfig.minSdkVersion 13\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
+                        + "}\n");
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
@@ -121,8 +126,11 @@ public class BuildCacheTest {
                         .with(BooleanOption.ENABLE_BUILD_CACHE, false)
                         .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
 
-        GradleBuildResult result = executor.expectFailure().run("clean", "assembleDebug");
-        assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("aar transform can only work with the build cache");
+        executor.run("clean", "assembleDebug");
+
+        // When improved dependency resolution is enabled, a project local cache is used.
+        File cacheDir = FileUtils.join(project.file("build"), FD_INTERMEDIATES, "project-cache");
+        assertThat(cacheDir).isDirectory();
+        assertThat(buildCacheDir).doesNotExist();
     }
 }

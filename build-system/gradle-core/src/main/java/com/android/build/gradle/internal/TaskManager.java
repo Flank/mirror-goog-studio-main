@@ -407,7 +407,10 @@ public abstract class TaskManager {
             @Nullable String testedProjectPath) {
         Set<AndroidDependency> libsToExplode =
                 dependencyManager.resolveDependencies(
-                        variantDeps, testedProjectPath, getGlobalScope().getBuildCache());
+                        variantDeps,
+                        testedProjectPath,
+                        getGlobalScope().getBuildCache(),
+                        getGlobalScope().getProjectLevelCache());
         dependencyManager.processLibraries(libsToExplode, getGlobalScope().getBuildCache());
     }
 

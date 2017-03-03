@@ -100,7 +100,6 @@ public class GlobalScope extends TaskOutputHolderImpl
         this.buildCache =
                 BuildCacheUtils.createBuildCacheIfEnabled(
                         project.getRootProject()::file, projectOptions);
-        validateAndroidGradleOptions(projectOptions, buildCache);
     }
 
     @NonNull

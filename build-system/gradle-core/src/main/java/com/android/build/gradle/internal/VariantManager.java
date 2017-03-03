@@ -59,8 +59,8 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -483,14 +483,15 @@ public class VariantManager implements VariantModel {
         final DependencyHandler dependencies = project.getDependencies();
 
         // register transforms.
-        dependencies.registerTransform(AarTransform.class,
+        dependencies.registerTransform(
+                AarTransform.class,
                 transform -> {
                     final AarTransform aarTransform = (AarTransform) transform;
                     aarTransform.setProject(project);
                     aarTransform.setFileCache(
-                            Verify.verifyNotNull(
+                            MoreObjects.firstNonNull(
                                     taskManager.getGlobalScope().getBuildCache(),
-                                    "aar transform can only work with the build cache"));
+                                    taskManager.getGlobalScope().getProjectLevelCache()));
                 });
         dependencies.registerTransform(JarTransform.class, transform -> {});
 
