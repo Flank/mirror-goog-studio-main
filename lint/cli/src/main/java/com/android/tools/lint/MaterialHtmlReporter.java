@@ -16,14 +16,15 @@
 
 package com.android.tools.lint;
 
-import static com.android.SdkConstants.DOT_JPG;
-import static com.android.SdkConstants.DOT_PNG;
-import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.android.tools.lint.detector.api.LintUtils.isBitmapFile;
 import static com.android.tools.lint.detector.api.TextFormat.HTML;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.configuration.DensityQualifier;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.resources.Density;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
@@ -41,6 +42,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
@@ -643,7 +645,7 @@ public class MaterialHtmlReporter extends Reporter {
                         boolean addedImage = false;
                         if (url != null && warning.location != null
                                 && warning.location.getSecondary() == null) {
-                            addedImage = addImage(url, warning.location);
+                            addedImage = addImage(url, warning.file, warning.location);
                         }
                         append("<span class=\"message\">");
                         append(RAW.convertTo(warning.message, HTML));
@@ -681,12 +683,9 @@ public class MaterialHtmlReporter extends Reporter {
                                     append("</span>");
                                     append("<br />");
 
-                                    String name = l.getFile().getName();
                                     // Only display up to 3 inlined views to keep big reports from
                                     // getting massive in rendering cost
-                                    if (shownSnippetsCount < 3
-                                            && !(endsWith(name, DOT_PNG) || endsWith(name,
-                                            DOT_JPG))) {
+                                    if (shownSnippetsCount < 3 && !(isBitmapFile(l.getFile()))) {
                                         CharSequence s = client.readFile(l.getFile());
                                         if (s.length() > 0) {
                                             int offset = start != null ? start.getOffset() : -1;
@@ -738,7 +737,7 @@ public class MaterialHtmlReporter extends Reporter {
                         // Place a block of images?
                         if (!addedImage && url != null && warning.location != null
                                 && warning.location.getSecondary() != null) {
-                            addImage(url, warning.location);
+                            addImage(url, warning.file, warning.location);
                         }
 
                         if (warning.isVariantSpecific()) {
@@ -1244,24 +1243,68 @@ public class MaterialHtmlReporter extends Reporter {
         return url;
     }
 
-    private boolean addImage(String url, Location location) {
-        if (url != null && endsWith(url, DOT_PNG)) {
+    /**
+     * Returns the density for the given file, if known (e.g. in a density folder,
+     * such as drawable-mdpi
+     */
+    private static int getDensity(@NonNull File file) {
+        File parent = file.getParentFile();
+        if (parent != null) {
+            String name = parent.getName();
+            FolderConfiguration configuration = FolderConfiguration.getConfigForFolder(name);
+            if (configuration != null) {
+                DensityQualifier qualifier = configuration.getDensityQualifier();
+                if (qualifier != null && !qualifier.hasFakeValue()) {
+                    Density density = qualifier.getValue();
+                    if (density != null) {
+                        return density.getDpiValue();
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /** Compare icons - first in descending density order, then by name */
+    static final Comparator<File> ICON_DENSITY_COMPARATOR = (file1, file2) -> {
+        int density1 = getDensity(file1);
+        int density2 = getDensity(file2);
+        int densityDelta = density1 - density2;
+        if (densityDelta != 0) {
+            return densityDelta;
+        }
+
+        return file1.getName().compareToIgnoreCase(file2.getName());
+    };
+
+    private boolean addImage(String url, File urlFile, Location location) {
+        if (url != null && urlFile != null && isBitmapFile(urlFile)) {
             if (location.getSecondary() != null) {
                 // Emit many images
                 // Add in linked images as well
-                List<String> urls = new ArrayList<>();
+                List<File> files = Lists.newArrayList();
                 while (location != null) {
-                    String imageUrl = getUrl(location.getFile());
-                    if (imageUrl != null
-                            && endsWith(imageUrl, DOT_PNG)) {
-                        urls.add(imageUrl);
+                    File file = location.getFile();
+                    if (isBitmapFile(file)) {
+                        files.add(file);
+
                     }
                     location = location.getSecondary();
                 }
+
+                files.sort(ICON_DENSITY_COMPARATOR);
+
+                List<String> urls = new ArrayList<>();
+                for (File file : files) {
+                    String imageUrl = getUrl(file);
+                    if (imageUrl != null) {
+                        urls.add(imageUrl);
+                    }
+                }
+
                 if (!urls.isEmpty()) {
-                    // Sort in order
-                    urls.sort(Comparator.comparingInt(HtmlReporter::getDpiRank));
-                    append("<table>");
+                    append("<table>\n");
                     append("<tr>");
                     for (String linkedUrl : urls) {
                         // Image series: align top

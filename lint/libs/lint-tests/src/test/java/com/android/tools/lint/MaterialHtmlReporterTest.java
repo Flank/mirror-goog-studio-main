@@ -20,7 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
+import com.android.tools.lint.checks.IconDetector;
 import com.android.tools.lint.checks.ManifestDetector;
+import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
@@ -40,7 +43,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
         //noinspection ResultOfMethodCallIgnored
         File projectDir = TestUtils.createTempDirDeletedOnExit();
         File buildDir = new File(projectDir, "build");
-        File reportFile = new File(buildDir, "report");
+        File reportFile = new File(projectDir, "report.html");
         //noinspection ResultOfMethodCallIgnored
         buildDir.mkdirs();
 
@@ -95,9 +98,33 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
             warning2.location = Location.create(warning2.file,
                     new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
 
+            ImageTestFile icon1 = new ImageTestFile("res/drawable-mdpi/icon.png", 100, 100).fill(0xFFFF00FF);
+            ImageTestFile icon2 = new ImageTestFile("res/drawable-340dpi/icon2.png", 100, 100).fill(0xFFFF00FF);
+            ImageTestFile icon3 = new ImageTestFile("res/drawable-260dpi/icon3.png", 100, 100).fill(0xFFFF00FF);
+            ImageTestFile icon4 = new ImageTestFile("res/drawable-xxhdpi/icon4.png", 100, 100).fill(0xFFFF00FF);
+            File iconFile1 = icon1.createFile(projectDir);
+            File iconFile2 = icon2.createFile(projectDir);
+            File iconFile3 = icon3.createFile(projectDir);
+            File iconFile4 = icon4.createFile(projectDir);
+            Location location1 = Location.create(iconFile1);
+            Location location2 = Location.create(iconFile2);
+            Location location3 = Location.create(iconFile3);
+            Location location4 = Location.create(iconFile4);
+            location1.setSecondary(location2);
+            location2.setSecondary(location3);
+            location3.setSecondary(location4);
+
+            Warning warning3 = new Warning(IconDetector.DUPLICATES_NAMES,
+                    "The following unrelated icon files have identical contents: icon.png, icon2.png, icon3.png, icon4.png",
+                    Severity.WARNING, project);
+            warning3.file = location1.getFile();
+            warning3.path = icon1.targetRelativePath;
+            warning3.location = location1;
+
             List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
             warnings.add(warning2);
+            warnings.add(warning3);
 
             reporter.write(new Reporter.Stats(0, 2), warnings);
 
@@ -165,6 +192,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "      <a class=\"mdl-navigation__link\" href=\"#overview\"><i class=\"material-icons\">dashboard</i>Overview</a>\n"
                             + "      <a class=\"mdl-navigation__link\" href=\"#UsesMinSdkAttributes\"><i class=\"material-icons warning-icon\">warning</i>Minimum SDK and target SDK attributes not defined (1)</a>\n"
                             + "      <a class=\"mdl-navigation__link\" href=\"#HardcodedText\"><i class=\"material-icons warning-icon\">warning</i>Hardcoded text (1)</a>\n"
+                            + "      <a class=\"mdl-navigation__link\" href=\"#IconDuplicates\"><i class=\"material-icons warning-icon\">warning</i>Duplicated icons under different names (1)</a>\n"
                             + "    </nav>\n"
                             + "  </div>\n"
                             + "  <main class=\"mdl-layout__content\">\n"
@@ -187,6 +215,11 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "<tr>\n"
                             + "<td class=\"countColumn\">1</td><td class=\"issueColumn\"><i class=\"material-icons warning-icon\">warning</i>\n"
                             + "<a href=\"#HardcodedText\">HardcodedText</a>: Hardcoded text</td></tr>\n"
+                            + "<tr><td class=\"countColumn\"></td><td class=\"categoryColumn\"><a href=\"#Usability:Icons\">Usability:Icons</a>\n"
+                            + "</td></tr>\n"
+                            + "<tr>\n"
+                            + "<td class=\"countColumn\">1</td><td class=\"issueColumn\"><i class=\"material-icons warning-icon\">warning</i>\n"
+                            + "<a href=\"#IconDuplicates\">IconDuplicates</a>: Duplicated icons under different names</td></tr>\n"
                             + "</table>\n"
                             + "<br/>              </div>\n"
                             + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
@@ -204,7 +237,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "              <div class=\"mdl-card__supporting-text\">\n"
                             + "<div class=\"issue\">\n"
                             + "<div class=\"warningslist\">\n"
-                            + "<span class=\"location\"><a href=\"../AndroidManifest.xml\">AndroidManifest.xml</a>:7</span>: <span class=\"message\">&lt;uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"</span><br />\n"
+                            + "<span class=\"location\"><a href=\"AndroidManifest.xml\">AndroidManifest.xml</a>:7</span>: <span class=\"message\">&lt;uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\"</span><br />\n"
                             + "</div>\n"
                             + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationUsesMinSdkAttributes\" style=\"display: none;\">\n"
                             + "The manifest should contain a <code>&lt;uses-sdk></code> element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for.)<br/><div class=\"moreinfo\">More info: <a href=\"http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\">http://developer.android.com/guide/topics/manifest/uses-sdk-element.html</a>\n"
@@ -243,7 +276,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "              <div class=\"mdl-card__supporting-text\">\n"
                             + "<div class=\"issue\">\n"
                             + "<div class=\"warningslist\">\n"
-                            + "<span class=\"location\"><a href=\"../res/layout/main.xml\">res/layout/main.xml</a>:12</span>: <span class=\"message\">[I18N] Hardcoded string \"Fooo\", should use @string resource</span><br />\n"
+                            + "<span class=\"location\"><a href=\"res/layout/main.xml\">res/layout/main.xml</a>:12</span>: <span class=\"message\">[I18N] Hardcoded string \"Fooo\", should use @string resource</span><br />\n"
                             + "</div>\n"
                             + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationHardcodedText\" style=\"display: none;\">\n"
                             + "Hardcoding text attributes directly in layout files is bad for several reasons:<br/>\n"
@@ -274,6 +307,62 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
                             + "<button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"explanationHardcodedTextLink\" onclick=\"reveal('explanationHardcodedText');\">\n"
                             + "Explain</button><button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"HardcodedTextCardLink\" onclick=\"hideid('HardcodedTextCard');\">\n"
+                            + "Dismiss</button>            </div>\n"
+                            + "            </div>\n"
+                            + "          </section>\n"
+                            + "<a name=\"Usability:Icons\"></a>\n"
+                            + "<a name=\"IconDuplicates\"></a>\n"
+                            + "<section class=\"section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp\" id=\"IconDuplicatesCard\" style=\"display: block;\">\n"
+                            + "            <div class=\"mdl-card mdl-cell mdl-cell--12-col\">\n"
+                            + "  <div class=\"mdl-card__title\">\n"
+                            + "    <h2 class=\"mdl-card__title-text\">Duplicated icons under different names</h2>\n"
+                            + "  </div>\n"
+                            + "              <div class=\"mdl-card__supporting-text\">\n"
+                            + "<div class=\"issue\">\n"
+                            + "<div class=\"warningslist\">\n"
+                            + "<span class=\"location\"><a href=\"res/drawable-mdpi/icon.png\">res/drawable-mdpi/icon.png</a></span>: <span class=\"message\">The following unrelated icon files have identical contents: icon.png, icon2.png, icon3.png, icon4.png</span><br />\n"
+                            + "<ul></ul><button id=\"Location1DivLink\" onclick=\"reveal('Location1Div');\" />+ 3 Additional Locations...</button>\n"
+                            + "<div id=\"Location1Div\" style=\"display: none\">\n"
+                            + "Additional locations: <ul>\n"
+                            + "<li> <span class=\"location\"><a href=\"res/drawable-340dpi/icon2.png\">res/drawable-340dpi/icon2.png</a></span>\n"
+                            + "<li> <span class=\"location\"><a href=\"res/drawable-260dpi/icon3.png\">res/drawable-260dpi/icon3.png</a></span>\n"
+                            + "<li> <span class=\"location\"><a href=\"res/drawable-xxhdpi/icon4.png\">res/drawable-xxhdpi/icon4.png</a></span>\n"
+                            + "</ul>\n"
+                            + "</div><br/><br/>\n"
+                            + "<table>\n"
+                            + "<tr><td><a href=\"res/drawable-mdpi/icon.png\"><img border=\"0\" align=\"top\" src=\"res/drawable-mdpi/icon.png\" /></a>\n"
+                            + "</td><td><a href=\"res/drawable-260dpi/icon3.png\"><img border=\"0\" align=\"top\" src=\"res/drawable-260dpi/icon3.png\" /></a>\n"
+                            + "</td><td><a href=\"res/drawable-340dpi/icon2.png\"><img border=\"0\" align=\"top\" src=\"res/drawable-340dpi/icon2.png\" /></a>\n"
+                            + "</td><td><a href=\"res/drawable-xxhdpi/icon4.png\"><img border=\"0\" align=\"top\" src=\"res/drawable-xxhdpi/icon4.png\" /></a>\n"
+                            + "</td></tr><tr><th>mdpi</th><th>260dpi</th><th>340dpi</th><th>xxhdpi</th></tr>\n"
+                            + "</table>\n"
+                            + "</div>\n"
+                            + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationIconDuplicates\" style=\"display: none;\">\n"
+                            + "If an icon is repeated under different names, you can consolidate and just use one of the icons and delete the others to make your application smaller. However, duplicated icons usually are not intentional and can sometimes point to icons that were accidentally overwritten or accidentally not updated.<br/>To suppress this error, use the issue id \"IconDuplicates\" as explained in the <a href=\"#SuppressInfo\">Suppressing Warnings and Errors</a> section.<br/>\n"
+                            + "<br/></div>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "<div class=\"chips\">\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">IconDuplicates</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Icons</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Usability</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Warning</span>\n"
+                            + "</span>\n"
+                            + "<span class=\"mdl-chip\">\n"
+                            + "    <span class=\"mdl-chip__text\">Priority 3/10</span>\n"
+                            + "</span>\n"
+                            + "</div>\n"
+                            + "              </div>\n"
+                            + "              <div class=\"mdl-card__actions mdl-card--border\">\n"
+                            + "<button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"explanationIconDuplicatesLink\" onclick=\"reveal('explanationIconDuplicates');\">\n"
+                            + "Explain</button><button class=\"mdl-button mdl-js-button mdl-js-ripple-effect\" id=\"IconDuplicatesCardLink\" onclick=\"hideid('IconDuplicatesCard');\">\n"
                             + "Dismiss</button>            </div>\n"
                             + "            </div>\n"
                             + "          </section>\n"

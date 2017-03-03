@@ -739,7 +739,7 @@ public class HtmlReporter extends Reporter {
     }
 
     /** Provide a sorting rank for a url */
-    static int getDpiRank(String url) {
+    private static int getDpiRank(String url) {
         if (url.contains("-xhdpi")) {
             return 0;
         } else if (url.contains("-hdpi")) {

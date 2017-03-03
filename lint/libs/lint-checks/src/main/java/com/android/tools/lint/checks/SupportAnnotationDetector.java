@@ -1048,7 +1048,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             UFile uFile = UastUtils.getContainingFile(node);
             PsiFile containingFile1 = uFile != null ? uFile.getPsi() : null;
             PsiFile containingFile2 = method.getContainingFile();
-            if (Objects.equals(containingFile1, containingFile2)) {
+            if (Objects.equals(containingFile1, containingFile2) || containingFile2 == null) {
                 // Same compilation unit
                 return;
             }
