@@ -582,20 +582,32 @@ public class TestLintClient extends LintCliClient {
     @Override
     public File findResource(@NonNull String relativePath) {
         if (relativePath.equals(ExternalAnnotationRepository.SDK_ANNOTATIONS_PATH)) {
-            File rootDir = TestUtils.getWorkspaceRoot();
-            File file = new File(rootDir, "tools/adt/idea/android/annotations");
-            if (!file.exists()) {
-                throw new RuntimeException("File " + file + " not found");
+            try {
+                File rootDir = TestUtils.getWorkspaceRoot();
+                File file = new File(rootDir, "tools/adt/idea/android/annotations");
+                if (!file.exists()) {
+                    throw new RuntimeException("File " + file + " not found");
+                }
+                return file;
+            } catch (Throwable ignore) {
+                // Lint checks not running inside a tools build -- typically
+                // a third party lint check.
+                return super.findResource(relativePath);
             }
-            return file;
         } else if (relativePath.startsWith("tools/support/")) {
-            String base = relativePath.substring("tools/support/".length());
-            File rootDir = TestUtils.getWorkspaceRoot();
-            File file = new File(rootDir, "tools/base/files/typos/" + base);
-            if (!file.exists()) {
-                return null;
+            try {
+                File rootDir = TestUtils.getWorkspaceRoot();
+                String base = relativePath.substring("tools/support/".length());
+                File file = new File(rootDir, "tools/base/files/typos/" + base);
+                if (!file.exists()) {
+                    return null;
+                }
+                return file;
+            } catch (Throwable ignore) {
+                // Lint checks not running inside a tools build -- typically
+                // a third party lint check.
+                return super.findResource(relativePath);
             }
-            return file;
         } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
             File file = super.findResource(relativePath);
             if (file == null || !file.exists()) {

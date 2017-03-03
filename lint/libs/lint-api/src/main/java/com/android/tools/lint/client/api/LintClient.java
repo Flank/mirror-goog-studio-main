@@ -516,6 +516,9 @@ public abstract class LintClient {
                 if (build != null) {
                     file = new File(build, "development/sdk/api-versions.xml"
                             .replace('/', File.separatorChar));
+                    if (file.exists()) {
+                        return file;
+                    }
                 }
             }
 
