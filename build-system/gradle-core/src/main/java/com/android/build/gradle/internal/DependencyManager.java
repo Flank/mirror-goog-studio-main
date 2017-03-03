@@ -151,7 +151,8 @@ public class DependencyManager {
     public Set<AndroidDependency> resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
-            @Nullable FileCache buildCache) {
+            @Nullable FileCache buildCache,
+            FileCache projectLevelCache) {
         // set of Android Libraries to explode. This only concerns remote libraries, as modules
         // are now used through their staging folders rather than their bundled AARs.
         // Therefore there is no dependency on these exploded tasks since remote AARs are
@@ -161,10 +162,7 @@ public class DependencyManager {
         Set<AndroidDependency> libsToExplode = Sets.newIdentityHashSet();
 
         resolveDependencies(
-                variantDeps,
-                testedProjectPath,
-                libsToExplode,
-                buildCache);
+                variantDeps, testedProjectPath, libsToExplode, buildCache, projectLevelCache);
         return libsToExplode;
     }
 
@@ -229,7 +227,8 @@ public class DependencyManager {
             @NonNull final VariantDependencies variantDeps,
             @Nullable String testedProjectPath,
             @NonNull Set<AndroidDependency> libsToExplodeOut,
-            @Nullable FileCache buildCache) {
+            @Nullable FileCache buildCache,
+            @NonNull FileCache projectLevelCache) {
         boolean needPackageScope = true;
         if (AndroidGradleOptions.buildModelOnly(project)) {
             // if we're only syncing (building the model), then we only need the package
@@ -263,15 +262,17 @@ public class DependencyManager {
         // start with package dependencies, record the artifacts
         DependencyGraph packagedGraph;
         if (needPackageScope) {
-            packagedGraph = resolveConfiguration(
-                    packageClasspath,
-                    variantDeps,
-                    libsToExplodeOut,
-                    currentUnresolvedDependencies,
-                    testedProjectPath,
-                    artifactSet,
-                    ScopeType.PACKAGE,
-                    buildCache);
+            packagedGraph =
+                    resolveConfiguration(
+                            packageClasspath,
+                            variantDeps,
+                            libsToExplodeOut,
+                            currentUnresolvedDependencies,
+                            testedProjectPath,
+                            artifactSet,
+                            ScopeType.PACKAGE,
+                            buildCache,
+                            projectLevelCache);
         } else {
             packagedGraph = DependencyGraph.getEmpty();
         }
@@ -282,15 +283,17 @@ public class DependencyManager {
         // provided bits. This disables the checks on impossible provided libs (provided aar in
         // apk project).
         ScopeType scopeType = needPackageScope ? ScopeType.COMPILE : ScopeType.COMPILE_ONLY;
-        DependencyGraph compileDependencies = resolveConfiguration(
-                compileClasspath,
-                variantDeps,
-                libsToExplodeOut,
-                currentUnresolvedDependencies,
-                testedProjectPath,
-                artifactSet,
-                scopeType,
-                buildCache);
+        DependencyGraph compileDependencies =
+                resolveConfiguration(
+                        compileClasspath,
+                        variantDeps,
+                        libsToExplodeOut,
+                        currentUnresolvedDependencies,
+                        testedProjectPath,
+                        artifactSet,
+                        scopeType,
+                        buildCache,
+                        projectLevelCache);
 
         if (extraModelInfo.getMode() != STANDARD &&
                 compileClasspath.getResolvedConfiguration().hasError()) {
@@ -384,7 +387,8 @@ public class DependencyManager {
             @Nullable String testedProjectPath,
             @NonNull Set<String> artifactSet,
             @NonNull ScopeType scopeType,
-            @Nullable FileCache buildCache) {
+            @Nullable FileCache buildCache,
+            @NonNull FileCache projectLevelCache) {
 
         // collect the artifacts first.
         Map<ModuleVersionIdentifier, List<ResolvedArtifact>> artifacts = Maps.newHashMap();
@@ -427,6 +431,7 @@ public class DependencyManager {
                         artifactSet,
                         scopeType,
                         buildCache,
+                        projectLevelCache,
                         false, /*forceProvided*/
                         0);
             } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -622,6 +627,7 @@ public class DependencyManager {
             @NonNull Set<String> artifactSet,
             @NonNull ScopeType scopeType,
             @Nullable FileCache buildCache,
+            @NonNull FileCache projectLevelCache,
             boolean forceProvided,
             int indent) {
 
@@ -709,6 +715,7 @@ public class DependencyManager {
                             artifactSet,
                             scopeType,
                             buildCache,
+                            projectLevelCache,
                             childForceProvided,
                             indent + 1);
                 } else if (dependencyResult instanceof UnresolvedDependencyResult) {
@@ -816,32 +823,30 @@ public class DependencyManager {
                                 File explodedDir;
                                 if (PrepareLibraryTask.shouldUseBuildCache(
                                         buildCache != null, mavenCoordinates)) {
-                                    explodedDir = buildCache.getFileInCache(
-                                            PrepareLibraryTask.getBuildCacheInputs(
-                                                    artifact.getFile()));
+                                    explodedDir =
+                                            buildCache.getFileInCache(
+                                                    PrepareLibraryTask.getCacheInputs(
+                                                            artifact.getFile()));
                                 } else {
-                                    if (AndroidGradleOptions
-                                                .isImprovedDependencyResolutionEnabled(project)) {
+                                    if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(
+                                            project)) {
                                         // When using the improved dependency resolution, the output
                                         // directory has to be different from the the normal
                                         // exploded-aar path in order to not interfere with the
-                                        // up-to-date-check
-
-                                        // TODO: ResolveDependencyTask does not perform up-to-date
-                                        // check.  Need to figure out a way to avoid repeatedly
-                                        // exploding snapshots.
-                                        explodedDir = FileUtils.join(
-                                                project.getBuildDir(),
-                                                FD_INTERMEDIATES,
-                                                EXPLODED_AAR,
-                                                "snapshots",
-                                                path);
+                                        // up-to-date-check.
+                                        // We use a project local FileCache to handle up-to-date
+                                        // check and concurrency.
+                                        explodedDir =
+                                                projectLevelCache.getFileInCache(
+                                                        PrepareLibraryTask.getCacheInputs(
+                                                                artifact.getFile()));
                                     } else {
-                                        explodedDir = FileUtils.join(
-                                                project.getBuildDir(),
-                                                FD_INTERMEDIATES,
-                                                EXPLODED_AAR,
-                                                path);
+                                        explodedDir =
+                                                FileUtils.join(
+                                                        project.getBuildDir(),
+                                                        FD_INTERMEDIATES,
+                                                        EXPLODED_AAR,
+                                                        path);
                                     }
                                 }
 

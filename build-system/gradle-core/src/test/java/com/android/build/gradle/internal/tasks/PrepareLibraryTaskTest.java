@@ -79,10 +79,10 @@ public class PrepareLibraryTaskTest {
 
         // Run PrepareLibraryTask, expect that the exploded aar is created in the build cache
         // directory
-        File explodedDir =
-                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
-        PrepareLibraryTask task = createPrepareLibraryTask(
-                projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
+        File explodedDir = buildCache.getFileInCache(PrepareLibraryTask.getCacheInputs(aarFile));
+        PrepareLibraryTask task =
+                createPrepareLibraryTask(
+                        projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
         task.execute();
 
         assertThat(buildCacheDir.list()).hasLength(2); // Including 1 lock file
@@ -110,8 +110,7 @@ public class PrepareLibraryTaskTest {
 
         // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
         // build cache directory
-        File explodedDir2 =
-                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile2));
+        File explodedDir2 = buildCache.getFileInCache(PrepareLibraryTask.getCacheInputs(aarFile2));
         assertThat(explodedDir2).isNotEqualTo(explodedDir);
 
         task = createPrepareLibraryTask(
@@ -129,8 +128,7 @@ public class PrepareLibraryTaskTest {
 
         // Run PrepareLibraryTask for the new aar, expect that a new exploded aar is created in the
         // build cache directory
-        File explodedDir3 =
-                buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile3));
+        File explodedDir3 = buildCache.getFileInCache(PrepareLibraryTask.getCacheInputs(aarFile3));
         assertThat(explodedDir3).isNotEqualTo(explodedDir);
         assertThat(explodedDir3).isNotEqualTo(explodedDir2);
 
@@ -211,7 +209,7 @@ public class PrepareLibraryTaskTest {
         // Run PrepareLibraryTask, expect it to fail
         try {
             File explodedDir =
-                    buildCache.getFileInCache(PrepareLibraryTask.getBuildCacheInputs(aarFile));
+                    buildCache.getFileInCache(PrepareLibraryTask.getCacheInputs(aarFile));
             PrepareLibraryTask task = createPrepareLibraryTask(
                     projectDir, aarFile, explodedDir, buildCache, mavenCoordinates);
             task.execute();

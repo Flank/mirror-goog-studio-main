@@ -47,6 +47,7 @@ public class ResolveDependenciesTask extends BaseTask {
     private DependencyManager dependencyManager;
     private String testedProjectPath;
     @Nullable private FileCache buildCache;
+    private FileCache projectLevelCache;
 
     @TaskAction
     public void resolveDependencies() throws InterruptedException, IOException {
@@ -54,19 +55,24 @@ public class ResolveDependenciesTask extends BaseTask {
         dependencyManager.resolveDependencies(
                 variantData.getVariantDependency(),
                 testedProjectPath,
-                variantData.getScope().getGlobalScope().getBuildCache());
+                variantData.getScope().getGlobalScope().getBuildCache(),
+                variantData.getScope().getGlobalScope().getProjectLevelCache());
 
-        variantData.getVariantConfiguration().setResolvedDependencies(
-                variantData.getVariantDependency().getCompileDependencies(),
-                variantData.getVariantDependency().getPackageDependencies());
+        variantData
+                .getVariantConfiguration()
+                .setResolvedDependencies(
+                        variantData.getVariantDependency().getCompileDependencies(),
+                        variantData.getVariantDependency().getPackageDependencies());
 
-        extractAarInParallel(getProject(), variantData.getVariantConfiguration(), buildCache);
+        extractAarInParallel(
+                getProject(), variantData.getVariantConfiguration(), buildCache, projectLevelCache);
     }
 
     public static void extractAarInParallel(
             @NonNull Project project,
             @NonNull GradleVariantConfiguration config,
-            @Nullable FileCache buildCache)
+            @Nullable FileCache buildCache,
+            @NonNull FileCache projectLevelCache)
             throws InterruptedException, IOException {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
 
@@ -81,14 +87,17 @@ public class ResolveDependenciesTask extends BaseTask {
             }
             File input = androidDependency.getArtifactFile();
             File output = androidDependency.getExtractedFolder();
-            boolean useBuildCache = PrepareLibraryTask.shouldUseBuildCache(buildCache != null, androidDependency.getCoordinates());
+            // For snapshots, we use a project local file cache.
+            boolean useBuildCache =
+                    PrepareLibraryTask.shouldUseBuildCache(
+                            buildCache != null, androidDependency.getCoordinates());
             PrepareLibraryTask.prepareLibrary(
                     input,
                     output,
-                    buildCache,
+                    useBuildCache ? buildCache : projectLevelCache,
                     createAction(project, executor, input),
                     project.getLogger(),
-                    useBuildCache);
+                    false /* includeTroubleshootingMessage */);
         }
         executor.waitForTasksWithQuickFail(false);
     }
@@ -105,8 +114,6 @@ public class ResolveDependenciesTask extends BaseTask {
             return null;
         });
     }
-
-
 
     public static class ConfigAction implements TaskConfigAction<ResolveDependenciesTask> {
         @NonNull
@@ -143,7 +150,9 @@ public class ResolveDependenciesTask extends BaseTask {
                     scope.getGlobalScope().getExtension() instanceof TestAndroidConfig
                             ? ((TestAndroidConfig) scope.getGlobalScope().getExtension()).getTargetProjectPath()
                             : null;
+
             task.buildCache = scope.getGlobalScope().getBuildCache();
+            task.projectLevelCache = scope.getGlobalScope().getProjectLevelCache();
         }
     }
 }

@@ -17,14 +17,15 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
@@ -113,6 +114,30 @@ public class BuildCacheTest {
     }
 
     @Test
+    public void testProjectLevelCache() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid.defaultConfig.minSdkVersion 13\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
+                        + "}\n");
+        File buildCacheDir = new File(project.getTestDir(), "build-cache");
+        FileUtils.deletePath(buildCacheDir);
+
+        RunGradleTasks executor =
+                project.executor()
+                        .withProperty("android.enableBuildCache", "false")
+                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+
+        executor.run("clean", "assembleDebug");
+
+        // When improved dependency resolution is enabled, a project local cache is used.
+        File cacheDir = FileUtils.join(project.file("build"), FD_INTERMEDIATES, "project-cache");
+        assertThat(cacheDir).isDirectory();
+        assertThat(buildCacheDir).doesNotExist();
+    }
+
+    @Test
     public void testBuildCacheDisabled() throws Exception {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
@@ -127,9 +152,9 @@ public class BuildCacheTest {
                         .withProperty("android.enableBuildCache", "false")
                         .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
 
-        // Improved dependency resolution must be disabled if build cache is disabled.
+        // Improved dependency resolution still use project level build cache.
         executor.withProperty(
-                AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, "false");
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(), "false");
 
         executor.run("clean", "assembleDebug");
         assertThat(buildCacheDir).doesNotExist();

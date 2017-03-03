@@ -15,11 +15,16 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * Integration test for uploadAchives with multiple projects.
  */
@@ -50,6 +55,13 @@ class RepoTest {
             .fromTestProject("repo/util")
             .create()
 
+    @BeforeClass
+    static void setUp() {
+        // Clean testRepo
+        File testRepo = new File(app.testDir, "../testrepo");
+        testRepo.delete()
+    }
+
     @AfterClass
     static void cleanUp() {
         app = null
@@ -60,15 +72,18 @@ class RepoTest {
 
     @Test
     void repo() {
-        try {
-            util.execute("clean", "uploadArchives")
-            baseLibrary.execute("clean", "uploadArchives")
-            library.execute("clean", "uploadArchives")
-            app.execute("clean", "assembleDebug")
-        } finally {
-            // clean up the test repository.
-            File testRepo = new File(app.testDir, "../testrepo")
-            testRepo.delete()
-        }
+        util.execute("clean", "uploadArchives")
+        baseLibrary.execute("clean", "uploadArchives")
+        library.execute("clean", "uploadArchives")
+        app.execute("clean", "assembleDebug")
+        File explodedSnapshot = app.getIntermediateFile("project-cache");
+        assertThat(explodedSnapshot).isDirectory();
+        assertThat(explodedSnapshot.list().toList()).hasSize(1)
+
+        File explodedDir = new File(explodedSnapshot, explodedSnapshot.list()[0]);
+        long modifiedTime = explodedDir.lastModified();
+
+        app.execute("assembleDebug")
+        assertThat(explodedDir).wasModifiedAt(modifiedTime);
     }
 }
