@@ -121,7 +121,7 @@ public class AdbServerServiceIntegrationTest {
         service.startAsync().awaitRunning();
 
         CompletableFuture<UnsignedInteger> future = service.execute(new ServerVersion());
-        assertThat(future.get()).isGreaterThan(UnsignedInteger.fromIntBits(3));
+        assertThat(future.get()).isGreaterThan(UnsignedInteger.valueOf(30));
 
         service.stopAsync().awaitTerminated();
     }

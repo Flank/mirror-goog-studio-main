@@ -48,9 +48,9 @@ public class ServerVersionTest {
 
     @Test
     public void version_nominal() throws IOException {
-        responseData = "OKAY0010".getBytes(Charsets.UTF_8);
+        responseData = "OKAY00040024".getBytes(Charsets.UTF_8);
         connection = new StreamConnection(new ByteArrayInputStream(responseData), commandStream);
-        assertThat(versionCommand.execute(connection)).isEqualTo(UnsignedInteger.valueOf(0x10));
+        assertThat(versionCommand.execute(connection)).isEqualTo(UnsignedInteger.valueOf(0x24));
     }
 
     @Test
