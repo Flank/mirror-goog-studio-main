@@ -18,21 +18,19 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.android.tools.device.internal.adb.commands.CommandResult;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.Closeable;
 import java.io.IOException;
 
 /** A {@link Connection} represents an open connection from an adb client to a server. */
 public interface Connection extends Closeable {
-    /** Issues the given command to the server endpoint. */
-    void writeCommand(@NonNull CommandBuffer buffer) throws IOException;
-
-    /** Returns whether adb server responded "OKAY" for the issued command. */
-    boolean isOk() throws IOException;
-
-    /** Returns the error message from adb server following a "FAIL" response. */
+    /** Returns the result of issuing the given command to the server endpoint. */
     @NonNull
-    String getError() throws IOException;
+    CommandResult executeCommand(@NonNull CommandBuffer buffer) throws IOException;
+
+    /** Issues a command that doesn't result in a result. */
+    void issueCommand(@NonNull CommandBuffer buffer) throws IOException;
 
     /**
      * Returns an integer formed by reading 4 bytes of data from the response and interpreting it as

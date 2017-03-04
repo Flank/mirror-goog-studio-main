@@ -39,13 +39,14 @@ public class ListDevices implements AdbCommand<List<DeviceHandle>> {
     @Override
     public List<DeviceHandle> execute(@NonNull Connection conn) throws IOException {
         CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.DEVICES);
-        conn.writeCommand(buffer);
+        CommandResult result = conn.executeCommand(buffer);
 
-        if (!conn.isOk()) {
+        if (!result.isOk()) {
             String msg = "Error retrieving device list";
-            try {
-                msg += ": " + conn.getError();
-            } catch (IOException ignored) {}
+            String error = result.getError();
+            if (error != null) {
+                msg += ": " + error;
+            }
             throw new IOException(msg);
         }
 

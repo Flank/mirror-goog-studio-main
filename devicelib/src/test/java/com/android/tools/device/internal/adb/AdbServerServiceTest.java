@@ -143,7 +143,7 @@ public class AdbServerServiceTest {
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
         verify(connection, times(1))
-                .writeCommand(
+                .issueCommand(
                         argThat(
                                 cb ->
                                         new String(cb.toByteArray(), Charsets.UTF_8)
@@ -169,7 +169,7 @@ public class AdbServerServiceTest {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
         when(launcher.launch(anyInt(), anyLong(), any())).thenReturn(endpoint);
         when(endpoint.newConnection()).thenReturn(connection);
-        doThrow(new IOException()).when(connection).writeCommand(any());
+        doThrow(new IOException()).when(connection).issueCommand(any());
 
         adbService = new AdbServerService(options, launcher, probe, executorService);
 

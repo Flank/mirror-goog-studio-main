@@ -26,15 +26,22 @@ public class ServerVersion implements AdbCommand<UnsignedInteger> {
     @Override
     public UnsignedInteger execute(@NonNull Connection conn) throws IOException {
         CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.VERSION);
-        conn.writeCommand(buffer);
+        CommandResult result = conn.executeCommand(buffer);
 
-        if (conn.isOk()) {
+        if (result.isOk()) {
+            UnsignedInteger len = conn.readUnsignedHexInt();
+            assert len.equals(UnsignedInteger.valueOf(4)) : "Got length = " + len;
             return conn.readUnsignedHexInt();
         } else {
-            throw new IOException(conn.getError());
+            String error = result.getError();
+            if (error == null) {
+                error = "Error obtaining version";
+            }
+            throw new IOException(error);
         }
     }
 
+    @NonNull
     @Override
     public String getName() {
         return HostService.VERSION.toString();
