@@ -46,6 +46,9 @@ def main():
     args.insert(1, '--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
 
+  if sys.platform == 'darwin':
+    args.insert(0, '--watchfs')
+
   sys.exit(subprocess.call([bazel] + args, env=env))
 
 
