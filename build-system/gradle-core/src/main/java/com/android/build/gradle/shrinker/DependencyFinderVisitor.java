@@ -89,7 +89,9 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         mIsAnnotation = (access & Opcodes.ACC_ANNOTATION) != 0;
 
         if (signature != null) {
-            handleClassSignature(mKlass, signature);
+            SignatureReader reader = new SignatureReader(signature);
+            SignatureVisitor visitor = new DependencyFinderSignatureVisitor();
+            reader.accept(visitor);
         }
 
         super.visit(version, access, name, signature, superName, interfaces);
@@ -117,7 +119,9 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         }
 
         if (signature != null) {
-            handleClassSignature(method, signature);
+            SignatureReader reader = new SignatureReader(signature);
+            SignatureVisitor visitor = new DependencyFinderSignatureVisitor();
+            reader.accept(visitor);
         }
 
         return new DependencyFinderMethodVisitor(
@@ -133,7 +137,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
         if (signature != null) {
             SignatureReader reader = new SignatureReader(signature);
-            SignatureVisitor visitor = new DependencyFinderSignatureVisitor(field);
+            SignatureVisitor visitor = new DependencyFinderSignatureVisitor();
             reader.acceptType(visitor);
         }
 
@@ -145,11 +149,16 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
         if (!visible) {
             return super.visitAnnotation(desc, false);
         } else {
-            Type type = Type.getType(desc);
-            handleDeclarationType(mKlass, type);
-            return new DependencyFinderAnnotationVisitor(
-                    type.getInternalName(), mKlass, super.visitAnnotation(desc, true));
+            return handleAnnotation(mKlass, desc);
         }
+    }
+
+    @NonNull
+    private AnnotationVisitor handleAnnotation(T source, String desc) {
+        Type type = Type.getType(desc);
+        handleDeclarationType(source, type);
+        return new DependencyFinderAnnotationVisitor(
+                type.getInternalName(), source, super.visitAnnotation(desc, true));
     }
 
     @Override
@@ -170,12 +179,6 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             T classReference = mGraph.getClassReference(className);
             handleDependency(member, classReference, DependencyType.REQUIRED_CLASS_STRUCTURE);
         }
-    }
-
-    private void handleClassSignature(T source, String signature) {
-        SignatureReader reader = new SignatureReader(signature);
-        SignatureVisitor visitor = new DependencyFinderSignatureVisitor(source);
-        reader.accept(visitor);
     }
 
     /**
@@ -245,10 +248,7 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             if (!visible) {
                 return super.visitAnnotation(desc, false);
             } else {
-                Type type = Type.getType(desc);
-                handleDeclarationType(mMethod, type);
-                return new DependencyFinderAnnotationVisitor(
-                        type.getInternalName(), mMethod, super.visitAnnotation(desc, true));
+                return handleAnnotation(mMethod, desc);
             }
         }
 
@@ -475,6 +475,17 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
             mLastLdcs.clear();
             super.visitJumpInsn(opcode, label);
         }
+
+        @Override
+        public void visitLocalVariable(
+                String name, String desc, String signature, Label start, Label end, int index) {
+            if (signature != null) {
+                SignatureReader reader = new SignatureReader(signature);
+                SignatureVisitor visitor = new DependencyFinderSignatureVisitor();
+                reader.acceptType(visitor);
+            }
+            super.visitLocalVariable(name, desc, signature, start, end, index);
+        }
     }
 
     private class DependencyFinderAnnotationVisitor extends AnnotationVisitor {
@@ -534,22 +545,24 @@ abstract class DependencyFinderVisitor<T> extends ClassVisitor {
 
     private class DependencyFinderSignatureVisitor extends SignatureVisitor {
 
-        private final T mSource;
-
-        DependencyFinderSignatureVisitor(T source) {
+        DependencyFinderSignatureVisitor() {
             super(Opcodes.ASM5);
-            mSource = source;
         }
 
         @Override
         public void visitClassType(String name) {
             if (!isSdkPackage(name)) {
-                handleDependency(
-                        mSource,
-                        mGraph.getClassReference(name),
-                        DependencyType.REQUIRED_CLASS_STRUCTURE);
+                mGraph.addTypeFromGenericSignature(mKlass, mGraph.getClassReference(name));
             }
             super.visitClassType(name);
+        }
+
+        @Override
+        public void visitInnerClassType(String name) {
+            if (!isSdkPackage(name)) {
+                mGraph.addTypeFromGenericSignature(mKlass, mGraph.getClassReference(name));
+            }
+            super.visitInnerClassType(name);
         }
     }
 

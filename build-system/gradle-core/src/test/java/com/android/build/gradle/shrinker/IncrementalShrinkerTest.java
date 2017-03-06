@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.shrinker;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +35,7 @@ import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.objectweb.asm.tree.ClassNode;
 
 /** Tests for {@link IncrementalShrinker}. */
 @SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
@@ -472,5 +474,83 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertMembersLeft("MyInterface", "doSomething:(Ljava/lang/Object;)V");
         assertImplements("MyImpl", "test/MyInterface");
+    }
+
+    @Test
+    public void signatures_classSignature_startUsing() throws Exception {
+        Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
+        Files.write(TestClasses.Signatures.namedMap(), new File(mTestPackageDir, "NamedMap.class"));
+        Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
+        Files.write(
+                TestClassesForIncremental.classWithCasts("Casts"),
+                new File(mTestPackageDir, "Casts.class"));
+
+        fullRun(
+                parseKeepRules(
+                        "-keep class test.Main { void main(...); }\n -keep class test.Casts { *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "main:(Ltest/NamedMap;)V");
+        assertMembersLeft("NamedMap", "<init>:()V");
+        assertClassSkipped("HasAge");
+        assertClassSkipped("Named");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ljava/lang/Object;>Ljava/lang/Object;");
+
+        // Start using Named.
+        Files.write(
+                TestClassesForIncremental.classWithCasts("Casts", "test/Named"),
+                new File(mTestPackageDir, "Casts.class"));
+        incrementalRun(ImmutableMap.of("Casts", Status.CHANGED));
+
+        assertMembersLeft("Main", "<init>:()V", "main:(Ltest/NamedMap;)V");
+        assertMembersLeft("NamedMap", "<init>:()V");
+        assertClassSkipped("HasAge");
+        assertMembersLeft("Named");
+
+        namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ltest/Named;>Ljava/lang/Object;");
+    }
+
+    @Test
+    public void signatures_classSignature_stopUsing() throws Exception {
+        Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
+        Files.write(TestClasses.Signatures.namedMap(), new File(mTestPackageDir, "NamedMap.class"));
+        Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
+        Files.write(
+                TestClassesForIncremental.classWithCasts("Casts", "test/Named"),
+                new File(mTestPackageDir, "Casts.class"));
+
+        fullRun(
+                parseKeepRules(
+                        "-keep class test.Main { void main(...); }\n -keep class test.Casts { *; }"));
+
+        assertMembersLeft("Main", "<init>:()V", "main:(Ltest/NamedMap;)V");
+        assertMembersLeft("NamedMap", "<init>:()V");
+        assertClassSkipped("HasAge");
+        assertMembersLeft("Named");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ltest/Named;>Ljava/lang/Object;");
+
+        // Stop using Named.
+        Files.write(
+                TestClassesForIncremental.classWithCasts("Casts"),
+                new File(mTestPackageDir, "Casts.class"));
+        incrementalRun(ImmutableMap.of("Casts", Status.CHANGED));
+
+        assertMembersLeft("Main", "<init>:()V", "main:(Ltest/NamedMap;)V");
+        assertMembersLeft("NamedMap", "<init>:()V");
+        assertClassSkipped("HasAge");
+        assertClassSkipped("Named");
+
+        namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ljava/lang/Object;>Ljava/lang/Object;");
     }
 }

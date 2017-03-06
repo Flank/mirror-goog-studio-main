@@ -26,19 +26,24 @@ import java.util.Set;
 import java.util.function.Predicate;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.Remapper;
 
 /**
  * {@link ClassVisitor} that skips class members which are not reachable. It also filters the list
- * of implemented interfaces.
+ * of implemented interfaces and rewrites generic signatures not to include references to "dropped"
+ * types. This is done by replacing the referenced type with java/lang/Object: the same as ProGuard
+ * does.
  */
-public class FilterMembersVisitor extends ClassVisitor {
-    private final Set<String> mMembers;
-    private final Predicate<String> mClassKeptPredicate;
+public class RewriteOutputVisitor extends ClassVisitor {
+    @NonNull private final Set<String> mMembers;
+    @NonNull private final Predicate<String> mClassKeptPredicate;
+    @NonNull private final Remapper mRemapper;
     @Nullable private final BytecodeVersion mBytecodeVersion;
 
-    public FilterMembersVisitor(
+    public RewriteOutputVisitor(
             @NonNull Set<String> members,
             @NonNull Predicate<String> classKeptPredicate,
             @Nullable BytecodeVersion bytecodeVersion,
@@ -50,6 +55,7 @@ public class FilterMembersVisitor extends ClassVisitor {
         mMembers = members;
         mClassKeptPredicate = classKeptPredicate;
         mBytecodeVersion = bytecodeVersion;
+        mRemapper = new ToObjectRemapper();
     }
 
     @Override
@@ -72,6 +78,8 @@ public class FilterMembersVisitor extends ClassVisitor {
             version = mBytecodeVersion.getBytes();
         }
 
+        signature = mRemapper.mapSignature(signature, false);
+
         super.visit(
                 version,
                 access,
@@ -84,6 +92,8 @@ public class FilterMembersVisitor extends ClassVisitor {
     @Override
     public FieldVisitor visitField(
             int access, String name, String desc, String signature, Object value) {
+        signature = mRemapper.mapSignature(signature, true);
+
         if (mMembers.contains(name + ":" + desc)) {
             return super.visitField(access, name, desc, signature, value);
         } else {
@@ -94,10 +104,25 @@ public class FilterMembersVisitor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(
             int access, String name, String desc, String signature, String[] exceptions) {
-        if (mMembers.contains(name + ":" + desc)) {
-            return super.visitMethod(access, name, desc, signature, exceptions);
-        } else {
+        signature = mRemapper.mapSignature(signature, false);
+
+        if (!mMembers.contains(name + ":" + desc)) {
             return null;
+        } else {
+            return new MethodVisitor(
+                    Opcodes.ASM5, super.visitMethod(access, name, desc, signature, exceptions)) {
+                @Override
+                public void visitLocalVariable(
+                        String name,
+                        String desc,
+                        String signature,
+                        Label start,
+                        Label end,
+                        int index) {
+                    signature = mRemapper.mapSignature(signature, true);
+                    super.visitLocalVariable(name, desc, signature, start, end, index);
+                }
+            };
         }
     }
 
@@ -106,6 +131,18 @@ public class FilterMembersVisitor extends ClassVisitor {
         // Remove constant pool references to removed classes.
         if (mClassKeptPredicate.test(name)) {
             super.visitInnerClass(name, outerName, innerName, access);
+        }
+    }
+
+    private class ToObjectRemapper extends Remapper {
+
+        @Override
+        public String map(String type) {
+            if (mClassKeptPredicate.test(type)) {
+                return type;
+            } else {
+                return "java/lang/Object";
+            }
         }
     }
 }
