@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.managed.AndroidConfig;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.testing.api.DeviceProvider;
@@ -62,6 +63,7 @@ public class AndroidConfigHelper {
         model.setAdbOptions(instantiator.newInstance(AdbOptions.class));
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
         model.setLibraryRequests(Lists.<LibraryRequest>newArrayList());
+        model.setBuildToolsRevision(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
     }
 
 

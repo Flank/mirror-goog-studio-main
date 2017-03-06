@@ -133,7 +133,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private String target;
 
-    private Revision buildToolsRevision;
+    @NonNull private Revision buildToolsRevision;
 
     private List<LibraryRequest> libraryRequests = Lists.newArrayList();
 
@@ -258,7 +258,7 @@ public abstract class BaseExtension implements AndroidConfig {
                 });
 
         sourceSetsContainer.create(defaultConfig.getName());
-
+        buildToolsRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
         setDefaultConfigValues();
     }
 
@@ -355,7 +355,7 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * <strong>Required.</strong> Version of the build tools to use.
+     * Version of the build tools to use.
      *
      * <p>Value assigned to this property is parsed and stored in a normalized form, so reading it
      * back may give a slightly different string.

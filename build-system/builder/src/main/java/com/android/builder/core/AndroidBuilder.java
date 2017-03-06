@@ -133,9 +133,10 @@ public class AndroidBuilder {
      */
     public static final Revision MIN_BUILD_TOOLS_REV = new Revision(25, 0, 0);
 
-    /**
-     * API level for split APKs.
-     */
+    /** Default version of build tools that will be used if the user does not specify. */
+    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(25, 0, 1);
+
+    /** API level for split APKs. */
     private static final int API_LEVEL_SPLIT_APK = 21;
 
     @NonNull

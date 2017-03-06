@@ -158,7 +158,6 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
                 "\n" +
                 "android {\n" +
                 "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
                 "}\n");
 
         addFile(buildFile);
