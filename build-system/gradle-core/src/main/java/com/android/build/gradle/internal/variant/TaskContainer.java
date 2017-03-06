@@ -22,14 +22,19 @@ import org.gradle.api.Task;
 /** Provider of tasks reference. This allow for simpler dependencies that the whole VariantScope */
 public interface TaskContainer {
 
-    // FIX ME : POPULATE
-    enum TaskName {
-        PACKAGE_INSTANT_APP,
+    enum TaskKind {
+        // Task the process all variant's outputs.
+        PROCESS_ANDROID_RESOURCES,
+        // Task to package all variant's outputs.
+        PACKAGE_ANDROID_ARTIFACT,
+        // Task to assemble the variant and all its output.
         ASSEMBLE
     }
 
+    void addTask(TaskKind taskKind, Task task);
+
     @Nullable
-    Task getTaskByName(TaskName name);
+    Task getTaskByKind(TaskKind name);
 
     @Nullable
     <T extends Task> T getTaskByType(Class<T> taskType);

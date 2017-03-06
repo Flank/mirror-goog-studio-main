@@ -134,6 +134,7 @@ import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -870,7 +871,6 @@ public abstract class TaskManager {
                                 testedScope.getOutputs(
                                         TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)));
 
-        scope.getVariantData().manifestProcessorTask = processTestManifestTask;
         scope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                 scope.getManifestOutputDirectory(),
@@ -2891,8 +2891,6 @@ public abstract class TaskManager {
             packageApp.dependsOn(tasks, packageInstantRunResources);
         }
 
-        variantData.packageAndroidArtifactTask = packageApp;
-
         // Common code for both packaging tasks.
         Consumer<AndroidTask<PackageApplication>> configureResourcesAndAssetsDependencies =
                 task -> {
@@ -3015,7 +3013,7 @@ public abstract class TaskManager {
                 tasks,
                 variantData.getScope().getTaskName("assemble"),
                 task -> {
-                    variantData.assembleVariantTask = task;
+                    variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task);
                 });
     }
 

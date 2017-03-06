@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -754,6 +755,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                     outputDirectory, packagingScope.getProjectBaseName(), split);
             packageAndroidArtifact.projectBaseName = packagingScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
+            packagingScope.addTask(
+                    TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, packageAndroidArtifact);
             configure(packageAndroidArtifact);
         }
 

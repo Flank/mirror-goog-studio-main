@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
@@ -29,6 +30,7 @@ import com.android.ide.common.build.ApkData;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 
 /** Data needed by the packaging tasks. */
@@ -126,4 +128,6 @@ public interface PackagingScope extends TaskOutputHolder {
     AaptOptions getAaptOptions();
 
     SplitScope getSplitScope();
+
+    void addTask(TaskContainer.TaskKind taskKind, Task task);
 }

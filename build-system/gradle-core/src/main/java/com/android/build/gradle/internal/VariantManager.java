@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -327,14 +328,16 @@ public class VariantManager implements VariantModel {
             if (productFlavors.isEmpty()) {
                 // Reuse assemble task for build type if there is no product flavor.
                 variantScope.setAssembleTask(buildTypeData.getAssembleTask());
-                buildTypeData.getAssembleTask().configure(
-                        tasks,
-                        new Action<Task>() {
-                            @Override
-                            public void execute(Task task) {
-                                variantData.assembleVariantTask = task;
-                            }
-                        });
+                buildTypeData
+                        .getAssembleTask()
+                        .configure(
+                                tasks,
+                                new Action<Task>() {
+                                    @Override
+                                    public void execute(Task task) {
+                                        variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task);
+                                    }
+                                });
             } else {
                 variantScope.setAssembleTask(taskManager.createAssembleTask(tasks, variantData));
 

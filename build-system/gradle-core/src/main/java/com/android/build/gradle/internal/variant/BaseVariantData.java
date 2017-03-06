@@ -47,14 +47,11 @@ import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
-import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.ErrorReporter;
@@ -75,7 +72,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -84,7 +84,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Base data about a variant. */
@@ -110,12 +109,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
     public CheckManifest checkManifestTask;
     public AndroidTask<PackageSplitRes> packageSplitResourcesTask;
     public AndroidTask<PackageSplitAbi> packageSplitAbiTask;
-    public AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
-    public AndroidTask<? extends PackageAndroidArtifact> packageAndroidArtifactTask;
 
     // FIX ME : move all AndroidTask<> above to Scope and use these here.
-    public PackageAndroidArtifact packageAndroidArtifact;
-    public ProcessAndroidResources processAndroidResources;
+    private Map<TaskKind, Task> registeredTasks = new ConcurrentHashMap<>();
 
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
@@ -137,7 +133,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
     @NonNull
     public Collection<ExternalNativeBuildTask> externalNativeBuildTasks = Lists.newArrayList();
     @Nullable public JackCompileTransform jackCompileTransform = null;
-    public Jar classesJarTask;
     // empty anchor compile task to set all compilations tasks as dependents.
     public Task compileTask;
 
@@ -146,9 +141,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
 
     // TODO : why is Jack not registered as the obfuscationTask ???
     public Task obfuscationTask;
-
-    // Task to assemble the variant and all its output.
-    public Task assembleVariantTask;
 
     private List<ConfigurableFileTree> javaSources;
 
@@ -287,25 +279,27 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
         }
     }
 
+    @Override
+    public void addTask(TaskKind taskKind, Task task) {
+        registeredTasks.put(taskKind, task);
+    }
+
     @Nullable
     @Override
-    public Task getTaskByName(TaskName name) {
-        if (TaskName.ASSEMBLE.equals(name)) {
-            return assembleVariantTask;
-        }
-        return null;
+    public Task getTaskByKind(TaskKind name) {
+        return registeredTasks.get(name);
     }
 
     @Nullable
     @Override
     public <U extends Task> U getTaskByType(Class<U> taskType) {
-        if (taskType.equals(PackageAndroidArtifact.class)) {
-            return taskType.cast(packageAndroidArtifact);
-        }
-        if (taskType.equals(ProcessAndroidResources.class)) {
-            return taskType.cast(processAndroidResources);
-        }
-        return null;
+        Optional<Task> requestedTask =
+                registeredTasks
+                        .values()
+                        .stream()
+                        .filter(task -> taskType.equals(task.getClass()))
+                        .findFirst();
+        return requestedTask.isPresent() ? taskType.cast(requestedTask.get()) : null;
     }
 
     @NonNull

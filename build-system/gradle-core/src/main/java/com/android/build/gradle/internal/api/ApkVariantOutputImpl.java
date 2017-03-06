@@ -57,7 +57,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Nullable
     @Override
     public Task getZipAlign() {
-        return null;
+        return getPackageApplication();
     }
 
     @Override

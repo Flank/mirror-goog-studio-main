@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -244,7 +245,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public Task getAssemble() {
-        return getVariantData().assembleVariantTask;
+        return getVariantData().getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
     }
 
     @Override

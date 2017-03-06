@@ -74,7 +74,7 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Nullable
     @Override
     public Task getAssemble() {
-        return taskContainer.getTaskByName(TaskContainer.TaskName.ASSEMBLE);
+        return taskContainer.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
     }
 
     @NonNull

@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.Version;
@@ -600,10 +601,11 @@ public class ModelBuilder implements ToolingModelBuilder {
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName()
-                        + "-" + variantConfiguration.getBaseName(),
-                variantData.assembleVariantTask == null
+                        + "-"
+                        + variantConfiguration.getBaseName(),
+                variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE) == null
                         ? scope.getTaskName("assemble")
-                        : variantData.assembleVariantTask.getName(),
+                        : variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE).getName(),
                 variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 variantConfiguration.getApplicationId(),

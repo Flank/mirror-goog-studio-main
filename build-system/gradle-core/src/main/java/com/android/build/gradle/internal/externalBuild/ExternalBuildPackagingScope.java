@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.model.AaptOptions;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
@@ -278,5 +280,10 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     public void addToAnchorOutput(
             @NonNull AnchorOutputType outputType, @NonNull FileCollection fileCollection) {
         mVariantScope.addToAnchorOutput(outputType, fileCollection);
+    }
+
+    @Override
+    public void addTask(TaskContainer.TaskKind taskKind, Task task) {
+        // not needed as customization not allowed in external build system.
     }
 }

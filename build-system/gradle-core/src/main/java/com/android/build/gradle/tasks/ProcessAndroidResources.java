@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -676,6 +677,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             final BaseVariantData<? extends BaseVariantOutputData> variantData =
                     variantScope.getVariantData();
+
+            variantData.addTask(TaskContainer.TaskKind.PROCESS_ANDROID_RESOURCES, processResources);
 
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
