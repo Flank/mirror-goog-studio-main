@@ -25,7 +25,7 @@ public class KillServer implements AdbCommand<Void> {
     @Override
     public Void execute(@NonNull Connection conn) throws IOException {
         CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.KILL);
-        conn.writeCommand(buffer);
+        conn.issueCommand(buffer);
         return null;
     }
 

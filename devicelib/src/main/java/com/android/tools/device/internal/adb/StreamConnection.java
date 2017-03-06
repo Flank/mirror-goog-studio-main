@@ -17,7 +17,9 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.android.tools.device.internal.adb.commands.CommandResult;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.BufferedInputStream;
@@ -27,9 +29,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class StreamConnection implements Connection {
-    /** Response header from adb server that indicates that the command succeeded. */
-    public static final String STATUS_OKAY = "OKAY";
-
     private final BufferedInputStream is;
     private final BufferedOutputStream os;
 
@@ -45,22 +44,31 @@ public class StreamConnection implements Connection {
     }
 
     @Override
-    public void writeCommand(@NonNull CommandBuffer buffer) throws IOException {
+    @NonNull
+    public CommandResult executeCommand(@NonNull CommandBuffer buffer) throws IOException {
+        issueCommand(buffer);
+        if ("OKAY".equals(readString(4))) {
+            return CommandResult.OKAY;
+        } else {
+            return CommandResult.createError(readError());
+        }
+    }
+
+    @Override
+    public void issueCommand(@NonNull CommandBuffer buffer) throws IOException {
         byte[] command = buffer.toByteArray();
         os.write(String.format("%04X", command.length).getBytes(Charsets.UTF_8));
         os.write(command);
         os.flush();
     }
 
-    @Override
-    public boolean isOk() throws IOException {
-        return STATUS_OKAY.equals(readString(4));
-    }
-
-    @NonNull
-    @Override
-    public String getError() throws IOException {
-        return readString(readUnsignedHexInt().intValue());
+    @Nullable
+    private String readError() throws IOException {
+        if (is.available() < 4) {
+            return null;
+        }
+        int len = readUnsignedHexInt().intValue();
+        return len > 0 ? readString(len) : null;
     }
 
     @NonNull

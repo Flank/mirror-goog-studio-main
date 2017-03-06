@@ -19,6 +19,9 @@ package com.android.tools.device.internal.adb;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.android.tools.device.internal.adb.commands.CommandResult;
+import com.android.tools.device.internal.adb.commands.HostService;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.ByteArrayInputStream;
@@ -38,25 +41,30 @@ public class StreamConnectionTest {
     }
 
     @Test
-    public void isOk_nominal() throws IOException {
+    public void writeCommand_okResult() throws IOException {
         responseData = "OKAY".getBytes(Charsets.UTF_8);
         conn = new StreamConnection(new ByteArrayInputStream(responseData), commandStream);
-        assertThat(conn.isOk()).isTrue();
+        CommandResult commandResult =
+                conn.executeCommand(new CommandBuffer().writeHostCommand(HostService.DEVICES));
+        assertThat(commandResult.isOk()).isTrue();
     }
 
     @Test
-    public void isOk_Failure() throws IOException {
+    public void writeCommand_failureWithNoErrorData() throws IOException {
         responseData = "FAIL".getBytes(Charsets.UTF_8);
         conn = new StreamConnection(new ByteArrayInputStream(responseData), commandStream);
-        assertThat(conn.isOk()).isFalse();
+        CommandResult commandResult =
+                conn.executeCommand(new CommandBuffer().writeHostCommand(HostService.DEVICES));
+        assertThat(commandResult.isOk()).isFalse();
+        assertThat(commandResult.getError()).isNull();
     }
 
     @Test
-    public void isOk_NotEnoughData() {
+    public void writeCommand_notEnoughData() {
         responseData = "OK".getBytes(Charsets.UTF_8);
         conn = new StreamConnection(new ByteArrayInputStream(responseData), commandStream);
         try {
-            conn.isOk();
+            conn.executeCommand(new CommandBuffer().writeHostCommand(HostService.DEVICES));
             fail("Expected exception since there wasn't enough data");
         } catch (IOException e) {
             assertThat(e.getMessage()).isEqualTo("End of Stream before fully reading 4 bytes");
