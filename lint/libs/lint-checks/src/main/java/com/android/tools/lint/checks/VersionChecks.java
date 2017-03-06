@@ -409,6 +409,8 @@ public class VersionChecks {
                     return api <= 24;
                 } else if (name.equals("isAtLeastNMR1")) {
                     return api <= 25;
+                } else if (name.equals("isAtLeastO")) {
+                    return api <= 26;
                 }
             }
         }

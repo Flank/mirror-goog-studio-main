@@ -95,6 +95,7 @@ public class TestLintTask {
 
     /** Creates a new lint test task */
     public TestLintTask() {
+        BuiltinIssueRegistry.reset();
     }
 
     /** Creates a new lint test task */

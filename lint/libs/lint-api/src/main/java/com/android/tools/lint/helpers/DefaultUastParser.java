@@ -51,7 +51,11 @@ public class DefaultUastParser extends UastParser {
     public DefaultUastParser(@Nullable com.android.tools.lint.detector.api.Project project,
             @NonNull com.intellij.openapi.project.Project p) {
         javaEvaluator = new DefaultJavaEvaluator(p, project);
-        uastContext = ServiceManager.getService(p, UastContext.class);
+        if (!p.isDisposed()) {
+            uastContext = ServiceManager.getService(p, UastContext.class);
+        } else {
+            uastContext = null;
+        }
     }
 
     /**
